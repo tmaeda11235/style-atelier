@@ -35,26 +35,31 @@ function SidePanel() {
       if (parsed) {
           addLog(`Parsed data: ${parsed.jobId || 'No Job ID'}`)
           setDroppedData(parsed)
-
-          try {
-              await db.addStyleCard({
-                  imageUrl: parsed.src,
-                  prompt: parsed.prompt,
-                  jobId: parsed.jobId,
-                  source: parsed.source
-              })
-              const count = await db.styleCards.count()
-              addLog(` StyleCard saved to DB! Total: ${count}`)
-          } catch (err) {
-              console.error(err)
-              addLog(`L Save failed: ${err}`)
-          }
       } else {
           addLog("Could not parse dropped data")
       }
     } catch (error) {
       console.error("DnD: Critical error", error)
       addLog(`CRITICAL ERROR: ${error}`)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!droppedData) return
+
+    try {
+        await db.addStyleCard({
+            imageUrl: droppedData.src,
+            prompt: droppedData.prompt,
+            jobId: droppedData.jobId,
+            source: droppedData.source
+        })
+        const count = await db.styleCards.count()
+        addLog(`  StyleCard saved to DB! Total: ${count}`)
+        setDroppedData(null)
+    } catch (err) {
+        console.error(err)
+        addLog(`L Save failed: ${err}`)
     }
   }
 
@@ -102,7 +107,7 @@ function SidePanel() {
                 </div>
                 <div className="mt-3 flex justify-end">
                     <button 
-                        onClick={() => setDroppedData(null)}
+                        onClick={handleSave}
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                     >
                         Save & Continue
