@@ -7,10 +7,54 @@ interface LibraryTabProps {
 }
 
 export function LibraryTab({ addLog }: LibraryTabProps) {
-  const { styleCards, handleCardClick } = useLibrary(addLog)
+  const {
+    styleCards,
+    handleCardClick,
+    searchTag,
+    setSearchTag,
+    rarityFilter,
+    setRarityFilter,
+    sortBy,
+    setSortBy,
+  } = useLibrary(addLog)
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-4">
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
+        <input
+          type="text"
+          placeholder="Search by tag or name..."
+          value={searchTag}
+          onChange={(e) => setSearchTag(e.target.value)}
+          className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+        <div className="flex gap-2">
+          <select
+            value={rarityFilter}
+            onChange={(e) => setRarityFilter(e.target.value as any)}
+            className="flex-1 px-1 py-1 text-[10px] border rounded bg-white"
+          >
+            <option value="All">All Rarities</option>
+            <option value="Common">Common</option>
+            <option value="Rare">Rare</option>
+            <option value="Epic">Epic</option>
+            <option value="Legendary">Legendary</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="flex-1 px-1 py-1 text-[10px] border rounded bg-white"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="rarity">Rarity</option>
+            <option value="usage">Usage</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
       {styleCards?.map((card) => {
         const config = RARITY_CONFIG[card.tier]
         return (
