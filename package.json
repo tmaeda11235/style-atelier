@@ -12,6 +12,8 @@
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dexie": "^4.2.1",
+    "dexie-react-hooks": "^4.2.0",
     "lucide-react": "^0.562.0",
     "plasmo": "0.90.5",
     "react": "18.2.0",
