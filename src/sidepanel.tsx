@@ -1,9 +1,11 @@
 import { useState } from "react"
 import "./style.css"
+import { db } from "./lib/db"
+import { parseDroppedData, type ParsedData } from "./lib/mj-parser"
 
 function SidePanel() {
   const [isDragging, setIsDragging] = useState(false)
-  const [droppedData, setDroppedData] = useState<{src: string, prompt?: string, jobId?: string} | null>(null)
+  const [droppedData, setDroppedData] = useState<ParsedData | null>(null)
   const [logs, setLogs] = useState<string[]>([])
 
   const addLog = (msg: string) => setLogs(prev => [msg, ...prev].slice(0, 20))
@@ -17,56 +19,31 @@ function SidePanel() {
     setIsDragging(false)
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
     addLog("Drop event received")
 
-    // Priority 1: Custom JSON Data (from Content Script)
-    const jsonData = e.dataTransfer.getData("application/json")
-    if (jsonData) {
-      try {
-        const data = JSON.parse(jsonData)
-        addLog(`JSON received: ${data.src?.substring(0, 30)}...`)
-        if (data.src) {
-            setDroppedData(data)
-            return
-        }
-      } catch (err) {
-        console.error(err)
-      }
-    }
+    const parsed = parseDroppedData(e.dataTransfer)
+    
+    if (parsed) {
+        addLog(`Parsed data: ${parsed.jobId || 'No Job ID'}`)
+        setDroppedData(parsed)
 
-    // Priority 2: Standard URL (Fallback for job links)
-    const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain")
-    if (url) {
-        addLog(`URL received: ${url.substring(0, 30)}...`)
-        
-        // Check if it is a Job URL
-        if (url.includes("/jobs/")) {
-            const match = url.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/)
-            if (match) {
-                const jobId = match[1]
-                const imageUrl = `https://cdn.midjourney.com/${jobId}/0_0.webp`
-                addLog(`Resolved Job ID: ${jobId}`)
-                setDroppedData({
-                    src: imageUrl,
-                    jobId: jobId,
-                    prompt: "Prompt not available from URL"
-                })
-                return
-            }
+        try {
+            await db.addStyleCard({
+                imageUrl: parsed.src,
+                prompt: parsed.prompt,
+                jobId: parsed.jobId,
+                source: parsed.source
+            })
+            addLog(" StyleCard saved to DB!")
+        } catch (err) {
+            console.error(err)
+            addLog(`L Save failed: ${err}`)
         }
-
-        // Direct Image URL
-        if (url.match(/\.(webp|png|jpg|jpeg|gif)$/i) || url.includes("cdn.midjourney.com")) {
-             setDroppedData({ src: url })
-             return
-        }
-
-        addLog("URL format not recognized as MJ image or job")
     } else {
-        addLog("No URL found in drop data")
+        addLog("Could not parse dropped data")
     }
   }
 
