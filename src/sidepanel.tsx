@@ -40,7 +40,8 @@ function SidePanel() {
                   jobId: parsed.jobId,
                   source: parsed.source
               })
-              addLog(" StyleCard saved to DB!")
+              const count = await db.styleCards.count()
+              addLog(` StyleCard saved to DB! Total: ${count}`)
           } catch (err) {
               console.error(err)
               addLog(`L Save failed: ${err}`)
