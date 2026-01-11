@@ -30,3 +30,15 @@ tags: []
 2.  **Minting**: Image + Prompt Metadata saved to IndexedDB as "Style Card".
 3.  **Usage**: User selects Card from Side Panel -> Content Script injects prompt into Midjourney input.
 4.  **Export**: Card data encoded into image (QR/Metadata) for sharing.
+
+## Project Structure
+To ensure maintainability and scalability, the project follows a strict directory structure:
+
+- `assets/`: Static assets (icons, images) - Must be in root for Plasmo.
+- `src/`: Root directory for all source code.
+    - `src/components/`: Reusable React components.
+    - `src/lib/`: Shared utilities, database logic, and types.
+    - `src/styles/`: Global styles (CSS, Tailwind directives).
+    - `src/background.ts`: Extension background script.
+    - `src/sidepanel.tsx`: Main entry point for the side panel UI.
+    - `src/content.ts`: Content scripts (if applicable).
