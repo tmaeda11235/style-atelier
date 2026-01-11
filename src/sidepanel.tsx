@@ -1,15 +1,8 @@
-import { useState, useEffect } from "react"
-
-import { db } from "./lib/db"
-
+import { useState } from "react"
 import "./style.css"
 
 function SidePanel() {
   const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    console.log("Database initialized:", db.name)
-  }, [])
 
   return (
     <div className="w-full h-screen p-4 bg-slate-50 flex flex-col items-center justify-center font-sans">
