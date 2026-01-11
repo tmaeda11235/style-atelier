@@ -149,7 +149,20 @@ function SidePanel() {
         <div className="w-full mt-8 border-t border-slate-200 pt-4">
             <div className="flex justify-between items-center mb-2">
                <p className="text-[10px] text-slate-500 uppercase font-bold">Debug Logs</p>
-               <button onClick={() => setLogs([])} className="text-[10px] text-slate-400 hover:text-slate-600">Clear</button>
+               <div className="flex gap-2">
+                   <button 
+                       onClick={async () => {
+                           if (window.confirm("Are you sure you want to delete all saved styles?")) {
+                               await db.styleCards.clear()
+                               addLog("Database cleared.")
+                           }
+                       }} 
+                       className="text-[10px] text-red-400 hover:text-red-600 font-medium"
+                   >
+                       Reset DB
+                   </button>
+                   <button onClick={() => setLogs([])} className="text-[10px] text-slate-400 hover:text-slate-600">Clear Logs</button>
+               </div>
             </div>
             <div className="bg-slate-900 text-green-400 p-2 rounded text-[10px] font-mono h-24 overflow-y-auto whitespace-pre-wrap shadow-inner">
               {logs.length === 0 ? <span className="text-slate-600 opacity-50">Waiting for events...</span> : logs.map((log, i) => <div key={i} className="mb-1 border-b border-green-900/30 pb-0.5 last:border-0">{`> ${log}`}</div>)}
