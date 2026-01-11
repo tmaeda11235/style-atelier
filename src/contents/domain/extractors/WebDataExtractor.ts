@@ -1,4 +1,5 @@
 import type { IExtractor, IMJElementData } from "../interfaces"
+import { extractJobIdFromUrl } from "../../../lib/mj-parser"
 
 export class WebDataExtractor implements IExtractor {
   extract(element: HTMLElement): IMJElementData | null {
@@ -20,8 +21,8 @@ export class WebDataExtractor implements IExtractor {
     let jobId = ""
     const parentLink = img.closest("a")
     if (parentLink && parentLink.href) {
-        const match = parentLink.href.match(/jobs\/([a-f0-9-]{36})/)
-        if (match) jobId = match[1]
+        const id = extractJobIdFromUrl(parentLink.href)
+        if (id) jobId = id
     }
 
     return {
@@ -43,21 +44,16 @@ export class WebDataExtractor implements IExtractor {
             let fullText = ""
 
             // 1. Get Prompt Text (Clean prompt without buttons/params)
-            // Clone spans to safely remove button elements (parameters) before extracting text
-            const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-            spans.forEach(span => {
-                if (span.querySelector("img")) return // Skip thumbnail
-
-                const clone = span.cloneNode(true) as HTMLElement
-                // Remove buttons (parameters) to get pure prompt text
-                const buttons = clone.querySelectorAll("button")
-                buttons.forEach(b => b.remove())
-                
-                const text = clone.textContent?.trim()
-                if (text) fullText += text + " "
-            })
-
-            fullText = fullText.trim()
+            // Clone the entire container to safely remove button elements (parameters) before extracting text
+            const clone = breakWordDiv.cloneNode(true) as HTMLElement
+            // Remove buttons (parameters) to get pure prompt text
+            const buttons = clone.querySelectorAll("button")
+            buttons.forEach(b => b.remove())
+            // Remove images (thumbnails)
+            const images = clone.querySelectorAll("img")
+            images.forEach(i => i.remove())
+            
+            fullText = clone.textContent?.trim() || ""
 
             // 2. Get Parameters from Buttons (Structure based extraction)
             // Search in the common parent to cover both responsive layouts
@@ -72,11 +68,24 @@ export class WebDataExtractor implements IExtractor {
                     const valueSpan = btn.querySelector("span.line-clamp-2")
                     
                     if (labelSpan && valueSpan) {
-                        const label = labelSpan.textContent?.trim()
+                        let label = labelSpan.textContent?.trim()
                         const value = valueSpan.textContent?.trim()
                         if (label && value) {
-                            // Clean up label (remove -- if duplicated, though usually it's correct)
-                            fullText += ` ${label} ${value}`
+                            // Ensure label starts with --
+                            if (!label.startsWith("--")) {
+                                label = "--" + label
+                            }
+                            // Clean up duplicate -- just in case
+                            if (label.startsWith("----")) {
+                                label = label.substring(2)
+                            }
+                            
+                            const paramText = `${label} ${value}`
+                            // Avoid simple duplicates if the exact string is already in fullText
+                            // (Though usually prompt text and params are distinct)
+                            if (!fullText.includes(paramText)) {
+                                fullText += ` ${paramText}`
+                            }
                         }
                     } else {
                         // Fallback: Try to extract parameter from button text if structure doesn't match
@@ -107,19 +116,14 @@ export class WebDataExtractor implements IExtractor {
         if (breakWordDiv) {
             let fullText = ""
             
-            const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-            spans.forEach(span => {
-                if (span.querySelector("img")) return
-
-                const clone = span.cloneNode(true) as HTMLElement
-                const buttons = clone.querySelectorAll("button")
-                buttons.forEach(b => b.remove())
-                
-                const text = clone.textContent?.trim()
-                if (text) fullText += text + " "
-            })
-
-            fullText = fullText.trim()
+            // 1. Get Prompt Text (Clean prompt without buttons/params)
+            const clone = breakWordDiv.cloneNode(true) as HTMLElement
+            const buttons = clone.querySelectorAll("button")
+            buttons.forEach(b => b.remove())
+            const images = clone.querySelectorAll("img")
+            images.forEach(i => i.remove())
+            
+            fullText = clone.textContent?.trim() || ""
 
             const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
             if (parent) {
@@ -129,10 +133,16 @@ export class WebDataExtractor implements IExtractor {
                     const valueSpan = btn.querySelector("span.line-clamp-2")
                     
                     if (labelSpan && valueSpan) {
-                        const label = labelSpan.textContent?.trim()
+                        let label = labelSpan.textContent?.trim()
                         const value = valueSpan.textContent?.trim()
                         if (label && value) {
-                            fullText += ` ${label} ${value}`
+                            if (!label.startsWith("--")) {
+                                label = "--" + label
+                            }
+                            const paramText = `${label} ${value}`
+                            if (!fullText.includes(paramText)) {
+                                fullText += ` ${paramText}`
+                            }
                         }
                     } else {
                         // Fallback for Strategy 2
