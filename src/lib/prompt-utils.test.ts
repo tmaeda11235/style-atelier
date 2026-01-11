@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPromptString } from './prompt-utils';
+import { buildPromptString, parsePrompt } from './prompt-utils';
 import type { PromptSegment, StyleCard } from './db-schema';
 
 describe('buildPromptString', () => {
@@ -28,5 +28,20 @@ describe('buildPromptString', () => {
   it('should not mask any parameters', () => {
     const prompt = buildPromptString(segments, params, []);
     expect(prompt).toBe('a cat --ar 16:9 --sref http://example.com/style.jpg --p abcdef');
+  });
+});
+
+describe('parsePrompt', () => {
+  it('should parse --profile as an alias for --p', () => {
+    const prompt = 'a cute cat --profile 12345';
+    const { parameters } = parsePrompt(prompt);
+    expect(parameters.p).toBe('12345');
+  });
+
+  it('should handle multiple spaces and complex values for --profile', () => {
+    const prompt = 'a dog --profile  pcd78d7 owipony  --ar 16:9';
+    const { parameters } = parsePrompt(prompt);
+    expect(parameters.p).toBe('pcd78d7 owipony');
+    expect(parameters.ar).toBe('16:9');
   });
 });
