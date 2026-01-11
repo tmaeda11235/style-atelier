@@ -1,3 +1,9 @@
+---
+noteId: "c44bf950eeb511f0aa7a379a6036fa3e"
+tags: []
+
+---
+
 # Tech Context
 
 ## Technology Stack
