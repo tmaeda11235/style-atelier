@@ -13,14 +13,15 @@ function getPromptFromContainer(img: HTMLImageElement): string {
   const unitContainer = img.closest("#pageScroll > div") || img.closest(".absolute") || img.closest(".group")
   
   if (unitContainer) {
-      // User provided HTML shows the prompt is in a span with "word-break: break-word" style
-      // or class "inline align-baseline" inside the .break-word container.
-      // The first span might be an image thumbnail wrapper.
-      const promptSpan = unitContainer.querySelector('.break-word span[style*="word-break"]') || 
-                         unitContainer.querySelector('.break-word span.align-baseline')
-      
-      if (promptSpan && promptSpan.textContent) {
-          return promptSpan.textContent.trim()
+      // Robust strategy: Find .break-word container, then find the span that is NOT the thumbnail
+      const breakWordDiv = unitContainer.querySelector(".break-word")
+      if (breakWordDiv) {
+          const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
+          // The prompt span usually doesn't contain the thumbnail image directly
+          const targetSpan = spans.find(span => !span.querySelector("img") && span.textContent?.trim())
+          if (targetSpan && targetSpan.textContent) {
+              return targetSpan.textContent.trim()
+          }
       }
   }
 
@@ -28,10 +29,13 @@ function getPromptFromContainer(img: HTMLImageElement): string {
   let current: HTMLElement | null = img.parentElement
   for (let i = 0; i < 5; i++) {
       if (!current) break
-      const promptEl = current.querySelector('.break-word span[style*="word-break"]') || 
-                       current.querySelector('.break-word span.align-baseline')
-      if (promptEl && promptEl.textContent) {
-          return promptEl.textContent.trim()
+      const breakWordDiv = current.querySelector(".break-word")
+      if (breakWordDiv) {
+          const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
+          const targetSpan = spans.find(span => !span.querySelector("img") && span.textContent?.trim())
+          if (targetSpan && targetSpan.textContent) {
+              return targetSpan.textContent.trim()
+          }
       }
       current = current.parentElement
   }
