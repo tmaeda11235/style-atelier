@@ -63,6 +63,25 @@ function SidePanel() {
     }
   }
 
+  const handleCardClick = (prompt: string) => {
+    // Send message to active tab to inject prompt
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0]
+      if (activeTab?.id) {
+        chrome.tabs.sendMessage(activeTab.id, {
+          type: "INJECT_PROMPT",
+          prompt: prompt
+        }).catch(err => {
+            // Ignore connection errors if content script isn't ready or on a different page
+            addLog(`Note: ${err.message || 'Could not send to tab'}`)
+        })
+        addLog(`Sent prompt: ${prompt.substring(0, 20)}...`)
+      } else {
+          addLog("No active tab found")
+      }
+    })
+  }
+
   return (
     <div 
         className={`w-full h-screen flex flex-col font-sans transition-colors ${isDragging ? 'bg-blue-50' : 'bg-slate-50'}`}
@@ -128,7 +147,11 @@ function SidePanel() {
              ) : (
                  <div className="grid grid-cols-2 gap-3">
                      {styleCards.map(card => (
-                         <div key={card.id} className="group relative bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                         <div 
+                            key={card.id} 
+                            onClick={() => handleCardClick(card.prompt)}
+                            className="group relative bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                         >
                              <div className="aspect-square bg-slate-100 overflow-hidden">
                                  <img src={card.imageUrl} alt="Style" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                              </div>
