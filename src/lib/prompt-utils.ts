@@ -61,7 +61,7 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
   return { promptSegments, parameters };
 };
 
-export const buildPromptString = (segments: PromptSegment[], params: StyleCard['parameters']): string => {
+export const buildPromptString = (segments: PromptSegment[], params: StyleCard['parameters'], maskedKeys: (keyof StyleCard['parameters'])[] = []): string => {
   const segmentString = segments
     .map(seg => {
       switch (seg.type) {
@@ -76,15 +76,15 @@ export const buildPromptString = (segments: PromptSegment[], params: StyleCard['
     .join(', ');
 
   const paramParts: string[] = [];
-  if (params.ar) paramParts.push(`--ar ${params.ar}`);
-  if (params.sref?.length) paramParts.push(`--sref ${params.sref.join(' ')}`);
-  if (params.cref?.length) paramParts.push(`--cref ${params.cref.join(' ')}`);
-  if (params.p) paramParts.push(`--p ${params.p}`);
-  if (params.stylize !== undefined) paramParts.push(`--s ${params.stylize}`);
-  if (params.chaos !== undefined) paramParts.push(`--c ${params.chaos}`);
-  if (params.weird !== undefined) paramParts.push(`--w ${params.weird}`);
-  if (params.tile) paramParts.push('--tile');
-  if (params.raw) paramParts.push('--style raw');
+  if (params.ar && !maskedKeys.includes('ar')) paramParts.push(`--ar ${params.ar}`);
+  if (params.sref?.length && !maskedKeys.includes('sref')) paramParts.push(`--sref ${params.sref.join(' ')}`);
+  if (params.cref?.length && !maskedKeys.includes('cref')) paramParts.push(`--cref ${params.cref.join(' ')}`);
+  if (params.p && !maskedKeys.includes('p')) paramParts.push(`--p ${params.p}`);
+  if (params.stylize !== undefined && !maskedKeys.includes('stylize')) paramParts.push(`--s ${params.stylize}`);
+  if (params.chaos !== undefined && !maskedKeys.includes('chaos')) paramParts.push(`--c ${params.chaos}`);
+  if (params.weird !== undefined && !maskedKeys.includes('weird')) paramParts.push(`--w ${params.weird}`);
+  if (params.tile && !maskedKeys.includes('tile')) paramParts.push('--tile');
+  if (params.raw && !maskedKeys.includes('raw')) paramParts.push('--style raw');
   
   return `${segmentString} ${paramParts.join(' ')}`.trim();
 };

@@ -1,3 +1,9 @@
+---
+noteId: "1e9960f0eef211f0a8d7c97a07437227"
+tags: []
+
+---
+
 # Testing
 
 This project uses [Vitest](https://vitest.dev/) for unit and component testing, and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) for testing React components.

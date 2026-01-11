@@ -115,7 +115,14 @@ function SidePanel() {
   }
 
   const handleCardClick = (card: StyleCard) => {
-    const prompt = buildPromptString(card.promptSegments, card.parameters);
+    const maskedKeys: (keyof StyleCard['parameters'])[] = [];
+    if (card.masking.isSrefHidden) {
+      maskedKeys.push('sref');
+    }
+    if (card.masking.isPHidden) {
+      maskedKeys.push('p');
+    }
+    const prompt = buildPromptString(card.promptSegments, card.parameters, maskedKeys);
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0]
       if (activeTab?.id) {

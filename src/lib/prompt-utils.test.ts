@@ -1,0 +1,32 @@
+import { describe, it, expect } from 'vitest';
+import { buildPromptString } from './prompt-utils';
+import type { PromptSegment, StyleCard } from './db-schema';
+
+describe('buildPromptString', () => {
+  const segments: PromptSegment[] = [{ type: 'text', value: 'a cat' }];
+  const params: StyleCard['parameters'] = {
+    sref: ['http://example.com/style.jpg'],
+    p: 'abcdef',
+    ar: '16:9',
+  };
+
+  it('should mask both sref and p', () => {
+    const prompt = buildPromptString(segments, params, ['sref', 'p']);
+    expect(prompt).toBe('a cat --ar 16:9');
+  });
+
+  it('should mask only sref', () => {
+    const prompt = buildPromptString(segments, params, ['sref']);
+    expect(prompt).toBe('a cat --ar 16:9 --p abcdef');
+  });
+
+  it('should mask only p', () => {
+    const prompt = buildPromptString(segments, params, ['p']);
+    expect(prompt).toBe('a cat --ar 16:9 --sref http://example.com/style.jpg');
+  });
+
+  it('should not mask any parameters', () => {
+    const prompt = buildPromptString(segments, params, []);
+    expect(prompt).toBe('a cat --ar 16:9 --sref http://example.com/style.jpg --p abcdef');
+  });
+});
