@@ -12,6 +12,10 @@ export const BubbleEditor: React.FC<BubbleEditorProps> = ({ initialSegments, onC
   const [segments, setSegments] = useState<PromptSegment[]>(initialSegments);
 
   useEffect(() => {
+    setSegments(initialSegments);
+  }, [initialSegments]);
+
+  useEffect(() => {
     if (onChange) {
       onChange(segments);
     }
