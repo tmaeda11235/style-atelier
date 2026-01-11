@@ -199,6 +199,58 @@ function observeDOM() {
   document.querySelectorAll("img").forEach(processImage)
 }
 
+// === Message Listener for Prompt Injection ===
+function injectPrompt(prompt: string) {
+  console.log("Style Atelier: Attempting to inject prompt:", prompt)
+  
+  // Try to find the input area
+  // Priority 1: Specific ID or aria-label often used in chat apps
+  // Note: MJ Alpha/Beta site structure may vary
+  let input = document.getElementById("prompt-textarea") || 
+              document.querySelector('[aria-label="Imagine a prompt"]') ||
+              document.querySelector('[aria-label="Prompt text"]') ||
+              document.querySelector('[data-testid="prompt-input"]') ||
+              document.querySelector('[role="textbox"]') ||
+              document.querySelector('textarea')
+
+  if (input) {
+      // Handle contenteditable div
+      if (input.isContentEditable) {
+          input.focus()
+          // Select all existing text if any? Or just append?
+          // For now, let's append or replace. Typically users want to use this prompt.
+          // Let's replace for simplicity as per "insert its prompt" usually implies setting the prompt.
+          // However, if we want to append, we'd need to check existing content.
+          // Let's try inserting at cursor or replacing.
+          
+          // Using execCommand is deprecated but often works for contenteditable
+          document.execCommand('selectAll', false, undefined)
+          document.execCommand('insertText', false, prompt)
+      } else {
+          // Handle textarea/input
+          // React override hack for input values
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+          if (nativeInputValueSetter) {
+              nativeInputValueSetter.call(input, prompt);
+          } else {
+              (input as HTMLTextAreaElement).value = prompt;
+          }
+          
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus()
+      }
+      console.log("Style Atelier: Prompt injected successfully")
+  } else {
+      console.error("Style Atelier: Could not find chat input area")
+  }
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "INJECT_PROMPT" && message.prompt) {
+      injectPrompt(message.prompt)
+  }
+})
+
 if (document.readyState === "loading") {
     window.addEventListener("DOMContentLoaded", observeDOM)
 } else {
