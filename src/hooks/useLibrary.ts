@@ -24,7 +24,8 @@ export function useLibrary(addLog: (msg: string) => void) {
       const tag = searchTag.toLowerCase()
       result = result.filter((card) => 
         card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
-        card.name.toLowerCase().includes(tag)
+        card.name.toLowerCase().includes(tag) ||
+        card.parameters.sref?.some((url) => url.toLowerCase().includes(tag))
       )
     }
 
