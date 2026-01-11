@@ -13,14 +13,14 @@ function getPromptFromContainer(img: HTMLImageElement): string {
   const unitContainer = img.closest("#pageScroll > div") || img.closest(".absolute") || img.closest(".group")
   
   if (unitContainer) {
-      // Robust strategy: Find .break-word container, then find the span that is NOT the thumbnail
+      // Robust strategy: Find .break-word container, then collect text from all spans that are NOT the thumbnail
       const breakWordDiv = unitContainer.querySelector(".break-word")
       if (breakWordDiv) {
           const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-          // The prompt span usually doesn't contain the thumbnail image directly
-          const targetSpan = spans.find(span => !span.querySelector("img") && span.textContent?.trim())
-          if (targetSpan && targetSpan.textContent) {
-              return targetSpan.textContent.trim()
+          // Collect text from all valid spans (prompt text + parameters might be split)
+          const validSpans = spans.filter(span => !span.querySelector("img") && span.textContent?.trim())
+          if (validSpans.length > 0) {
+              return validSpans.map(s => s.textContent).join(" ").trim()
           }
       }
   }
@@ -32,9 +32,9 @@ function getPromptFromContainer(img: HTMLImageElement): string {
       const breakWordDiv = current.querySelector(".break-word")
       if (breakWordDiv) {
           const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-          const targetSpan = spans.find(span => !span.querySelector("img") && span.textContent?.trim())
-          if (targetSpan && targetSpan.textContent) {
-              return targetSpan.textContent.trim()
+          const validSpans = spans.filter(span => !span.querySelector("img") && span.textContent?.trim())
+          if (validSpans.length > 0) {
+              return validSpans.map(s => s.textContent).join(" ").trim()
           }
       }
       current = current.parentElement
