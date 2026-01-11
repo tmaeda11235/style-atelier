@@ -30,7 +30,6 @@ export function SidePanelLayout({
       }`}
     >
       <div className="p-4 bg-white shadow-sm z-10">
-        <h1 className="text-xl font-bold">Style Atelier</h1>
         <div className="mt-2">
           <nav className="-mb-px flex space-x-4 border-b border-slate-200">
             <button

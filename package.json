@@ -1,6 +1,6 @@
 {
-  "name": "temp-init",
-  "displayName": "Temp init",
+  "name": "ml-style-atelier",
+  "displayName": "Style Atelier",
   "version": "0.0.1",
   "description": "Style Atelier is a prompt manager for midjourney.",
   "author": "tmaeda11235@gmail.com",
