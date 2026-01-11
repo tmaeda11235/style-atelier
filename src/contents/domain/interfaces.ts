@@ -1,16 +1,11 @@
-export interface IMJElementData {
-  src: string
-  prompt: string
-  jobId?: string
-  source: string
-}
+import type { HistoryItem } from "../../../lib/db-schema";
 
 export interface IProcessor {
   process(element: HTMLElement): void
 }
 
 export interface IExtractor {
-  extract(element: HTMLElement): IMJElementData | null
+  extract(element: HTMLElement): HistoryItem | null
 }
 
 export interface IActionHandler {

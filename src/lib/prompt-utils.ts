@@ -1,85 +1,90 @@
+import type { PromptSegment, StyleCard } from "./db-schema";
 
-export type BubbleType = 'fixed' | 'slot';
+const PARAM_REGEX = /--([a-z0-9-]+)\s*([^--]*)/g;
 
-export interface BubbleData {
-  id: string;
-  text: string;
-  type: BubbleType;
-}
+export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegment[], parameters: StyleCard['parameters'] } => {
+  const parameters: StyleCard['parameters'] = {};
+  let promptText = fullCommand;
 
-export const splitPromptToBubbles = (prompt: string): BubbleData[] => {
-  if (!prompt) return [];
+  // Extract parameters
+  const matches = [...fullCommand.matchAll(PARAM_REGEX)];
+  matches.forEach(match => {
+    const key = match[1].trim();
+    const value = match[2] ? match[2].trim() : '';
+    promptText = promptText.replace(match[0], ''); // Remove param from prompt text
 
-  // Regex to find {{slot}} style placeholders
-  const slotRegex = /\{\{([^}]+)\}\}/g;
-  const parts: { text: string; type: BubbleType }[] = [];
-  let lastIndex = 0;
-  let match;
-
-  // Find all slots and add them and the text in between
-  while ((match = slotRegex.exec(prompt)) !== null) {
-    // Add text before the slot
-    if (match.index > lastIndex) {
-      parts.push({ text: prompt.substring(lastIndex, match.index), type: 'fixed' });
-    }
-    // Add the slot itself
-    parts.push({ text: match[1], type: 'slot' });
-    lastIndex = slotRegex.lastIndex;
-  }
-
-  // Add any remaining text after the last slot
-  if (lastIndex < prompt.length) {
-    parts.push({ text: prompt.substring(lastIndex), type: 'fixed' });
-  }
-
-  // Now, split the 'fixed' parts into smaller bubbles
-  const finalBubbles: BubbleData[] = [];
-  parts.forEach(part => {
-    if (part.type === 'slot') {
-      finalBubbles.push({ ...part, id: crypto.randomUUID() });
-    } else {
-      const paramRegex = /--(\w+)\s+([^--]+)/g;
-      const params: {text: string, start: number, end: number}[] = [];
-      let paramMatch;
-      while ((paramMatch = paramRegex.exec(part.text)) !== null) {
-        params.push({
-          text: paramMatch[0].trim(),
-          start: paramMatch.index,
-          end: paramRegex.lastIndex
-        });
-      }
-
-      let lastIdx = 0;
-      for (const p of params) {
-        const textBefore = part.text.substring(lastIdx, p.start);
-        finalBubbles.push(...textBefore.split(/,|\n/).map(t => t.trim()).filter(t => t.length > 0).map(t => ({ text: t, type: 'fixed', id: crypto.randomUUID() })));
-        finalBubbles.push({ text: p.text, type: 'fixed', id: crypto.randomUUID() });
-        lastIdx = p.end;
-      }
-      const textAfter = part.text.substring(lastIdx);
-      finalBubbles.push(...textAfter.split(/,|\n/).map(t => t.trim()).filter(t => t.length > 0).map(t => ({ text: t, type: 'fixed', id: crypto.randomUUID() })));
+    switch (key) {
+      case 'ar':
+        parameters.ar = value;
+        break;
+      case 'sref':
+        parameters.sref = value.split(/\s+/);
+        break;
+      case 'cref':
+        parameters.cref = value.split(/\s+/);
+        break;
+      case 'p':
+        parameters.p = value;
+        break;
+      case 'stylize':
+      case 's':
+        parameters.stylize = parseInt(value, 10);
+        break;
+      case 'chaos':
+      case 'c':
+        parameters.chaos = parseInt(value, 10);
+        break;
+      case 'weird':
+      case 'w':
+        parameters.weird = parseInt(value, 10);
+        break;
+      case 'tile':
+        parameters.tile = true;
+        break;
+      case 'style':
+        if (value === 'raw') {
+          parameters.raw = true;
+        }
+        break;
     }
   });
 
+  // Create prompt segments from the remaining text
+  const promptSegments: PromptSegment[] = promptText
+    .split(/,/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(value => ({ type: 'text', value }));
+  
+  // TODO: Implement slot and chip parsing in the future
 
-  return finalBubbles;
+  return { promptSegments, parameters };
 };
 
-export const joinBubblesToPrompt = (bubbles: BubbleData[]): string => {
-  const mainPromptParts: string[] = [];
+export const buildPromptString = (segments: PromptSegment[], params: StyleCard['parameters']): string => {
+  const segmentString = segments
+    .map(seg => {
+      switch (seg.type) {
+        case 'text':
+          return seg.value;
+        case 'slot':
+          return `{{${seg.label}}}`; // or seg.default
+        case 'chip':
+          return ``; // chips are handled as params
+      }
+    })
+    .join(', ');
+
   const paramParts: string[] = [];
-
-  bubbles.forEach(bubble => {
-    const text = bubble.type === 'slot' ? `{{${bubble.text}}}` : bubble.text;
-    if (text.startsWith('--')) {
-      paramParts.push(text);
-    } else {
-      mainPromptParts.push(text);
-    }
-  });
-
-  const mainPrompt = mainPromptParts.join(', ');
-  const params = paramParts.join(' ');
-
-  return `${mainPrompt} ${params}`.trim();
+  if (params.ar) paramParts.push(`--ar ${params.ar}`);
+  if (params.sref?.length) paramParts.push(`--sref ${params.sref.join(' ')}`);
+  if (params.cref?.length) paramParts.push(`--cref ${params.cref.join(' ')}`);
+  if (params.p) paramParts.push(`--p ${params.p}`);
+  if (params.stylize !== undefined) paramParts.push(`--s ${params.stylize}`);
+  if (params.chaos !== undefined) paramParts.push(`--c ${params.chaos}`);
+  if (params.weird !== undefined) paramParts.push(`--w ${params.weird}`);
+  if (params.tile) paramParts.push('--tile');
+  if (params.raw) paramParts.push('--style raw');
+  
+  return `${segmentString} ${paramParts.join(' ')}`.trim();
 };

@@ -1,8 +1,9 @@
-import type { IExtractor, IMJElementData } from "../interfaces"
+import type { IExtractor } from "../interfaces"
+import type { HistoryItem } from "../../../lib/db-schema";
 import { extractJobIdFromUrl, cleanPromptBody, extractParameters } from "../../../lib/mj-parser"
 
 export class WebDataExtractor implements IExtractor {
-  extract(element: HTMLElement): IMJElementData | null {
+  extract(element: HTMLElement): HistoryItem | null {
     const img = element as HTMLImageElement
     if (img.tagName !== "IMG") return null
 
@@ -25,11 +26,15 @@ export class WebDataExtractor implements IExtractor {
         if (id) jobId = id
     }
 
+    if (!jobId) {
+      return null;
+    }
+
     return {
-      src: img.src,
-      prompt: prompt,
-      jobId: jobId,
-      source: "midjourney-web"
+      id: jobId,
+      fullCommand: prompt,
+      imageUrl: img.src,
+      timestamp: Date.now(),
     }
   }
 
@@ -49,7 +54,7 @@ export class WebDataExtractor implements IExtractor {
         
         // Use innerText to preserve formatting/newlines which regex relies on
         // and to get automatic spacing between block elements.
-        const fullText = (paramContainer as HTMLElement).innerText || paramContainer.textContent || ""
+        const fullText = (paramContainer as HTMLElement).innerText || param.textContent || ""
         const params = extractParameters(fullText)
 
         return [body, ...params].filter(Boolean).join(" ").trim()

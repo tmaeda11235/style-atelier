@@ -1,37 +1,40 @@
-
 import React, { useState, useEffect } from 'react';
 
 import { Bubble } from './Bubble';
-import { type BubbleData, splitPromptToBubbles } from '../../lib/prompt-utils';
+import type { PromptSegment } from '../../lib/db-schema';
 
 interface BubbleEditorProps {
-  initialPrompt: string;
-  onChange?: (bubbles: BubbleData[]) => void;
+  initialSegments: PromptSegment[];
+  onChange?: (segments: PromptSegment[]) => void;
 }
 
-export const BubbleEditor: React.FC<BubbleEditorProps> = ({ initialPrompt, onChange }) => {
-  const [bubbles, setBubbles] = useState<BubbleData[]>(splitPromptToBubbles(initialPrompt));
+export const BubbleEditor: React.FC<BubbleEditorProps> = ({ initialSegments, onChange }) => {
+  const [segments, setSegments] = useState<PromptSegment[]>(initialSegments);
 
   useEffect(() => {
     if (onChange) {
-      onChange(bubbles);
+      onChange(segments);
     }
-  }, [bubbles, onChange]);
+  }, [segments, onChange]);
 
-  const handleBubbleClick = (id: string) => {
-      console.log('Bubble clicked:', id);
-      setBubbles(bubbles.map(b => {
-          if (b.id === id) {
-              return {...b, type: b.type === 'fixed' ? 'slot' : 'fixed'}
-          }
-          return b;
-      }))
+  const handleBubbleClick = (index: number) => {
+    setSegments(segments.map((seg, i) => {
+      if (i === index) {
+        if (seg.type === 'text') {
+          return { type: 'slot', label: seg.value, default: seg.value };
+        }
+        if (seg.type === 'slot') {
+          return { type: 'text', value: seg.label };
+        }
+      }
+      return seg;
+    }));
   }
 
   return (
     <div className="flex flex-wrap gap-2 p-4 bg-slate-100 rounded-lg">
-      {bubbles.map(bubble => (
-        <Bubble key={bubble.id} bubble={bubble} onClick={() => handleBubbleClick(bubble.id)} />
+      {segments.map((segment, index) => (
+        <Bubble key={index} segment={segment} onClick={() => handleBubbleClick(index)} />
       ))}
     </div>
   );
