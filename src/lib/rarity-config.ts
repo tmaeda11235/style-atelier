@@ -21,7 +21,7 @@ export const RARITY_CONFIG = {
     bgClass: 'bg-purple-500',
     borderClass: 'border-purple-500',
     textClass: 'text-white',
-    glowClass: 'shadow-[0_0_15px_rgba(168,85,247,0.6)]',
+    glowClass: 'shadow-[0_0_20px_rgba(168,85,247,0.8)] shadow-purple-500/50',
   },
   Legendary: {
     name: 'Legendary',
