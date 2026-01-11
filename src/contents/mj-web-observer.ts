@@ -145,7 +145,15 @@ function processImage(img: HTMLImageElement) {
 
   img.addEventListener("dragstart", (e) => {
     // Attempt to extract prompt
-    const prompt = getPromptFromContainer(img) || img.alt || ""
+    let prompt = getPromptFromContainer(img)
+    
+    // Fallback logic: If extracted prompt seems missing parameters (no '--') 
+    // but alt text has them, prefer alt text.
+    if ((!prompt || !prompt.includes('--')) && img.alt && img.alt.includes('--')) {
+        prompt = img.alt
+    } else if (!prompt) {
+        prompt = img.alt || ""
+    }
     
     // Attempt to extract Job ID from parent link
     let jobId = ""
