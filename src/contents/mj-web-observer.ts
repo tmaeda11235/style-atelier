@@ -26,14 +26,17 @@ function getPromptFromContainer(img: HTMLImageElement): string {
           }
 
           // 2. Get Parameters (Sref etc) from sibling container
-          const parent = breakWordDiv.parentElement
+          // Use closest to find common parent reliably (e.g. .overflow-clip or .group)
+          const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
+          
           if (parent) {
               // Debug logs
-              console.log("[SA Debug] Prompt Parent:", parent)
+              console.log("[SA Debug] Common Parent:", parent)
               console.log("[SA Debug] Parent Classes:", parent.className)
 
               // Try to find the parameter container with various strategies
               // User reported: div.gap-3.flex.flex-col...
+              // Search specifically for container with gap-3 that is likely to hold buttons
               const paramContainer = parent.querySelector("div.gap-3") || 
                                      parent.querySelector('div[class*="gap-3"]')
               
