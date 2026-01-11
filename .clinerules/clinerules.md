@@ -27,6 +27,10 @@
 ## Style
 - **Documentation Style**: Prioritize **conciseness** over detail or comprehensiveness. Avoid verbose explanations.
 
+- **Permission Guidelines**: Approval is not required for changes that can be reverted via Git. Additionally, you are free to execute npm and gh commands at your discretion.
+
+- **Pull Request Requirements**: Pull requests must include unit tests alongside the implementation code.
+
 ## Task Management & Workflow
 
 ### Case 1: When an Issue Number is Provided (New Task)
