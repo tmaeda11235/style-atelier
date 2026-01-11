@@ -7,10 +7,11 @@
 - **Local Database**: [Dexie.js](https://dexie.org/) - Wrapper for IndexedDB.
 
 ## Key Libraries
-- **Image Processing**: Canvas API (Native).
+- **Image Processing**: Canvas API (Native) / [satori](https://github.com/vercel/satori) (for card layout generation).
 - **Metadata/Exif**: `piexifjs` - For embedding/extracting JSON in images.
 - **QR Codes**: `jsQR` - For scanning/generating QR codes on cards.
 - **Search**: `FlexSearch.js` - High-performance client-side search.
+- **NLP/Parser**: `compromise` / `ja-compromise` - For prompt analysis and tagging.
 
 ## Development Environment
 - **Node.js**: LTS version recommended.
