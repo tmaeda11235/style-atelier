@@ -246,8 +246,12 @@ function injectPrompt(prompt: string) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Style Atelier: Message received", message)
   if (message.type === "INJECT_PROMPT" && message.prompt) {
       injectPrompt(message.prompt)
+      sendResponse({ status: "success" })
+  } else {
+      sendResponse({ status: "unknown_message" })
   }
 })
 
