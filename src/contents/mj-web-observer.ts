@@ -54,6 +54,19 @@ function getPromptFromContainer(img: HTMLImageElement): string {
                           // Clean up label (remove -- if duplicated, though usually it's correct)
                           fullText += ` ${label} ${value}`
                       }
+                  } else {
+                      // Fallback: Try to extract parameter from button text if structure doesn't match
+                      // This handles cases like --sref where the structure might be different
+                      const rawText = btn.textContent?.trim() || ""
+                      // Simple heuristic: if it contains "--", treat it as a parameter
+                      if (rawText.includes('--')) {
+                          // Remove newlines and excessive spaces
+                          const cleanText = rawText.replace(/\s+/g, ' ').trim()
+                          // Avoid duplicates if we can, but appending is safer than missing it
+                          if (!fullText.includes(cleanText)) {
+                              fullText += ` ${cleanText}`
+                          }
+                      }
                   }
               })
           }
@@ -96,6 +109,15 @@ function getPromptFromContainer(img: HTMLImageElement): string {
                       const value = valueSpan.textContent?.trim()
                       if (label && value) {
                           fullText += ` ${label} ${value}`
+                      }
+                  } else {
+                      // Fallback for Strategy 2
+                      const rawText = btn.textContent?.trim() || ""
+                      if (rawText.includes('--')) {
+                          const cleanText = rawText.replace(/\s+/g, ' ').trim()
+                          if (!fullText.includes(cleanText)) {
+                              fullText += ` ${cleanText}`
+                          }
                       }
                   }
               })
