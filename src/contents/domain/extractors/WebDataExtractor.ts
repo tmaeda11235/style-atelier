@@ -46,12 +46,19 @@ export class WebDataExtractor implements IExtractor {
             // 1. Get Prompt Text (Clean prompt without buttons/params)
             // Clone the entire container to safely remove button elements (parameters) before extracting text
             const clone = breakWordDiv.cloneNode(true) as HTMLElement
-            // Remove buttons (parameters) to get pure prompt text
-            const buttons = clone.querySelectorAll("button")
-            buttons.forEach(b => b.remove())
-            // Remove images (thumbnails)
-            const images = clone.querySelectorAll("img")
-            images.forEach(i => i.remove())
+            
+            // Aggressively remove non-text elements that might be parameters or duplicates
+            // Including 'a' tags because parameters can be links
+            // Including '.hidden' to avoid extracting hidden text (responsive duplicates)
+            const unwantedSelectors = [
+                "button", 
+                "a", 
+                "img", 
+                ".hidden", 
+                "[aria-hidden='true']"
+            ]
+            const unwanted = clone.querySelectorAll(unwantedSelectors.join(","))
+            unwanted.forEach(el => el.remove())
             
             fullText = clone.textContent?.trim() || ""
 
@@ -60,6 +67,8 @@ export class WebDataExtractor implements IExtractor {
             const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
             if (parent) {
                 const allButtons = parent.querySelectorAll("button")
+                const processedParams = new Set<string>()
+
                 allButtons.forEach(btn => {
                     // Midjourney parameter buttons typically have this structure:
                     // span.opacity-80 (Label: --ar)
@@ -80,22 +89,25 @@ export class WebDataExtractor implements IExtractor {
                                 label = label.substring(2)
                             }
                             
+                            const paramKey = `${label}:${value}`
+                            if (processedParams.has(paramKey)) return // Skip duplicate button
+                            processedParams.add(paramKey)
+
                             const paramText = `${label} ${value}`
                             // Avoid simple duplicates if the exact string is already in fullText
-                            // (Though usually prompt text and params are distinct)
                             if (!fullText.includes(paramText)) {
                                 fullText += ` ${paramText}`
                             }
                         }
                     } else {
                         // Fallback: Try to extract parameter from button text if structure doesn't match
-                        // This handles cases like --sref where the structure might be different
                         const rawText = btn.textContent?.trim() || ""
-                        // Simple heuristic: if it contains "--", treat it as a parameter
                         if (rawText.includes('--')) {
-                            // Remove newlines and excessive spaces
                             const cleanText = rawText.replace(/\s+/g, ' ').trim()
-                            // Avoid duplicates if we can, but appending is safer than missing it
+                            
+                            if (processedParams.has(cleanText)) return
+                            processedParams.add(cleanText)
+
                             if (!fullText.includes(cleanText)) {
                                 fullText += ` ${cleanText}`
                             }
@@ -118,16 +130,24 @@ export class WebDataExtractor implements IExtractor {
             
             // 1. Get Prompt Text (Clean prompt without buttons/params)
             const clone = breakWordDiv.cloneNode(true) as HTMLElement
-            const buttons = clone.querySelectorAll("button")
-            buttons.forEach(b => b.remove())
-            const images = clone.querySelectorAll("img")
-            images.forEach(i => i.remove())
+            
+            const unwantedSelectors = [
+                "button", 
+                "a", 
+                "img", 
+                ".hidden", 
+                "[aria-hidden='true']"
+            ]
+            const unwanted = clone.querySelectorAll(unwantedSelectors.join(","))
+            unwanted.forEach(el => el.remove())
             
             fullText = clone.textContent?.trim() || ""
 
             const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
             if (parent) {
                 const allButtons = parent.querySelectorAll("button")
+                const processedParams = new Set<string>()
+
                 allButtons.forEach(btn => {
                     const labelSpan = btn.querySelector("span.opacity-80") || btn.querySelector("span.text-light-500")
                     const valueSpan = btn.querySelector("span.line-clamp-2")
@@ -139,6 +159,14 @@ export class WebDataExtractor implements IExtractor {
                             if (!label.startsWith("--")) {
                                 label = "--" + label
                             }
+                            if (label.startsWith("----")) {
+                                label = label.substring(2)
+                            }
+
+                            const paramKey = `${label}:${value}`
+                            if (processedParams.has(paramKey)) return
+                            processedParams.add(paramKey)
+
                             const paramText = `${label} ${value}`
                             if (!fullText.includes(paramText)) {
                                 fullText += ` ${paramText}`
@@ -149,6 +177,10 @@ export class WebDataExtractor implements IExtractor {
                         const rawText = btn.textContent?.trim() || ""
                         if (rawText.includes('--')) {
                             const cleanText = rawText.replace(/\s+/g, ' ').trim()
+                            
+                            if (processedParams.has(cleanText)) return
+                            processedParams.add(cleanText)
+
                             if (!fullText.includes(cleanText)) {
                                 fullText += ` ${cleanText}`
                             }
