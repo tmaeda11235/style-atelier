@@ -12,6 +12,12 @@ interface MintingViewProps {
   setIsPHidden: (hidden: boolean) => void
   onCancelMinting: () => void
   onSaveMintedCard: () => Promise<void>
+  // Auto-naming props
+  suggestedKeywords: string[]
+  selectedKeywords: string[]
+  setSelectedKeywords: (keywords: string[]) => void
+  customName: string
+  setCustomName: (name: string) => void
 }
 
 export function MintingView({
@@ -24,7 +30,25 @@ export function MintingView({
   setIsPHidden,
   onCancelMinting,
   onSaveMintedCard,
+  suggestedKeywords,
+  selectedKeywords,
+  setSelectedKeywords,
+  customName,
+  setCustomName,
 }: MintingViewProps) {
+  const toggleKeyword = (keyword: string) => {
+    if (selectedKeywords.includes(keyword)) {
+      setSelectedKeywords(selectedKeywords.filter((k) => k !== keyword))
+    } else {
+      setSelectedKeywords([...selectedKeywords, keyword])
+    }
+  }
+
+  const currentName =
+    selectedKeywords.length > 0
+      ? `${selectedKeywords.join(" ")}${customName ? ` (${customName})` : ""}`
+      : customName || "New Card"
+
   return (
     <div className="absolute inset-0 bg-slate-50 z-20 flex flex-col">
       <div className="p-4 bg-white shadow-sm">
@@ -34,6 +58,50 @@ export function MintingView({
         {mintingItem && (
           <>
             <img src={mintingItem.imageUrl} className="w-full h-auto rounded-lg mb-4 shadow-md" />
+
+            <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
+              <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Card Identity</h3>
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-slate-500 mb-1">Preview Name</label>
+                <div className="p-2 bg-slate-100 rounded border text-sm font-bold text-slate-800 min-h-[2.5rem] flex items-center">
+                  {currentName}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-slate-500 mb-2">Select Keywords</label>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedKeywords.map((kw, i) => {
+                    const isSelected = selectedKeywords.includes(kw)
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => toggleKeyword(kw)}
+                        className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                          isSelected
+                            ? "bg-blue-500 text-white shadow-sm"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        {kw}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Custom Name / Note</label>
+                <input
+                  type="text"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder="Add details..."
+                  className="w-full p-2 text-sm border rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            </div>
+
             <BubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} />
           </>
         )}
