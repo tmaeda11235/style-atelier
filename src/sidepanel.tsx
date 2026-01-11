@@ -21,29 +21,36 @@ function SidePanel() {
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    console.log("DnD: Drop event detected", e)
     setIsDragging(false)
     addLog("Drop event received")
 
-    const parsed = parseDroppedData(e.dataTransfer)
-    
-    if (parsed) {
-        addLog(`Parsed data: ${parsed.jobId || 'No Job ID'}`)
-        setDroppedData(parsed)
+    try {
+      const parsed = parseDroppedData(e.dataTransfer)
+      console.log("DnD: Parsed data", parsed)
+      
+      if (parsed) {
+          addLog(`Parsed data: ${parsed.jobId || 'No Job ID'}`)
+          setDroppedData(parsed)
 
-        try {
-            await db.addStyleCard({
-                imageUrl: parsed.src,
-                prompt: parsed.prompt,
-                jobId: parsed.jobId,
-                source: parsed.source
-            })
-            addLog(" StyleCard saved to DB!")
-        } catch (err) {
-            console.error(err)
-            addLog(`L Save failed: ${err}`)
-        }
-    } else {
-        addLog("Could not parse dropped data")
+          try {
+              await db.addStyleCard({
+                  imageUrl: parsed.src,
+                  prompt: parsed.prompt,
+                  jobId: parsed.jobId,
+                  source: parsed.source
+              })
+              addLog(" StyleCard saved to DB!")
+          } catch (err) {
+              console.error(err)
+              addLog(`L Save failed: ${err}`)
+          }
+      } else {
+          addLog("Could not parse dropped data")
+      }
+    } catch (error) {
+      console.error("DnD: Critical error", error)
+      addLog(`CRITICAL ERROR: ${error}`)
     }
   }
 
