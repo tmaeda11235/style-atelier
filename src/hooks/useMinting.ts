@@ -70,7 +70,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       tier: selectedRarity,
       isFavorite: false,
       usageCount: 0,
-      tags: [],
+      tags: [...selectedKeywords],
       dominantColor: "#ffffff",
       thumbnailData: mintingItem.imageUrl,
       frameId: "default",
