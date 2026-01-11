@@ -1,13 +1,20 @@
+
 import { useState } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import "./style.css"
+import { BubbleEditor } from "./components/bubble/BubbleEditor"
 import { db } from "./lib/db"
 import { parseDroppedData, type ParsedData } from "./lib/mj-parser"
+import { joinBubblesToPrompt, type BubbleData } from "./lib/prompt-utils"
 
 function SidePanel() {
   const [isDragging, setIsDragging] = useState(false)
   const [droppedData, setDroppedData] = useState<ParsedData | null>(null)
   const [logs, setLogs] = useState<string[]>([])
+  const [editingCardId, setEditingCardId] = useState<number | null>(null)
+  const [editingPrompt, setEditingPrompt] = useState<string | null>(null)
+  const [editedBubbles, setEditedBubbles] = useState<BubbleData[]>([])
+  const [newCardBubbles, setNewCardBubbles] = useState<BubbleData[]>([])
 
   const styleCards = useLiveQuery(() => db.styleCards.orderBy('createdAt').reverse().toArray())
 
@@ -44,27 +51,46 @@ function SidePanel() {
     }
   }
 
-  const handleSave = async () => {
+  const handleSaveNewCard = async () => {
     if (!droppedData) return
+
+    const finalPrompt = joinBubblesToPrompt(newCardBubbles);
 
     try {
         await db.addStyleCard({
             imageUrl: droppedData.src,
-            prompt: droppedData.prompt,
+            prompt: finalPrompt,
             jobId: droppedData.jobId,
             source: droppedData.source
         })
         const count = await db.styleCards.count()
         addLog(`  StyleCard saved to DB! Total: ${count}`)
         setDroppedData(null)
+        setNewCardBubbles([])
     } catch (err) {
         console.error(err)
         addLog(`L Save failed: ${err}`)
     }
   }
+  
+  const handleEditCard = (cardId: number, prompt: string) => {
+    setEditingCardId(cardId);
+    setEditingPrompt(prompt);
+  }
+
+  const handleSaveEditedCard = async () => {
+    if (editingCardId === null) return;
+
+    const finalPrompt = joinBubblesToPrompt(editedBubbles);
+    await db.styleCards.update(editingCardId, { prompt: finalPrompt });
+    addLog(`Card ${editingCardId} updated!`);
+    setEditingCardId(null);
+    setEditingPrompt(null);
+    setEditedBubbles([]);
+  }
+
 
   const handleCardClick = (prompt: string) => {
-    // Send message to active tab to inject prompt
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0]
       if (activeTab?.id) {
@@ -72,7 +98,6 @@ function SidePanel() {
           type: "INJECT_PROMPT",
           prompt: prompt
         }).catch(err => {
-            // Ignore connection errors if content script isn't ready or on a different page
             addLog(`Note: ${err.message || 'Could not send to tab'}`)
         })
         addLog(`Sent prompt: ${prompt.substring(0, 20)}...`)
@@ -93,6 +118,17 @@ function SidePanel() {
           <h1 className="text-xl font-bold text-slate-900">Style Atelier</h1>
       </div>
       
+      {editingPrompt && (
+        <div className="p-4 border-b border-slate-200">
+          <BubbleEditor initialPrompt={editingPrompt} onChange={setEditedBubbles} />
+          <div className="mt-2 flex justify-end">
+            <button onClick={handleSaveEditedCard} className="text-xs text-slate-500 hover:text-slate-700">
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto p-4">
         {droppedData ? (
             <div className="p-3 border rounded bg-white shadow-sm w-full animate-in fade-in zoom-in mb-6">
@@ -105,7 +141,7 @@ function SidePanel() {
                         Close
                     </button>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 mb-4">
                     <div className="relative w-24 h-24 bg-slate-100 rounded overflow-hidden flex-shrink-0">
                         <img src={droppedData.src} alt="Dropped" className="w-full h-full object-cover" />
                     </div>
@@ -117,16 +153,14 @@ function SidePanel() {
                                 </code>
                             </div>
                         )}
-                        {droppedData.prompt && (
-                            <p className="text-xs text-slate-600 line-clamp-3">
-                                {droppedData.prompt}
-                            </p>
-                        )}
                     </div>
                 </div>
+                {droppedData.prompt && (
+                    <BubbleEditor initialPrompt={droppedData.prompt} onChange={setNewCardBubbles} />
+                )}
                 <div className="mt-3 flex justify-end">
                     <button 
-                        onClick={handleSave}
+                        onClick={handleSaveNewCard}
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                     >
                         Save & Continue
@@ -149,13 +183,12 @@ function SidePanel() {
                      {styleCards.map(card => (
                          <div 
                             key={card.id} 
-                            onClick={() => handleCardClick(card.prompt)}
-                            className="group relative bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                            className="group relative bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                          >
-                             <div className="aspect-square bg-slate-100 overflow-hidden">
+                             <div className="aspect-square bg-slate-100 overflow-hidden cursor-pointer" onClick={() => handleCardClick(card.prompt)}>
                                  <img src={card.imageUrl} alt="Style" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                              </div>
-                             <div className="p-2">
+                             <div className="p-2 border-t border-slate-100">
                                  {card.jobId && (
                                      <p className="text-[10px] text-slate-500 font-mono truncate mb-1" title={card.jobId}>{card.jobId}</p>
                                  )}
@@ -163,6 +196,9 @@ function SidePanel() {
                                      {card.prompt}
                                  </p>
                              </div>
+                             <button onClick={() => handleEditCard(card.id, card.prompt)} className="absolute bottom-2 right-2 text-[10px] bg-white/50 backdrop-blur-sm px-1.5 py-0.5 rounded-full border-slate-200 border text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-colors">
+                                Edit
+                             </button>
                          </div>
                      ))}
                  </div>
