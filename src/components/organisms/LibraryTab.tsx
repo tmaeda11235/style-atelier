@@ -16,6 +16,7 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
     setRarityFilter,
     sortBy,
     setSortBy,
+    allSrefs,
   } = useLibrary(addLog)
 
   return (
@@ -24,11 +25,17 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
       <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
         <input
           type="text"
-          placeholder="Search by tag or name..."
+          placeholder="Search by tag, name or sref..."
+          list="sref-options"
           value={searchTag}
           onChange={(e) => setSearchTag(e.target.value)}
           className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
+        <datalist id="sref-options">
+          {allSrefs.map((url) => (
+            <option key={url} value={url} />
+          ))}
+        </datalist>
         <div className="flex gap-2">
           <select
             value={rarityFilter}

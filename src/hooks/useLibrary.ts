@@ -14,6 +14,15 @@ export function useLibrary(addLog: (msg: string) => void) {
 
   const allCards = useLiveQuery(() => db.styleCards.toArray())
 
+  const allSrefs = useMemo(() => {
+    if (!allCards) return []
+    const srefs = new Set<string>()
+    allCards.forEach((card) => {
+      card.parameters.sref?.forEach((url) => srefs.add(url))
+    })
+    return Array.from(srefs)
+  }, [allCards])
+
   const filteredAndSortedCards = useMemo(() => {
     if (!allCards) return []
 
@@ -92,5 +101,6 @@ export function useLibrary(addLog: (msg: string) => void) {
     setRarityFilter,
     sortBy,
     setSortBy,
+    allSrefs,
   }
 }
