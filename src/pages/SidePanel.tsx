@@ -26,6 +26,11 @@ function SidePanelPage() {
     handleStartMinting,
     handleSaveMintedCard,
     setMintingItem,
+    suggestedKeywords,
+    selectedKeywords,
+    setSelectedKeywords,
+    customName,
+    setCustomName,
   } = useMinting(addLog, setActiveTab)
 
   const handleResetDb = async () => {
@@ -64,6 +69,11 @@ function SidePanelPage() {
             setIsPHidden={setIsPHidden}
             onCancelMinting={() => setMintingItem(null)}
             onSaveMintedCard={handleSaveMintedCard}
+            suggestedKeywords={suggestedKeywords}
+            selectedKeywords={selectedKeywords}
+            setSelectedKeywords={setSelectedKeywords}
+            customName={customName}
+            setCustomName={setCustomName}
           />
         )}
         {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
