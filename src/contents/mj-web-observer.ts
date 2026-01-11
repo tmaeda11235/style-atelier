@@ -6,15 +6,15 @@ export const config: PlasmoCSConfig = {
   run_at: "document_start"
 }
 
-const DEBUG_MODE = false
+const DEBUG_MODE = true // Re-enable for debugging
 
 function getPromptFromContainer(img: HTMLImageElement): string {
   // Strategy 1: Look for common container under #pageScroll (User provided selector)
   const unitContainer = img.closest("#pageScroll > div") || img.closest(".absolute") || img.closest(".group")
   
   if (unitContainer) {
-      // Robust strategy: Find .break-word container (Prompt) AND .gap-3 container (Parameters)
       const breakWordDiv = unitContainer.querySelector(".break-word")
+      
       if (breakWordDiv) {
           let fullText = ""
 
@@ -26,14 +26,25 @@ function getPromptFromContainer(img: HTMLImageElement): string {
           }
 
           // 2. Get Parameters (Sref etc) from sibling container
-          // Selector hint: #pageScroll ... > div.gap-3 ...
           const parent = breakWordDiv.parentElement
           if (parent) {
-              const paramContainer = parent.querySelector("div.gap-3")
+              // Debug logs
+              console.log("[SA Debug] Prompt Parent:", parent)
+              console.log("[SA Debug] Parent Classes:", parent.className)
+
+              // Try to find the parameter container with various strategies
+              // User reported: div.gap-3.flex.flex-col...
+              const paramContainer = parent.querySelector("div.gap-3") || 
+                                     parent.querySelector('div[class*="gap-3"]')
+              
+              console.log("[SA Debug] Param Container Candidate:", paramContainer)
+
               if (paramContainer && paramContainer.textContent) {
-                  // Only append if it looks like parameters (starts with --) or just append everything safely
                   const params = paramContainer.textContent.trim()
+                  console.log("[SA Debug] Param Text Found:", params)
                   if (params) fullText += " " + params
+              } else {
+                  console.warn("[SA Debug] Param Container NOT found or empty")
               }
           }
 
