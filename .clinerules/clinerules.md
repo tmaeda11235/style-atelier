@@ -1,7 +1,30 @@
 # Clinerules
 
 ## Memory Bank & Context
-- **Project Brief**: Retrieve the project overview from `memory-bank/projectbrief.md`.
+1. `projectbrief.md`
+   - Foundation document that shapes all other files
+   - Created at project start if it doesn't exist
+   - Defines core requirements and goals
+   - Source of truth for project scope
+2. `productContext.md`
+   - Why this project exists
+   - Problems it solves
+   - How it should work
+   - User experience goals
+3. `systemPatterns.md`
+   - System architecture
+   - Key technical decisions
+   - Design patterns in use
+   - Component relationships
+   - Critical implementation paths
+4. `techContext.md`
+   - Technologies used
+   - Development setup
+   - Technical constraints
+   - Dependencies
+   - Tool usage patterns
+
+## Style
 - **Documentation Style**: Prioritize **conciseness** over detail or comprehensiveness. Avoid verbose explanations.
 
 ## Task Management & Workflow
