@@ -17,6 +17,9 @@ function SidePanel() {
   
   const [mintingItem, setMintingItem] = useState<HistoryItem | null>(null);
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([]);
+  const [isSrefHidden, setIsSrefHidden] = useState(false);
+  const [isPHidden, setIsPHidden] = useState(false);
+
 
   const historyItems = useLiveQuery(() => db.historyItems.orderBy('timestamp').reverse().toArray())
   const styleCards = useLiveQuery(() => db.styleCards.orderBy('createdAt').reverse().toArray())
@@ -26,6 +29,8 @@ function SidePanel() {
     if (mintingItem) {
       const { promptSegments } = parsePrompt(mintingItem.fullCommand);
       setEditedSegments(promptSegments);
+    } else {
+      setEditedSegments([]);
     }
   }, [mintingItem]);
 
@@ -69,7 +74,7 @@ function SidePanel() {
       updatedAt: Date.now(),
       promptSegments: editedSegments,
       parameters,
-      masking: { isSrefHidden: false, isPHidden: false, },
+      masking: { isSrefHidden: isSrefHidden, isPHidden: isPHidden },
       tier: 'Common',
       isFavorite: false,
       usageCount: 0,
@@ -89,6 +94,8 @@ function SidePanel() {
       await db.styleCards.put(newCard);
       addLog(`New StyleCard "${newCard.name}" minted successfully!`);
       setMintingItem(null);
+      setIsSrefHidden(false);
+      setIsPHidden(false);
       setActiveTab("library");
     } catch (err) {
       console.error("Failed to mint StyleCard:", err);
@@ -187,8 +194,23 @@ function SidePanel() {
         <h2 className="text-lg font-bold text-slate-800">Mint New Card</h2>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
-        <img src={mintingItem.imageUrl} className="w-full h-auto rounded-lg mb-4 shadow-md" />
-        <BubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} />
+        {mintingItem && (
+          <>
+            <img src={mintingItem.imageUrl} className="w-full h-auto rounded-lg mb-4 shadow-md" />
+            <BubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} />
+          </>
+        )}
+        <div className="mt-4 p-4 border rounded-lg bg-white">
+          <h3 className="text-sm font-bold mb-2">Sealing Options</h3>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="hide-sref" checked={isSrefHidden} onChange={(e) => setIsSrefHidden(e.target.checked)} />
+            <label htmlFor="hide-sref" className="text-sm">Hide --sref when sharing</label>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="hide-p" checked={isPHidden} onChange={(e) => setIsPHidden(e.target.checked)} />
+            <label htmlFor="hide-p" className="text-sm">Hide --p when sharing</label>
+          </div>
+        </div>
       </div>
        <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2">
         <button onClick={() => setMintingItem(null)} className="px-4 py-2 text-sm text-slate-600 rounded-md hover:bg-slate-100">Cancel</button>

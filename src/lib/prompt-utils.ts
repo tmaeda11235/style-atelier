@@ -24,6 +24,7 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
         parameters.cref = value.split(/\s+/);
         break;
       case 'p':
+      case 'profile':
         parameters.p = value;
         break;
       case 'stylize':
