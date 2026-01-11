@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 import { Bubble } from './Bubble';
 import type { PromptSegment } from '../../lib/db-schema';
+import { RarityTier } from '../../lib/rarity-config';
 
 interface BubbleEditorProps {
   initialSegments: PromptSegment[];
   onChange?: (segments: PromptSegment[]) => void;
+  tier?: RarityTier;
 }
 
-export const BubbleEditor: React.FC<BubbleEditorProps> = ({ initialSegments, onChange }) => {
+export const BubbleEditor: React.FC<BubbleEditorProps> = ({ initialSegments, onChange, tier }) => {
   const [segments, setSegments] = useState<PromptSegment[]>(initialSegments);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export const BubbleEditor: React.FC<BubbleEditorProps> = ({ initialSegments, onC
   return (
     <div className="flex flex-wrap gap-2 p-4 bg-slate-100 rounded-lg">
       {segments.map((segment, index) => (
-        <Bubble key={index} segment={segment} onClick={() => handleBubbleClick(index)} />
+        <Bubble key={index} segment={segment} onClick={() => handleBubbleClick(index)} tier={tier} />
       ))}
     </div>
   );

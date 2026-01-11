@@ -1,5 +1,6 @@
 import React from "react"
 import { useLibrary } from "../../hooks/useLibrary"
+import { RARITY_CONFIG } from "../../lib/rarity-config"
 
 interface LibraryTabProps {
   addLog: (msg: string) => void
@@ -14,7 +15,9 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
         <div
           key={card.id}
           onClick={() => handleCardClick(card)}
-          className="bg-white border border-slate-200 rounded-lg shadow-sm cursor-pointer"
+          className={`bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all ${
+            RARITY_CONFIG[card.tier]?.borderClass || "border-slate-200"
+          } ${RARITY_CONFIG[card.tier]?.glowClass || ""}`}
         >
           <img
             src={card.thumbnailData}

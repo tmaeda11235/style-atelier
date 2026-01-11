@@ -1,19 +1,25 @@
 import React from 'react';
 import type { PromptSegment } from '../../lib/db-schema';
 import { cn } from '../../lib/utils';
+import { RARITY_CONFIG, RarityTier } from '../../lib/rarity-config';
 
 interface BubbleProps {
   segment: PromptSegment;
   onClick: () => void;
+  tier?: RarityTier;
 }
 
-export const Bubble: React.FC<BubbleProps> = ({ segment, onClick }) => {
+export const Bubble: React.FC<BubbleProps> = ({ segment, onClick, tier }) => {
+  const rarityConfig = tier ? RARITY_CONFIG[tier] : null;
+
   const bubbleClasses = cn(
-    'px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors flex items-center gap-2',
+    'px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors flex items-center gap-2 border-2',
     {
-      'bg-slate-200 text-slate-800 hover:bg-slate-300': segment.type === 'text',
-      'bg-blue-200 text-blue-800 hover:bg-blue-300': segment.type === 'slot',
-      'bg-green-200 text-green-800 hover:bg-green-300': segment.type === 'chip',
+      'bg-slate-200 text-slate-800 hover:bg-slate-300 border-transparent': segment.type === 'text' && !rarityConfig,
+      'bg-blue-200 text-blue-800 hover:bg-blue-300 border-transparent': segment.type === 'slot' && !rarityConfig,
+      'bg-green-200 text-green-800 hover:bg-green-300 border-transparent': segment.type === 'chip' && !rarityConfig,
+      [rarityConfig?.borderClass || '']: !!rarityConfig,
+      [rarityConfig?.glowClass || '']: !!rarityConfig,
     }
   );
 
