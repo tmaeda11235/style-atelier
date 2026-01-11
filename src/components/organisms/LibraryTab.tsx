@@ -55,8 +55,8 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-      {styleCards?.map((card) => {
-        const config = RARITY_CONFIG[card.tier]
+        {styleCards?.map((card) => {
+          const config = RARITY_CONFIG[card.tier]
         return (
           <div
             key={card.id}
@@ -82,6 +82,7 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
           </div>
         )
       })}
+      </div>
     </div>
   )
 }
