@@ -3,12 +3,14 @@ import { db } from "../lib/db"
 import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
 import { parsePrompt } from "../lib/prompt-utils"
 import { extractKeywords } from "../lib/nlp-utils"
+import { RarityTier } from "../lib/rarity-config"
 
 export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "history" | "library" | "decks") => void) {
   const [mintingItem, setMintingItem] = useState<HistoryItem | null>(null)
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
   const [isSrefHidden, setIsSrefHidden] = useState(false)
   const [isPHidden, setIsPHidden] = useState(false)
+  const [selectedRarity, setSelectedRarity] = useState<RarityTier>("Common")
 
   // Auto-naming related state
   const [suggestedKeywords, setSuggestedKeywords] = useState<string[]>([])
@@ -25,11 +27,13 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       setSuggestedKeywords(keywords)
       setSelectedKeywords([])
       setCustomName("")
+      setSelectedRarity("Common")
     } else {
       setEditedSegments([])
       setSuggestedKeywords([])
       setSelectedKeywords([])
       setCustomName("")
+      setSelectedRarity("Common")
     }
   }, [mintingItem])
 
@@ -63,7 +67,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       promptSegments: editedSegments,
       parameters,
       masking: { isSrefHidden: isSrefHidden, isPHidden: isPHidden },
-      tier: "Common",
+      tier: selectedRarity,
       isFavorite: false,
       usageCount: 0,
       tags: [],
@@ -99,6 +103,8 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
     setIsSrefHidden,
     isPHidden,
     setIsPHidden,
+    selectedRarity,
+    setSelectedRarity,
     handleStartMinting,
     handleSaveMintedCard,
     setMintingItem, // For cancelling minting

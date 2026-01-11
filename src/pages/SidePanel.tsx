@@ -26,6 +26,8 @@ function SidePanelPage() {
     handleStartMinting,
     handleSaveMintedCard,
     setMintingItem,
+    selectedRarity,
+    setSelectedRarity,
     suggestedKeywords,
     selectedKeywords,
     setSelectedKeywords,
@@ -59,17 +61,19 @@ function SidePanelPage() {
         droppedItem={droppedItem}
       >
         {mintingItem && (
-          <MintingView
-            mintingItem={mintingItem}
-            editedSegments={editedSegments}
-            setEditedSegments={setEditedSegments}
-            isSrefHidden={isSrefHidden}
-            setIsSrefHidden={setIsSrefHidden}
-            isPHidden={isPHidden}
-            setIsPHidden={setIsPHidden}
-            onCancelMinting={() => setMintingItem(null)}
-            onSaveMintedCard={handleSaveMintedCard}
-            suggestedKeywords={suggestedKeywords}
+      <MintingView
+        mintingItem={mintingItem}
+        editedSegments={editedSegments}
+        setEditedSegments={setEditedSegments}
+        isSrefHidden={isSrefHidden}
+        setIsSrefHidden={setIsSrefHidden}
+        isPHidden={isPHidden}
+        setIsPHidden={setIsPHidden}
+        onCancelMinting={() => setMintingItem(null)}
+        onSaveMintedCard={handleSaveMintedCard}
+        selectedRarity={selectedRarity}
+        setSelectedRarity={setSelectedRarity}
+        suggestedKeywords={suggestedKeywords}
             selectedKeywords={selectedKeywords}
             setSelectedKeywords={setSelectedKeywords}
             customName={customName}

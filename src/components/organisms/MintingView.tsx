@@ -1,6 +1,7 @@
 import React from "react"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import { BubbleEditor } from "../bubble/BubbleEditor"
+import { RARITY_CONFIG, RarityTier } from "../../lib/rarity-config"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -12,6 +13,8 @@ interface MintingViewProps {
   setIsPHidden: (hidden: boolean) => void
   onCancelMinting: () => void
   onSaveMintedCard: () => Promise<void>
+  selectedRarity: RarityTier
+  setSelectedRarity: (rarity: RarityTier) => void
   // Auto-naming props
   suggestedKeywords: string[]
   selectedKeywords: string[]
@@ -30,6 +33,8 @@ export function MintingView({
   setIsPHidden,
   onCancelMinting,
   onSaveMintedCard,
+  selectedRarity,
+  setSelectedRarity,
   suggestedKeywords,
   selectedKeywords,
   setSelectedKeywords,
@@ -102,7 +107,33 @@ export function MintingView({
               </div>
             </div>
 
-            <BubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} />
+            <BubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
+
+            <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm">
+              <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {(Object.keys(RARITY_CONFIG) as RarityTier[]).map((tier) => {
+                  const config = RARITY_CONFIG[tier]
+                  const isSelected = selectedRarity === tier
+                  return (
+                    <button
+                      key={tier}
+                      onClick={() => setSelectedRarity(tier)}
+                      className={`p-3 rounded-lg border-2 flex flex-col items-center gap-1 transition-all ${
+                        isSelected
+                          ? `${config.borderClass} ${config.bgClass} bg-opacity-10 ${config.glowClass}`
+                          : "border-slate-100 hover:border-slate-200"
+                      }`}
+                    >
+                      <span className={`text-xs font-black uppercase ${config.textClass} ${isSelected ? "" : "text-slate-400"}`}>
+                        {tier}
+                      </span>
+                      <div className={`w-full h-1 rounded-full ${config.bgClass}`} />
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </>
         )}
         <div className="mt-4 p-4 border rounded-lg bg-white">
