@@ -6,7 +6,7 @@ export const config: PlasmoCSConfig = {
   run_at: "document_start"
 }
 
-const DEBUG_MODE = true // Re-enable for debugging
+const DEBUG_MODE = false
 
 function getPromptFromContainer(img: HTMLImageElement): string {
   // Strategy 1: Look for common container under #pageScroll (User provided selector)
@@ -18,37 +18,44 @@ function getPromptFromContainer(img: HTMLImageElement): string {
       if (breakWordDiv) {
           let fullText = ""
 
-          // 1. Get Prompt Text
+          // 1. Get Prompt Text (Clean prompt without buttons/params)
+          // Clone spans to safely remove button elements (parameters) before extracting text
           const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-          const validSpans = spans.filter(span => !span.querySelector("img") && span.textContent?.trim())
-          if (validSpans.length > 0) {
-              fullText = validSpans.map(s => s.textContent).join(" ").trim()
-          }
+          spans.forEach(span => {
+              if (span.querySelector("img")) return // Skip thumbnail
 
-          // 2. Get Parameters (Sref etc) from sibling container
-          // Use closest to find common parent reliably (e.g. .overflow-clip or .group)
-          const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
-          
-          if (parent) {
-              // Debug logs
-              console.log("[SA Debug] Common Parent:", parent)
-              console.log("[SA Debug] Parent Classes:", parent.className)
-
-              // Try to find the parameter container with various strategies
-              // User reported: div.gap-3.flex.flex-col...
-              // Search specifically for container with gap-3 that is likely to hold buttons
-              const paramContainer = parent.querySelector("div.gap-3") || 
-                                     parent.querySelector('div[class*="gap-3"]')
+              const clone = span.cloneNode(true) as HTMLElement
+              // Remove buttons (parameters) to get pure prompt text
+              const buttons = clone.querySelectorAll("button")
+              buttons.forEach(b => b.remove())
               
-              console.log("[SA Debug] Param Container Candidate:", paramContainer)
+              const text = clone.textContent?.trim()
+              if (text) fullText += text + " "
+          })
 
-              if (paramContainer && paramContainer.textContent) {
-                  const params = paramContainer.textContent.trim()
-                  console.log("[SA Debug] Param Text Found:", params)
-                  if (params) fullText += " " + params
-              } else {
-                  console.warn("[SA Debug] Param Container NOT found or empty")
-              }
+          fullText = fullText.trim()
+
+          // 2. Get Parameters from Buttons (Structure based extraction)
+          // Search in the common parent to cover both responsive layouts
+          const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
+          if (parent) {
+              const allButtons = parent.querySelectorAll("button")
+              allButtons.forEach(btn => {
+                  // Midjourney parameter buttons typically have this structure:
+                  // span.opacity-80 (Label: --ar)
+                  // span.line-clamp-2 (Value: 16:9)
+                  const labelSpan = btn.querySelector("span.opacity-80") || btn.querySelector("span.text-light-500") // Fallback class
+                  const valueSpan = btn.querySelector("span.line-clamp-2")
+                  
+                  if (labelSpan && valueSpan) {
+                      const label = labelSpan.textContent?.trim()
+                      const value = valueSpan.textContent?.trim()
+                      if (label && value) {
+                          // Clean up label (remove -- if duplicated, though usually it's correct)
+                          fullText += ` ${label} ${value}`
+                      }
+                  }
+              })
           }
 
           if (fullText) return fullText.trim()
@@ -64,18 +71,34 @@ function getPromptFromContainer(img: HTMLImageElement): string {
           let fullText = ""
           
           const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-          const validSpans = spans.filter(span => !span.querySelector("img") && span.textContent?.trim())
-          if (validSpans.length > 0) {
-              fullText = validSpans.map(s => s.textContent).join(" ").trim()
-          }
+          spans.forEach(span => {
+              if (span.querySelector("img")) return
 
-          const parent = breakWordDiv.parentElement
+              const clone = span.cloneNode(true) as HTMLElement
+              const buttons = clone.querySelectorAll("button")
+              buttons.forEach(b => b.remove())
+              
+              const text = clone.textContent?.trim()
+              if (text) fullText += text + " "
+          })
+
+          fullText = fullText.trim()
+
+          const parent = breakWordDiv.closest('.overflow-clip') || breakWordDiv.closest('.group') || breakWordDiv.parentElement
           if (parent) {
-              const paramContainer = parent.querySelector("div.gap-3")
-              if (paramContainer && paramContainer.textContent) {
-                  const params = paramContainer.textContent.trim()
-                  if (params) fullText += " " + params
-              }
+              const allButtons = parent.querySelectorAll("button")
+              allButtons.forEach(btn => {
+                  const labelSpan = btn.querySelector("span.opacity-80") || btn.querySelector("span.text-light-500")
+                  const valueSpan = btn.querySelector("span.line-clamp-2")
+                  
+                  if (labelSpan && valueSpan) {
+                      const label = labelSpan.textContent?.trim()
+                      const value = valueSpan.textContent?.trim()
+                      if (label && value) {
+                          fullText += ` ${label} ${value}`
+                      }
+                  }
+              })
           }
 
           if (fullText) return fullText.trim()
