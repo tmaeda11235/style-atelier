@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
 import "./style.css"
 import { db } from "./lib/db"
 import { parseDroppedData, type ParsedData } from "./lib/mj-parser"
@@ -7,6 +8,8 @@ function SidePanel() {
   const [isDragging, setIsDragging] = useState(false)
   const [droppedData, setDroppedData] = useState<ParsedData | null>(null)
   const [logs, setLogs] = useState<string[]>([])
+
+  const styleCards = useLiveQuery(() => db.styleCards.orderBy('createdAt').reverse().toArray())
 
   const addLog = (msg: string) => setLogs(prev => [msg, ...prev].slice(0, 20))
 
@@ -57,64 +60,96 @@ function SidePanel() {
 
   return (
     <div 
-        className={`w-full h-screen p-4 flex flex-col items-center font-sans transition-colors ${isDragging ? 'bg-blue-100' : 'bg-slate-50'}`}
+        className={`w-full h-screen flex flex-col font-sans transition-colors ${isDragging ? 'bg-blue-50' : 'bg-slate-50'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
     >
-      <h1 className="text-xl font-bold text-slate-900 mb-4">Style Atelier</h1>
+      <div className="p-4 bg-white shadow-sm z-10">
+          <h1 className="text-xl font-bold text-slate-900">Style Atelier</h1>
+      </div>
       
-      {droppedData ? (
-        <div className="flex-1 w-full overflow-y-auto mb-4">
-            <div className="p-3 border rounded bg-white shadow-sm w-full animate-in fade-in zoom-in">
-                <p className="text-xs text-slate-500 mb-2 font-bold uppercase tracking-wider">Captured Asset</p>
-                <div className="relative aspect-square w-full mb-3 bg-slate-100 rounded overflow-hidden">
-                    <img src={droppedData.src} alt="Dropped" className="w-full h-full object-contain" />
+      <div className="flex-1 overflow-y-auto p-4">
+        {droppedData ? (
+            <div className="p-3 border rounded bg-white shadow-sm w-full animate-in fade-in zoom-in mb-6">
+                <div className="flex justify-between items-center mb-2">
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">New Capture</p>
+                    <button 
+                        onClick={() => setDroppedData(null)}
+                        className="text-xs text-slate-400 hover:text-slate-600"
+                    >
+                        Close
+                    </button>
                 </div>
-                
-                {droppedData.prompt && (
-                    <div className="mb-3">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Prompt</p>
-                        <p className="text-xs text-slate-700 bg-slate-50 p-2 rounded border border-slate-100 leading-relaxed max-h-32 overflow-y-auto">
-                            {droppedData.prompt}
-                        </p>
+                <div className="flex gap-3">
+                    <div className="relative w-24 h-24 bg-slate-100 rounded overflow-hidden flex-shrink-0">
+                        <img src={droppedData.src} alt="Dropped" className="w-full h-full object-cover" />
                     </div>
-                )}
-                
-                {droppedData.jobId && (
-                     <div className="mb-3">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Job ID</p>
-                        <code className="text-[10px] bg-slate-100 px-1 py-0.5 rounded text-slate-600 block truncate">
-                            {droppedData.jobId}
-                        </code>
+                    <div className="flex-1 min-w-0">
+                        {droppedData.jobId && (
+                             <div className="mb-2">
+                                <code className="text-[10px] bg-slate-100 px-1 py-0.5 rounded text-slate-600 block truncate">
+                                    {droppedData.jobId}
+                                </code>
+                            </div>
+                        )}
+                        {droppedData.prompt && (
+                            <p className="text-xs text-slate-600 line-clamp-3">
+                                {droppedData.prompt}
+                            </p>
+                        )}
                     </div>
-                )}
+                </div>
+                <div className="mt-3 flex justify-end">
+                    <button 
+                        onClick={() => setDroppedData(null)}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                        Save & Continue
+                    </button>
+                </div>
+            </div>
+        ) : (
+            <div className={`border-2 border-dashed rounded-lg text-slate-400 text-center w-full py-8 mb-6 transition-colors ${isDragging ? 'border-blue-400 bg-blue-50' : 'border-slate-300 hover:border-slate-400'}`}>
+                <p className="text-sm font-medium">Drop Midjourney Images Here</p>
+            </div>
+        )}
 
-                <button 
-                    onClick={() => setDroppedData(null)}
-                    className="mt-2 w-full text-xs text-red-500 hover:bg-red-50 p-2 rounded transition-colors border border-transparent hover:border-red-100"
-                >
-                    Clear
-                </button>
+        <div className="mb-4">
+             <h2 className="text-sm font-bold text-slate-700 mb-3">Saved Styles</h2>
+             
+             {!styleCards || styleCards.length === 0 ? (
+                 <p className="text-xs text-slate-400 text-center py-8">No styles saved yet.</p>
+             ) : (
+                 <div className="grid grid-cols-2 gap-3">
+                     {styleCards.map(card => (
+                         <div key={card.id} className="group relative bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                             <div className="aspect-square bg-slate-100 overflow-hidden">
+                                 <img src={card.imageUrl} alt="Style" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                             </div>
+                             <div className="p-2">
+                                 {card.jobId && (
+                                     <p className="text-[10px] text-slate-500 font-mono truncate mb-1" title={card.jobId}>{card.jobId}</p>
+                                 )}
+                                 <p className="text-[10px] text-slate-700 line-clamp-2 leading-tight" title={card.prompt}>
+                                     {card.prompt}
+                                 </p>
+                             </div>
+                         </div>
+                     ))}
+                 </div>
+             )}
+        </div>
+
+        <div className="w-full mt-8 border-t border-slate-200 pt-4">
+            <div className="flex justify-between items-center mb-2">
+               <p className="text-[10px] text-slate-500 uppercase font-bold">Debug Logs</p>
+               <button onClick={() => setLogs([])} className="text-[10px] text-slate-400 hover:text-slate-600">Clear</button>
+            </div>
+            <div className="bg-slate-900 text-green-400 p-2 rounded text-[10px] font-mono h-24 overflow-y-auto whitespace-pre-wrap shadow-inner">
+              {logs.length === 0 ? <span className="text-slate-600 opacity-50">Waiting for events...</span> : logs.map((log, i) => <div key={i} className="mb-1 border-b border-green-900/30 pb-0.5 last:border-0">{`> ${log}`}</div>)}
             </div>
         </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center w-full mb-4">
-            <div className="p-8 border-2 border-dashed border-slate-300 rounded-lg text-slate-400 text-center w-full h-64 flex flex-col items-center justify-center gap-2">
-                <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <p className="text-sm">Drop MJ Image Here</p>
-            </div>
-        </div>
-      )}
-
-      <div className="w-full">
-          <div className="flex justify-between items-center mb-1">
-             <p className="text-[10px] text-slate-500 uppercase font-bold">Debug Logs</p>
-             <button onClick={() => setLogs([])} className="text-[10px] text-slate-400 hover:text-slate-600">Clear</button>
-          </div>
-          <div className="bg-slate-900 text-green-400 p-2 rounded text-[10px] font-mono h-24 overflow-y-auto whitespace-pre-wrap shadow-inner">
-            {logs.length === 0 ? <span className="text-slate-600 opacity-50">Waiting for events...</span> : logs.map((log, i) => <div key={i} className="mb-1 border-b border-green-900/30 pb-0.5 last:border-0">{`> ${log}`}</div>)}
-          </div>
       </div>
     </div>
   )
