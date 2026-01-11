@@ -49,7 +49,7 @@ When the user instructs to start working on a specific Issue number:
     - **Progress Tracking**: Describe the progress explicitly in the commit message.
     - Repeat steps 5 and 6 until all tasks are complete.
 7.  **Pull Request**:
-    - Create a PR and request review: `gh pr create`
+    - Create a PR linked with issue and request review: `gh pr create`
 8.  **Review**:
     - Check for feedback and address any review comments.
 
