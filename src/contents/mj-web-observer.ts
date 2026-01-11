@@ -13,15 +13,31 @@ function getPromptFromContainer(img: HTMLImageElement): string {
   const unitContainer = img.closest("#pageScroll > div") || img.closest(".absolute") || img.closest(".group")
   
   if (unitContainer) {
-      // Robust strategy: Find .break-word container, then collect text from all spans that are NOT the thumbnail
+      // Robust strategy: Find .break-word container (Prompt) AND .gap-3 container (Parameters)
       const breakWordDiv = unitContainer.querySelector(".break-word")
       if (breakWordDiv) {
+          let fullText = ""
+
+          // 1. Get Prompt Text
           const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
-          // Collect text from all valid spans (prompt text + parameters might be split)
           const validSpans = spans.filter(span => !span.querySelector("img") && span.textContent?.trim())
           if (validSpans.length > 0) {
-              return validSpans.map(s => s.textContent).join(" ").trim()
+              fullText = validSpans.map(s => s.textContent).join(" ").trim()
           }
+
+          // 2. Get Parameters (Sref etc) from sibling container
+          // Selector hint: #pageScroll ... > div.gap-3 ...
+          const parent = breakWordDiv.parentElement
+          if (parent) {
+              const paramContainer = parent.querySelector("div.gap-3")
+              if (paramContainer && paramContainer.textContent) {
+                  // Only append if it looks like parameters (starts with --) or just append everything safely
+                  const params = paramContainer.textContent.trim()
+                  if (params) fullText += " " + params
+              }
+          }
+
+          if (fullText) return fullText.trim()
       }
   }
 
@@ -31,11 +47,24 @@ function getPromptFromContainer(img: HTMLImageElement): string {
       if (!current) break
       const breakWordDiv = current.querySelector(".break-word")
       if (breakWordDiv) {
+          let fullText = ""
+          
           const spans = Array.from(breakWordDiv.querySelectorAll(":scope > span"))
           const validSpans = spans.filter(span => !span.querySelector("img") && span.textContent?.trim())
           if (validSpans.length > 0) {
-              return validSpans.map(s => s.textContent).join(" ").trim()
+              fullText = validSpans.map(s => s.textContent).join(" ").trim()
           }
+
+          const parent = breakWordDiv.parentElement
+          if (parent) {
+              const paramContainer = parent.querySelector("div.gap-3")
+              if (paramContainer && paramContainer.textContent) {
+                  const params = paramContainer.textContent.trim()
+                  if (params) fullText += " " + params
+              }
+          }
+
+          if (fullText) return fullText.trim()
       }
       current = current.parentElement
   }
