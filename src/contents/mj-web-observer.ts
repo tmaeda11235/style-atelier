@@ -6,7 +6,7 @@ export const config: PlasmoCSConfig = {
   run_at: "document_start"
 }
 
-const DEBUG_MODE = false
+const DEBUG_MODE = true // Temporarily enabled for debugging
 
 function getPromptFromContainer(img: HTMLImageElement): string {
   // Strategy 1: Look for common container under #pageScroll (User provided selector)
@@ -144,6 +144,8 @@ function processImage(img: HTMLImageElement) {
   img.style.cursor = "grab"
 
   img.addEventListener("dragstart", (e) => {
+    console.log("Style Atelier: Drag start detected", img.src)
+    
     // Attempt to extract prompt
     let prompt = getPromptFromContainer(img)
     
@@ -170,10 +172,13 @@ function processImage(img: HTMLImageElement) {
       source: "midjourney-web"
     }
 
+    console.log("Style Atelier: Extracted payload", payload)
+
     if (e.dataTransfer) {
       try {
         // Attach custom data for the extension side panel
         e.dataTransfer.setData("application/json", JSON.stringify(payload))
+        console.log("Style Atelier: Data attached to DataTransfer")
       } catch (err) {
         console.error("Style Atelier: Failed to attach data", err)
       }
