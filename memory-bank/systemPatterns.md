@@ -1,3 +1,9 @@
+---
+noteId: "c4493a30eeb511f0aa7a379a6036fa3e"
+tags: []
+
+---
+
 # System Patterns
 
 ## Architecture
