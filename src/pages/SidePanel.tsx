@@ -5,6 +5,7 @@ import { HistoryTab } from "../components/organisms/HistoryTab"
 import { LibraryTab } from "../components/organisms/LibraryTab"
 import { DecksTab } from "../components/organisms/DecksTab"
 import { MintingView } from "../components/organisms/MintingView"
+import { HandBar } from "../components/organisms/HandBar"
 import { useTabs } from "../hooks/useTabs"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
@@ -47,7 +48,7 @@ function SidePanelPage() {
   }
 
   return (
-    <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className="h-full">
+    <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className="h-full relative overflow-hidden">
       <SidePanelLayout
         activeTab={activeTab}
         onTabChange={(tab) => {
@@ -83,6 +84,9 @@ function SidePanelPage() {
         {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
         {activeTab === "library" && <LibraryTab addLog={addLog} />}
         {activeTab === "decks" && <DecksTab addLog={addLog} />}
+        
+        {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
+        <HandBar />
       </SidePanelLayout>
     </div>
   )

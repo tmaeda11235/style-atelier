@@ -65,6 +65,17 @@ export function useLibrary(addLog: (msg: string) => void) {
     return result
   }, [allCards, searchTag, rarityFilter, sortBy])
 
+  const togglePin = async (card: StyleCard, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const newPinnedStatus = !card.isPinned
+    try {
+      await db.styleCards.update(card.id, { isPinned: newPinnedStatus })
+      addLog(newPinnedStatus ? `Added ${card.name} to hand.` : `Removed ${card.name} from hand.`)
+    } catch (err) {
+      console.error("Failed to toggle pin:", err)
+    }
+  }
+
   const handleCardClick = (card: StyleCard) => {
     const maskedKeys: (keyof StyleCard["parameters"])[] = []
     if (card.masking.isSrefHidden) {
@@ -95,6 +106,7 @@ export function useLibrary(addLog: (msg: string) => void) {
   return {
     styleCards: filteredAndSortedCards,
     handleCardClick,
+    togglePin,
     searchTag,
     setSearchTag,
     rarityFilter,

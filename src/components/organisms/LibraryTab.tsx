@@ -10,6 +10,7 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
   const {
     styleCards,
     handleCardClick,
+    togglePin,
     searchTag,
     setSearchTag,
     rarityFilter,
@@ -82,6 +83,18 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
               <div className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm ${config.bgClass} ${config.textClass}`}>
                 {card.tier}
               </div>
+              {/* Pin Button */}
+              <button
+                onClick={(e) => togglePin(card, e)}
+                className={`absolute bottom-1 right-1 p-1 rounded-full shadow-md transition-colors ${
+                  card.isPinned ? "bg-yellow-400 text-white" : "bg-white/80 text-slate-400 hover:text-yellow-500"
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={card.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
             </div>
             <div className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
               <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
