@@ -89,3 +89,23 @@ export const buildPromptString = (segments: PromptSegment[], params: StyleCard['
   
   return `${segmentString} ${paramParts.join(' ')}`.trim();
 };
+
+export const mergePromptSegments = (allSegments: PromptSegment[]): PromptSegment[] => {
+  const seen = new Set<string>();
+  const merged: PromptSegment[] = [];
+
+  allSegments.forEach(seg => {
+    if (seg.type === 'text') {
+      const normalized = seg.value.toLowerCase().trim();
+      if (!seen.has(normalized) && normalized.length > 0) {
+        seen.add(normalized);
+        merged.push(seg);
+      }
+    } else {
+      // For slots/chips, we might want different logic later, but for now just include them
+      merged.push(seg);
+    }
+  });
+
+  return merged;
+};
