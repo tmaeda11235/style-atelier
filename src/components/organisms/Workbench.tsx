@@ -10,12 +10,18 @@ import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import { ParameterEditor } from "./ParameterEditor";
 import type { PromptSegment } from "../../lib/db-schema";
 
-export const Workbench: React.FC = () => {
+interface WorkbenchProps {
+  onStartVariationMinting?: (base: any) => void;
+  addLog?: (msg: string) => void;
+}
+
+export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog }) => {
   const { workbenchCards, toggleCardSelection, clearWorkbench } = useWorkbench();
   const { canEvolve, evolveCard } = useEvolution();
-  
+
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([]);
   const [editedParams, setEditedParams] = useState<any>({});
+  const [isInjecting, setIsInjecting] = useState(false);
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
@@ -52,20 +58,38 @@ export const Workbench: React.FC = () => {
     }
   }, [workbenchCards, isMixingMode, isEvolutionMode, targetCard]);
 
-  const handleInjectPrompt = () => {
+  const handleInjectPrompt = async () => {
     if (workbenchCards.length === 0) return;
+    setIsInjecting(true);
 
     const fullPrompt = buildPromptString(editedSegments, editedParams);
-    
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const activeTab = tabs[0];
-      if (activeTab?.id) {
-        chrome.tabs.sendMessage(activeTab.id, {
-          type: "INJECT_PROMPT",
-          prompt: fullPrompt,
-        });
+
+      if (!activeTab?.id) {
+        throw new Error("No active tab found");
       }
-    });
+
+      await chrome.tabs.sendMessage(activeTab.id, {
+        type: "INJECT_PROMPT",
+        prompt: fullPrompt,
+      });
+
+      addLog?.(`Prompt injected successfully!`);
+    } catch (err) {
+      console.error("Injection failed:", err);
+      // Determine if it's a connection error likely caused by missing content script
+      const errorMessage = (err as Error).message || "";
+      if (errorMessage.includes("Receiving end does not exist") || errorMessage.includes("Could not establish connection")) {
+        addLog?.("Connection failed. Please RELOAD the Midjourney page.");
+      } else {
+        addLog?.(`Error: ${errorMessage}`);
+      }
+    } finally {
+      setIsInjecting(false);
+    }
   };
 
   return (
@@ -106,7 +130,7 @@ export const Workbench: React.FC = () => {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                 <h3 className="text-sm font-bold text-slate-700">
+                <h3 className="text-sm font-bold text-slate-700">
                   {isEvolutionMode ? "Evolution" : "Variation Recipe"}
                 </h3>
                 {isEvolutionMode && targetCard && <RarityBadge tier={targetCard.tier} />}
@@ -124,7 +148,7 @@ export const Workbench: React.FC = () => {
 
               {isEvolutionMode && targetCard && (
                 <div className="pt-2 border-t border-slate-100">
-                   <div className="flex justify-between items-center text-xs mb-2">
+                  <div className="flex justify-between items-center text-xs mb-2">
                     <span className="text-slate-500">Usage Progress</span>
                     <span className="font-mono font-bold text-blue-600">{targetCard.usageCount} uses</span>
                   </div>
@@ -146,9 +170,10 @@ export const Workbench: React.FC = () => {
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200"
                 onClick={handleInjectPrompt}
+                disabled={isInjecting}
               >
                 <Send className="w-4 h-4 mr-2" />
-                Try on Midjourney
+                {isInjecting ? "Injecting..." : "Try on Midjourney"}
               </Button>
             </div>
           </div>
