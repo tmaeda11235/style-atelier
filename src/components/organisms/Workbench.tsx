@@ -7,6 +7,7 @@ import { Button } from "../atoms/Button";
 import { Sparkles, FlaskConical, X, Send } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
+import { ParameterEditor } from "./ParameterEditor";
 import type { PromptSegment } from "../../lib/db-schema";
 
 export const Workbench: React.FC = () => {
@@ -14,6 +15,7 @@ export const Workbench: React.FC = () => {
   const { canEvolve, evolveCard } = useEvolution();
   
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([]);
+  const [editedParams, setEditedParams] = useState<any>({});
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
@@ -22,29 +24,33 @@ export const Workbench: React.FC = () => {
 
   useEffect(() => {
     if (isMixingMode) {
-      const allSegments = workbenchCards.flatMap(c => c.promptSegments);
+      const allSegments = workbenchCards.flatMap((c) => c.promptSegments);
       const merged = mergePromptSegments(allSegments);
       setEditedSegments(merged);
+
+      const mergedParams: any = { ...workbenchCards[0].parameters };
+      workbenchCards.slice(1).forEach((parent) => {
+        if (parent.parameters.sref) {
+          mergedParams.sref = Array.from(new Set([...(mergedParams.sref || []), ...parent.parameters.sref]));
+        }
+        if (parent.parameters.p && !mergedParams.p) {
+          mergedParams.p = parent.parameters.p;
+        }
+      });
+      setEditedParams(mergedParams);
     } else if (isEvolutionMode && targetCard) {
       setEditedSegments(targetCard.promptSegments);
+      setEditedParams(targetCard.parameters);
     } else {
       setEditedSegments([]);
+      setEditedParams({});
     }
   }, [workbenchCards, isMixingMode, isEvolutionMode, targetCard]);
 
   const handleInjectPrompt = () => {
     if (workbenchCards.length === 0) return;
 
-    const mergedParams: any = { ...workbenchCards[0].parameters };
-    if (isMixingMode) {
-      workbenchCards.slice(1).forEach((parent) => {
-        if (parent.parameters.sref) {
-          mergedParams.sref = Array.from(new Set([...(mergedParams.sref || []), ...parent.parameters.sref]));
-        }
-      });
-    }
-
-    const fullPrompt = buildPromptString(editedSegments, mergedParams);
+    const fullPrompt = buildPromptString(editedSegments, editedParams);
     
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
@@ -102,12 +108,14 @@ export const Workbench: React.FC = () => {
               </div>
 
               <div className="bg-white">
-                <PromptBubbleEditor 
-                  initialSegments={editedSegments} 
-                  onChange={setEditedSegments} 
-                  tier={isEvolutionMode ? targetCard?.tier : "Common"} 
+                <PromptBubbleEditor
+                  initialSegments={editedSegments}
+                  onChange={setEditedSegments}
+                  tier={isEvolutionMode ? targetCard?.tier : "Common"}
                 />
               </div>
+
+              <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
 
               {isEvolutionMode && targetCard && (
                 <div className="pt-2 border-t border-slate-100">

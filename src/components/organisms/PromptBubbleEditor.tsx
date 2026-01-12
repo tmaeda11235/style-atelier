@@ -60,6 +60,26 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     setSegments(segments.filter((_, i) => i !== index))
   }
 
+  const toggleSegmentType = (index: number) => {
+    const newSegments = [...segments]
+    const segment = newSegments[index]
+
+    if (segment.type === "text") {
+      newSegments[index] = {
+        type: "slot",
+        label: segment.value,
+        default: segment.value,
+      }
+    } else if (segment.type === "slot") {
+      newSegments[index] = {
+        type: "text",
+        value: segment.label,
+      }
+    }
+
+    setSegments(newSegments)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault()
@@ -87,10 +107,11 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     >
       {segments.map((segment, index) => (
         <PromptBubble
-          key={`${index}-${segment.type === 'text' ? segment.value : segment.type === 'slot' ? segment.label : segment.kind}`}
+          key={`${index}-${segment.type === "text" ? segment.value : segment.type === "slot" ? segment.label : segment.kind}`}
           segment={segment}
           onRemove={() => removeSegment(index)}
-          tier={segment.type === 'text' ? undefined : tier} // テキスト以外はカード由来として色を付ける
+          onClick={segment.type !== "chip" ? () => toggleSegmentType(index) : undefined}
+          tier={segment.type === "text" ? undefined : tier} // テキスト以外はカード由来として色を付ける
         />
       ))}
       <input
