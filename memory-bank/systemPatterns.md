@@ -31,12 +31,22 @@ tags: []
 3.  **Usage**: User selects Card from Side Panel -> Content Script injects prompt into Midjourney input.
 4.  **Export**: Card data encoded into image (QR/Metadata) for sharing.
 
+## Component Development Rules (Sustainability)
+1. **Atomic Isolation**: New UI elements must be evaluated for decomposition into Atoms/Molecules before creating an Organism.
+2. **Document First**: Every component must have a JSDoc block explaining its purpose and props.
+3. **Pure Atoms**: Atoms must not depend on external hooks or global state (use props instead).
+4. **Consistency**: Reuse existing Atoms/Molecules to maintain UI consistency and reduce technical debt.
+
 ## Project Structure
 To ensure maintainability and scalability, the project follows a strict directory structure:
 
 - `assets/`: Static assets (icons, images) - Must be in root for Plasmo.
 - `src/`: Root directory for all source code.
-    - `src/components/`: Reusable React components.
+    - `src/components/`: Reusable React components. Following Atomic Design principles:
+        - `atoms/`: Basic UI elements (Button, Input, Badge). No business logic.
+        - `molecules/`: Groups of atoms. Context-specific but low logic.
+        - `organisms/`: Complex functional blocks. Connected to Hooks.
+        - `templates/`: Page layouts.
     - `src/lib/`: Shared utilities, database logic, and types.
     - `src/styles/`: Global styles (CSS, Tailwind directives).
     - `src/background.ts`: Extension background script.
