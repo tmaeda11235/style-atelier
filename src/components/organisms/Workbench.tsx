@@ -32,11 +32,13 @@ export const Workbench: React.FC = () => {
       workbenchCards.slice(1).forEach((parent) => {
         if (parent.parameters.sref) {
           const srefArray = Array.isArray(parent.parameters.sref) ? parent.parameters.sref : [parent.parameters.sref]
-          mergedParams.sref = Array.from(new Set([...(mergedParams.sref || []), ...srefArray]))
+          const currentSrefs = Array.isArray(mergedParams.sref) ? mergedParams.sref : mergedParams.sref ? [mergedParams.sref] : []
+          mergedParams.sref = Array.from(new Set([...currentSrefs, ...srefArray]))
         }
         if (parent.parameters.p) {
           const pArray = Array.isArray(parent.parameters.p) ? parent.parameters.p : [parent.parameters.p]
-          mergedParams.p = Array.from(new Set([...(mergedParams.p || []), ...pArray]))
+          const currentPs = Array.isArray(mergedParams.p) ? mergedParams.p : mergedParams.p ? [mergedParams.p] : []
+          mergedParams.p = Array.from(new Set([...currentPs, ...pArray]))
         }
       });
 
