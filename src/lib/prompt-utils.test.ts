@@ -44,6 +44,13 @@ describe('parsePrompt', () => {
     expect(parameters.p).toBe('pcd78d7 owipony');
     expect(parameters.ar).toBe('16:9');
   });
+
+  it('should handle Japanese delimiters', () => {
+    const prompt = 'cat,dogbirdfish.ant:bee;cow';
+    const { promptSegments } = parsePrompt(prompt);
+    expect(promptSegments).toHaveLength(7);
+    expect(promptSegments.map(s => s.value)).toEqual(['cat', 'dog', 'bird', 'fish', 'ant', 'bee', 'cow']);
+  });
 });
 
 describe('mergePromptSegments', () => {
