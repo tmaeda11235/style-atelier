@@ -20,14 +20,14 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
         parameters.ar = value;
         break;
       case 'sref':
-        parameters.sref = value.split(/\s+/);
+        parameters.sref = value.split(/\s+/).filter(v => v.length > 0);
         break;
       case 'cref':
-        parameters.cref = value.split(/\s+/);
+        parameters.cref = value.split(/\s+/).filter(v => v.length > 0);
         break;
       case 'p':
       case 'profile':
-        parameters.p = value.split(/\s+/);
+        parameters.p = value.split(/\s+/).filter(v => v.length > 0);
         break;
       case 'stylize':
       case 's':
@@ -78,8 +78,14 @@ export const buildPromptString = (segments: PromptSegment[], params: StyleCard['
 
   const paramParts: string[] = [];
   if (params.ar && !maskedKeys.includes('ar')) paramParts.push(`--ar ${params.ar}`);
-  if (params.sref?.length && !maskedKeys.includes('sref')) paramParts.push(`--sref ${params.sref.join(' ')}`);
-  if (params.cref?.length && !maskedKeys.includes('cref')) paramParts.push(`--cref ${params.cref.join(' ')}`);
+  if (params.sref?.length && !maskedKeys.includes('sref')) {
+    const srefArray = Array.isArray(params.sref) ? params.sref : [params.sref];
+    paramParts.push(`--sref ${srefArray.join(' ')}`);
+  }
+  if (params.cref?.length && !maskedKeys.includes('cref')) {
+    const crefArray = Array.isArray(params.cref) ? params.cref : [params.cref];
+    paramParts.push(`--cref ${crefArray.join(' ')}`);
+  }
   
   // Backward compatibility for p
   const pValues = Array.isArray(params.p) ? params.p : params.p ? [params.p] : [];
