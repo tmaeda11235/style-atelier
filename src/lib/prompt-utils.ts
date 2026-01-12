@@ -1,7 +1,7 @@
 import type { PromptSegment, StyleCard } from "./db-schema";
 
-export const PROMPT_DELIMITER_REGEX = /[,:;]+/;
-export const PROMPT_DELIMITER_CHARS = [",", "", "", ":", ";"];
+export const PROMPT_DELIMITER_REGEX = /[,、。:;]+/;
+export const PROMPT_DELIMITER_CHARS = [",", "、", "。", ":", ";"];
 
 const PARAM_REGEX = /--([a-z0-9-]+)\s*([^--]*)/g;
 

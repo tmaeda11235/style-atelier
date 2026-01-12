@@ -46,10 +46,10 @@ describe('parsePrompt', () => {
   });
 
   it('should handle Japanese delimiters', () => {
-    const prompt = 'cat,dogbirdfish:ant;bee';
+    const prompt = 'cat,dog、bird。fish:ant;cow';
     const { promptSegments } = parsePrompt(prompt);
     expect(promptSegments).toHaveLength(6);
-    expect(promptSegments.map(s => s.value)).toEqual(['cat', 'dog', 'bird', 'fish', 'ant', 'bee']);
+    expect(promptSegments.map(s => s.value)).toEqual(['cat', 'dog', 'bird', 'fish', 'ant', 'cow']);
   });
 
   it('should not split by space', () => {
