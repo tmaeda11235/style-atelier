@@ -27,7 +27,8 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
         break;
       case 'p':
       case 'profile':
-        parameters.p = value.split(/\s+/).filter(v => v.length > 0);
+        // --p code1 code2 should be split into ["code1", "code2"]
+        parameters.p = value.trim().split(/\s+/).filter(v => v.length > 0);
         break;
       case 'stylize':
       case 's':

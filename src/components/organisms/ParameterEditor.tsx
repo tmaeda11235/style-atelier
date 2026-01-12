@@ -31,23 +31,36 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
   const getArrayValue = (key: "sref" | "p"): string[] => {
     const val = parameters[key]
     if (Array.isArray(val)) return val
-    if (val) return [val as unknown as string]
+    if (typeof val === "string" && val.trim().length > 0) {
+      // âXn‡WÇü¿L "code1 code2" bn4’n
+      return val.trim().split(/\s+/).filter(v => v.length > 0)
+    }
     return []
   }
 
   const addValue = (key: "sref" | "p", value: string, setter: (v: string) => void) => {
-    if (!value.trim()) return
+    const trimmed = value.trim()
+    if (!trimmed) return
+    
+    // e›L "code1 code2" nˆFkp³üÉ’+€4’n
+    const newItems = trimmed.split(/\s+/).filter(v => v.length > 0)
     const currentValues = getArrayValue(key)
-    if (!currentValues.includes(value.trim())) {
-      updateParam(key, [...currentValues, value.trim()])
-    }
+    
+    const updatedValues = [...currentValues]
+    newItems.forEach(item => {
+      if (!updatedValues.includes(item)) {
+        updatedValues.push(item)
+      }
+    })
+    
+    updateParam(key, updatedValues)
     setter("")
   }
 
   const removeValue = (key: "sref" | "p", index: number) => {
-    const currentValues = [...getArrayValue(key)]
-    currentValues.splice(index, 1)
-    updateParam(key, currentValues.length > 0 ? currentValues : undefined)
+    const currentValues = getArrayValue(key)
+    const updatedValues = currentValues.filter((_, i) => i !== index)
+    updateParam(key, updatedValues.length > 0 ? updatedValues : undefined)
   }
 
   return (
