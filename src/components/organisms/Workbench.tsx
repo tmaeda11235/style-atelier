@@ -5,7 +5,7 @@ import { CardThumbnail } from "../molecules/CardThumbnail";
 import { RarityBadge } from "../atoms/RarityBadge";
 import { Button } from "../atoms/Button";
 import { Sparkles, FlaskConical, X, Send } from "lucide-react";
-import { buildPromptString } from "../../lib/prompt-utils";
+import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import type { PromptSegment } from "../../lib/db-schema";
 
@@ -22,9 +22,8 @@ export const Workbench: React.FC = () => {
 
   useEffect(() => {
     if (isMixingMode) {
-      const merged = workbenchCards.flatMap((c, i) =>
-        i > 0 ? [{ type: "text" as const, value: ", " }, ...c.promptSegments] : c.promptSegments
-      );
+      const allSegments = workbenchCards.flatMap(c => c.promptSegments);
+      const merged = mergePromptSegments(allSegments);
       setEditedSegments(merged);
     } else if (isEvolutionMode && targetCard) {
       setEditedSegments(targetCard.promptSegments);
