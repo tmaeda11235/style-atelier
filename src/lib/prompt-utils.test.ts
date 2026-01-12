@@ -46,10 +46,17 @@ describe('parsePrompt', () => {
   });
 
   it('should handle Japanese delimiters', () => {
-    const prompt = 'cat,dogbirdfish.ant:bee;cow';
+    const prompt = 'cat,dogbirdfish:ant;bee';
     const { promptSegments } = parsePrompt(prompt);
-    expect(promptSegments).toHaveLength(7);
-    expect(promptSegments.map(s => s.value)).toEqual(['cat', 'dog', 'bird', 'fish', 'ant', 'bee', 'cow']);
+    expect(promptSegments).toHaveLength(6);
+    expect(promptSegments.map(s => s.value)).toEqual(['cat', 'dog', 'bird', 'fish', 'ant', 'bee']);
+  });
+
+  it('should not split by space', () => {
+    const prompt = 'a cute cat --ar 16:9';
+    const { promptSegments } = parsePrompt(prompt);
+    expect(promptSegments).toHaveLength(1);
+    expect(promptSegments[0].value).toBe('a cute cat');
   });
 });
 

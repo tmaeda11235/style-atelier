@@ -77,6 +77,17 @@ describe("PromptBubbleEditor", () => {
     expect(screen.getByText("yellow")).toBeDefined()
   })
 
+  it("does not split by space", () => {
+    const onChange = vi.fn()
+    render(<PromptBubbleEditor initialSegments={initialSegments} onChange={onChange} />)
+
+    const input = screen.getByPlaceholderText("")
+    fireEvent.change(input, { target: { value: "running fast" } })
+    fireEvent.keyDown(input, { key: "Enter" })
+
+    expect(screen.getByText("running fast")).toBeDefined()
+  })
+
   it("removes a segment when clicking remove button", () => {
     const onChange = vi.fn()
     render(<PromptBubbleEditor initialSegments={initialSegments} onChange={onChange} />)
