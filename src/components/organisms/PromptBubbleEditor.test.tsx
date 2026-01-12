@@ -44,6 +44,37 @@ describe("PromptBubbleEditor", () => {
     expect(onChange).toHaveBeenCalled()
   })
 
+  it("adds a new token on Japanese delimiters", () => {
+    const onChange = vi.fn()
+    render(<PromptBubbleEditor initialSegments={initialSegments} onChange={onChange} />)
+
+    const input = screen.getByPlaceholderText("")
+    
+    // Test with Japanese comma
+    fireEvent.change(input, { target: { value: "猫" } })
+    fireEvent.keyDown(input, { key: "、" })
+    expect(screen.getByText("猫")).toBeDefined()
+
+    // Test with Japanese period
+    fireEvent.change(input, { target: { value: "走る" } })
+    fireEvent.keyDown(input, { key: "。" })
+    expect(screen.getByText("走る")).toBeDefined()
+  })
+
+  it("splits multiple tokens by delimiters", () => {
+    const onChange = vi.fn()
+    render(<PromptBubbleEditor initialSegments={initialSegments} onChange={onChange} />)
+
+    const input = screen.getByPlaceholderText("")
+    fireEvent.change(input, { target: { value: "red,blue;green:yellow" } })
+    fireEvent.keyDown(input, { key: "Enter" })
+
+    expect(screen.getByText("red")).toBeDefined()
+    expect(screen.getByText("blue")).toBeDefined()
+    expect(screen.getByText("green")).toBeDefined()
+    expect(screen.getByText("yellow")).toBeDefined()
+  })
+
   it("removes a segment when clicking remove button", () => {
     const onChange = vi.fn()
     render(<PromptBubbleEditor initialSegments={initialSegments} onChange={onChange} />)
