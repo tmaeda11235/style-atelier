@@ -1,5 +1,6 @@
 import React from "react"
-import { Tab } from "../../hooks/useTabs"
+import type { Tab } from "../../hooks/useTabs"
+import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 
 interface SidePanelLayoutProps {
   activeTab: Tab
@@ -10,6 +11,10 @@ interface SidePanelLayoutProps {
   onClearLogs: () => void
   onResetDb: () => void
   droppedItem: any
+  // New props for global error handling
+  alertType?: AlertType
+  onRetryConnection?: () => void
+  onDismissAlert?: () => void
 }
 
 export function SidePanelLayout({
@@ -21,53 +26,54 @@ export function SidePanelLayout({
   onClearLogs,
   onResetDb,
   droppedItem,
+  alertType,
+  onRetryConnection,
+  onDismissAlert
 }: SidePanelLayoutProps) {
   return (
     <div
-      className={`w-full h-screen flex flex-col font-sans text-slate-800 transition-colors ${
-        isDragging ? "bg-blue-50" : "bg-slate-50"
-      }`}
+      className={`w-full h-screen flex flex-col font-sans text-slate-800 transition-colors ${isDragging ? "bg-blue-50" : "bg-slate-50"
+        }`}
     >
+      {/* Global Alert at the very top */}
+      <ConnectionAlert type={alertType || null} onRetry={onRetryConnection} onDismiss={onDismissAlert} />
+
       <div className="p-4 bg-white shadow-sm z-10">
         <div className="mt-2">
           <nav className="-mb-px flex space-x-4 border-b border-slate-200">
             <button
               onClick={() => onTabChange("history")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "history"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "history"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
             >
               History
             </button>
             <button
               onClick={() => onTabChange("library")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "library"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "library"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
             >
               Library
             </button>
             <button
               onClick={() => onTabChange("decks")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "decks"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "decks"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
             >
               Decks
             </button>
             <button
               onClick={() => onTabChange("workbench")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "workbench"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "workbench"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
             >
               Workbench
             </button>

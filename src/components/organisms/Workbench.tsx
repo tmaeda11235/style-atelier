@@ -8,75 +8,64 @@ import { Sparkles, X, Send, BookUp2 } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import { ParameterEditor } from "./ParameterEditor";
+import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert";
+
 import type { PromptSegment } from "../../lib/db-schema";
 
 interface WorkbenchProps {
   onStartVariationMinting?: (base: any) => void;
   addLog?: (msg: string) => void;
+  setAlertType: (type: AlertType) => void;
 }
 
-export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog }) => {
+export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog, setAlertType }) => {
   const { workbenchCards, toggleCardSelection, clearWorkbench } = useWorkbench();
   const { canEvolve, evolveCard } = useEvolution();
 
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([]);
   const [editedParams, setEditedParams] = useState<any>({});
   const [isInjecting, setIsInjecting] = useState(false);
+  // Removed local alertType state, now using prop
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
   const targetCard = workbenchCards[0];
   const canEvolveTarget = targetCard && canEvolve(targetCard);
 
+  // Check connection on mount
   useEffect(() => {
-    if (isMixingMode) {
-      const allSegments = workbenchCards.flatMap((c) => c.promptSegments);
-      const merged = mergePromptSegments(allSegments);
-      setEditedSegments(merged);
+    const checkConnection = async () => {
+      try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const activeTab = tabs[0];
+        if (!activeTab?.id) return;
 
-      const mergedParams: any = { ...workbenchCards[0].parameters };
-      workbenchCards.slice(1).forEach((parent) => {
-        if (parent.parameters.sref) {
-          const srefArray = Array.isArray(parent.parameters.sref) ? parent.parameters.sref : [parent.parameters.sref]
-          const currentSrefs = Array.isArray(mergedParams.sref) ? mergedParams.sref : mergedParams.sref ? [mergedParams.sref] : []
-          mergedParams.sref = Array.from(new Set([...currentSrefs, ...srefArray]))
-        }
-        if (parent.parameters.p) {
-          const pArray = Array.isArray(parent.parameters.p) ? parent.parameters.p : [parent.parameters.p]
-          const currentPs = Array.isArray(mergedParams.p) ? mergedParams.p : mergedParams.p ? [mergedParams.p] : []
-          mergedParams.p = Array.from(new Set([...currentPs, ...pArray]))
-        }
-      });
+        // Simple PING to check if content script is alive
+        // We use a short timeout because a missing script causes immediate failure or hang
+        await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
+        setAlertType(null);
+      } catch (err) {
+        // If PING fails, we assume disconnected (needs reload)
+        console.log("Connection check failed:", err);
+        setAlertType("disconnected");
+      }
+    };
 
-      setEditedParams(mergedParams);
-    } else if (isEvolutionMode && targetCard) {
-      setEditedSegments(targetCard.promptSegments);
-      setEditedParams(targetCard.parameters);
-    } else {
-      setEditedSegments([]);
-      setEditedParams({});
-    }
-  }, [workbenchCards, isMixingMode, isEvolutionMode, targetCard]);
-
-  const [connectionError, setConnectionError] = useState(false);
-
-  // Reset error when cards change
-  useEffect(() => {
-    setConnectionError(false);
-  }, [workbenchCards]);
+    checkConnection();
+  }, [workbenchCards]); // Re-check when cards change (user activity) or just on mount? 
+  // User might have reloaded page in background. 
+  // Ideally listening to tab updates would be better but simple ping on interaction/render is okay for now.
 
   const handleInjectPrompt = async () => {
     if (workbenchCards.length === 0) return;
     setIsInjecting(true);
-    setConnectionError(false);
+    setAlertType(null);
 
     const fullPrompt = buildPromptString(editedSegments, editedParams);
 
-    let activeTab: chrome.tabs.Tab | undefined;
-
     try {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      activeTab = tabs[0];
+      const activeTab = tabs[0];
 
       if (!activeTab?.id) {
         throw new Error("No active tab found");
@@ -88,23 +77,17 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       });
 
       if (response && response.status === "error") {
-        // Handle specific functional errors gracefully
         if (response.message && response.message.includes("Could not find chat input")) {
-          addLog?.("Prompt box not found. Please ensure you are on the 'Create' page or Reload.");
-          // Also show the reload UI as a fallback helper
-          setConnectionError(true);
+          setAlertType("no_input");
         } else {
-          addLog?.("Something went wrong. Please reload.");
-          setConnectionError(true);
+          setAlertType("disconnected");
         }
       } else {
         addLog?.(`Prompt injected successfully!`);
       }
     } catch (err) {
       console.error("Injection failed:", err);
-      // Suppress technical details in the user log
-      // Just show the UI warning for action
-      setConnectionError(true);
+      setAlertType("disconnected");
     } finally {
       setIsInjecting(false);
     }
@@ -185,15 +168,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                 </div>
               )}
 
-              {connectionError && (
-                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs text-amber-800 flex items-start gap-2">
-                  <span className="mt-0.5">⚠️</span>
-                  <div>
-                    <p className="font-bold">Connection Update Required</p>
-                    <p>Please <span className="font-bold underline cursor-pointer" onClick={() => chrome.tabs.reload()}>reload the page</span> to activate the extension.</p>
-                  </div>
-                </div>
-              )}
+              {/* ConnectionAlert was moved to SidePanelLayout */}
 
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200"
