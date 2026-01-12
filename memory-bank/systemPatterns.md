@@ -33,9 +33,10 @@ tags: []
 
 ## Component Development Rules (Sustainability)
 1. **Atomic Isolation**: New UI elements must be evaluated for decomposition into Atoms/Molecules before creating an Organism.
-2. **Document First**: Every component must have a JSDoc block explaining its purpose and props.
-3. **Pure Atoms**: Atoms must not depend on external hooks or global state (use props instead).
+2. **Document First**: Every component must have a JSDoc block explaining its purpose and props. This helps AI agents and developers understand the intended use case.
+3. **Pure Atoms**: Atoms must not depend on external hooks or global state (use props instead). They should be highly reusable and testable in isolation.
 4. **Consistency**: Reuse existing Atoms/Molecules to maintain UI consistency and reduce technical debt.
+5. **No Logic in Molecules**: Molecules should focus on UI structure and composition. Business logic or heavy state management should be handled in Organisms or Custom Hooks.
 
 ## Project Structure
 To ensure maintainability and scalability, the project follows a strict directory structure:
