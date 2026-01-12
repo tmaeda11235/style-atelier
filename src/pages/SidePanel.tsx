@@ -94,7 +94,7 @@ function SidePanelPage() {
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
           {activeTab === "library" && <LibraryTab addLog={addLog} />}
           {activeTab === "decks" && <DecksTab addLog={addLog} />}
-          {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} />}
+          {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} />}
 
           {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
           <HandBar />
