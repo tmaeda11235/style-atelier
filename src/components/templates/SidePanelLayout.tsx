@@ -65,7 +65,7 @@ export function SidePanelLayout({
           </nav>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
         {droppedItem && (
           <div className="p-3 border rounded bg-white shadow-lg ring-2 ring-blue-500">
             <p className="text-xs font-bold uppercase">New History Item Added!</p>

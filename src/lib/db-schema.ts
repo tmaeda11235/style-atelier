@@ -32,6 +32,7 @@ export interface StyleCard {
   // --- TCG Attributes (Metagame) ---
   tier: 'Common' | 'Rare' | 'Epic' | 'Legendary';
   isFavorite: boolean;
+  isPinned?: boolean;      // 手札（Hand）に入っているか
   usageCount: number;     // 熟練度算出用
   tags: string[];         // 検索用タグ (Visual Indexing用)
   dominantColor: string;  // 主要色のHex (e.g., "#FF00FF")
