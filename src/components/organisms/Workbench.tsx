@@ -101,7 +101,7 @@ export const Workbench: React.FC = () => {
                 {isEvolutionMode && targetCard && <RarityBadge tier={targetCard.tier} />}
               </div>
 
-              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <div className="bg-white">
                 <PromptBubbleEditor 
                   initialSegments={editedSegments} 
                   onChange={setEditedSegments} 

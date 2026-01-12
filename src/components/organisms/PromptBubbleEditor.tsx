@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { PromptBubble } from "../molecules/PromptBubble"
 import type { PromptSegment } from "../../lib/db-schema"
 import { RarityTier } from "../../lib/rarity-config"
+import { cn } from "../../lib/utils"
 
 /**
- * プロンプトのセグメントを一覧表示し、クリックで編集（Text <-> Slotの切り替え）ができるエディタコンポーネント。
+ * プロンプトのセグメントをチップ形式で表示し、自由なテキスト入力でトークンを追加できるエディタ。
  *
  * @param {Object} props
  * @param {PromptSegment[]} props.initialSegments - 初期セグメントデータ
@@ -23,9 +24,15 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   tier,
 }) => {
   const [segments, setSegments] = useState<PromptSegment[]>(initialSegments)
+  const [inputValue, setInputValue] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setSegments(initialSegments)
+    // 外部（Workbench等）からの変更を反映
+    // ただし、自身での変更ループを避けるため、内容が異なる場合のみ更新
+    if (JSON.stringify(initialSegments) !== JSON.stringify(segments)) {
+      setSegments(initialSegments)
+    }
   }, [initialSegments])
 
   useEffect(() => {
@@ -34,32 +41,68 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     }
   }, [segments, onChange])
 
-  const handleBubbleClick = (index: number) => {
-    setSegments(
-      segments.map((seg, i) => {
-        if (i === index) {
-          if (seg.type === "text") {
-            return { type: "slot", label: seg.value, default: seg.value }
-          }
-          if (seg.type === "slot") {
-            return { type: "text", value: seg.label }
-          }
-        }
-        return seg
-      })
-    )
+  const addToken = (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+
+    // カンマ区切りで複数のトークンとして扱う
+    const newTokens: PromptSegment[] = trimmed
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+      .map((value) => ({ type: "text", value }))
+
+    setSegments([...segments, ...newTokens])
+    setInputValue("")
+  }
+
+  const removeSegment = (index: number) => {
+    setSegments(segments.filter((_, i) => i !== index))
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      addToken(inputValue)
+    } else if (e.key === "Backspace" && inputValue === "" && segments.length > 0) {
+      removeSegment(segments.length - 1)
+    } else if (e.key === ",") {
+      e.preventDefault()
+      addToken(inputValue)
+    }
+  }
+
+  const handleBlur = () => {
+    addToken(inputValue)
+  }
+
+  const focusInput = () => {
+    inputRef.current?.focus()
   }
 
   return (
-    <div className="flex flex-wrap gap-2 p-4 bg-slate-100 rounded-lg">
+    <div
+      className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[100px] cursor-text items-start content-start transition-colors focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400"
+      onClick={focusInput}
+    >
       {segments.map((segment, index) => (
         <PromptBubble
-          key={index}
+          key={`${index}-${segment.type === 'text' ? segment.value : segment.type === 'slot' ? segment.label : segment.kind}`}
           segment={segment}
-          onClick={() => handleBubbleClick(index)}
-          tier={tier}
+          onRemove={() => removeSegment(index)}
+          tier={segment.type === 'text' ? undefined : tier} // テキスト以外はカード由来として色を付ける
         />
       ))}
+      <input
+        ref={inputRef}
+        type="text"
+        className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm py-1 text-slate-800 placeholder:text-slate-400"
+        placeholder={segments.length === 0 ? "Type something or select cards..." : ""}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+      />
     </div>
   )
 }
