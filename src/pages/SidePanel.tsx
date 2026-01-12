@@ -4,11 +4,13 @@ import { SidePanelLayout } from "../components/templates/SidePanelLayout"
 import { HistoryTab } from "../components/organisms/HistoryTab"
 import { LibraryTab } from "../components/organisms/LibraryTab"
 import { DecksTab } from "../components/organisms/DecksTab"
+import { Workbench } from "../components/organisms/Workbench"
 import { MintingView } from "../components/organisms/MintingView"
 import { HandBar } from "../components/organisms/HandBar"
 import { useTabs } from "../hooks/useTabs"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
+import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 
 function SidePanelPage() {
   const [logs, setLogs] = useState<string[]>([])
@@ -18,6 +20,7 @@ function SidePanelPage() {
   const { isDragging, droppedItem, handleDragOver, handleDragLeave, handleDrop } = useDragAndDrop(addLog)
   const {
     mintingItem,
+    variationBase,
     editedSegments,
     setEditedSegments,
     isSrefHidden,
@@ -25,8 +28,10 @@ function SidePanelPage() {
     isPHidden,
     setIsPHidden,
     handleStartMinting,
+    handleStartVariationMinting,
     handleSaveMintedCard,
     setMintingItem,
+    setVariationBase,
     selectedRarity,
     setSelectedRarity,
     suggestedKeywords,
@@ -49,45 +54,52 @@ function SidePanelPage() {
 
   return (
     <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className="h-full relative overflow-hidden">
-      <SidePanelLayout
-        activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab)
-          setMintingItem(null)
-        }}
-        isDragging={isDragging}
-        logs={logs}
-        onClearLogs={handleClearLogs}
-        onResetDb={handleResetDb}
-        droppedItem={droppedItem}
-      >
-        {mintingItem && (
-      <MintingView
-        mintingItem={mintingItem}
-        editedSegments={editedSegments}
-        setEditedSegments={setEditedSegments}
-        isSrefHidden={isSrefHidden}
-        setIsSrefHidden={setIsSrefHidden}
-        isPHidden={isPHidden}
-        setIsPHidden={setIsPHidden}
-        onCancelMinting={() => setMintingItem(null)}
-        onSaveMintedCard={handleSaveMintedCard}
-        selectedRarity={selectedRarity}
-        setSelectedRarity={setSelectedRarity}
-        suggestedKeywords={suggestedKeywords}
-            selectedKeywords={selectedKeywords}
-            setSelectedKeywords={setSelectedKeywords}
-            customName={customName}
-            setCustomName={setCustomName}
-          />
-        )}
-        {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
-        {activeTab === "library" && <LibraryTab addLog={addLog} />}
-        {activeTab === "decks" && <DecksTab addLog={addLog} />}
-        
-        {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
-        <HandBar />
-      </SidePanelLayout>
+      <WorkbenchProvider>
+        <SidePanelLayout
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab)
+            setMintingItem(null)
+            setVariationBase(null)
+          }}
+          isDragging={isDragging}
+          logs={logs}
+          onClearLogs={handleClearLogs}
+          onResetDb={handleResetDb}
+          droppedItem={droppedItem}
+        >
+          {(mintingItem || variationBase) && (
+            <MintingView
+              mintingItem={mintingItem}
+              editedSegments={editedSegments}
+              setEditedSegments={setEditedSegments}
+              isSrefHidden={isSrefHidden}
+              setIsSrefHidden={setIsSrefHidden}
+              isPHidden={isPHidden}
+              setIsPHidden={setIsPHidden}
+              onCancelMinting={() => {
+                setMintingItem(null)
+                setVariationBase(null)
+              }}
+              onSaveMintedCard={handleSaveMintedCard}
+              selectedRarity={selectedRarity}
+              setSelectedRarity={setSelectedRarity}
+              suggestedKeywords={suggestedKeywords}
+              selectedKeywords={selectedKeywords}
+              setSelectedKeywords={setSelectedKeywords}
+              customName={customName}
+              setCustomName={setCustomName}
+            />
+          )}
+          {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
+          {activeTab === "library" && <LibraryTab addLog={addLog} />}
+          {activeTab === "decks" && <DecksTab addLog={addLog} />}
+          {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} />}
+
+          {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
+          <HandBar />
+        </SidePanelLayout>
+      </WorkbenchProvider>
     </div>
   )
 }
