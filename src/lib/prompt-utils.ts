@@ -49,8 +49,9 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
     }
   });
 
+  const delimiters = /[,. :;]+/
   const promptSegments: PromptSegment[] = promptText
-    .split(/,/)
+    .split(delimiters)
     .map(s => s.trim())
     .filter(s => s.length > 0)
     .map(value => ({ type: 'text', value }));
