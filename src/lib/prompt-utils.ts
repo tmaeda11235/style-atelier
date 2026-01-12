@@ -1,5 +1,8 @@
 import type { PromptSegment, StyleCard } from "./db-schema";
 
+export const PROMPT_DELIMITER_REGEX = /[,. :;]+/;
+export const PROMPT_DELIMITER_CHARS = [",", "", "", ".", ":", ";", " "];
+
 const PARAM_REGEX = /--([a-z0-9-]+)\s*([^--]*)/g;
 
 export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegment[], parameters: StyleCard['parameters'] } => {
@@ -49,9 +52,8 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
     }
   });
 
-  const delimiters = /[,. :;]+/
   const promptSegments: PromptSegment[] = promptText
-    .split(delimiters)
+    .split(PROMPT_DELIMITER_REGEX)
     .map(s => s.trim())
     .filter(s => s.length > 0)
     .map(value => ({ type: 'text', value }));

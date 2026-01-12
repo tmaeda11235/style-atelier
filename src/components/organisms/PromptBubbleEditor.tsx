@@ -3,6 +3,7 @@ import { PromptBubble } from "../molecules/PromptBubble"
 import type { PromptSegment } from "../../lib/db-schema"
 import { RarityTier } from "../../lib/rarity-config"
 import { cn } from "../../lib/utils"
+import { PROMPT_DELIMITER_REGEX, PROMPT_DELIMITER_CHARS } from "../../lib/prompt-utils"
 
 /**
  * プロンプトのセグメントをチップ形式で表示し、自由なテキスト入力でトークンを追加できるエディタ。
@@ -45,10 +46,8 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     const trimmed = text.trim()
     if (!trimmed) return
 
-    // 複数の区切り文字（, 、 。 . : ;）で複数のトークンとして扱う
-    const delimiters = /[,、。. :;]+/
     const newTokens: PromptSegment[] = trimmed
-      .split(delimiters)
+      .split(PROMPT_DELIMITER_REGEX)
       .map((s) => s.trim())
       .filter((s) => s.length > 0)
       .map((value) => ({ type: "text", value }))
@@ -62,13 +61,12 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const delimiters = [",", "、", "。", ".", ":", ";"]
     if (e.key === "Enter") {
       e.preventDefault()
       addToken(inputValue)
     } else if (e.key === "Backspace" && inputValue === "" && segments.length > 0) {
       removeSegment(segments.length - 1)
-    } else if (delimiters.includes(e.key)) {
+    } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
       e.preventDefault()
       addToken(inputValue)
     }
