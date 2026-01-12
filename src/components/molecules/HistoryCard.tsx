@@ -38,10 +38,10 @@ export function HistoryCard({
           {item.fullCommand}
         </p>
         <Button
-          variant="ghost"
+          variant="primary"
           size="xs"
           onClick={() => onMintClick(item)}
-          className="mt-2 text-blue-600 font-medium hover:bg-blue-50"
+          className="mt-2"
         >
           Mint Card
         </Button>
