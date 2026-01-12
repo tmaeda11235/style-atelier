@@ -80,7 +80,11 @@ export const buildPromptString = (segments: PromptSegment[], params: StyleCard['
   if (params.ar && !maskedKeys.includes('ar')) paramParts.push(`--ar ${params.ar}`);
   if (params.sref?.length && !maskedKeys.includes('sref')) paramParts.push(`--sref ${params.sref.join(' ')}`);
   if (params.cref?.length && !maskedKeys.includes('cref')) paramParts.push(`--cref ${params.cref.join(' ')}`);
-  if (params.p?.length && !maskedKeys.includes('p')) paramParts.push(`--p ${params.p.join(' ')}`);
+  
+  // Backward compatibility for p
+  const pValues = Array.isArray(params.p) ? params.p : params.p ? [params.p] : [];
+  if (pValues.length && !maskedKeys.includes('p')) paramParts.push(`--p ${pValues.join(' ')}`);
+  
   if (params.stylize !== undefined && !maskedKeys.includes('stylize')) paramParts.push(`--s ${params.stylize}`);
   if (params.chaos !== undefined && !maskedKeys.includes('chaos')) paramParts.push(`--c ${params.chaos}`);
   if (params.weird !== undefined && !maskedKeys.includes('weird')) paramParts.push(`--w ${params.weird}`);

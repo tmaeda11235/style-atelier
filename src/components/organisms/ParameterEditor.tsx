@@ -28,9 +28,16 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
     onChange({ ...parameters, [key]: value })
   }
 
+  const getArrayValue = (key: "sref" | "p"): string[] => {
+    const val = parameters[key]
+    if (Array.isArray(val)) return val
+    if (val) return [val as unknown as string]
+    return []
+  }
+
   const addValue = (key: "sref" | "p", value: string, setter: (v: string) => void) => {
     if (!value.trim()) return
-    const currentValues = parameters[key] || []
+    const currentValues = getArrayValue(key)
     if (!currentValues.includes(value.trim())) {
       updateParam(key, [...currentValues, value.trim()])
     }
@@ -38,7 +45,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
   }
 
   const removeValue = (key: "sref" | "p", index: number) => {
-    const currentValues = [...(parameters[key] || [])]
+    const currentValues = [...getArrayValue(key)]
     currentValues.splice(index, 1)
     updateParam(key, currentValues.length > 0 ? currentValues : undefined)
   }
@@ -88,7 +95,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             <User className="w-3 h-3" /> Personalization (--p)
           </label>
           <div className="flex flex-wrap gap-2 mb-2">
-            {(parameters.p || []).map((val, idx) => (
+            {getArrayValue("p").map((val, idx) => (
               <div
                 key={`${val}-${idx}`}
                 className="flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-100 px-2 py-0.5 rounded-full text-[10px] font-bold"
@@ -123,7 +130,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             <Image className="w-3 h-3" /> Style Reference (--sref)
           </label>
           <div className="flex flex-wrap gap-2 mb-2">
-            {(parameters.sref || []).map((url, idx) => (
+            {getArrayValue("sref").map((url, idx) => (
               <div
                 key={`${url}-${idx}`}
                 className="flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full text-[10px] font-bold"
