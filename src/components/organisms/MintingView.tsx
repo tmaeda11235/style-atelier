@@ -1,6 +1,6 @@
 import React from "react"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
-import { BubbleEditor } from "../bubble/BubbleEditor"
+import { PromptBubbleEditor } from "./PromptBubbleEditor"
 import { RarityTier } from "../../lib/rarity-config"
 import { RaritySelector } from "../molecules/RaritySelector"
 import { KeywordChip } from "../molecules/KeywordChip"
@@ -102,7 +102,7 @@ export function MintingView({
               </div>
             </div>
 
-            <BubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
+            <PromptBubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
 
             <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm">
               <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
