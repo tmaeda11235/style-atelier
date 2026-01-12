@@ -116,4 +116,18 @@ describe("PromptBubbleEditor", () => {
     expect(screen.queryByText("color")).toBeNull()
     expect(onChange).toHaveBeenCalled()
   })
+
+  it("toggles segment between text and slot when clicked", () => {
+    const segments: PromptSegment[] = [{ type: "text", value: "test" }]
+    const onChange = vi.fn()
+    render(<PromptBubbleEditor initialSegments={segments} onChange={onChange} />)
+
+    const bubble = screen.getByText("test")
+    fireEvent.click(bubble)
+
+    expect(onChange).toHaveBeenCalledWith([{ type: "slot", label: "test", default: "test" }])
+
+    fireEvent.click(screen.getByText("test"))
+    expect(onChange).toHaveBeenLastCalledWith([{ type: "text", value: "test" }])
+  })
 })
