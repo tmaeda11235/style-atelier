@@ -64,9 +64,11 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
 
     const fullPrompt = buildPromptString(editedSegments, editedParams);
 
+    let activeTab: chrome.tabs.Tab | undefined;
+
     try {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      const activeTab = tabs[0];
+      activeTab = tabs[0];
 
       if (!activeTab?.id) {
         throw new Error("No active tab found");
@@ -83,7 +85,51 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       // Determine if it's a connection error likely caused by missing content script
       const errorMessage = (err as Error).message || "";
       if (errorMessage.includes("Receiving end does not exist") || errorMessage.includes("Could not establish connection")) {
-        addLog?.("Connection failed. Please RELOAD the Midjourney page.");
+        try {
+          addLog?.("Detecting missing content script. Attempting to inject...");
+
+          if (!activeTab?.id) throw new Error("No active tab ID for injection")
+
+          // Dynamically find the content script from manifest to handle hashed filenames
+          const manifest = chrome.runtime.getManifest();
+          const contentScripts = manifest.content_scripts;
+          // Strategy: find the script that matches the current URL or just the main one.
+          // Since we are likely on Midjourney, we can check matches, or just try to inject the main observer.
+          // In Plasmo, content scripts are usually in the first group or specific ones.
+          // We'll look for one that contains 'mj-web-observer' in its js path or just take the first one if it's the only one.
+          // Given the build output, there is 'mj-web-observer.xxxx.js'.
+
+          let scriptFile = "";
+          if (contentScripts) {
+            for (const cs of contentScripts) {
+              if (cs.js && cs.js.some(f => f.includes("mj-web-observer"))) {
+                scriptFile = cs.js.find(f => f.includes("mj-web-observer")) || "";
+                break;
+              }
+            }
+          }
+
+          if (scriptFile) {
+            await chrome.scripting.executeScript({
+              target: { tabId: activeTab.id },
+              files: [scriptFile]
+            });
+
+            // Retry sending message
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for script to initialize
+            await chrome.tabs.sendMessage(activeTab.id, {
+              type: "INJECT_PROMPT",
+              prompt: fullPrompt,
+            });
+            addLog?.("Injection successful after manual script load.");
+            return; // Success, exit
+          } else {
+            addLog?.("Could not find content script file in manifest.");
+          }
+        } catch (injectionErr) {
+          console.error("Fallback injection failed:", injectionErr);
+          addLog?.("Failed to inject content script manually. Please reload the page.");
+        }
       } else {
         addLog?.(`Error: ${errorMessage}`);
       }
