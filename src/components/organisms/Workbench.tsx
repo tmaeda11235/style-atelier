@@ -4,7 +4,7 @@ import { useEvolution } from "../../hooks/useEvolution";
 import { CardThumbnail } from "../molecules/CardThumbnail";
 import { RarityBadge } from "../atoms/RarityBadge";
 import { Button } from "../atoms/Button";
-import { Sparkles, FlaskConical, X, Send } from "lucide-react";
+import { Sparkles, X, Send, BookUp2 } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import { ParameterEditor } from "./ParameterEditor";
@@ -72,7 +72,7 @@ export const Workbench: React.FC = () => {
     <div className="flex flex-col h-full bg-white text-slate-900 p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
-          <FlaskConical className="w-5 h-5 text-blue-500" />
+          <BookUp2 className="w-5 h-5 text-blue-500" />
           Workbench
         </h2>
         {workbenchCards.length > 0 && (
@@ -156,7 +156,7 @@ export const Workbench: React.FC = () => {
 
         {!isEvolutionMode && !isMixingMode && (
           <div className="text-center py-12 px-6 bg-slate-50/50 rounded-xl border border-slate-100 border-dashed">
-            <FlaskConical className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+            <BookUp2 className="w-8 h-8 text-slate-200 mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-400 mb-1">Workbench is Empty</p>
             <p className="text-xs text-slate-300">Select cards from your Hand below.</p>
           </div>
