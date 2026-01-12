@@ -1,6 +1,8 @@
 import React from "react"
 import { useHand } from "../../hooks/useHand"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
+import { Button } from "../atoms/Button"
+import { CardThumbnail } from "../molecules/CardThumbnail"
 
 export function HandBar() {
   const { pinnedCards, unpinCard, clearHand } = useHand()
@@ -16,36 +18,28 @@ export function HandBar() {
       <div className="max-w-md mx-auto p-2">
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Hand ({pinnedCards.length})</span>
-          <button 
+          <Button 
+            variant="ghost" 
+            size="xs" 
             onClick={clearHand}
-            className="text-[10px] text-slate-400 hover:text-red-500 transition-colors"
+            className="text-slate-400 hover:text-red-500"
           >
             Clear All
-          </button>
+          </Button>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {pinnedCards.map((card) => {
             const config = RARITY_CONFIG[card.tier]
             return (
-              <div 
-                key={card.id} 
-                className={`relative flex-shrink-0 w-12 h-12 rounded-md border-2 overflow-hidden group ${config.borderClass}`}
-              >
-                <img 
-                  src={card.thumbnailData} 
-                  alt={card.name} 
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={() => unpinCard(card.id)}
-                  className="absolute -top-1 -right-1 bg-slate-800 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
+              <CardThumbnail
+                key={card.id}
+                imageUrl={card.thumbnailData}
+                alt={card.name}
+                tier={card.tier}
+                size="sm"
+                onDeleteClick={() => unpinCard(card.id)}
+                className={`flex-shrink-0 border-2 ${config.borderClass}`}
+              />
             )
           })}
           {/* Action Button: To Workbench (Future) */}

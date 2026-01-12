@@ -1,7 +1,11 @@
 import React from "react"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import { BubbleEditor } from "../bubble/BubbleEditor"
-import { RARITY_CONFIG, RarityTier } from "../../lib/rarity-config"
+import { RarityTier } from "../../lib/rarity-config"
+import { RaritySelector } from "../molecules/RaritySelector"
+import { KeywordChip } from "../molecules/KeywordChip"
+import { Button } from "../atoms/Button"
+import { Input } from "../atoms/Input"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -76,33 +80,24 @@ export function MintingView({
               <div className="mb-4">
                 <label className="block text-xs font-medium text-slate-500 mb-2">Select Keywords</label>
                 <div className="flex flex-wrap gap-2">
-                  {suggestedKeywords.map((kw, i) => {
-                    const isSelected = selectedKeywords.includes(kw)
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => toggleKeyword(kw)}
-                        className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                          isSelected
-                            ? "bg-blue-500 text-white shadow-sm"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
-                      >
-                        {kw}
-                      </button>
-                    )
-                  })}
+                  {suggestedKeywords.map((kw, i) => (
+                    <KeywordChip
+                      key={i}
+                      label={kw}
+                      isSelected={selectedKeywords.includes(kw)}
+                      onClick={() => toggleKeyword(kw)}
+                    />
+                  ))}
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-500 mb-1">Custom Name / Note</label>
-                <input
+                <Input
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder="Add details..."
-                  className="w-full p-2 text-sm border rounded focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
             </div>
@@ -111,28 +106,10 @@ export function MintingView({
 
             <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm">
               <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {(Object.keys(RARITY_CONFIG) as RarityTier[]).map((tier) => {
-                  const config = RARITY_CONFIG[tier]
-                  const isSelected = selectedRarity === tier
-                  return (
-                    <button
-                      key={tier}
-                      onClick={() => setSelectedRarity(tier)}
-                      className={`p-3 rounded-lg border-2 flex flex-col items-center gap-1 transition-all ${
-                        isSelected
-                          ? `${config.borderClass} ${config.bgClass} bg-opacity-10 ${config.glowClass}`
-                          : "border-slate-100 hover:border-slate-200"
-                      }`}
-                    >
-                      <span className={`text-xs font-black uppercase ${config.textClass} ${isSelected ? "" : "text-slate-400"}`}>
-                        {tier}
-                      </span>
-                      <div className={`w-full h-1 rounded-full ${config.bgClass}`} />
-                    </button>
-                  )
-                })}
-              </div>
+              <RaritySelector
+                selected={selectedRarity}
+                onSelect={setSelectedRarity}
+              />
             </div>
           </>
         )}
@@ -163,18 +140,17 @@ export function MintingView({
         </div>
       </div>
       <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2">
-        <button
+        <Button
+          variant="ghost"
           onClick={onCancelMinting}
-          className="px-4 py-2 text-sm text-slate-600 rounded-md hover:bg-slate-100"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onSaveMintedCard}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600"
         >
           Save Card
-        </button>
+        </Button>
       </div>
     </div>
   )
