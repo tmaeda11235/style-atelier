@@ -31,9 +31,8 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
   const getArrayValue = (key: "sref" | "p"): string[] => {
     const val = parameters[key]
     if (Array.isArray(val)) return val
-    if (typeof val === "string" && val.trim().length > 0) {
-      // âXn‡WÇü¿L "code1 code2" bn4’n
-      return val.trim().split(/\s+/).filter(v => v.length > 0)
+    if (typeof val === "string" && (val as string).trim().length > 0) {
+      return (val as string).trim().split(/\s+/).filter((v) => v.length > 0)
     }
     return []
   }
@@ -41,18 +40,14 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
   const addValue = (key: "sref" | "p", value: string, setter: (v: string) => void) => {
     const trimmed = value.trim()
     if (!trimmed) return
-    
-    // e›L "code1 code2" nˆFkp³üÉ’+€4’n
-    const newItems = trimmed.split(/\s+/).filter(v => v.length > 0)
+    const newItems = trimmed.split(/\s+/).filter((v) => v.length > 0)
     const currentValues = getArrayValue(key)
-    
     const updatedValues = [...currentValues]
-    newItems.forEach(item => {
+    newItems.forEach((item) => {
       if (!updatedValues.includes(item)) {
         updatedValues.push(item)
       }
     })
-    
     updateParam(key, updatedValues)
     setter("")
   }
@@ -70,7 +65,6 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
         <span className="text-xs font-bold uppercase tracking-wider">Parameters</span>
       </div>
 
-      {/* Aspect Ratio */}
       <div className="space-y-2">
         <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
           <Hash className="w-3 h-3" /> Aspect Ratio
@@ -102,7 +96,6 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {/* Personalization */}
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
             <User className="w-3 h-3" /> Personalization (--p)
@@ -137,7 +130,6 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
           </div>
         </div>
 
-        {/* Style Reference */}
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
             <Image className="w-3 h-3" /> Style Reference (--sref)
