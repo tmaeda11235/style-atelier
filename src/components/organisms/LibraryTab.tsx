@@ -4,11 +4,14 @@ import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { SearchField } from "../molecules/SearchField"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 
+import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+
 interface LibraryTabProps {
   addLog: (msg: string) => void
+  setAlertType: (type: AlertType) => void
 }
 
-export function LibraryTab({ addLog }: LibraryTabProps) {
+export function LibraryTab({ addLog, setAlertType }: LibraryTabProps) {
   const {
     styleCards,
     handleCardClick,
@@ -20,7 +23,7 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
     sortBy,
     setSortBy,
     allSrefs,
-  } = useLibrary(addLog)
+  } = useLibrary(addLog, setAlertType)
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,9 +68,8 @@ export function LibraryTab({ addLog }: LibraryTabProps) {
             <div
               key={card.id}
               onClick={() => handleCardClick(card)}
-              className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                config?.borderClass || "border-slate-200"
-              } ${config?.glowClass || ""}`}
+              className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
+                } ${config?.glowClass || ""}`}
             >
               <CardThumbnail
                 imageUrl={card.thumbnailData}

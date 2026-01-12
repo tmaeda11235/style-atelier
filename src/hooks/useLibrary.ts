@@ -3,11 +3,12 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
+import type { AlertType } from "../components/molecules/ConnectionAlert"
 
 export type SortOption = "newest" | "oldest" | "rarity" | "usage"
 export type RarityFilter = "All" | StyleCard["tier"]
 
-export function useLibrary(addLog: (msg: string) => void) {
+export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: AlertType) => void) {
   const [searchTag, setSearchTag] = useState("")
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
@@ -31,7 +32,7 @@ export function useLibrary(addLog: (msg: string) => void) {
     // Filtering
     if (searchTag) {
       const tag = searchTag.toLowerCase()
-      result = result.filter((card) => 
+      result = result.filter((card) =>
         card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
         card.name.toLowerCase().includes(tag) ||
         card.parameters.sref?.some((url) => url.toLowerCase().includes(tag))
@@ -93,12 +94,27 @@ export function useLibrary(addLog: (msg: string) => void) {
             type: "INJECT_PROMPT",
             prompt: prompt,
           })
+          .then((response) => {
+            if (response && response.status === "error") {
+              if (response.message && response.message.includes("Could not find chat input")) {
+                setAlertType("no_input");
+              } else {
+                setAlertType("disconnected");
+              }
+            } else {
+              addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
+            }
+          })
           .catch((err) => {
+            // Fix: Report error to global alert system
+            console.error("Library injection failed:", err);
+            setAlertType("disconnected");
             addLog(`Note: ${err.message || "Could not send to tab"}`)
           })
-        addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
+
       } else {
-        addLog("No active tab found")
+        addLog("No active tab found");
+        setAlertType("disconnected");
       }
     })
   }

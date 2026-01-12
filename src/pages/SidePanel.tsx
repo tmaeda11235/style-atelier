@@ -11,10 +11,16 @@ import { useTabs } from "../hooks/useTabs"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
 import { WorkbenchProvider } from "../contexts/WorkbenchContext"
+import type { AlertType } from "../components/molecules/ConnectionAlert"
 
 function SidePanelPage() {
   const [logs, setLogs] = useState<string[]>([])
-  const addLog = (msg: string) => setLogs((prev) => [msg, ...prev].slice(0, 20))
+  // New global state for connection alerts
+  const [alertType, setAlertType] = useState<AlertType>(null)
+
+  const addLog = (log: string) => {
+    setLogs((prev) => [log, ...prev].slice(0, 20))
+  }
 
   const { activeTab, setActiveTab } = useTabs()
   const { isDragging, droppedItem, handleDragOver, handleDragLeave, handleDrop } = useDragAndDrop(addLog)
@@ -52,6 +58,16 @@ function SidePanelPage() {
     setLogs([])
   }
 
+  // Global retry handler - usually just reload
+  const handleRetryConnection = () => {
+    chrome.tabs.reload();
+    setAlertType(null);
+  }
+
+  const handleDismissAlert = () => {
+    setAlertType(null);
+  }
+
   return (
     <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className="h-full relative overflow-hidden">
       <WorkbenchProvider>
@@ -67,6 +83,9 @@ function SidePanelPage() {
           onClearLogs={handleClearLogs}
           onResetDb={handleResetDb}
           droppedItem={droppedItem}
+          alertType={alertType}
+          onRetryConnection={handleRetryConnection}
+          onDismissAlert={handleDismissAlert}
         >
           {(mintingItem || variationBase) && (
             <MintingView
@@ -92,9 +111,9 @@ function SidePanelPage() {
             />
           )}
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
-          {activeTab === "library" && <LibraryTab addLog={addLog} />}
+          {activeTab === "library" && <LibraryTab addLog={addLog} setAlertType={setAlertType} />}
           {activeTab === "decks" && <DecksTab addLog={addLog} />}
-          {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} />}
+          {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} setAlertType={setAlertType} />}
 
           {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
           <HandBar />
