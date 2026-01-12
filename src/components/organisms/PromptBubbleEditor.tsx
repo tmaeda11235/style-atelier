@@ -45,9 +45,10 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     const trimmed = text.trim()
     if (!trimmed) return
 
-    // カンマ区切りで複数のトークンとして扱う
+    // 複数の区切り文字（, 、 。 . : ;）で複数のトークンとして扱う
+    const delimiters = /[,、。. :;]+/
     const newTokens: PromptSegment[] = trimmed
-      .split(",")
+      .split(delimiters)
       .map((s) => s.trim())
       .filter((s) => s.length > 0)
       .map((value) => ({ type: "text", value }))
@@ -61,12 +62,13 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const delimiters = [",", "、", "。", ".", ":", ";"]
     if (e.key === "Enter") {
       e.preventDefault()
       addToken(inputValue)
     } else if (e.key === "Backspace" && inputValue === "" && segments.length > 0) {
       removeSegment(segments.length - 1)
-    } else if (e.key === ",") {
+    } else if (delimiters.includes(e.key)) {
       e.preventDefault()
       addToken(inputValue)
     }
