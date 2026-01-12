@@ -15,7 +15,7 @@ export interface StyleCard {
     ar?: string;          // Aspect Ratio (e.g., "16:9")
     sref?: string[];      // Style Reference URLs
     cref?: string[];      // Character Reference URLs
-    p?: string;           // Personalization Code
+    p?: string[];         // Personalization Codes
     stylize?: number;     // --s 0-1000
     chaos?: number;       // --c 0-100
     weird?: number;       // --w 0-3000
