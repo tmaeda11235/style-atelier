@@ -88,20 +88,23 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       });
 
       if (response && response.status === "error") {
-        addLog?.(`Error: ${response.message}`);
+        // Handle specific functional errors gracefully
+        if (response.message && response.message.includes("Could not find chat input")) {
+          addLog?.("Prompt box not found. Please ensure you are on the 'Create' page or Reload.");
+          // Also show the reload UI as a fallback helper
+          setConnectionError(true);
+        } else {
+          addLog?.("Something went wrong. Please reload.");
+          setConnectionError(true);
+        }
       } else {
         addLog?.(`Prompt injected successfully!`);
       }
     } catch (err) {
       console.error("Injection failed:", err);
-      // Determine if it's a connection error likely caused by missing content script
-      const errorMessage = (err as Error).message || "";
-      if (errorMessage.includes("Receiving end does not exist") || errorMessage.includes("Could not establish connection")) {
-        setConnectionError(true);
-        addLog?.("Connection failed. Please RELOAD the Midjourney page.");
-      } else {
-        addLog?.(`Error: ${errorMessage}`);
-      }
+      // Suppress technical details in the user log
+      // Just show the UI warning for action
+      setConnectionError(true);
     } finally {
       setIsInjecting(false);
     }
