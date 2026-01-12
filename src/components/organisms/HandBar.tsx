@@ -1,18 +1,18 @@
 import React from "react"
 import { useHand } from "../../hooks/useHand"
+import { useWorkbenchContext } from "../../contexts/WorkbenchContext"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { Button } from "../atoms/Button"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 
 export function HandBar() {
   const { pinnedCards, unpinCard, clearHand } = useHand()
+  const { selectedCardIds, toggleCardSelection } = useWorkbenchContext()
 
   // Always render the container, but hide content if empty
   // This helps confirm DOM existence during debugging
   if (pinnedCards.length === 0) return <div id="handbar-root" />
-
-  console.log("any hand");
-  
+ 
   return (
     <div id="handbar-root" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-50 transition-all">
       <div className="max-w-md mx-auto p-2">
@@ -30,16 +30,27 @@ export function HandBar() {
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {pinnedCards.map((card) => {
             const config = RARITY_CONFIG[card.tier]
+            const isSelected = selectedCardIds.includes(card.id)
             return (
-              <CardThumbnail
+              <div
                 key={card.id}
-                imageUrl={card.thumbnailData}
-                alt={card.name}
-                tier={card.tier}
-                size="sm"
-                onDeleteClick={() => unpinCard(card.id)}
-                className={`flex-shrink-0 border-2 ${config.borderClass}`}
-              />
+                onClick={() => toggleCardSelection(card.id)}
+                className="cursor-pointer"
+              >
+                <CardThumbnail
+                  imageUrl={card.thumbnailData}
+                  alt={card.name}
+                  tier={card.tier}
+                  size="sm"
+                  onDeleteClick={(e) => {
+                    e.stopPropagation()
+                    unpinCard(card.id)
+                  }}
+                  className={`flex-shrink-0 border-2 transition-all ${
+                    isSelected ? "border-blue-500 scale-110 ring-2 ring-blue-200" : config.borderClass
+                  }`}
+                />
+              </div>
             )
           })}
           {/* Action Button: To Workbench (Future) */}

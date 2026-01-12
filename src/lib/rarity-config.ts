@@ -33,4 +33,10 @@ export const RARITY_CONFIG = {
   },
 } as const;
 
+export const UPGRADE_THRESHOLDS: Record<Exclude<RarityTier, 'Legendary'>, number> = {
+  Common: 5,    // 5 uses to reach Rare
+  Rare: 15,    // 15 uses to reach Epic
+  Epic: 40,    // 40 uses to reach Legendary
+};
+
 export type RarityTier = keyof typeof RARITY_CONFIG;

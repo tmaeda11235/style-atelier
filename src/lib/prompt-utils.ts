@@ -6,12 +6,11 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
   const parameters: StyleCard['parameters'] = {};
   let promptText = fullCommand;
 
-  // Extract parameters
   const matches = [...fullCommand.matchAll(PARAM_REGEX)];
   matches.forEach(match => {
     const key = match[1].trim();
     const value = match[2] ? match[2].trim() : '';
-    promptText = promptText.replace(match[0], ''); // Remove param from prompt text
+    promptText = promptText.replace(match[0], '');
 
     switch (key) {
       case 'ar':
@@ -50,15 +49,12 @@ export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegmen
     }
   });
 
-  // Create prompt segments from the remaining text
   const promptSegments: PromptSegment[] = promptText
     .split(/,/)
     .map(s => s.trim())
     .filter(s => s.length > 0)
     .map(value => ({ type: 'text', value }));
   
-  // TODO: Implement slot and chip parsing in the future
-
   return { promptSegments, parameters };
 };
 
@@ -69,11 +65,12 @@ export const buildPromptString = (segments: PromptSegment[], params: StyleCard['
         case 'text':
           return seg.value;
         case 'slot':
-          return `{{${seg.label}}}`; // or seg.default
+          return `{{${seg.label}}}`;
         case 'chip':
-          return ``; // chips are handled as params
+          return ``;
       }
     })
+    .filter(val => !!val && val.trim() !== '')
     .join(', ');
 
   const paramParts: string[] = [];

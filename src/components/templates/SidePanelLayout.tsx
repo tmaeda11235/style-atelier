@@ -1,6 +1,5 @@
 import React from "react"
-
-type Tab = "history" | "library" | "decks"
+import { Tab } from "../../hooks/useTabs"
 
 interface SidePanelLayoutProps {
   activeTab: Tab
@@ -61,6 +60,16 @@ export function SidePanelLayout({
               }`}
             >
               Decks
+            </button>
+            <button
+              onClick={() => onTabChange("workbench")}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "workbench"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Workbench
             </button>
           </nav>
         </div>
