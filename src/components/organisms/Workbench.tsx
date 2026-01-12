@@ -33,10 +33,11 @@ export const Workbench: React.FC = () => {
         if (parent.parameters.sref) {
           mergedParams.sref = Array.from(new Set([...(mergedParams.sref || []), ...parent.parameters.sref]));
         }
-        if (parent.parameters.p && !mergedParams.p) {
-          mergedParams.p = parent.parameters.p;
+        if (parent.parameters.p) {
+          mergedParams.p = Array.from(new Set([...(mergedParams.p || []), ...parent.parameters.p]));
         }
       });
+
       setEditedParams(mergedParams);
     } else if (isEvolutionMode && targetCard) {
       setEditedSegments(targetCard.promptSegments);
