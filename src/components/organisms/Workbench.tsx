@@ -58,9 +58,17 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     }
   }, [workbenchCards, isMixingMode, isEvolutionMode, targetCard]);
 
+  const [connectionError, setConnectionError] = useState(false);
+
+  // Reset error when cards change
+  useEffect(() => {
+    setConnectionError(false);
+  }, [workbenchCards]);
+
   const handleInjectPrompt = async () => {
     if (workbenchCards.length === 0) return;
     setIsInjecting(true);
+    setConnectionError(false);
 
     const fullPrompt = buildPromptString(editedSegments, editedParams);
 
@@ -74,62 +82,23 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         throw new Error("No active tab found");
       }
 
-      await chrome.tabs.sendMessage(activeTab.id, {
+      const response = await chrome.tabs.sendMessage(activeTab.id, {
         type: "INJECT_PROMPT",
         prompt: fullPrompt,
       });
 
-      addLog?.(`Prompt injected successfully!`);
+      if (response && response.status === "error") {
+        addLog?.(`Error: ${response.message}`);
+      } else {
+        addLog?.(`Prompt injected successfully!`);
+      }
     } catch (err) {
       console.error("Injection failed:", err);
       // Determine if it's a connection error likely caused by missing content script
       const errorMessage = (err as Error).message || "";
       if (errorMessage.includes("Receiving end does not exist") || errorMessage.includes("Could not establish connection")) {
-        try {
-          addLog?.("Detecting missing content script. Attempting to inject...");
-
-          if (!activeTab?.id) throw new Error("No active tab ID for injection")
-
-          // Dynamically find the content script from manifest to handle hashed filenames
-          const manifest = chrome.runtime.getManifest();
-          const contentScripts = manifest.content_scripts;
-          // Strategy: find the script that matches the current URL or just the main one.
-          // Since we are likely on Midjourney, we can check matches, or just try to inject the main observer.
-          // In Plasmo, content scripts are usually in the first group or specific ones.
-          // We'll look for one that contains 'mj-web-observer' in its js path or just take the first one if it's the only one.
-          // Given the build output, there is 'mj-web-observer.xxxx.js'.
-
-          let scriptFile = "";
-          if (contentScripts) {
-            for (const cs of contentScripts) {
-              if (cs.js && cs.js.some(f => f.includes("mj-web-observer"))) {
-                scriptFile = cs.js.find(f => f.includes("mj-web-observer")) || "";
-                break;
-              }
-            }
-          }
-
-          if (scriptFile) {
-            await chrome.scripting.executeScript({
-              target: { tabId: activeTab.id },
-              files: [scriptFile]
-            });
-
-            // Retry sending message
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit for script to initialize
-            await chrome.tabs.sendMessage(activeTab.id, {
-              type: "INJECT_PROMPT",
-              prompt: fullPrompt,
-            });
-            addLog?.("Injection successful after manual script load.");
-            return; // Success, exit
-          } else {
-            addLog?.("Could not find content script file in manifest.");
-          }
-        } catch (injectionErr) {
-          console.error("Fallback injection failed:", injectionErr);
-          addLog?.("Failed to inject content script manually. Please reload the page.");
-        }
+        setConnectionError(true);
+        addLog?.("Connection failed. Please RELOAD the Midjourney page.");
       } else {
         addLog?.(`Error: ${errorMessage}`);
       }
@@ -210,6 +179,16 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                       Need more uses to evolve this card
                     </p>
                   )}
+                </div>
+              )}
+
+              {connectionError && (
+                <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs text-amber-800 flex items-start gap-2">
+                  <span className="mt-0.5">⚠️</span>
+                  <div>
+                    <p className="font-bold">Connection Update Required</p>
+                    <p>Please <span className="font-bold underline cursor-pointer" onClick={() => chrome.tabs.reload()}>reload the page</span> to activate the extension.</p>
+                  </div>
                 </div>
               )}
 

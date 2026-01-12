@@ -9,7 +9,7 @@ export interface IExtractor {
 }
 
 export interface IActionHandler {
-  handle(payload: any): Promise<void> | void
+  handle(payload: any): Promise<void> | void | Promise<boolean>
 }
 
 export interface IService {
