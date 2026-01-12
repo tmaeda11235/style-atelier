@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPromptString, parsePrompt } from './prompt-utils';
+import { buildPromptString, parsePrompt, mergePromptSegments } from './prompt-utils';
 import type { PromptSegment, StyleCard } from './db-schema';
 
 describe('buildPromptString', () => {
@@ -43,5 +43,32 @@ describe('parsePrompt', () => {
     const { parameters } = parsePrompt(prompt);
     expect(parameters.p).toBe('pcd78d7 owipony');
     expect(parameters.ar).toBe('16:9');
+  });
+});
+
+describe('mergePromptSegments', () => {
+  it('should remove duplicate text segments', () => {
+    const segments: PromptSegment[] = [
+      { type: 'text', value: 'a cat' },
+      { type: 'text', value: 'a cat' },
+      { type: 'text', value: 'A CAT ' },
+      { type: 'text', value: 'a dog' },
+    ];
+    const merged = mergePromptSegments(segments);
+    expect(merged).toHaveLength(2);
+    expect(merged[0].value).toBe('a cat');
+    expect(merged[1].value).toBe('a dog');
+  });
+
+  it('should keep non-text segments', () => {
+    const segments: PromptSegment[] = [
+      { type: 'text', value: 'a cat' },
+      { type: 'slot', label: 'animal', id: '1' },
+      { type: 'text', value: 'a cat' },
+    ];
+    const merged = mergePromptSegments(segments);
+    expect(merged).toHaveLength(2);
+    expect(merged[0].value).toBe('a cat');
+    expect(merged[1].type).toBe('slot');
   });
 });
