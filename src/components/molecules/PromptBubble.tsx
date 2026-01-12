@@ -12,54 +12,60 @@ import { RARITY_CONFIG, RarityTier } from "../../lib/rarity-config"
  * @param {() => void} props.onClick - クリック時のハンドラ
  * @param {RarityTier} [props.tier] - 適用するレアリティ
  */
+import { X } from "lucide-react"
+
 interface PromptBubbleProps {
   segment: PromptSegment
-  onClick: () => void
+  onClick?: () => void
+  onRemove?: () => void
   tier?: RarityTier
+  className?: string
 }
 
 export const PromptBubble: React.FC<PromptBubbleProps> = ({
   segment,
   onClick,
+  onRemove,
   tier,
+  className,
 }) => {
   const rarityConfig = tier ? RARITY_CONFIG[tier] : null
 
   const bubbleClasses = cn(
-    "px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors flex items-center gap-2 border-2",
+    "group px-3 py-1 rounded-full text-sm font-medium transition-colors flex items-center gap-2 border-2 shrink-0",
     {
-      "bg-slate-200 text-slate-800 hover:bg-slate-300 border-transparent":
+      "cursor-pointer": !!onClick,
+      "bg-slate-100 text-slate-700 hover:bg-slate-200 border-transparent":
         segment.type === "text" && !rarityConfig,
-      "bg-blue-200 text-blue-800 hover:bg-blue-300 border-transparent":
+      "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100":
         segment.type === "slot" && !rarityConfig,
-      "bg-green-200 text-green-800 hover:bg-green-300 border-transparent":
+      "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100":
         segment.type === "chip" && !rarityConfig,
+      [rarityConfig?.bgClass || ""]: !!rarityConfig,
+      [rarityConfig?.textClass || ""]: !!rarityConfig,
       [rarityConfig?.borderClass || ""]: !!rarityConfig,
       [rarityConfig?.glowClass || ""]: !!rarityConfig,
-    }
+    },
+    className
   )
 
   const renderContent = () => {
     switch (segment.type) {
       case "text":
-        return <span>{segment.value}</span>
+        return <span className="max-w-[150px] truncate">{segment.value}</span>
       case "slot":
         return (
-          <>
-            <span>{segment.label}</span>
-            <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded-full">
-              Slot
-            </span>
-          </>
+          <div className="flex items-center gap-1">
+            <span className="max-w-[120px] truncate">{segment.label}</span>
+            <span className="text-[10px] uppercase opacity-50 font-bold">Slot</span>
+          </div>
         )
       case "chip":
         return (
-          <>
-            <span>{segment.kind}</span>
-            <span className="text-xs bg-green-100 text-green-700 px-1 rounded-full">
-              Chip
-            </span>
-          </>
+          <div className="flex items-center gap-1">
+            <span className="max-w-[120px] truncate">{segment.kind}</span>
+            <span className="text-[10px] uppercase opacity-50 font-bold">Card</span>
+          </div>
         )
     }
   }
@@ -67,6 +73,17 @@ export const PromptBubble: React.FC<PromptBubbleProps> = ({
   return (
     <div className={bubbleClasses} onClick={onClick}>
       {renderContent()}
+      {onRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
+          className="hover:bg-black/10 rounded-full p-0.5 transition-colors"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      )}
     </div>
   )
 }
