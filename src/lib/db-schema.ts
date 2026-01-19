@@ -57,14 +57,6 @@ export type PromptSegment =
   | { type: 'chip'; kind: 'sref' | 'cref'; value: string }; // 参照画像チップ
 
 
-export interface Deck {
-  id: string;
-  name: string;        // e.g., "Project: Manga A"
-  cardIds: string[];   // カードの並び順も保持
-  themeColor?: string; // デッキのアイコン色
-  lastUsedAt: number;  // 最近使った順にソートするため
-}
-
 export interface HistoryItem {
   id: string;             // Job ID from MJ
   fullCommand: string;    // 生のプロンプト全文
