@@ -3,7 +3,6 @@ import { db } from "../lib/db"
 import { SidePanelLayout } from "../components/templates/SidePanelLayout"
 import { HistoryTab } from "../components/organisms/HistoryTab"
 import { LibraryTab } from "../components/organisms/LibraryTab"
-import { DecksTab } from "../components/organisms/DecksTab"
 import { Workbench } from "../components/organisms/Workbench"
 import { MintingView } from "../components/organisms/MintingView"
 import { HandBar } from "../components/organisms/HandBar"
@@ -49,7 +48,7 @@ function SidePanelPage() {
 
   const handleResetDb = async () => {
     if (window.confirm("Are you sure you want to delete ALL DATA?")) {
-      await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.decks.clear(), db.userSettings.clear()])
+      await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.userSettings.clear()])
       addLog("All data cleared.")
     }
   }
@@ -112,7 +111,6 @@ function SidePanelPage() {
           )}
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
           {activeTab === "library" && <LibraryTab addLog={addLog} setAlertType={setAlertType} />}
-          {activeTab === "decks" && <DecksTab addLog={addLog} />}
           {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} setAlertType={setAlertType} />}
 
           {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}

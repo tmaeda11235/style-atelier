@@ -11,7 +11,7 @@ export interface VariationBase {
   genealogy: StyleCard["genealogy"];
 }
 
-export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "history" | "library" | "decks" | "workbench") => void) {
+export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "history" | "library" | "workbench") => void) {
   const [mintingItem, setMintingItem] = useState<HistoryItem | null>(null)
   const [variationBase, setVariationBase] = useState<VariationBase | null>(null)
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
