@@ -24,12 +24,14 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   onChange,
   tier,
 }) => {
-  const [segments, setSegments] = useState<PromptSegment[]>(initialSegments)
+  const [segments, setSegments] = useState<PromptSegment[]>(
+    () => initialSegments.length > 0 ? [...initialSegments] : initialSegments
+  )
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // 外部（Workbench等）からの変更を反映
+    // 外部（Workbench 等）からの変更を反映
     // ただし、自身での変更ループを避けるため、内容が異なる場合のみ更新
     if (JSON.stringify(initialSegments) !== JSON.stringify(segments)) {
       setSegments(initialSegments)
