@@ -1,4 +1,13 @@
 
+export interface CustomCategory {
+  id: string;             // UUID or unique slug (e.g. "style")
+  name: string;           // Category Name (e.g., "Style", "Cyberpunk")
+  iconEmoji?: string;     // Default emoji icon (e.g. "🎨")
+  iconUrl?: string;       // Custom base64 image URL selected from Library card
+  iconCardId?: string;    // Reference to original source card
+  createdAt: number;
+}
+
 export interface StyleCard {
   // --- Basic Identity ---
   id: string;             // UUID (e.g., "550e8400-e29b...")
@@ -35,7 +44,9 @@ export interface StyleCard {
   isPinned?: boolean;      // 手札（Hand）に入っているか
   usageCount: number;     // 熟練度算出用
   tags: string[];         // 検索用タグ (Visual Indexing用)
+  category?: string;      // 選択されたカテゴリID
   dominantColor: string;  // 主要色のHex (e.g., "#FF00FF")
+  accentColor?: string;   // アクセント色のHex (e.g., "#00FF00")
 
   // --- Visuals (Skin) ---
   thumbnailData: string;  // Base64 (軽量化されたサムネイル)

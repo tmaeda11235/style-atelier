@@ -11,9 +11,11 @@ export type RarityFilter = "All" | StyleCard["tier"]
 export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: AlertType) => void) {
   const [searchTag, setSearchTag] = useState("")
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>("All")
+  const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
 
   const allCards = useLiveQuery(() => db.styleCards.toArray())
+  const categories = useLiveQuery(() => db.categories.toArray()) || []
 
   const allSrefs = useMemo(() => {
     if (!allCards) return []
@@ -32,15 +34,24 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
     // Filtering
     if (searchTag) {
       const tag = searchTag.toLowerCase()
-      result = result.filter((card) =>
-        card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
-        card.name.toLowerCase().includes(tag) ||
-        card.parameters.sref?.some((url) => url.toLowerCase().includes(tag))
-      )
+      result = result.filter((card) => {
+        const catObj = categories.find((c) => c.id === card.category)
+        const categoryName = catObj ? catObj.name.toLowerCase() : ""
+        return (
+          card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
+          card.name.toLowerCase().includes(tag) ||
+          card.parameters.sref?.some((url) => url.toLowerCase().includes(tag)) ||
+          categoryName.includes(tag)
+        )
+      })
     }
 
     if (rarityFilter !== "All") {
       result = result.filter((card) => card.tier === rarityFilter)
+    }
+
+    if (categoryFilter !== "All") {
+      result = result.filter((card) => card.category === categoryFilter)
     }
 
     // TODO: Add dominantColor filtering if needed
@@ -64,7 +75,7 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
     })
 
     return result
-  }, [allCards, searchTag, rarityFilter, sortBy])
+  }, [allCards, categories, searchTag, rarityFilter, categoryFilter, sortBy])
 
   const togglePin = async (card: StyleCard, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -127,8 +138,11 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
     setSearchTag,
     rarityFilter,
     setRarityFilter,
+    categoryFilter,
+    setCategoryFilter,
     sortBy,
     setSortBy,
     allSrefs,
+    categories,
   }
 }

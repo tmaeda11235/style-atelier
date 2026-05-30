@@ -1,7 +1,7 @@
 import React from "react"
 import { RarityBadge } from "../atoms/RarityBadge"
 import { IconButton } from "../atoms/IconButton"
-import { RarityTier } from "../../lib/rarity-config"
+import type { RarityTier } from "../../lib/rarity-config"
 
 /**
  * カードのサムネイル画像、レアリティバッジ、ピン留めアクションを組み合わせたコンポーネント。
@@ -27,6 +27,7 @@ interface CardThumbnailProps {
   onInjectClick?: (e: React.MouseEvent) => void
   size?: "sm" | "md" | "lg"
   className?: string
+  category?: { id: string; name: string; iconEmoji?: string; iconUrl?: string }
 }
 
 export function CardThumbnail({
@@ -40,6 +41,7 @@ export function CardThumbnail({
   onInjectClick,
   size = "md",
   className = "",
+  category,
 }: CardThumbnailProps) {
   const sizeClasses = {
     sm: "w-12 h-12",
@@ -53,6 +55,20 @@ export function CardThumbnail({
 
   return (
     <div className={`relative overflow-hidden rounded-lg group ${sizeClasses[size]} ${className}`}>
+      {/* Category Icon */}
+      {category && (
+        <div
+          className="absolute top-1.5 left-1.5 flex items-center justify-center bg-slate-900/60 border border-white/20 text-white rounded-full w-6 h-6 shadow-md z-10 overflow-hidden backdrop-blur-[2px]"
+          title={`Category: ${category.name}`}
+        >
+          {category.iconUrl ? (
+            <img src={category.iconUrl} alt={category.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xs leading-none">{category.iconEmoji || "🖼️"}</span>
+          )}
+        </div>
+      )}
+
       {imagesToRender.length === 4 ? (
         <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
           <img

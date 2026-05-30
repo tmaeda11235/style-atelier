@@ -129,4 +129,31 @@ describe("CardThumbnail", () => {
     fireEvent.click(buttons[0])
     expect(mockOnInjectClick).toHaveBeenCalled()
   })
+
+  it("renders category icon emoji when provided", () => {
+    const category = { id: "style", name: "Style", iconEmoji: "🎨" }
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        category={category}
+      />
+    )
+    expect(screen.getByText("🎨")).toBeDefined()
+  })
+
+  it("renders category custom icon image when provided", () => {
+    const category = { id: "custom", name: "Custom", iconUrl: "data:image/png;base64,icon_data" }
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        category={category}
+      />
+    )
+    const categoryImg = screen.getAllByRole("img").find(img => img.getAttribute("src") === "data:image/png;base64,icon_data")
+    expect(categoryImg).toBeDefined()
+  })
 })

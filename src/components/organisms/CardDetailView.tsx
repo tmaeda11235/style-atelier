@@ -10,6 +10,7 @@ import { db } from "../../lib/db"
 import { buildPromptString } from "../../lib/prompt-utils"
 import { X, Send, Save, Trash2, CheckCircle2 } from "lucide-react"
 import type { AlertType } from "../molecules/ConnectionAlert"
+import { useLiveQuery } from "dexie-react-hooks"
 
 interface CardDetailViewProps {
   card: StyleCard
@@ -29,12 +30,15 @@ export function CardDetailView({
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
 
+  const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
+
   const [name, setName] = useState(card.name)
   const [tier, setTier] = useState(card.tier)
   const [promptSegments, setPromptSegments] = useState<PromptSegment[]>(card.promptSegments || [])
   const [parameters, setParameters] = useState<StyleCard["parameters"]>(card.parameters || {})
   const [isSrefHidden, setIsSrefHidden] = useState(card.masking?.isSrefHidden || false)
   const [isPHidden, setIsPHidden] = useState(card.masking?.isPHidden || false)
+  const [category, setCategory] = useState(card.category || "")
   
   // Tags editing state
   const [tags, setTags] = useState<string[]>(card.tags || [])
@@ -52,6 +56,7 @@ export function CardDetailView({
     setParameters(card.parameters || {})
     setIsSrefHidden(card.masking?.isSrefHidden || false)
     setIsPHidden(card.masking?.isPHidden || false)
+    setCategory(card.category || "")
     setTags(card.tags || [])
     const initialImages = card.images && card.images.length > 0 ? card.images : [card.thumbnailData].filter(Boolean)
     setSelectedThumbs(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []))
@@ -98,6 +103,7 @@ export function CardDetailView({
       images,
       selectedThumbnails: selectedThumbs,
       thumbnailData: primaryThumb,
+      category: category || undefined,
       masking: {
         isSrefHidden,
         isPHidden,
@@ -150,6 +156,52 @@ export function CardDetailView({
             />
           </div>
 
+          {/* Category Selector */}
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full text-sm border rounded bg-white p-2"
+            >
+              <option value="">No Category</option>
+              {categoriesList.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.iconEmoji || "🖼️"} {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Color Palette Display */}
+          {(card.dominantColor || card.accentColor) && (
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-2">Detected Palette</label>
+              <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                {card.dominantColor && (
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
+                      style={{ backgroundColor: card.dominantColor }}
+                      title="Dominant Color"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Dominant ({card.dominantColor})</span>
+                  </div>
+                )}
+                {card.accentColor && (
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
+                      style={{ backgroundColor: card.accentColor }}
+                      title="Accent Color"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Accent ({card.accentColor})</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Tags Editor */}
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">Tags</label>
@@ -181,7 +233,7 @@ export function CardDetailView({
                 placeholder="Add new tag..."
                 className="text-xs py-1"
               />
-              <Button type="submit" size="xs" variant="slate">
+              <Button type="submit" size="xs" variant="secondary">
                 Add
               </Button>
             </form>
@@ -286,7 +338,7 @@ export function CardDetailView({
         </Button>
         <div className="flex gap-2">
           <Button
-            variant="slate"
+            variant="secondary"
             onClick={handleTryOnMidjourney}
             className="flex items-center gap-1.5"
           >

@@ -1,7 +1,9 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { Settings2, Image, User } from "lucide-react"
 import { AspectRatioSelector } from "../molecules/AspectRatioSelector"
 import { ParameterArrayEditor } from "../molecules/ParameterArrayEditor"
+import { useLiveQuery } from "dexie-react-hooks"
+import { db } from "../../lib/db"
 
 interface ParameterEditorProps {
   parameters: {
@@ -22,6 +24,16 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
   const updateParam = (key: string, value: any) => {
     onChange({ ...parameters, [key]: value })
   }
+
+  const allCards = useLiveQuery(() => db.styleCards.toArray()) || []
+
+  const allSrefs = useMemo(() => {
+    const srefs = new Set<string>()
+    allCards.forEach((card) => {
+      card.parameters?.sref?.forEach((url) => srefs.add(url))
+    })
+    return Array.from(srefs)
+  }, [allCards])
 
   return (
     <div className="space-y-4 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
@@ -59,6 +71,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             border: "border-blue-100",
             hover: "hover:text-blue-900",
           }}
+          options={allSrefs}
         />
       </div>
     </div>
