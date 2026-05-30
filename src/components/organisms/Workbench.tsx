@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useWorkbench } from "../../hooks/useWorkbench";
 import { useEvolution } from "../../hooks/useEvolution";
 import { CardThumbnail } from "../molecules/CardThumbnail";
 import { RarityBadge } from "../atoms/RarityBadge";
 import { Button } from "../atoms/Button";
-import { Sparkles, X, Send, BookUp2 } from "lucide-react";
+import { Sparkles, X, Send, BookUp2, Pin } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import { ParameterEditor } from "./ParameterEditor";
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert";
+import { db } from "../../lib/db";
 
 import type { PromptSegment } from "../../lib/db-schema";
 
@@ -19,18 +20,39 @@ interface WorkbenchProps {
 }
 
 export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog, setAlertType }) => {
-  const { workbenchCards, toggleCardSelection, clearWorkbench } = useWorkbench();
+  const { workbenchCards, handCards, toggleCardSelection, clearWorkbench } = useWorkbench();
   const { canEvolve, evolveCard } = useEvolution();
 
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([]);
   const [editedParams, setEditedParams] = useState<any>({});
   const [isInjecting, setIsInjecting] = useState(false);
-  // Removed local alertType state, now using prop
+  const [slotValues, setSlotValues] = useState<Record<string, string>>({});
+  const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({});
+
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
   const targetCard = workbenchCards[0];
   const canEvolveTarget = targetCard && canEvolve(targetCard);
+
+  const workbenchCardsDependency = workbenchCards.map(c => `${c.id}-${c.updatedAt || 0}`).join(",");
+
+  // Load slot history from localStorage
+  const loadSlotHistory = () => {
+    try {
+      const stored = localStorage.getItem("style_atelier_slot_history");
+      if (stored) {
+        setSlotHistory(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error("Failed to load slot history:", e);
+    }
+  };
+
+  useEffect(() => {
+    loadSlotHistory();
+  }, []);
 
   // Check connection on mount
   useEffect(() => {
@@ -41,27 +63,134 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         if (!activeTab?.id) return;
 
         // Simple PING to check if content script is alive
-        // We use a short timeout because a missing script causes immediate failure or hang
         await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
         setAlertType(null);
       } catch (err) {
-        // If PING fails, we assume disconnected (needs reload)
         console.log("Connection check failed:", err);
         setAlertType("disconnected");
       }
     };
 
     checkConnection();
-  }, [workbenchCards]); // Re-check when cards change (user activity) or just on mount? 
-  // User might have reloaded page in background. 
-  // Ideally listening to tab updates would be better but simple ping on interaction/render is okay for now.
+  }, [workbenchCardsDependency]);
+
+  // Load segments, parameters, and initialize slotValues when workbenchCards changes
+  useEffect(() => {
+    if (workbenchCards.length === 0) {
+      setEditedSegments([]);
+      setEditedParams({});
+      setSlotValues({});
+      return;
+    }
+
+    let nextSegments: PromptSegment[] = [];
+    let nextParams: any = {};
+
+    if (workbenchCards.length === 1) {
+      const target = workbenchCards[0];
+      nextSegments = target.promptSegments || [];
+      nextParams = target.parameters || {};
+    } else {
+      const allSegments = workbenchCards.flatMap(p => p.promptSegments || []);
+      nextSegments = mergePromptSegments(allSegments);
+      
+      const mainParent = workbenchCards[0];
+      nextParams = { ...mainParent.parameters };
+      workbenchCards.slice(1).forEach(parent => {
+        if (parent.parameters?.sref) {
+          const combinedSref = [...(parent.parameters.sref || []), ...(nextParams.sref || [])];
+          nextParams.sref = Array.from(new Set(combinedSref)).slice(0, 5);
+        }
+        if (parent.parameters?.cref) {
+          const combinedCref = [...(parent.parameters.cref || []), ...(nextParams.cref || [])];
+          nextParams.cref = Array.from(new Set(combinedCref)).slice(0, 5);
+        }
+      });
+    }
+
+    setEditedSegments(nextSegments);
+    setEditedParams(nextParams);
+
+    // Initialize slotValues based on nextSegments
+    const initialSlotValues: Record<string, string> = {};
+    nextSegments.forEach(seg => {
+      if (seg.type === "slot") {
+        initialSlotValues[seg.label] = seg.default || "";
+      }
+    });
+    setSlotValues(initialSlotValues);
+  }, [workbenchCardsDependency]);
+
+  // Auto-focus the first slot input
+  useEffect(() => {
+    const hasSlots = editedSegments.some(seg => seg.type === "slot");
+    if (hasSlots) {
+      const timer = setTimeout(() => {
+        firstInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [workbenchCardsDependency, editedSegments]);
+
+  const handleSlotValueChange = (label: string, value: string) => {
+    setSlotValues(prev => ({
+      ...prev,
+      [label]: value
+    }));
+  };
+
+  const handlePinToHand = async (value: string, label: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+
+    try {
+      const newCard = {
+        id: crypto.randomUUID(),
+        name: trimmed,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        promptSegments: [{ type: "text" as const, value: trimmed }],
+        parameters: {},
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common" as const,
+        isFavorite: false,
+        isPinned: true,
+        usageCount: 0,
+        tags: [label.toLowerCase()],
+        dominantColor: "#cbd5e1",
+        thumbnailData: "",
+        frameId: "default",
+        genealogy: {
+          generation: 1,
+          parentIds: [],
+        },
+        isVariable: true,
+      };
+
+      await db.styleCards.add(newCard);
+      addLog?.(`Pinned "${trimmed}" to Hand under tag "${label}"`);
+    } catch (err) {
+      console.error("Failed to pin card to Hand:", err);
+    }
+  };
 
   const handleInjectPrompt = async () => {
     if (workbenchCards.length === 0) return;
     setIsInjecting(true);
     setAlertType(null);
 
-    const fullPrompt = buildPromptString(editedSegments, editedParams);
+    // Replace slot segments with their filled variable values
+    const resolvedSegments = editedSegments.map(seg => {
+      if (seg.type === "slot") {
+        return {
+          type: "text" as const,
+          value: slotValues[seg.label] || seg.default || seg.label
+        };
+      }
+      return seg;
+    });
+
+    const fullPrompt = buildPromptString(resolvedSegments, editedParams);
 
     try {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -84,6 +213,22 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         }
       } else {
         addLog?.(`Prompt injected successfully!`);
+
+        // Save slot values to history on success
+        const existing = localStorage.getItem("style_atelier_slot_history");
+        const history: Record<string, string[]> = existing ? JSON.parse(existing) : {};
+
+        Object.entries(slotValues).forEach(([lbl, val]) => {
+          const trimmedVal = val.trim();
+          if (!trimmedVal) return;
+          if (!history[lbl]) {
+            history[lbl] = [];
+          }
+          history[lbl] = [trimmedVal, ...history[lbl].filter(v => v !== trimmedVal)].slice(0, 10);
+        });
+
+        localStorage.setItem("style_atelier_slot_history", JSON.stringify(history));
+        loadSlotHistory();
       }
     } catch (err) {
       console.error("Injection failed:", err);
@@ -92,6 +237,9 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       setIsInjecting(false);
     }
   };
+
+  // Extract slots
+  const slots = editedSegments.filter((seg): seg is { type: "slot"; label: string; default: string } => seg.type === "slot");
 
   return (
     <div className="flex flex-col h-full bg-white text-slate-900 p-4 space-y-4">
@@ -145,6 +293,96 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                 />
               </div>
 
+              {/* Slot Variables Inputs */}
+              {slots.length > 0 && (
+                <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    Slot Variables
+                  </h4>
+                  <div className="space-y-3">
+                    {slots.map((slot, index) => {
+                      const label = slot.label;
+                      const currentValue = slotValues[label] ?? "";
+                      const historyList = slotHistory[label] || [];
+
+                      return (
+                        <div key={`${label}-${index}`} className="space-y-1">
+                          <label className="block text-xs font-medium text-slate-600">
+                            {label}
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              ref={index === 0 ? firstInputRef : null}
+                              type="text"
+                              value={currentValue}
+                              onChange={(e) => handleSlotValueChange(label, e.target.value)}
+                              placeholder={slot.default || `Enter ${label}...`}
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm text-slate-800 focus:outline-none focus:border-blue-500"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              onClick={() => handlePinToHand(currentValue, label)}
+                              title="Pin to Hand"
+                              className="text-slate-400 hover:text-blue-500"
+                            >
+                              <Pin className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+
+                          {/* Quick selection from Hand cards */}
+                          {handCards.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 items-center pt-1">
+                              <span className="text-[10px] text-slate-400">Fill from Hand:</span>
+                              {handCards.map((hc) => {
+                                const resolvedText = buildPromptString(hc.promptSegments, hc.parameters);
+                                return (
+                                  <button
+                                    key={hc.id}
+                                    type="button"
+                                    onClick={() => handleSlotValueChange(label, resolvedText)}
+                                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded transition-colors"
+                                  >
+                                    {hc.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Historical Values list */}
+                          {historyList.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 items-center pt-1">
+                              <span className="text-[10px] text-slate-400">Recent:</span>
+                              {historyList.map((val, hIdx) => (
+                                <div key={hIdx} className="flex items-center bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSlotValueChange(label, val)}
+                                    className="text-[10px] text-slate-600 hover:text-slate-800 transition-colors"
+                                  >
+                                    {val}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePinToHand(val, label)}
+                                    title="Pin this value to Hand"
+                                    className="text-slate-400 hover:text-blue-500"
+                                  >
+                                    <Pin className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
 
               {isEvolutionMode && targetCard && (
@@ -167,8 +405,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                   )}
                 </div>
               )}
-
-              {/* ConnectionAlert was moved to SidePanelLayout */}
 
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200"

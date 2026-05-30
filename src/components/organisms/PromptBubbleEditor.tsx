@@ -20,7 +20,7 @@ interface PromptBubbleEditorProps {
 }
 
 export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
-  initialSegments,
+  initialSegments = [],
   onChange,
   tier,
 }) => {
@@ -38,12 +38,6 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     }
   }, [initialSegments])
 
-  useEffect(() => {
-    if (onChange) {
-      onChange(segments)
-    }
-  }, [segments, onChange])
-
   const addToken = (text: string) => {
     const trimmed = text.trim()
     if (!trimmed) return
@@ -52,14 +46,30 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
       .split(PROMPT_DELIMITER_REGEX)
       .map((s) => s.trim())
       .filter((s) => s.length > 0)
-      .map((value) => ({ type: "text", value }))
+      .map((value) => {
+        // Direct slot typing detection
+        const slotMatch = value.match(/^(?:\{\{|\[|<)(.+?)(?:\}\}|\]|>)$/)
+        if (slotMatch) {
+          const label = slotMatch[1].trim()
+          return { type: "slot" as const, label, default: label }
+        }
+        return { type: "text" as const, value }
+      })
 
-    setSegments([...segments, ...newTokens])
+    const nextSegments = [...segments, ...newTokens]
+    setSegments(nextSegments)
+    if (onChange) {
+      onChange(nextSegments)
+    }
     setInputValue("")
   }
 
   const removeSegment = (index: number) => {
-    setSegments(segments.filter((_, i) => i !== index))
+    const nextSegments = segments.filter((_, i) => i !== index)
+    setSegments(nextSegments)
+    if (onChange) {
+      onChange(nextSegments)
+    }
   }
 
   const toggleSegmentType = (index: number) => {
@@ -80,6 +90,9 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     }
 
     setSegments(newSegments)
+    if (onChange) {
+      onChange(newSegments)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -120,7 +133,7 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
         ref={inputRef}
         type="text"
         className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm py-1 text-slate-800 placeholder:text-slate-400"
-        placeholder={segments.length === 0 ? "Type something or select cards..." : ""}
+        placeholder={initialSegments.length === 0 ? "Type something or select cards..." : ""}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
