@@ -6,6 +6,7 @@ import { RaritySelector } from "../molecules/RaritySelector"
 import { KeywordChip } from "../molecules/KeywordChip"
 import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
+import { useHand } from "../../hooks/useHand"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -45,6 +46,9 @@ export function MintingView({
   customName,
   setCustomName,
 }: MintingViewProps) {
+  const { pinnedCards } = useHand()
+  const hasPinnedCards = pinnedCards.length > 0
+
   const toggleKeyword = (keyword: string) => {
     if (selectedKeywords.includes(keyword)) {
       setSelectedKeywords(selectedKeywords.filter((k) => k !== keyword))
@@ -59,7 +63,10 @@ export function MintingView({
       : customName || "New Card"
 
   return (
-    <div className="absolute inset-0 bg-slate-50 z-20 flex flex-col">
+    <div
+      data-testid="minting-view-container"
+      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}
+    >
       <div className="p-4 bg-white shadow-sm">
         <h2 className="text-lg font-bold text-slate-800">Mint New Card</h2>
       </div>
