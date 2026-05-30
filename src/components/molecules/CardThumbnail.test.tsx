@@ -156,4 +156,34 @@ describe("CardThumbnail", () => {
     const categoryImg = screen.getAllByRole("img").find(img => img.getAttribute("src") === "data:image/png;base64,icon_data")
     expect(categoryImg).toBeDefined()
   })
+
+  it("renders usage count badge when usageCount is provided", () => {
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        usageCount={5}
+      />
+    )
+    const usageBadge = screen.getByTestId("usage-count-badge")
+    expect(usageBadge).toBeDefined()
+    expect(usageBadge.textContent).toBe("5 uses")
+  })
+
+  it("calls onEditClick when edit button is clicked", () => {
+    const mockOnEditClick = vi.fn()
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        onEditClick={mockOnEditClick}
+      />
+    )
+    const editBtn = screen.getByTestId("edit-card-button")
+    expect(editBtn).toBeDefined()
+    fireEvent.click(editBtn)
+    expect(mockOnEditClick).toHaveBeenCalledTimes(1)
+  })
 })

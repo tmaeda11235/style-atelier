@@ -25,9 +25,11 @@ interface CardThumbnailProps {
   onPinClick?: (e: React.MouseEvent) => void
   onDeleteClick?: (e: React.MouseEvent) => void
   onInjectClick?: (e: React.MouseEvent) => void
+  onEditClick?: (e: React.MouseEvent) => void
   size?: "sm" | "md" | "lg"
   className?: string
   category?: { id: string; name: string; iconEmoji?: string; iconUrl?: string }
+  usageCount?: number
 }
 
 export function CardThumbnail({
@@ -39,9 +41,11 @@ export function CardThumbnail({
   onPinClick,
   onDeleteClick,
   onInjectClick,
+  onEditClick,
   size = "md",
   className = "",
   category,
+  usageCount,
 }: CardThumbnailProps) {
   const sizeClasses = {
     sm: "w-12 h-12",
@@ -138,6 +142,16 @@ export function CardThumbnail({
       {/* Rarity Badge */}
       <RarityBadge tier={tier} className="absolute top-1 right-1" />
       
+      {/* Usage Count Badge */}
+      {usageCount !== undefined && (
+        <div
+          data-testid="usage-count-badge"
+          className="absolute bottom-1.5 left-1.5 bg-slate-900/60 border border-white/20 text-white rounded px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-[2px] shadow-md z-10 select-none pointer-events-none"
+        >
+          {usageCount} uses
+        </div>
+      )}
+
       {/* Actions */}
       <div className="absolute bottom-1 right-1 flex gap-1">
         {onInjectClick && (
@@ -151,6 +165,22 @@ export function CardThumbnail({
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </IconButton>
+        )}
+
+        {onEditClick && (
+          <IconButton
+            variant="white"
+            size="sm"
+            onClick={onEditClick}
+            className="shadow-md"
+            title="Edit Card"
+            data-testid="edit-card-button"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
           </IconButton>
         )}
