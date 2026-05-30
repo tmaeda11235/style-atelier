@@ -124,17 +124,25 @@ export async function analyzeImageColors(imageUrl: string): Promise<ExtractedCol
           nameCounts[name].bSum += b;
         }
 
+        const totalPixels = Object.values(nameCounts).reduce((acc, curr) => acc + curr.count, 0);
+
         const sortedColors = Object.entries(nameCounts)
-          .map(([name, stats]) => ({
-            name,
-            count: stats.count,
-            hex: rgbToHex(
-              Math.round(stats.rSum / stats.count),
-              Math.round(stats.gSum / stats.count),
-              Math.round(stats.bSum / stats.count)
-            ),
-          }))
-          .sort((a, b) => b.count - a.count);
+          .map(([name, stats]) => {
+            const isNeutral = name === "White" || name === "Black" || name === "Gray";
+            // Boost chromatic colors to prioritize vibrant shades over white/gray backgrounds
+            const weightedCount = stats.count * (isNeutral ? 1.0 : 2.5);
+            return {
+              name,
+              count: stats.count,
+              weightedCount,
+              hex: rgbToHex(
+                Math.round(stats.rSum / stats.count),
+                Math.round(stats.gSum / stats.count),
+                Math.round(stats.bSum / stats.count)
+              ),
+            };
+          })
+          .sort((a, b) => b.weightedCount - a.weightedCount);
 
         if (sortedColors.length === 0) {
           resolve({
@@ -147,7 +155,23 @@ export async function analyzeImageColors(imageUrl: string): Promise<ExtractedCol
         }
 
         const dominant = sortedColors[0];
-        const accent = sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0];
+        const isDomNeutral = dominant.name === "White" || dominant.name === "Black" || dominant.name === "Gray";
+
+        // Try to pick a vibrant chromatic color as accent if dominant is neutral
+        let accent = sortedColors[0];
+        if (isDomNeutral) {
+          const chromaticAccent = sortedColors.find((c) => {
+            const isNeut = c.name === "White" || c.name === "Black" || c.name === "Gray";
+            return !isNeut && c.count >= totalPixels * 0.05; // Must have at least 5% coverage
+          });
+          if (chromaticAccent) {
+            accent = chromaticAccent;
+          } else {
+            accent = sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0];
+          }
+        } else {
+          accent = sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0];
+        }
 
         resolve({
           dominantHex: dominant.hex,

@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
+import { db } from "../../lib/db"
 
 interface AutocompleteDropdownProps {
   options: string[]
@@ -80,6 +82,8 @@ export function AutocompleteDropdown({
 }: AutocompleteDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  const styleCards = useLiveQuery(() => db.styleCards.toArray()) || []
+
   // Filter options based on input value
   const filteredOptions = options.filter((opt) =>
     opt.toLowerCase().includes(value.toLowerCase()) && opt !== value
@@ -109,22 +113,30 @@ export function AutocompleteDropdown({
     >
       {filteredOptions.map((opt) => {
         const isUrl = opt.startsWith("http://") || opt.startsWith("https://")
+        const matchingCard = styleCards.find((c) => c.parameters?.sref?.includes(opt))
+
         return (
           <div
             key={opt}
             onClick={() => onSelect(opt)}
             className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100 cursor-pointer text-slate-700 transition-colors select-none"
           >
-            {isUrl ? (
-              <>
-                <SafeAutocompleteImage src={opt} />
-                <span className="truncate flex-1 font-mono text-[10px] text-slate-500">
-                  {opt}
-                </span>
-              </>
+            {matchingCard && matchingCard.thumbnailData ? (
+              <img
+                src={matchingCard.thumbnailData}
+                className="w-5 h-5 rounded object-cover border border-slate-200 bg-slate-50 flex-shrink-0"
+                alt="Card Preview"
+              />
+            ) : isUrl ? (
+              <SafeAutocompleteImage src={opt} />
             ) : (
-              <span className="truncate flex-1">{opt}</span>
+              <div className="w-5 h-5 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 font-mono text-[9px]">
+                #
+              </div>
             )}
+            <span className="truncate flex-1 font-mono text-[10px] text-slate-600">
+              {opt}
+            </span>
           </div>
         )
       })}
