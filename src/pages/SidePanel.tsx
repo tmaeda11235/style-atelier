@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { db } from "../lib/db"
 import { SidePanelLayout } from "../components/templates/SidePanelLayout"
 import { HistoryTab } from "../components/organisms/HistoryTab"
@@ -7,6 +7,7 @@ import { Workbench } from "../components/organisms/Workbench"
 import { MintingView } from "../components/organisms/MintingView"
 import { CardDetailView } from "../components/organisms/CardDetailView"
 import { HandBar } from "../components/organisms/HandBar"
+import { OnboardingGuide } from "../components/organisms/OnboardingGuide"
 import { useTabs } from "../hooks/useTabs"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
@@ -19,6 +20,14 @@ function SidePanelPage() {
   // New global state for connection alerts
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(null)
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
+
+  useEffect(() => {
+    const seen = localStorage.getItem("style-atelier-onboarding-seen")
+    if (!seen) {
+      setIsGuideOpen(true)
+    }
+  }, [])
 
   const addLog = (log: string) => {
     setLogs((prev) => [log, ...prev].slice(0, 20))
@@ -103,6 +112,7 @@ function SidePanelPage() {
   const handleResetDb = async () => {
     if (window.confirm("Are you sure you want to delete ALL DATA?")) {
       await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.userSettings.clear(), db.categories.clear()])
+      localStorage.removeItem("style-atelier-onboarding-seen")
       addLog("All data cleared.")
     }
   }
@@ -140,6 +150,7 @@ function SidePanelPage() {
           alertType={alertType}
           onRetryConnection={handleRetryConnection}
           onDismissAlert={handleDismissAlert}
+          onOpenGuide={() => setIsGuideOpen(true)}
         >
           {(mintingItem || variationBase) && (
             <MintingView
@@ -188,6 +199,14 @@ function SidePanelPage() {
           <HandBar />
         </SidePanelLayout>
       </WorkbenchProvider>
+
+      <OnboardingGuide
+        isOpen={isGuideOpen}
+        onClose={() => {
+          localStorage.setItem("style-atelier-onboarding-seen", "true")
+          setIsGuideOpen(false)
+        }}
+      />
     </div>
   )
 }

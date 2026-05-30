@@ -1,4 +1,5 @@
 import React from "react"
+import { HelpCircle } from "lucide-react"
 import type { Tab } from "../../hooks/useTabs"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 
@@ -15,6 +16,7 @@ interface SidePanelLayoutProps {
   alertType?: AlertType
   onRetryConnection?: () => void
   onDismissAlert?: () => void
+  onOpenGuide: () => void
 }
 
 export function SidePanelLayout({
@@ -28,7 +30,8 @@ export function SidePanelLayout({
   droppedItem,
   alertType,
   onRetryConnection,
-  onDismissAlert
+  onDismissAlert,
+  onOpenGuide
 }: SidePanelLayoutProps) {
   return (
     <div
@@ -40,35 +43,44 @@ export function SidePanelLayout({
 
       <div className="p-4 bg-white shadow-sm z-10">
         <div className="mt-2">
-          <nav className="-mb-px flex space-x-4 border-b border-slate-200">
+          <div className="flex justify-between items-center border-b border-slate-200">
+            <nav className="-mb-px flex space-x-4">
+              <button
+                onClick={() => onTabChange("history")}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "history"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                History
+              </button>
+              <button
+                onClick={() => onTabChange("library")}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "library"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                Library
+              </button>
+              <button
+                onClick={() => onTabChange("workbench")}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "workbench"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                Workbench
+              </button>
+            </nav>
             <button
-              onClick={() => onTabChange("history")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "history"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
+              onClick={onOpenGuide}
+              className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold"
+              title="Show Guide"
             >
-              History
+              <HelpCircle className="w-4 h-4 text-blue-500" /> Guide
             </button>
-            <button
-              onClick={() => onTabChange("library")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "library"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
-            >
-              Library
-            </button>
-            <button
-              onClick={() => onTabChange("workbench")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "workbench"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
-            >
-              Workbench
-            </button>
-          </nav>
+          </div>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
