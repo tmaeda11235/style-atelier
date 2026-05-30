@@ -202,6 +202,7 @@ describe("Workbench", () => {
         expect.objectContaining({
           name: "steampunk dragon",
           isPinned: true,
+          isVariable: true,
           promptSegments: [{ type: "text", value: "steampunk dragon" }],
           tags: ["subject"],
         })

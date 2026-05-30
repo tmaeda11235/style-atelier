@@ -164,6 +164,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           generation: 1,
           parentIds: [],
         },
+        isVariable: true,
       };
 
       await db.styleCards.add(newCard);

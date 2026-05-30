@@ -27,7 +27,7 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
   const filteredAndSortedCards = useMemo(() => {
     if (!allCards) return []
 
-    let result = [...allCards]
+    let result = allCards.filter(card => !card.isVariable)
 
     // Filtering
     if (searchTag) {

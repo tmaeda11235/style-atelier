@@ -7,7 +7,12 @@ export function useHand() {
 
   const unpinCard = async (id: string) => {
     try {
-      await db.styleCards.update(id, { isPinned: false })
+      const card = await db.styleCards.get(id)
+      if (card?.isVariable) {
+        await db.styleCards.delete(id)
+      } else {
+        await db.styleCards.update(id, { isPinned: false })
+      }
     } catch (err) {
       console.error("Failed to unpin card:", err)
     }
@@ -16,7 +21,11 @@ export function useHand() {
   const clearHand = async () => {
     if (!pinnedCards) return
     try {
-      await Promise.all(pinnedCards.map((card) => db.styleCards.update(card.id, { isPinned: false })))
+      await Promise.all(
+        pinnedCards.map((card) =>
+          card.isVariable ? db.styleCards.delete(card.id) : db.styleCards.update(card.id, { isPinned: false })
+        )
+      )
     } catch (err) {
       console.error("Failed to clear hand:", err)
     }

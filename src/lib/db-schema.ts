@@ -48,6 +48,7 @@ export interface StyleCard {
     originCreatorId?: string; // 始祖のID（署名）
     mutationNote?: string;    // "Mixed with Watercolor" などの自動メモ
   };
+  isVariable?: boolean;     // 変数カード（手札一時保持用）フラグ
 }
 
 // プロンプトの構成要素（バブル）
