@@ -48,12 +48,57 @@ export function CardThumbnail({
   }
 
   const imagesToRender = thumbnailImages && thumbnailImages.length > 0
-    ? thumbnailImages.slice(0, 2)
+    ? thumbnailImages.slice(0, 4)
     : [imageUrl].filter(Boolean) as string[]
 
   return (
     <div className={`relative overflow-hidden rounded-lg group ${sizeClasses[size]} ${className}`}>
-      {imagesToRender.length >= 2 ? (
+      {imagesToRender.length === 4 ? (
+        <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
+          <img
+            src={imagesToRender[0]}
+            alt={`${alt} - Thumbnail 1`}
+            className="w-full h-full object-cover border-r border-b border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[1]}
+            alt={`${alt} - Thumbnail 2`}
+            className="w-full h-full object-cover border-b border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[2]}
+            alt={`${alt} - Thumbnail 3`}
+            className="w-full h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[3]}
+            alt={`${alt} - Thumbnail 4`}
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          />
+        </div>
+      ) : imagesToRender.length === 3 ? (
+        <div className="grid grid-cols-3 w-full h-full">
+          <div className="col-span-2 h-full">
+            <img
+              src={imagesToRender[0]}
+              alt={`${alt} - Thumbnail 1`}
+              className="w-full h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
+            />
+          </div>
+          <div className="grid grid-rows-2 h-full">
+            <img
+              src={imagesToRender[1]}
+              alt={`${alt} - Thumbnail 2`}
+              className="w-full h-full object-cover border-b border-white/20 transition-transform group-hover:scale-105"
+            />
+            <img
+              src={imagesToRender[2]}
+              alt={`${alt} - Thumbnail 3`}
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+          </div>
+        </div>
+      ) : imagesToRender.length === 2 ? (
         <div className="flex w-full h-full">
           <img
             src={imagesToRender[0]}

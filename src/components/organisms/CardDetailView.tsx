@@ -75,11 +75,11 @@ export function CardDetailView({
       // Remove it
       setSelectedThumbs(selectedThumbs.filter((url) => url !== imgUrl))
     } else {
-      // Add it. If already 2 selected, shift the queue
-      if (selectedThumbs.length < 2) {
+      // Add it. If already 4 selected, shift the queue
+      if (selectedThumbs.length < 4) {
         setSelectedThumbs([...selectedThumbs, imgUrl])
       } else {
-        setSelectedThumbs([selectedThumbs[1], imgUrl])
+        setSelectedThumbs([...selectedThumbs.slice(1), imgUrl])
       }
     }
   }
@@ -193,17 +193,19 @@ export function CardDetailView({
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Associated Images ({images.length})</h3>
             <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-full">
-              Selected: {selectedThumbs.length} / 2
+              Selected: {selectedThumbs.length} / 4
             </span>
           </div>
           <p className="text-[11px] text-slate-400">
-            Click on images to toggle their use as the card's thumbnail (up to two). The selection order determines display layout.
+            Click on images to toggle their use as the card's thumbnail (up to four). The selection order determines display layout.
           </p>
 
           <div className="grid grid-cols-2 gap-3">
             {images.map((imgUrl, index) => {
               const selectedIdx = selectedThumbs.indexOf(imgUrl)
               const isSelected = selectedIdx !== -1
+              const orderLabels = ["1st", "2nd", "3rd", "4th"]
+              const orderLabel = orderLabels[selectedIdx] || `${selectedIdx + 1}th`
               return (
                 <div
                   key={index}
@@ -216,7 +218,7 @@ export function CardDetailView({
                   {isSelected && (
                     <div className="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
-                      <span>{selectedIdx === 0 ? "1st" : "2nd"}</span>
+                      <span>{orderLabel}</span>
                     </div>
                   )}
                 </div>
