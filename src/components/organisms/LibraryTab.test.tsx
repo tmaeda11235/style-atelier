@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { LibraryTab } from "./LibraryTab"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"
+import { TutorialProvider } from "../../contexts/TutorialContext"
 
 vi.mock("../../hooks/useLibrary", () => ({
   useLibrary: vi.fn(),
@@ -62,13 +63,13 @@ describe("LibraryTab", () => {
   })
 
   it("renders search field, filters, and cards", () => {
-    render(<LibraryTab {...defaultProps} />)
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
     expect(screen.getByPlaceholderText("Search by tag, name or sref...")).toBeDefined()
     expect(screen.getByText("Golden Dragon")).toBeDefined()
   })
 
   it("triggers togglePin when clicking the card itself", () => {
-    render(<LibraryTab {...defaultProps} />)
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
     const cardElement = screen.getByText("Golden Dragon").closest(".group")
     expect(cardElement).toBeDefined()
     
@@ -77,7 +78,7 @@ describe("LibraryTab", () => {
   })
 
   it("triggers onOpenDetailCard when clicking the edit button on the card", () => {
-    render(<LibraryTab {...defaultProps} />)
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
     const editBtn = screen.getByTestId("edit-card-button")
     expect(editBtn).toBeDefined()
     

@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { MintingView } from "./MintingView"
 import { useHand } from "../../hooks/useHand"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
+import { TutorialProvider } from "../../contexts/TutorialContext"
 
 vi.mock("../../hooks/useHand", () => ({
   useHand: vi.fn(),
@@ -50,7 +51,7 @@ describe("MintingView", () => {
       clearHand: vi.fn(),
     })
 
-    render(<MintingView {...defaultProps} />)
+    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
     expect(screen.getByText("Mint New Card")).toBeDefined()
     expect(screen.getByRole("img")).toBeDefined()
     expect(screen.getByText("mountain")).toBeDefined()
@@ -64,7 +65,7 @@ describe("MintingView", () => {
       clearHand: vi.fn(),
     })
 
-    render(<MintingView {...defaultProps} />)
+    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
     const container = screen.getByTestId("minting-view-container")
     expect(container.className).toContain("absolute inset-0 bg-slate-50 z-20 flex flex-col")
     expect(container.className).not.toContain("pb-[110px]")
@@ -96,7 +97,7 @@ describe("MintingView", () => {
       clearHand: vi.fn(),
     })
 
-    render(<MintingView {...defaultProps} />)
+    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
     const container = screen.getByTestId("minting-view-container")
     expect(container.className).toContain("pb-[110px]")
   })
@@ -108,7 +109,7 @@ describe("MintingView", () => {
       clearHand: vi.fn(),
     })
 
-    render(<MintingView {...defaultProps} />)
+    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
 
     // Keywords toggle interaction
     const keywordChip = screen.getByText("mountain")

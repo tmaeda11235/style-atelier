@@ -7,27 +7,75 @@ import { Workbench } from "../components/organisms/Workbench"
 import { MintingView } from "../components/organisms/MintingView"
 import { CardDetailView } from "../components/organisms/CardDetailView"
 import { HandBar } from "../components/organisms/HandBar"
-import { OnboardingGuide } from "../components/organisms/OnboardingGuide"
+import { InteractiveTutorial } from "../components/organisms/InteractiveTutorial"
 import { useTabs } from "../hooks/useTabs"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
 import { WorkbenchProvider } from "../contexts/WorkbenchContext"
+import { TutorialProvider, useTutorial } from "../contexts/TutorialContext"
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import type { StyleCard } from "../lib/db-schema"
 
-function SidePanelPage() {
+/**
+ * First-launch welcome dialog (non-interactive) triggering the tutorial.
+ */
+function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
+      <div className="w-full max-w-xs bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200">
+        <div className="p-5 flex flex-col items-center gap-3">
+          <div className="w-14 h-14 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center">
+            <span className="text-3xl">🎴</span>
+          </div>
+          <h2 className="text-base font-black text-white text-center">Style Atelierへようこそ！</h2>
+          <p className="text-xs text-slate-400 leading-relaxed text-center">
+            実際に操作しながら使い方を覚える<br />インタラクティブなガイドを開始しますか？
+          </p>
+        </div>
+        <div className="px-5 pb-5 flex flex-col gap-2">
+          <button
+            onClick={onStart}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow transition-all"
+          >
+            ガイドを開始する
+          </button>
+          <button
+            onClick={onSkip}
+            className="w-full py-2 text-slate-500 hover:text-slate-300 text-xs font-semibold transition-all"
+          >
+            スキップ（あとでGuideボタンから開始できます）
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SidePanelInner() {
+  const { startTutorial } = useTutorial()
   const [logs, setLogs] = useState<string[]>([])
   // New global state for connection alerts
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(null)
-  const [isGuideOpen, setIsGuideOpen] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
     const seen = localStorage.getItem("style-atelier-onboarding-seen")
     if (!seen) {
-      setIsGuideOpen(true)
+      setShowWelcome(true)
     }
   }, [])
+
+  const handleStartTutorial = () => {
+    localStorage.setItem("style-atelier-onboarding-seen", "true")
+    setShowWelcome(false)
+    startTutorial()
+  }
+
+  const handleSkipTutorial = () => {
+    localStorage.setItem("style-atelier-onboarding-seen", "true")
+    setShowWelcome(false)
+  }
 
   const addLog = (log: string) => {
     setLogs((prev) => [log, ...prev].slice(0, 20))
@@ -78,7 +126,14 @@ function SidePanelPage() {
   }
 
   const { activeTab, setActiveTab } = useTabs()
-  const { isDragging, droppedItem, handleDragOver, handleDragLeave, handleDrop } = useDragAndDrop(addLog)
+  const { isDragging, droppedItem, handleDragOver, handleDragLeave, handleDrop: rawHandleDrop } = useDragAndDrop(addLog)
+
+  const handleDrop = async (e: React.DragEvent) => {
+    const result = await rawHandleDrop(e)
+    if (result) {
+      advanceIfStep("drop-history")
+    }
+  }
   const {
     mintingItem,
     variationBase,
@@ -88,7 +143,7 @@ function SidePanelPage() {
     setIsSrefHidden,
     isPHidden,
     setIsPHidden,
-    handleStartMinting,
+    handleStartMinting: rawStartMinting,
     handleStartVariationMinting,
     handleSaveMintedCard,
     setMintingItem,
@@ -108,6 +163,11 @@ function SidePanelPage() {
     detectedAccentColor,
     detectedColorTags,
   } = useMinting(addLog, setActiveTab)
+
+  const handleStartMinting = (historyItem: any) => {
+    rawStartMinting(historyItem)
+    advanceIfStep("mint-button")
+  }
 
   const handleResetDb = async () => {
     if (window.confirm("Are you sure you want to delete ALL DATA?")) {
@@ -150,7 +210,7 @@ function SidePanelPage() {
           alertType={alertType}
           onRetryConnection={handleRetryConnection}
           onDismissAlert={handleDismissAlert}
-          onOpenGuide={() => setIsGuideOpen(true)}
+          onOpenGuide={() => startTutorial()}
         >
           {(mintingItem || variationBase) && (
             <MintingView
@@ -200,14 +260,26 @@ function SidePanelPage() {
         </SidePanelLayout>
       </WorkbenchProvider>
 
-      <OnboardingGuide
-        isOpen={isGuideOpen}
-        onClose={() => {
-          localStorage.setItem("style-atelier-onboarding-seen", "true")
-          setIsGuideOpen(false)
-        }}
-      />
+      {/* Welcome dialog on first launch */}
+      {showWelcome && (
+        <WelcomeDialog onStart={handleStartTutorial} onSkip={handleSkipTutorial} />
+      )}
+
+      {/* Interactive tutorial overlay */}
+      <InteractiveTutorial />
     </div>
+  )
+}
+
+/**
+ * Root page component – wraps everything in TutorialProvider so useTutorial
+ * is available both in SidePanelInner and InteractiveTutorial.
+ */
+function SidePanelPage() {
+  return (
+    <TutorialProvider>
+      <SidePanelInner />
+    </TutorialProvider>
   )
 }
 
