@@ -6,8 +6,8 @@ import { CardThumbnail } from "../molecules/CardThumbnail"
 import type { StyleCard } from "../../lib/db-schema"
 import { Plus } from "lucide-react"
 import { CategoryManagerModal } from "./CategoryManagerModal"
-
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+import { useTutorial } from "../../contexts/TutorialContext"
 
 interface LibraryTabProps {
   addLog: (msg: string) => void
@@ -17,6 +17,7 @@ interface LibraryTabProps {
 
 export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const { advanceIfStep } = useTutorial()
 
   const {
     styleCards,
@@ -114,14 +115,18 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {styleCards?.map((card) => {
+      <div className="grid grid-cols-2 gap-3" data-tutorial="library-card-grid">
+        {styleCards?.map((card, idx) => {
           const config = RARITY_CONFIG[card.tier]
           const cardCategory = categories.find((c) => c.id === card.category)
           return (
             <div
               key={card.id}
-              onClick={(e) => togglePin(card, e)}
+              data-tutorial={idx === 0 ? "library-card" : undefined}
+              onClick={(e) => {
+                togglePin(card, e)
+                advanceIfStep("card-to-hand")
+              }}
               className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
                 } ${config?.glowClass || ""}`}
             >

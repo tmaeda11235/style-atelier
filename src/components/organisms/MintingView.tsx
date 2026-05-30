@@ -9,6 +9,7 @@ import { Input } from "../atoms/Input"
 import { useHand } from "../../hooks/useHand"
 import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "../../lib/db"
+import { useTutorial } from "../../contexts/TutorialContext"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -65,6 +66,7 @@ export function MintingView({
 }: MintingViewProps) {
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
+  const { advanceIfStep } = useTutorial()
 
   const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
 
@@ -117,7 +119,7 @@ export function MintingView({
                 </div>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-4" data-tutorial="title-input">
                 <label className="block text-xs font-medium text-slate-500 mb-1">Custom Name / Note</label>
                 <Input
                   type="text"
@@ -241,9 +243,11 @@ export function MintingView({
               </div>
             </div>
 
-            <PromptBubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
+            <div data-tutorial="prompt-segment-bubble">
+              <PromptBubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
+            </div>
 
-            <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm">
+            <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm" data-tutorial="rarity-section">
               <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
               <RaritySelector
                 selected={selectedRarity}
@@ -278,7 +282,7 @@ export function MintingView({
           </div>
         </div>
       </div>
-      <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2">
+      <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2" data-tutorial="mint-save-footer">
         <Button
           variant="ghost"
           onClick={onCancelMinting}
@@ -286,7 +290,10 @@ export function MintingView({
           Cancel
         </Button>
         <Button
-          onClick={onSaveMintedCard}
+          onClick={async () => {
+            await onSaveMintedCard()
+            advanceIfStep("save-card")
+          }}
         >
           Save Card
         </Button>

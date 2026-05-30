@@ -11,13 +11,14 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
   const { historyItems } = useHistory()
 
   return (
-    <div className="space-y-3">
-      {historyItems?.map((item) => (
-        <HistoryCard
-          key={item.id}
-          item={item}
-          onMintClick={onStartMinting}
-        />
+    <div className="space-y-3" data-tutorial="history-drop-zone">
+      {historyItems?.map((item, idx) => (
+        <div key={item.id} data-tutorial={idx === 0 ? "mint-button" : undefined}>
+          <HistoryCard
+            item={item}
+            onMintClick={onStartMinting}
+          />
+        </div>
       ))}
     </div>
   )
