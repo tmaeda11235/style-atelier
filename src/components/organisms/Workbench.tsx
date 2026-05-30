@@ -214,6 +214,12 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       } else {
         addLog?.(`Prompt injected successfully!`);
 
+        // Increment usage count for all cards in the Workbench
+        workbenchCards.forEach((card) => {
+          db.styleCards.update(card.id, { usageCount: (card.usageCount || 0) + 1 })
+            .catch(err => console.error("Failed to update usage count on workbench inject:", err));
+        });
+
         // Save slot values to history on success
         const existing = localStorage.getItem("style_atelier_slot_history");
         const history: Record<string, string[]> = existing ? JSON.parse(existing) : {};

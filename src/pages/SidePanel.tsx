@@ -55,6 +55,11 @@ function SidePanelPage() {
         }
       } else {
         addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
+        if (activeDetailCard) {
+          db.styleCards.update(activeDetailCard.id, {
+            usageCount: (activeDetailCard.usageCount || 0) + 1
+          }).catch(err => console.error("Failed to update usage count on details inject:", err));
+        }
       }
     } catch (err: any) {
       console.error("Injection failed:", err);

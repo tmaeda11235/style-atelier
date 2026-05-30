@@ -81,7 +81,11 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
     e.stopPropagation()
     const newPinnedStatus = !card.isPinned
     try {
-      await db.styleCards.update(card.id, { isPinned: newPinnedStatus })
+      const updateData: Partial<StyleCard> = { isPinned: newPinnedStatus }
+      if (newPinnedStatus) {
+        updateData.usageCount = (card.usageCount || 0) + 1
+      }
+      await db.styleCards.update(card.id, updateData)
       addLog(newPinnedStatus ? `Added ${card.name} to hand.` : `Removed ${card.name} from hand.`)
     } catch (err) {
       console.error("Failed to toggle pin:", err)
@@ -114,6 +118,8 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
               }
             } else {
               addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
+              db.styleCards.update(card.id, { usageCount: (card.usageCount || 0) + 1 })
+                .catch((err) => console.error("Failed to update usage count on inject:", err))
             }
           })
           .catch((err) => {

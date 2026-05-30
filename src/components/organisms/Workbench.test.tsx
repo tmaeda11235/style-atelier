@@ -18,6 +18,8 @@ vi.mock("../../lib/db", () => ({
   db: {
     styleCards: {
       add: vi.fn(),
+      update: vi.fn().mockResolvedValue(1),
+      get: vi.fn().mockResolvedValue(null),
       toArray: vi.fn().mockResolvedValue([]),
     },
     categories: {
@@ -174,6 +176,10 @@ describe("Workbench", () => {
           prompt: "a photo of, neon tiger, in, neon rain --ar 16:9",
         })
       );
+      // Check that usageCount was incremented
+      expect(db.styleCards.update).toHaveBeenCalledWith("card-1", {
+        usageCount: 6,
+      });
     });
 
     // Check value is saved to localStorage history

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { db } from "../lib/db";
 
 interface WorkbenchContextType {
   selectedCardIds: string[];
@@ -12,9 +13,19 @@ export const WorkbenchProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
 
   const toggleCardSelection = useCallback((cardId: string) => {
-    setSelectedCardIds((prev) =>
-      prev.includes(cardId) ? prev.filter((id) => id !== cardId) : [...prev, cardId]
-    );
+    setSelectedCardIds((prev) => {
+      const isSelecting = !prev.includes(cardId);
+      if (isSelecting) {
+        db.styleCards.get(cardId).then((card) => {
+          if (card) {
+            db.styleCards.update(cardId, {
+              usageCount: (card.usageCount || 0) + 1
+            }).catch(err => console.error("Failed to update usage count on select:", err));
+          }
+        }).catch(err => console.error("Failed to fetch card on select:", err));
+      }
+      return isSelecting ? [...prev, cardId] : prev.filter((id) => id !== cardId);
+    });
   }, []);
 
   const clearWorkbench = useCallback(() => {
