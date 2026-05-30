@@ -36,6 +36,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
   const targetCard = workbenchCards[0];
   const canEvolveTarget = targetCard && canEvolve(targetCard);
 
+  const workbenchCardsDependency = workbenchCards.map(c => `${c.id}-${c.updatedAt || 0}`).join(",");
+
   // Load slot history from localStorage
   const loadSlotHistory = () => {
     try {
@@ -70,7 +72,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     };
 
     checkConnection();
-  }, [workbenchCards]);
+  }, [workbenchCardsDependency]);
 
   // Load segments, parameters, and initialize slotValues when workbenchCards changes
   useEffect(() => {
@@ -117,7 +119,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       }
     });
     setSlotValues(initialSlotValues);
-  }, [workbenchCards]);
+  }, [workbenchCardsDependency]);
 
   // Auto-focus the first slot input
   useEffect(() => {
@@ -128,7 +130,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [workbenchCards, editedSegments]);
+  }, [workbenchCardsDependency, editedSegments]);
 
   const handleSlotValueChange = (label: string, value: string) => {
     setSlotValues(prev => ({
