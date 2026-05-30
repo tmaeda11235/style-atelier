@@ -86,11 +86,18 @@ function SidePanelPage() {
     setSelectedKeywords,
     customName,
     setCustomName,
+    selectedCategory,
+    setSelectedCategory,
+    customTags,
+    setCustomTags,
+    detectedDominantColor,
+    detectedAccentColor,
+    detectedColorTags,
   } = useMinting(addLog, setActiveTab)
 
   const handleResetDb = async () => {
     if (window.confirm("Are you sure you want to delete ALL DATA?")) {
-      await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.userSettings.clear()])
+      await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.userSettings.clear(), db.categories.clear()])
       addLog("All data cleared.")
     }
   }
@@ -150,6 +157,13 @@ function SidePanelPage() {
               setSelectedKeywords={setSelectedKeywords}
               customName={customName}
               setCustomName={setCustomName}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              customTags={customTags}
+              setCustomTags={setCustomTags}
+              detectedDominantColor={detectedDominantColor}
+              detectedAccentColor={detectedAccentColor}
+              detectedColorTags={detectedColorTags}
             />
           )}
           {activeDetailCard && (

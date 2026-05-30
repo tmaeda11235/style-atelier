@@ -3,7 +3,8 @@ import { db } from "../lib/db"
 import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
 import { parsePrompt } from "../lib/prompt-utils"
 import { extractKeywords } from "../lib/nlp-utils"
-import { RarityTier } from "../lib/rarity-config"
+import type { RarityTier } from "../lib/rarity-config"
+import { analyzeImageColors } from "../lib/color-utils"
 
 export interface VariationBase {
   promptSegments: PromptSegment[];
@@ -24,6 +25,13 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([])
   const [customName, setCustomName] = useState("")
 
+  // Custom Category, Tags, and Colors state
+  const [selectedCategory, setSelectedCategory] = useState<string>("")
+  const [customTags, setCustomTags] = useState<string[]>([])
+  const [detectedDominantColor, setDetectedDominantColor] = useState<string>("#ffffff")
+  const [detectedAccentColor, setDetectedAccentColor] = useState<string>("#ffffff")
+  const [detectedColorTags, setDetectedColorTags] = useState<string[]>([])
+
   useEffect(() => {
     if (mintingItem) {
       const { promptSegments } = parsePrompt(mintingItem.fullCommand)
@@ -32,17 +40,50 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       // Extract keywords for auto-naming
       const keywords = extractKeywords(mintingItem.fullCommand)
       setSuggestedKeywords(keywords)
+
+      // Extract dominant and accent colors
+      if (mintingItem.imageUrl) {
+        analyzeImageColors(mintingItem.imageUrl)
+          .then((colors) => {
+            setDetectedDominantColor(colors.dominantHex)
+            setDetectedAccentColor(colors.accentHex)
+            const colorTags: string[] = []
+            if (colors.dominantName) colorTags.push(colors.dominantName)
+            if (colors.accentName && colors.accentName !== colors.dominantName) {
+              colorTags.push(colors.accentName)
+            }
+            setDetectedColorTags(colorTags)
+          })
+          .catch((err) => {
+            console.error("Failed to analyze image colors:", err)
+            setDetectedDominantColor("#ffffff")
+            setDetectedAccentColor("#ffffff")
+            setDetectedColorTags([])
+          })
+      } else {
+        setDetectedDominantColor("#ffffff")
+        setDetectedAccentColor("#ffffff")
+        setDetectedColorTags([])
+      }
     } else if (variationBase) {
       setEditedSegments(variationBase.promptSegments)
       setSuggestedKeywords([])
+      setDetectedDominantColor("#ffffff")
+      setDetectedAccentColor("#ffffff")
+      setDetectedColorTags([])
     } else {
       setEditedSegments([])
       setSuggestedKeywords([])
+      setDetectedDominantColor("#ffffff")
+      setDetectedAccentColor("#ffffff")
+      setDetectedColorTags([])
     }
     
     setSelectedKeywords([])
+    setCustomTags([])
     setCustomName("")
     setSelectedRarity("Common")
+    setSelectedCategory("")
   }, [mintingItem, variationBase])
 
   const handleStartMinting = (historyItem: HistoryItem) => {
@@ -88,10 +129,19 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
     }
     if (!finalName) {
       finalName =
-        editedSegments.length > 0 && editedSegments[0].type === "text"
-          ? editedSegments[0].value.substring(0, 20)
-          : "New Card"
+          editedSegments.length > 0 && editedSegments[0].type === "text"
+            ? editedSegments[0].value.substring(0, 20)
+            : "New Card"
     }
+
+    // Combine suggested keywords, custom tags, and color tags, making them unique and lowercase
+    const mergedTags = Array.from(
+      new Set([
+        ...selectedKeywords.map((t) => t.toLowerCase()),
+        ...customTags.map((t) => t.toLowerCase()),
+        ...detectedColorTags.map((t) => t.toLowerCase()),
+      ])
+    )
 
     const newCard: StyleCard = {
       id: crypto.randomUUID(),
@@ -104,8 +154,10 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       tier: selectedRarity,
       isFavorite: false,
       usageCount: 0,
-      tags: [...selectedKeywords],
-      dominantColor: "#ffffff",
+      tags: mergedTags,
+      category: selectedCategory || undefined,
+      dominantColor: detectedDominantColor,
+      accentColor: detectedAccentColor,
       thumbnailData,
       frameId: "default",
       genealogy,
@@ -148,5 +200,12 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
     setSelectedKeywords,
     customName,
     setCustomName,
+    selectedCategory,
+    setSelectedCategory,
+    customTags,
+    setCustomTags,
+    detectedDominantColor,
+    detectedAccentColor,
+    detectedColorTags,
   }
 }

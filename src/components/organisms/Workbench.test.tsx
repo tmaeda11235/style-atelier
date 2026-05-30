@@ -18,6 +18,10 @@ vi.mock("../../lib/db", () => ({
   db: {
     styleCards: {
       add: vi.fn(),
+      toArray: vi.fn().mockResolvedValue([]),
+    },
+    categories: {
+      toArray: vi.fn().mockResolvedValue([]),
     },
   },
 }));

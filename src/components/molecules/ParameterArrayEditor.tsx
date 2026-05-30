@@ -1,8 +1,9 @@
-import React from "react"
+import React, { useState } from "react"
 import { Plus, X } from "lucide-react"
 import { Input } from "../atoms/Input"
 import { useParameterArray } from "../../hooks/useParameterArray"
 import { cn } from "../../lib/utils"
+import { AutocompleteDropdown } from "./AutocompleteDropdown"
 
 interface ParameterArrayEditorProps {
   label: string
@@ -16,6 +17,7 @@ interface ParameterArrayEditorProps {
     border: string
     hover: string
   }
+  options?: string[]
 }
 
 export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
@@ -30,12 +32,15 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
     border: "border-blue-100",
     hover: "hover:text-blue-900",
   },
+  options = [],
 }) => {
   const { inputValue, setInputValue, currentValues, addValue, removeValue, handleKeyDown } =
     useParameterArray({
       values,
       onChange,
     })
+
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <div className="space-y-2">
@@ -60,17 +65,32 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
           </div>
         ))}
       </div>
-      <div className="flex gap-2">
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="h-8 text-xs bg-white"
-        />
+      <div className="flex gap-2 items-start">
+        <div className="flex-1 relative">
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsOpen(true)}
+            placeholder={placeholder}
+            className="h-8 text-xs bg-white w-full"
+          />
+          {options.length > 0 && (
+            <AutocompleteDropdown
+              options={options}
+              value={inputValue}
+              isOpen={isOpen}
+              onSelect={(val) => {
+                setInputValue(val)
+                setIsOpen(false)
+              }}
+              onClose={() => setIsOpen(false)}
+            />
+          )}
+        </div>
         <button
           onClick={() => addValue(inputValue)}
-          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors h-8 flex items-center justify-center"
         >
           <Plus className="w-4 h-4 text-slate-400" />
         </button>
