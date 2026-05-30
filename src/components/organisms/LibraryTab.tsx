@@ -121,7 +121,7 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
           return (
             <div
               key={card.id}
-              onClick={() => onOpenDetailCard(card)}
+              onClick={(e) => togglePin(card, e)}
               className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
                 } ${config?.glowClass || ""}`}
             >
@@ -131,7 +131,12 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
                 alt={card.name}
                 tier={card.tier}
                 isPinned={card.isPinned}
+                usageCount={card.usageCount}
                 onPinClick={(e) => togglePin(card, e)}
+                onEditClick={(e) => {
+                  e.stopPropagation()
+                  onOpenDetailCard(card)
+                }}
                 onInjectClick={(e) => {
                   e.stopPropagation()
                   handleCardClick(card)
