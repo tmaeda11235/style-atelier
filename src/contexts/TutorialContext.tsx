@@ -60,8 +60,8 @@ export const TUTORIAL_STEPS: TutorialStepConfig[] = [
   {
     id: "rarity-save",
     title: "⑤ レア度を選んでSaveする",
-    description: "カードのレア度（Common / Rare / Epic / Legendary）を選択し、「Save Card」を押してLibraryに登録してください。",
-    targetSelector: "[data-tutorial='rarity-section']",
+    description: "上のセクションでレア度（Common / Rare / Epic / Legendary）を選択したら、「Save Card」を押してLibraryに登録してください。",
+    targetSelector: "[data-tutorial='mint-save-footer']",
     position: "top",
     autoAdvance: true,
   },

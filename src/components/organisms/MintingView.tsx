@@ -282,7 +282,7 @@ export function MintingView({
           </div>
         </div>
       </div>
-      <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2">
+      <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2" data-tutorial="mint-save-footer">
         <Button
           variant="ghost"
           onClick={onCancelMinting}
