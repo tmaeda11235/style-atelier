@@ -152,16 +152,21 @@ export function InteractiveTutorial() {
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === totalSteps - 1
 
-  // ── Spotlight clip path ────────────────────────────────────────────────
+  // ── Spotlight: 4 overlay rects around the cutout ───────────────────────
+  // clip-path は視覚的にはカットアウトを作れるが、親 div のポインタイベントを
+  // ブロックしてしまう。代わりにスポットライト周囲の4枚の矩形で覆う方式にする。
   const renderSpotlight = () => {
-    const vw = window.innerWidth
-    const vh = window.innerHeight || document.documentElement.clientHeight
+    const bg = "rgba(2, 6, 23, 0.75)"
+    const base: React.CSSProperties = {
+      position: "fixed",
+      background: bg,
+      pointerEvents: "auto",
+    }
 
     if (!spotlightRect) {
-      // Full overlay with no cutout
       return (
         <div
-          className="absolute inset-0 bg-slate-950/70"
+          style={{ ...base, inset: 0 }}
           onClick={stopTutorial}
           aria-label="Click to close tutorial"
         />
@@ -169,37 +174,21 @@ export function InteractiveTutorial() {
     }
 
     const { top, left, width, height } = spotlightRect
-    const clipPath = `polygon(
-      0 0,
-      ${vw}px 0,
-      ${vw}px ${vh}px,
-      0 ${vh}px,
-      0 0,
-      ${left}px ${top}px,
-      ${left}px ${top + height}px,
-      ${left + width}px ${top + height}px,
-      ${left + width}px ${top}px,
-      ${left}px ${top}px
-    )`
+    const right = left + width
+    const bottom = top + height
 
     return (
-      <div
-        className="absolute inset-0 transition-all duration-300"
-        style={{
-          background: "rgba(2, 6, 23, 0.75)",
-          clipPath,
-          backdropFilter: "blur(1px)",
-        }}
-      />
+      <>
+        {/* Top */}
+        <div style={{ ...base, top: 0, left: 0, right: 0, height: top }} />
+        {/* Bottom */}
+        <div style={{ ...base, top: bottom, left: 0, right: 0, bottom: 0 }} />
+        {/* Left */}
+        <div style={{ ...base, top, left: 0, width: left, height }} />
+        {/* Right */}
+        <div style={{ ...base, top, left: right, right: 0, height }} />
+      </>
     )
-  }
-
-  // ── Arrow indicator for tooltip ─────────────────────────────────────────
-  const arrowClass: Record<string, string> = {
-    bottom: "bottom-full left-1/2 -translate-x-1/2 mb-0.5 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800",
-    top: "top-full left-1/2 -translate-x-1/2 mt-0.5 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800",
-    left: "left-full top-1/2 -translate-y-1/2 ml-0.5 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800",
-    right: "right-full top-1/2 -translate-y-1/2 mr-0.5 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800",
   }
 
   return (
@@ -207,10 +196,8 @@ export function InteractiveTutorial() {
       className="fixed inset-0 z-[100] pointer-events-none"
       data-testid="interactive-tutorial"
     >
-      {/* Spotlight overlay (pointer-events: auto for background click) */}
-      <div className="absolute inset-0 pointer-events-auto">
-        {renderSpotlight()}
-      </div>
+      {/* 4-rect spotlight overlay - only covers areas outside the spotlight */}
+      {renderSpotlight()}
 
       {/* Spotlight border ring */}
       {spotlightRect && (
@@ -327,11 +314,21 @@ export function InteractiveTutorial() {
           </div>
         </div>
 
-        {/* Arrow */}
-        <div
-          className={`absolute w-0 h-0 border-8 ${arrowClass[arrowSide] || arrowClass.bottom}`}
-          style={{ pointerEvents: "none" }}
-        />
+        {/* Arrow pointing toward the spotlight */}
+        {(() => {
+          const arrowClass: Record<string, string> = {
+            bottom: "bottom-full left-1/2 -translate-x-1/2 mb-0.5 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800",
+            top: "top-full left-1/2 -translate-x-1/2 mt-0.5 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800",
+            left: "left-full top-1/2 -translate-y-1/2 ml-0.5 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800",
+            right: "right-full top-1/2 -translate-y-1/2 mr-0.5 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800",
+          }
+          return (
+            <div
+              className={`absolute w-0 h-0 border-8 ${arrowClass[arrowSide] || arrowClass.bottom}`}
+              style={{ pointerEvents: "none" }}
+            />
+          )
+        })()}
       </div>
     </div>
   )
