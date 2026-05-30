@@ -11,9 +11,6 @@ vi.mock("dexie-react-hooks", () => ({
 }))
 
 describe("useHand", () => {
-  beforeEach(async () => {
-    await db.styleCards.clear()
-  })
 
   it("should return empty hand initially", () => {
     // Since useLiveQuery is mocked to just return the array, we need to handle the promise

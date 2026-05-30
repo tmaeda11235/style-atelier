@@ -130,4 +130,23 @@ describe("PromptBubbleEditor", () => {
     fireEvent.click(screen.getByText("test"))
     expect(onChange).toHaveBeenLastCalledWith([{ type: "text", value: "test" }])
   })
+
+  it("handles initialSegments change from empty to non-empty and vice versa", () => {
+    const onChange = vi.fn()
+    const { rerender } = render(
+      <PromptBubbleEditor initialSegments={[]} onChange={onChange} />
+    )
+
+    expect(onChange).toHaveBeenCalledWith([])
+
+    // 外部から initialSegments が変更された場合
+    const newSegments: PromptSegment[] = [{ type: "text", value: "new token" }]
+    rerender(<PromptBubbleEditor initialSegments={newSegments} onChange={onChange} />)
+
+    expect(screen.getByText("new token")).toBeDefined()
+
+    // さらに空配列に戻された場合
+    rerender(<PromptBubbleEditor initialSegments={[]} onChange={onChange} />)
+    expect(screen.queryByText("new token")).toBeNull()
+  })
 })
