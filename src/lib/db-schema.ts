@@ -49,6 +49,9 @@ export interface StyleCard {
     mutationNote?: string;    // "Mixed with Watercolor" などの自動メモ
   };
   isVariable?: boolean;     // 変数カード（手札一時保持用）フラグ
+  jobId?: string;           // Midjourney Job ID (for drag-and-drop merging)
+  images?: string[];        // Associated image URLs
+  selectedThumbnails?: string[]; // Selected image URLs for thumbnail display (up to 2)
 }
 
 // プロンプトの構成要素（バブル）

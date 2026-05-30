@@ -3,15 +3,17 @@ import { useLibrary } from "../../hooks/useLibrary"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { SearchField } from "../molecules/SearchField"
 import { CardThumbnail } from "../molecules/CardThumbnail"
+import type { StyleCard } from "../../lib/db-schema"
 
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 
 interface LibraryTabProps {
   addLog: (msg: string) => void
   setAlertType: (type: AlertType) => void
+  onOpenDetailCard: (card: StyleCard) => void
 }
 
-export function LibraryTab({ addLog, setAlertType }: LibraryTabProps) {
+export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTabProps) {
   const {
     styleCards,
     handleCardClick,
@@ -67,16 +69,21 @@ export function LibraryTab({ addLog, setAlertType }: LibraryTabProps) {
           return (
             <div
               key={card.id}
-              onClick={() => handleCardClick(card)}
+              onClick={() => onOpenDetailCard(card)}
               className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
                 } ${config?.glowClass || ""}`}
             >
               <CardThumbnail
                 imageUrl={card.thumbnailData}
+                thumbnailImages={card.selectedThumbnails}
                 alt={card.name}
                 tier={card.tier}
                 isPinned={card.isPinned}
                 onPinClick={(e) => togglePin(card, e)}
+                onInjectClick={(e) => {
+                  e.stopPropagation()
+                  handleCardClick(card)
+                }}
               />
               <div className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
                 <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>

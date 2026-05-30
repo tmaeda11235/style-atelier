@@ -258,7 +258,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border-2 border-dashed border-slate-200 min-h-[160px]">
         {workbenchCards.map((card) => (
           <div key={card.id} className="relative group animate-in zoom-in-95 duration-200">
-            <CardThumbnail imageUrl={card.thumbnailData} alt={card.name} tier={card.tier} className="w-full aspect-square" />
+            <CardThumbnail imageUrl={card.thumbnailData} thumbnailImages={card.selectedThumbnails} alt={card.name} tier={card.tier} className="w-full aspect-square" />
             <button
               onClick={() => toggleCardSelection(card.id)}
               className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"

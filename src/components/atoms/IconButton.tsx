@@ -13,7 +13,7 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   children: React.ReactNode
   rounded?: boolean
   size?: "xs" | "sm" | "md" | "lg"
-  variant?: "slate" | "white" | "indigo" | "danger" | "yellow"
+  variant?: "slate" | "white" | "indigo" | "danger" | "yellow" | "blue"
 }
 
 export function IconButton({
@@ -40,6 +40,7 @@ export function IconButton({
     indigo: "bg-indigo-600 text-white hover:bg-indigo-700",
     danger: "bg-red-500 text-white hover:bg-red-600",
     yellow: "bg-yellow-400 text-white hover:bg-yellow-500",
+    blue: "bg-blue-600 text-white hover:bg-blue-700",
   }
 
   return (

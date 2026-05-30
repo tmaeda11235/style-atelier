@@ -39,6 +39,7 @@ export function HandBar() {
               >
                 <CardThumbnail
                   imageUrl={card.thumbnailData}
+                  thumbnailImages={card.selectedThumbnails}
                   alt={card.name}
                   tier={card.tier}
                   size="sm"

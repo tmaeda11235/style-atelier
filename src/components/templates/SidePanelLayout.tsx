@@ -73,8 +73,12 @@ export function SidePanelLayout({
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
         {droppedItem && (
-          <div className="p-3 border rounded bg-white shadow-lg ring-2 ring-blue-500">
-            <p className="text-xs font-bold uppercase">New History Item Added!</p>
+          <div className="p-3 border rounded bg-white shadow-lg ring-2 ring-blue-500 animate-in fade-in slide-in-from-top-4">
+            <p className="text-xs font-bold uppercase text-slate-800">
+              {droppedItem.isMerged
+                ? `Associated with Card "${droppedItem.name || 'Existing Card'}"!`
+                : "New History Item Added!"}
+            </p>
           </div>
         )}
         {children}
