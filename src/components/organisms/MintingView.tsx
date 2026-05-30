@@ -292,7 +292,7 @@ export function MintingView({
         <Button
           onClick={async () => {
             await onSaveMintedCard()
-            advanceIfStep("rarity-save")
+            advanceIfStep("save-card")
           }}
         >
           Save Card

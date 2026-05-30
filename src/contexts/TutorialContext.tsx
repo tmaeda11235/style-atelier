@@ -7,6 +7,7 @@ export type TutorialStep =
   | "title-input"
   | "slot-selection"
   | "rarity-save"
+  | "save-card"
   | "card-to-hand"
   | "workbench-edit"
   | null
@@ -59,23 +60,31 @@ export const TUTORIAL_STEPS: TutorialStepConfig[] = [
   },
   {
     id: "rarity-save",
-    title: "⑤ レア度を選んでSaveする",
-    description: "上のセクションでレア度（Common / Rare / Epic / Legendary）を選択したら、「Save Card」を押してLibraryに登録してください。",
+    title: "⑤ レア度を選ぶ",
+    description: "カードのレア度（Common / Rare / Epic / Legendary）を選択してください。選択できたら「次へ」を押してください。",
+    targetSelector: "[data-tutorial='rarity-section']",
+    position: "top",
+    autoAdvance: false,
+  },
+  {
+    id: "save-card",
+    title: "⑥ Save Cardを押す",
+    description: "「Save Card」を押してカードをLibraryに登録してください。",
     targetSelector: "[data-tutorial='mint-save-footer']",
     position: "top",
     autoAdvance: true,
   },
   {
     id: "card-to-hand",
-    title: "⑥ カードをクリックしてHandへ",
-    description: "LibraryのStyleCardをクリックすると、画面下部のHandBarに追加されます。追加できたら「Next」を押してください。",
+    title: "⑦ カードをクリックしてHandへ",
+    description: "LibraryのStyleCardをクリックすると、画面下部のHandBarに追加されます。追加できたら「次へ」を押してください。",
     targetSelector: "[data-tutorial='library-card-grid']",
     position: "bottom",
     autoAdvance: false,
   },
   {
     id: "workbench-edit",
-    title: "⑦ Workbenchで編集する",
+    title: "⑧ Workbenchで編集する",
     description: "Workbenchタブに切り替えると、HandのカードをWorkbenchに載せてSlotの値を編集し、プロンプトをMidjourneyに送信できます。ガイドは以上です！",
     targetSelector: "[data-tutorial='workbench-tab']",
     position: "bottom",
