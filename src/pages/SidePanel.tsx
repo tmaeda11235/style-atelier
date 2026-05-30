@@ -52,7 +52,7 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
 }
 
 function SidePanelInner() {
-  const { startTutorial } = useTutorial()
+  const { startTutorial, advanceIfStep } = useTutorial()
   const [logs, setLogs] = useState<string[]>([])
   // New global state for connection alerts
   const [alertType, setAlertType] = useState<AlertType>(null)
