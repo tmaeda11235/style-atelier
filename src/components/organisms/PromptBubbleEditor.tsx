@@ -30,6 +30,8 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const isFirstRender = useRef(true)
+
   useEffect(() => {
     // 外部（Workbench 等）からの変更を反映
     // ただし、自身での変更ループを避けるため、内容が異なる場合のみ更新
@@ -39,6 +41,10 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   }, [initialSegments])
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
     if (onChange) {
       onChange(segments)
     }

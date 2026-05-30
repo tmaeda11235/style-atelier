@@ -137,7 +137,7 @@ describe("PromptBubbleEditor", () => {
       <PromptBubbleEditor initialSegments={[]} onChange={onChange} />
     )
 
-    expect(onChange).toHaveBeenCalledWith([])
+    expect(onChange).not.toHaveBeenCalled()
 
     // 外部から initialSegments が変更された場合
     const newSegments: PromptSegment[] = [{ type: "text", value: "new token" }]
