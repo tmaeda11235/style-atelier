@@ -8,8 +8,8 @@ export class StyleAtelierDatabase extends Dexie {
 
   constructor() {
     super('StyleAtelierDatabase');
-    this.version(4).stores({
-      styleCards: 'id, name, createdAt, tier, isFavorite, isPinned',
+    this.version(5).stores({
+      styleCards: 'id, name, createdAt, tier, isFavorite, isPinned, jobId',
       historyItems: 'id, timestamp',
       userSettings: 'userId',
     });

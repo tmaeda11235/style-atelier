@@ -17,23 +17,27 @@ import { RarityTier } from "../../lib/rarity-config"
  * @param {string} [props.className=''] - 追加のカスタムクラス
  */
 interface CardThumbnailProps {
-  imageUrl: string
+  imageUrl?: string
+  thumbnailImages?: string[]
   alt: string
   tier: RarityTier
   isPinned?: boolean
   onPinClick?: (e: React.MouseEvent) => void
   onDeleteClick?: (e: React.MouseEvent) => void
+  onInjectClick?: (e: React.MouseEvent) => void
   size?: "sm" | "md" | "lg"
   className?: string
 }
 
 export function CardThumbnail({
   imageUrl,
+  thumbnailImages,
   alt,
   tier,
   isPinned,
   onPinClick,
   onDeleteClick,
+  onInjectClick,
   size = "md",
   className = "",
 }: CardThumbnailProps) {
@@ -43,19 +47,98 @@ export function CardThumbnail({
     lg: "w-full h-48",
   }
 
+  const imagesToRender = thumbnailImages && thumbnailImages.length > 0
+    ? thumbnailImages.slice(0, 4)
+    : [imageUrl].filter(Boolean) as string[]
+
   return (
     <div className={`relative overflow-hidden rounded-lg group ${sizeClasses[size]} ${className}`}>
-      <img
-        src={imageUrl}
-        alt={alt}
-        className="w-full h-full object-cover transition-transform group-hover:scale-110"
-      />
+      {imagesToRender.length === 4 ? (
+        <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
+          <img
+            src={imagesToRender[0]}
+            alt={`${alt} - Thumbnail 1`}
+            className="w-full h-full object-cover border-r border-b border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[1]}
+            alt={`${alt} - Thumbnail 2`}
+            className="w-full h-full object-cover border-b border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[2]}
+            alt={`${alt} - Thumbnail 3`}
+            className="w-full h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[3]}
+            alt={`${alt} - Thumbnail 4`}
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          />
+        </div>
+      ) : imagesToRender.length === 3 ? (
+        <div className="grid grid-cols-3 w-full h-full">
+          <div className="col-span-2 h-full">
+            <img
+              src={imagesToRender[0]}
+              alt={`${alt} - Thumbnail 1`}
+              className="w-full h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
+            />
+          </div>
+          <div className="grid grid-rows-2 h-full">
+            <img
+              src={imagesToRender[1]}
+              alt={`${alt} - Thumbnail 2`}
+              className="w-full h-full object-cover border-b border-white/20 transition-transform group-hover:scale-105"
+            />
+            <img
+              src={imagesToRender[2]}
+              alt={`${alt} - Thumbnail 3`}
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+          </div>
+        </div>
+      ) : imagesToRender.length === 2 ? (
+        <div className="flex w-full h-full">
+          <img
+            src={imagesToRender[0]}
+            alt={`${alt} - Thumbnail 1`}
+            className="w-1/2 h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
+          />
+          <img
+            src={imagesToRender[1]}
+            alt={`${alt} - Thumbnail 2`}
+            className="w-1/2 h-full object-cover transition-transform group-hover:scale-105"
+          />
+        </div>
+      ) : (
+        <img
+          src={imagesToRender[0] || "assets/icon.png"}
+          alt={alt}
+          className="w-full h-full object-cover transition-transform group-hover:scale-110"
+        />
+      )}
       
       {/* Rarity Badge */}
       <RarityBadge tier={tier} className="absolute top-1 right-1" />
       
       {/* Actions */}
       <div className="absolute bottom-1 right-1 flex gap-1">
+        {onInjectClick && (
+          <IconButton
+            variant="blue"
+            size="sm"
+            onClick={onInjectClick}
+            className="shadow-md"
+            title="Inject Prompt"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </IconButton>
+        )}
+
         {onPinClick && (
           <IconButton
             variant={isPinned ? "yellow" : "white"}
