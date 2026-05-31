@@ -129,14 +129,27 @@ function SidePanelInner() {
   }
 
   const { activeTab, setActiveTab } = useTabs()
-  const { isDragging, droppedItem, handleDragOver, handleDragLeave, handleDrop: rawHandleDrop } = useDragAndDrop(addLog)
-
+  const { 
+    isDragging, 
+    isDraggingFile, 
+    isImporting, 
+    droppedItem, 
+    handleDragOver, 
+    handleDragLeave, 
+    handleDrop: rawHandleDrop 
+  } = useDragAndDrop(addLog)
+ 
   const handleDrop = async (e: React.DragEvent) => {
-    const result = await rawHandleDrop(e)
+    const result = (await rawHandleDrop(e)) as any
     if (result) {
-      advanceIfStep("drop-history")
+      if (result.isImport) {
+        setActiveTab("library")
+      } else {
+        advanceIfStep("drop-history")
+      }
     }
   }
+
   const {
     mintingItem,
     variationBase,
@@ -230,6 +243,8 @@ function SidePanelInner() {
             setActiveDetailCard(null)
           }}
           isDragging={isDragging}
+          isDraggingFile={isDraggingFile}
+          isImporting={isImporting}
           logs={logs}
           onClearLogs={handleClearLogs}
           onResetDb={handleResetDb}
