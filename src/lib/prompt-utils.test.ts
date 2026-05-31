@@ -30,9 +30,30 @@ describe('buildPromptString', () => {
     const result = buildPromptString(segments, params);
     expect(result).toBe('a cute cat --ar 16:9 --sref url1 --p 12345');
   });
+
+  it('should include and support masking imagePrompts', () => {
+    const segments: PromptSegment[] = [{ type: 'text', value: 'a cute cat' }];
+    const params = { imagePrompts: ['https://example.com/img1.png', 'https://example.com/img2.png'], ar: '16:9' };
+    
+    const unmasked = buildPromptString(segments, params);
+    expect(unmasked).toBe('https://example.com/img1.png https://example.com/img2.png a cute cat --ar 16:9');
+
+    const masked = buildPromptString(segments, params, ['imagePrompts']);
+    expect(masked).toBe('a cute cat --ar 16:9');
+  });
 });
 
 describe('parsePrompt', () => {
+  it('should extract starting URLs as imagePrompts and keep them out of text segments', () => {
+    const prompt = 'https://s.mj.run/img1 https://s.mj.run/img2 a majestic lion --ar 16:9';
+    const { promptSegments, parameters } = parsePrompt(prompt);
+    
+    expect(parameters.imagePrompts).toEqual(['https://s.mj.run/img1', 'https://s.mj.run/img2']);
+    expect(parameters.ar).toBe('16:9');
+    expect(promptSegments).toHaveLength(1);
+    expect(promptSegments[0].value).toBe('a majestic lion');
+  });
+
   it('should parse --profile as an alias for --p', () => {
     const prompt = 'a cute cat --profile 12345';
     const { parameters } = parsePrompt(prompt);

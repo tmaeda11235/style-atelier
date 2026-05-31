@@ -7,9 +7,22 @@ const PARAM_REGEX = /--([a-z0-9-]+)\s*([^--]*)/g;
 
 export const parsePrompt = (fullCommand: string): { promptSegments: PromptSegment[], parameters: StyleCard['parameters'] } => {
   const parameters: StyleCard['parameters'] = {};
-  let promptText = fullCommand;
+  let promptText = fullCommand.trim();
 
-  const matches = [...fullCommand.matchAll(PARAM_REGEX)];
+  // Extract URLs from the start of the prompt as Image Prompts
+  const imagePrompts: string[] = [];
+  while (true) {
+    const match = promptText.match(/^(https?:\/\/[^\s]+)/);
+    if (!match) break;
+    imagePrompts.push(match[1]);
+    promptText = promptText.substring(match[1].length).trim();
+  }
+
+  if (imagePrompts.length > 0) {
+    parameters.imagePrompts = imagePrompts;
+  }
+
+  const matches = [...promptText.matchAll(PARAM_REGEX)];
   matches.forEach(match => {
     const key = match[1].trim();
     const value = match[2] ? match[2].trim() : '';
@@ -98,7 +111,11 @@ export const buildPromptString = (segments: PromptSegment[], params: StyleCard['
   if (params.tile && !maskedKeys.includes('tile')) paramParts.push('--tile');
   if (params.raw && !maskedKeys.includes('raw')) paramParts.push('--style raw');
   
-  return `${segmentString} ${paramParts.join(' ')}`.trim();
+  const prefix = params.imagePrompts?.length && !maskedKeys.includes('imagePrompts')
+    ? params.imagePrompts.join(' ')
+    : '';
+
+  return `${prefix} ${segmentString} ${paramParts.join(' ')}`.replace(/\s+/g, ' ').trim();
 };
 
 export const mergePromptSegments = (allSegments: PromptSegment[]): PromptSegment[] => {

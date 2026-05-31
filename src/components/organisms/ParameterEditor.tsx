@@ -11,6 +11,7 @@ interface ParameterEditorProps {
     sref?: string[]
     cref?: string[]
     p?: string[]
+    imagePrompts?: string[]
     stylize?: number
     chaos?: number
     weird?: number
@@ -33,6 +34,22 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
       card.parameters?.sref?.forEach((url) => srefs.add(url))
     })
     return Array.from(srefs)
+  }, [allCards])
+
+  const allCrefs = useMemo(() => {
+    const crefs = new Set<string>()
+    allCards.forEach((card) => {
+      card.parameters?.cref?.forEach((url) => crefs.add(url))
+    })
+    return Array.from(crefs)
+  }, [allCards])
+
+  const allImagePrompts = useMemo(() => {
+    const ip = new Set<string>()
+    allCards.forEach((card) => {
+      card.parameters?.imagePrompts?.forEach((url) => ip.add(url))
+    })
+    return Array.from(ip)
   }, [allCards])
 
   return (
@@ -60,6 +77,21 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
         />
 
         <ParameterArrayEditor
+          label="Image Prompts"
+          icon={<Image className="w-3 h-3" />}
+          values={parameters.imagePrompts}
+          onChange={(value) => updateParam("imagePrompts", value)}
+          placeholder="Add Image URL"
+          colorClass={{
+            bg: "bg-amber-50",
+            text: "text-amber-700",
+            border: "border-amber-100",
+            hover: "hover:text-amber-900",
+          }}
+          options={allImagePrompts}
+        />
+
+        <ParameterArrayEditor
           label="Style Reference (--sref)"
           icon={<Image className="w-3 h-3" />}
           values={parameters.sref}
@@ -72,6 +104,21 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             hover: "hover:text-blue-900",
           }}
           options={allSrefs}
+        />
+
+        <ParameterArrayEditor
+          label="Character Reference (--cref)"
+          icon={<User className="w-3 h-3" />}
+          values={parameters.cref}
+          onChange={(value) => updateParam("cref", value)}
+          placeholder="Add Character URL"
+          colorClass={{
+            bg: "bg-green-50",
+            text: "text-green-700",
+            border: "border-green-100",
+            hover: "hover:text-green-900",
+          }}
+          options={allCrefs}
         />
       </div>
     </div>
