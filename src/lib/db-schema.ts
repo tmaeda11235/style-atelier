@@ -61,6 +61,7 @@ export interface StyleCard {
   };
   isVariable?: boolean;     // 変数カード（手札一時保持用）フラグ
   jobId?: string;           // Midjourney Job ID (for drag-and-drop merging)
+  associatedJobIds?: string[]; // Merged Midjourney Job IDs
   images?: string[];        // Associated image URLs
   selectedThumbnails?: string[]; // Selected image URLs for thumbnail display (up to 2)
 }

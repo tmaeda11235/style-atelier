@@ -37,6 +37,14 @@ export class StyleAtelierDatabase extends Dexie {
         console.warn("Failed to seed default categories:", err);
       });
     });
+
+    // Version 7: Add associatedJobIds multiEntry index to styleCards
+    this.version(7).stores({
+      styleCards: 'id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds',
+      historyItems: 'id, timestamp',
+      userSettings: 'userId',
+      categories: 'id, name, createdAt',
+    });
   }
 
   // TODO: Implement new data access methods
