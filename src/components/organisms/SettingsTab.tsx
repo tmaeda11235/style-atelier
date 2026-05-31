@@ -9,22 +9,18 @@ import {
   Lock, 
   ShieldCheck, 
   Database, 
-  Key, 
-  ChevronDown, 
-  ChevronUp, 
   Trash2,
   Settings2,
   Clock
 } from "lucide-react";
 import { 
   authorize, 
+  clearCachedToken,
   fetchUserInfo, 
   uploadBackup, 
   downloadBackup, 
   exportDatabase, 
-  importDatabase, 
-  getClientId, 
-  DEFAULT_CLIENT_ID 
+  importDatabase 
 } from "../../lib/google-drive";
 
 interface SettingsTabProps {
@@ -36,20 +32,12 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
 
-  // Redirect URI for client ID registration
-  const [redirectUri, setRedirectUri] = useState<string>("");
-
   // Google Auth states
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [lastBackup, setLastBackup] = useState<string | null>(null);
-
-  // Custom Client ID states
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [customClientId, setCustomClientId] = useState("");
-  const [clientIdSaved, setClientIdSaved] = useState(false);
 
   // Status logs local view
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" | null }>({
@@ -64,22 +52,9 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       setLastBackup(new Date(parseInt(savedLastBackup)).toLocaleString());
     }
 
-    // Load custom client ID
-    const savedClientId = localStorage.getItem("style-atelier-custom-client-id") || "";
-    setCustomClientId(savedClientId);
-
     // Load sync enabled state
     const savedSyncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
     setIsSyncEnabled(savedSyncEnabled);
-
-    // Get Redirect URL for Chrome Identity API
-    if (typeof chrome !== "undefined" && chrome.identity && chrome.identity.getRedirectURL) {
-      try {
-        setRedirectUri(chrome.identity.getRedirectURL());
-      } catch (e) {
-        console.error("Failed to get redirect URL:", e);
-      }
-    }
   }, []);
 
   const showStatus = (text: string, type: "success" | "error" | "info") => {
@@ -96,6 +71,9 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     
     if (!checked) {
       // Clear token and email when turning sync off
+      if (accessToken) {
+        clearCachedToken(accessToken).catch(console.error);
+      }
       setAccessToken(null);
       setUserEmail(null);
     }
@@ -107,7 +85,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const getOrRequestToken = async (): Promise<string> => {
     if (accessToken) return accessToken;
     
-    const token = await authorize();
+    const token = await authorize(true);
     setAccessToken(token);
     try {
       const userInfo = await fetchUserInfo(token);
@@ -149,11 +127,12 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       addLog(`Backup failed: ${err.message || err}`);
       showStatus(`Backup failed: ${err.message || "Unknown error"}`, "error");
       
-      // If token expired, clear it
-      if (err.message && (err.message.includes("401") || err.message.includes("Unauthorized") || err.message.includes("invalid"))) {
-        setAccessToken(null);
-        setUserEmail(null);
+      // Clear token cache from Chrome
+      if (accessToken) {
+        await clearCachedToken(accessToken);
       }
+      setAccessToken(null);
+      setUserEmail(null);
     } finally {
       setIsBackingUp(false);
     }
@@ -191,28 +170,14 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       addLog(`Restore failed: ${err.message || err}`);
       showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
       
-      if (err.message && (err.message.includes("401") || err.message.includes("Unauthorized") || err.message.includes("invalid"))) {
-        setAccessToken(null);
-        setUserEmail(null);
+      if (accessToken) {
+        await clearCachedToken(accessToken);
       }
+      setAccessToken(null);
+      setUserEmail(null);
     } finally {
       setIsRestoring(false);
     }
-  };
-
-  const handleSaveClientId = () => {
-    localStorage.setItem("style-atelier-custom-client-id", customClientId);
-    setClientIdSaved(true);
-    addLog(`Saved custom OAuth Client ID: ${customClientId.substring(0, 15)}...`);
-    showStatus("Custom Client ID saved. Connect again to apply changes.", "success");
-    setTimeout(() => setClientIdSaved(false), 3000);
-  };
-
-  const handleResetClientId = () => {
-    localStorage.removeItem("style-atelier-custom-client-id");
-    setCustomClientId("");
-    addLog("OAuth Client ID reset to default.");
-    showStatus("OAuth Client ID reset to default.", "info");
   };
 
   return (
@@ -348,66 +313,6 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Advanced Settings Accordion */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full px-5 py-4 flex justify-between items-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <Key className="w-4 h-4 text-slate-500" />
-            Advanced OAuth2 Configuration
-          </span>
-          {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-        </button>
-
-        {showAdvanced && (
-          <div className="px-5 pb-5 pt-1 border-t border-slate-100 space-y-4 animate-in slide-in-from-top-2 duration-200">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                Custom Google OAuth Client ID
-              </label>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
-                By default, the extension uses a shared Client ID. If you hit Google Drive API limits, or want to host your own backup configuration, input your personal Client ID here.
-              </p>
-              {redirectUri && (
-                <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-[10px] text-slate-600 font-mono select-all">
-                  <span className="font-bold block text-[9px] text-slate-400 uppercase tracking-wider mb-1">
-                    Google Cloud Console - Authorized Redirect URI
-                  </span>
-                  {redirectUri}
-                </div>
-              )}
-              <textarea
-                value={customClientId}
-                onChange={(e) => setCustomClientId(e.target.value)}
-                placeholder={DEFAULT_CLIENT_ID}
-                className="w-full text-xs font-mono p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none h-20 resize-none"
-              />
-            </div>
-            
-            <div className="flex gap-2 justify-end">
-              {customClientId && (
-                <button
-                  onClick={handleResetClientId}
-                  className="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-[10px] font-bold rounded-lg text-slate-500 transition-colors"
-                >
-                  Reset to Default
-                </button>
-              )}
-              <button
-                onClick={handleSaveClientId}
-                className={`px-4 py-1.5 text-[10px] font-bold rounded-lg shadow-sm transition-all duration-200 ${
-                  clientIdSaved ? "bg-green-600 text-white" : "bg-slate-900 hover:bg-slate-800 text-white"
-                }`}
-              >
-                {clientIdSaved ? "Saved!" : "Save Client ID"}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Dangerous Operations (Reset DB) */}

@@ -3,12 +3,11 @@ import {
   exportDatabase, 
   importDatabase, 
   authorize, 
+  clearCachedToken,
   fetchUserInfo, 
   searchBackupFile, 
   uploadBackup, 
-  downloadBackup,
-  getClientId,
-  DEFAULT_CLIENT_ID
+  downloadBackup
 } from "./google-drive";
 import { db } from "./db";
 
@@ -31,35 +30,24 @@ vi.mock("./db", () => {
 });
 
 // Mock Chrome APIs
-const mockLaunchWebAuthFlow = vi.fn();
-const mockGetRedirectURL = vi.fn().mockReturnValue("https://mock-extension-id.chromiumapp.org/");
+const mockGetAuthToken = vi.fn();
+const mockRemoveCachedAuthToken = vi.fn();
 
 global.chrome = {
   identity: {
-    launchWebAuthFlow: mockLaunchWebAuthFlow,
-    getRedirectURL: mockGetRedirectURL,
+    getAuthToken: mockGetAuthToken,
+    removeCachedAuthToken: mockRemoveCachedAuthToken,
   },
   runtime: {
     lastError: undefined
   }
 } as any;
 
-describe("Google Drive Utilities", () => {
+describe("Google Drive Utilities (getAuthToken Flow)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     global.fetch = vi.fn();
-  });
-
-  describe("getClientId", () => {
-    it("should return default client ID when no custom ID is saved", () => {
-      expect(getClientId()).toBe(DEFAULT_CLIENT_ID);
-    });
-
-    it("should return custom client ID when saved in localStorage", () => {
-      localStorage.setItem("style-atelier-custom-client-id", "my-custom-id");
-      expect(getClientId()).toBe("my-custom-id");
-    });
   });
 
   describe("exportDatabase", () => {
@@ -127,18 +115,15 @@ describe("Google Drive Utilities", () => {
   });
 
   describe("authorize", () => {
-    it("should resolve access token on successful auth flow redirect", async () => {
-      mockLaunchWebAuthFlow.mockImplementation((opts, callback) => {
-        callback("https://mock-extension-id.chromiumapp.org/#access_token=mock-token-abc&token_type=Bearer");
+    it("should resolve access token on successful getAuthToken call", async () => {
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("mock-token-123");
       });
 
-      const token = await authorize();
-      expect(token).toBe("mock-token-abc");
-      expect(mockLaunchWebAuthFlow).toHaveBeenCalledWith(
-        expect.objectContaining({
-          interactive: true,
-          url: expect.stringContaining("client_id=" + DEFAULT_CLIENT_ID)
-        }),
+      const token = await authorize(true);
+      expect(token).toBe("mock-token-123");
+      expect(mockGetAuthToken).toHaveBeenCalledWith(
+        expect.objectContaining({ interactive: true }),
         expect.any(Function)
       );
     });
@@ -146,7 +131,7 @@ describe("Google Drive Utilities", () => {
     it("should reject with error when chrome runtime reports error", async () => {
       const originalLastError = chrome.runtime.lastError;
       (chrome.runtime as any).lastError = { message: "User cancelled authentication" };
-      mockLaunchWebAuthFlow.mockImplementation((opts, callback) => {
+      mockGetAuthToken.mockImplementation((opts, callback) => {
         callback(undefined);
       });
 
@@ -154,6 +139,20 @@ describe("Google Drive Utilities", () => {
       
       // cleanup
       (chrome.runtime as any).lastError = originalLastError;
+    });
+  });
+
+  describe("clearCachedToken", () => {
+    it("should call removeCachedAuthToken with correct token", async () => {
+      mockRemoveCachedAuthToken.mockImplementation((opts, callback) => {
+        callback();
+      });
+
+      await clearCachedToken("stale-token");
+      expect(mockRemoveCachedAuthToken).toHaveBeenCalledWith(
+        { token: "stale-token" },
+        expect.any(Function)
+      );
     });
   });
 

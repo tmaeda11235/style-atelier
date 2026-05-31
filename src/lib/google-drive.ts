@@ -1,12 +1,5 @@
 import { db } from "./db";
 
-// Default Client ID
-export const DEFAULT_CLIENT_ID = "81426269486-ofes7841buji4k17mkf07pps81nit1h4.apps.googleusercontent.com";
-const SCOPES = [
-  "https://www.googleapis.com/auth/drive.file",
-  "https://www.googleapis.com/auth/userinfo.email"
-];
-
 export interface BackupPayload {
   version: number;
   exportedAt: number;
@@ -19,64 +12,44 @@ export interface BackupPayload {
 }
 
 /**
- * Get active Client ID (checks localStorage for custom client ID)
+ * Trigger OAuth2 authorization flow using chrome.identity.getAuthToken (Native Chrome Extension flow)
  */
-export function getClientId(): string {
-  const customId = localStorage.getItem("style-atelier-custom-client-id");
-  return customId && customId.trim() !== "" ? customId.trim() : DEFAULT_CLIENT_ID;
-}
-
-/**
- * Trigger OAuth2 authorization flow using chrome.identity.launchWebAuthFlow
- */
-export async function authorize(forceConsent = false): Promise<string> {
-  if (typeof chrome === "undefined" || !chrome.identity || !chrome.identity.launchWebAuthFlow) {
+export async function authorize(interactive = true): Promise<string> {
+  if (typeof chrome === "undefined" || !chrome.identity || !chrome.identity.getAuthToken) {
     throw new Error("Chrome Identity API is not available. This feature only works inside the Chrome Extension environment.");
   }
 
-  const clientId = getClientId();
-  const redirectUrl = chrome.identity.getRedirectURL();
-  
-  let authUrl = `https://accounts.google.com/o/oauth2/v2/auth` +
-    `?client_id=${clientId}` +
-    `&redirect_uri=${encodeURIComponent(redirectUrl)}` +
-    `&response_type=token` +
-    `&scope=${encodeURIComponent(SCOPES.join(" "))}`;
-
-  if (forceConsent) {
-    authUrl += "&prompt=consent";
-  }
-
   return new Promise((resolve, reject) => {
-    chrome.identity.launchWebAuthFlow(
+    chrome.identity.getAuthToken(
       {
-        url: authUrl,
-        interactive: true
+        interactive
       },
-      (responseUrl) => {
+      (token) => {
         if (chrome.runtime.lastError) {
           return reject(new Error(chrome.runtime.lastError.message));
         }
-        if (!responseUrl) {
-          return reject(new Error("Authorization failed: empty redirect URL"));
-        }
-
-        try {
-          const urlObj = new URL(responseUrl);
-          const hash = urlObj.hash.substring(1);
-          const params = new URLSearchParams(hash);
-          const accessToken = params.get("access_token");
-
-          if (accessToken) {
-            resolve(accessToken);
-          } else {
-            reject(new Error("Authorization failed: access_token not found in redirect URL"));
-          }
-        } catch (e: any) {
-          reject(new Error(`Failed to parse redirect URL: ${e.message}`));
+        if (token) {
+          resolve(token);
+        } else {
+          reject(new Error("Authorization failed: empty access token"));
         }
       }
     );
+  });
+}
+
+/**
+ * Remove cached auth token if it expires or becomes invalid
+ */
+export async function clearCachedToken(token: string): Promise<void> {
+  if (typeof chrome === "undefined" || !chrome.identity || !chrome.identity.removeCachedAuthToken) {
+    return;
+  }
+
+  return new Promise((resolve) => {
+    chrome.identity.removeCachedAuthToken({ token }, () => {
+      resolve();
+    });
   });
 }
 
