@@ -52,7 +52,8 @@
   },
   "manifest": {
     "permissions": [
-      "activeTab"
+      "activeTab",
+      "identity"
     ],
     "host_permissions": [
       "https://midjourney.com/*",

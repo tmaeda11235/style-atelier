@@ -14,7 +14,6 @@ import {
   ChevronUp, 
   Trash2,
   Settings2,
-  LogOut,
   Clock
 } from "lucide-react";
 import { 
@@ -27,7 +26,6 @@ import {
   getClientId, 
   DEFAULT_CLIENT_ID 
 } from "../../lib/google-drive";
-import { db } from "../../lib/db";
 
 interface SettingsTabProps {
   addLog: (log: string) => void;
@@ -35,10 +33,12 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
+  // Sync toggle state
+  const [isSyncEnabled, setIsSyncEnabled] = useState(false);
+
   // Google Auth states
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [lastBackup, setLastBackup] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   });
 
   useEffect(() => {
-    // Load last backup time from localStorage
+    // Load last backup time
     const savedLastBackup = localStorage.getItem("style-atelier-last-backup");
     if (savedLastBackup) {
       setLastBackup(new Date(parseInt(savedLastBackup)).toLocaleString());
@@ -64,6 +64,10 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     // Load custom client ID
     const savedClientId = localStorage.getItem("style-atelier-custom-client-id") || "";
     setCustomClientId(savedClientId);
+
+    // Load sync enabled state
+    const savedSyncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
+    setIsSyncEnabled(savedSyncEnabled);
   }, []);
 
   const showStatus = (text: string, type: "success" | "error" | "info") => {
@@ -73,55 +77,70 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     }, 6000);
   };
 
-  const handleConnect = async (force = false) => {
-    setIsConnecting(true);
-    setStatusMessage({ text: "Connecting to Google Drive...", type: "info" });
-    try {
-      const token = await authorize(force);
-      setAccessToken(token);
-      
-      const userInfo = await fetchUserInfo(token);
-      setUserEmail(userInfo.email);
-      addLog(`Connected to Google Drive: ${userInfo.email}`);
-      showStatus(`Successfully connected to ${userInfo.email}!`, "success");
-    } catch (err: any) {
-      console.error(err);
-      addLog(`Google Drive connection error: ${err.message || err}`);
-      showStatus(err.message || "Failed to authorize Google account.", "error");
-    } finally {
-      setIsConnecting(false);
+  const handleToggleSync = (checked: boolean) => {
+    setIsSyncEnabled(checked);
+    localStorage.setItem("style-atelier-sync-enabled", checked ? "true" : "false");
+    addLog(`Google Drive synchronization: ${checked ? "ENABLED" : "DISABLED"}`);
+    
+    if (!checked) {
+      // Clear token and email when turning sync off
+      setAccessToken(null);
+      setUserEmail(null);
     }
   };
 
-  const handleDisconnect = () => {
-    setAccessToken(null);
-    setUserEmail(null);
-    addLog("Disconnected from Google Drive.");
-    showStatus("Google Drive connection disconnected.", "info");
+  /**
+   * Helper to retrieve token from memory or request a new one via Identity flow
+   */
+  const getOrRequestToken = async (): Promise<string> => {
+    if (accessToken) return accessToken;
+    
+    const token = await authorize();
+    setAccessToken(token);
+    try {
+      const userInfo = await fetchUserInfo(token);
+      setUserEmail(userInfo.email);
+    } catch (e) {
+      console.warn("Could not fetch user profile details, token used directly:", e);
+    }
+    return token;
   };
 
   const handleBackup = async () => {
-    if (!accessToken) return;
+    if (!isSyncEnabled) return;
+
+    // Check if backup has been confirmed before
+    const isBackupConfirmed = localStorage.getItem("style-atelier-backup-confirmed") === "true";
+    if (!isBackupConfirmed) {
+      const ok = window.confirm(
+        "データをGoogle Driveにバックアップ（保存）します。よろしいですか？\n(※次回以降、この確認画面は表示されずダイレクトに保存されます。)"
+      );
+      if (!ok) return;
+      localStorage.setItem("style-atelier-backup-confirmed", "true");
+    }
+
     setIsBackingUp(true);
     setStatusMessage({ text: "Creating backup and uploading...", type: "info" });
     try {
+      const token = await getOrRequestToken();
       const jsonData = await exportDatabase();
-      await uploadBackup(accessToken, jsonData);
+      await uploadBackup(token, jsonData);
 
       const now = Date.now();
       localStorage.setItem("style-atelier-last-backup", now.toString());
       setLastBackup(new Date(now).toLocaleString());
 
       addLog("Backup uploaded to Google Drive successfully.");
-      showStatus("Database backup uploaded successfully!", "success");
+      showStatus("バックアップ完了しました", "success");
     } catch (err: any) {
       console.error(err);
       addLog(`Backup failed: ${err.message || err}`);
       showStatus(`Backup failed: ${err.message || "Unknown error"}`, "error");
       
-      // If token expired, try to reconnect
-      if (err.message && (err.message.includes("401") || err.message.includes("Unauthorized"))) {
-        handleConnect(true);
+      // If token expired, clear it
+      if (err.message && (err.message.includes("401") || err.message.includes("Unauthorized") || err.message.includes("invalid"))) {
+        setAccessToken(null);
+        setUserEmail(null);
       }
     } finally {
       setIsBackingUp(false);
@@ -129,17 +148,23 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   };
 
   const handleRestore = async () => {
-    if (!accessToken) return;
+    if (!isSyncEnabled) return;
     
-    const confirmRestore = window.confirm(
-      "【警告】Google Driveからデータを復元します。\n現在のローカルデータ（カード、カテゴリ、設定など）はすべて上書きされますがよろしいですか？"
-    );
-    if (!confirmRestore) return;
+    // Check if restore has been confirmed before
+    const isRestoreConfirmed = localStorage.getItem("style-atelier-restore-confirmed") === "true";
+    if (!isRestoreConfirmed) {
+      const ok = window.confirm(
+        "【警告】Google Driveからデータを復元（ロード）します。\n現在のローカルデータ（カード、カテゴリ、設定など）はすべて上書きされ、元に戻せません。よろしいですか？\n(※次回以降、この確認画面は表示されずダイレクトにロードされます。)"
+      );
+      if (!ok) return;
+      localStorage.setItem("style-atelier-restore-confirmed", "true");
+    }
 
     setIsRestoring(true);
     setStatusMessage({ text: "Downloading backup from Google Drive...", type: "info" });
     try {
-      const backupData = await downloadBackup(accessToken);
+      const token = await getOrRequestToken();
+      const backupData = await downloadBackup(token);
       if (!backupData) {
         showStatus("Backup file (style-atelier-backup.json) not found on Google Drive.", "error");
         addLog("Restore failed: Backup file not found.");
@@ -148,11 +173,16 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
       await importDatabase(backupData);
       addLog("Database restored from Google Drive successfully.");
-      showStatus("Data successfully restored! Please reload the page if changes don't reflect immediately.", "success");
+      showStatus("データ復元が完了しました！", "success");
     } catch (err: any) {
       console.error(err);
       addLog(`Restore failed: ${err.message || err}`);
       showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
+      
+      if (err.message && (err.message.includes("401") || err.message.includes("Unauthorized") || err.message.includes("invalid"))) {
+        setAccessToken(null);
+        setUserEmail(null);
+      }
     } finally {
       setIsRestoring(false);
     }
@@ -188,16 +218,16 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         {/* Subtle decorative background gradient */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
-        <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-xl ${userEmail ? "bg-green-50 text-green-600 border border-green-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
-            <Cloud className="w-6 h-6 animate-pulse" />
+        <div className="flex items-start gap-4 mb-4">
+          <div className={`p-3 rounded-xl ${isSyncEnabled ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
+            <Cloud className="w-6 h-6" />
           </div>
           <div className="space-y-1 flex-1">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
               Google Drive Cloud Sync
-              {userEmail && (
+              {isSyncEnabled && userEmail && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
-                  <ShieldCheck className="w-3 h-3 mr-0.5" /> Synchronized
+                  <ShieldCheck className="w-3 h-3 mr-0.5" /> Active
                 </span>
               )}
             </h3>
@@ -207,9 +237,30 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           </div>
         </div>
 
+        {/* Sync Toggle Switch */}
+        <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold text-slate-700">Google Drive同期を有効にする</span>
+            <p className="text-[10px] text-slate-400">バックアップ・復元用のボタンが活性化します</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleToggleSync(!isSyncEnabled)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              isSyncEnabled ? "bg-blue-600" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                isSyncEnabled ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
         {/* Status / Message Display */}
         {statusMessage.text && (
-          <div className={`mt-4 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
+          <div className={`mt-3 mb-4 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
             statusMessage.type === "success" ? "bg-green-50 text-green-800 border-green-200" :
             statusMessage.type === "error" ? "bg-red-50 text-red-800 border-red-200" :
             "bg-blue-50 text-blue-800 border-blue-200"
@@ -222,90 +273,62 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         )}
 
         {/* Action Buttons */}
-        <div className="mt-5 space-y-4">
-          {!userEmail ? (
+        <div className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => handleConnect(false)}
-              disabled={isConnecting}
-              className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-2"
+              onClick={handleBackup}
+              disabled={!isSyncEnabled || isBackingUp || isRestoring}
+              className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
             >
-              {isConnecting ? (
+              {isBackingUp ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Connecting...
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Backing up...
                 </>
               ) : (
                 <>
-                  <Cloud className="w-4 h-4" />
-                  Connect Google Account
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  Backup Data
                 </>
               )}
             </button>
-          ) : (
-            <div className="space-y-3">
-              {/* Account Identity and disconnect */}
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs">
-                <span className="font-semibold text-slate-600 truncate mr-2" title={userEmail}>
-                  {userEmail}
-                </span>
-                <button
-                  onClick={handleDisconnect}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors flex items-center gap-1 font-bold text-[10px]"
-                  title="Disconnect account"
-                >
-                  <LogOut className="w-3.5 h-3.5" /> Disconnect
-                </button>
-              </div>
+            <button
+              onClick={handleRestore}
+              disabled={!isSyncEnabled || isBackingUp || isRestoring}
+              className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              {isRestoring ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Restoring...
+                </>
+              ) : (
+                <>
+                  <DownloadCloud className="w-3.5 h-3.5" />
+                  Restore Data
+                </>
+              )}
+            </button>
+          </div>
 
-              {/* Sync Actions */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleBackup}
-                  disabled={isBackingUp || isRestoring}
-                  className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  {isBackingUp ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Backing up...
-                    </>
-                  ) : (
-                    <>
-                      <UploadCloud className="w-3.5 h-3.5" />
-                      Backup Data
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleRestore}
-                  disabled={isBackingUp || isRestoring}
-                  className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-50 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  {isRestoring ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Restoring...
-                    </>
-                  ) : (
-                    <>
-                      <DownloadCloud className="w-3.5 h-3.5" />
-                      Restore Data
-                    </>
-                  )}
-                </button>
-              </div>
+          {/* Sync Account Details & Last Backup Time */}
+          {(userEmail || lastBackup) && (
+            <div className="flex flex-col items-center justify-center gap-1 border-t border-slate-100 pt-3">
+              {userEmail && (
+                <div className="text-[10px] text-slate-500 font-semibold truncate max-w-full">
+                  連携アカウント: {userEmail}
+                </div>
+              )}
+              {lastBackup && (
+                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                  <Clock className="w-3 h-3" />
+                  <span>最終バックアップ: {lastBackup}</span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Last Backup Label */}
-          {lastBackup && (
-            <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-medium">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Last backed up: {lastBackup}</span>
-            </div>
-          )}
-
-          {/* User requested security note */}
+          {/* Security note */}
           <div className="flex items-start gap-1.5 bg-blue-50/40 rounded-xl p-3 border border-blue-100/50">
             <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
