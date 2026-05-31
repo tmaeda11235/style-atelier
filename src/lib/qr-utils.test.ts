@@ -65,6 +65,21 @@ describe('qr-utils', () => {
       expect(decompressed.thumbnailData).toBeUndefined();
     });
 
+    it('should decompress card data from custom protocol URL formats', () => {
+      const compressed = compressCardData(mockCard);
+      const urls = [
+        `web+styleatelier://import?data=${compressed}`,
+        `web+style-atelier://import?data=${compressed}`,
+        `style-atelier://import?data=${compressed}`
+      ];
+
+      for (const url of urls) {
+        const decompressed = decompressCardData(url);
+        expect(decompressed.id).toBe(mockCard.id);
+        expect(decompressed.name).toBe(mockCard.name);
+      }
+    });
+
     it('should throw an error when decompressing invalid data', () => {
       expect(() => decompressCardData('invalid-base64-payload')).toThrow();
     });
