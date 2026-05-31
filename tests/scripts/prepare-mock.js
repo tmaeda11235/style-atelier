@@ -96,7 +96,9 @@ async function run() {
 
     // b. リネームしたアセットのパス修正
     htmlContent = htmlContent.replace(/href="[^"]*\/index_files\/css2"/g, 'href="./index_files/google-fonts.css"');
-    htmlContent = htmlContent.replace(/src="[^"]*\/index_files\/clientSideEntry-gnf8cfdk\.js\.ダウンロード"/g, 'src="./index_files/clientSideEntry-gnf8cfdk.js"');
+    
+    // clientSideEntry.js (React エントリ) を無効化して、React ハイドレーションによる静的HTML/画像の初期化（CORSエラーによる消去）を防ぐ
+    htmlContent = htmlContent.replace(/<script[^>]*src="[^"]*clientSideEntry-gnf8cfdk[^"]*"[^>]*><\/script>/gi, '<!-- clientSideEntry Disabled to preserve static HTML/Images -->');
 
     // content.ts スクリプトのインジェクト (もし未インジェクトなら)
     if (!htmlContent.includes('/tests/sandbox/content.ts')) {

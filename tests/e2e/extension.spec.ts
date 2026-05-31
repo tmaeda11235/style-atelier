@@ -96,9 +96,9 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       const mjFrame = page.frameLocator("#midjourney-frame");
       const spFrame = page.frameLocator("#sidepanel-frame");
 
-      // 2. Midjourney 内の最初のエレメント（Cyberpunkカード）が表示されるのを待つ
+      // 2. Midjourney 内の最初のエレメント（超高層ビル画像）が表示されるのを待つ
       console.log("Waiting for Midjourney mock images to render...");
-      const mockImage = mjFrame.locator(".sa-mock-card img").first();
+      const mockImage = mjFrame.locator("#pageScroll img").first();
       await expect(mockImage).toBeVisible({ timeout: 15000 });
 
       // 3. ウェルカムダイアログの「スキップ」ボタンがあればクリック
@@ -128,9 +128,9 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
         console.log("Fallback: Dispatching programmatic drop event to guarantee coverage...");
         // 画像のメタデータを抽出して手動でイベントをディスパッチ
         const imgData = {
-          id: "8f3e5b32-cd29-4e6a-bc01-e25f617d774e",
-          fullCommand: "Cyberpunk street vendor stall, holographic signs, rain slicked asphalt, purple and teal lighting --ar 16:9 --personalize --v 6.0",
-          imageUrl: "data:image/svg+xml;charset=utf-8,...",
+          id: "340ae0f9-c2f0-459c-ad45-95f7249049e8",
+          fullCommand: "超高層ビルを見上げた景色, 観葉植物, noon, skyscraper --ar 16:9 --sref 2496378872 3886212479 --stylize 200 --profile buibsja",
+          imageUrl: "./index_files/0_0_640_N.webp",
           timestamp: Date.now()
         };
 
@@ -166,7 +166,7 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
 
       // 8. 注入したヒストリーアイテムが一覧に表示されることを検証
       console.log("Verifying history list contains the dropped item...");
-      const historyItem = spFrame.locator("text=Cyberpunk street vendor stall");
+      const historyItem = spFrame.locator("text=超高層ビルを見上げた景色");
       await expect(historyItem).toBeVisible({ timeout: 10000 });
 
       console.log("Drag-and-drop E2E test passed successfully!");
