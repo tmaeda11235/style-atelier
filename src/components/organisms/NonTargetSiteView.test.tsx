@@ -6,12 +6,10 @@ import { NonTargetSiteView } from "./NonTargetSiteView"
 describe("NonTargetSiteView", () => {
   it("should render welcome text and buttons", () => {
     const mockOpenMidjourney = vi.fn()
-    const mockOpenDiscord = vi.fn()
 
     render(
       <NonTargetSiteView
         onOpenMidjourney={mockOpenMidjourney}
-        onOpenDiscord={mockOpenDiscord}
       />
     )
 
@@ -22,15 +20,10 @@ describe("NonTargetSiteView", () => {
     ).toBeInTheDocument()
 
     const mjButton = screen.getByRole("button", { name: /Midjourneyを開く/ })
-    const dcButton = screen.getByRole("button", { name: /Discordを開く/ })
 
     expect(mjButton).toBeInTheDocument()
-    expect(dcButton).toBeInTheDocument()
 
     fireEvent.click(mjButton)
     expect(mockOpenMidjourney).toHaveBeenCalledTimes(1)
-
-    fireEvent.click(dcButton)
-    expect(mockOpenDiscord).toHaveBeenCalledTimes(1)
   })
 })
