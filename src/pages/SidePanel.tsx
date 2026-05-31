@@ -9,6 +9,7 @@ import { CardDetailView } from "../components/organisms/CardDetailView"
 import { HandBar } from "../components/organisms/HandBar"
 import { InteractiveTutorial } from "../components/organisms/InteractiveTutorial"
 import { useTabs } from "../hooks/useTabs"
+import { SettingsTab } from "../components/organisms/SettingsTab"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
 import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
@@ -296,6 +297,7 @@ function SidePanelInner() {
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
           {activeTab === "library" && <LibraryTab addLog={addLog} setAlertType={setAlertType} onOpenDetailCard={setActiveDetailCard} />}
           {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} setAlertType={setAlertType} />}
+          {activeTab === "settings" && <SettingsTab addLog={addLog} onResetDb={handleResetDb} />}
 
           {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
           <HandBar />
