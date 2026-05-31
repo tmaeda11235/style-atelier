@@ -36,6 +36,9 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
 
+  // Redirect URI for client ID registration
+  const [redirectUri, setRedirectUri] = useState<string>("");
+
   // Google Auth states
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -68,6 +71,15 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     // Load sync enabled state
     const savedSyncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
     setIsSyncEnabled(savedSyncEnabled);
+
+    // Get Redirect URL for Chrome Identity API
+    if (typeof chrome !== "undefined" && chrome.identity && chrome.identity.getRedirectURL) {
+      try {
+        setRedirectUri(chrome.identity.getRedirectURL());
+      } catch (e) {
+        console.error("Failed to get redirect URL:", e);
+      }
+    }
   }, []);
 
   const showStatus = (text: string, type: "success" | "error" | "info") => {
@@ -360,6 +372,14 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               <p className="text-[10px] text-slate-400 leading-relaxed">
                 By default, the extension uses a shared Client ID. If you hit Google Drive API limits, or want to host your own backup configuration, input your personal Client ID here.
               </p>
+              {redirectUri && (
+                <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-[10px] text-slate-600 font-mono select-all">
+                  <span className="font-bold block text-[9px] text-slate-400 uppercase tracking-wider mb-1">
+                    Google Cloud Console - Authorized Redirect URI
+                  </span>
+                  {redirectUri}
+                </div>
+              )}
               <textarea
                 value={customClientId}
                 onChange={(e) => setCustomClientId(e.target.value)}
