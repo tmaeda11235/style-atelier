@@ -258,7 +258,9 @@ export async function exportCardAsImage(card: StyleCard): Promise<void> {
   // 5. Trigger download of the composite canvas
   const dataUrl = canvas.toDataURL('image/png');
   const downloadLink = document.createElement('a');
-  downloadLink.download = `${card.name.replace(/[^a-zA-Z0-9]/g, '_')}_style_card.png`;
+  const safeName = card.name.replace(/[\s/\\?%*:|"<>]/g, '_') || 'style_card';
+  const timestamp = Date.now();
+  downloadLink.download = `${safeName}_${timestamp}.png`;
   downloadLink.href = dataUrl;
   downloadLink.click();
 }
