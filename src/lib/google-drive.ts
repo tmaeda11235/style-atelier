@@ -1,7 +1,7 @@
 import { db } from "./db";
 
-// Default Client ID for testing (users can overwrite this with their own from settings)
-export const DEFAULT_CLIENT_ID = "92651478148-p98a2i5f04v26k5o8ptldrdqj99k4vpl.apps.googleusercontent.com";
+// Default Client ID
+export const DEFAULT_CLIENT_ID = "81426269486-2pi6vl3bqhdr6l9tn1pddv6vh2mu3u0t.apps.googleusercontent.com";
 const SCOPES = [
   "https://www.googleapis.com/auth/drive.file",
   "https://www.googleapis.com/auth/userinfo.email"
