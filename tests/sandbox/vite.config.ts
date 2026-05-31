@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
+import fs from "fs";
+import path from "path";
 
 export default defineConfig({
   plugins: [
@@ -9,6 +11,23 @@ export default defineConfig({
       jsxRuntime: "automatic",
     }),
     tsconfigPaths(),
+    {
+      name: 'serve-fixtures-static',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.includes('/tests/fixtures/') && req.url.endsWith('.css')) {
+            const urlPath = req.url.split('?')[0];
+            const filePath = path.join(__dirname, '../..', urlPath);
+            if (fs.existsSync(filePath)) {
+              res.setHeader('Content-Type', 'text/css');
+              res.end(fs.readFileSync(filePath));
+              return;
+            }
+          }
+          next();
+        });
+      }
+    }
   ],
   server: {
     port: 5173,

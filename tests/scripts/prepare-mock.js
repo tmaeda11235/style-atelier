@@ -159,16 +159,16 @@ async function run() {
     console.log('google-fonts.css not found, skipping font localization.');
   }
 
-  // 4. Midjourney CSS内の @layer (base|components|utilities) に起因する Vite/PostCSS ビルドエラー対策
-  console.log('Patching Midjourney CSS files to prevent PostCSS @layer errors...');
+  // 4. Midjourney CSS内の @layer を元に戻す（Vite側で静的にサーブするためパッチは不要になり、元来のスタイル優先度・レスポンシブデザインを保証）
+  console.log('Restoring Midjourney CSS @layer specificity...');
   const cssFiles = fs.readdirSync(ASSETS_DIR).filter(file => file.endsWith('.css') && file.startsWith('clientSideEntry'));
   for (const cssFile of cssFiles) {
     const cssFilePath = path.join(ASSETS_DIR, cssFile);
     let content = fs.readFileSync(cssFilePath, 'utf8');
-    const layerRegex = /@layer\s+(base|components|utilities)\b/g;
+    const layerRegex = /@layer\s+(base|components|utilities)_mock\b/g;
     if (layerRegex.test(content)) {
-      console.log(`Patching @layer layers in ${cssFile}...`);
-      content = content.replace(layerRegex, '@layer $1_mock');
+      console.log(`Restoring @layer layers in ${cssFile}...`);
+      content = content.replace(layerRegex, '@layer $1');
       fs.writeFileSync(cssFilePath, content, 'utf8');
     }
   }
