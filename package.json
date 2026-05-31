@@ -46,10 +46,11 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
-    ],
-    "permissions": [
-      "scripting"
+      "https://midjourney.com/*",
+      "https://*.midjourney.com/*",
+      "https://*.discord.com/*",
+      "https://*.discordapp.com/*",
+      "https://*.discordapp.net/*"
     ]
   }
 }
