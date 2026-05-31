@@ -3,10 +3,9 @@ import { Compass, ExternalLink } from "lucide-react"
 
 interface NonTargetSiteViewProps {
   onOpenMidjourney: () => void
-  onOpenDiscord: () => void
 }
 
-export function NonTargetSiteView({ onOpenMidjourney, onOpenDiscord }: NonTargetSiteViewProps) {
+export function NonTargetSiteView({ onOpenMidjourney }: NonTargetSiteViewProps) {
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 p-6 text-slate-200 font-sans select-none overflow-hidden">
       <div className="relative w-full max-w-sm flex flex-col items-center text-center space-y-6">
@@ -46,14 +45,6 @@ export function NonTargetSiteView({ onOpenMidjourney, onOpenDiscord }: NonTarget
           >
             Midjourneyを開く
             <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </button>
-          
-          <button
-            onClick={onOpenDiscord}
-            className="w-full py-2.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            Discordを開く
-            <ExternalLink className="w-3.5 h-3.5 opacity-60" />
           </button>
         </div>
 

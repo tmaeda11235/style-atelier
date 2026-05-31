@@ -206,18 +206,6 @@ function SidePanelInner() {
     }
   }
 
-  const handleOpenDiscord = () => {
-    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.id) {
-          chrome.tabs.update(tabs[0].id, { url: "https://discord.com" })
-        }
-      })
-    } else {
-      window.open("https://discord.com", "_blank")
-    }
-  }
-
   if (isLoading) {
     return <div className="w-full h-screen bg-slate-950" />
   }
@@ -226,7 +214,6 @@ function SidePanelInner() {
     return (
       <NonTargetSiteView
         onOpenMidjourney={handleOpenMidjourney}
-        onOpenDiscord={handleOpenDiscord}
       />
     )
   }
