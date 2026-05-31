@@ -8,6 +8,7 @@ import { Plus } from "lucide-react"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 import { useTutorial } from "../../contexts/TutorialContext"
+import { db } from "../../lib/db"
 
 interface LibraryTabProps {
   addLog: (msg: string) => void
@@ -18,6 +19,112 @@ interface LibraryTabProps {
 export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const { advanceIfStep } = useTutorial()
+  const [isFileDragging, setIsFileDragging] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+
+  const handleFileDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsFileDragging(true)
+    }
+  }
+
+  const handleFileDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsFileDragging(false)
+  }
+
+  const handleFileDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsFileDragging(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    const imageFile = files.find((f) => f.type.startsWith("image/"))
+    if (!imageFile) {
+      addLog("No valid image file dropped.")
+      return
+    }
+
+    setIsImporting(true)
+    addLog("Processing dropped card image...")
+
+    try {
+      const { readQRCodeFromImage, decompressCardData } = await import("../../lib/qr-utils")
+      const payload = await readQRCodeFromImage(imageFile)
+      
+      if (!payload) {
+        addLog("No QR code found in the image.")
+        setIsImporting(false)
+        return
+      }
+
+      const partialCard = decompressCardData(payload)
+      if (!partialCard.name || !partialCard.promptSegments) {
+        addLog("Invalid card data in QR code.")
+        setIsImporting(false)
+        return
+      }
+
+      const cdnUrl = partialCard.images?.[0]
+      let finalThumbnailData = "assets/icon.png"
+      
+      if (cdnUrl) {
+        addLog("Fetching clean artwork from Midjourney...")
+        try {
+          const response = await fetch(cdnUrl)
+          if (response.ok) {
+            const blob = await response.blob()
+            finalThumbnailData = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result as string)
+              reader.onerror = reject
+              reader.readAsDataURL(blob)
+            })
+            addLog("Artwork downloaded successfully.")
+          } else {
+            addLog("Could not fetch artwork from Midjourney CDN. Using placeholder.")
+          }
+        } catch (fetchErr) {
+          console.error("CORS or network error fetching artwork:", fetchErr)
+          addLog("Failed to download artwork. Using placeholder.")
+        }
+      } else {
+        addLog("No artwork URL found in card. Using placeholder.")
+      }
+
+      const existingCard = partialCard.id ? await db.styleCards.get(partialCard.id) : null
+      
+      const importedCard: StyleCard = {
+        id: partialCard.id || crypto.randomUUID(),
+        name: partialCard.name,
+        createdAt: existingCard?.createdAt || Date.now(),
+        updatedAt: Date.now(),
+        promptSegments: partialCard.promptSegments,
+        parameters: partialCard.parameters || {},
+        masking: partialCard.masking || { isSrefHidden: false, isPHidden: false },
+        tier: partialCard.tier || "Common",
+        isFavorite: existingCard?.isFavorite || false,
+        usageCount: existingCard?.usageCount || 0,
+        tags: partialCard.tags || [],
+        category: partialCard.category,
+        dominantColor: partialCard.dominantColor || "#1e293b",
+        accentColor: partialCard.accentColor || "#3b82f6",
+        thumbnailData: finalThumbnailData,
+        frameId: partialCard.frameId || "default",
+        genealogy: partialCard.genealogy || { generation: 1, parentIds: [] },
+        images: cdnUrl ? [cdnUrl] : [],
+        selectedThumbnails: cdnUrl ? [cdnUrl] : [],
+      }
+
+      await db.styleCards.put(importedCard)
+      addLog(`Imported card "${importedCard.name}" successfully!`)
+    } catch (err) {
+      console.error("Failed to import card:", err)
+      addLog("Error occurred while importing card.")
+    } finally {
+      setIsImporting(false)
+    }
+  }
 
   const {
     styleCards,
@@ -36,7 +143,40 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
   } = useLibrary(addLog, setAlertType)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div 
+      className="flex flex-col gap-4 relative"
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
+      data-testid="library-tab-container"
+    >
+      {isFileDragging && (
+        <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex flex-col items-center justify-center z-50 backdrop-blur-[2px] pointer-events-none animate-pulse">
+          <div className="bg-white p-4 rounded-full shadow-lg flex items-center justify-center border border-blue-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <span className="text-xs font-bold text-blue-600 mt-2 bg-white px-2 py-0.5 rounded shadow-sm">
+            Drop QR Card Image to Import
+          </span>
+        </div>
+      )}
+      
+      {isImporting && (
+        <div className="absolute inset-0 bg-slate-900/40 rounded-lg flex flex-col items-center justify-center z-50 backdrop-blur-[1px] pointer-events-none">
+          <div className="bg-white p-4 rounded-lg shadow-xl flex items-center gap-3 border border-slate-100">
+            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-xs font-bold text-slate-700">Importing Card...</span>
+          </div>
+        </div>
+      )}
+
       {/* Search and Filters */}
       <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
         <SearchField

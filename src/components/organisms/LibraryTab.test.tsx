@@ -9,6 +9,44 @@ vi.mock("../../hooks/useLibrary", () => ({
   useLibrary: vi.fn(),
 }))
 
+vi.mock("../../lib/db", () => ({
+  db: {
+    styleCards: {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue("card-123"),
+      toArray: vi.fn().mockResolvedValue([]),
+    },
+    categories: {
+      toArray: vi.fn().mockResolvedValue([]),
+    },
+  },
+}))
+
+vi.mock("../../lib/qr-utils", () => ({
+  readQRCodeFromImage: vi.fn().mockResolvedValue("mock-payload"),
+  decompressCardData: vi.fn().mockReturnValue({
+    id: "card-123",
+    name: "Imported Card",
+    promptSegments: [{ type: "text", value: "imported cat" }],
+    parameters: {},
+    images: ["https://example.com/cdn.png"],
+  }),
+}))
+
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  blob: vi.fn().mockResolvedValue(new Blob(["bytes"], { type: "image/png" })),
+})
+
+class MockFileReader {
+  onloadend: () => void = () => {}
+  result: string = "data:image/png;base64,mockbase64"
+  readAsDataURL() {
+    setTimeout(() => this.onloadend(), 0)
+  }
+}
+global.FileReader = MockFileReader as any
+
 const mockCards: StyleCard[] = [
   {
     id: "card-1",
@@ -85,5 +123,46 @@ describe("LibraryTab", () => {
     fireEvent.click(editBtn)
     expect(mockOpenDetailCard).toHaveBeenCalledWith(mockCards[0])
     expect(mockTogglePin).not.toHaveBeenCalled()
+  })
+
+  it("handles dropping a card image and imports it", async () => {
+    const { act } = await import("@testing-library/react")
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    
+    const container = screen.getByTestId("library-tab-container")
+    
+    // Simulate DragOver with files
+    const dragOverEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: {
+        types: ["Files"],
+      },
+    }
+    fireEvent.dragOver(container, dragOverEvent)
+    expect(screen.getByText("Drop QR Card Image to Import")).toBeDefined()
+
+    // Simulate Drop of an image file
+    const mockFile = new File(["test"], "card.png", { type: "image/png" })
+    const dropEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: {
+        files: [mockFile],
+      },
+    }
+    
+    await act(async () => {
+      fireEvent.drop(container, dropEvent)
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    const { db } = await import("../../lib/db")
+    expect(db.styleCards.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "card-123",
+        name: "Imported Card",
+        thumbnailData: "data:image/png;base64,mockbase64",
+      })
+    )
+    expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
   })
 })
