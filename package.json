@@ -45,11 +45,15 @@
     "vitest": "^4.0.16"
   },
   "manifest": {
-    "host_permissions": [
-      "https://*/*"
-    ],
     "permissions": [
-      "scripting"
+      "activeTab"
+    ],
+    "host_permissions": [
+      "https://midjourney.com/*",
+      "https://*.midjourney.com/*",
+      "https://*.discord.com/*",
+      "https://*.discordapp.com/*",
+      "https://*.discordapp.net/*"
     ]
   }
 }
