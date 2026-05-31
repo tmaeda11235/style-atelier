@@ -231,9 +231,10 @@ export async function exportCardAsImage(card: StyleCard): Promise<void> {
   try {
     const qrSize = 180;
     const qrX = width - qrSize - 35;
-    const qrY = infoY - 20;
+    const qrY = 600; // Adjusted from infoY - 20 (575) to prevent overlapping artwork and balance layout
 
-    const qrPayload = compressCardData(card);
+    const compressed = compressCardData(card);
+    const qrPayload = `web+styleatelier://import?data=${compressed}`;
     const qrDataUrl = await generateQRCodeUrl(qrPayload, qrSize);
     const qrImg = await loadImage(qrDataUrl);
 
@@ -248,12 +249,12 @@ export async function exportCardAsImage(card: StyleCard): Promise<void> {
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
     ctx.restore();
 
-    // Label under QR Code
-    ctx.fillStyle = '#64748b';
+    // Label under QR Code (use higher contrast color and adjusted padding)
+    ctx.fillStyle = '#94a3b8';
     ctx.font = 'bold 9px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText('SCAN TO IMPORT', qrX + qrSize / 2, qrY + qrSize + 12);
+    ctx.fillText('SCAN TO IMPORT', qrX + qrSize / 2, qrY + qrSize + 14);
   } catch (err) {
     console.error('Error generating or drawing QR code to canvas:', err);
   }

@@ -60,7 +60,14 @@ export function compressCardData(card: StyleCard): string {
  */
 export function decompressCardData(payload: string): Partial<StyleCard> {
   try {
-    const compressedBytes = base64ToUint8Array(payload);
+    let base64Data = payload;
+    if (payload.includes('?data=')) {
+      const match = payload.match(/[?&]data=([^&]+)/);
+      if (match && match[1]) {
+        base64Data = decodeURIComponent(match[1]);
+      }
+    }
+    const compressedBytes = base64ToUint8Array(base64Data);
     const decompressedBytes = inflateSync(compressedBytes);
     const jsonStr = strFromU8(decompressedBytes);
     const data = JSON.parse(jsonStr);
