@@ -72,9 +72,11 @@ export function useActiveTabUrl() {
     chrome.windows?.onFocusChanged?.addListener(handleWindowFocus)
 
     return () => {
-      chrome.tabs.onActivated?.removeListener(handleActivated)
-      chrome.tabs.onUpdated?.removeListener(handleUpdated)
-      chrome.windows?.onFocusChanged?.removeListener(handleWindowFocus)
+      if (typeof chrome !== "undefined") {
+        chrome.tabs?.onActivated?.removeListener(handleActivated)
+        chrome.tabs?.onUpdated?.removeListener(handleUpdated)
+        chrome.windows?.onFocusChanged?.removeListener(handleWindowFocus)
+      }
     }
   }, [])
 
