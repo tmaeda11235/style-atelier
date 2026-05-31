@@ -17,6 +17,8 @@ interface SidePanelLayoutProps {
   onRetryConnection?: () => void
   onDismissAlert?: () => void
   onOpenGuide: () => void
+  isDraggingFile?: boolean
+  isImporting?: boolean
 }
 
 export function SidePanelLayout({
@@ -31,7 +33,9 @@ export function SidePanelLayout({
   alertType,
   onRetryConnection,
   onDismissAlert,
-  onOpenGuide
+  onOpenGuide,
+  isDraggingFile,
+  isImporting
 }: SidePanelLayoutProps) {
   return (
     <div
@@ -84,7 +88,34 @@ export function SidePanelLayout({
           </div>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 relative">
+        {isDraggingFile && (
+          <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex flex-col items-center justify-center z-50 backdrop-blur-[2px] pointer-events-none animate-pulse">
+            <div className="bg-white p-4 rounded-full shadow-lg flex items-center justify-center border border-blue-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <span className="text-xs font-bold text-blue-600 mt-2 bg-white px-2 py-0.5 rounded shadow-sm">
+              Drop QR Card Image to Import
+            </span>
+          </div>
+        )}
+        
+        {isImporting && (
+          <div className="absolute inset-0 bg-slate-900/40 rounded-lg flex flex-col items-center justify-center z-50 backdrop-blur-[1px] pointer-events-none">
+            <div className="bg-white p-4 rounded-lg shadow-xl flex items-center gap-3 border border-slate-100">
+              <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-xs font-bold text-slate-700">Importing Card...</span>
+            </div>
+          </div>
+        )}
+
         {droppedItem && (
           <div className="p-3 border rounded bg-white shadow-lg ring-2 ring-blue-500 animate-in fade-in slide-in-from-top-4">
             <p className="text-xs font-bold uppercase text-slate-800">

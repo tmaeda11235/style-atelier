@@ -37,7 +37,6 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Search and Filters */}
       <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
         <SearchField
           placeholder="Search by tag, name or sref..."

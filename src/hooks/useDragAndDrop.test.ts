@@ -16,10 +16,37 @@ vi.mock("../lib/db", () => {
       styleCards: {
         where: vi.fn(() => mockWhere),
         update: vi.fn(),
+        get: vi.fn().mockResolvedValue(null),
+        put: vi.fn().mockResolvedValue("imported-card-id"),
       },
     },
   }
 })
+
+vi.mock("../lib/qr-utils", () => ({
+  readQRCodeFromImage: vi.fn().mockResolvedValue("mock-payload"),
+  decompressCardData: vi.fn().mockReturnValue({
+    id: "imported-card-id",
+    name: "Imported Card",
+    promptSegments: [{ type: "text", value: "imported cat" }],
+    parameters: {},
+    images: ["https://example.com/cdn.png"],
+  }),
+}))
+
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  blob: vi.fn().mockResolvedValue(new Blob(["bytes"], { type: "image/png" })),
+})
+
+class MockFileReader {
+  onloadend: () => void = () => {}
+  result: string = "data:image/png;base64,mockbase64"
+  readAsDataURL() {
+    setTimeout(() => this.onloadend(), 0)
+  }
+}
+global.FileReader = MockFileReader as any
 
 describe("useDragAndDrop", () => {
   const mockAddLog = vi.fn()
@@ -179,5 +206,94 @@ describe("useDragAndDrop", () => {
       isMerged: true,
     })
     expect(returnedItem).toEqual(mockItem)
+  })
+
+  describe("File Drag & Drop", () => {
+    it("should handle drag over with files correctly", () => {
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      expect(result.current.isDraggingFile).toBe(false)
+
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          types: ["Files"],
+        },
+      } as any
+      act(() => {
+        result.current.handleDragOver(dummyEvent)
+      })
+      expect(result.current.isDraggingFile).toBe(true)
+      expect(result.current.isDragging).toBe(false)
+    })
+
+    it("should process image drop, read QR, fetch image, and save to IndexedDB", async () => {
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+        await new Promise((r) => setTimeout(r, 50))
+      })
+
+      expect(db.styleCards.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "imported-card-id",
+          name: "Imported Card",
+          thumbnailData: "data:image/png;base64,mockbase64",
+        })
+      )
+      expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
+      expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
+    })
+
+    it("should prioritize JSON data over file import when both are present", async () => {
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockExistingCard = {
+        id: "card-uuid-123",
+        name: "Cool Card",
+        jobId: "test-job-id",
+        images: ["https://example.com/first.png"],
+        thumbnailData: "https://example.com/first.png",
+      }
+
+      const styleCardsWhere = db.styleCards.where("jobId")
+      vi.mocked((styleCardsWhere as any).first).mockResolvedValue(mockExistingCard)
+      vi.mocked(db.styleCards.update).mockResolvedValue(1)
+
+      const mockItem = {
+        id: "test-job-id",
+        fullCommand: "test prompt",
+        imageUrl: "https://example.com/second.png",
+        timestamp: 1234567,
+      }
+
+      const dummyFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          types: ["Files", "application/json"],
+          files: [dummyFile],
+          getData: vi.fn().mockReturnValue(JSON.stringify(mockItem)),
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(db.styleCards.update).toHaveBeenCalled()
+      expect(returnVal).toEqual(mockItem)
+    })
   })
 })
