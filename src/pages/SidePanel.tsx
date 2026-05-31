@@ -11,6 +11,8 @@ import { InteractiveTutorial } from "../components/organisms/InteractiveTutorial
 import { useTabs } from "../hooks/useTabs"
 import { useDragAndDrop } from "../hooks/useDragAndDrop"
 import { useMinting } from "../hooks/useMinting"
+import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
+import { NonTargetSiteView } from "../components/organisms/NonTargetSiteView"
 import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { TutorialProvider, useTutorial } from "../contexts/TutorialContext"
 import type { AlertType } from "../components/molecules/ConnectionAlert"
@@ -52,6 +54,7 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
 }
 
 function SidePanelInner() {
+  const { isTargetSite, isLoading } = useActiveTabUrl()
   const { startTutorial, advanceIfStep } = useTutorial()
   const [logs, setLogs] = useState<string[]>([])
   // New global state for connection alerts
@@ -189,6 +192,43 @@ function SidePanelInner() {
 
   const handleDismissAlert = () => {
     setAlertType(null);
+  }
+
+  const handleOpenMidjourney = () => {
+    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.update(tabs[0].id, { url: "https://www.midjourney.com/imagine" })
+        }
+      })
+    } else {
+      window.open("https://www.midjourney.com/imagine", "_blank")
+    }
+  }
+
+  const handleOpenDiscord = () => {
+    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.update(tabs[0].id, { url: "https://discord.com" })
+        }
+      })
+    } else {
+      window.open("https://discord.com", "_blank")
+    }
+  }
+
+  if (isLoading) {
+    return <div className="w-full h-screen bg-slate-950" />
+  }
+
+  if (!isTargetSite) {
+    return (
+      <NonTargetSiteView
+        onOpenMidjourney={handleOpenMidjourney}
+        onOpenDiscord={handleOpenDiscord}
+      />
+    )
   }
 
   return (
