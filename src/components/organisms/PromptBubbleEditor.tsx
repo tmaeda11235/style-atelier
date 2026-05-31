@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { PromptBubble } from "../molecules/PromptBubble"
 import type { PromptSegment } from "../../lib/db-schema"
-import { RarityTier } from "../../lib/rarity-config"
+import type { RarityTier } from "../../lib/rarity-config"
 import { cn } from "../../lib/utils"
 import { PROMPT_DELIMITER_REGEX, PROMPT_DELIMITER_CHARS } from "../../lib/prompt-utils"
 

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Style Atelier - Layout Sandbox</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #020617;
+      display: flex;
+    }
+    #midjourney-frame {
+      flex: 1;
+      height: 100%;
+      border: none;
+      background-color: #1a1a1a;
+    }
+    #sidepanel-frame {
+      width: 380px;
+      height: 100%;
+      border: none;
+      border-left: 1px solid #2d2d2d;
+      background-color: #020617;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="midjourney-frame" src="/tests/fixtures/midjourney/index.html"></iframe>
+  <iframe id="sidepanel-frame" src="/tests/sandbox/sidepanel.html"></iframe>
+
+  <script>
+    // chrome API メッセージ中継ハブ (Chrome API Mock Bridge)
+    window.addEventListener('message', (event) => {
+      const mjFrame = document.getElementById('midjourney-frame');
+      const spFrame = document.getElementById('sidepanel-frame');
+
+      if (!mjFrame || !spFrame) return;
+
+      // 送信元がサイドパネル iframe の場合
+      if (event.source === spFrame.contentWindow) {
+        const message = event.data;
+        if (message && message.target === 'content-script') {
+          console.log('[Sandbox Parent] Routing to Midjourney Content Script:', message.payload);
+          mjFrame.contentWindow.postMessage({
+            source: 'chrome-api-mock',
+            payload: message.payload,
+            messageId: message.messageId
+          }, '*');
+        }
+      }
+
+      // 送信元が Midjourney iframe の場合 (Content Script からの応答)
+      if (event.source === mjFrame.contentWindow) {
+        const message = event.data;
+        if (message && message.target === 'sidepanel') {
+          console.log('[Sandbox Parent] Routing Response to Sidepanel:', message.payload);
+          spFrame.contentWindow.postMessage({
+            source: 'chrome-api-mock-response',
+            payload: message.payload,
+            messageId: message.messageId
+          }, '*');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

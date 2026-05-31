@@ -26,8 +26,8 @@ export function useWorkbench() {
     // 単純な結合ロジック
     const promptParts = workbenchCards.map(card => {
         const maskedKeys: (keyof StyleCard["parameters"])[] = [];
-        if (card.masking.isSrefHidden) maskedKeys.push("sref");
-        if (card.masking.isPHidden) maskedKeys.push("p");
+        if (card.masking?.isSrefHidden) maskedKeys.push("sref");
+        if (card.masking?.isPHidden) maskedKeys.push("p");
         return buildPromptString(card.promptSegments, card.parameters, maskedKeys);
     });
 

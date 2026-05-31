@@ -1,6 +1,6 @@
 import { db } from "../lib/db";
 import type { StyleCard, PromptSegment } from "../lib/db-schema";
-import { UPGRADE_THRESHOLDS, RarityTier } from "../lib/rarity-config";
+import { UPGRADE_THRESHOLDS, type RarityTier } from "../lib/rarity-config";
 import { mergePromptSegments } from "../lib/prompt-utils";
 
 export function useEvolution() {

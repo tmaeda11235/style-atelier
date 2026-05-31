@@ -1,5 +1,5 @@
 import React from "react"
-import { RARITY_CONFIG, RarityTier } from "../../lib/rarity-config"
+import { RARITY_CONFIG, type RarityTier } from "../../lib/rarity-config"
 
 /**
  * レアリティを選択するためのグリッドセレクター。

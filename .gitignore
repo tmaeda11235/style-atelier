@@ -31,3 +31,9 @@ dist/
 
 # typescript
 .tsbuildinfo
+
+# playwright testing
+/test-results/
+/playwright-report/
+/tests/screenshots/
+/tests/fixtures/midjourney/
