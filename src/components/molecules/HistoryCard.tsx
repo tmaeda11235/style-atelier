@@ -1,5 +1,5 @@
 import React from "react"
-import { HistoryItem } from "../../lib/db-schema"
+import type { HistoryItem } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
 
 /**

@@ -1,7 +1,7 @@
 import React from "react"
 import type { PromptSegment } from "../../lib/db-schema"
 import { cn } from "../../lib/utils"
-import { RARITY_CONFIG, RarityTier } from "../../lib/rarity-config"
+import { RARITY_CONFIG, type RarityTier } from "../../lib/rarity-config"
 import { X } from "lucide-react"
 
 /**

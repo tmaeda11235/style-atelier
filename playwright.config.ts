@@ -24,7 +24,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:8080",
+    baseURL: "http://localhost:5173",
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
   },
@@ -35,16 +35,15 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // Extension testing only works in Chromium
       },
     },
   ],
 
   /* Run local dev server before starting the tests */
   webServer: {
-    command: "npx http-server ./tests/fixtures -p 8080",
-    port: 8080,
+    command: "npx vite --config tests/sandbox/vite.config.ts --port 5173",
+    port: 5173,
     reuseExistingServer: !process.env.CI,
-    timeout: 10 * 1000,
+    timeout: 15 * 1000,
   },
 });

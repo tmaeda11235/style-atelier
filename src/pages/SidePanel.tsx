@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { db } from "../lib/db"
 import { SidePanelLayout } from "../components/templates/SidePanelLayout"
 import { HistoryTab } from "../components/organisms/HistoryTab"
