@@ -254,5 +254,46 @@ describe("useDragAndDrop", () => {
       expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
       expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
     })
+
+    it("should prioritize JSON data over file import when both are present", async () => {
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockExistingCard = {
+        id: "card-uuid-123",
+        name: "Cool Card",
+        jobId: "test-job-id",
+        images: ["https://example.com/first.png"],
+        thumbnailData: "https://example.com/first.png",
+      }
+
+      const styleCardsWhere = db.styleCards.where("jobId")
+      vi.mocked((styleCardsWhere as any).first).mockResolvedValue(mockExistingCard)
+      vi.mocked(db.styleCards.update).mockResolvedValue(1)
+
+      const mockItem = {
+        id: "test-job-id",
+        fullCommand: "test prompt",
+        imageUrl: "https://example.com/second.png",
+        timestamp: 1234567,
+      }
+
+      const dummyFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          types: ["Files", "application/json"],
+          files: [dummyFile],
+          getData: vi.fn().mockReturnValue(JSON.stringify(mockItem)),
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(db.styleCards.update).toHaveBeenCalled()
+      expect(returnVal).toEqual(mockItem)
+    })
   })
 })

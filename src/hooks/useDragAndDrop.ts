@@ -10,7 +10,8 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes("Files")) {
+    const types = Array.from(e.dataTransfer?.types || [])
+    if (types.includes("Files") && !types.includes("application/json")) {
       setIsDraggingFile(true)
     } else {
       setIsDragging(true)
@@ -28,8 +29,11 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
     setIsDraggingFile(false)
     addLog("Drop event received.")
 
-    // 1. Check if files are dropped (QR Card Image Import)
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    const types = Array.from(e.dataTransfer?.types || [])
+    const hasJsonData = types.includes("application/json")
+
+    // 1. Check if files are dropped (QR Card Image Import) - only if it is not a local JSON drag
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && !hasJsonData) {
       const files = Array.from(e.dataTransfer.files)
       const imageFile = files.find((f) => f.type.startsWith("image/"))
       if (!imageFile) {
