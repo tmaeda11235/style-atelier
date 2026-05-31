@@ -93,22 +93,17 @@ export async function importDatabase(jsonData: string): Promise<void> {
   }
 
   await db.transaction("rw", [db.styleCards, db.categories, db.userSettings, db.historyItems], async () => {
-    await db.styleCards.clear();
-    await db.categories.clear();
-    await db.userSettings.clear();
-    await db.historyItems.clear();
-
     if (payload.data.styleCards.length > 0) {
-      await db.styleCards.bulkAdd(payload.data.styleCards);
+      await db.styleCards.bulkPut(payload.data.styleCards);
     }
     if (payload.data.categories && payload.data.categories.length > 0) {
-      await db.categories.bulkAdd(payload.data.categories);
+      await db.categories.bulkPut(payload.data.categories);
     }
     if (payload.data.userSettings && payload.data.userSettings.length > 0) {
-      await db.userSettings.bulkAdd(payload.data.userSettings);
+      await db.userSettings.bulkPut(payload.data.userSettings);
     }
     if (payload.data.historyItems && payload.data.historyItems.length > 0) {
-      await db.historyItems.bulkAdd(payload.data.historyItems);
+      await db.historyItems.bulkPut(payload.data.historyItems);
     }
   });
 }

@@ -15,7 +15,8 @@ vi.mock("./db", () => {
   const mockTable = () => ({
     toArray: vi.fn().mockResolvedValue([]),
     clear: vi.fn().mockResolvedValue(undefined),
-    bulkAdd: vi.fn().mockResolvedValue(undefined)
+    bulkAdd: vi.fn().mockResolvedValue(undefined),
+    bulkPut: vi.fn().mockResolvedValue(undefined)
   });
   return {
     db: {
@@ -82,7 +83,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
   });
 
   describe("importDatabase", () => {
-    it("should clear and import payload data into tables", async () => {
+    it("should merge payload data into tables using bulkPut without clearing", async () => {
       const mockPayload = {
         version: 1,
         exportedAt: 123456,
@@ -97,14 +98,14 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       await importDatabase(JSON.stringify(mockPayload));
 
       expect(db.transaction).toHaveBeenCalled();
-      expect(db.styleCards.clear).toHaveBeenCalled();
-      expect(db.styleCards.bulkAdd).toHaveBeenCalledWith(mockPayload.data.styleCards);
-      expect(db.categories.clear).toHaveBeenCalled();
-      expect(db.categories.bulkAdd).toHaveBeenCalledWith(mockPayload.data.categories);
-      expect(db.userSettings.clear).toHaveBeenCalled();
-      expect(db.userSettings.bulkAdd).toHaveBeenCalledWith(mockPayload.data.userSettings);
-      expect(db.historyItems.clear).toHaveBeenCalled();
-      expect(db.historyItems.bulkAdd).toHaveBeenCalledWith(mockPayload.data.historyItems);
+      expect(db.styleCards.clear).not.toHaveBeenCalled();
+      expect(db.styleCards.bulkPut).toHaveBeenCalledWith(mockPayload.data.styleCards);
+      expect(db.categories.clear).not.toHaveBeenCalled();
+      expect(db.categories.bulkPut).toHaveBeenCalledWith(mockPayload.data.categories);
+      expect(db.userSettings.clear).not.toHaveBeenCalled();
+      expect(db.userSettings.bulkPut).toHaveBeenCalledWith(mockPayload.data.userSettings);
+      expect(db.historyItems.clear).not.toHaveBeenCalled();
+      expect(db.historyItems.bulkPut).toHaveBeenCalledWith(mockPayload.data.historyItems);
     });
 
     it("should throw error if payload structure is invalid", async () => {

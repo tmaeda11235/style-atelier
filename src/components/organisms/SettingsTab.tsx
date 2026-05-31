@@ -135,7 +135,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     const isRestoreConfirmed = localStorage.getItem("style-atelier-restore-confirmed") === "true";
     if (!isRestoreConfirmed) {
       const ok = window.confirm(
-        "【警告】Google Driveからデータを復元（ロード）します。\n現在のローカルデータ（カード、カテゴリ、設定など）はすべて上書きされ、元に戻せません。よろしいですか？\n(※次回以降、この確認画面は表示されずダイレクトにロードされます。)"
+        "Google Driveからデータを復元（ロード）し、マージします。\n同じIDのデータはバックアップの内容で上書きされますがよろしいですか？\n(※次回以降、この確認画面は表示されずダイレクトにロードされます。)"
       );
       if (!ok) return;
       localStorage.setItem("style-atelier-restore-confirmed", "true");
