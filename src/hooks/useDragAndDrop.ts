@@ -28,7 +28,10 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
       const item = JSON.parse(jsonData) as HistoryItem
       if (item && item.id && item.imageUrl) {
         // Query to check if a style card with this jobId already exists
-        const existingCard = await db.styleCards.where("jobId").equals(item.id).first()
+        let existingCard = await db.styleCards.where("jobId").equals(item.id).first()
+        if (!existingCard) {
+          existingCard = await db.styleCards.where("associatedJobIds").equals(item.id).first()
+        }
         
         if (existingCard) {
           const currentImages = existingCard.images || []
