@@ -93,11 +93,11 @@ export function decompressCardData(payload: string): Partial<StyleCard> {
 /**
  * Generates a Data URL for a QR Code image containing the payload string.
  */
-export function generateQRCodeUrl(payload: string): Promise<string> {
+export function generateQRCodeUrl(payload: string, width?: number): Promise<string> {
   return QRCode.toDataURL(payload, {
     errorCorrectionLevel: 'M', // Medium error correction is a good balance for data capacity
     margin: 2,
-    scale: 4,
+    width: width || 200,
   });
 }
 

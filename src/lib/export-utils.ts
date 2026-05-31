@@ -229,21 +229,24 @@ export async function exportCardAsImage(card: StyleCard): Promise<void> {
 
   // 4. Generate and Draw QR Code
   try {
-    const qrPayload = compressCardData(card);
-    const qrDataUrl = await generateQRCodeUrl(qrPayload);
-    const qrImg = await loadImage(qrDataUrl);
-
-    const qrSize = 160;
+    const qrSize = 180;
     const qrX = width - qrSize - 35;
-    const qrY = infoY - 5;
+    const qrY = infoY - 20;
+
+    const qrPayload = compressCardData(card);
+    const qrDataUrl = await generateQRCodeUrl(qrPayload, qrSize);
+    const qrImg = await loadImage(qrDataUrl);
 
     // Draw White card frame behind QR code for high contrast scanning
     ctx.fillStyle = '#ffffff';
     drawRoundedRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12);
     ctx.fill();
 
-    // Draw QR image
+    // Draw QR image (disable smoothing for pixel-perfect sharpness)
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+    ctx.restore();
 
     // Label under QR Code
     ctx.fillStyle = '#64748b';
