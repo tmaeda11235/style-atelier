@@ -51,6 +51,7 @@
     "vitest": "^4.0.16"
   },
   "manifest": {
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx4tc0SD4KZanpUgJQqG3GHsOoyhbqGaN7heBnOsnb8p4KJDbP1MFfMJ8d8M5XKQsKCs/Tsf2XM/1yXNSOBSlFUoAA4QXLuhk76A6o40720FjrzauyMqTXJY8E/Dp/VtZxwfXMziTROhVeBTGV1Z0CmF7WDc2jQqBt4jaxUqmMU4QRWUyQpx1s6dw4ITX2aRPBybBQBOr1SL64ZQE6B7YUzv8IqvVN04QpFn1TajltePpG4Th0K8/bibcf6RQI3A669ITzw6fb67kVWiOPaPtwWMVRfgwSWvUy7UR2XUhLqmUGQPJuXRPReKRw+nkcfRsbbf/TV33Cz+HEcy0aC3itwIDAQAB",
     "permissions": [
       "activeTab",
       "identity"
