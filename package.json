@@ -45,6 +45,9 @@
     "vitest": "^4.0.16"
   },
   "manifest": {
+    "permissions": [
+      "activeTab"
+    ],
     "host_permissions": [
       "https://midjourney.com/*",
       "https://*.midjourney.com/*",
