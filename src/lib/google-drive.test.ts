@@ -4,7 +4,6 @@ import {
   importDatabase, 
   authorize, 
   clearCachedToken,
-  fetchUserInfo, 
   searchBackupFile, 
   uploadBackup, 
   downloadBackup
@@ -153,34 +152,6 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         { token: "stale-token" },
         expect.any(Function)
       );
-    });
-  });
-
-  describe("fetchUserInfo", () => {
-    it("should return email from google userinfo API", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ email: "user@example.com" })
-      });
-
-      const result = await fetchUserInfo("token-123");
-      expect(result.email).toBe("user@example.com");
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        expect.objectContaining({
-          headers: { Authorization: "Bearer token-123" }
-        })
-      );
-    });
-
-    it("should throw error if userinfo API returns non-ok status", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 401,
-        statusText: "Unauthorized"
-      });
-
-      await expect(fetchUserInfo("bad-token")).rejects.toThrow("Failed to fetch user info: 401 Unauthorized");
     });
   });
 

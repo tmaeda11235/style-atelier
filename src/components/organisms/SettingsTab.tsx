@@ -16,7 +16,6 @@ import {
 import { 
   authorize, 
   clearCachedToken,
-  fetchUserInfo, 
   uploadBackup, 
   downloadBackup, 
   exportDatabase, 
@@ -34,7 +33,6 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
   // Google Auth states
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [lastBackup, setLastBackup] = useState<string | null>(null);
@@ -70,12 +68,11 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     addLog(`Google Drive synchronization: ${checked ? "ENABLED" : "DISABLED"}`);
     
     if (!checked) {
-      // Clear token and email when turning sync off
+      // Clear token when turning sync off
       if (accessToken) {
         clearCachedToken(accessToken).catch(console.error);
       }
       setAccessToken(null);
-      setUserEmail(null);
     }
   };
 
@@ -87,12 +84,6 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     
     const token = await authorize(true);
     setAccessToken(token);
-    try {
-      const userInfo = await fetchUserInfo(token);
-      setUserEmail(userInfo.email);
-    } catch (e) {
-      console.warn("Could not fetch user profile details, token used directly:", e);
-    }
     return token;
   };
 
@@ -132,7 +123,6 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         await clearCachedToken(accessToken);
       }
       setAccessToken(null);
-      setUserEmail(null);
     } finally {
       setIsBackingUp(false);
     }
@@ -174,7 +164,6 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         await clearCachedToken(accessToken);
       }
       setAccessToken(null);
-      setUserEmail(null);
     } finally {
       setIsRestoring(false);
     }
@@ -202,7 +191,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           <div className="space-y-1 flex-1">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
               Google Drive Cloud Sync
-              {isSyncEnabled && userEmail && (
+              {isSyncEnabled && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
                   <ShieldCheck className="w-3 h-3 mr-0.5" /> Active
                 </span>
@@ -288,20 +277,13 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             </button>
           </div>
 
-          {/* Sync Account Details & Last Backup Time */}
-          {(userEmail || lastBackup) && (
+          {/* Last Backup Time */}
+          {lastBackup && (
             <div className="flex flex-col items-center justify-center gap-1 border-t border-slate-100 pt-3">
-              {userEmail && (
-                <div className="text-[10px] text-slate-500 font-semibold truncate max-w-full">
-                  連携アカウント: {userEmail}
-                </div>
-              )}
-              {lastBackup && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                  <Clock className="w-3 h-3" />
-                  <span>最終バックアップ: {lastBackup}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                <Clock className="w-3.5 h-3.5" />
+                <span>最終バックアップ: {lastBackup}</span>
+              </div>
             </div>
           )}
 

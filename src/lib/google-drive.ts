@@ -54,24 +54,6 @@ export async function clearCachedToken(token: string): Promise<void> {
 }
 
 /**
- * Fetch authorized user's email address
- */
-export async function fetchUserInfo(accessToken: string): Promise<{ email: string }> {
-  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch user info: ${res.status} ${res.statusText}`);
-  }
-
-  const data = await res.json();
-  return { email: data.email || "unknown@gmail.com" };
-}
-
-/**
  * Serialize Dexie database tables to a JSON string
  */
 export async function exportDatabase(): Promise<string> {
