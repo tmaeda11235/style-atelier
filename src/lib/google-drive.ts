@@ -1,7 +1,7 @@
 import { db } from "./db";
 
 // Default Client ID
-export const DEFAULT_CLIENT_ID = "81426269486-2pi6vl3bqhdr6l9tn1pddv6vh2mu3u0t.apps.googleusercontent.com";
+export const DEFAULT_CLIENT_ID = "81426269486-ofes7841buji4k17mkf07pps81nit1h4.apps.googleusercontent.com";
 const SCOPES = [
   "https://www.googleapis.com/auth/drive.file",
   "https://www.googleapis.com/auth/userinfo.email"
