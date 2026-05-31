@@ -139,6 +139,10 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           const combinedCref = [...(parent.parameters.cref || []), ...(nextParams.cref || [])];
           nextParams.cref = Array.from(new Set(combinedCref)).slice(0, 5);
         }
+        if (parent.parameters?.imagePrompts) {
+          const combinedIP = [...(parent.parameters.imagePrompts || []), ...(nextParams.imagePrompts || [])];
+          nextParams.imagePrompts = Array.from(new Set(combinedIP)).slice(0, 5);
+        }
       });
     }
 

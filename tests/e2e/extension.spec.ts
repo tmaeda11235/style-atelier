@@ -183,4 +183,39 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       throw error;
     }
   });
+
+  test("should correctly extract image prompts and image srefs from mock DOM", async ({ page }) => {
+    console.log("Navigating to sandbox page for extraction test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const mjFrame = page.frameLocator("#midjourney-frame");
+
+    // Wait for Midjourney mock images to render
+    console.log("Waiting for Midjourney mock images to render...");
+    const mockImage = mjFrame.locator("#pageScroll img").first();
+    await expect(mockImage).toBeVisible({ timeout: 15000 });
+
+    // Evaluate extractor inside midjourney-frame context
+    console.log("Evaluating WebDataExtractor on the image prompt row...");
+    const result = await mjFrame.locator("body").evaluate(() => {
+      // Find the first post image
+      const img = document.querySelector("#pageScroll img") as HTMLImageElement;
+      if (!img) return null;
+      
+      // Get the exposed extractor from window
+      const extractor = (window as any)._extractor;
+      if (!extractor) return { error: "Extractor not found on window" };
+
+      // Call extract and return the result
+      return extractor.extract(img);
+    });
+
+    console.log("Extracted result:", result);
+    expect(result).not.toBeNull();
+    expect(result.id).toBe("ef70ff6c-9deb-4647-be73-cf34216129dd");
+    expect(result.fullCommand).toContain("https://s.mj.run/fOawY_NXKRY");
+    expect(result.fullCommand).toContain("超高層ビルを見上げた景色, 空飛ぶ巨大亀, noon, skyscraper");
+    expect(result.fullCommand).toContain("--sref https://s.mj.run/fOawY_NXKRY");
+    console.log("Extraction test passed successfully!");
+  });
 });

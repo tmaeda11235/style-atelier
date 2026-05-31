@@ -11,8 +11,17 @@ const parser = loadDefaultJapaneseParser()
 export function extractKeywords(prompt: string): string[] {
   if (!prompt) return []
 
+  let cleanPrompt = prompt.trim()
+  
+  // Remove image prompts (URLs at the beginning of the prompt)
+  while (true) {
+    const match = cleanPrompt.match(/^(https?:\/\/[^\s]+)/)
+    if (!match) break
+    cleanPrompt = cleanPrompt.substring(match[1].length).trim()
+  }
+
   // Midjourneyのパラメータ（--から始まるもの）を除去
-  const cleanPrompt = prompt.replace(/--[a-z0-9-]+[^\r\n]*?(?=\s--|$|[\r\n])/g, "").trim()
+  cleanPrompt = cleanPrompt.replace(/--[a-z0-9-]+[^\r\n]*?(?=\s--|$|[\r\n])/g, "").trim()
 
   // 1. カンマで分割
   const segments = cleanPrompt.split(",").map((s) => s.trim()).filter(Boolean)

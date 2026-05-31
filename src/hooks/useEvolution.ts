@@ -67,6 +67,11 @@ export function useEvolution() {
         const combinedCref = [...(parent.parameters.cref || []), ...(mergedParams.cref || [])];
         mergedParams.cref = Array.from(new Set(combinedCref)).slice(0, 5);
       }
+      // imagePromptsのマージ (最大5枚、最新優先)
+      if (parent.parameters.imagePrompts) {
+        const combinedIP = [...(parent.parameters.imagePrompts || []), ...(mergedParams.imagePrompts || [])];
+        mergedParams.imagePrompts = Array.from(new Set(combinedIP)).slice(0, 5);
+      }
       // 他のパラメータも必要に応じてマージ
     });
 

@@ -25,6 +25,7 @@ export interface StyleCard {
     sref?: string[];      // Style Reference URLs
     cref?: string[];      // Character Reference URLs
     p?: string[];         // Personalization Codes
+    imagePrompts?: string[]; // Image Prompt URLs
     stylize?: number;     // --s 0-1000
     chaos?: number;       // --c 0-100
     weird?: number;       // --w 0-3000

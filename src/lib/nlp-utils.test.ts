@@ -28,6 +28,15 @@ describe("extractKeywords", () => {
     expect(keywords).toContain("This is a test")
   })
 
+  it("should ignore starting URLs (image prompts)", () => {
+    const prompt = "https://s.mj.run/abc https://s.mj.run/def A majestic lion, sunset --ar 16:9"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toContain("A majestic lion")
+    expect(keywords).toContain("sunset")
+    expect(keywords).not.toContain("https://s.mj.run/abc")
+    expect(keywords).not.toContain("https://s.mj.run/def")
+  })
+
   it("should handle empty or null prompt", () => {
     expect(extractKeywords("")).toEqual([])
   })

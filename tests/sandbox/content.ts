@@ -189,6 +189,9 @@ function main() {
   console.log("Style Atelier Sandbox Content Script: Initializing...")
 
   const extractor = new WebDataExtractor()
+  if (typeof window !== "undefined") {
+    (window as any)._extractor = extractor
+  }
   const processor = new ImageProcessor(extractor, true) // Pass true to enable debug outline so observed items are visible
   const galleryObserver = new GalleryObserver(processor)
   const injector = new PromptInjector()
