@@ -1,0 +1,266 @@
+import type { StyleCard } from './db-schema';
+import { compressCardData, generateQRCodeUrl } from './qr-utils';
+
+/**
+ * Loads an image from a URL or Base64 string, handling CORS.
+ */
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+    img.src = src;
+  });
+}
+
+/**
+ * Draws a rounded rectangle path on the canvas context.
+ */
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+/**
+ * Renders the card content onto a canvas and triggers a PNG download.
+ */
+export async function exportCardAsImage(card: StyleCard): Promise<void> {
+  const width = 600;
+  const height = 850;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Could not get 2D context for canvas');
+  }
+
+  // 1. Draw Card Background
+  // Use dominant color as background theme, fallback to dark slate if missing
+  const primaryBgColor = card.dominantColor || '#1e293b';
+  const accentColor = card.accentColor || '#3b82f6';
+
+  // Draw main card body with slight rounding and dark aesthetic
+  ctx.fillStyle = '#0f172a'; // Deep dark base
+  ctx.fillRect(0, 0, width, height);
+
+  // Gradient highlight on the background
+  const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width);
+  bgGrad.addColorStop(0, primaryBgColor + '55'); // Transparent version of dominant color
+  bgGrad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Card Outer Border
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 6;
+  drawRoundedRect(ctx, 10, 10, width - 20, height - 20, 24);
+  ctx.stroke();
+
+  // 2. Load and Draw Art Image(s)
+  // Gather available image sources, fallback to thumbnailData
+  const imageSources = card.selectedThumbnails && card.selectedThumbnails.length > 0
+    ? card.selectedThumbnails.slice(0, 4)
+    : card.images && card.images.length > 0
+      ? card.images.slice(0, 4)
+      : [card.thumbnailData].filter(Boolean);
+
+  const artX = 30;
+  const artY = 30;
+  const artW = 540;
+  const artH = 540;
+
+  // Clip the artwork container
+  ctx.save();
+  drawRoundedRect(ctx, artX, artY, artW, artH, 16);
+  ctx.clip();
+
+  // Draw background fallback for the image frame
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(artX, artY, artW, artH);
+
+  try {
+    const loadedImages: HTMLImageElement[] = [];
+    for (const src of imageSources) {
+      try {
+        const img = await loadImage(src);
+        loadedImages.push(img);
+      } catch (err) {
+        console.warn(`Failed to load image: ${src}, falling back.`, err);
+        // Fallback to card's base64 thumbnailData if CDN fetch fails
+        if (src !== card.thumbnailData && card.thumbnailData) {
+          try {
+            const fallbackImg = await loadImage(card.thumbnailData);
+            loadedImages.push(fallbackImg);
+          } catch (fallbackErr) {
+            console.error('Fallback image failed to load as well.', fallbackErr);
+          }
+        }
+      }
+    }
+
+    if (loadedImages.length === 4) {
+      // 2x2 Grid Layout
+      const halfW = artW / 2;
+      const halfH = artH / 2;
+      ctx.drawImage(loadedImages[0], artX, artY, halfW, halfH);
+      ctx.drawImage(loadedImages[1], artX + halfW, artY, halfW, halfH);
+      ctx.drawImage(loadedImages[2], artX, artY + halfH, halfW, halfH);
+      ctx.drawImage(loadedImages[3], artX + halfW, artY + halfH, halfW, halfH);
+    } else if (loadedImages.length === 3) {
+      // 3-split grid layout (1 large left, 2 stacked right)
+      const twoThirdsW = (artW * 2) / 3;
+      const oneThirdW = artW / 3;
+      const halfH = artH / 2;
+      ctx.drawImage(loadedImages[0], artX, artY, twoThirdsW, artH);
+      ctx.drawImage(loadedImages[1], artX + twoThirdsW, artY, oneThirdW, halfH);
+      ctx.drawImage(loadedImages[2], artX + twoThirdsW, artY + halfH, oneThirdW, halfH);
+    } else if (loadedImages.length === 2) {
+      // 2-split vertical layout
+      const halfW = artW / 2;
+      ctx.drawImage(loadedImages[0], artX, artY, halfW, artH);
+      ctx.drawImage(loadedImages[1], artX + halfW, artY, halfW, artH);
+    } else if (loadedImages.length === 1) {
+      // Single main image
+      ctx.drawImage(loadedImages[0], artX, artY, artW, artH);
+    } else {
+      // If no images could be loaded, draw a placeholder icon text
+      ctx.fillStyle = '#475569';
+      ctx.font = '24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('No Art Loaded', artX + artW / 2, artY + artH / 2);
+    }
+  } catch (err) {
+    console.error('Error drawing artwork to canvas:', err);
+  }
+  ctx.restore();
+
+  // 3. Draw Bottom Panel (Card Info)
+  const infoY = 595;
+  const infoX = 35;
+
+  // Title
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 26px "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(card.name, infoX, infoY);
+
+  // Rarity Badge Config
+  const tierColors: Record<string, string> = {
+    Common: '#94a3b8',
+    Rare: '#3b82f6',
+    Epic: '#a855f7',
+    Legendary: '#eab308',
+  };
+  const tierColor = tierColors[card.tier] || '#94a3b8';
+
+  // Draw Rarity Badge Background Capsule
+  ctx.fillStyle = tierColor;
+  const badgeY = infoY + 40;
+  const badgeW = 90;
+  const badgeH = 22;
+  drawRoundedRect(ctx, infoX, badgeY, badgeW, badgeH, 6);
+  ctx.fill();
+
+  // Rarity Badge Text
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(card.tier.toUpperCase(), infoX + badgeW / 2, badgeY + badgeH / 2);
+
+  // Prompt / Parameters Summary
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  const paramsY = badgeY + 35;
+  let currentParamY = paramsY;
+  
+  // Render Aspect Ratio and other options if set
+  const paramList: string[] = [];
+  if (card.parameters?.ar) paramList.push(`--ar ${card.parameters.ar}`);
+  if (card.parameters?.stylize !== undefined) paramList.push(`--s ${card.parameters.stylize}`);
+  if (card.parameters?.chaos !== undefined) paramList.push(`--c ${card.parameters.chaos}`);
+  if (card.parameters?.weird !== undefined) paramList.push(`--w ${card.parameters.weird}`);
+  if (card.parameters?.raw) paramList.push(`--style raw`);
+  if (card.parameters?.tile) paramList.push(`--tile`);
+
+  // First lines of text prompt segments
+  const firstTextSegment = card.promptSegments?.find((s) => s.type === 'text');
+  if (firstTextSegment && firstTextSegment.value) {
+    const textPreview = firstTextSegment.value.length > 35 
+      ? firstTextSegment.value.substring(0, 35) + '...'
+      : firstTextSegment.value;
+    ctx.fillText(`"${textPreview}"`, infoX, currentParamY);
+    currentParamY += 20;
+  }
+
+  // Draw parameter items (split into lines of 2 if too long)
+  if (paramList.length > 0) {
+    const line1 = paramList.slice(0, 3).join(' ');
+    const line2 = paramList.slice(3, 6).join(' ');
+    ctx.fillText(line1, infoX, currentParamY);
+    if (line2) {
+      currentParamY += 18;
+      ctx.fillText(line2, infoX, currentParamY);
+    }
+  }
+
+  // 4. Generate and Draw QR Code
+  try {
+    const qrPayload = compressCardData(card);
+    const qrDataUrl = await generateQRCodeUrl(qrPayload);
+    const qrImg = await loadImage(qrDataUrl);
+
+    const qrSize = 160;
+    const qrX = width - qrSize - 35;
+    const qrY = infoY - 5;
+
+    // Draw White card frame behind QR code for high contrast scanning
+    ctx.fillStyle = '#ffffff';
+    drawRoundedRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12);
+    ctx.fill();
+
+    // Draw QR image
+    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+    // Label under QR Code
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('SCAN TO IMPORT', qrX + qrSize / 2, qrY + qrSize + 12);
+  } catch (err) {
+    console.error('Error generating or drawing QR code to canvas:', err);
+  }
+
+  // 5. Trigger download of the composite canvas
+  const dataUrl = canvas.toDataURL('image/png');
+  const downloadLink = document.createElement('a');
+  const safeName = card.name.replace(/[\s/\\?%*:|"<>]/g, '_') || 'style_card';
+  const timestamp = Date.now();
+  downloadLink.download = `${safeName}_${timestamp}.png`;
+  downloadLink.href = dataUrl;
+  downloadLink.click();
+}

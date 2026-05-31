@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, act } from "@testing-library/react"
 import { CardDetailView } from "./CardDetailView"
 import { useHand } from "../../hooks/useHand"
 import type { StyleCard } from "../../lib/db-schema"
 
 vi.mock("../../hooks/useHand", () => ({
   useHand: vi.fn(),
+}))
+
+vi.mock("../../lib/export-utils", () => ({
+  exportCardAsImage: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("../../lib/db", () => ({
@@ -150,5 +154,18 @@ describe("CardDetailView", () => {
     fireEvent.click(injectButton)
 
     expect(defaultProps.onInject).toHaveBeenCalledWith("a neon cyber punk cat --ar 16:9")
+  })
+
+  it("triggers export utility on export click", async () => {
+    render(<CardDetailView {...defaultProps} />)
+
+    const exportButton = screen.getByTestId("export-card-button")
+    
+    await act(async () => {
+      fireEvent.click(exportButton)
+    })
+
+    const { exportCardAsImage } = await import("../../lib/export-utils")
+    expect(exportCardAsImage).toHaveBeenCalled()
   })
 })

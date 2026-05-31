@@ -8,9 +8,10 @@ import { Input } from "../atoms/Input"
 import { useHand } from "../../hooks/useHand"
 import { db } from "../../lib/db"
 import { buildPromptString } from "../../lib/prompt-utils"
-import { X, Send, Save, Trash2, CheckCircle2 } from "lucide-react"
+import { X, Send, Save, Trash2, CheckCircle2, Download } from "lucide-react"
 import type { AlertType } from "../molecules/ConnectionAlert"
 import { useLiveQuery } from "dexie-react-hooks"
+import { exportCardAsImage } from "../../lib/export-utils"
 
 interface CardDetailViewProps {
   card: StyleCard
@@ -47,6 +48,33 @@ export function CardDetailView({
   // Image and Thumbnail Selection state
   const images = card.images && card.images.length > 0 ? card.images : [card.thumbnailData].filter(Boolean)
   const [selectedThumbs, setSelectedThumbs] = useState<string[]>(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []))
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExportCard = async () => {
+    setIsExporting(true)
+    try {
+      const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png"
+      const tempCard: StyleCard = {
+        ...card,
+        name,
+        tier,
+        promptSegments,
+        parameters,
+        tags,
+        images,
+        selectedThumbnails: selectedThumbs,
+        thumbnailData: primaryThumb,
+        category: category || undefined,
+        dominantColor: card.dominantColor,
+        accentColor: card.accentColor,
+      }
+      await exportCardAsImage(tempCard)
+    } catch (err) {
+      console.error("Failed to export card:", err)
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   // Sync state if card changes
   useEffect(() => {
@@ -333,9 +361,21 @@ export function CardDetailView({
 
       {/* Footer Actions */}
       <div className="p-4 bg-white shadow-t-sm flex justify-between gap-2 border-t z-10">
-        <Button variant="ghost" onClick={onClose}>
-          Cancel
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportCard}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 border-slate-300 hover:bg-slate-50 text-slate-700"
+            data-testid="export-card-button"
+          >
+            <Download className="w-4 h-4" />
+            {isExporting ? "Exporting..." : "Export"}
+          </Button>
+        </div>
         <div className="flex gap-2">
           <Button
             variant="secondary"
