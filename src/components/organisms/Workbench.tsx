@@ -61,13 +61,23 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       try {
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         const activeTab = tabs[0];
-        if (!activeTab?.id) return;
+        if (!activeTab) {
+          addLog?.("Check Connection: No active tab returned from query.");
+          return;
+        }
+        if (!activeTab.id) {
+          addLog?.(`Check Connection: Active tab has no ID. URL: ${activeTab.url}`);
+          return;
+        }
 
+        addLog?.(`Checking connection to Tab ${activeTab.id} (${activeTab.url})...`);
         // Simple PING to check if content script is alive
-        await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
+        const response = await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
+        addLog?.(`Check Connection: Success! Ping response: ${JSON.stringify(response)}`);
         setAlertType(null);
-      } catch (err) {
+      } catch (err: any) {
         console.log("Connection check failed:", err);
+        addLog?.(`Connection check failed: ${err?.message || JSON.stringify(err)}`);
         setAlertType("disconnected");
       }
     };
@@ -198,7 +208,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     const fullPrompt = buildPromptString(resolvedSegments, editedParams);
 
     try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
       const activeTab = tabs[0];
 
       if (!activeTab?.id) {

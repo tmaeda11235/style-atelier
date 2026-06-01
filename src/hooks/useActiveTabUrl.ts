@@ -19,7 +19,7 @@ export function useActiveTabUrl() {
     }
 
     try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+      const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
       const activeTab = tabs[0]
       if (!activeTab) {
         setIsTargetSite(false)

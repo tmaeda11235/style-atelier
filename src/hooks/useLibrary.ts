@@ -101,7 +101,7 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
       maskedKeys.push("p")
     }
     const prompt = buildPromptString(card.promptSegments, card.parameters, maskedKeys)
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
       const activeTab = tabs[0]
       if (activeTab?.id) {
         chrome.tabs
