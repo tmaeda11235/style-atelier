@@ -196,7 +196,7 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans select-none animate-in fade-in duration-200"
       data-testid="onboarding-modal"
     >
-      <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm max-h-[calc(100vh-2rem)] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="p-4 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/40">
@@ -216,7 +216,7 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
         </div>
 
         {/* Content */}
-        <div className="p-5 flex-1 flex flex-col gap-4">
+        <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-4">
           {/* Main Card Graphic */}
           <div className={`p-4 rounded-xl border bg-gradient-to-br ${steps[currentStep].color} flex flex-col gap-3 transition-all duration-300 shadow-inner`}>
             <div className="flex items-center gap-3">
