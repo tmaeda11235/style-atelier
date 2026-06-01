@@ -132,11 +132,10 @@ describe("InteractiveTutorial", () => {
     expect(screen.getByText(/サンプルを追加して進む/)).toBeDefined()
   })
 
-  it("shows 次へ button on steps without autoAdvance", async () => {
+  it("shows 次へ button on all steps (even with autoAdvance)", async () => {
     render(
       <TutorialHarness>
         <TriggerButton />
-        <StepAdvancer />
         <InteractiveTutorial />
       </TutorialHarness>
     )
@@ -144,13 +143,29 @@ describe("InteractiveTutorial", () => {
     await act(async () => {
       fireEvent.click(screen.getByText("Start"))
     })
-    // step 1 has autoAdvance + mockAction, so no 次へ
-    expect(screen.queryByText("次へ")).toBeNull()
-
-    // Advance to step 3 (title-input) which has autoAdvance: false
-    await act(async () => { fireEvent.click(screen.getByText("Next")) }) // step 2
-    await act(async () => { fireEvent.click(screen.getByText("Next")) }) // step 3
-    expect(screen.getByText(/③ タイトルを入れる/)).toBeDefined()
+    // step 1 has autoAdvance, but now we always show 次へ
     expect(screen.getByText("次へ")).toBeDefined()
+  })
+
+  it("renders tooltip centered as fallback when target element is not found", async () => {
+    vi.spyOn(document, "querySelector").mockImplementation(() => null)
+
+    render(
+      <TutorialHarness>
+        <TriggerButton />
+        <InteractiveTutorial />
+      </TutorialHarness>
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Start"))
+    })
+
+    expect(screen.getByTestId("interactive-tutorial")).toBeDefined()
+    expect(screen.getByText(/Step 1 \/ 8/)).toBeDefined()
+    
+    // The tooltip should still be visible even though querySelector returned null
+    const tooltip = screen.getByText("① HistoryにD&Dする")
+    expect(tooltip).toBeDefined()
   })
 })

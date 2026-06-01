@@ -73,6 +73,7 @@ function SidePanelInner() {
   const handleStartTutorial = () => {
     localStorage.setItem("style-atelier-onboarding-seen", "true")
     setShowWelcome(false)
+    setActiveTab("history")
     startTutorial()
   }
 
@@ -253,7 +254,10 @@ function SidePanelInner() {
           alertType={alertType}
           onRetryConnection={handleRetryConnection}
           onDismissAlert={handleDismissAlert}
-          onOpenGuide={() => startTutorial()}
+          onOpenGuide={() => {
+            setActiveTab("history")
+            startTutorial()
+          }}
         >
           {(mintingItem || variationBase) && (
             <MintingView
