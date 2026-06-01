@@ -39,9 +39,9 @@ function drawRoundedRect(
 }
 
 /**
- * Renders the card content onto a canvas and triggers a PNG download.
+ * Renders the card content onto a canvas.
  */
-export async function exportCardAsImage(card: StyleCard): Promise<void> {
+export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasElement> {
   const width = 600;
   const height = 850;
 
@@ -259,7 +259,14 @@ export async function exportCardAsImage(card: StyleCard): Promise<void> {
     console.error('Error generating or drawing QR code to canvas:', err);
   }
 
-  // 5. Trigger download of the composite canvas
+  return canvas;
+}
+
+/**
+ * Renders the card content onto a canvas and triggers a PNG download.
+ */
+export async function exportCardAsImage(card: StyleCard): Promise<void> {
+  const canvas = await renderCardToCanvas(card);
   const dataUrl = canvas.toDataURL('image/png');
   const downloadLink = document.createElement('a');
   const safeName = card.name.replace(/[\s/\\?%*:|"<>]/g, '_') || 'style_card';
