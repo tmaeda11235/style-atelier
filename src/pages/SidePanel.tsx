@@ -100,7 +100,7 @@ function SidePanelInner() {
   const handleInjectPrompt = async (prompt: string) => {
     setAlertType(null);
     try {
-      const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const activeTab = tabs[0];
       if (!activeTab?.id) {
         throw new Error("No active tab found");
@@ -211,7 +211,7 @@ function SidePanelInner() {
 
   const handleOpenMidjourney = () => {
     if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
-      chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id) {
           chrome.tabs.update(tabs[0].id, { url: "https://www.midjourney.com/imagine" })
         }

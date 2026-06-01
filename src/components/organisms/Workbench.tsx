@@ -57,6 +57,9 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
 
   // Check connection on mount
   useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const checkConnection = async () => {
       try {
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -70,6 +73,13 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           return;
         }
 
+        // If the tab is still loading, wait and retry
+        if (activeTab.status !== "complete") {
+          addLog?.(`Check Connection: Tab is still loading (status: ${activeTab.status}). Retrying in 1s...`);
+          setTimeout(checkConnection, 1000);
+          return;
+        }
+
         addLog?.(`Checking connection to Tab ${activeTab.id} (${activeTab.url})...`);
         // Simple PING to check if content script is alive
         const response = await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
@@ -77,8 +87,14 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         setAlertType(null);
       } catch (err: any) {
         console.log("Connection check failed:", err);
-        addLog?.(`Connection check failed: ${err?.message || JSON.stringify(err)}`);
-        setAlertType("disconnected");
+        addLog?.(`Connection check failed (attempt ${retryCount + 1}/${maxRetries}): ${err?.message || JSON.stringify(err)}`);
+        
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(checkConnection, 1500); // Wait 1.5s and retry
+        } else {
+          setAlertType("disconnected");
+        }
       }
     };
 
@@ -208,7 +224,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     const fullPrompt = buildPromptString(resolvedSegments, editedParams);
 
     try {
-      const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const activeTab = tabs[0];
 
       if (!activeTab?.id) {
