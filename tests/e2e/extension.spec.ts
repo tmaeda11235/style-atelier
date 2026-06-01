@@ -33,12 +33,13 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
         await skipButton.click();
       }
 
-      // 5. HandBarのモックカードをクリックしてWorkbenchに追加
-      console.log("Adding mock card to Workbench from Hand...");
-      const mockCardInHand = spFrame.locator("#handbar-root .cursor-pointer").first();
-      await expect(mockCardInHand).toBeVisible({ timeout: 10000 });
-      await page.waitForTimeout(1000); // Reactイベントリスナーのアタッチ待ち
-      await mockCardInHand.click({ force: true });
+      // 5. HandBarの2枚目のカード（anime slot template）を削除し、1枚目のカードだけにする
+      console.log("Removing mock-card-2 from Workbench...");
+      const secondCard = spFrame.locator("#handbar-root .cursor-pointer").nth(1);
+      await expect(secondCard).toBeVisible({ timeout: 10000 });
+      await secondCard.hover();
+      const deleteBtn = secondCard.locator("button").last();
+      await deleteBtn.click();
 
       // 6. サイドパネルの「Workbench」タブへ切り替え
       console.log("Switching to Workbench tab in Sidepanel...");
@@ -251,10 +252,10 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     await expect(slotInput).toBeVisible();
     await slotInput.fill("samurai cat");
     
-    // Pin to Hand
-    const pinBtn = spFrame.locator("button[title='Pin to Hand']").first();
-    await expect(pinBtn).toBeVisible();
-    await pinBtn.click();
+    // Send to Workbench
+    const sendBtn = spFrame.locator("button[title='Send to Workbench']").first();
+    await expect(sendBtn).toBeVisible();
+    await sendBtn.click();
 
     // 6. 新しいカードがHandBarにピン留めされたかを確認
     const newCardImage = spFrame.locator("#handbar-root img[alt='samurai cat']");
@@ -273,11 +274,9 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       await skipButton.click();
     }
 
-    // 2. 両方のカードをWorkbenchに追加
-    const card1 = spFrame.locator("#handbar-root .cursor-pointer").nth(0);
-    const card2 = spFrame.locator("#handbar-root .cursor-pointer").nth(1);
-    await card1.click({ force: true });
-    await card2.click({ force: true });
+    // 2. 初期状態で両方のカードがすでにWorkbench（手札）に入っていることを確認
+    const cardCount = spFrame.locator("#handbar-root .cursor-pointer");
+    await expect(cardCount).toHaveCount(2);
 
     // 3. Workbenchタブへ切り替え
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')");
@@ -297,9 +296,12 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     await expect(executeMergeBtn).toBeVisible();
     await executeMergeBtn.click();
 
-    // 7. モーダルが閉じてWorkbenchがクリアされたことを確認 (Workbench is Empty)
-    const emptyMsg = spFrame.locator("text=Workbench is Empty");
-    await expect(emptyMsg).toBeVisible({ timeout: 10000 });
+    // 7. モーダルが閉じたことを確認
+    await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
+
+    // 材料カードが消費され、ベースカード1枚だけが残っていることを確認
+    const remainingCards = spFrame.locator("#handbar-root .cursor-pointer");
+    await expect(remainingCards).toHaveCount(1);
   });
 
   test("should allow managing tags in CardDetailView", async ({ page }) => {
