@@ -212,6 +212,7 @@ export function CardThumbnail({
             size="sm"
             onClick={onPinClick}
             className="shadow-md"
+            title={isPinned ? "Workbenchから外す" : "Workbenchに送る"}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>

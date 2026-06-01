@@ -304,7 +304,10 @@ function SidePanelInner() {
           {activeTab === "settings" && <SettingsTab addLog={addLog} onResetDb={handleResetDb} />}
 
           {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
-          <HandBar />
+          <HandBar 
+            onNavigateToWorkbench={() => setActiveTab("workbench")}
+            onOpenDetailCard={setActiveDetailCard}
+          />
         </SidePanelLayout>
       </WorkbenchProvider>
 
