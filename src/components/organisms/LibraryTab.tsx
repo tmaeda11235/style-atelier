@@ -6,6 +6,7 @@ import { CardThumbnail } from "../molecules/CardThumbnail"
 import type { StyleCard } from "../../lib/db-schema"
 import { Plus } from "lucide-react"
 import { CategoryManagerModal } from "./CategoryManagerModal"
+import { ShareCardModal } from "./ShareCardModal"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 import { useTutorial } from "../../contexts/TutorialContext"
 
@@ -17,6 +18,7 @@ interface LibraryTabProps {
 
 export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
 
   const {
@@ -145,6 +147,10 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
                   e.stopPropagation()
                   handleCardClick(card)
                 }}
+                onShareClick={(e) => {
+                  e.stopPropagation()
+                  setSharingCard(card)
+                }}
                 category={cardCategory}
               />
               <div className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
@@ -158,6 +164,14 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
       {isCategoryModalOpen && (
         <CategoryManagerModal
           onClose={() => setIsCategoryModalOpen(false)}
+          addLog={addLog}
+        />
+      )}
+
+      {sharingCard && (
+        <ShareCardModal
+          card={sharingCard}
+          onClose={() => setSharingCard(null)}
           addLog={addLog}
         />
       )}
