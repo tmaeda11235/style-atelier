@@ -30,6 +30,28 @@ async function seedSandboxData() {
           thumbnailData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231e293b'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='10'>cyberpunk</text></svg>",
           frameId: "default",
           genealogy: { generation: 1, parentIds: [] }
+        },
+        {
+          id: "mock-card-2",
+          name: "anime slot template",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          promptSegments: [
+            { type: "text", value: "retro anime style," },
+            { type: "slot", label: "Subject", default: "girl" },
+            { type: "text", value: "eating ramen" }
+          ],
+          parameters: {},
+          masking: { isSrefHidden: false, isPHidden: false },
+          tier: "Rare",
+          isFavorite: false,
+          isPinned: true,
+          usageCount: 2,
+          tags: ["anime"],
+          dominantColor: "#ec4899",
+          thumbnailData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231e293b'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ec4899' font-size='10'>anime</text></svg>",
+          frameId: "default",
+          genealogy: { generation: 1, parentIds: [] }
         }
       ]);
       console.log("[Sandbox Seed] Seeding finished successfully.");

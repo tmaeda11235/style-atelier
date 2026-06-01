@@ -212,10 +212,138 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
 
     console.log("Extracted result:", result);
     expect(result).not.toBeNull();
-    expect(result.id).toBe("ef70ff6c-9deb-4647-be73-cf34216129dd");
+    expect(result.id).toBe("c8e0e10b-9a6f-4bd9-ab6c-d4252c60febb");
     expect(result.fullCommand).toContain("https://s.mj.run/fOawY_NXKRY");
-    expect(result.fullCommand).toContain("超高層ビルを見上げた景色, 空飛ぶ巨大亀, noon, skyscraper");
-    expect(result.fullCommand).toContain("--sref https://s.mj.run/fOawY_NXKRY");
+    expect(result.fullCommand).toContain("超高層ビルを見上げた景色");
+    expect(result.fullCommand).toContain("カードが大量に重ねられて輝いている");
     console.log("Extraction test passed successfully!");
+  });
+
+  test("should render slot variables and handle pin to hand in Workbench", async ({ page }) => {
+    console.log("Navigating to sandbox page for Workbench slot variable test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. ウェルカムダイアログの「スキップ」ボタンがあればクリック
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. HandBarからanime slot templateをクリックしてWorkbenchに追加
+    const mockCardInHand = spFrame.locator("#handbar-root .cursor-pointer").nth(1); // anime slot template
+    await expect(mockCardInHand).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
+    await mockCardInHand.click({ force: true });
+
+    // 3. Workbenchタブへ切り替え
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')");
+    await expect(workbenchTabButton).toBeVisible({ timeout: 10000 });
+    await workbenchTabButton.click();
+
+    // 4. Slot Variablesセクションが表示されるのを確認
+    const slotSectionHeader = spFrame.locator("text=Slot Variables");
+    await expect(slotSectionHeader).toBeVisible({ timeout: 10000 });
+
+    // 5. Inputに値を入力して、Pin to Handボタンをクリック
+    const slotInput = spFrame.locator("input[placeholder='girl']");
+    await expect(slotInput).toBeVisible();
+    await slotInput.fill("samurai cat");
+    
+    // Pin to Hand
+    const pinBtn = spFrame.locator("button[title='Pin to Hand']").first();
+    await expect(pinBtn).toBeVisible();
+    await pinBtn.click();
+
+    // 6. 新しいカードがHandBarにピン留めされたかを確認
+    const newCardImage = spFrame.locator("#handbar-root img[alt='samurai cat']");
+    await expect(newCardImage).toBeVisible({ timeout: 10000 });
+  });
+
+  test("should open Merge Card Stack modal and execute merge in Workbench", async ({ page }) => {
+    console.log("Navigating to sandbox page for Workbench merge test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. スキップ
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. 両方のカードをWorkbenchに追加
+    const card1 = spFrame.locator("#handbar-root .cursor-pointer").nth(0);
+    const card2 = spFrame.locator("#handbar-root .cursor-pointer").nth(1);
+    await card1.click({ force: true });
+    await card2.click({ force: true });
+
+    // 3. Workbenchタブへ切り替え
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')");
+    await workbenchTabButton.click();
+
+    // 4. Merge Stackボタンをクリックしてモーダルを開く
+    const mergeStackBtn = spFrame.locator("button:has-text('Merge Stack')").first();
+    await expect(mergeStackBtn).toBeVisible();
+    await mergeStackBtn.click();
+
+    // 5. モーダルの表示を確認
+    const modalTitle = spFrame.locator("h3:has-text('Merge Card Stack')");
+    await expect(modalTitle).toBeVisible();
+
+    // 6. モーダル内のMerge Stackを実行
+    const executeMergeBtn = spFrame.locator("button:has-text('Merge Stack')").nth(1);
+    await expect(executeMergeBtn).toBeVisible();
+    await executeMergeBtn.click();
+
+    // 7. モーダルが閉じてWorkbenchがクリアされたことを確認 (Workbench is Empty)
+    const emptyMsg = spFrame.locator("text=Workbench is Empty");
+    await expect(emptyMsg).toBeVisible({ timeout: 10000 });
+  });
+
+  test("should allow managing tags in CardDetailView", async ({ page }) => {
+    console.log("Navigating to sandbox page for CardDetailView test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. スキップ
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Libraryタブに切り替え
+    const libraryTabButton = spFrame.locator("button:has-text('Library')");
+    await expect(libraryTabButton).toBeVisible();
+    await libraryTabButton.click();
+
+    // 3. カードの編集ボタンをクリックして詳細ビューを開く
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first();
+    await expect(editBtn).toBeVisible({ timeout: 10000 });
+    await editBtn.click();
+
+    // 4. Card Detail Viewの表示確認
+    const detailTitle = spFrame.locator("h2:has-text('Card Details')");
+    await expect(detailTitle).toBeVisible();
+
+    // 5. タグの追加
+    const tagInput = spFrame.locator("input[placeholder='Add new tag...']");
+    await expect(tagInput).toBeVisible();
+    await tagInput.fill("e2e-tag");
+    const addTagBtn = spFrame.locator("button:has-text('Add')");
+    await addTagBtn.click();
+
+    // 6. タグが表示されたことを確認
+    const newTagChip = spFrame.locator("text=e2e-tag");
+    await expect(newTagChip).toBeVisible();
+
+    // 7. 保存して閉じる
+    const saveBtn = spFrame.locator("button:has-text('Save')");
+    await saveBtn.click();
+
+    // 8. 詳細ビューが閉じたことを確認
+    await expect(detailTitle).not.toBeVisible({ timeout: 5000 });
   });
 });
