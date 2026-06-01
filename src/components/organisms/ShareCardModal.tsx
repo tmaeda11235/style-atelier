@@ -20,50 +20,6 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
   const [isSharing, setIsSharing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleWebShare = async () => {
-    setIsSharing(true)
-    setErrorMessage(null)
-    try {
-      if (!navigator.share) {
-        throw new Error("Web Share API is not supported by your browser.")
-      }
-
-      // Generate canvas
-      const canvas = await renderCardToCanvas(card)
-      
-      // Convert to blob
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"))
-      if (!blob) {
-        throw new Error("Failed to generate card image.")
-      }
-
-      // Create file object
-      const fileName = `${card.name.replace(/[\s/\\?%*:|"<>]/g, "_")}.png`
-      const file = new File([blob], fileName, { type: "image/png" })
-
-      // Check if browser can share files
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: card.name,
-          text: `Style Card: ${card.name} #StyleAtelier`,
-        })
-        addLog(`Successfully shared card "${card.name}" via Web Share.`)
-        onClose()
-      } else {
-        throw new Error("Your browser does not support sharing image files.")
-      }
-    } catch (err: any) {
-      console.error("Web Share failed:", err)
-      if (err.name !== "AbortError") {
-        setErrorMessage(err.message || "Failed to share card.")
-        addLog(`Share error: ${err.message || "Failed to share card."}`)
-      }
-    } finally {
-      setIsSharing(false)
-    }
-  }
-
   const handleOpenSharePage = () => {
     try {
       const sharePageUrl = chrome.runtime.getURL("tabs/share.html") + `?id=${card.id}`
@@ -176,16 +132,6 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
 
           {/* Action List */}
           <div className="flex flex-col gap-2 pt-1">
-            <Button
-              onClick={handleWebShare}
-              disabled={isSharing}
-              className="w-full py-2.5 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
-              data-testid="share-sns-button"
-            >
-              <Share2 className="w-4 h-4" />
-              {isSharing ? "Processing..." : "SNS / Apps (Web Share)"}
-            </Button>
-
             <Button
               onClick={handleCopyToClipboard}
               disabled={isSharing}

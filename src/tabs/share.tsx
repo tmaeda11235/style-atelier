@@ -3,7 +3,7 @@ import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { renderCardToCanvas, exportCardAsImage } from "../lib/export-utils"
 import { Button } from "../components/atoms/Button"
-import { Clipboard, Download, Share2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
+import { Clipboard, Download, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
 import "../style.css"
 
 export default function SharePage() {
@@ -85,41 +85,7 @@ export default function SharePage() {
     }
   }
 
-  const handleWebShare = async () => {
-    if (!card) return
-    setSuccessMessage(null)
-    setErrorMessage(null)
-    try {
-      if (!navigator.share) {
-        throw new Error("Web Share is not supported by this browser.")
-      }
 
-      const canvas = await renderCardToCanvas(card)
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"))
-      if (!blob) {
-        throw new Error("Failed to generate card image.")
-      }
-
-      const fileName = `${card.name.replace(/[\s/\\?%*:|"<>]/g, "_")}.png`
-      const file = new File([blob], fileName, { type: "image/png" })
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: card.name,
-          text: `Midjourney Style Card: ${card.name}`,
-        })
-        setSuccessMessage("Card shared successfully!")
-      } else {
-        throw new Error("Sharing files is not supported in this environment.")
-      }
-    } catch (err: any) {
-      console.error("Web Share failed:", err)
-      if (err.name !== "AbortError") {
-        setErrorMessage(err.message || "Failed to share card.")
-      }
-    }
-  }
 
   const handleClose = () => {
     window.close()
@@ -254,16 +220,7 @@ export default function SharePage() {
               </Button>
             </div>
 
-            {navigator.share && (
-              <Button
-                onClick={handleWebShare}
-                variant="secondary"
-                className="py-3 flex items-center justify-center gap-2 font-bold text-xs"
-              >
-                <Share2 className="w-4 h-4" />
-                Share (Web Share)
-              </Button>
-            )}
+
 
             <p className="text-[10px] text-slate-500 leading-relaxed">
               Tip: You can paste the copied card image directly into chat apps like Discord, or post it to X (Twitter). The card includes an embedded QR code that anyone can scan to import this style into their own Style Atelier workspace.
