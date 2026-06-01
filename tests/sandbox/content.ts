@@ -1,8 +1,8 @@
-import { PromptInjector } from "../../src/contents/domain/actions/PromptInjector"
-import { CommandListener } from "../../src/contents/services/CommandListener"
-import { WebDataExtractor } from "../../src/contents/domain/extractors/WebDataExtractor"
-import { ImageProcessor } from "../../src/contents/domain/processors/ImageProcessor"
-import { GalleryObserver } from "../../src/contents/services/GalleryObserver"
+import { PromptInjector } from "../../src/contents/_domain/actions/PromptInjector"
+import { CommandListener } from "../../src/contents/_services/CommandListener"
+import { WebDataExtractor } from "../../src/contents/_domain/extractors/WebDataExtractor"
+import { ImageProcessor } from "../../src/contents/_domain/processors/ImageProcessor"
+import { GalleryObserver } from "../../src/contents/_services/GalleryObserver"
 
 // 1. chrome API のモック定義（onMessage の親ウィンドウ中継）
 const messageListeners: Array<(message: any, sender: any, sendResponse: (res: any) => void) => void | boolean> = [];

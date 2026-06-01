@@ -1,12 +1,18 @@
 import type { PlasmoCSConfig } from "plasmo"
-import { WebDataExtractor } from "./domain/extractors/WebDataExtractor"
-import { ImageProcessor } from "./domain/processors/ImageProcessor"
-import { PromptInjector } from "./domain/actions/PromptInjector"
-import { GalleryObserver } from "./services/GalleryObserver"
-import { CommandListener } from "./services/CommandListener"
+import { WebDataExtractor } from "./_domain/extractors/WebDataExtractor"
+import { ImageProcessor } from "./_domain/processors/ImageProcessor"
+import { PromptInjector } from "./_domain/actions/PromptInjector"
+import { GalleryObserver } from "./_services/GalleryObserver"
+import { CommandListener } from "./_services/CommandListener"
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://midjourney.com/*", "https://*.midjourney.com/*"],
+  matches: [
+    "https://midjourney.com/*",
+    "https://*.midjourney.com/*",
+    "https://*.discord.com/*",
+    "https://*.discordapp.com/*",
+    "https://*.discordapp.net/*"
+  ],
   all_frames: true,
   run_at: "document_start"
 }

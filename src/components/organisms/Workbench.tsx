@@ -40,9 +40,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
   const [isInjecting, setIsInjecting] = useState(false);
   const [slotValues, setSlotValues] = useState<Record<string, string>>({});
   const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({});
-  
-  // State for opening merge modal
-  const [isMergeOpen, setIsMergeOpen] = useState(false);
+
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
@@ -67,20 +65,47 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     loadSlotHistory();
   }, []);
 
+
   // Check connection on mount
   useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const checkConnection = async () => {
       try {
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         const activeTab = tabs[0];
-        if (!activeTab?.id) return;
+        if (!activeTab) {
+          addLog?.("Check Connection: No active tab returned from query.");
+          return;
+        }
+        if (!activeTab.id) {
+          addLog?.(`Check Connection: Active tab has no ID. URL: ${activeTab.url}`);
+          return;
+        }
 
+        // If the tab is still loading, wait and retry
+        if (activeTab.status !== "complete") {
+          addLog?.(`Check Connection: Tab is still loading (status: ${activeTab.status}). Retrying in 1s...`);
+          setTimeout(checkConnection, 1000);
+          return;
+        }
+
+        addLog?.(`Checking connection to Tab ${activeTab.id} (${activeTab.url})...`);
         // Simple PING to check if content script is alive
-        await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
+        const response = await chrome.tabs.sendMessage(activeTab.id, { type: "PING" });
+        addLog?.(`Check Connection: Success! Ping response: ${JSON.stringify(response)}`);
         setAlertType(null);
-      } catch (err) {
+      } catch (err: any) {
         console.log("Connection check failed:", err);
-        setAlertType("disconnected");
+        addLog?.(`Connection check failed (attempt ${retryCount + 1}/${maxRetries}): ${err?.message || JSON.stringify(err)}`);
+        
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(checkConnection, 1500); // Wait 1.5s and retry
+        } else {
+          setAlertType("disconnected");
+        }
       }
     };
 
@@ -145,7 +170,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     }));
   };
 
-  const handlePinToHand = async (value: string, label: string) => {
+  const handleSendToWorkbench = async (value: string, label: string) => {
     const trimmed = value.trim();
     if (!trimmed) return;
 
@@ -174,9 +199,9 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       };
 
       await db.styleCards.add(newCard);
-      addLog?.(`Pinned "${trimmed}" to Hand under tag "${label}"`);
+      addLog?.(`Sent "${trimmed}" to Workbench under tag "${label}"`);
     } catch (err) {
-      console.error("Failed to pin card to Hand:", err);
+      console.error("Failed to send card to Workbench:", err);
     }
   };
 
@@ -250,70 +275,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     }
   };
 
-  const handleExecuteMerge = async (baseCardId: string, consumeStates: Record<string, boolean>) => {
-    const representative = workbenchCards.find(c => c.id === baseCardId);
-    if (!representative) return;
 
-    const materials = workbenchCards.filter(c => c.id !== baseCardId);
-    const additionalUses = materials
-      .filter(c => consumeStates[c.id])
-      .reduce((sum, c) => sum + (c.usageCount || 0), 0);
-
-    try {
-      await db.transaction("rw", db.styleCards, async () => {
-        const mergedImages = [...(representative.images || [])];
-        if (representative.thumbnailData && !mergedImages.includes(representative.thumbnailData)) {
-          mergedImages.push(representative.thumbnailData);
-        }
-
-        const mergedJobIds = [...(representative.associatedJobIds || [])];
-        if (representative.jobId && !mergedJobIds.includes(representative.jobId)) {
-          mergedJobIds.push(representative.jobId);
-        }
-
-        let extraUsageCount = 0;
-
-        for (const mat of materials) {
-          if (mat.images && mat.images.length > 0) {
-            mat.images.forEach(img => {
-              if (!mergedImages.includes(img)) mergedImages.push(img);
-            });
-          } else if (mat.thumbnailData && !mergedImages.includes(mat.thumbnailData)) {
-            mergedImages.push(mat.thumbnailData);
-          }
-
-          if (mat.jobId && !mergedJobIds.includes(mat.jobId)) {
-            mergedJobIds.push(mat.jobId);
-          }
-          if (mat.associatedJobIds && mat.associatedJobIds.length > 0) {
-            mat.associatedJobIds.forEach(jid => {
-              if (!mergedJobIds.includes(jid)) mergedJobIds.push(jid);
-            });
-          }
-
-          const isConsumed = consumeStates[mat.id];
-          if (isConsumed) {
-            extraUsageCount += (mat.usageCount || 0);
-            await db.styleCards.delete(mat.id);
-          }
-        }
-
-        await db.styleCards.update(representative.id, {
-          images: mergedImages,
-          associatedJobIds: mergedJobIds,
-          usageCount: (representative.usageCount || 0) + extraUsageCount,
-          updatedAt: Date.now()
-        });
-      });
-
-      addLog?.(`Fused cards into "${representative.name}". New usage count: ${(representative.usageCount || 0) + additionalUses}`);
-      clearWorkbench();
-      setIsMergeOpen(false);
-    } catch (err) {
-      console.error("Failed to merge style cards:", err);
-      addLog?.("Error: Failed to merge style cards.");
-    }
-  };
 
   // Extract slots
   const slots = editedSegments.filter((seg): seg is { type: "slot"; label: string; default: string } => seg.type === "slot");
@@ -326,17 +288,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           Workbench
         </h2>
         <div className="flex gap-2">
-          {workbenchCards.length >= 2 && (
-            <Button
-              variant="secondary"
-              size="xs"
-              onClick={() => setIsMergeOpen(true)}
-              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              Merge Stack
-            </Button>
-          )}
           {workbenchCards.length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearWorkbench} className="text-slate-400 hover:text-slate-600">
               Clear All
@@ -359,7 +310,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         ))}
         {workbenchCards.length < 2 && (
           <div className="border-2 border-dashed border-slate-700 rounded-lg flex items-center justify-center aspect-square text-slate-500 text-xs text-center p-2">
-            Select cards from Hand
+            Add style cards to Workbench from Library
           </div>
         )}
       </div>
@@ -390,7 +341,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                 onSlotValueChange={handleSlotValueChange}
                 slotHistory={slotHistory}
                 handCards={handCards}
-                onPinToHand={handlePinToHand}
+                onSendToWorkbench={handleSendToWorkbench}
               />
 
               <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
@@ -432,17 +383,11 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           <div className="text-center py-12 px-6 bg-slate-50/50 rounded-xl border border-slate-100 border-dashed">
             <BookUp2 className="w-8 h-8 text-slate-200 mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-400 mb-1">Workbench is Empty</p>
-            <p className="text-xs text-slate-300">Select cards from your Hand below.</p>
+            <p className="text-xs text-slate-300">Send style cards to Workbench from Library.</p>
           </div>
         )}
       </div>
 
-      <MergeStackModal
-        isOpen={isMergeOpen}
-        onClose={() => setIsMergeOpen(false)}
-        workbenchCards={workbenchCards}
-        onExecuteMerge={handleExecuteMerge}
-      />
     </div>
   );
 };

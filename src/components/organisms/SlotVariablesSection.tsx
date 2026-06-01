@@ -18,8 +18,8 @@ export interface SlotVariablesSectionProps {
   slotHistory: Record<string, string[]>;
   /** List of cards currently in the Hand for quick-filling values */
   handCards: StyleCard[];
-  /** Callback triggered to pin a slot value as a new card in the Hand */
-  onPinToHand: (value: string, label: string) => Promise<void>;
+  /** Callback triggered to send a slot value as a new card to the Workbench */
+  onSendToWorkbench: (value: string, label: string) => Promise<void>;
 }
 
 /**
@@ -32,7 +32,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
   onSlotValueChange,
   slotHistory,
   handCards,
-  onPinToHand,
+  onSendToWorkbench,
 }) => {
   const firstInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,8 +77,8 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                   type="button"
                   variant="ghost"
                   size="xs"
-                  onClick={() => onPinToHand(currentValue, label)}
-                  title="Pin to Hand"
+                  onClick={() => onSendToWorkbench(currentValue, label)}
+                  title="Send to Workbench"
                   className="text-slate-400 hover:text-blue-500"
                 >
                   <Pin className="w-3.5 h-3.5" />
@@ -88,7 +88,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
               {/* Quick selection from Hand cards */}
               {handCards.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                  <span className="text-[10px] text-slate-400">Fill from Hand:</span>
+                  <span className="text-[10px] text-slate-400">Fill from Workbench:</span>
                   {handCards.map((hc) => {
                     const resolvedText = buildPromptString(hc.promptSegments, hc.parameters);
                     return (
@@ -123,8 +123,8 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onPinToHand(val, label)}
-                        title="Pin this value to Hand"
+                        onClick={() => onSendToWorkbench(val, label)}
+                        title="Send this value to Workbench"
                         className="text-slate-400 hover:text-blue-500"
                       >
                         <Pin className="w-2.5 h-2.5" />

@@ -3,21 +3,45 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../lib/db";
 import type { StyleCard } from "../lib/db-schema";
 import { buildPromptString } from "../lib/prompt-utils";
-import { useWorkbenchContext } from "../contexts/WorkbenchContext";
 
 export function useWorkbench() {
-  const { selectedCardIds, toggleCardSelection, clearWorkbench } = useWorkbenchContext();
-  
   // 手札（Hand）にあるカードを取得
   const handCards = useLiveQuery(() => db.styleCards.filter(c => !!c.isPinned).toArray());
 
-  // ワークベンチに配置されたカード
-  const workbenchCards = useMemo(() => {
-    if (!handCards) return [];
-    return selectedCardIds
-      .map(id => handCards.find(c => c.id === id))
-      .filter((c): c is StyleCard => !!c);
-  }, [handCards, selectedCardIds]);
+  // ワークベンチに配置されたカードは手札と100%同期
+  const workbenchCards = handCards || [];
+
+  const selectedCardIds = useMemo(() => {
+    return workbenchCards.map(c => c.id);
+  }, [workbenchCards]);
+
+  const toggleCardSelection = async (cardId: string) => {
+    try {
+      const card = await db.styleCards.get(cardId);
+      if (card) {
+        if (card.isVariable) {
+          await db.styleCards.delete(cardId);
+        } else {
+          await db.styleCards.update(cardId, { isPinned: !card.isPinned });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle card selection:", err);
+    }
+  };
+
+  const clearWorkbench = async () => {
+    if (!handCards) return;
+    try {
+      await Promise.all(
+        handCards.map((card) =>
+          card.isVariable ? db.styleCards.delete(card.id) : db.styleCards.update(card.id, { isPinned: false })
+        )
+      );
+    } catch (err) {
+      console.error("Failed to clear workbench:", err);
+    }
+  };
 
   // 統合されたプロンプト文字列の生成
   const mergedPrompt = useMemo(() => {

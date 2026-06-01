@@ -76,8 +76,8 @@ export const TUTORIAL_STEPS: TutorialStepConfig[] = [
   },
   {
     id: "card-to-hand",
-    title: "⑦ カードをクリックしてHandへ",
-    description: "LibraryのStyleCardをクリックすると、画面下部のHandBarに追加されます。追加できたら「次へ」を押してください。",
+    title: "⑦ カードをWorkbenchへ送る",
+    description: "LibraryのStyleCardをクリックすると、画面下部のWorkbenchバーに追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。",
     targetSelector: "[data-tutorial='library-card-grid']",
     position: "bottom",
     autoAdvance: false,
@@ -85,7 +85,7 @@ export const TUTORIAL_STEPS: TutorialStepConfig[] = [
   {
     id: "workbench-edit",
     title: "⑧ Workbenchで編集する",
-    description: "Workbenchタブに切り替えると、HandのカードをWorkbenchに載せてSlotの値を編集し、プロンプトをMidjourneyに送信できます。ガイドは以上です！",
+    description: "Workbenchタブに切り替えると、送られたカードのSlotの値を編集し、プロンプトをMidjourneyに送信できます。ガイドは以上です！",
     targetSelector: "[data-tutorial='workbench-tab']",
     position: "bottom",
     autoAdvance: false,

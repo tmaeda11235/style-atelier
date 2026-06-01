@@ -86,7 +86,7 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
         updateData.usageCount = (card.usageCount || 0) + 1
       }
       await db.styleCards.update(card.id, updateData)
-      addLog(newPinnedStatus ? `Added ${card.name} to hand.` : `Removed ${card.name} from hand.`)
+      addLog(newPinnedStatus ? `Added ${card.name} to Workbench.` : `Removed ${card.name} from Workbench.`)
     } catch (err) {
       console.error("Failed to toggle pin:", err)
     }

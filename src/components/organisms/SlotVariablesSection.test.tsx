@@ -39,7 +39,7 @@ describe("SlotVariablesSection", () => {
         onSlotValueChange={vi.fn()}
         slotHistory={{}}
         handCards={[]}
-        onPinToHand={vi.fn()}
+        onSendToWorkbench={vi.fn()}
       />
     );
     expect(container.firstChild).toBeNull();
@@ -54,7 +54,7 @@ describe("SlotVariablesSection", () => {
         onSlotValueChange={mockChange}
         slotHistory={{}}
         handCards={[]}
-        onPinToHand={vi.fn()}
+        onSendToWorkbench={vi.fn()}
       />
     );
 
@@ -70,8 +70,8 @@ describe("SlotVariablesSection", () => {
     expect(mockChange).toHaveBeenCalledWith("Subject", "neon tiger");
   });
 
-  it("triggers pin to Hand when pin button is clicked", () => {
-    const mockPin = vi.fn();
+  it("triggers send to Workbench when pin button is clicked", () => {
+    const mockSend = vi.fn();
     render(
       <SlotVariablesSection
         slots={mockSlots}
@@ -79,14 +79,14 @@ describe("SlotVariablesSection", () => {
         onSlotValueChange={vi.fn()}
         slotHistory={{}}
         handCards={[]}
-        onPinToHand={mockPin}
+        onSendToWorkbench={mockSend}
       />
     );
 
-    const pinBtn = screen.getAllByTitle("Pin to Hand")[0];
-    fireEvent.click(pinBtn);
+    const sendBtn = screen.getAllByTitle("Send to Workbench")[0];
+    fireEvent.click(sendBtn);
 
-    expect(mockPin).toHaveBeenCalledWith("cat", "Subject");
+    expect(mockSend).toHaveBeenCalledWith("cat", "Subject");
   });
 
   it("allows selecting value from Hand cards", () => {
@@ -98,7 +98,7 @@ describe("SlotVariablesSection", () => {
         onSlotValueChange={mockChange}
         slotHistory={{}}
         handCards={[mockHandCard]}
-        onPinToHand={vi.fn()}
+        onSendToWorkbench={vi.fn()}
       />
     );
 
@@ -117,7 +117,7 @@ describe("SlotVariablesSection", () => {
         onSlotValueChange={mockChange}
         slotHistory={mockHistory}
         handCards={[]}
-        onPinToHand={vi.fn()}
+        onSendToWorkbench={vi.fn()}
       />
     );
 

@@ -190,7 +190,7 @@ describe("Workbench", () => {
     expect(history.Style).toContain("neon rain");
   });
 
-  it("pins slot value directly to Hand when clicking pin button", async () => {
+  it("sends slot value directly to Workbench when clicking pin button", async () => {
     vi.mocked(useWorkbench).mockReturnValue({
       workbenchCards: [mockTargetCard],
       handCards: [],
@@ -206,7 +206,7 @@ describe("Workbench", () => {
     fireEvent.change(subjectInput, { target: { value: "steampunk dragon" } });
 
     // The pin button next to Subject input
-    const pinButtons = screen.getAllByTitle("Pin to Hand");
+    const pinButtons = screen.getAllByTitle("Send to Workbench");
     fireEvent.click(pinButtons[0]);
 
     await waitFor(() => {
@@ -220,7 +220,7 @@ describe("Workbench", () => {
         })
       );
       expect(mockAddLog).toHaveBeenCalledWith(
-        expect.stringContaining('Pinned "steampunk dragon" to Hand')
+        expect.stringContaining('Sent "steampunk dragon" to Workbench')
       );
     });
   });
@@ -245,56 +245,5 @@ describe("Workbench", () => {
     fireEvent.click(fillButtons[0]);
 
     expect(subjectInput.value).toBe("cyberpunk cat");
-  });
-
-  it("displays 'Merge Stack' button when 2 or more cards are selected, opens modal on click", () => {
-    vi.mocked(useWorkbench).mockReturnValue({
-      workbenchCards: [mockTargetCard, mockHandCard],
-      handCards: [mockHandCard],
-      selectedCardIds: ["card-1", "card-hand-1"],
-      toggleCardSelection: vi.fn(),
-      clearWorkbench: vi.fn(),
-      mergedPrompt: "",
-    });
-
-    render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />);
-
-    const mergeBtn = screen.getByRole("button", { name: /Merge Stack/i });
-    expect(mergeBtn).toBeDefined();
-
-    fireEvent.click(mergeBtn);
-
-    expect(screen.getByText("Merge Card Stack")).toBeDefined();
-    expect(screen.getAllByText("Photo Template")).toBeDefined();
-    expect(screen.getAllByText("cyberpunk cat")).toBeDefined();
-  });
-
-  it("performs card merging correctly when Merge Stack is executed inside modal", async () => {
-    const mockClearWorkbench = vi.fn();
-    vi.mocked(useWorkbench).mockReturnValue({
-      workbenchCards: [mockTargetCard, mockHandCard],
-      handCards: [mockHandCard],
-      selectedCardIds: ["card-1", "card-hand-1"],
-      toggleCardSelection: vi.fn(),
-      clearWorkbench: mockClearWorkbench,
-      mergedPrompt: "",
-    });
-
-    render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />);
-
-    const mergeBtn = screen.getByRole("button", { name: /Merge Stack/i });
-    fireEvent.click(mergeBtn);
-
-    const modalMergeBtns = screen.getAllByRole("button", { name: /Merge Stack/i });
-    fireEvent.click(modalMergeBtns[1]);
-
-    await waitFor(() => {
-      expect(db.styleCards.update).toHaveBeenCalledWith("card-1", expect.objectContaining({
-        usageCount: 5,
-      }));
-      expect(db.styleCards.delete).toHaveBeenCalledWith("card-hand-1");
-      expect(mockClearWorkbench).toHaveBeenCalled();
-      expect(mockAddLog).toHaveBeenCalledWith(expect.stringContaining('Fused cards into "Photo Template"'));
-    });
   });
 });
