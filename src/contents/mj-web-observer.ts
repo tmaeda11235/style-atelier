@@ -1,9 +1,9 @@
 import type { PlasmoCSConfig } from "plasmo"
-import { WebDataExtractor } from "./domain/extractors/WebDataExtractor"
-import { ImageProcessor } from "./domain/processors/ImageProcessor"
-import { PromptInjector } from "./domain/actions/PromptInjector"
-import { GalleryObserver } from "./services/GalleryObserver"
-import { CommandListener } from "./services/CommandListener"
+import { WebDataExtractor } from "./_domain/extractors/WebDataExtractor"
+import { ImageProcessor } from "./_domain/processors/ImageProcessor"
+import { PromptInjector } from "./_domain/actions/PromptInjector"
+import { GalleryObserver } from "./_services/GalleryObserver"
+import { CommandListener } from "./_services/CommandListener"
 
 export const config: PlasmoCSConfig = {
   matches: [

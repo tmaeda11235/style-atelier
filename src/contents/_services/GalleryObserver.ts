@@ -1,4 +1,4 @@
-import type { IService, IProcessor } from "../domain/interfaces"
+import type { IService, IProcessor } from "../_domain/interfaces"
 
 export class GalleryObserver implements IService {
   private observer: MutationObserver | null = null

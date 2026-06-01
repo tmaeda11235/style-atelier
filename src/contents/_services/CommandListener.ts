@@ -1,4 +1,4 @@
-import type { IService, IActionHandler } from "../domain/interfaces"
+import type { IService, IActionHandler } from "../_domain/interfaces"
 
 export class CommandListener implements IService {
   private handler: IActionHandler
