@@ -26,6 +26,7 @@ interface CardThumbnailProps {
   onDeleteClick?: (e: React.MouseEvent) => void
   onInjectClick?: (e: React.MouseEvent) => void
   onEditClick?: (e: React.MouseEvent) => void
+  onShareClick?: (e: React.MouseEvent) => void
   size?: "sm" | "md" | "lg"
   className?: string
   category?: { id: string; name: string; iconEmoji?: string; iconUrl?: string }
@@ -42,6 +43,7 @@ export function CardThumbnail({
   onDeleteClick,
   onInjectClick,
   onEditClick,
+  onShareClick,
   size = "md",
   className = "",
   category,
@@ -165,6 +167,25 @@ export function CardThumbnail({
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </IconButton>
+        )}
+
+        {onShareClick && (
+          <IconButton
+            variant="white"
+            size="sm"
+            onClick={onShareClick}
+            className="shadow-md"
+            title="Share Card"
+            data-testid="share-card-button"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
             </svg>
           </IconButton>
         )}
