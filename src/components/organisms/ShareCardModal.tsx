@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import type { StyleCard } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
-import { X, Share2, ExternalLink, Download, AlertCircle } from "lucide-react"
+import { X, Share2, ExternalLink, Download, AlertCircle, Clipboard } from "lucide-react"
 import { exportCardAsImage, renderCardToCanvas } from "../../lib/export-utils"
 
 interface ShareCardModalProps {
@@ -66,7 +66,7 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
 
   const handleOpenSharePage = () => {
     try {
-      const sharePageUrl = chrome.runtime.getURL(`tabs/share.html?id=${card.id}`)
+      const sharePageUrl = chrome.runtime.getURL("tabs/share.html") + `?id=${card.id}`
       chrome.tabs.create({ url: sharePageUrl })
       addLog(`Opened share page for card "${card.name}".`)
       onClose()
@@ -74,6 +74,35 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
       console.error("Failed to open share page:", err)
       // Fallback
       window.open(`/tabs/share.html?id=${card.id}`, "_blank")
+    }
+  }
+
+  const handleCopyToClipboard = async () => {
+    setIsSharing(true)
+    setErrorMessage(null)
+    try {
+      const canvas = await renderCardToCanvas(card)
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          setErrorMessage("Failed to generate card image.")
+          return
+        }
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob })
+          ])
+          addLog(`Copied card "${card.name}" to clipboard.`)
+          onClose()
+        } catch (clipErr: any) {
+          console.error("Clipboard copy failed:", clipErr)
+          setErrorMessage("Browser blocked clipboard copy. Try opening the image page.")
+        }
+      }, "image/png")
+    } catch (err: any) {
+      console.error("Clipboard copy failed:", err)
+      setErrorMessage("Failed to copy image to clipboard.")
+    } finally {
+      setIsSharing(false)
     }
   }
 
@@ -155,6 +184,16 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
             >
               <Share2 className="w-4 h-4" />
               {isSharing ? "Processing..." : "SNS / Apps (Web Share)"}
+            </Button>
+
+            <Button
+              onClick={handleCopyToClipboard}
+              disabled={isSharing}
+              className="w-full py-2.5 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
+              data-testid="share-copy-button"
+            >
+              <Clipboard className="w-4 h-4" />
+              Copy Image to Clipboard
             </Button>
 
             <Button
