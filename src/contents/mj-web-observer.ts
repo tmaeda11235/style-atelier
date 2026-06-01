@@ -6,7 +6,13 @@ import { GalleryObserver } from "./services/GalleryObserver"
 import { CommandListener } from "./services/CommandListener"
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://midjourney.com/*", "https://*.midjourney.com/*"],
+  matches: [
+    "https://midjourney.com/*",
+    "https://*.midjourney.com/*",
+    "https://*.discord.com/*",
+    "https://*.discordapp.com/*",
+    "https://*.discordapp.net/*"
+  ],
   all_frames: true,
   run_at: "document_start"
 }

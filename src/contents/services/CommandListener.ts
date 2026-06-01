@@ -29,6 +29,9 @@ export class CommandListener implements IService {
           sendResponse({ status: "success" })
         }
         return true; // Keep channel open
+      } else if (message.type === "PING") {
+        sendResponse({ status: "success" })
+        return false;
       } else {
         sendResponse({ status: "unknown_message" })
         return false;
