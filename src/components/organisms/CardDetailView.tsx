@@ -1,26 +1,41 @@
-import React, { useState, useEffect } from "react"
-import type { StyleCard, PromptSegment } from "../../lib/db-schema"
-import { PromptBubbleEditor } from "./PromptBubbleEditor"
-import { ParameterEditor } from "./ParameterEditor"
-import { RaritySelector } from "../molecules/RaritySelector"
-import { Button } from "../atoms/Button"
-import { Input } from "../atoms/Input"
-import { useHand } from "../../hooks/useHand"
-import { db } from "../../lib/db"
-import { buildPromptString } from "../../lib/prompt-utils"
-import { X, Send, Save, Trash2, CheckCircle2, Download } from "lucide-react"
-import type { AlertType } from "../molecules/ConnectionAlert"
-import { useLiveQuery } from "dexie-react-hooks"
-import { exportCardAsImage } from "../../lib/export-utils"
+import React, { useState, useEffect } from "react";
+import type { StyleCard, PromptSegment } from "../../lib/db-schema";
+import { PromptBubbleEditor } from "./PromptBubbleEditor";
+import { ParameterEditor } from "./ParameterEditor";
+import { RaritySelector } from "../molecules/RaritySelector";
+import { Button } from "../atoms/Button";
+import { Input } from "../atoms/Input";
+import { useHand } from "../../hooks/useHand";
+import { db } from "../../lib/db";
+import { buildPromptString } from "../../lib/prompt-utils";
+import { X, Send, Save, Download } from "lucide-react";
+import type { AlertType } from "../molecules/ConnectionAlert";
+import { useLiveQuery } from "dexie-react-hooks";
+import { exportCardAsImage } from "../../lib/export-utils";
+import { TagEditor } from "../molecules/TagEditor";
+import { AssociatedImageGallery } from "../molecules/AssociatedImageGallery";
 
+/**
+ * Props for the CardDetailView component.
+ */
 interface CardDetailViewProps {
-  card: StyleCard
-  onClose: () => void
-  onInject: (prompt: string) => Promise<void>
-  onSave: (updatedCard: StyleCard) => Promise<void>
-  setAlertType: (type: AlertType) => void
+  /** The StyleCard object being viewed or edited */
+  card: StyleCard;
+  /** Callback to close the detail panel */
+  onClose: () => void;
+  /** Callback to inject the built prompt into the target application page */
+  onInject: (prompt: string) => Promise<void>;
+  /** Callback to save the updated StyleCard object to storage */
+  onSave: (updatedCard: StyleCard) => Promise<void>;
+  /** Callback to update the alert state */
+  setAlertType: (type: AlertType) => void;
 }
 
+/**
+ * CardDetailView component renders the full inspection and modification panel
+ * for a specific StyleCard. It enables users to rename cards, edit prompt recipes/bubbles,
+ * set parameter options, manage tags, select thumbnail images, and export the card.
+ */
 export function CardDetailView({
   card,
   onClose,
@@ -28,32 +43,31 @@ export function CardDetailView({
   onSave,
   setAlertType,
 }: CardDetailViewProps) {
-  const { pinnedCards } = useHand()
-  const hasPinnedCards = pinnedCards.length > 0
+  const { pinnedCards } = useHand();
+  const hasPinnedCards = pinnedCards.length > 0;
 
-  const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
+  const categoriesList = useLiveQuery(() => db.categories.toArray()) || [];
 
-  const [name, setName] = useState(card.name)
-  const [tier, setTier] = useState(card.tier)
-  const [promptSegments, setPromptSegments] = useState<PromptSegment[]>(card.promptSegments || [])
-  const [parameters, setParameters] = useState<StyleCard["parameters"]>(card.parameters || {})
-  const [isSrefHidden, setIsSrefHidden] = useState(card.masking?.isSrefHidden || false)
-  const [isPHidden, setIsPHidden] = useState(card.masking?.isPHidden || false)
-  const [category, setCategory] = useState(card.category || "")
+  const [name, setName] = useState(card.name);
+  const [tier, setTier] = useState(card.tier);
+  const [promptSegments, setPromptSegments] = useState<PromptSegment[]>(card.promptSegments || []);
+  const [parameters, setParameters] = useState<StyleCard["parameters"]>(card.parameters || {});
+  const [isSrefHidden, setIsSrefHidden] = useState(card.masking?.isSrefHidden || false);
+  const [isPHidden, setIsPHidden] = useState(card.masking?.isPHidden || false);
+  const [category, setCategory] = useState(card.category || "");
   
   // Tags editing state
-  const [tags, setTags] = useState<string[]>(card.tags || [])
-  const [newTagInput, setNewTagInput] = useState("")
+  const [tags, setTags] = useState<string[]>(card.tags || []);
 
   // Image and Thumbnail Selection state
-  const images = card.images && card.images.length > 0 ? card.images : [card.thumbnailData].filter(Boolean)
-  const [selectedThumbs, setSelectedThumbs] = useState<string[]>(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []))
-  const [isExporting, setIsExporting] = useState(false)
+  const images = card.images && card.images.length > 0 ? card.images : [card.thumbnailData].filter(Boolean);
+  const [selectedThumbs, setSelectedThumbs] = useState<string[]>(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []));
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleExportCard = async () => {
-    setIsExporting(true)
+    setIsExporting(true);
     try {
-      const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png"
+      const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png";
       const tempCard: StyleCard = {
         ...card,
         name,
@@ -67,59 +81,45 @@ export function CardDetailView({
         category: category || undefined,
         dominantColor: card.dominantColor,
         accentColor: card.accentColor,
-      }
-      await exportCardAsImage(tempCard)
+      };
+      await exportCardAsImage(tempCard);
     } catch (err) {
-      console.error("Failed to export card:", err)
+      console.error("Failed to export card:", err);
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   // Sync state if card changes
   useEffect(() => {
-    setName(card.name)
-    setTier(card.tier)
-    setPromptSegments(card.promptSegments || [])
-    setParameters(card.parameters || {})
-    setIsSrefHidden(card.masking?.isSrefHidden || false)
-    setIsPHidden(card.masking?.isPHidden || false)
-    setCategory(card.category || "")
-    setTags(card.tags || [])
-    const initialImages = card.images && card.images.length > 0 ? card.images : [card.thumbnailData].filter(Boolean)
-    setSelectedThumbs(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []))
-  }, [card])
-
-  const handleAddTag = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = newTagInput.trim().toLowerCase()
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags([...tags, trimmed])
-    }
-    setNewTagInput("")
-  }
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove))
-  }
+    setName(card.name);
+    setTier(card.tier);
+    setPromptSegments(card.promptSegments || []);
+    setParameters(card.parameters || {});
+    setIsSrefHidden(card.masking?.isSrefHidden || false);
+    setIsPHidden(card.masking?.isPHidden || false);
+    setCategory(card.category || "");
+    setTags(card.tags || []);
+    setSelectedThumbs(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []));
+  }, [card]);
 
   const handleToggleThumbnail = (imgUrl: string) => {
     if (selectedThumbs.includes(imgUrl)) {
       // Remove it
-      setSelectedThumbs(selectedThumbs.filter((url) => url !== imgUrl))
+      setSelectedThumbs(selectedThumbs.filter((url) => url !== imgUrl));
     } else {
       // Add it. If already 4 selected, shift the queue
       if (selectedThumbs.length < 4) {
-        setSelectedThumbs([...selectedThumbs, imgUrl])
+        setSelectedThumbs([...selectedThumbs, imgUrl]);
       } else {
-        setSelectedThumbs([...selectedThumbs.slice(1), imgUrl])
+        setSelectedThumbs([...selectedThumbs.slice(1), imgUrl]);
       }
     }
-  }
+  };
 
   const handleSaveChanges = async () => {
     // Fallback thumbnail data for older fields compatibility
-    const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png"
+    const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png";
 
     const updatedCard: StyleCard = {
       ...card,
@@ -137,23 +137,23 @@ export function CardDetailView({
         isPHidden,
       },
       updatedAt: Date.now(),
-    }
+    };
 
     try {
-      await onSave(updatedCard)
+      await onSave(updatedCard);
     } catch (err) {
-      console.error("Failed to save style card updates:", err)
+      console.error("Failed to save style card updates:", err);
     }
-  }
+  };
 
   const handleTryOnMidjourney = async () => {
-    const maskedKeys: (keyof StyleCard["parameters"])[] = []
-    if (isSrefHidden) maskedKeys.push("sref")
-    if (isPHidden) maskedKeys.push("p")
+    const maskedKeys: (keyof StyleCard["parameters"])[] = [];
+    if (isSrefHidden) maskedKeys.push("sref");
+    if (isPHidden) maskedKeys.push("p");
 
-    const fullPrompt = buildPromptString(promptSegments, parameters, maskedKeys)
-    await onInject(fullPrompt)
-  }
+    const fullPrompt = buildPromptString(promptSegments, parameters, maskedKeys);
+    await onInject(fullPrompt);
+  };
 
   return (
     <div
@@ -231,80 +231,16 @@ export function CardDetailView({
           )}
 
           {/* Tags Editor */}
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Tags</label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {tags.map((t, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200"
-                >
-                  {t}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(t)}
-                    className="text-slate-400 hover:text-red-500 text-[10px]"
-                  >
-                    &times;
-                  </button>
-                </span>
-              ))}
-              {tags.length === 0 && (
-                <span className="text-xs text-slate-400 italic">No tags added yet.</span>
-              )}
-            </div>
-            <form onSubmit={handleAddTag} className="flex gap-2">
-              <Input
-                type="text"
-                value={newTagInput}
-                onChange={(e) => setNewTagInput(e.target.value)}
-                placeholder="Add new tag..."
-                className="text-xs py-1"
-              />
-              <Button type="submit" size="xs" variant="secondary">
-                Add
-              </Button>
-            </form>
-          </div>
+          <TagEditor tags={tags} onChange={setTags} />
         </div>
 
         {/* Gallery & Thumbnail Selector Section */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Associated Images ({images.length})</h3>
-            <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-full">
-              Selected: {selectedThumbs.length} / 4
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Click on images to toggle their use as the card's thumbnail (up to four). The selection order determines display layout.
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            {images.map((imgUrl, index) => {
-              const selectedIdx = selectedThumbs.indexOf(imgUrl)
-              const isSelected = selectedIdx !== -1
-              const orderLabels = ["1st", "2nd", "3rd", "4th"]
-              const orderLabel = orderLabels[selectedIdx] || `${selectedIdx + 1}th`
-              return (
-                <div
-                  key={index}
-                  onClick={() => handleToggleThumbnail(imgUrl)}
-                  className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
-                    isSelected ? "border-blue-500 ring-2 ring-blue-100 shadow-md" : "border-slate-200 hover:border-slate-400"
-                  }`}
-                >
-                  <img src={imgUrl} className="w-full h-full object-cover" alt={`Card Image ${index + 1}`} />
-                  {isSelected && (
-                    <div className="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>{orderLabel}</span>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+        <div className="p-4 bg-white border rounded-lg shadow-sm">
+          <AssociatedImageGallery
+            images={images}
+            selectedThumbs={selectedThumbs}
+            onToggleThumbnail={handleToggleThumbnail}
+          />
         </div>
 
         {/* Prompt segments bubble editor */}
@@ -395,5 +331,5 @@ export function CardDetailView({
         </div>
       </div>
     </div>
-  )
+  );
 }

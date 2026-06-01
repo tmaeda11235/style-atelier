@@ -1,24 +1,36 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useWorkbench } from "../../hooks/useWorkbench";
 import { useEvolution } from "../../hooks/useEvolution";
 import { CardThumbnail } from "../molecules/CardThumbnail";
 import { RarityBadge } from "../atoms/RarityBadge";
 import { Button } from "../atoms/Button";
-import { Sparkles, X, Send, BookUp2, Pin, Layers } from "lucide-react";
+import { Sparkles, X, Send, BookUp2, Layers } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import { ParameterEditor } from "./ParameterEditor";
-import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert";
+import { type AlertType } from "../molecules/ConnectionAlert";
 import { db } from "../../lib/db";
+import { MergeStackModal } from "./MergeStackModal";
+import { SlotVariablesSection } from "./SlotVariablesSection";
 
 import type { PromptSegment } from "../../lib/db-schema";
 
+/**
+ * Props for the Workbench component.
+ */
 interface WorkbenchProps {
+  /** Callback triggered when a variation minting starts */
   onStartVariationMinting?: (base: any) => void;
+  /** Callback to add log messages */
   addLog?: (msg: string) => void;
-  setAlertType: (type: AlertType) => void;
+  /** Callback to set system alert type */
+  setAlertType: (type: AlertType | null) => void;
 }
 
+/**
+ * Workbench component acts as the main sandbox where users can blend multiple style cards,
+ * evolve rare cards, fill slot variables, and inject prompts directly into Midjourney.
+ */
 export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog, setAlertType }) => {
   const { workbenchCards, handCards, toggleCardSelection, clearWorkbench } = useWorkbench();
   const { canEvolve, evolveCard } = useEvolution();
@@ -29,12 +41,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
   const [slotValues, setSlotValues] = useState<Record<string, string>>({});
   const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({});
   
-  // States for merging stack/cards
+  // State for opening merge modal
   const [isMergeOpen, setIsMergeOpen] = useState(false);
-  const [baseCardId, setBaseCardId] = useState<string>("");
-  const [consumeStates, setConsumeStates] = useState<Record<string, boolean>>({});
-
-  const firstInputRef = useRef<HTMLInputElement>(null);
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
@@ -58,35 +66,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
   useEffect(() => {
     loadSlotHistory();
   }, []);
-
-  // Synchronize merge state when cards in workbench change
-  useEffect(() => {
-    if (workbenchCards.length >= 2) {
-      const currentOnWorkbench = workbenchCards.some(c => c.id === baseCardId);
-      const defaultBase = currentOnWorkbench ? baseCardId : workbenchCards[0].id;
-      setBaseCardId(defaultBase);
-
-      setConsumeStates(prev => {
-        const next = { ...prev };
-        workbenchCards.forEach(c => {
-          if (c.id === defaultBase) {
-            delete next[c.id];
-          } else if (next[c.id] === undefined) {
-            next[c.id] = true;
-          }
-        });
-        Object.keys(next).forEach(id => {
-          if (!workbenchCards.some(c => c.id === id)) {
-            delete next[id];
-          }
-        });
-        return next;
-      });
-    } else {
-      setBaseCardId("");
-      setConsumeStates({});
-    }
-  }, [workbenchCardsDependency, baseCardId]);
 
   // Check connection on mount
   useEffect(() => {
@@ -158,17 +137,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     });
     setSlotValues(initialSlotValues);
   }, [workbenchCardsDependency]);
-
-  // Auto-focus the first slot input
-  useEffect(() => {
-    const hasSlots = editedSegments.some(seg => seg.type === "slot");
-    if (hasSlots) {
-      const timer = setTimeout(() => {
-        firstInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [workbenchCardsDependency, editedSegments]);
 
   const handleSlotValueChange = (label: string, value: string) => {
     setSlotValues(prev => ({
@@ -282,22 +250,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     }
   };
 
-  const handleSelectBaseCard = (cardId: string) => {
-    setBaseCardId(cardId);
-    setConsumeStates(prev => {
-      const next = { ...prev };
-      delete next[cardId];
-      workbenchCards.forEach(c => {
-        if (c.id !== cardId && next[c.id] === undefined) {
-          next[c.id] = true;
-        }
-      });
-      return next;
-    });
-  };
-
-  const handleExecuteMerge = async () => {
-    if (!baseCardId) return;
+  const handleExecuteMerge = async (baseCardId: string, consumeStates: Record<string, boolean>) => {
     const representative = workbenchCards.find(c => c.id === baseCardId);
     if (!representative) return;
 
@@ -361,12 +314,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
       addLog?.("Error: Failed to merge style cards.");
     }
   };
-
-  const baseCard = workbenchCards.find(c => c.id === baseCardId);
-  const additionalUses = workbenchCards
-    .filter(c => c.id !== baseCardId && consumeStates[c.id])
-    .reduce((sum, c) => sum + (c.usageCount || 0), 0);
-  const previewUsageCount = (baseCard?.usageCount || 0) + additionalUses;
 
   // Extract slots
   const slots = editedSegments.filter((seg): seg is { type: "slot"; label: string; default: string } => seg.type === "slot");
@@ -436,95 +383,15 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                 />
               </div>
 
-              {/* Slot Variables Inputs */}
-              {slots.length > 0 && (
-                <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    Slot Variables
-                  </h4>
-                  <div className="space-y-3">
-                    {slots.map((slot, index) => {
-                      const label = slot.label;
-                      const currentValue = slotValues[label] ?? "";
-                      const historyList = slotHistory[label] || [];
-
-                      return (
-                        <div key={`${label}-${index}`} className="space-y-1">
-                          <label className="block text-xs font-medium text-slate-600">
-                            {label}
-                          </label>
-                          <div className="flex gap-2 items-center">
-                            <input
-                              ref={index === 0 ? firstInputRef : null}
-                              type="text"
-                              value={currentValue}
-                              onChange={(e) => handleSlotValueChange(label, e.target.value)}
-                              placeholder={slot.default || `Enter ${label}...`}
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm text-slate-800 focus:outline-none focus:border-blue-500"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="xs"
-                              onClick={() => handlePinToHand(currentValue, label)}
-                              title="Pin to Hand"
-                              className="text-slate-400 hover:text-blue-500"
-                            >
-                              <Pin className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-
-                          {/* Quick selection from Hand cards */}
-                          {handCards.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                              <span className="text-[10px] text-slate-400">Fill from Hand:</span>
-                              {handCards.map((hc) => {
-                                const resolvedText = buildPromptString(hc.promptSegments, hc.parameters);
-                                return (
-                                  <button
-                                    key={hc.id}
-                                    type="button"
-                                    onClick={() => handleSlotValueChange(label, resolvedText)}
-                                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded transition-colors"
-                                  >
-                                    {hc.name}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {/* Historical Values list */}
-                          {historyList.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                              <span className="text-[10px] text-slate-400">Recent:</span>
-                              {historyList.map((val, hIdx) => (
-                                <div key={hIdx} className="flex items-center bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSlotValueChange(label, val)}
-                                    className="text-[10px] text-slate-600 hover:text-slate-800 transition-colors"
-                                  >
-                                    {val}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handlePinToHand(val, label)}
-                                    title="Pin this value to Hand"
-                                    className="text-slate-400 hover:text-blue-500"
-                                  >
-                                    <Pin className="w-2.5 h-2.5" />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Slot Variables Section */}
+              <SlotVariablesSection
+                slots={slots}
+                slotValues={slotValues}
+                onSlotValueChange={handleSlotValueChange}
+                slotHistory={slotHistory}
+                handCards={handCards}
+                onPinToHand={handlePinToHand}
+              />
 
               <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
 
@@ -570,143 +437,12 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         )}
       </div>
 
-      {isMergeOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden text-slate-800 animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
-            <div className="p-4 bg-slate-50 border-b flex items-center justify-between">
-              <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-blue-500" />
-                Merge Card Stack
-              </h3>
-              <Button variant="ghost" size="xs" onClick={() => setIsMergeOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="p-4 flex-1 overflow-y-auto space-y-4">
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Select one card to keep as the base recipe. Choose whether to consume the other cards to inherit their usage counts.
-              </p>
-              
-              <div className="space-y-3">
-                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Representative Card (Choose 1)</h4>
-                <div className="space-y-2">
-                  {workbenchCards.map(c => {
-                    const isBase = c.id === baseCardId;
-                    return (
-                      <div
-                        key={c.id}
-                        onClick={() => handleSelectBaseCard(c.id)}
-                        className={`flex items-center gap-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${
-                          isBase 
-                            ? "border-blue-500 bg-blue-50/50 shadow-sm" 
-                            : "border-slate-100 hover:border-slate-200 bg-slate-50/30"
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border bg-white">
-                          <img src={c.thumbnailData || "assets/icon.png"} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-slate-700 truncate">{c.name}</p>
-                          <p className="text-[10px] text-slate-400">Uses: {c.usageCount || 0}</p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isBase ? "border-blue-500 bg-blue-500" : "border-slate-300 bg-white"}`}>
-                          {isBase && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {workbenchCards.length > 1 && (
-                <div className="space-y-3 pt-2 border-t border-slate-100">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Material Cards Integration</h4>
-                  <div className="space-y-2">
-                    {workbenchCards.filter(c => c.id !== baseCardId).map(c => {
-                      const isConsumed = consumeStates[c.id] ?? true;
-                      return (
-                        <div
-                          key={c.id}
-                          className="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/20 gap-3"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 border bg-white">
-                              <img src={c.thumbnailData || "assets/icon.png"} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-slate-600 truncate">{c.name}</p>
-                              <p className="text-[9px] text-slate-400">Uses to transfer: {c.usageCount || 0}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setConsumeStates(prev => ({ ...prev, [c.id]: !isConsumed }))}
-                              className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border ${
-                                isConsumed 
-                                  ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" 
-                                  : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
-                              }`}
-                            >
-                              {isConsumed ? "Consume" : "Keep"}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {baseCard && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 space-y-1.5">
-                  <div className="flex justify-between text-[11px] text-slate-600">
-                    <span>Base Card:</span>
-                    <span className="font-semibold truncate max-w-[150px]">{baseCard.name}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] text-slate-600">
-                    <span>Combined Images:</span>
-                    <span className="font-semibold font-mono">
-                      {workbenchCards.reduce((acc, c) => {
-                        const urls = [...(c.images || [])];
-                        if (c.thumbnailData) urls.push(c.thumbnailData);
-                        urls.forEach(u => acc.add(u));
-                        return acc;
-                      }, new Set<string>()).size} images
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs pt-1.5 border-t border-slate-200 text-slate-700">
-                    <span className="font-medium">Preview Usage Count:</span>
-                    <div className="flex items-center gap-1 font-bold text-blue-600">
-                      <span>{baseCard.usageCount || 0}</span>
-                      {additionalUses > 0 && (
-                        <>
-                          <span className="text-[10px] text-slate-400 font-normal">+{additionalUses}</span>
-                          <span>&rarr; {previewUsageCount}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setIsMergeOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleExecuteMerge}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1.5 shadow-sm shadow-blue-200"
-              >
-                Merge Stack
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MergeStackModal
+        isOpen={isMergeOpen}
+        onClose={() => setIsMergeOpen(false)}
+        workbenchCards={workbenchCards}
+        onExecuteMerge={handleExecuteMerge}
+      />
     </div>
   );
 };
