@@ -1,24 +1,36 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useWorkbench } from "../../hooks/useWorkbench";
 import { useEvolution } from "../../hooks/useEvolution";
 import { CardThumbnail } from "../molecules/CardThumbnail";
 import { RarityBadge } from "../atoms/RarityBadge";
 import { Button } from "../atoms/Button";
-import { Sparkles, X, Send, BookUp2, Pin, Layers } from "lucide-react";
+import { Sparkles, X, Send, BookUp2, Layers } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
 import { ParameterEditor } from "./ParameterEditor";
-import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert";
+import { type AlertType } from "../molecules/ConnectionAlert";
 import { db } from "../../lib/db";
+import { MergeStackModal } from "./MergeStackModal";
+import { SlotVariablesSection } from "./SlotVariablesSection";
 
 import type { PromptSegment } from "../../lib/db-schema";
 
+/**
+ * Props for the Workbench component.
+ */
 interface WorkbenchProps {
+  /** Callback triggered when a variation minting starts */
   onStartVariationMinting?: (base: any) => void;
+  /** Callback to add log messages */
   addLog?: (msg: string) => void;
-  setAlertType: (type: AlertType) => void;
+  /** Callback to set system alert type */
+  setAlertType: (type: AlertType | null) => void;
 }
 
+/**
+ * Workbench component acts as the main sandbox where users can blend multiple style cards,
+ * evolve rare cards, fill slot variables, and inject prompts directly into Midjourney.
+ */
 export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog, setAlertType }) => {
   const { workbenchCards, handCards, toggleCardSelection, clearWorkbench } = useWorkbench();
   const { canEvolve, evolveCard } = useEvolution();
@@ -29,7 +41,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
   const [slotValues, setSlotValues] = useState<Record<string, string>>({});
   const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({});
 
-  const firstInputRef = useRef<HTMLInputElement>(null);
 
   const isEvolutionMode = workbenchCards.length === 1;
   const isMixingMode = workbenchCards.length >= 2;
@@ -152,17 +163,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     setSlotValues(initialSlotValues);
   }, [workbenchCardsDependency]);
 
-  // Auto-focus the first slot input
-  useEffect(() => {
-    const hasSlots = editedSegments.some(seg => seg.type === "slot");
-    if (hasSlots) {
-      const timer = setTimeout(() => {
-        firstInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [workbenchCardsDependency, editedSegments]);
-
   const handleSlotValueChange = (label: string, value: string) => {
     setSlotValues(prev => ({
       ...prev,
@@ -276,6 +276,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
   };
 
 
+
   // Extract slots
   const slots = editedSegments.filter((seg): seg is { type: "slot"; label: string; default: string } => seg.type === "slot");
 
@@ -333,95 +334,15 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                 />
               </div>
 
-              {/* Slot Variables Inputs */}
-              {slots.length > 0 && (
-                <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    Slot Variables
-                  </h4>
-                  <div className="space-y-3">
-                    {slots.map((slot, index) => {
-                      const label = slot.label;
-                      const currentValue = slotValues[label] ?? "";
-                      const historyList = slotHistory[label] || [];
-
-                      return (
-                        <div key={`${label}-${index}`} className="space-y-1">
-                          <label className="block text-xs font-medium text-slate-600">
-                            {label}
-                          </label>
-                          <div className="flex gap-2 items-center">
-                            <input
-                              ref={index === 0 ? firstInputRef : null}
-                              type="text"
-                              value={currentValue}
-                              onChange={(e) => handleSlotValueChange(label, e.target.value)}
-                              placeholder={slot.default || `Enter ${label}...`}
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm text-slate-800 focus:outline-none focus:border-blue-500"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="xs"
-                              onClick={() => handleSendToWorkbench(currentValue, label)}
-                              title="Send to Workbench"
-                              className="text-slate-400 hover:text-blue-500"
-                            >
-                              <Pin className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-
-                          {/* Quick selection from Workbench cards */}
-                          {handCards.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                              <span className="text-[10px] text-slate-400">Fill from Workbench:</span>
-                              {handCards.map((hc) => {
-                                const resolvedText = buildPromptString(hc.promptSegments, hc.parameters);
-                                return (
-                                  <button
-                                    key={hc.id}
-                                    type="button"
-                                    onClick={() => handleSlotValueChange(label, resolvedText)}
-                                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded transition-colors"
-                                  >
-                                    {hc.name}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {/* Historical Values list */}
-                          {historyList.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                              <span className="text-[10px] text-slate-400">Recent:</span>
-                              {historyList.map((val, hIdx) => (
-                                <div key={hIdx} className="flex items-center bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSlotValueChange(label, val)}
-                                    className="text-[10px] text-slate-600 hover:text-slate-800 transition-colors"
-                                  >
-                                    {val}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSendToWorkbench(val, label)}
-                                    title="Send this value to Workbench"
-                                    className="text-slate-400 hover:text-blue-500"
-                                  >
-                                    <Pin className="w-2.5 h-2.5" />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Slot Variables Section */}
+              <SlotVariablesSection
+                slots={slots}
+                slotValues={slotValues}
+                onSlotValueChange={handleSlotValueChange}
+                slotHistory={slotHistory}
+                handCards={handCards}
+                onSendToWorkbench={handleSendToWorkbench}
+              />
 
               <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
 
@@ -466,6 +387,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           </div>
         )}
       </div>
+
     </div>
   );
 };
