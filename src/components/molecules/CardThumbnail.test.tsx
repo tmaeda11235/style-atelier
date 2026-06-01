@@ -186,4 +186,20 @@ describe("CardThumbnail", () => {
     fireEvent.click(editBtn)
     expect(mockOnEditClick).toHaveBeenCalledTimes(1)
   })
+
+  it("calls onShareClick when share button is clicked", () => {
+    const mockOnShareClick = vi.fn()
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        onShareClick={mockOnShareClick}
+      />
+    )
+    const shareBtn = screen.getByTestId("share-card-button")
+    expect(shareBtn).toBeDefined()
+    fireEvent.click(shareBtn)
+    expect(mockOnShareClick).toHaveBeenCalledTimes(1)
+  })
 })

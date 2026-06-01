@@ -86,4 +86,20 @@ describe("LibraryTab", () => {
     expect(mockOpenDetailCard).toHaveBeenCalledWith(mockCards[0])
     expect(mockTogglePin).not.toHaveBeenCalled()
   })
+
+  it("opens ShareCardModal when clicking the share button on the card", () => {
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    const shareBtn = screen.getByTestId("share-card-button")
+    expect(shareBtn).toBeDefined()
+
+    // Initially modal is not in document
+    expect(screen.queryByText("Share Style Card")).toBeNull()
+
+    // Click share button
+    fireEvent.click(shareBtn)
+
+    // Modal should now be in the document
+    expect(screen.getByText("Share Style Card")).toBeDefined()
+    expect(screen.getByText("Open Dedicated Image Page")).toBeDefined()
+  })
 })
