@@ -65,6 +65,29 @@ describe('qr-utils', () => {
       expect(decompressed.thumbnailData).toBeUndefined();
     });
 
+    it('should respect masking configuration and delete hidden parameters during compression', () => {
+      const maskedCard: StyleCard = {
+        ...mockCard,
+        parameters: {
+          ...mockCard.parameters,
+          p: ['personalization-code-123'],
+        },
+        masking: {
+          isSrefHidden: true,
+          isPHidden: true,
+        },
+      };
+
+      const compressed = compressCardData(maskedCard);
+      const decompressed = decompressCardData(compressed);
+
+      expect(decompressed.parameters?.sref).toBeUndefined();
+      expect(decompressed.parameters?.p).toBeUndefined();
+      expect(decompressed.parameters?.ar).toBe('16:9');
+      expect(decompressed.parameters?.stylize).toBe(250);
+      expect(decompressed.parameters?.raw).toBe(true);
+    });
+
     it('should decompress card data from custom protocol URL formats', () => {
       const compressed = compressCardData(mockCard);
       const urls = [

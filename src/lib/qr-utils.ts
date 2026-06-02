@@ -36,11 +36,19 @@ function base64ToUint8Array(base64: string): Uint8Array {
  * Strips heavy visual data like thumbnailData.
  */
 export function compressCardData(card: StyleCard): string {
+  const parameters = { ...card.parameters };
+  if (card.masking?.isSrefHidden) {
+    delete parameters.sref;
+  }
+  if (card.masking?.isPHidden) {
+    delete parameters.p;
+  }
+
   const cleanCard = {
     id: card.id,
     name: card.name,
     promptSegments: card.promptSegments,
-    parameters: card.parameters,
+    parameters: parameters,
     tier: card.tier,
     frameId: card.frameId,
     category: card.category,
