@@ -51,3 +51,16 @@ export class StyleAtelierDatabase extends Dexie {
 }
 
 export const db = new StyleAtelierDatabase();
+
+export async function seedDefaultCategories(targetDb: StyleAtelierDatabase = db) {
+  const now = Date.now();
+  await targetDb.categories.bulkAdd([
+    { id: 'style', name: 'Style', iconEmoji: '🎨', createdAt: now },
+    { id: 'character', name: 'Character', iconEmoji: '👤', createdAt: now },
+    { id: 'landscape', name: 'Landscape', iconEmoji: '🌲', createdAt: now },
+    { id: 'lighting', name: 'Lighting', iconEmoji: '💡', createdAt: now },
+    { id: 'camera', name: 'Camera', iconEmoji: '📷', createdAt: now },
+    { id: 'abstract', name: 'Abstract', iconEmoji: '🌀', createdAt: now },
+    { id: 'other', name: 'Other', iconEmoji: '📁', createdAt: now },
+  ]);
+}
