@@ -119,4 +119,66 @@ describe("useLibrary hook", () => {
       usageCount: 3,
     })
   })
+
+  it("should pin card and call onNavigateToWorkbench if card has slot variables", async () => {
+    const mockNavigate = vi.fn()
+    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType, mockNavigate))
+
+    const mockCard = {
+      id: "card-slots",
+      name: "Card with Slots",
+      isPinned: false,
+      usageCount: 2,
+      parameters: {},
+      masking: {},
+      promptSegments: [
+        { type: "text", value: "a photo of a " },
+        { type: "slot", label: "subject", default: "cat" }
+      ],
+    } as any
+
+    await act(async () => {
+      result.current.handleCardClick(mockCard)
+    })
+
+    expect(chrome.tabs.query).not.toHaveBeenCalled()
+    expect(chrome.tabs.sendMessage).not.toHaveBeenCalled()
+
+    expect(db.styleCards.update).toHaveBeenCalledWith("card-slots", {
+      isPinned: true,
+    })
+
+    expect(mockNavigate).toHaveBeenCalled()
+    expect(mockAddLog).toHaveBeenCalledWith('Redirected to Workbench to fill slot variables for "Card with Slots".')
+  })
+
+  it("should call onNavigateToWorkbench but NOT pin card if card with slot variables is already pinned", async () => {
+    const mockNavigate = vi.fn()
+    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType, mockNavigate))
+
+    const mockCard = {
+      id: "card-slots-pinned",
+      name: "Pinned Card with Slots",
+      isPinned: true,
+      usageCount: 2,
+      parameters: {},
+      masking: {},
+      promptSegments: [
+        { type: "text", value: "a photo of a " },
+        { type: "slot", label: "subject", default: "cat" }
+      ],
+    } as any
+
+    await act(async () => {
+      result.current.handleCardClick(mockCard)
+    })
+
+    expect(chrome.tabs.query).not.toHaveBeenCalled()
+    expect(chrome.tabs.sendMessage).not.toHaveBeenCalled()
+
+    expect(db.styleCards.update).not.toHaveBeenCalled()
+
+    expect(mockNavigate).toHaveBeenCalled()
+    expect(mockAddLog).toHaveBeenCalledWith('Redirected to Workbench to fill slot variables for "Pinned Card with Slots".')
+  })
 })
