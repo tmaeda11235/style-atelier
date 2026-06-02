@@ -8,7 +8,11 @@ import type { AlertType } from "../components/molecules/ConnectionAlert"
 export type SortOption = "newest" | "oldest" | "rarity" | "usage"
 export type RarityFilter = "All" | StyleCard["tier"]
 
-export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: AlertType) => void) {
+export function useLibrary(
+  addLog: (msg: string) => void,
+  setAlertType: (type: AlertType) => void,
+  onNavigateToWorkbench?: () => void
+) {
   const [searchTag, setSearchTag] = useState("")
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>("All")
   const [categoryFilter, setCategoryFilter] = useState<string>("All")
@@ -93,6 +97,19 @@ export function useLibrary(addLog: (msg: string) => void, setAlertType: (type: A
   }
 
   const handleCardClick = (card: StyleCard) => {
+    const hasSlots = card.promptSegments?.some((seg) => seg.type === "slot")
+    if (hasSlots) {
+      if (!card.isPinned) {
+        db.styleCards.update(card.id, { isPinned: true })
+          .catch(err => console.error("Failed to pin card:", err))
+      }
+      addLog(`Redirected to Workbench to fill slot variables for "${card.name}".`)
+      if (onNavigateToWorkbench) {
+        onNavigateToWorkbench()
+      }
+      return
+    }
+
     const maskedKeys: (keyof StyleCard["parameters"])[] = []
     if (card.masking.isSrefHidden) {
       maskedKeys.push("sref")

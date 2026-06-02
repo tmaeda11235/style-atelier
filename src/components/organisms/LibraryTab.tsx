@@ -14,9 +14,10 @@ interface LibraryTabProps {
   addLog: (msg: string) => void
   setAlertType: (type: AlertType) => void
   onOpenDetailCard: (card: StyleCard) => void
+  onNavigateToWorkbench?: () => void
 }
 
-export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTabProps) {
+export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateToWorkbench }: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
@@ -35,7 +36,7 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard }: LibraryTa
     setSortBy,
     allSrefs,
     categories,
-  } = useLibrary(addLog, setAlertType)
+  } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
   return (
     <div className="flex flex-col gap-4">

@@ -299,7 +299,14 @@ function SidePanelInner() {
             />
           )}
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
-          {activeTab === "library" && <LibraryTab addLog={addLog} setAlertType={setAlertType} onOpenDetailCard={setActiveDetailCard} />}
+          {activeTab === "library" && (
+            <LibraryTab
+              addLog={addLog}
+              setAlertType={setAlertType}
+              onOpenDetailCard={setActiveDetailCard}
+              onNavigateToWorkbench={() => setActiveTab("workbench")}
+            />
+          )}
           {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} setAlertType={setAlertType} />}
           {activeTab === "settings" && <SettingsTab addLog={addLog} onResetDb={handleResetDb} />}
 
