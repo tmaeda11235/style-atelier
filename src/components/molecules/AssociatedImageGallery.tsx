@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle2 } from "lucide-react";
+import iconUrl from "url:../../../assets/icon.png";
 
 /**
  * Props for the AssociatedImageGallery component.
@@ -55,7 +56,7 @@ export const AssociatedImageGallery: React.FC<AssociatedImageGalleryProps> = ({
               }`}
             >
               <img
-                src={imgUrl}
+                src={imgUrl === "assets/icon.png" ? iconUrl : imgUrl}
                 className="w-full h-full object-cover"
                 alt={`Card Image ${index + 1}`}
               />

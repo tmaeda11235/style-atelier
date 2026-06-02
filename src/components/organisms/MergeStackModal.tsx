@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Layers } from "lucide-react";
 import { Button } from "../atoms/Button";
 import type { StyleCard } from "../../lib/db-schema";
+import iconUrl from "url:../../../assets/icon.png";
 
 /**
  * Props for the MergeStackModal component.
@@ -125,7 +126,7 @@ export const MergeStackModal: React.FC<MergeStackModalProps> = ({
                   >
                     <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border bg-white">
                       <img
-                        src={c.thumbnailData || "assets/icon.png"}
+                        src={(!c.thumbnailData || c.thumbnailData === "assets/icon.png") ? iconUrl : c.thumbnailData}
                         className="w-full h-full object-cover"
                         alt={c.name}
                       />
@@ -165,7 +166,7 @@ export const MergeStackModal: React.FC<MergeStackModalProps> = ({
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 border bg-white">
                             <img
-                              src={c.thumbnailData || "assets/icon.png"}
+                              src={(!c.thumbnailData || c.thumbnailData === "assets/icon.png") ? iconUrl : c.thumbnailData}
                               className="w-full h-full object-cover"
                               alt={c.name}
                             />

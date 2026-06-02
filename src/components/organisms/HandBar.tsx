@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useHand } from "../../hooks/useHand"
+import iconUrl from "url:../../../assets/icon.png"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { Button } from "../atoms/Button"
 import { CardThumbnail } from "../molecules/CardThumbnail"
@@ -234,7 +235,7 @@ export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProp
                         }`}
                       >
                         <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border bg-white">
-                          <img src={c.thumbnailData || "assets/icon.png"} className="w-full h-full object-cover" />
+                          <img src={(!c.thumbnailData || c.thumbnailData === "assets/icon.png") ? iconUrl : c.thumbnailData} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-slate-700 truncate">{c.name}</p>
@@ -262,7 +263,7 @@ export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProp
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 border bg-white">
-                              <img src={c.thumbnailData || "assets/icon.png"} className="w-full h-full object-cover" />
+                              <img src={(!c.thumbnailData || c.thumbnailData === "assets/icon.png") ? iconUrl : c.thumbnailData} className="w-full h-full object-cover" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-semibold text-slate-600 truncate">{c.name}</p>

@@ -5,6 +5,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
+  resolve: {
+    alias: [
+      {
+        find: /^url:(.*)$/,
+        replacement: "$1",
+      },
+    ],
+  },
   test: {
     globals: true,
     environment: "jsdom",

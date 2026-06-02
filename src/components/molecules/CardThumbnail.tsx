@@ -2,6 +2,7 @@ import React from "react"
 import { RarityBadge } from "../atoms/RarityBadge"
 import { IconButton } from "../atoms/IconButton"
 import type { RarityTier } from "../../lib/rarity-config"
+import iconUrl from "url:../../../assets/icon.png"
 
 /**
  * カードのサムネイル画像、レアリティバッジ、ピン留めアクションを組み合わせたコンポーネント。
@@ -55,9 +56,10 @@ export function CardThumbnail({
     lg: "w-full h-48",
   }
 
-  const imagesToRender = thumbnailImages && thumbnailImages.length > 0
+  const imagesToRender = (thumbnailImages && thumbnailImages.length > 0
     ? thumbnailImages.slice(0, 4)
     : [imageUrl].filter(Boolean) as string[]
+  ).map((img) => img === "assets/icon.png" ? iconUrl : img)
 
   return (
     <div className={`relative overflow-hidden rounded-lg group ${sizeClasses[size]} ${className}`}>
@@ -135,7 +137,7 @@ export function CardThumbnail({
         </div>
       ) : (
         <img
-          src={imagesToRender[0] || "assets/icon.png"}
+          src={imagesToRender[0] || iconUrl}
           alt={alt}
           className="w-full h-full object-cover transition-transform group-hover:scale-110"
         />

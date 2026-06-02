@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { StyleCard, PromptSegment } from "../../lib/db-schema";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
+import iconUrl from "url:../../../assets/icon.png";
 import { ParameterEditor } from "./ParameterEditor";
 import { RaritySelector } from "../molecules/RaritySelector";
 import { Button } from "../atoms/Button";

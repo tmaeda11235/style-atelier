@@ -77,5 +77,13 @@ describe("Color Utilities", () => {
       expect(colors.dominantHex).toBe("#4f46e5");
       expect(colors.accentHex).toBe("#f59e0b");
     });
+
+    it("returns default/fallback values when image is placeholder asset", async () => {
+      const colors1 = await analyzeImageColors("assets/icon.png");
+      expect(colors1.dominantName).toBe("Blue");
+      
+      const colors2 = await analyzeImageColors("url:../../assets/icon.png");
+      expect(colors2.dominantName).toBe("Blue");
+    });
   });
 });
