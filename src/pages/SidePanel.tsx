@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { db } from "../lib/db"
+import { db, seedDefaultCategories } from "../lib/db"
 import { SidePanelLayout } from "../components/templates/SidePanelLayout"
 import { HistoryTab } from "../components/organisms/HistoryTab"
 import { LibraryTab } from "../components/organisms/LibraryTab"
@@ -190,6 +190,7 @@ function SidePanelInner() {
   const handleResetDb = async () => {
     if (window.confirm("Are you sure you want to delete ALL DATA?")) {
       await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.userSettings.clear(), db.categories.clear()])
+      await seedDefaultCategories()
       localStorage.removeItem("style-atelier-onboarding-seen")
       addLog("All data cleared.")
     }
