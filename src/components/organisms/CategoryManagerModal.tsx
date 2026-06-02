@@ -127,7 +127,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
       setEmoji("")
       setIconUrl("")
       setIconCardId("")
-      setActiveTab("manage")
+      onClose()
     } catch (err) {
       console.error("Failed to add category:", err)
       alert("Failed to add category. Please try again.")
@@ -180,6 +180,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
           <button
             onClick={isSelectingCard ? () => setIsSelectingCard(false) : onClose}
             className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
