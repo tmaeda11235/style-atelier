@@ -246,4 +246,49 @@ describe("Workbench", () => {
 
     expect(subjectInput.value).toBe("cyberpunk cat");
   });
+
+  describe("checkConnection timers", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("clears pending timeouts on unmount", async () => {
+      vi.mocked(useWorkbench).mockReturnValue({
+        workbenchCards: [],
+        handCards: [],
+        selectedCardIds: [],
+        toggleCardSelection: vi.fn(),
+        clearWorkbench: vi.fn(),
+        mergedPrompt: "",
+      });
+
+      // Simulate chrome tabs query failing to trigger a retry
+      vi.mocked(chrome.tabs.query).mockRejectedValue(new Error("Tab query failed"));
+
+      const { unmount } = render(
+        <Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />
+      );
+
+      // Flush microtasks to allow the first async query call and catch block to run
+      await vi.runAllTicks();
+
+      // Verify that query was called once initially
+      expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
+
+      // Unmount the component to trigger the cleanup.
+      unmount();
+
+      // Fast-forward time past 1500ms retry timeout
+      vi.advanceTimersByTime(1500);
+      await vi.runAllTicks();
+
+      // Verify that query was not called a second time (meaning the timer was cleared)
+      // Since query was called once during the initial mount, the call count should remain 1.
+      expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
+    });
+  });
 });
