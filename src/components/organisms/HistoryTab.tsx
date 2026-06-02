@@ -12,7 +12,7 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!hasMore) return
+    if (!hasMore || !historyItems || historyItems.length < 50) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -36,7 +36,7 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
       }
       observer.disconnect()
     }
-  }, [hasMore, loadMore])
+  }, [hasMore, loadMore, historyItems])
 
   return (
     <div className="space-y-3 pb-4" data-tutorial="history-drop-zone">
@@ -49,7 +49,7 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
         </div>
       ))}
 
-      {hasMore && (
+      {hasMore && historyItems && historyItems.length >= 50 && (
         <div
           ref={sentinelRef}
           className="py-4 text-center text-xs text-zinc-500 font-medium flex items-center justify-center gap-2"
