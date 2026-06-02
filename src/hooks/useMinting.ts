@@ -162,6 +162,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       frameId: "default",
       genealogy,
       jobId: mintingItem ? mintingItem.id : undefined,
+      associatedJobIds: mintingItem ? [mintingItem.id] : [],
       images: mintingItem ? [mintingItem.imageUrl] : [],
       selectedThumbnails: mintingItem ? [mintingItem.imageUrl] : [],
     }
