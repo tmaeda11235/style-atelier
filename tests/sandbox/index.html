@@ -26,16 +26,96 @@
       border-left: 1px solid #2d2d2d;
       background-color: #020617;
     }
+    .sandbox-controls {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #94a3b8;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease-in-out;
+    }
+    .sandbox-controls:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(15, 23, 42, 0.95);
+    }
+    .sandbox-controls label {
+      font-weight: 500;
+      color: #cbd5e1;
+    }
+    .sandbox-controls select {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f8fafc;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .sandbox-controls select:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .sandbox-controls select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
   </style>
 </head>
 <body>
-  <iframe id="midjourney-frame" src="/tests/fixtures/midjourney/index.html"></iframe>
+  <div class="sandbox-controls">
+    <label for="variant-select">Midjourney Mock:</label>
+    <select id="variant-select">
+      <option value="index.html">Default Mock (index.html)</option>
+      <option value="pattern2.html">Pattern 2 (pattern2.html)</option>
+      <option value="variant_a.html">Variant A (variant_a.html)</option>
+      <option value="variant_b.html">Variant B (variant_b.html)</option>
+    </select>
+  </div>
+  <iframe id="midjourney-frame" src="about:blank"></iframe>
   <iframe id="sidepanel-frame" src="/tests/sandbox/sidepanel.html"></iframe>
 
   <script>
+    // クエリパラメータからバリエーションのファイルを読み込み
+    const urlParams = new URLSearchParams(window.location.search);
+    let variantFile = urlParams.get('variant') || 'index.html';
+    
+    const mjFrame = document.getElementById('midjourney-frame');
+    const selectEl = document.getElementById('variant-select');
+    
+    // iframe の URL を更新
+    function updateIframe(file) {
+      mjFrame.src = `/tests/fixtures/midjourney/${file}`;
+    }
+    
+    // 初期値セット
+    selectEl.value = variantFile;
+    updateIframe(variantFile);
+    
+    // 選択肢切り替え時のアクション
+    selectEl.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      updateIframe(selected);
+      
+      // URLのクエリパラメータを書き換えて状態保持
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('variant', selected);
+      window.history.pushState({}, '', newUrl);
+    });
+
     // chrome API メッセージ中継ハブ (Chrome API Mock Bridge)
     window.addEventListener('message', (event) => {
-      const mjFrame = document.getElementById('midjourney-frame');
       const spFrame = document.getElementById('sidepanel-frame');
 
       if (!mjFrame || !spFrame) return;
