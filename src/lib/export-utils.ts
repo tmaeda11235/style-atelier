@@ -1,5 +1,6 @@
 import type { StyleCard } from './db-schema';
 import { compressCardData, generateQRCodeUrl } from './qr-utils';
+import iconUrl from 'url:../../assets/icon.png';
 
 /**
  * Loads an image from a URL or Base64 string, handling CORS.
@@ -77,11 +78,13 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
 
   // 2. Load and Draw Art Image(s)
   // Gather available image sources, fallback to thumbnailData
-  const imageSources = card.selectedThumbnails && card.selectedThumbnails.length > 0
+  const rawImageSources = card.selectedThumbnails && card.selectedThumbnails.length > 0
     ? card.selectedThumbnails.slice(0, 4)
     : card.images && card.images.length > 0
       ? card.images.slice(0, 4)
       : [card.thumbnailData].filter(Boolean);
+
+  const imageSources = rawImageSources.map((src) => src === "assets/icon.png" ? iconUrl : src);
 
   const artX = 30;
   const artY = 30;
@@ -108,7 +111,8 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
         // Fallback to card's base64 thumbnailData if CDN fetch fails
         if (src !== card.thumbnailData && card.thumbnailData) {
           try {
-            const fallbackImg = await loadImage(card.thumbnailData);
+            const fallbackSrc = card.thumbnailData === "assets/icon.png" ? iconUrl : card.thumbnailData;
+            const fallbackImg = await loadImage(fallbackSrc);
             loadedImages.push(fallbackImg);
           } catch (fallbackErr) {
             console.error('Fallback image failed to load as well.', fallbackErr);

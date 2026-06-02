@@ -1,3 +1,5 @@
+import iconUrl from "url:../../assets/icon.png";
+
 export interface ExtractedColors {
   dominantHex: string;
   dominantName: string;
@@ -71,6 +73,7 @@ export async function analyzeImageColors(imageUrl: string): Promise<ExtractedCol
     typeof document === "undefined" ||
     isTest ||
     imageUrl.includes("assets/icon.png") ||
+    imageUrl.includes(iconUrl) ||
     imageUrl === ""
   ) {
     return {

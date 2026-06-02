@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { db } from "../lib/db"
 import type { HistoryItem, StyleCard } from "../lib/db-schema"
+import iconUrl from "url:../../assets/icon.png"
 
 export function useDragAndDrop(addLog: (msg: string) => void) {
   const [isDragging, setIsDragging] = useState(false)
