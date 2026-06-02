@@ -29,6 +29,14 @@ export default defineConfig({
       }
     }
   ],
+  resolve: {
+    alias: [
+      {
+        find: /^url:(.*)$/,
+        replacement: "$1",
+      },
+    ],
+  },
   server: {
     port: 5173,
   },
