@@ -4,7 +4,7 @@ import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { SearchField } from "../molecules/SearchField"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 import type { StyleCard } from "../../lib/db-schema"
-import { Plus } from "lucide-react"
+import { Tag } from "lucide-react"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 import { ShareCardModal } from "./ShareCardModal"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
@@ -107,13 +107,13 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
             <span>{cat.name}</span>
           </button>
         ))}
-        {/* Add custom category button */}
+        {/* Manage categories button */}
         <button
           onClick={() => setIsCategoryModalOpen(true)}
           className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
-          title="Add Custom Category"
+          title="Manage Categories"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Tag className="w-3.5 h-3.5" />
         </button>
       </div>
 

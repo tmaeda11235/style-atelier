@@ -54,7 +54,22 @@ async function seedSandboxData() {
           genealogy: { generation: 1, parentIds: [] }
         }
       ]);
-      console.log("[Sandbox Seed] Seeding finished successfully.");
+
+    console.log("[Sandbox Seed] Clearing old categories...");
+    await db.categories.clear();
+    console.log("[Sandbox Seed] Seeding default categories...");
+    const now = Date.now();
+    await db.categories.bulkAdd([
+      { id: 'style', name: 'Style', iconEmoji: '🎨', createdAt: now },
+      { id: 'character', name: 'Character', iconEmoji: '👤', createdAt: now },
+      { id: 'landscape', name: 'Landscape', iconEmoji: '🌲', createdAt: now },
+      { id: 'lighting', name: 'Lighting', iconEmoji: '💡', createdAt: now },
+      { id: 'camera', name: 'Camera', iconEmoji: '📷', createdAt: now },
+      { id: 'abstract', name: 'Abstract', iconEmoji: '🌀', createdAt: now },
+      { id: 'other', name: 'Other', iconEmoji: '📁', createdAt: now },
+    ]);
+
+    console.log("[Sandbox Seed] Seeding finished successfully.");
   } catch (err) {
     console.error("[Sandbox Seed] Failed to seed sandbox database:", err);
   }

@@ -3,19 +3,28 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "../../lib/db"
 import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
-import { X, Plus, Image as ImageIcon } from "lucide-react"
+import { X, Plus, Image as ImageIcon, Trash2, Edit2 } from "lucide-react"
+import type { CustomCategory } from "../../lib/db-schema"
 
 interface CategoryManagerModalProps {
   onClose: () => void
   addLog: (msg: string) => void
 }
 
+const SYSTEM_CATEGORY_IDS = ["style", "character", "landscape", "lighting", "camera", "abstract", "other"]
+
 export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalProps) {
+  const [activeTab, setActiveTab] = useState<"create" | "manage">("create")
+  const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null)
+  
   const [name, setName] = useState("")
   const [emoji, setEmoji] = useState("")
   const [iconUrl, setIconUrl] = useState("")
   const [iconCardId, setIconCardId] = useState("")
   const [isSelectingCard, setIsSelectingCard] = useState(false)
+
+  // Fetch categories
+  const categories = useLiveQuery(() => db.categories.toArray()) || []
 
   // Fetch library cards to choose icons from
   const libraryCards = useLiveQuery(() => db.styleCards.filter(c => !c.isVariable).toArray()) || []
@@ -26,11 +35,74 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
     setIsSelectingCard(false)
   }
 
+  const handleStartEdit = (cat: CustomCategory) => {
+    setEditingCategory(cat)
+    setName(cat.name)
+    setEmoji(cat.iconEmoji || "")
+    setIconUrl(cat.iconUrl || "")
+    setIconCardId(cat.iconCardId || "")
+    setActiveTab("create")
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCategory(null)
+    setName("")
+    setEmoji("")
+    setIconUrl("")
+    setIconCardId("")
+  }
+
+  const handleDelete = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`Are you sure you want to delete the category "${categoryName}"? All style cards in this category will be reassigned to "No Category".`)) {
+      return
+    }
+    try {
+      // 1. Reassign Style Cards in this category to undefined
+      await db.styleCards.where("category").equals(categoryId).modify(card => {
+        delete card.category
+      })
+      // 2. Delete category
+      await db.categories.delete(categoryId)
+      addLog(`Deleted category "${categoryName}"`)
+    } catch (err) {
+      console.error("Failed to delete category:", err)
+      alert("Failed to delete category. Please try again.")
+    }
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName) {
       alert("Please enter a category name.")
+      return
+    }
+
+    if (editingCategory) {
+      // Check if another category with the same derived ID exists
+      const targetId = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      if (targetId !== editingCategory.id) {
+        const existing = await db.categories.get(targetId)
+        if (existing) {
+          alert("A category with this name already exists.")
+          return
+        }
+      }
+
+      try {
+        await db.categories.update(editingCategory.id, {
+          name: trimmedName,
+          iconEmoji: emoji.trim() || undefined,
+          iconUrl: iconUrl || undefined,
+          iconCardId: iconCardId || undefined,
+        })
+        addLog(`Updated category "${trimmedName}"`)
+        handleCancelEdit()
+        setActiveTab("manage")
+      } catch (err) {
+        console.error("Failed to update category:", err)
+        alert("Failed to update category. Please try again.")
+      }
       return
     }
 
@@ -51,6 +123,10 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
         createdAt: Date.now(),
       })
       addLog(`Created category "${trimmedName}"`)
+      setName("")
+      setEmoji("")
+      setIconUrl("")
+      setIconCardId("")
       onClose()
     } catch (err) {
       console.error("Failed to add category:", err)
@@ -64,12 +140,47 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
       <div className="bg-white rounded-t-xl max-h-[85%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0">
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-800">
-            {isSelectingCard ? "Select Card Icon" : "Add Custom Category"}
-          </h3>
+          {isSelectingCard ? (
+            <h3 className="text-xs font-bold text-slate-800">Select Card Icon</h3>
+          ) : (
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setActiveTab("create")
+                  setEditingCategory(null)
+                }}
+                className={`text-xs font-bold pb-1 border-b-2 transition-all ${
+                  activeTab === "create" && !editingCategory
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                Add Category
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("manage")
+                  if (editingCategory) handleCancelEdit()
+                }}
+                className={`text-xs font-bold pb-1 border-b-2 transition-all ${
+                  activeTab === "manage"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                Manage Categories
+              </button>
+              {editingCategory && (
+                <span className="text-xs font-bold pb-1 border-b-2 border-blue-600 text-blue-600">
+                  Edit "{editingCategory.name}"
+                </span>
+              )}
+            </div>
+          )}
           <button
             onClick={isSelectingCard ? () => setIsSelectingCard(false) : onClose}
             className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -105,7 +216,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                 </div>
               )}
             </div>
-          ) : (
+          ) : activeTab === "create" ? (
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Category Name</label>
@@ -174,14 +285,80 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
               )}
 
               <div className="pt-2 flex justify-end gap-2">
-                <Button type="button" variant="ghost" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Create Category
-                </Button>
+                {editingCategory ? (
+                  <>
+                    <Button type="button" variant="ghost" onClick={handleCancelEdit}>
+                      Cancel Edit
+                    </Button>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Save Changes
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button type="button" variant="ghost" onClick={onClose}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Create Category
+                    </Button>
+                  </>
+                )}
               </div>
             </form>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-[11px] text-slate-500 mb-3">
+                List of custom and system categories. Custom categories can be edited or deleted.
+              </p>
+              <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+                {categories.map((cat) => {
+                  const isSystem = SYSTEM_CATEGORY_IDS.includes(cat.id)
+                  return (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between p-2 border rounded-lg bg-white shadow-sm border-slate-100 hover:border-slate-200 transition-all"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shadow-inner flex-shrink-0">
+                          {cat.iconUrl ? (
+                            <img src={cat.iconUrl} className="w-full h-full object-cover" alt={cat.name} />
+                          ) : (
+                            <span className="text-sm leading-none">{cat.iconEmoji || "📁"}</span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-700 leading-tight">{cat.name}</p>
+                          {isSystem && (
+                            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">System Default</span>
+                          )}
+                        </div>
+                      </div>
+                      {!isSystem && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(cat)}
+                            className="p-1 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                            title="Edit Category"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(cat.id, cat.name)}
+                            className="p-1 rounded text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                            title="Delete Category"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>
