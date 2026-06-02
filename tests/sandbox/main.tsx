@@ -64,6 +64,7 @@ seedSandboxData();
 
 // chrome API モックの定義
 if (typeof window !== "undefined") {
+  (window as any).db = db;
   const pendingRequests = new Map<string, (value: any) => void>();
 
   // 親ウィンドウからのレスポンスを待受
