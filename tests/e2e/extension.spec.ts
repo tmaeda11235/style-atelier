@@ -440,9 +440,9 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       await libraryTabButton.click();
       await page.waitForTimeout(1000); // Wait for Dexie queries to load style cards and categories
 
-      // 3. "+" ボタン（Add Custom Category）をクリックしてモーダルを開く
+      // 3. タグボタン（Manage Categories）をクリックしてモーダルを開く
       console.log("4. Opening category modal...");
-      const addCategoryBtn = spFrame.locator("button[title='Add Custom Category']");
+      const addCategoryBtn = spFrame.locator("button[title='Manage Categories']");
       await expect(addCategoryBtn).toBeVisible({ timeout: 15000 });
       await addCategoryBtn.click();
       await page.waitForTimeout(500);
