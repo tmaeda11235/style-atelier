@@ -1,6 +1,7 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import type { HistoryItem } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
+import { db } from "../../lib/db"
 
 /**
  * プロンプトの実行履歴を表示するカードコンポーネント。
@@ -21,12 +22,45 @@ export function HistoryCard({
   onMintClick,
   className = "",
 }: HistoryCardProps) {
+  const [imgSrc, setImgSrc] = useState<string>(item.imageUrl)
+
+  useEffect(() => {
+    let objectUrl: string | null = null
+
+    if (item.localImageBlob) {
+      objectUrl = URL.createObjectURL(item.localImageBlob)
+      setImgSrc(objectUrl)
+    } else {
+      setImgSrc(item.imageUrl)
+
+      const fetchAndCacheImage = async () => {
+        try {
+          const response = await fetch(item.imageUrl)
+          if (response.ok) {
+            const blob = await response.blob()
+            await db.historyItems.update(item.id, { localImageBlob: blob })
+          }
+        } catch (err) {
+          console.error("Failed to dynamically cache history image:", err)
+        }
+      }
+
+      fetchAndCacheImage()
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [item.localImageBlob, item.imageUrl, item.id])
+
   return (
     <div
       className={`bg-white border border-slate-200 rounded-lg shadow-sm flex gap-3 p-2 ${className}`}
     >
       <img
-        src={item.imageUrl}
+        src={imgSrc}
         alt={item.id}
         className="w-24 h-24 rounded object-cover"
       />
