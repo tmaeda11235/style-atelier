@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Cloud, 
   UploadCloud, 
@@ -11,7 +11,10 @@ import {
   Database, 
   Trash2,
   Settings2,
-  Clock
+  Clock,
+  FileJson,
+  Download,
+  Upload
 } from "lucide-react";
 import { 
   authorize, 
@@ -28,6 +31,8 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
 
@@ -169,6 +174,80 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     }
   };
 
+  const handleLocalExport = async () => {
+    try {
+      setStatusMessage({ text: "Exporting database...", type: "info" });
+      const jsonData = await exportDatabase();
+      const blob = new Blob([jsonData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      link.href = url;
+      link.download = `style-atelier-backup-${timestamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      addLog("Database exported to local JSON file successfully.");
+      showStatus("エクスポートが完了しました", "success");
+    } catch (err: any) {
+      console.error(err);
+      addLog(`Export failed: ${err.message || err}`);
+      showStatus(`Export failed: ${err.message || "Unknown error"}`, "error");
+    }
+  };
+
+  const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    
+    const ok = window.confirm(
+      "ローカルファイルからデータを復元し、マージします。\n同じIDのデータはインポートする内容で上書きされますがよろしいですか？"
+    );
+    if (!ok) {
+      e.target.value = "";
+      return;
+    }
+    
+    setStatusMessage({ text: "Reading file...", type: "info" });
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        if (!text) {
+          throw new Error("File is empty.");
+        }
+        
+        const parsed = JSON.parse(text);
+        if (!parsed.data || !parsed.data.styleCards) {
+          throw new Error("Invalid backup file: Missing styleCards data.");
+        }
+        
+        await importDatabase(text);
+        addLog("Database restored from local JSON file successfully.");
+        showStatus("インポートが完了しました！", "success");
+      } catch (err: any) {
+        console.error(err);
+        addLog(`Import failed: ${err.message || err}`);
+        showStatus(`Import failed: ${err.message || "Unknown error"}`, "error");
+      } finally {
+        e.target.value = "";
+      }
+    };
+    
+    reader.onerror = () => {
+      addLog("Import failed: File reading error.");
+      showStatus("Import failed: File reading error.", "error");
+      e.target.value = "";
+    };
+    
+    reader.readAsText(file);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Title block */}
@@ -292,6 +371,63 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
               認証情報は拡張機能には一切保存されません。バックアップ・復元操作時の一時的なアクセス（Google Drive内の自身が作成したバックアップファイル）にのみ使用されます。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Local File Backup Card */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        {/* Subtle decorative background gradient */}
+        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+
+        <div className="flex items-start gap-4 mb-4">
+          <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+            <FileJson className="w-6 h-6" />
+          </div>
+          <div className="space-y-1 flex-1">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              Local File Backup (Offline)
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Export your style cards and binders to a local JSON file, or restore from a previously exported backup file. Perfect for offline migrations or keeping absolute privacy.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={handleLocalExport}
+              disabled={isBackingUp || isRestoring}
+              className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export JSON
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isBackingUp || isRestoring}
+              className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Import JSON
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleLocalImport}
+              accept=".json"
+              className="hidden"
+            />
+          </div>
+
+          {/* Privacy Note */}
+          <div className="flex items-start gap-1.5 bg-indigo-50/40 rounded-xl p-3 border border-indigo-100/50">
+            <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
+              データは完全にブラウザとローカル環境のみで処理されます。外部サーバーに送信されることはなく、完全なオフライン環境でも動作します。
             </p>
           </div>
         </div>
