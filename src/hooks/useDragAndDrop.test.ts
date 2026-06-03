@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { useDragAndDrop } from "./useDragAndDrop"
 import { db } from "../lib/db"
 import { renderHook, act } from "@testing-library/react"
+import iconUrl from "url:../../assets/icon.png"
 
 vi.mock("../lib/db", () => {
   const mockWhere = {
@@ -294,6 +295,76 @@ describe("useDragAndDrop", () => {
 
       expect(db.styleCards.update).toHaveBeenCalled()
       expect(returnVal).toEqual(mockItem)
+    })
+
+    it("should use placeholder icon when artwork fetch fails", async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      } as any)
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+        await new Promise((r) => setTimeout(r, 50))
+      })
+
+      expect(db.styleCards.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "imported-card-id",
+          name: "Imported Card",
+          thumbnailData: iconUrl,
+        })
+      )
+      expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
+      expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
+    })
+
+    it("should use placeholder icon when no CDN URL is present in card metadata", async () => {
+      const { decompressCardData } = await import("../lib/qr-utils")
+      vi.mocked(decompressCardData).mockReturnValueOnce({
+        id: "imported-card-id",
+        name: "Imported Card",
+        promptSegments: [{ type: "text", value: "imported cat" }],
+        parameters: {},
+        images: [],
+      })
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+        await new Promise((r) => setTimeout(r, 50))
+      })
+
+      expect(db.styleCards.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "imported-card-id",
+          name: "Imported Card",
+          thumbnailData: iconUrl,
+        })
+      )
+      expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
+      expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
     })
   })
 })
