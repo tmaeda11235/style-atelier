@@ -101,9 +101,19 @@ describe("useDragAndDrop", () => {
     })
 
     expect(db.styleCards.where).toHaveBeenCalledWith("jobId")
-    expect(db.historyItems.put).toHaveBeenCalledWith(mockItem)
+    expect(db.historyItems.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...mockItem,
+        localImageBlob: expect.any(Blob),
+      })
+    )
     expect(result.current.droppedItem).toEqual({ id: "test-job-id", isMerged: false })
-    expect(returnedItem).toEqual(mockItem)
+    expect(returnedItem).toEqual(
+      expect.objectContaining({
+        ...mockItem,
+        localImageBlob: expect.any(Blob),
+      })
+    )
   })
 
   it("should append image to existing StyleCard when matching jobId exists", async () => {
@@ -249,6 +259,7 @@ describe("useDragAndDrop", () => {
           id: "imported-card-id",
           name: "Imported Card",
           thumbnailData: "data:image/png;base64,mockbase64",
+          associatedJobIds: [],
         })
       )
       expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')

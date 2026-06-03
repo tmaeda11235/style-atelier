@@ -22,7 +22,8 @@ import {
   uploadBackup, 
   downloadBackup, 
   exportDatabase, 
-  importDatabase 
+  importDatabase,
+  getBackupMetadata
 } from "../../lib/google-drive";
 
 interface SettingsTabProps {
@@ -41,6 +42,8 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [lastBackup, setLastBackup] = useState<string | null>(null);
+  const [cloudBackup, setCloudBackup] = useState<{ modifiedTime: string; size: string } | null>(null);
+  const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false);
 
   // Status logs local view
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" | null }>({
@@ -58,6 +61,33 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     // Load sync enabled state
     const savedSyncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
     setIsSyncEnabled(savedSyncEnabled);
+
+    if (savedSyncEnabled) {
+      // Silently authorize and get backup metadata
+      authorize(false)
+        .then((token) => {
+          setAccessToken(token);
+          setIsLoadingCloudBackup(true);
+          getBackupMetadata(token)
+            .then((meta) => {
+              if (meta) {
+                const dateStr = new Date(meta.modifiedTime).toLocaleString();
+                const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+                setCloudBackup({
+                  modifiedTime: dateStr,
+                  size: `${sizeKB} KB`
+                });
+              } else {
+                setCloudBackup(null);
+              }
+            })
+            .catch((err) => console.error(err))
+            .finally(() => setIsLoadingCloudBackup(false));
+        })
+        .catch((err) => {
+          console.log("Silent authorization failed:", err.message);
+        });
+    }
   }, []);
 
   const showStatus = (text: string, type: "success" | "error" | "info") => {
@@ -67,7 +97,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     }, 6000);
   };
 
-  const handleToggleSync = (checked: boolean) => {
+  const handleToggleSync = async (checked: boolean) => {
     setIsSyncEnabled(checked);
     localStorage.setItem("style-atelier-sync-enabled", checked ? "true" : "false");
     addLog(`Google Drive synchronization: ${checked ? "ENABLED" : "DISABLED"}`);
@@ -78,6 +108,33 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         clearCachedToken(accessToken).catch(console.error);
       }
       setAccessToken(null);
+      setCloudBackup(null);
+    } else {
+      // When turning sync on, fetch metadata using interactive authorization
+      try {
+        const token = await authorize(true);
+        setAccessToken(token);
+        setIsLoadingCloudBackup(true);
+        const meta = await getBackupMetadata(token);
+        if (meta) {
+          const dateStr = new Date(meta.modifiedTime).toLocaleString();
+          const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+          setCloudBackup({
+            modifiedTime: dateStr,
+            size: `${sizeKB} KB`
+          });
+        } else {
+          setCloudBackup(null);
+        }
+      } catch (err: any) {
+        console.error(err);
+        addLog(`Sync authorization failed: ${err.message || err}`);
+        showStatus(`Authorization failed: ${err.message || "Unknown error"}`, "error");
+        setIsSyncEnabled(false);
+        localStorage.setItem("style-atelier-sync-enabled", "false");
+      } finally {
+        setIsLoadingCloudBackup(false);
+      }
     }
   };
 
@@ -116,6 +173,17 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       localStorage.setItem("style-atelier-last-backup", now.toString());
       setLastBackup(new Date(now).toLocaleString());
 
+      // Fetch updated metadata
+      const meta = await getBackupMetadata(token);
+      if (meta) {
+        const dateStr = new Date(meta.modifiedTime).toLocaleString();
+        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+        setCloudBackup({
+          modifiedTime: dateStr,
+          size: `${sizeKB} KB`
+        });
+      }
+
       addLog("Backup uploaded to Google Drive successfully.");
       showStatus("バックアップ完了しました", "success");
     } catch (err: any) {
@@ -136,15 +204,14 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const handleRestore = async () => {
     if (!isSyncEnabled) return;
     
-    // Check if restore has been confirmed before
-    const isRestoreConfirmed = localStorage.getItem("style-atelier-restore-confirmed") === "true";
-    if (!isRestoreConfirmed) {
-      const ok = window.confirm(
-        "Google Driveからデータを復元（ロード）し、マージします。\n同じIDのデータはバックアップの内容で上書きされますがよろしいですか？\n(※次回以降、この確認画面は表示されずダイレクトにロードされます。)"
-      );
-      if (!ok) return;
-      localStorage.setItem("style-atelier-restore-confirmed", "true");
+    // Always display confirmation dialog
+    let confirmMsg = "Google Driveからデータを復元（ロード）し、マージします。\n同じIDのデータはバックアップの内容で上書きされますがよろしいですか？";
+    if (cloudBackup) {
+      confirmMsg += `\n\n【クラウド上のバックアップ情報】\n更新日時: ${cloudBackup.modifiedTime}\nサイズ: ${cloudBackup.size}`;
     }
+    
+    const ok = window.confirm(confirmMsg);
+    if (!ok) return;
 
     setIsRestoring(true);
     setStatusMessage({ text: "Downloading backup from Google Drive...", type: "info" });
@@ -356,13 +423,31 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             </button>
           </div>
 
-          {/* Last Backup Time */}
-          {lastBackup && (
-            <div className="flex flex-col items-center justify-center gap-1 border-t border-slate-100 pt-3">
-              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                <Clock className="w-3.5 h-3.5" />
-                <span>最終バックアップ: {lastBackup}</span>
-              </div>
+          {/* Last Backup Time & Cloud Backup Preview */}
+          {(lastBackup || cloudBackup || isLoadingCloudBackup) && (
+            <div className="flex flex-col items-center justify-center gap-1.5 border-t border-slate-100 pt-3">
+              {lastBackup && (
+                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>ローカル最終バックアップ: {lastBackup}</span>
+                </div>
+              )}
+              {isLoadingCloudBackup ? (
+                <div className="flex items-center gap-1 text-[10px] text-blue-400 font-medium animate-pulse">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>クラウド情報を取得中...</span>
+                </div>
+              ) : cloudBackup ? (
+                <div className="flex flex-col items-center gap-0.5 text-[10px] text-slate-500 font-medium bg-slate-50 rounded-lg py-1.5 px-3 border border-slate-100 w-full text-center">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Cloud Backup Preview</span>
+                  <span>更新日時: {cloudBackup.modifiedTime}</span>
+                  <span>サイズ: {cloudBackup.size}</span>
+                </div>
+              ) : isSyncEnabled && (
+                <div className="text-[10px] text-slate-400 font-medium">
+                  クラウド上のバックアップファイルが見つかりません
+                </div>
+              )}
             </div>
           )}
 

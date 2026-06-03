@@ -5,6 +5,7 @@ import {
   authorize, 
   clearCachedToken,
   searchBackupFile, 
+  getBackupMetadata,
   uploadBackup, 
   downloadBackup
 } from "./google-drive";
@@ -177,6 +178,34 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       const id = await searchBackupFile("token-123");
       expect(id).toBeNull();
+    });
+  });
+
+  describe("getBackupMetadata", () => {
+    it("should return backup metadata if backup file exists", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "drive-file-id-789", name: "style-atelier-backup.json", modifiedTime: "2026-06-03T12:00:00.000Z", size: "102400" }]
+        })
+      });
+
+      const meta = await getBackupMetadata("token-123");
+      expect(meta).toEqual({
+        id: "drive-file-id-789",
+        modifiedTime: "2026-06-03T12:00:00.000Z",
+        size: "102400"
+      });
+    });
+
+    it("should return null if backup file does not exist", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      });
+
+      const meta = await getBackupMetadata("token-123");
+      expect(meta).toBeNull();
     });
   });
 
