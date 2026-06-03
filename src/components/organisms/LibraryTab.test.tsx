@@ -59,6 +59,7 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
+      allCards: mockCards,
     })
   })
 
@@ -101,5 +102,63 @@ describe("LibraryTab", () => {
     // Modal should now be in the document
     expect(screen.getByText("Share Style Card")).toBeDefined()
     expect(screen.getByText("Open Dedicated Image Page")).toBeDefined()
+  })
+
+  it("renders empty state when there are no cards in the library", () => {
+    vi.mocked(useLibrary).mockReturnValue({
+      styleCards: [],
+      handleCardClick: vi.fn(),
+      togglePin: mockTogglePin,
+      searchTag: "",
+      setSearchTag: vi.fn(),
+      rarityFilter: "All",
+      setRarityFilter: vi.fn(),
+      categoryFilter: "All",
+      setCategoryFilter: vi.fn(),
+      sortBy: "newest",
+      setSortBy: vi.fn(),
+      allSrefs: [],
+      categories: [],
+      allCards: [],
+    })
+
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    expect(screen.getByText("スタイルカードがありません")).toBeDefined()
+    expect(screen.getByText(/Historyタブから画像をドラッグ＆ドロップ/)).toBeDefined()
+  })
+
+  it("renders empty state when search filters return no cards and allows clearing filters", () => {
+    const mockSetSearchTag = vi.fn()
+    const mockSetRarityFilter = vi.fn()
+    const mockSetCategoryFilter = vi.fn()
+
+    vi.mocked(useLibrary).mockReturnValue({
+      styleCards: [],
+      handleCardClick: vi.fn(),
+      togglePin: mockTogglePin,
+      searchTag: "NonExistentTag",
+      setSearchTag: mockSetSearchTag,
+      rarityFilter: "All",
+      setRarityFilter: mockSetRarityFilter,
+      categoryFilter: "All",
+      setCategoryFilter: mockSetCategoryFilter,
+      sortBy: "newest",
+      setSortBy: vi.fn(),
+      allSrefs: [],
+      categories: [],
+      allCards: mockCards,
+    })
+
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    expect(screen.getByText("カードが見つかりません")).toBeDefined()
+    expect(screen.getByText(/検索キーワードやフィルターの条件を変更するか/)).toBeDefined()
+
+    const clearButton = screen.getByRole("button", { name: "フィルターをクリア" })
+    expect(clearButton).toBeDefined()
+    fireEvent.click(clearButton)
+
+    expect(mockSetSearchTag).toHaveBeenCalledWith("")
+    expect(mockSetRarityFilter).toHaveBeenCalledWith("All")
+    expect(mockSetCategoryFilter).toHaveBeenCalledWith("All")
   })
 })
