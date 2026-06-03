@@ -7,6 +7,25 @@ export interface ExtractedColors {
   accentName: string;
 }
 
+export function hexToRgb(hex: string): [number, number, number] {
+  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  const fullHex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex);
+  return result
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [0, 0, 0];
+}
+
+export function hexToHsl(hex: string): [number, number, number] {
+  const [r, g, b] = hexToRgb(hex);
+  return rgbToHsl(r, g, b);
+}
+
+export function getColorNameFromHex(hex: string): string {
+  const [h, s, l] = hexToHsl(hex);
+  return getQuantizedColorName(h, s, l);
+}
+
 export function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
   g /= 255;

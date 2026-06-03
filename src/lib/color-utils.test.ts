@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rgbToHsl, rgbToHex, getQuantizedColorName, analyzeImageColors } from "./color-utils";
+import { rgbToHsl, rgbToHex, getQuantizedColorName, analyzeImageColors, hexToRgb, hexToHsl, getColorNameFromHex } from "./color-utils";
 
 describe("Color Utilities", () => {
   describe("rgbToHsl", () => {
@@ -84,6 +84,25 @@ describe("Color Utilities", () => {
       
       const colors2 = await analyzeImageColors("url:../../assets/icon.png");
       expect(colors2.dominantName).toBe("Blue");
+    });
+  });
+
+  describe("hex helpers", () => {
+    it("converts hex to rgb", () => {
+      expect(hexToRgb("#ffffff")).toEqual([255, 255, 255]);
+      expect(hexToRgb("#000000")).toEqual([0, 0, 0]);
+      expect(hexToRgb("#ff0000")).toEqual([255, 0, 0]);
+    });
+
+    it("converts hex to hsl", () => {
+      expect(hexToHsl("#ffffff")).toEqual([0, 0, 100]);
+      expect(hexToHsl("#ff0000")).toEqual([0, 100, 50]);
+    });
+
+    it("gets color name from hex", () => {
+      expect(getColorNameFromHex("#ff0000")).toBe("Red");
+      expect(getColorNameFromHex("#0000ff")).toBe("Blue");
+      expect(getColorNameFromHex("#ffffff")).toBe("White");
     });
   });
 });
