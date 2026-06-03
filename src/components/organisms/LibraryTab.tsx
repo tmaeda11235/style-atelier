@@ -32,12 +32,30 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
     setRarityFilter,
     categoryFilter,
     setCategoryFilter,
+    colorFilter,
+    setColorFilter,
     sortBy,
     setSortBy,
     allSrefs,
     categories,
     allCards,
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
+
+  const colorOptions = [
+    { value: "All", label: "All Colors", bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)" },
+    { value: "Red", label: "Red", bg: "#ef4444" },
+    { value: "Orange", label: "Orange", bg: "#f97316" },
+    { value: "Yellow", label: "Yellow", bg: "#eab308" },
+    { value: "Green", label: "Green", bg: "#22c55e" },
+    { value: "Cyan", label: "Cyan", bg: "#06b6d4" },
+    { value: "Blue", label: "Blue", bg: "#3b82f6" },
+    { value: "Purple", label: "Purple", bg: "#a855f7" },
+    { value: "Pink", label: "Pink", bg: "#ec4899" },
+    { value: "Brown", label: "Brown", bg: "#78350f" },
+    { value: "White", label: "White", bg: "#ffffff" },
+    { value: "Gray", label: "Gray", bg: "#6b7280" },
+    { value: "Black", label: "Black", bg: "#09090b" },
+  ]
 
   return (
     <div className="flex flex-col gap-4">
@@ -70,7 +88,40 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
             <option value="oldest">Oldest</option>
             <option value="rarity">Rarity</option>
             <option value="usage">Usage</option>
+            <option value="color">Color</option>
           </select>
+        </div>
+
+        {/* Color Palette Filter */}
+        <div className="flex gap-1 items-center overflow-x-auto pb-1 mt-1.5 scrollbar-none">
+          <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">Color:</span>
+          {colorOptions.map((colorOpt) => {
+            const isSelected = colorFilter === colorOpt.value
+            return (
+              <button
+                key={colorOpt.value}
+                onClick={() => setColorFilter(colorOpt.value as any)}
+                className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
+                  isSelected ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5" : "hover:scale-105"
+                }`}
+                style={{
+                  background: colorOpt.bg,
+                  borderColor: colorOpt.value === "White" ? "#cbd5e1" : "transparent",
+                }}
+                title={colorOpt.label}
+              >
+                {isSelected && (
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
+                      colorOpt.value === "White" || colorOpt.value === "Yellow" ? "text-slate-800" : "text-white"
+                    }`}
+                  >
+                    ✓
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 

@@ -3,10 +3,17 @@ import { useLibrary } from "./useLibrary"
 import { db } from "../lib/db"
 import { renderHook, act } from "@testing-library/react"
 
+let mockStyleCards: any[] = []
+let mockCategories: any[] = []
+
 // Mock dexie-react-hooks
 vi.mock("dexie-react-hooks", () => ({
   useLiveQuery: (fn: any) => {
-    return []
+    const fnStr = fn.toString()
+    if (fnStr.includes("categories")) {
+      return mockCategories
+    }
+    return mockStyleCards
   }
 }))
 
@@ -14,10 +21,10 @@ vi.mock("../lib/db", () => ({
   db: {
     styleCards: {
       update: vi.fn().mockResolvedValue(1),
-      toArray: vi.fn().mockResolvedValue([]),
+      toArray: vi.fn().mockImplementation(async () => mockStyleCards),
     },
     categories: {
-      toArray: vi.fn().mockResolvedValue([]),
+      toArray: vi.fn().mockImplementation(async () => mockCategories),
     },
   },
 }))
@@ -180,5 +187,75 @@ describe("useLibrary hook", () => {
 
     expect(mockNavigate).toHaveBeenCalled()
     expect(mockAddLog).toHaveBeenCalledWith('Redirected to Workbench to fill slot variables for "Pinned Card with Slots".')
+  })
+
+  describe("filtering and sorting by dominantColor", () => {
+    beforeEach(() => {
+      mockStyleCards = [
+        {
+          id: "1",
+          name: "Red Card",
+          dominantColor: "#ff0000",
+          tier: "Rare",
+          createdAt: 100,
+          usageCount: 2,
+          isVariable: false,
+          parameters: {},
+          tags: ["fire"]
+        },
+        {
+          id: "2",
+          name: "Blue Card",
+          dominantColor: "#0000ff",
+          tier: "Common",
+          createdAt: 200,
+          usageCount: 1,
+          isVariable: false,
+          parameters: {},
+          tags: ["water"]
+        },
+        {
+          id: "3",
+          name: "Gray Card",
+          dominantColor: "#808080",
+          tier: "Legendary",
+          createdAt: 150,
+          usageCount: 5,
+          isVariable: false,
+          parameters: {},
+          tags: ["stone"]
+        }
+      ]
+      mockCategories = []
+    })
+
+    it("filters cards by dominantColor", () => {
+      const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
+      
+      expect(result.current.styleCards).toHaveLength(3)
+
+      act(() => {
+        result.current.setColorFilter("Red")
+      })
+      expect(result.current.styleCards).toHaveLength(1)
+      expect(result.current.styleCards[0].name).toBe("Red Card")
+
+      act(() => {
+        result.current.setColorFilter("Blue")
+      })
+      expect(result.current.styleCards).toHaveLength(1)
+      expect(result.current.styleCards[0].name).toBe("Blue Card")
+    })
+
+    it("sorts cards by color", () => {
+      const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
+      
+      act(() => {
+        result.current.setSortBy("color")
+      })
+      expect(result.current.styleCards[0].name).toBe("Red Card")
+      expect(result.current.styleCards[1].name).toBe("Blue Card")
+      expect(result.current.styleCards[2].name).toBe("Gray Card")
+    })
   })
 })

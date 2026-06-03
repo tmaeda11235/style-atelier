@@ -55,6 +55,8 @@ describe("LibraryTab", () => {
       setRarityFilter: vi.fn(),
       categoryFilter: "All",
       setCategoryFilter: vi.fn(),
+      colorFilter: "All",
+      setColorFilter: vi.fn(),
       sortBy: "newest",
       setSortBy: vi.fn(),
       allSrefs: [],
@@ -104,6 +106,37 @@ describe("LibraryTab", () => {
     expect(screen.getByText("Open Dedicated Image Page")).toBeDefined()
   })
 
+  it("renders color filters and handles color filter click", () => {
+    const mockSetColorFilter = vi.fn()
+    vi.mocked(useLibrary).mockReturnValue({
+      styleCards: mockCards,
+      handleCardClick: vi.fn(),
+      togglePin: mockTogglePin,
+      searchTag: "",
+      setSearchTag: vi.fn(),
+      rarityFilter: "All",
+      setRarityFilter: vi.fn(),
+      categoryFilter: "All",
+      setCategoryFilter: vi.fn(),
+      colorFilter: "All",
+      setColorFilter: mockSetColorFilter,
+      sortBy: "newest",
+      setSortBy: vi.fn(),
+      allSrefs: [],
+      categories: [],
+      allCards: mockCards,
+    })
+
+    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    
+    expect(screen.getByText("Color:")).toBeDefined()
+    
+    const redButton = screen.getByTitle("Red")
+    expect(redButton).toBeDefined()
+    fireEvent.click(redButton)
+    expect(mockSetColorFilter).toHaveBeenCalledWith("Red")
+  })
+
   it("renders empty state when there are no cards in the library", () => {
     vi.mocked(useLibrary).mockReturnValue({
       styleCards: [],
@@ -115,6 +148,8 @@ describe("LibraryTab", () => {
       setRarityFilter: vi.fn(),
       categoryFilter: "All",
       setCategoryFilter: vi.fn(),
+      colorFilter: "All",
+      setColorFilter: vi.fn(),
       sortBy: "newest",
       setSortBy: vi.fn(),
       allSrefs: [],
@@ -142,6 +177,8 @@ describe("LibraryTab", () => {
       setRarityFilter: mockSetRarityFilter,
       categoryFilter: "All",
       setCategoryFilter: mockSetCategoryFilter,
+      colorFilter: "All",
+      setColorFilter: vi.fn(),
       sortBy: "newest",
       setSortBy: vi.fn(),
       allSrefs: [],
