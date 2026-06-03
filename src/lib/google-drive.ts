@@ -8,6 +8,7 @@ export interface BackupPayload {
     categories: any[];
     userSettings: any[];
     historyItems: any[];
+    slotHistory?: Record<string, string[]>;
   };
 }
 
@@ -68,6 +69,16 @@ export async function exportDatabase(): Promise<string> {
     return rest;
   });
 
+  let slotHistory: Record<string, string[]> | undefined = undefined;
+  try {
+    const stored = localStorage.getItem("style_atelier_slot_history");
+    if (stored) {
+      slotHistory = JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to read slot history for backup:", e);
+  }
+
   const payload: BackupPayload = {
     version: 1,
     exportedAt: Date.now(),
@@ -75,7 +86,8 @@ export async function exportDatabase(): Promise<string> {
       styleCards: cards,
       categories,
       userSettings: settings,
-      historyItems: historyWithoutBlobs
+      historyItems: historyWithoutBlobs,
+      slotHistory
     }
   };
 
@@ -106,6 +118,27 @@ export async function importDatabase(jsonData: string): Promise<void> {
       await db.historyItems.bulkPut(payload.data.historyItems);
     }
   });
+
+  if (payload.data.slotHistory) {
+    try {
+      const stored = localStorage.getItem("style_atelier_slot_history");
+      const existingHistory: Record<string, string[]> = stored ? JSON.parse(stored) : {};
+      
+      const mergedHistory: Record<string, string[]> = { ...existingHistory };
+      
+      for (const [key, incomingValues] of Object.entries(payload.data.slotHistory)) {
+        if (Array.isArray(incomingValues)) {
+          const localValues = mergedHistory[key] || [];
+          const merged = Array.from(new Set([...incomingValues, ...localValues])).slice(0, 10);
+          mergedHistory[key] = merged;
+        }
+      }
+      
+      localStorage.setItem("style_atelier_slot_history", JSON.stringify(mergedHistory));
+    } catch (e) {
+      console.error("Failed to restore/merge slot history:", e);
+    }
+  }
 }
 
 /**
