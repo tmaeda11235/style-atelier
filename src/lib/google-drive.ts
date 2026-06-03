@@ -130,6 +130,39 @@ export async function searchBackupFile(accessToken: string): Promise<string | nu
   return null;
 }
 
+export interface BackupMetadata {
+  id: string;
+  modifiedTime: string;
+  size: string;
+}
+
+/**
+ * Search Google Drive for 'style-atelier-backup.json' and return its metadata
+ */
+export async function getBackupMetadata(accessToken: string): Promise<BackupMetadata | null> {
+  const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get backup metadata: ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
+  if (data.files && data.files.length > 0) {
+    const file = data.files[0];
+    return {
+      id: file.id,
+      modifiedTime: file.modifiedTime || "",
+      size: file.size || "0"
+    };
+  }
+  return null;
+}
+
 /**
  * Upload backup payload JSON to Google Drive (create or overwrite)
  */
