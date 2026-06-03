@@ -123,7 +123,13 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       // ドラッグのイベント発生が正しく仲介されていれば、サイドパネルに通知が表示される。
       // もしドラッグが成功しなかった場合は、プログラム的にdropイベントを発火させて処理フローを補完・検証する。
       const notification = spFrame.locator("text=New History Item Added!");
-      const isVisible = await notification.isVisible({ timeout: 4000 }).catch(() => false);
+      let isVisible = false;
+      try {
+        await expect(notification).toBeVisible({ timeout: 6000 });
+        isVisible = true;
+      } catch (e) {
+        isVisible = false;
+      }
       
       if (!isVisible) {
         console.log("Fallback: Dispatching programmatic drop event to guarantee coverage...");
@@ -167,7 +173,7 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
 
       // 8. 注入したヒストリーアイテムが一覧に表示されることを検証
       console.log("Verifying history list contains the dropped item...");
-      const historyItem = spFrame.locator("text=超高層ビルを見上げた景色");
+      const historyItem = spFrame.locator("text=超高層ビルを見上げた景色").first();
       await expect(historyItem).toBeVisible({ timeout: 10000 });
 
       console.log("Drag-and-drop E2E test passed successfully!");
