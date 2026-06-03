@@ -63,7 +63,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
         }
 
         const cdnUrl = partialCard.images?.[0]
-        let finalThumbnailData = "assets/icon.png"
+        let finalThumbnailData = iconUrl
         
         if (cdnUrl) {
           addLog("Fetching clean artwork from Midjourney...")
