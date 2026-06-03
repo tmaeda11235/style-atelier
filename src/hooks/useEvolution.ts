@@ -97,6 +97,7 @@ export function useEvolution() {
         originCreatorId: mainParent.genealogy.originCreatorId,
         mutationNote: `Combined from ${parentCards.map(p => p.name).join(" and ")}`,
       },
+      associatedJobIds: [],
     };
 
     await db.styleCards.add(newCard);

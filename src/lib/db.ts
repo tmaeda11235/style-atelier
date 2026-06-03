@@ -45,12 +45,28 @@ export class StyleAtelierDatabase extends Dexie {
       userSettings: 'userId',
       categories: 'id, name, createdAt',
     });
+
+    // Version 8: Migration to initialize associatedJobIds for existing cards
+    this.version(8).stores({
+      styleCards: 'id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds',
+      historyItems: 'id, timestamp',
+      userSettings: 'userId',
+      categories: 'id, name, createdAt',
+    }).upgrade(upgradeToVersion8);
   }
 
   // TODO: Implement new data access methods
 }
 
 export const db = new StyleAtelierDatabase();
+
+export function upgradeToVersion8(tx: any) {
+  return tx.table('styleCards').toCollection().modify((card: any) => {
+    if (!card.associatedJobIds) {
+      card.associatedJobIds = card.jobId ? [card.jobId] : [];
+    }
+  });
+}
 
 export async function seedDefaultCategories(targetDb: StyleAtelierDatabase = db) {
   const now = Date.now();

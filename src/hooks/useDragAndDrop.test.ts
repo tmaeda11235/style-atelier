@@ -249,6 +249,7 @@ describe("useDragAndDrop", () => {
           id: "imported-card-id",
           name: "Imported Card",
           thumbnailData: "data:image/png;base64,mockbase64",
+          associatedJobIds: [],
         })
       )
       expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')

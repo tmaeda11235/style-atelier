@@ -111,6 +111,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           genealogy: partialCard.genealogy || { generation: 1, parentIds: [] },
           images: cdnUrl ? [cdnUrl] : [],
           selectedThumbnails: cdnUrl ? [cdnUrl] : [],
+          associatedJobIds: [],
         }
 
         await db.styleCards.put(importedCard)

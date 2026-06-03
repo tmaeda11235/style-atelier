@@ -209,6 +209,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           parentIds: [],
         },
         isVariable: true,
+        associatedJobIds: [],
       };
 
       await db.styleCards.add(newCard);
