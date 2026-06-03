@@ -114,7 +114,7 @@ describe("Workbench", () => {
     });
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />);
-    expect(screen.getByText("Workbench is Empty")).toBeDefined();
+    expect(screen.getByText("Workbench は空です")).toBeDefined();
   });
 
   it("renders card segments and slot variable inputs when card has slots", async () => {

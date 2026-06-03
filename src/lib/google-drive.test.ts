@@ -5,6 +5,7 @@ import {
   authorize, 
   clearCachedToken,
   searchBackupFile, 
+  getBackupMetadata,
   uploadBackup, 
   downloadBackup
 } from "./google-drive";
@@ -80,6 +81,19 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       expect(parsed.data.historyItems[0].id).toBe("hist1");
       expect(parsed.data.historyItems[1].id).toBe("hist2");
     });
+
+    it("should include slotHistory from localStorage in the exported payload", async () => {
+      const mockSlotHistory = {
+        subject: ["cat", "dog"],
+        style: ["anime"]
+      };
+      localStorage.setItem("style_atelier_slot_history", JSON.stringify(mockSlotHistory));
+
+      const json = await exportDatabase();
+      const parsed = JSON.parse(json);
+
+      expect(parsed.data.slotHistory).toEqual(mockSlotHistory);
+    });
   });
 
   describe("importDatabase", () => {
@@ -106,6 +120,70 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       expect(db.userSettings.bulkPut).toHaveBeenCalledWith(mockPayload.data.userSettings);
       expect(db.historyItems.clear).not.toHaveBeenCalled();
       expect(db.historyItems.bulkPut).toHaveBeenCalledWith(mockPayload.data.historyItems);
+    });
+
+    it("should restore and merge slotHistory into localStorage, keeping incoming values first, removing duplicates, and limiting to 10 items", async () => {
+      const existingHistory = {
+        subject: ["existing1", "existing2", "common"],
+        style: ["minimalist"]
+      };
+      localStorage.setItem("style_atelier_slot_history", JSON.stringify(existingHistory));
+
+      const incomingHistory = {
+        subject: ["common", "incoming1", "incoming2"],
+        style: ["gothic"],
+        artist: ["picasso"]
+      };
+
+      const mockPayload = {
+        version: 1,
+        exportedAt: 123456,
+        data: {
+          styleCards: [],
+          categories: [],
+          userSettings: [],
+          historyItems: [],
+          slotHistory: incomingHistory
+        }
+      };
+
+      await importDatabase(JSON.stringify(mockPayload));
+
+      const restored = JSON.parse(localStorage.getItem("style_atelier_slot_history") || "{}");
+
+      expect(restored.subject).toEqual(["common", "incoming1", "incoming2", "existing1", "existing2"]);
+      expect(restored.style).toEqual(["gothic", "minimalist"]);
+      expect(restored.artist).toEqual(["picasso"]);
+    });
+
+    it("should cap merged slotHistory items at 10 per variable", async () => {
+      const existingHistory = {
+        subject: ["1", "2", "3", "4", "5", "6", "7", "8"]
+      };
+      localStorage.setItem("style_atelier_slot_history", JSON.stringify(existingHistory));
+
+      const incomingHistory = {
+        subject: ["9", "10", "11", "12", "13"]
+      };
+
+      const mockPayload = {
+        version: 1,
+        exportedAt: 123456,
+        data: {
+          styleCards: [],
+          categories: [],
+          userSettings: [],
+          historyItems: [],
+          slotHistory: incomingHistory
+        }
+      };
+
+      await importDatabase(JSON.stringify(mockPayload));
+
+      const restored = JSON.parse(localStorage.getItem("style_atelier_slot_history") || "{}");
+
+      expect(restored.subject).toEqual(["9", "10", "11", "12", "13", "1", "2", "3", "4", "5"]);
+      expect(restored.subject).toHaveLength(10);
     });
 
     it("should throw error if payload structure is invalid", async () => {
@@ -177,6 +255,34 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       const id = await searchBackupFile("token-123");
       expect(id).toBeNull();
+    });
+  });
+
+  describe("getBackupMetadata", () => {
+    it("should return backup metadata if backup file exists", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "drive-file-id-789", name: "style-atelier-backup.json", modifiedTime: "2026-06-03T12:00:00.000Z", size: "102400" }]
+        })
+      });
+
+      const meta = await getBackupMetadata("token-123");
+      expect(meta).toEqual({
+        id: "drive-file-id-789",
+        modifiedTime: "2026-06-03T12:00:00.000Z",
+        size: "102400"
+      });
+    });
+
+    it("should return null if backup file does not exist", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      });
+
+      const meta = await getBackupMetadata("token-123");
+      expect(meta).toBeNull();
     });
   });
 

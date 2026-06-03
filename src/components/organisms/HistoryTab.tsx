@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react"
 import { useHistory } from "../../hooks/useHistory"
 import type { HistoryItem } from "../../lib/db-schema"
 import { HistoryCard } from "../molecules/HistoryCard"
+import { History, ExternalLink } from "lucide-react"
 
 interface HistoryTabProps {
   onStartMinting: (item: HistoryItem) => void
@@ -37,6 +38,32 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
       observer.disconnect()
     }
   }, [hasMore, loadMore, historyItems])
+
+  if (historyItems !== undefined && historyItems.length === 0) {
+    return (
+      <div 
+        className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 rounded-xl border border-slate-200 border-dashed backdrop-blur-sm animate-in fade-in duration-300"
+        data-tutorial="history-drop-zone"
+      >
+        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+          <History className="w-6 h-6 text-slate-500" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-800 mb-1">履歴がありません</h3>
+        <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed mb-4">
+          Midjourneyのプロンプト入力エリアから画像をドラッグ＆ドロップするか、MidjourneyのWebサイトからスタイルを連携してください。
+        </p>
+        <a
+          href="https://www.midjourney.com/explore"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm"
+        >
+          <span>Midjourneyを開く</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-3 pb-4" data-tutorial="history-drop-zone">

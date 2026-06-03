@@ -4,7 +4,7 @@ import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { SearchField } from "../molecules/SearchField"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 import type { StyleCard } from "../../lib/db-schema"
-import { Tag } from "lucide-react"
+import { Tag, BookUp2, Search } from "lucide-react"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 import { ShareCardModal } from "./ShareCardModal"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
@@ -38,6 +38,7 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
     setSortBy,
     allSrefs,
     categories,
+    allCards,
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
   const colorOptions = [
@@ -168,50 +169,86 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3" data-tutorial="library-card-grid">
-        {styleCards?.map((card, idx) => {
-          const config = RARITY_CONFIG[card.tier]
-          const cardCategory = categories.find((c) => c.id === card.category)
-          return (
-            <div
-              key={card.id}
-              data-tutorial={idx === 0 ? "library-card" : undefined}
-              onClick={(e) => {
-                togglePin(card, e)
-                advanceIfStep("card-to-hand")
-              }}
-              className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
-                } ${config?.glowClass || ""}`}
-            >
-              <CardThumbnail
-                imageUrl={card.thumbnailData}
-                thumbnailImages={card.selectedThumbnails}
-                alt={card.name}
-                tier={card.tier}
-                isPinned={card.isPinned}
-                usageCount={card.usageCount}
-                onPinClick={(e) => togglePin(card, e)}
-                onEditClick={(e) => {
-                  e.stopPropagation()
-                  onOpenDetailCard(card)
+      {styleCards !== undefined && styleCards.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3" data-tutorial="library-card-grid">
+          {styleCards.map((card, idx) => {
+            const config = RARITY_CONFIG[card.tier]
+            const cardCategory = categories.find((c) => c.id === card.category)
+            return (
+              <div
+                key={card.id}
+                data-tutorial={idx === 0 ? "library-card" : undefined}
+                onClick={(e) => {
+                  togglePin(card, e)
+                  advanceIfStep("card-to-hand")
                 }}
-                onInjectClick={(e) => {
-                  e.stopPropagation()
-                  handleCardClick(card)
-                }}
-                onShareClick={(e) => {
-                  e.stopPropagation()
-                  setSharingCard(card)
-                }}
-                category={cardCategory}
-              />
-              <div className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
-                <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
+                className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
+                  } ${config?.glowClass || ""}`}
+              >
+                <CardThumbnail
+                  imageUrl={card.thumbnailData}
+                  thumbnailImages={card.selectedThumbnails}
+                  alt={card.name}
+                  tier={card.tier}
+                  isPinned={card.isPinned}
+                  usageCount={card.usageCount}
+                  onPinClick={(e) => togglePin(card, e)}
+                  onEditClick={(e) => {
+                    e.stopPropagation()
+                    onOpenDetailCard(card)
+                  }}
+                  onInjectClick={(e) => {
+                    e.stopPropagation()
+                    handleCardClick(card)
+                  }}
+                  onShareClick={(e) => {
+                    e.stopPropagation()
+                    setSharingCard(card)
+                  }}
+                  category={cardCategory}
+                />
+                <div className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
+                  <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      ) : styleCards !== undefined ? (
+        <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 rounded-xl border border-slate-200 border-dashed backdrop-blur-sm animate-in fade-in duration-300">
+          {allCards !== undefined && allCards.filter(c => !c.isVariable).length === 0 ? (
+            <>
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                <BookUp2 className="w-6 h-6 text-slate-500" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800 mb-1">スタイルカードがありません</h3>
+              <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed">
+                Historyタブから画像をドラッグ＆ドロップして、あなただけの特別なスタイルカードを作成しましょう！
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                <Search className="w-6 h-6 text-slate-500" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800 mb-1">カードが見つかりません</h3>
+              <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed mb-4">
+                検索キーワードやフィルターの条件を変更するか、クリアしてください。
+              </p>
+              <button
+                onClick={() => {
+                  setSearchTag("")
+                  setRarityFilter("All")
+                  setCategoryFilter("All")
+                }}
+                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-sm"
+              >
+                フィルターをクリア
+              </button>
+            </>
+          )}
+        </div>
+      ) : null}
 
       {isCategoryModalOpen && (
         <CategoryManagerModal

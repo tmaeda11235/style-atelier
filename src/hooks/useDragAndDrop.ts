@@ -63,7 +63,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
         }
 
         const cdnUrl = partialCard.images?.[0]
-        let finalThumbnailData = "assets/icon.png"
+        let finalThumbnailData = iconUrl
         
         if (cdnUrl) {
           addLog("Fetching clean artwork from Midjourney...")
@@ -111,6 +111,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           genealogy: partialCard.genealogy || { generation: 1, parentIds: [] },
           images: cdnUrl ? [cdnUrl] : [],
           selectedThumbnails: cdnUrl ? [cdnUrl] : [],
+          associatedJobIds: [],
         }
 
         await db.styleCards.put(importedCard)
@@ -157,6 +158,21 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           setTimeout(() => setDroppedItem(null), 3000)
           return item
         } else {
+          addLog("Fetching artwork for history item cache...")
+          try {
+            const response = await fetch(item.imageUrl)
+            if (response.ok) {
+              const blob = await response.blob()
+              item.localImageBlob = blob
+              addLog("History artwork cached locally.")
+            } else {
+              addLog("Failed to fetch history artwork from CDN.")
+            }
+          } catch (fetchErr) {
+            console.error("CORS or network error fetching history artwork:", fetchErr)
+            addLog("Failed to cache history artwork.")
+          }
+
           await db.historyItems.put(item)
           addLog(`History item ${item.id} saved.`)
           setDroppedItem({ id: item.id, isMerged: false })

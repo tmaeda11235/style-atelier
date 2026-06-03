@@ -221,5 +221,6 @@ export function useLibrary(
     setSortBy,
     allSrefs,
     categories,
+    allCards,
   }
 }
