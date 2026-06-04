@@ -68,7 +68,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         .then((token) => {
           setAccessToken(token);
           setIsLoadingCloudBackup(true);
-          getBackupMetadata(token)
+          getBackupMetadata(token, setAccessToken)
             .then((meta) => {
               if (meta) {
                 const dateStr = new Date(meta.modifiedTime).toLocaleString();
@@ -115,7 +115,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         const token = await authorize(true);
         setAccessToken(token);
         setIsLoadingCloudBackup(true);
-        const meta = await getBackupMetadata(token);
+        const meta = await getBackupMetadata(token, setAccessToken);
         if (meta) {
           const dateStr = new Date(meta.modifiedTime).toLocaleString();
           const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
@@ -167,14 +167,14 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     try {
       const token = await getOrRequestToken();
       const jsonData = await exportDatabase();
-      await uploadBackup(token, jsonData);
+      await uploadBackup(token, jsonData, setAccessToken);
 
       const now = Date.now();
       localStorage.setItem("style-atelier-last-backup", now.toString());
       setLastBackup(new Date(now).toLocaleString());
 
       // Fetch updated metadata
-      const meta = await getBackupMetadata(token);
+      const meta = await getBackupMetadata(accessToken || token, setAccessToken);
       if (meta) {
         const dateStr = new Date(meta.modifiedTime).toLocaleString();
         const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
@@ -193,7 +193,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       
       // Clear token cache from Chrome
       if (accessToken) {
-        await clearCachedToken(accessToken);
+        await clearCachedToken(accessToken).catch(console.error);
       }
       setAccessToken(null);
     } finally {
@@ -217,7 +217,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     setStatusMessage({ text: "Downloading backup from Google Drive...", type: "info" });
     try {
       const token = await getOrRequestToken();
-      const backupData = await downloadBackup(token);
+      const backupData = await downloadBackup(token, setAccessToken);
       if (!backupData) {
         showStatus("Backup file (style-atelier-backup.json) not found on Google Drive.", "error");
         addLog("Restore failed: Backup file not found.");
@@ -233,7 +233,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
       
       if (accessToken) {
-        await clearCachedToken(accessToken);
+        await clearCachedToken(accessToken).catch(console.error);
       }
       setAccessToken(null);
     } finally {

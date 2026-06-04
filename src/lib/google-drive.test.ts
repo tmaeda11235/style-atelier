@@ -376,4 +376,75 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       expect(content).toBeNull();
     });
   });
+
+  describe("Automatic Re-authorization on 401", () => {
+    it("should clear cached token, request new token silently, and retry searchBackupFile successfully on 401", async () => {
+      // Mock fetch: 1st returns 401, 2nd returns success (file exists)
+      global.fetch = vi.fn()
+        .mockResolvedValueOnce({
+          status: 401,
+          ok: false,
+          statusText: "Unauthorized"
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            files: [{ id: "drive-file-id-reauth", name: "style-atelier-backup.json" }]
+          })
+        });
+
+      // Mock authorize for silent flow
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        expect(opts.interactive).toBe(false);
+        callback("fresh-token-456");
+      });
+
+      mockRemoveCachedAuthToken.mockImplementation((opts, callback) => {
+        expect(opts.token).toBe("stale-token-123");
+        callback();
+      });
+
+      const onTokenUpdated = vi.fn();
+
+      const id = await searchBackupFile("stale-token-123", onTokenUpdated);
+
+      expect(id).toBe("drive-file-id-reauth");
+      expect(mockRemoveCachedAuthToken).toHaveBeenCalledWith({ token: "stale-token-123" }, expect.any(Function));
+      expect(mockGetAuthToken).toHaveBeenCalledWith({ interactive: false }, expect.any(Function));
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-token-456");
+
+      // Verify fetch calls
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      // First call has stale token
+      expect(vi.mocked(global.fetch).mock.calls[0][1]?.headers).toMatchObject({
+        Authorization: "Bearer stale-token-123"
+      });
+      // Second call has fresh token
+      expect(vi.mocked(global.fetch).mock.calls[1][1]?.headers).toMatchObject({
+        Authorization: "Bearer fresh-token-456"
+      });
+    });
+
+    it("should throw an error if silent re-authorization fails", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        status: 401,
+        ok: false,
+        statusText: "Unauthorized"
+      });
+
+      // Mock authorize to fail
+      const originalLastError = chrome.runtime.lastError;
+      (chrome.runtime as any).lastError = { message: "Silent reauth failed" };
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback(undefined);
+      });
+
+      await expect(searchBackupFile("stale-token-123")).rejects.toThrow(
+        "Google Drive authentication expired: Silent reauth failed"
+      );
+
+      // cleanup
+      (chrome.runtime as any).lastError = originalLastError;
+    });
+  });
 });

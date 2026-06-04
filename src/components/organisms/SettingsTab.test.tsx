@@ -174,7 +174,7 @@ describe("SettingsTab", () => {
 
     await waitFor(() => {
       expect(googleDrive.authorize).toHaveBeenCalledWith(true);
-      expect(googleDrive.getBackupMetadata).toHaveBeenCalledWith("mock-token-123");
+      expect(googleDrive.getBackupMetadata).toHaveBeenCalledWith("mock-token-123", expect.any(Function));
     });
 
     // Verify metadata preview is displayed
@@ -216,7 +216,7 @@ describe("SettingsTab", () => {
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
 
     await waitFor(() => {
-      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123");
+      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Function));
       expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data");
     });
 

@@ -144,13 +144,76 @@ export async function importDatabase(jsonData: string): Promise<void> {
 /**
  * Search Google Drive for an existing file named 'style-atelier-backup.json'
  */
-export async function searchBackupFile(accessToken: string): Promise<string | null> {
-  const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`, {
+export interface ReauthContext {
+  token: string;
+}
+
+/**
+ * A wrapper around fetch that automatically handles 401 Unauthorized (invalid/expired token)
+ * by removing the stale cached token from Chrome identity, attempting silent re-authorization,
+ * and retrying the request.
+ */
+async function fetchWithReauth(
+  url: string,
+  options: RequestInit,
+  context: ReauthContext,
+  onTokenUpdated?: (newToken: string) => void
+): Promise<Response> {
+  let res = await fetch(url, {
+    ...options,
     headers: {
-      Authorization: `Bearer ${accessToken}`
+      ...options.headers,
+      Authorization: `Bearer ${context.token}`
     }
   });
+
+  if (res.status === 401) {
+    console.warn("Google Drive API returned 401. Stale token detected. Clearing cache and retrying silently...");
+    
+    // 1. Clear cached token
+    await clearCachedToken(context.token);
+    
+    // 2. Silent re-authorization
+    try {
+      const newToken = await authorize(false); // interactive = false
+      context.token = newToken;
+      if (onTokenUpdated) {
+        onTokenUpdated(newToken);
+      }
+      
+      // 3. Retry with new token
+      res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${newToken}`
+        }
+      });
+    } catch (reauthErr: any) {
+      console.error("Silent re-authorization failed:", reauthErr);
+      throw new Error(`Google Drive authentication expired: ${reauthErr.message || reauthErr}`);
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Search Google Drive for an existing file named 'style-atelier-backup.json'
+ */
+export async function searchBackupFile(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext
+): Promise<string | null> {
+  const ctx = context || { token: accessToken };
+  const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`,
+    {},
+    ctx,
+    onTokenUpdated
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to search backup file: ${res.status} ${res.statusText}`);
@@ -172,13 +235,19 @@ export interface BackupMetadata {
 /**
  * Search Google Drive for 'style-atelier-backup.json' and return its metadata
  */
-export async function getBackupMetadata(accessToken: string): Promise<BackupMetadata | null> {
+export async function getBackupMetadata(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext
+): Promise<BackupMetadata | null> {
+  const ctx = context || { token: accessToken };
   const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`,
+    {},
+    ctx,
+    onTokenUpdated
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to get backup metadata: ${res.status} ${res.statusText}`);
@@ -199,19 +268,28 @@ export async function getBackupMetadata(accessToken: string): Promise<BackupMeta
 /**
  * Upload backup payload JSON to Google Drive (create or overwrite)
  */
-export async function uploadBackup(accessToken: string, jsonData: string): Promise<void> {
-  const fileId = await searchBackupFile(accessToken);
+export async function uploadBackup(
+  accessToken: string,
+  jsonData: string,
+  onTokenUpdated?: (newToken: string) => void
+): Promise<void> {
+  const ctx = { token: accessToken };
+  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx);
 
   if (fileId) {
     // File exists, overwrite it using PATCH (Simple media upload)
-    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
+    const res = await fetchWithReauth(
+      `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: jsonData
       },
-      body: jsonData
-    });
+      ctx,
+      onTokenUpdated
+    );
 
     if (!res.ok) {
       throw new Error(`Failed to update backup file: ${res.status} ${res.statusText}`);
@@ -236,14 +314,18 @@ export async function uploadBackup(accessToken: string, jsonData: string): Promi
       jsonData +
       closeDelimiter;
 
-    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`
+    const res = await fetchWithReauth(
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": `multipart/related; boundary=${boundary}`
+        },
+        body: multipartBody
       },
-      body: multipartBody
-    });
+      ctx,
+      onTokenUpdated
+    );
 
     if (!res.ok) {
       throw new Error(`Failed to create backup file: ${res.status} ${res.statusText}`);
@@ -254,17 +336,22 @@ export async function uploadBackup(accessToken: string, jsonData: string): Promi
 /**
  * Download file contents of 'style-atelier-backup.json' from Google Drive
  */
-export async function downloadBackup(accessToken: string): Promise<string | null> {
-  const fileId = await searchBackupFile(accessToken);
+export async function downloadBackup(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void
+): Promise<string | null> {
+  const ctx = { token: accessToken };
+  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx);
   if (!fileId) {
     return null;
   }
 
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    {},
+    ctx,
+    onTokenUpdated
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to download backup file: ${res.status} ${res.statusText}`);
@@ -272,3 +359,4 @@ export async function downloadBackup(accessToken: string): Promise<string | null
 
   return await res.text();
 }
+
