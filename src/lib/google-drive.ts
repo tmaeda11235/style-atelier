@@ -198,24 +198,134 @@ export async function getBackupMetadata(accessToken: string): Promise<BackupMeta
 
 /**
  * Upload backup payload JSON to Google Drive (create or overwrite)
+ * Supports Resumable upload for sizes >= 2MB
  */
-export async function uploadBackup(accessToken: string, jsonData: string): Promise<void> {
+export async function uploadBackup(
+  accessToken: string,
+  jsonData: string,
+  onProgress?: (progress: number) => void
+): Promise<void> {
   const fileId = await searchBackupFile(accessToken);
+  const blob = new Blob([jsonData], { type: "application/json" });
+  const threshold = 2 * 1024 * 1024; // 2MB
+
+  if (blob.size >= threshold) {
+    // Use Resumable upload
+    await uploadBackupResumable(accessToken, fileId, blob, onProgress);
+  } else {
+    // Use Simple upload with progress support via XMLHttpRequest
+    await uploadBackupSimple(accessToken, fileId, jsonData, onProgress);
+  }
+}
+
+/**
+ * Perform Resumable upload to Google Drive
+ */
+async function uploadBackupResumable(
+  accessToken: string,
+  fileId: string | null,
+  blob: Blob,
+  onProgress?: (progress: number) => void
+): Promise<void> {
+  let initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable";
+  let method = "POST";
+  let metadata: any = {
+    mimeType: "application/json"
+  };
 
   if (fileId) {
-    // File exists, overwrite it using PATCH (Simple media upload)
-    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: jsonData
-    });
+    initUrl = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=resumable`;
+    method = "PATCH";
+  } else {
+    metadata.name = "style-atelier-backup.json";
+  }
 
-    if (!res.ok) {
-      throw new Error(`Failed to update backup file: ${res.status} ${res.statusText}`);
+  // 1. Initialize Resumable session
+  const res = await fetch(initUrl, {
+    method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json; charset=UTF-8",
+      "X-Upload-Content-Type": "application/json",
+      "X-Upload-Content-Length": blob.size.toString()
+    },
+    body: JSON.stringify(metadata)
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to initialize resumable upload: ${res.status} ${res.statusText}`);
+  }
+
+  const uploadUrl = res.headers.get("Location");
+  if (!uploadUrl) {
+    throw new Error("Failed to get resumable upload session URL (Location header missing)");
+  }
+
+  // 2. Upload file content to session URL
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          onProgress(percent);
+        }
+      };
     }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`Resumable upload failed: ${xhr.status} ${xhr.statusText}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Network error during resumable upload."));
+    xhr.send(blob);
+  });
+}
+
+/**
+ * Perform Simple upload to Google Drive with progress support via XMLHttpRequest
+ */
+async function uploadBackupSimple(
+  accessToken: string,
+  fileId: string | null,
+  jsonData: string,
+  onProgress?: (progress: number) => void
+): Promise<void> {
+  if (fileId) {
+    // File exists, overwrite it using PATCH (Simple media upload)
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PATCH", `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, true);
+      xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+      xhr.setRequestHeader("Content-Type", "application/json");
+
+      if (onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Failed to update backup file: ${xhr.status} ${xhr.statusText}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during simple update."));
+      xhr.send(jsonData);
+    });
   } else {
     // File does not exist, create it using POST (Multipart upload to set metadata name)
     const boundary = "style_atelier_backup_boundary";
@@ -236,39 +346,70 @@ export async function uploadBackup(accessToken: string, jsonData: string): Promi
       jsonData +
       closeDelimiter;
 
-    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`
-      },
-      body: multipartBody
-    });
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", true);
+      xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+      xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
 
-    if (!res.ok) {
-      throw new Error(`Failed to create backup file: ${res.status} ${res.statusText}`);
-    }
+      if (onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Failed to create backup file: ${xhr.status} ${xhr.statusText}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during simple creation."));
+      xhr.send(multipartBody);
+    });
   }
 }
 
 /**
- * Download file contents of 'style-atelier-backup.json' from Google Drive
+ * Download file contents of 'style-atelier-backup.json' from Google Drive with progress support
  */
-export async function downloadBackup(accessToken: string): Promise<string | null> {
+export async function downloadBackup(
+  accessToken: string,
+  onProgress?: (progress: number) => void
+): Promise<string | null> {
   const fileId = await searchBackupFile(accessToken);
   if (!fileId) {
     return null;
   }
 
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`
+  return new Promise<string | null>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, true);
+    xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+
+    if (onProgress) {
+      xhr.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          onProgress(percent);
+        }
+      };
     }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.responseText);
+      } else {
+        reject(new Error(`Failed to download backup file: ${xhr.status} ${xhr.statusText}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Network error during download."));
+    xhr.send();
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to download backup file: ${res.status} ${res.statusText}`);
-  }
-
-  return await res.text();
 }

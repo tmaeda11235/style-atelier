@@ -44,6 +44,8 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const [lastBackup, setLastBackup] = useState<string | null>(null);
   const [cloudBackup, setCloudBackup] = useState<{ modifiedTime: string; size: string } | null>(null);
   const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
 
   // Status logs local view
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" | null }>({
@@ -163,11 +165,15 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     }
 
     setIsBackingUp(true);
-    setStatusMessage({ text: "Creating backup and uploading...", type: "info" });
+    setUploadProgress(0);
+    setStatusMessage({ text: "Creating backup and uploading (0%)...", type: "info" });
     try {
       const token = await getOrRequestToken();
       const jsonData = await exportDatabase();
-      await uploadBackup(token, jsonData);
+      await uploadBackup(token, jsonData, (percent) => {
+        setUploadProgress(percent);
+        setStatusMessage({ text: `Creating backup and uploading (${percent}%)...`, type: "info" });
+      });
 
       const now = Date.now();
       localStorage.setItem("style-atelier-last-backup", now.toString());
@@ -198,6 +204,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       setAccessToken(null);
     } finally {
       setIsBackingUp(false);
+      setUploadProgress(null);
     }
   };
 
@@ -214,10 +221,14 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     if (!ok) return;
 
     setIsRestoring(true);
-    setStatusMessage({ text: "Downloading backup from Google Drive...", type: "info" });
+    setRestoreProgress(0);
+    setStatusMessage({ text: "Downloading backup from Google Drive (0%)...", type: "info" });
     try {
       const token = await getOrRequestToken();
-      const backupData = await downloadBackup(token);
+      const backupData = await downloadBackup(token, (percent) => {
+        setRestoreProgress(percent);
+        setStatusMessage({ text: `Downloading backup from Google Drive (${percent}%)...`, type: "info" });
+      });
       if (!backupData) {
         showStatus("Backup file (style-atelier-backup.json) not found on Google Drive.", "error");
         addLog("Restore failed: Backup file not found.");
@@ -238,6 +249,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       setAccessToken(null);
     } finally {
       setIsRestoring(false);
+      setRestoreProgress(null);
     }
   };
 
@@ -384,6 +396,16 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           </div>
         )}
 
+        {/* Progress Bar (Only during Sync Backing up or Restoring) */}
+        {(isBackingUp || isRestoring) && (
+          <div className="mt-2 mb-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+            <div 
+              className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" 
+              style={{ width: `${isBackingUp ? (uploadProgress ?? 0) : (restoreProgress ?? 0)}%` }} 
+            />
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -395,7 +417,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               {isBackingUp ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Backing up...
+                  Backing up... {uploadProgress !== null ? `${uploadProgress}%` : ""}
                 </>
               ) : (
                 <>
@@ -412,7 +434,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               {isRestoring ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Restoring...
+                  Restoring... {restoreProgress !== null ? `${restoreProgress}%` : ""}
                 </>
               ) : (
                 <>

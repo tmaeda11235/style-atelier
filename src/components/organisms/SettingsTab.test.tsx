@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import React from "react";
 import { SettingsTab } from "./SettingsTab";
 import * as googleDrive from "../../lib/google-drive";
@@ -216,7 +216,7 @@ describe("SettingsTab", () => {
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
 
     await waitFor(() => {
-      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123");
+      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Function));
       expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data");
     });
 
@@ -250,5 +250,85 @@ describe("SettingsTab", () => {
     expect(window.confirm).toHaveBeenCalledTimes(1);
     expect(googleDrive.downloadBackup).not.toHaveBeenCalled();
     expect(googleDrive.importDatabase).not.toHaveBeenCalled();
+  });
+
+  it("displays progress percentage and progress bar during backup", async () => {
+    let progressCallback: any = null;
+    vi.mocked(googleDrive.uploadBackup).mockImplementation(
+      async (token, jsonData, onProgress) => {
+        if (onProgress) progressCallback = onProgress;
+        return new Promise(() => {});
+      }
+    );
+
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    // Enable sync
+    const toggleBtn = screen.getByRole("button", { name: "" });
+    fireEvent.click(toggleBtn);
+
+    // Wait for sync to be enabled
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Backup Data/i })).not.toBeDisabled();
+    });
+
+    const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
+    fireEvent.click(backupBtn);
+
+    await waitFor(() => {
+      expect(googleDrive.uploadBackup).toHaveBeenCalled();
+    });
+
+    expect(progressCallback).not.toBeNull();
+
+    // Trigger 45% progress
+    act(() => {
+      progressCallback(45);
+    });
+
+    // Check button text changes
+    expect(screen.getByText("Backing up... 45%")).toBeDefined();
+    // Check status message displays progress
+    expect(screen.getByText("Creating backup and uploading (45%)...")).toBeDefined();
+  });
+
+  it("displays progress percentage and progress bar during restore", async () => {
+    let progressCallback: any = null;
+    vi.mocked(googleDrive.downloadBackup).mockImplementation(
+      async (token, onProgress) => {
+        if (onProgress) progressCallback = onProgress;
+        return new Promise(() => {});
+      }
+    );
+
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    // Enable sync
+    const toggleBtn = screen.getByRole("button", { name: "" });
+    fireEvent.click(toggleBtn);
+
+    // Wait for sync to be enabled
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Restore Data/i })).not.toBeDisabled();
+    });
+
+    const restoreBtn = screen.getByRole("button", { name: /Restore Data/i });
+    fireEvent.click(restoreBtn);
+
+    await waitFor(() => {
+      expect(googleDrive.downloadBackup).toHaveBeenCalled();
+    });
+
+    expect(progressCallback).not.toBeNull();
+
+    // Trigger 60% progress
+    act(() => {
+      progressCallback(60);
+    });
+
+    // Check button text changes
+    expect(screen.getByText("Restoring... 60%")).toBeDefined();
+    // Check status message displays progress
+    expect(screen.getByText("Downloading backup from Google Drive (60%)...")).toBeDefined();
   });
 });
