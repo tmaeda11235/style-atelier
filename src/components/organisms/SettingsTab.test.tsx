@@ -180,7 +180,8 @@ describe("SettingsTab", () => {
     // Verify metadata preview is displayed
     await waitFor(() => {
       expect(screen.getByText("Cloud Backup Preview")).toBeDefined();
-      expect(screen.getByText(/更新日時: 2026\/6\/3/)).toBeDefined();
+      const expectedDate = new Date("2026-06-03T12:00:00.000Z").toLocaleString();
+      expect(screen.getByText(`更新日時: ${expectedDate}`, { exact: false })).toBeDefined();
       expect(screen.getByText(/サイズ: 150\.0 KB/)).toBeDefined();
     });
   });
