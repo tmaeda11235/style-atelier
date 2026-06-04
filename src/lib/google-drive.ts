@@ -1,4 +1,6 @@
 import { db } from "./db";
+import { validateBackupPayload } from "./backup-validator";
+
 
 export interface BackupPayload {
   version: number;
@@ -98,13 +100,20 @@ export async function exportDatabase(): Promise<string> {
  * Clear existing IndexedDB tables and populate with imported JSON data
  */
 export async function importDatabase(jsonData: string): Promise<void> {
-  const payload = JSON.parse(jsonData) as BackupPayload;
-  
-  if (!payload.data || !payload.data.styleCards) {
-    throw new Error("Invalid backup data format: Missing styleCards.");
+  let payload: any;
+  try {
+    payload = JSON.parse(jsonData);
+  } catch (e) {
+    throw new Error("Invalid JSON format. Failed to parse backup file.");
+  }
+
+  const validation = validateBackupPayload(payload);
+  if (!validation.isValid) {
+    throw new Error(`Database validation failed: ${validation.error}`);
   }
 
   await db.transaction("rw", [db.styleCards, db.categories, db.userSettings, db.historyItems], async () => {
+
     if (payload.data.styleCards.length > 0) {
       await db.styleCards.bulkPut(payload.data.styleCards);
     }
