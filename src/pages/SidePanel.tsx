@@ -297,6 +297,14 @@ function SidePanelInner() {
               onInject={handleInjectPrompt}
               onSave={handleSaveCardDetails}
               setAlertType={setAlertType}
+              onCardSelect={async (cardId) => {
+                const targetCard = await db.styleCards.get(cardId);
+                if (targetCard) {
+                  setActiveDetailCard(targetCard);
+                } else {
+                  addLog("Warning: Selected parent card could not be found.");
+                }
+              }}
             />
           )}
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}

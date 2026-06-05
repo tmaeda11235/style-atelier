@@ -15,6 +15,7 @@ vi.mock("../../lib/export-utils", () => ({
 vi.mock("../../lib/db", () => ({
   db: {
     styleCards: {
+      get: vi.fn(),
       update: vi.fn(),
       toArray: vi.fn().mockResolvedValue([]),
     },
@@ -167,5 +168,70 @@ describe("CardDetailView", () => {
 
     const { exportCardAsImage } = await import("../../lib/export-utils")
     expect(exportCardAsImage).toHaveBeenCalled()
+  })
+
+  it("renders genealogy details and triggers card selection on parent click", async () => {
+    const mockParentCard: StyleCard = {
+      id: "parent-uuid-1",
+      name: "Parent Neo Cat",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      promptSegments: [{ type: "text", value: "a parent cat" }],
+      parameters: {},
+      masking: { isSrefHidden: false, isPHidden: false },
+      tier: "Common",
+      isFavorite: false,
+      usageCount: 0,
+      tags: [],
+      dominantColor: "#000000",
+      thumbnailData: "https://example.com/parent-thumb.png",
+      frameId: "default",
+      genealogy: { generation: 1, parentIds: [] },
+    }
+
+    const mockCardWithGenealogy: StyleCard = {
+      ...mockCard,
+      id: "card-uuid-2",
+      name: "Evolution Card",
+      genealogy: {
+        generation: 2,
+        parentIds: ["parent-uuid-1", "non-existent-parent"],
+        mutationNote: "Mixed with watercolor style",
+      },
+    }
+
+    const { db } = await import("../../lib/db")
+    vi.mocked(db.styleCards.get).mockImplementation(async (id) => {
+      if (id === "parent-uuid-1") return mockParentCard
+      return undefined
+    })
+
+    const onCardSelect = vi.fn()
+
+    render(
+      <CardDetailView
+        {...defaultProps}
+        card={mockCardWithGenealogy}
+        onCardSelect={onCardSelect}
+      />
+    )
+
+    // 世代が表示されていること
+    expect(screen.getByText("Gen 2")).toBeDefined()
+
+    // 変異メモが表示されていること
+    expect(screen.getByText("Mixed with watercolor style")).toBeDefined()
+
+    // 非同期で親カードがロードされるのを待つ
+    const parentNameNode = await screen.findByText("Parent Neo Cat")
+    expect(parentNameNode).toBeDefined()
+
+    // 削除された親カードのフォールバックが表示されていること
+    const deletedCardNode = await screen.findByText("Deleted Card")
+    expect(deletedCardNode).toBeDefined()
+
+    // 親カードをクリックすると onCardSelect が呼ばれること
+    fireEvent.click(parentNameNode)
+    expect(onCardSelect).toHaveBeenCalledWith("parent-uuid-1")
   })
 })
