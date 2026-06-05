@@ -61,13 +61,16 @@ describe("useMinting hook", () => {
     )
   })
 
-  it("should initialize associatedJobIds as empty array when minting a variation without history item", async () => {
+  it("should initialize associatedJobIds as empty array and inherit images when minting a variation without history item", async () => {
     const { result } = renderHook(() => useMinting(mockAddLog, mockSetActiveTab))
 
     const mockBase = {
       promptSegments: [{ type: "text" as const, value: "variation prompt" }],
       parameters: {},
       genealogy: { generation: 2, parentIds: ["parent-1"] },
+      thumbnailData: "parent-thumb.png",
+      images: ["parent-image-1.png", "parent-image-2.png"],
+      selectedThumbnails: ["parent-thumb.png"],
     }
 
     // Start variation minting
@@ -84,6 +87,9 @@ describe("useMinting hook", () => {
       expect.objectContaining({
         jobId: undefined,
         associatedJobIds: [],
+        thumbnailData: "parent-thumb.png",
+        images: ["parent-image-1.png", "parent-image-2.png"],
+        selectedThumbnails: ["parent-thumb.png"],
       })
     )
   })
