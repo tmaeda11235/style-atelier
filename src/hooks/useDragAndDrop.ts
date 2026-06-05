@@ -7,7 +7,23 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
   const [isDragging, setIsDragging] = useState(false)
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
-  const [droppedItem, setDroppedItem] = useState<{ id: string; name?: string; isMerged?: boolean } | null>(null)
+  const [droppedItem, setDroppedItem] = useState<{
+    id?: string
+    name?: string
+    isMerged?: boolean
+    isImport?: boolean
+    isError?: boolean
+    errorMessage?: string
+  } | null>(null)
+
+  const isJapanese = typeof navigator !== "undefined" && navigator.language?.startsWith("ja")
+
+  const triggerNotification = (item: typeof droppedItem) => {
+    setDroppedItem(item)
+    setTimeout(() => {
+      setDroppedItem(null)
+    }, 3000)
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -39,6 +55,10 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
       const imageFile = files.find((f) => f.type.startsWith("image/"))
       if (!imageFile) {
         addLog("No valid image file dropped.")
+        triggerNotification({
+          isError: true,
+          errorMessage: isJapanese ? "有効な画像ファイルがドロップされませんでした。" : "No valid image file dropped."
+        })
         return null
       }
 
@@ -51,6 +71,12 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
         
         if (!payload) {
           addLog("No QR code found in the image.")
+          triggerNotification({
+            isError: true,
+            errorMessage: isJapanese
+              ? "画像からQRコードが検出されませんでした。"
+              : "No QR code found in the image."
+          })
           setIsImporting(false)
           return null
         }
@@ -58,6 +84,12 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
         const partialCard = decompressCardData(payload)
         if (!partialCard.name || !partialCard.promptSegments) {
           addLog("Invalid card data in QR code.")
+          triggerNotification({
+            isError: true,
+            errorMessage: isJapanese
+              ? "QRコード内のカードデータが無効であるか、破損しています。"
+              : "Invalid card data in QR code or corrupted."
+          })
           setIsImporting(false)
           return null
         }
@@ -116,10 +148,21 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
 
         await db.styleCards.put(importedCard)
         addLog(`Imported card "${importedCard.name}" successfully!`)
+        triggerNotification({
+          id: importedCard.id,
+          name: importedCard.name,
+          isImport: true
+        })
         return { id: importedCard.id, isImport: true }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to import card:", err)
         addLog("Error occurred while importing card.")
+        triggerNotification({
+          isError: true,
+          errorMessage: isJapanese
+            ? `カードのインポート中にエラーが発生しました: ${err.message || err}`
+            : `Failed to import card: ${err.message || err}`
+        })
       } finally {
         setIsImporting(false)
       }
