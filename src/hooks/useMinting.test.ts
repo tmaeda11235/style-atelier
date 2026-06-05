@@ -57,6 +57,7 @@ describe("useMinting hook", () => {
       expect.objectContaining({
         jobId: "job-123",
         associatedJobIds: ["job-123"],
+        thumbnailData: expect.stringContaining("data:image/png;base64,"),
       })
     )
   })
@@ -84,6 +85,37 @@ describe("useMinting hook", () => {
       expect.objectContaining({
         jobId: undefined,
         associatedJobIds: [],
+      })
+    )
+  })
+
+  it("should convert localImageBlob to base64 thumbnail if present", async () => {
+    const { result } = renderHook(() => useMinting(mockAddLog, mockSetActiveTab))
+
+    const mockBlob = new Blob(["mock content"], { type: "image/png" })
+    const mockItem = {
+      id: "job-123",
+      fullCommand: "a beautiful sunset --ar 16:9",
+      imageUrl: "https://example.com/sunset.png",
+      localImageBlob: mockBlob,
+      timestamp: Date.now(),
+    }
+
+    act(() => {
+      result.current.handleStartMinting(mockItem)
+    })
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0))
+    })
+
+    await act(async () => {
+      await result.current.handleSaveMintedCard()
+    })
+
+    expect(db.styleCards.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        thumbnailData: expect.stringContaining("data:image/png;base64,"),
       })
     )
   })

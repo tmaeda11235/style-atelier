@@ -15,6 +15,8 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { exportCardAsImage } from "../../lib/export-utils";
 import { TagEditor } from "../molecules/TagEditor";
 import { AssociatedImageGallery } from "../molecules/AssociatedImageGallery";
+import { createThumbnailDataUrl } from "../../lib/image-utils";
+
 
 /**
  * Props for the CardDetailView component.
@@ -122,6 +124,13 @@ export function CardDetailView({
     // Fallback thumbnail data for older fields compatibility
     const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png";
 
+    let thumbnailData = primaryThumb;
+    try {
+      thumbnailData = await createThumbnailDataUrl(primaryThumb);
+    } catch (err) {
+      console.error("Failed to convert thumbnail to Base64:", err);
+    }
+
     const updatedCard: StyleCard = {
       ...card,
       name,
@@ -131,7 +140,7 @@ export function CardDetailView({
       tags,
       images,
       selectedThumbnails: selectedThumbs,
-      thumbnailData: primaryThumb,
+      thumbnailData,
       category: category || undefined,
       masking: {
         isSrefHidden,

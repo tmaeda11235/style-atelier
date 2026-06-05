@@ -88,7 +88,7 @@ describe("CardDetailView", () => {
     expect(screen.getByText("neon")).toBeDefined()
   })
 
-  it("toggles and limits thumbnail selection to max 4 in queue order", () => {
+  it("toggles and limits thumbnail selection to max 4 in queue order", async () => {
     render(<CardDetailView {...defaultProps} />)
 
     const images = screen.getAllByRole("img")
@@ -111,7 +111,9 @@ describe("CardDetailView", () => {
     fireEvent.click(cardImages[4])
     
     const saveButton = screen.getByText("Save")
-    fireEvent.click(saveButton)
+    await act(async () => {
+      fireEvent.click(saveButton)
+    })
 
     expect(defaultProps.onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -121,11 +123,12 @@ describe("CardDetailView", () => {
           "https://example.com/image4.png",
           "https://example.com/image5.png"
         ],
+        thumbnailData: expect.stringContaining("data:image/png;base64,"),
       })
     )
   })
 
-  it("adds and removes tags correctly", () => {
+  it("adds and removes tags correctly", async () => {
     render(<CardDetailView {...defaultProps} />)
 
     // Add tag
@@ -138,11 +141,14 @@ describe("CardDetailView", () => {
     fireEvent.click(removeButtons[0]) // remove first tag ("cyber")
 
     const saveButton = screen.getByText("Save")
-    fireEvent.click(saveButton)
+    await act(async () => {
+      fireEvent.click(saveButton)
+    })
 
     expect(defaultProps.onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tags: ["neon", "futuristic"],
+        thumbnailData: expect.stringContaining("data:image/png;base64,"),
       })
     )
   })
