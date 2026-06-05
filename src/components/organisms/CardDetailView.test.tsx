@@ -168,4 +168,46 @@ describe("CardDetailView", () => {
     const { exportCardAsImage } = await import("../../lib/export-utils")
     expect(exportCardAsImage).toHaveBeenCalled()
   })
+
+  it("does not show delete button if onDelete is not provided", () => {
+    render(<CardDetailView {...defaultProps} onDelete={undefined} />)
+    expect(screen.queryByTestId("delete-card-button")).toBeNull()
+  })
+
+  it("shows delete button, opens confirmation modal, and cancels properly", () => {
+    const onDeleteMock = vi.fn().mockResolvedValue(undefined)
+    render(<CardDetailView {...defaultProps} onDelete={onDeleteMock} />)
+
+    const deleteButton = screen.getByTestId("delete-card-button")
+    expect(deleteButton).toBeDefined()
+
+    // Confirmation modal should not be visible initially
+    expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
+
+    // Click Delete -> should show confirm modal
+    fireEvent.click(deleteButton)
+    expect(screen.getByTestId("delete-confirm-modal")).toBeDefined()
+
+    // Click cancel -> modal closes, onDelete not called
+    const cancelButton = screen.getByTestId("delete-confirm-cancel-button")
+    fireEvent.click(cancelButton)
+    expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
+    expect(onDeleteMock).not.toHaveBeenCalled()
+  })
+
+  it("calls onDelete when confirmed in modal", async () => {
+    const onDeleteMock = vi.fn().mockResolvedValue(undefined)
+    render(<CardDetailView {...defaultProps} onDelete={onDeleteMock} />)
+
+    const deleteButton = screen.getByTestId("delete-card-button")
+    fireEvent.click(deleteButton)
+
+    const okButton = screen.getByTestId("delete-confirm-ok-button")
+    await act(async () => {
+      fireEvent.click(okButton)
+    })
+
+    expect(onDeleteMock).toHaveBeenCalledWith("card-uuid-1")
+    expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
+  })
 })
