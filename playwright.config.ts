@@ -27,8 +27,8 @@ export default defineConfig({
     baseURL: "http://localhost:5173",
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
-    /* Capture screenshot after each test failure. */
-    screenshot: "only-on-failure",
+    /* Capture screenshot after each test. */
+    screenshot: "on",
     /* Record video only when a test fails. */
     video: "retain-on-failure",
   },
