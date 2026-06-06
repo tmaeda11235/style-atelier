@@ -5,6 +5,8 @@ import { parsePrompt } from "../lib/prompt-utils"
 import { extractKeywords } from "../lib/nlp-utils"
 import type { RarityTier } from "../lib/rarity-config"
 import { analyzeImageColors } from "../lib/color-utils"
+import { createThumbnailDataUrl } from "../lib/image-utils"
+
 
 export interface VariationBase {
   promptSegments: PromptSegment[];
@@ -110,7 +112,18 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       addLog(`Saving card from history item: ${mintingItem.id}`)
       const parsed = parsePrompt(mintingItem.fullCommand)
       parameters = parsed.parameters
-      thumbnailData = mintingItem.imageUrl
+      
+      try {
+        if (mintingItem.localImageBlob) {
+          thumbnailData = await createThumbnailDataUrl(mintingItem.localImageBlob)
+        } else {
+          thumbnailData = await createThumbnailDataUrl(mintingItem.imageUrl)
+        }
+      } catch (err) {
+        console.error("Failed to generate thumbnail, using original URL as fallback", err)
+        thumbnailData = mintingItem.imageUrl
+      }
+
       genealogy = {
         generation: 1,
         parentIds: [],
