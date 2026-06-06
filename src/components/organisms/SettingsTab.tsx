@@ -39,6 +39,25 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const { estimate, checkStorage } = useStorageEstimate();
 
+  const isJapanese = typeof navigator !== "undefined" && navigator.language?.startsWith("ja");
+  const t = {
+    cloudBackupLabel: isJapanese ? "クラウド上のバックアップ: " : "Cloud Backup: ",
+    loadingCloudBackup: isJapanese ? "クラウド情報を取得中..." : "Fetching cloud backup info...",
+    noCloudBackup: isJapanese ? "クラウド上のバックアップファイルが見つかりません" : "No cloud backup file found",
+    lastBackupLabel: isJapanese ? "ローカル最終バックアップ: " : "Last Local Backup: ",
+    syncingText: isJapanese ? "同期中..." : "Syncing...",
+    syncButtonText: isJapanese ? "Google Driveと同期 (Sync)" : "Sync with Google Drive",
+    restoreConfirmMsg: isJapanese
+      ? "Google Driveからデータを強制リカバリ（ロード）し、現在のローカルデータを完全に削除してバックアップの内容で置き換えます。\n現在のローカルデータ（この端末で新規作成したカードも含む）はすべて失われます。この操作は取り消せません。本当によろしいですか？"
+      : "Force recover database from Google Drive. This will completely overwrite all local data. Your current cards and configurations will be lost forever. This action cannot be undone. Are you sure?",
+    restoreConfirmHeader: isJapanese
+      ? "【クラウド上のバックアップ情報】"
+      : "[Cloud Backup Information]",
+    restoreConfirmTime: isJapanese ? "更新日時: " : "Modified Time: ",
+    restoreConfirmSize: isJapanese ? "サイズ: " : "Size: ",
+    restoreBtnText: isJapanese ? "Google Driveから強制リカバリ" : "Force Restore from Google Drive"
+  };
+
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
 
@@ -251,9 +270,9 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const handleForceRecovery = async () => {
     if (!isSyncEnabled) return;
     
-    let confirmMsg = "Google Driveからデータを強制リカバリ（ロード）し、現在のローカルデータを完全に削除してバックアップの内容で置き換えます。\n現在のローカルデータ（この端末で新規作成したカードも含む）はすべて失われます。この操作は取り消せません。本当によろしいですか？";
+    let confirmMsg = t.restoreConfirmMsg;
     if (cloudBackup) {
-      confirmMsg += `\n\n【クラウド上のバックアップ情報】\n更新日時: ${cloudBackup.modifiedTime}\nサイズ: ${cloudBackup.size}`;
+      confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${cloudBackup.modifiedTime}\n${t.restoreConfirmSize}${cloudBackup.size}`;
     }
     
     const ok = window.confirm(confirmMsg);
@@ -441,6 +460,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           </div>
           <button
             type="button"
+            id="google-drive-toggle-btn"
             onClick={() => handleToggleSync(!isSyncEnabled)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
               isSyncEnabled ? "bg-blue-600" : "bg-slate-200"
@@ -701,23 +721,41 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             <p className="text-[10px] text-red-600/80 leading-relaxed">
               Reset the database to its pristine state, or force recover database from Google Drive by overwriting local changes.
             </p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <button
-                onClick={handleResetDbClick}
-                className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
-              >
-                <Database className="w-3.5 h-3.5" />
-                Reset Local Database
-              </button>
-              <button
-                onClick={handleForceRecovery}
-                disabled={!isSyncEnabled || isSyncing || isRestoring}
-                className="px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 disabled:opacity-30"
-                id="force-recovery-btn"
-              >
-                <DownloadCloud className="w-3.5 h-3.5 text-red-500" />
-                Google Driveから強制リカバリ
-              </button>
+            <div className="flex flex-col gap-2 mt-2">
+              {isSyncEnabled && (
+                <div className="text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
+                  {isLoadingCloudBackup ? (
+                    <span className="text-blue-500 animate-pulse flex items-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      {t.loadingCloudBackup}
+                    </span>
+                  ) : cloudBackup ? (
+                    <span>
+                      {t.cloudBackupLabel}{cloudBackup.modifiedTime} ({cloudBackup.size})
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">{t.noCloudBackup}</span>
+                  )}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleResetDbClick}
+                  className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  Reset Local Database
+                </button>
+                <button
+                  onClick={handleForceRecovery}
+                  disabled={!isSyncEnabled || isSyncing || isRestoring}
+                  className="px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 disabled:opacity-30"
+                  id="force-recovery-btn"
+                >
+                  <DownloadCloud className="w-3.5 h-3.5 text-red-500" />
+                  {t.restoreBtnText}
+                </button>
+              </div>
             </div>
           </div>
         </div>

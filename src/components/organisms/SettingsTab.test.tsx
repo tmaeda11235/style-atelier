@@ -84,6 +84,13 @@ describe("SettingsTab", () => {
       configurable: true,
       writable: true
     });
+
+    // Mock navigator.language to default to Japanese for existing tests
+    Object.defineProperty(window.navigator, "language", {
+      value: "ja-JP",
+      configurable: true,
+      writable: true
+    });
   });
 
   afterEach(() => {
@@ -300,6 +307,42 @@ describe("SettingsTab", () => {
     // Second restore attempt - should still prompt confirmation
     fireEvent.click(restoreBtn);
     expect(window.confirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows confirmation dialog in English when language is English", async () => {
+    // Override navigator.language to English
+    Object.defineProperty(window.navigator, "language", {
+      value: "en-US",
+      configurable: true,
+      writable: true
+    });
+
+    vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
+    vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
+      id: "file-123",
+      modifiedTime: "2026-06-03T12:00:00.000Z",
+      size: "153600",
+    });
+    vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data");
+    vi.mocked(googleDrive.importDatabase).mockResolvedValue(undefined);
+
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    // Enable sync
+    const toggleBtn = screen.getByRole("button", { name: "" });
+    fireEvent.click(toggleBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Cloud Backup Preview")).toBeDefined();
+    });
+
+    const restoreBtn = screen.getByRole("button", { name: /Force Restore from Google Drive/i });
+    expect(restoreBtn).not.toBeDisabled();
+
+    fireEvent.click(restoreBtn);
+    expect(window.confirm).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("[Cloud Backup Information]");
+    expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
   });
 
   it("aborts force recovery if user cancels confirmation dialog", async () => {
