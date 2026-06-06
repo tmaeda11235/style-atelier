@@ -142,7 +142,7 @@ export async function exportDatabase(): Promise<string> {
 /**
  * Clear existing IndexedDB tables and populate with imported JSON data
  */
-export async function importDatabase(jsonData: string): Promise<void> {
+export async function importDatabase(jsonData: string, mode: 'merge' | 'replace' = 'replace'): Promise<void> {
   let payload: any;
   try {
     payload = JSON.parse(jsonData);
@@ -155,24 +155,28 @@ export async function importDatabase(jsonData: string): Promise<void> {
     throw new Error(`Database validation failed: ${validation.error}`);
   }
 
-  await db.importBackupData(payload.data);
+  await db.importBackupData(payload.data, mode);
 
   if (payload.data.slotHistory) {
     try {
-      const stored = localStorage.getItem("style_atelier_slot_history");
-      const existingHistory: Record<string, string[]> = stored ? JSON.parse(stored) : {};
-      
-      const mergedHistory: Record<string, string[]> = { ...existingHistory };
-      
-      for (const [key, incomingValues] of Object.entries(payload.data.slotHistory)) {
-        if (Array.isArray(incomingValues)) {
-          const localValues = mergedHistory[key] || [];
-          const merged = Array.from(new Set([...incomingValues, ...localValues])).slice(0, 10);
-          mergedHistory[key] = merged;
+      if (mode === 'replace') {
+        localStorage.setItem("style_atelier_slot_history", JSON.stringify(payload.data.slotHistory));
+      } else {
+        const stored = localStorage.getItem("style_atelier_slot_history");
+        const existingHistory: Record<string, string[]> = stored ? JSON.parse(stored) : {};
+        
+        const mergedHistory: Record<string, string[]> = { ...existingHistory };
+        
+        for (const [key, incomingValues] of Object.entries(payload.data.slotHistory)) {
+          if (Array.isArray(incomingValues)) {
+            const localValues = mergedHistory[key] || [];
+            const merged = Array.from(new Set([...incomingValues, ...localValues])).slice(0, 10);
+            mergedHistory[key] = merged;
+          }
         }
+        
+        localStorage.setItem("style_atelier_slot_history", JSON.stringify(mergedHistory));
       }
-      
-      localStorage.setItem("style_atelier_slot_history", JSON.stringify(mergedHistory));
     } catch (e) {
       console.error("Failed to restore/merge slot history:", e);
     }

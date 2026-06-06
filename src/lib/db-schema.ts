@@ -6,7 +6,10 @@ export interface CustomCategory {
   iconUrl?: string;       // Custom base64 image URL selected from Library card
   iconCardId?: string;    // Reference to original source card
   createdAt: number;
+  updatedAt?: number;     // Timestamp for versioning/sync
+  isDeleted?: boolean;    // Soft delete flag
 }
+
 
 export interface StyleCard {
   // --- Basic Identity ---
@@ -14,6 +17,8 @@ export interface StyleCard {
   name: string;           // カード名 (e.g., "Neon Cyber Cat")
   createdAt: number;      // Timestamp
   updatedAt: number;      // Timestamp for versioning
+  isDeleted?: boolean;    // Soft delete flag
+
 
   // --- The Recipe (Minting Result) ---
   // プロンプトを「トークン（バブル）」の配列として保持

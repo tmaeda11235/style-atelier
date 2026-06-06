@@ -44,12 +44,12 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
   // Google Auth states
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [lastBackup, setLastBackup] = useState<string | null>(null);
   const [cloudBackup, setCloudBackup] = useState<{ modifiedTime: string; size: string } | null>(null);
   const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [syncProgress, setSyncProgress] = useState<number | null>(null);
   const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
 
   // Status logs local view
@@ -168,32 +168,41 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     return token;
   };
 
-  const handleBackup = async () => {
+  const handleSync = async () => {
     if (!isSyncEnabled) return;
 
-    // Check if backup has been confirmed before
-    const isBackupConfirmed = localStorage.getItem("style-atelier-backup-confirmed") === "true";
-    if (!isBackupConfirmed) {
-      const ok = window.confirm(
-        "データをGoogle Driveにバックアップ（保存）します。よろしいですか？\n(※次回以降、この確認画面は表示されずダイレクトに保存されます。)"
-      );
-      if (!ok) return;
-      localStorage.setItem("style-atelier-backup-confirmed", "true");
-    }
-
-    setIsBackingUp(true);
-    setUploadProgress(0);
-    setStatusMessage({ text: "Creating backup and uploading (0%)...", type: "info" });
+    setIsSyncing(true);
+    setSyncProgress(0);
+    setStatusMessage({ text: "Google Drive同期を開始中...", type: "info" });
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     try {
       const token = await getOrRequestToken();
+      
+      // 1. Download existing backup (if any)
+      setStatusMessage({ text: "Google Driveからデータを取得中...", type: "info" });
+      const backupData = await downloadBackup(token, setAccessToken, (percent) => {
+        setSyncProgress(Math.round(percent * 0.5)); // 0-50%
+        setStatusMessage({ text: `データをダウンロード中 (${percent}%)...`, type: "info" });
+      }, undefined, { signal: controller.signal });
+
+      if (backupData) {
+        setStatusMessage({ text: "データをマージ中...", type: "info" });
+        await importDatabase(backupData, "merge");
+      } else {
+        addLog("No existing backup found. Uploading local data as new backup.");
+      }
+
+      // 2. Export and Upload current merged state
+      setStatusMessage({ text: "同期データを準備中...", type: "info" });
       const jsonData = await exportDatabase();
+
+      setStatusMessage({ text: "Google Driveへ同期中 (50%)...", type: "info" });
       await uploadBackup(token, jsonData, setAccessToken, (percent) => {
-        setUploadProgress(percent);
-        setStatusMessage({ text: `Creating backup and uploading (${percent}%)...`, type: "info" });
+        setSyncProgress(50 + Math.round(percent * 0.5)); // 50-100%
+        setStatusMessage({ text: `データをアップロード中 (${percent}%)...`, type: "info" });
       }, { signal: controller.signal });
 
       const now = Date.now();
@@ -201,7 +210,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       setLastBackup(new Date(now).toLocaleString());
 
       // Fetch updated metadata
-      const meta = await getBackupMetadata(accessToken || token, setAccessToken, undefined, { signal: controller.signal });
+      const meta = await getBackupMetadata(token, setAccessToken, undefined, { signal: controller.signal });
       if (meta) {
         const dateStr = new Date(meta.modifiedTime).toLocaleString();
         const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
@@ -211,38 +220,38 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         });
       }
 
-      addLog("Backup uploaded to Google Drive successfully.");
-      showStatus("バックアップ完了しました", "success");
+      addLog("Google Drive synchronization completed successfully.");
+      showStatus("同期が完了しました", "success");
+      checkStorage();
     } catch (err: any) {
       if (err.name === "AbortError") {
-        addLog("Backup cancelled by user.");
-        showStatus("バックアップがキャンセルされました", "info");
+        addLog("Sync cancelled by user.");
+        showStatus("同期がキャンセルされました", "info");
       } else if (err instanceof GDriveTimeoutError) {
-        addLog("Backup failed: Connection timed out.");
+        addLog("Sync failed: Connection timed out.");
         showStatus("同期がタイムアウトしました。ネットワーク接続を確認してください。", "error");
       } else {
         console.error(err);
-        addLog(`Backup failed: ${err.message || err}`);
-        showStatus(`Backup failed: ${err.message || "Unknown error"}`, "error");
+        addLog(`Sync failed: ${err.message || err}`);
+        showStatus(`Sync failed: ${err.message || "Unknown error"}`, "error");
       }
       
-      // Clear token cache from Chrome
+      // Clear token cache from Chrome on unexpected failure
       if (err.name !== "AbortError" && accessToken) {
         await clearCachedToken(accessToken).catch(console.error);
         setAccessToken(null);
       }
     } finally {
-      setIsBackingUp(false);
+      setIsSyncing(false);
       abortControllerRef.current = null;
-      setUploadProgress(null);
+      setSyncProgress(null);
     }
   };
 
-  const handleRestore = async () => {
+  const handleForceRecovery = async () => {
     if (!isSyncEnabled) return;
     
-    // Always display confirmation dialog
-    let confirmMsg = "Google Driveからデータを復元（ロード）し、マージします。\n同じIDのデータはバックアップの内容で上書きされますがよろしいですか？";
+    let confirmMsg = "Google Driveからデータを強制リカバリ（ロード）し、現在のローカルデータを完全に削除してバックアップの内容で置き換えます。\n現在のローカルデータ（この端末で新規作成したカードも含む）はすべて失われます。この操作は取り消せません。本当によろしいですか？";
     if (cloudBackup) {
       confirmMsg += `\n\n【クラウド上のバックアップ情報】\n更新日時: ${cloudBackup.modifiedTime}\nサイズ: ${cloudBackup.size}`;
     }
@@ -252,7 +261,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
     setIsRestoring(true);
     setRestoreProgress(0);
-    setStatusMessage({ text: "Downloading backup from Google Drive (0%)...", type: "info" });
+    setStatusMessage({ text: "Google Driveから強制リカバリ中 (0%)...", type: "info" });
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -261,29 +270,29 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       const token = await getOrRequestToken();
       const backupData = await downloadBackup(token, setAccessToken, (percent) => {
         setRestoreProgress(percent);
-        setStatusMessage({ text: `Downloading backup from Google Drive (${percent}%)...`, type: "info" });
+        setStatusMessage({ text: `データをダウンロード中 (${percent}%)...`, type: "info" });
       }, undefined, { signal: controller.signal });
       if (!backupData) {
-        showStatus("Backup file (style-atelier-backup.json) not found on Google Drive.", "error");
-        addLog("Restore failed: Backup file not found.");
+        showStatus("Google Driveにバックアップファイルが見つかりません。", "error");
+        addLog("Force recovery failed: Backup file not found.");
         return;
       }
 
-      await importDatabase(backupData);
-      addLog("Database restored from Google Drive successfully.");
-      showStatus("データ復元が完了しました！", "success");
+      await importDatabase(backupData, "replace");
+      addLog("Database recovered from Google Drive successfully.");
+      showStatus("強制リカバリが完了しました！", "success");
       checkStorage();
     } catch (err: any) {
       if (err.name === "AbortError") {
-        addLog("Restore cancelled by user.");
-        showStatus("データ復元がキャンセルされました", "info");
+        addLog("Force recovery cancelled by user.");
+        showStatus("強制リカバリがキャンセルされました", "info");
       } else if (err instanceof GDriveTimeoutError) {
-        addLog("Restore failed: Connection timed out.");
+        addLog("Force recovery failed: Connection timed out.");
         showStatus("同期がタイムアウトしました。ネットワーク接続を確認してください。", "error");
       } else {
         console.error(err);
-        addLog(`Restore failed: ${err.message || err}`);
-        showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
+        addLog(`Force recovery failed: ${err.message || err}`);
+        showStatus(`Force recovery failed: ${err.message || "Unknown error"}`, "error");
       }
       
       if (err.name !== "AbortError" && accessToken) {
@@ -328,9 +337,9 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     
     const file = files[0];
     
-    const ok = window.confirm(
-      "ローカルファイルからデータを復元し、マージします。\n同じIDのデータはインポートする内容で上書きされますがよろしいですか？"
-    );
+    const confirmMsg = "ローカルファイルからデータを復元（マージ）します。\n競合するデータは更新日時が新しい方が優先されますがよろしいですか？";
+      
+    const ok = window.confirm(confirmMsg);
     if (!ok) {
       e.target.value = "";
       return;
@@ -345,7 +354,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           throw new Error("File is empty.");
         }
         
-        await importDatabase(text);
+        await importDatabase(text, "merge");
         addLog("Database restored from local JSON file successfully.");
         showStatus("インポートが完了しました！", "success");
         checkStorage();
@@ -458,7 +467,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-blue-600 animate-spin shrink-0" />}
               <span className="font-medium">{statusMessage.text}</span>
             </div>
-            {statusMessage.type === "info" && (isBackingUp || isRestoring) && (
+            {statusMessage.type === "info" && (isSyncing || isRestoring) && (
               <button
                 type="button"
                 onClick={handleCancelSync}
@@ -470,54 +479,36 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           </div>
         )}
 
-        {/* Progress Bar (Only during Sync Backing up or Restoring) */}
-        {(isBackingUp || isRestoring) && (
+        {/* Progress Bar (Only during Sync or Force Recovering) */}
+        {(isSyncing || isRestoring) && (
           <div className="mt-2 mb-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
             <div 
               className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" 
-              style={{ width: `${isBackingUp ? (uploadProgress ?? 0) : (restoreProgress ?? 0)}%` }} 
+              style={{ width: `${isSyncing ? (syncProgress ?? 0) : (restoreProgress ?? 0)}%` }} 
             />
           </div>
         )}
 
         {/* Action Buttons */}
         <div className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleBackup}
-              disabled={!isSyncEnabled || isBackingUp || isRestoring}
-              className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              {isBackingUp ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Backing up... {uploadProgress !== null ? `${uploadProgress}%` : ""}
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="w-3.5 h-3.5" />
-                  Backup Data
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleRestore}
-              disabled={!isSyncEnabled || isBackingUp || isRestoring}
-              className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              {isRestoring ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Restoring... {restoreProgress !== null ? `${restoreProgress}%` : ""}
-                </>
-              ) : (
-                <>
-                  <DownloadCloud className="w-3.5 h-3.5" />
-                  Restore Data
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            onClick={handleSync}
+            disabled={!isSyncEnabled || isSyncing || isRestoring}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+            id="google-drive-sync-btn"
+          >
+            {isSyncing ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                同期中... {syncProgress !== null ? `${syncProgress}%` : ""}
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3.5 h-3.5" />
+                Google Driveと同期 (Sync)
+              </>
+            )}
+          </button>
 
           {/* Last Backup Time & Cloud Backup Preview */}
           {(lastBackup || cloudBackup || isLoadingCloudBackup) && (
@@ -666,7 +657,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleLocalExport}
-              disabled={isBackingUp || isRestoring}
+              disabled={isSyncing || isRestoring}
               className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Download className="w-3.5 h-3.5" />
@@ -674,7 +665,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isBackingUp || isRestoring}
+              disabled={isSyncing || isRestoring}
               className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Upload className="w-3.5 h-3.5" />
@@ -708,15 +699,26 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           <div className="space-y-1.5 flex-1">
             <h3 className="text-xs font-bold text-red-900">Danger Zone</h3>
             <p className="text-[10px] text-red-600/80 leading-relaxed">
-              Reset the database to its pristine state. This will delete all style cards, binders, histories, and categories locally. This action is irreversible unless you have a Google Drive backup.
+              Reset the database to its pristine state, or force recover database from Google Drive by overwriting local changes.
             </p>
-            <button
-              onClick={handleResetDbClick}
-              className="mt-2 px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
-            >
-              <Database className="w-3.5 h-3.5" />
-              Reset Local Database
-            </button>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <button
+                onClick={handleResetDbClick}
+                className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
+              >
+                <Database className="w-3.5 h-3.5" />
+                Reset Local Database
+              </button>
+              <button
+                onClick={handleForceRecovery}
+                disabled={!isSyncEnabled || isSyncing || isRestoring}
+                className="px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 disabled:opacity-30"
+                id="force-recovery-btn"
+              >
+                <DownloadCloud className="w-3.5 h-3.5 text-red-500" />
+                Google Driveから強制リカバリ
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -178,7 +178,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       await importDatabase(JSON.stringify(mockPayload));
 
-      expect(db.importBackupData).toHaveBeenCalledWith(mockPayload.data);
+      expect(db.importBackupData).toHaveBeenCalledWith(mockPayload.data, "replace");
     });
 
     it("should restore and merge slotHistory into localStorage, keeping incoming values first, removing duplicates, and limiting to 10 items", async () => {
@@ -206,7 +206,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         }
       };
 
-      await importDatabase(JSON.stringify(mockPayload));
+      await importDatabase(JSON.stringify(mockPayload), "merge");
 
       const restored = JSON.parse(localStorage.getItem("style_atelier_slot_history") || "{}");
 
@@ -237,7 +237,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         }
       };
 
-      await importDatabase(JSON.stringify(mockPayload));
+      await importDatabase(JSON.stringify(mockPayload), "merge");
 
       const restored = JSON.parse(localStorage.getItem("style_atelier_slot_history") || "{}");
 

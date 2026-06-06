@@ -178,7 +178,7 @@ describe("SettingsTab", () => {
 
     await waitFor(() => {
       expect(window.confirm).toHaveBeenCalled();
-      expect(importDatabase).toHaveBeenCalledWith(backupContent);
+      expect(importDatabase).toHaveBeenCalledWith(backupContent, "merge");
       expect(mockAddLog).toHaveBeenCalledWith("Database restored from local JSON file successfully.");
     });
   });
@@ -197,7 +197,7 @@ describe("SettingsTab", () => {
       expect(mockAddLog).toHaveBeenCalledWith(expect.stringContaining("Import failed:"));
     });
 
-    expect(importDatabase).toHaveBeenCalledWith(invalidContent);
+    expect(importDatabase).toHaveBeenCalledWith(invalidContent, "merge");
   });
 
   it("cancels import if user rejects confirmation", async () => {
@@ -228,11 +228,9 @@ describe("SettingsTab", () => {
 
     expect(screen.getByText("Google Drive Cloud Sync")).toBeDefined();
     
-    // Backup and Restore buttons should be disabled
-    const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
-    const restoreBtn = screen.getByRole("button", { name: /Restore Data/i });
-    expect(backupBtn).toBeDisabled();
-    expect(restoreBtn).toBeDisabled();
+    // Sync button should be disabled
+    const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
+    expect(syncBtn).toBeDisabled();
   });
 
   it("enabling sync performs authorization and fetches backup metadata", async () => {
@@ -261,7 +259,7 @@ describe("SettingsTab", () => {
     });
   });
 
-  it("always shows confirmation dialog on Restore, even if checked multiple times", async () => {
+  it("always shows confirmation dialog on Force Recovery, even if checked multiple times", async () => {
     vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
     vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
       id: "file-123",
@@ -282,7 +280,7 @@ describe("SettingsTab", () => {
       expect(screen.getByText("Cloud Backup Preview")).toBeDefined();
     });
 
-    const restoreBtn = screen.getByRole("button", { name: /Restore Data/i });
+    const restoreBtn = screen.getByRole("button", { name: /Google Driveから強制リカバリ/i });
     expect(restoreBtn).not.toBeDisabled();
 
     // First restore attempt
@@ -293,18 +291,18 @@ describe("SettingsTab", () => {
 
     await waitFor(() => {
       expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Function), expect.any(Function), undefined, expect.any(Object));
-      expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data");
+      expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data", "replace");
     });
 
     // Reset confirm mock calls
     vi.mocked(window.confirm).mockClear();
 
-    // Second restore attempt - should still prompt confirmation (Skipping should be disabled, issue #146)
+    // Second restore attempt - should still prompt confirmation
     fireEvent.click(restoreBtn);
     expect(window.confirm).toHaveBeenCalledTimes(1);
   });
 
-  it("aborts restore if user cancels confirmation dialog", async () => {
+  it("aborts force recovery if user cancels confirmation dialog", async () => {
     window.confirm = vi.fn().mockReturnValue(false); // User clicks Cancel
     vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
     vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
@@ -316,11 +314,11 @@ describe("SettingsTab", () => {
     fireEvent.click(toggleBtn);
 
     await waitFor(() => {
-      const restoreBtn = screen.getByRole("button", { name: /Restore Data/i });
+      const restoreBtn = screen.getByRole("button", { name: /Google Driveから強制リカバリ/i });
       expect(restoreBtn).not.toBeDisabled();
     });
 
-    const restoreBtn = screen.getByRole("button", { name: /Restore Data/i });
+    const restoreBtn = screen.getByRole("button", { name: /Google Driveから強制リカバリ/i });
     fireEvent.click(restoreBtn);
 
     expect(window.confirm).toHaveBeenCalledTimes(1);
@@ -334,15 +332,15 @@ describe("SettingsTab", () => {
       vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
     });
 
-    it("displays Cancel button during backup and handles manual cancellation", async () => {
+    it("displays Cancel button during sync and handles manual cancellation", async () => {
       let triggerAbort: (() => void) | undefined;
-      const uploadPromise = new Promise<void>((resolve, reject) => {
+      const downloadPromise = new Promise<string>((resolve, reject) => {
         triggerAbort = () => {
           const err = new DOMException("The user aborted a request.", "AbortError");
           reject(err);
         };
       });
-      vi.mocked(googleDrive.uploadBackup).mockReturnValue(uploadPromise);
+      vi.mocked(googleDrive.downloadBackup).mockReturnValue(downloadPromise);
 
       render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
@@ -351,12 +349,12 @@ describe("SettingsTab", () => {
       fireEvent.click(toggleBtn);
 
       await waitFor(() => {
-        const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
-        expect(backupBtn).not.toBeDisabled();
+        const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
+        expect(syncBtn).not.toBeDisabled();
       });
 
-      const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
-      fireEvent.click(backupBtn);
+      const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
+      fireEvent.click(syncBtn);
 
       // Verify Cancel button is displayed
       await waitFor(() => {
@@ -371,13 +369,13 @@ describe("SettingsTab", () => {
 
       // Verify log and status message reflect cancellation
       await waitFor(() => {
-        expect(mockAddLog).toHaveBeenCalledWith("Backup cancelled by user.");
-        expect(screen.getByText("バックアップがキャンセルされました")).toBeDefined();
+        expect(mockAddLog).toHaveBeenCalledWith("Sync cancelled by user.");
+        expect(screen.getByText("同期がキャンセルされました")).toBeDefined();
       });
     });
 
     it("handles connection timeout error gracefully", async () => {
-      vi.mocked(googleDrive.uploadBackup).mockRejectedValue(new googleDrive.GDriveTimeoutError());
+      vi.mocked(googleDrive.downloadBackup).mockRejectedValue(new googleDrive.GDriveTimeoutError());
 
       render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
@@ -386,16 +384,16 @@ describe("SettingsTab", () => {
       fireEvent.click(toggleBtn);
 
       await waitFor(() => {
-        const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
-        expect(backupBtn).not.toBeDisabled();
+        const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
+        expect(syncBtn).not.toBeDisabled();
       });
 
-      const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
-      fireEvent.click(backupBtn);
+      const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
+      fireEvent.click(syncBtn);
 
       // Verify log and status message reflect timeout
       await waitFor(() => {
-        expect(mockAddLog).toHaveBeenCalledWith("Backup failed: Connection timed out.");
+        expect(mockAddLog).toHaveBeenCalledWith("Sync failed: Connection timed out.");
         expect(screen.getByText("同期がタイムアウトしました。ネットワーク接続を確認してください。")).toBeDefined();
       });
     });
@@ -470,10 +468,10 @@ describe("SettingsTab", () => {
     });
   });
 
-  it("displays progress percentage and progress bar during backup", async () => {
+  it("displays progress percentage and progress bar during sync", async () => {
     let progressCallback: any = null;
-    vi.mocked(googleDrive.uploadBackup).mockImplementation(
-      async (token, jsonData, onTokenUpdated, onProgress, options) => {
+    vi.mocked(googleDrive.downloadBackup).mockImplementation(
+      async (token, onTokenUpdated, onProgress, options) => {
         if (onProgress) progressCallback = onProgress;
         return new Promise(() => {});
       }
@@ -487,30 +485,30 @@ describe("SettingsTab", () => {
 
     // Wait for sync to be enabled
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Backup Data/i })).not.toBeDisabled();
+      expect(screen.getByRole("button", { name: /Google Driveと同期/i })).not.toBeDisabled();
     });
 
-    const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
-    fireEvent.click(backupBtn);
+    const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
+    fireEvent.click(syncBtn);
 
     await waitFor(() => {
-      expect(googleDrive.uploadBackup).toHaveBeenCalled();
+      expect(googleDrive.downloadBackup).toHaveBeenCalled();
     });
 
     expect(progressCallback).not.toBeNull();
 
-    // Trigger 45% progress
+    // Trigger 50% download progress (maps to 25% overall progress)
     act(() => {
-      progressCallback(45);
+      progressCallback(50);
     });
 
     // Check button text changes
-    expect(screen.getByText("Backing up... 45%")).toBeDefined();
+    expect(screen.getByText("同期中... 25%")).toBeDefined();
     // Check status message displays progress
-    expect(screen.getByText("Creating backup and uploading (45%)...")).toBeDefined();
+    expect(screen.getByText("データをダウンロード中 (50%)...")).toBeDefined();
   });
 
-  it("displays progress percentage and progress bar during restore", async () => {
+  it("displays progress percentage and progress bar during force recovery", async () => {
     let progressCallback: any = null;
     vi.mocked(googleDrive.downloadBackup).mockImplementation(
       async (token, onTokenUpdated, onProgress, context, options) => {
@@ -527,10 +525,10 @@ describe("SettingsTab", () => {
 
     // Wait for sync to be enabled
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Restore Data/i })).not.toBeDisabled();
+      expect(screen.getByRole("button", { name: /Google Driveから強制リカバリ/i })).not.toBeDisabled();
     });
 
-    const restoreBtn = screen.getByRole("button", { name: /Restore Data/i });
+    const restoreBtn = screen.getByRole("button", { name: /Google Driveから強制リカバリ/i });
     fireEvent.click(restoreBtn);
 
     await waitFor(() => {
@@ -544,9 +542,7 @@ describe("SettingsTab", () => {
       progressCallback(60);
     });
 
-    // Check button text changes
-    expect(screen.getByText("Restoring... 60%")).toBeDefined();
     // Check status message displays progress
-    expect(screen.getByText("Downloading backup from Google Drive (60%)...")).toBeDefined();
+    expect(screen.getByText("データをダウンロード中 (60%)...")).toBeDefined();
   });
 });
