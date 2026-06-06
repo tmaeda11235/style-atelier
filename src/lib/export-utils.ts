@@ -195,6 +195,10 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
       }
     }
 
+    if (imageSources.length > 0 && loadedImages.length < imageSources.length) {
+      throw new Error(`Failed to load all images for card. Loaded ${loadedImages.length} of ${imageSources.length}.`);
+    }
+
     if (loadedImages.length === 4) {
       // 2x2 Grid Layout
       const halfW = artW / 2;
@@ -226,8 +230,8 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
       ctx.textAlign = 'center';
       ctx.fillText('No Art Loaded', artX + artW / 2, artY + artH / 2);
     }
-  } catch (err) {
-    console.error('Error drawing artwork to canvas:', err);
+  } catch (err: any) {
+    throw new Error(`Failed to draw artwork to canvas: ${err.message || err}`);
   } finally {
     // Revoke object URLs to prevent memory leaks
     for (const url of objectUrlsToRevoke) {
@@ -338,8 +342,8 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText('SCAN TO IMPORT', qrX + qrSize / 2, qrY + qrSize + 14);
-  } catch (err) {
-    console.error('Error generating or drawing QR code to canvas:', err);
+  } catch (err: any) {
+    throw new Error(`Failed to generate QR code: ${err.message || err}`);
   }
 
   return canvas;

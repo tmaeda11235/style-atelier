@@ -170,6 +170,21 @@ describe("CardDetailView", () => {
     expect(exportCardAsImage).toHaveBeenCalled()
   })
 
+  it("displays error message if export utility fails", async () => {
+    const { exportCardAsImage } = await import("../../lib/export-utils")
+    vi.mocked(exportCardAsImage).mockRejectedValueOnce(new Error("Failed to render canvas"))
+
+    render(<CardDetailView {...defaultProps} />)
+
+    const exportButton = screen.getByTestId("export-card-button")
+    
+    await act(async () => {
+      fireEvent.click(exportButton)
+    })
+
+    expect(screen.getByText("Failed to export card: Failed to render canvas")).toBeDefined()
+  })
+
   it("renders genealogy details and triggers card selection on parent click", async () => {
     const mockParentCard: StyleCard = {
       id: "parent-uuid-1",

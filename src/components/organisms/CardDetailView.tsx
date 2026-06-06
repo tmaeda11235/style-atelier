@@ -9,7 +9,7 @@ import { Input } from "../atoms/Input";
 import { useHand } from "../../hooks/useHand";
 import { db } from "../../lib/db";
 import { buildPromptString } from "../../lib/prompt-utils";
-import { X, Send, Save, Download, Trash2 } from "lucide-react";
+import { X, Send, Save, Download, Trash2, AlertCircle } from "lucide-react";
 import type { AlertType } from "../molecules/ConnectionAlert";
 import { useLiveQuery } from "dexie-react-hooks";
 import { exportCardAsImage } from "../../lib/export-utils";
@@ -70,6 +70,7 @@ export function CardDetailView({
   const images = card.images && card.images.length > 0 ? card.images : [card.thumbnailData].filter(Boolean);
   const [selectedThumbs, setSelectedThumbs] = useState<string[]>(card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : []));
   const [isExporting, setIsExporting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [parents, setParents] = useState<(StyleCard | null)[]>([]);
 
   useEffect(() => {
@@ -99,6 +100,7 @@ export function CardDetailView({
 
   const handleExportCard = async () => {
     setIsExporting(true);
+    setErrorMessage(null);
     try {
       const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png";
       const tempCard: StyleCard = {
@@ -116,8 +118,9 @@ export function CardDetailView({
         accentColor: card.accentColor,
       };
       await exportCardAsImage(tempCard);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to export card:", err);
+      setErrorMessage(`Failed to export card: ${err.message || err}`);
     } finally {
       setIsExporting(false);
     }
@@ -203,6 +206,12 @@ export function CardDetailView({
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {errorMessage && (
+          <div className="p-2.5 bg-red-50 border border-red-100 rounded-lg text-red-600 text-[11px] flex items-start gap-1.5 shadow-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
         {/* Card Metadata Section */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Identity</h3>

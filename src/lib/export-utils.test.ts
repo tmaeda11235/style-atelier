@@ -3,6 +3,16 @@ import { renderCardToCanvas } from "./export-utils";
 import type { StyleCard } from "./db-schema";
 import { db } from "./db";
 
+vi.mock("./qr-utils", () => ({
+  compressCardData: vi.fn().mockReturnValue("mocked-compressed-data"),
+  generateQRCodeUrl: vi.fn().mockResolvedValue("data:image/png;base64,mockedqrcode"),
+}));
+
+// Mock assets/icon.png
+vi.mock("url:../../assets/icon.png", () => ({
+  default: "mock-icon-url"
+}));
+
 const originalImage = global.Image;
 const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
@@ -10,9 +20,14 @@ const originalGetContext = HTMLCanvasElement.prototype.getContext;
 
 describe("export-utils", () => {
   let createdObjectURLs: string[] = [];
+  const mockImageInstances: any[] = [];
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
     createdObjectURLs = [];
+    mockImageInstances.length = 0;
+
     URL.createObjectURL = vi.fn((blob: Blob) => {
       const url = `blob:mock-url-${createdObjectURLs.length}`;
       createdObjectURLs.push(url);
@@ -47,17 +62,24 @@ describe("export-utils", () => {
       return null;
     }) as any;
 
-    // Mock Image load process
     global.Image = class {
-      src: string = "";
+      _src: string = "";
       crossOrigin: string = "";
       onload: (() => void) | null = null;
       onerror: ((err: any) => void) | null = null;
 
       constructor() {
+        mockImageInstances.push(this);
         setTimeout(() => {
           if (this.onload) this.onload();
         }, 10);
+      }
+
+      set src(val: string) {
+        this._src = val;
+      }
+      get src() {
+        return this._src;
       }
     } as any;
   });
@@ -67,7 +89,6 @@ describe("export-utils", () => {
     URL.createObjectURL = originalCreateObjectURL;
     URL.revokeObjectURL = originalRevokeObjectURL;
     HTMLCanvasElement.prototype.getContext = originalGetContext;
-    vi.restoreAllMocks();
   });
 
   const baseCard: StyleCard = {
@@ -88,6 +109,67 @@ describe("export-utils", () => {
     genealogy: { generation: 1, parentIds: [] },
   };
 
+  // --- HEAD Tests ---
+  it("throws error if canvas 2D context is not available", async () => {
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(null);
+
+    await expect(renderCardToCanvas(baseCard)).rejects.toThrow(
+      "Could not get 2D context for canvas"
+    );
+  });
+
+  it("throws error if image loading fails completely", async () => {
+    // Override default constructor automatic resolve by clearing load trigger or forcing error
+    global.Image = class {
+      _src = "";
+      crossOrigin = "";
+      onload = null;
+      onerror = null;
+      constructor() {
+        mockImageInstances.push(this);
+      }
+      set src(val) { this._src = val; }
+      get src() { return this._src; }
+    } as any;
+
+    const promise = renderCardToCanvas(baseCard);
+
+    await vi.waitFor(() => expect(mockImageInstances.length).toBeGreaterThan(0));
+    if (mockImageInstances[0].onerror) {
+      mockImageInstances[0].onerror(new Error("Image network error"));
+    }
+
+    await expect(promise).rejects.toThrow("Failed to draw artwork to canvas");
+  });
+
+  it("throws error if QR code generation fails", async () => {
+    const { generateQRCodeUrl } = await import("./qr-utils");
+    vi.mocked(generateQRCodeUrl).mockRejectedValueOnce(new Error("QR generation failed"));
+
+    // Override default constructor to just register instances without auto onload
+    global.Image = class {
+      _src = "";
+      crossOrigin = "";
+      onload = null;
+      onerror = null;
+      constructor() {
+        mockImageInstances.push(this);
+      }
+      set src(val) { this._src = val; }
+      get src() { return this._src; }
+    } as any;
+
+    const promise = renderCardToCanvas(baseCard);
+
+    await vi.waitFor(() => expect(mockImageInstances.length).toBeGreaterThan(0));
+    if (mockImageInstances[0].onload) {
+      mockImageInstances[0].onload();
+    }
+
+    await expect(promise).rejects.toThrow("Failed to generate QR code: QR generation failed");
+  });
+
+  // --- main Tests ---
   it("should prioritize local thumbnailData and skip external CDN loading when only 1 thumbnail is needed", async () => {
     const spyGet = vi.spyOn(db.historyItems, "get").mockResolvedValue(undefined);
     
