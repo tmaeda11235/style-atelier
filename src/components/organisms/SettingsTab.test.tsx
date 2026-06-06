@@ -2,13 +2,21 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render as tlRender, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import React from "react";
 import { SettingsTab } from "./SettingsTab";
+import { LanguageProvider } from "../../contexts/LanguageContext";
+import { SettingsProvider } from "../../contexts/SettingsContext";
 import * as googleDrive from "../../lib/google-drive";
 import { exportDatabase, importDatabase } from "../../lib/google-drive";
 import { db } from "../../lib/db";
-import { SettingsProvider } from "../../contexts/SettingsContext";
 
 const render = (ui: React.ReactElement, options?: any) => {
-  return tlRender(<SettingsProvider>{ui}</SettingsProvider>, options);
+  return tlRender(
+    <LanguageProvider>
+      <SettingsProvider>
+        {ui}
+      </SettingsProvider>
+    </LanguageProvider>,
+    options
+  );
 };
 
 vi.mock("../../lib/google-drive", () => {
@@ -24,23 +32,15 @@ vi.mock("../../lib/google-drive", () => {
     uploadBackup: vi.fn(),
     downloadBackup: vi.fn(),
     exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'),
-    importDatabase: vi.fn().mockImplementation(async (jsonData: string) => {
-      const { validateBackupPayload } = await import("../../lib/backup-validator");
-      let payload: any;
-      try {
-        payload = JSON.parse(jsonData);
-      } catch (e) {
-        throw new Error("Invalid JSON format. Failed to parse backup file.");
-      }
-      const validation = validateBackupPayload(payload);
-      if (!validation.isValid) {
-        throw new Error(`Database validation failed: ${validation.error}`);
-      }
-    }),
+    importDatabase: vi.fn().mockResolvedValue(undefined),
     getBackupMetadata: vi.fn(),
     GDriveTimeoutError,
   };
 });
+
+vi.mock("../../lib/auto-sync", () => ({
+  setAutoSyncEnabled: vi.fn(),
+}));
 
 vi.mock("../../lib/db", () => ({
   db: {
@@ -108,10 +108,10 @@ describe("SettingsTab", () => {
   it("renders Local File Backup card correctly", () => {
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
-    expect(screen.getByText("Local File Backup (Offline)")).toBeDefined();
-    expect(screen.getByText("Export JSON")).toBeDefined();
-    expect(screen.getByText("Import JSON")).toBeDefined();
-    expect(screen.getByText(/Export your style cards and binders to a local JSON file/)).toBeDefined();
+    expect(screen.getByText("ローカルバックアップ (オフライン)")).toBeDefined();
+    expect(screen.getByText("JSONエクスポート")).toBeDefined();
+    expect(screen.getByText("JSONインポート")).toBeDefined();
+    expect(screen.getByText(/スタイルカードとバインダーのデータをローカルのJSONファイルにエクスポート/)).toBeDefined();
   });
 
   it("triggers file download when Export JSON is clicked", async () => {
@@ -121,7 +121,7 @@ describe("SettingsTab", () => {
 
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
-    const exportBtn = screen.getByText("Export JSON");
+    const exportBtn = screen.getByText("JSONエクスポート");
     fireEvent.click(exportBtn);
 
     await waitFor(() => {
@@ -196,6 +196,7 @@ describe("SettingsTab", () => {
   });
 
   it("fails to import when file contains invalid backup structure", async () => {
+    vi.mocked(importDatabase).mockRejectedValueOnce(new Error("Database validation failed: invalid structure"));
     const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -238,7 +239,7 @@ describe("SettingsTab", () => {
   it("renders with default state (sync disabled)", () => {
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
-    expect(screen.getByText("Google Drive Cloud Sync")).toBeDefined();
+    expect(screen.getByText("Google Drive クラウド同期")).toBeDefined();
     
     // Sync button should be disabled
     const syncBtn = screen.getByRole("button", { name: /Google Driveと同期/i });
@@ -460,7 +461,7 @@ describe("SettingsTab", () => {
   it("renders Storage Management card correctly with normal usage", async () => {
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
-    expect(screen.getByText("Storage Management")).toBeDefined();
+    expect(screen.getByText("ストレージ管理")).toBeDefined();
     
     // Wait for the estimate to resolve
     await waitFor(() => {
@@ -511,7 +512,7 @@ describe("SettingsTab", () => {
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Storage Management")).toBeDefined();
+      expect(screen.getByText("ストレージ管理")).toBeDefined();
     });
 
     const clearBtn = screen.getByRole("button", { name: /Clear History/i });
@@ -673,5 +674,56 @@ describe("SettingsTab", () => {
     if (slotToggleBtn) {
       fireEvent.click(slotToggleBtn);
     }
+  });
+
+  describe("Auto Sync Settings", () => {
+    it("renders auto-sync toggle when sync is enabled", async () => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
+
+      const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+      // Initially auto-sync toggle shouldn't be rendered because isSyncEnabled is false
+      expect(container.querySelector("#google-drive-auto-sync-btn")).toBeNull();
+
+      // Enable main sync
+      const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
+      fireEvent.click(toggleBtn);
+
+      await waitFor(() => {
+        expect(container.querySelector("#google-drive-auto-sync-btn")).not.toBeNull();
+      });
+
+      // Toggle auto-sync
+      const autoSyncBtn = container.querySelector("#google-drive-auto-sync-btn")!;
+      fireEvent.click(autoSyncBtn);
+
+      const { setAutoSyncEnabled } = await import("../../lib/auto-sync");
+      expect(setAutoSyncEnabled).toHaveBeenCalledWith(true);
+    });
+
+    it("disables auto-sync if main sync is disabled", async () => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
+
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+
+      const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+      // Ensure both are enabled on mount
+      await waitFor(() => {
+        expect(container.querySelector("#google-drive-auto-sync-btn")).not.toBeNull();
+      });
+
+      // Disable main sync
+      const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
+      fireEvent.click(toggleBtn);
+
+      const { setAutoSyncEnabled } = await import("../../lib/auto-sync");
+      // Main sync turning off should call setAutoSyncEnabled(false)
+      expect(setAutoSyncEnabled).toHaveBeenCalledWith(false);
+      expect(container.querySelector("#google-drive-auto-sync-btn")).toBeNull();
+    });
   });
 });

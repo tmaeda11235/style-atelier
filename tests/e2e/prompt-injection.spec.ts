@@ -38,7 +38,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Prompt Injection", () => {
 
       // 4. サイドパネルのウェルカムダイアログの「スキップ」ボタンがあればクリック
       console.log("Checking for welcome dialog...");
-      const skipButton = spFrame.locator("text=スキップ");
+      const skipButton = spFrame.locator("#welcome-skip-btn");
       if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         console.log("Welcome dialog detected, clicking skip...");
         await skipButton.click();

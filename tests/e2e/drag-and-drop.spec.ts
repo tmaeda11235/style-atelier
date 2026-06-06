@@ -36,7 +36,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop", () => {
       await expect(mockImage).toBeVisible({ timeout: 15000 });
 
       // 3. ウェルカムダイアログの「スキップ」ボタンがあればクリック
-      const skipButton = spFrame.locator("text=スキップ");
+      const skipButton = spFrame.locator("#welcome-skip-btn");
       if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         await skipButton.click();
       }
@@ -132,7 +132,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -229,5 +229,98 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop", () => {
     await page.screenshot({
       path: path.join(screenshotsDir, "same-job-success.png"),
     });
+  });
+
+  test("should allow dragging a mock Midjourney image in Easy Mode to trigger Simple Mint Modal and save card directly to Library", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    
+    console.log("Navigating to sandbox page for Easy Mode drag-and-drop test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Enable Easy Mode first
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
+    await settingsNavBtn.click();
+
+    const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn");
+    await expect(easyModeToggle).toBeVisible({ timeout: 10000 });
+    await easyModeToggle.click();
+    await page.waitForTimeout(500);
+
+    // 3. Verify Easy Mode active (History tab is hidden)
+    const historyTabBtn = spFrame.locator("nav button:has-text('History')");
+    await expect(historyTabBtn).not.toBeVisible();
+
+    // 4. Dispatch drop event (Simulate Image drop)
+    console.log("Simulating drag-and-drop of an image in Easy Mode...");
+    const dropZone = spFrame.locator(".h-full.relative.overflow-hidden");
+    const imgData = {
+      id: "easy-mode-drop-job-123",
+      fullCommand: "A peaceful forest with rays of sunlight --ar 16:9 --sref 123456789",
+      imageUrl: "./index_files/0_0_640_N.webp",
+      timestamp: Date.now()
+    };
+
+    await dropZone.evaluate(async (element, item) => {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("application/json", JSON.stringify(item));
+      const dragOverEvent = new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer });
+      element.dispatchEvent(dragOverEvent);
+      const dropEvent = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer });
+      element.dispatchEvent(dropEvent);
+    }, imgData);
+
+    // 5. Verify Simple Mint Modal (Quick Card Creator) is visible
+    console.log("Waiting for Simple Mint Modal to open...");
+    const simpleMintContainer = spFrame.locator("[data-testid='simple-minting-view-container']");
+    await expect(simpleMintContainer).toBeVisible({ timeout: 10000 });
+
+    // 6. Verify default preview name or auto-keywords
+    const previewNameText = spFrame.locator("text=Preview:").first();
+    await expect(previewNameText).toBeVisible();
+
+    // 7. Verify category dropdown is visible
+    const categorySelect = simpleMintContainer.locator("select");
+    await expect(categorySelect).toBeVisible();
+    
+    // 8. Capture screenshot of the Simple Mint Modal
+    await page.screenshot({
+      path: path.join(screenshotsDir, "simple-mint-modal-open.png"),
+    });
+
+    // 9. Change custom card name
+    const customNameInput = simpleMintContainer.locator("input[placeholder='Enter custom card name...']");
+    await expect(customNameInput).toBeVisible();
+    await customNameInput.fill("Sunny Forest");
+
+    // 10. Click "Save to Library"
+    const saveBtn = spFrame.locator("button:has-text('Save to Library')");
+    await saveBtn.click();
+
+    // 11. Verify Modal closes and card is in Library
+    await expect(simpleMintContainer).not.toBeVisible({ timeout: 10000 });
+
+    // 12. Check in DB if the card with name "Sunny Forest" was created
+    const createdCard = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      const cards = await database.getAllCards();
+      return cards.find((c: any) => c.name.includes("Sunny Forest"));
+    });
+    expect(createdCard).toBeDefined();
+    expect(createdCard.name).toContain("Sunny Forest");
+
+    // 13. Capture final screenshot showing card added in Library
+    await page.screenshot({
+      path: path.join(screenshotsDir, "simple-mint-saved.png"),
+    });
+    console.log("Easy Mode Drag-and-drop E2E test passed successfully!");
   });
 });

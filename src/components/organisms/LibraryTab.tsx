@@ -16,9 +16,18 @@ interface LibraryTabProps {
   setAlertType: (type: AlertType) => void
   onOpenDetailCard: (card: StyleCard) => void
   onNavigateToWorkbench?: () => void
+  isEasyMode?: boolean
+  onOpenSimpleWorkbench?: (card: StyleCard) => void
 }
 
-export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateToWorkbench }: LibraryTabProps) {
+export function LibraryTab({
+  addLog,
+  setAlertType,
+  onOpenDetailCard,
+  onNavigateToWorkbench,
+  isEasyMode = false,
+  onOpenSimpleWorkbench,
+}: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
@@ -185,8 +194,12 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
                 key={card.id}
                 data-tutorial={idx === 0 ? "library-card" : undefined}
                 onClick={(e) => {
-                  togglePin(card, e)
-                  advanceIfStep("card-to-hand")
+                  if (isEasyMode) {
+                    onOpenSimpleWorkbench?.(card)
+                  } else {
+                    togglePin(card, e)
+                    advanceIfStep("card-to-hand")
+                  }
                 }}
                 className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
                   } ${config?.glowClass || ""}`}
@@ -198,7 +211,7 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
                   tier={card.tier}
                   isPinned={card.isPinned}
                   usageCount={card.usageCount}
-                  onPinClick={(e) => togglePin(card, e)}
+                  onPinClick={isEasyMode ? undefined : (e) => togglePin(card, e)}
                   onEditClick={(e) => {
                     e.stopPropagation()
                     onOpenDetailCard(card)

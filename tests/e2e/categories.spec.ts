@@ -37,7 +37,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories", () => {
 
       // 1. ウェルカムダイアログの「スキップ」ボタンがあればクリック
       console.log("2. Checking for welcome dialog...");
-      const skipButton = spFrame.locator("text=スキップ");
+      const skipButton = spFrame.locator("#welcome-skip-btn");
       if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         console.log("Clicking skip button...");
         await skipButton.click();

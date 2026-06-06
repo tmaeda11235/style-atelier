@@ -6,6 +6,8 @@ import { TutorialProvider } from "../contexts/TutorialContext"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
+import { LanguageProvider } from "../contexts/LanguageContext"
+import { initializeAutoSync } from "../lib/auto-sync"
 
 /**
  * Main inner container for the side panel. It manages site target detection
@@ -14,6 +16,10 @@ import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 function SidePanelInner() {
   const { isTargetSite, isLoading } = useActiveTabUrl()
   const { isEasyMode, toggleEasyMode } = useSettings()
+
+  useEffect(() => {
+    initializeAutoSync()
+  }, [])
 
   const handleToggleEasyMode = (enabled: boolean) => {
     toggleEasyMode(enabled)
@@ -51,16 +57,18 @@ function SidePanelInner() {
 }
 
 /**
- * Root page component – wraps everything in SettingsProvider and TutorialProvider so useSettings and useTutorial
+ * Root page component – wraps everything in SettingsProvider, LanguageProvider, and TutorialProvider so useSettings, useLanguage, and useTutorial
  * are available within both the SidePanelInner router and underlying views.
  */
 function SidePanelPage() {
   return (
-    <SettingsProvider>
-      <TutorialProvider>
-        <SidePanelInner />
-      </TutorialProvider>
-    </SettingsProvider>
+    <LanguageProvider>
+      <SettingsProvider>
+        <TutorialProvider>
+          <SidePanelInner />
+        </TutorialProvider>
+      </SettingsProvider>
+    </LanguageProvider>
   )
 }
 

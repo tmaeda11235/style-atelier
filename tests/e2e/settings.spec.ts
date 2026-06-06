@@ -45,7 +45,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -282,6 +282,94 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     console.log("Sync and logical delete E2E logic verification passed successfully!");
   });
 
+  test("should support auto-sync toggling and trigger backup on database changes", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+
+    let uploadCallCount = 0;
+    // Mock files list request
+    await page.route("**/drive/v3/files*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ files: [] })
+      });
+    });
+
+    // Mock file creation/upload request
+    await page.route("**/upload/drive/v3/files*", async (route) => {
+      uploadCallCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ id: "mock-file-123" })
+      });
+    });
+
+    console.log("Navigating to sandbox page for Auto-Sync E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // Switch to Settings tab
+    const settingsTabButton = spFrame.locator("nav button:has-text('Settings')");
+    await settingsTabButton.click();
+
+    // Enable Google Drive synchronization
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn");
+    await toggleBtn.click();
+
+    // Check that auto-sync button is visible
+    const autoSyncBtn = spFrame.locator("#google-drive-auto-sync-btn");
+    await expect(autoSyncBtn).toBeVisible({ timeout: 10000 });
+
+    // Enable auto-sync
+    await autoSyncBtn.click();
+
+    // Capture screenshot showing auto-sync enabled
+    await page.screenshot({
+      path: path.join(screenshotsDir, "auto-sync-enabled.png"),
+    });
+
+    // Simulate database changes inside evaluate to see if auto-backup triggers
+    console.log("Mutating database to trigger auto-backup...");
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      // Configure fast debounce using exposed config
+      const autoSyncConfig = (window as any).autoSyncConfig;
+      if (autoSyncConfig) {
+        autoSyncConfig.setDebounceMs(100);
+      }
+
+      // Add a style card to trigger dexie hooks
+      await database.styleCards.add({
+        id: "card-auto-sync-test",
+        name: "Auto Sync Test Card",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        promptSegments: [],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        tags: [],
+        dominantColor: "#000",
+        thumbnailData: ""
+      });
+    });
+
+    // Wait for the debounced upload call to happen (100ms debounce + some network overhead)
+    await page.waitForTimeout(500);
+
+    // Verify upload was triggered automatically
+    expect(uploadCallCount).toBeGreaterThan(0);
+    console.log("Auto-backup triggered successfully upon DB changes!");
+  });
+
   test("should toggle Easy Mode and restrict tab visibility to Library only", async ({ page }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
     console.log("Navigating to sandbox page for Easy Mode E2E test...");
@@ -290,7 +378,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog if exists
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -351,7 +439,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog if exists
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -413,5 +501,59 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     });
 
     console.log("Expert features toggles E2E test passed successfully!");
+  });
+
+  test("should allow changing display language and verify localization in UI", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Language/i18n E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog if visible
+    const skipButton = spFrame.locator("#welcome-skip-btn");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
+    await settingsNavBtn.click();
+    await page.waitForTimeout(500);
+
+    // 3. Locate Language selector
+    const langSelect = spFrame.locator("#language-select");
+    await expect(langSelect).toBeVisible();
+
+    // 4. Switch to English
+    console.log("Switching language to English...");
+    await langSelect.selectOption("en");
+    await page.waitForTimeout(500);
+
+    // Verify UI has changed to English (Settings title should be "Settings")
+    const settingsTitleEn = spFrame.locator("h2:has-text('Settings')");
+    await expect(settingsTitleEn).toBeVisible({ timeout: 5000 });
+
+    // Capture English Settings screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "settings-lang-en.png"),
+    });
+
+    // 5. Switch to Japanese
+    console.log("Switching language to Japanese...");
+    await langSelect.selectOption("ja");
+    await page.waitForTimeout(500);
+
+    // Verify UI has changed to Japanese (Settings title should be "設定")
+    const settingsTitleJa = spFrame.locator("h2:has-text('設定')");
+    await expect(settingsTitleJa).toBeVisible({ timeout: 5000 });
+
+    // Capture Japanese Settings screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "settings-lang-ja.png"),
+    });
+
+    console.log("Language selection E2E test passed successfully!");
   });
 });

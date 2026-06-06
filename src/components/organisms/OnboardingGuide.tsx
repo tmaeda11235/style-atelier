@@ -12,6 +12,7 @@ import {
   Hammer,
   Sparkles
 } from "lucide-react"
+import { useLanguage } from "../../contexts/LanguageContext"
 
 interface OnboardingGuideProps {
   isOpen: boolean
@@ -27,14 +28,15 @@ interface Step {
 }
 
 export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
+  const { t } = useLanguage()
   const [currentStep, setCurrentStep] = useState(0)
 
   if (!isOpen) return null
 
   const steps: Step[] = [
     {
-      title: "1. History to Panel",
-      description: "Drag and drop any generated image from Midjourney directly into the History tab of the Side Panel to import it.",
+      title: t.onboarding.steps[0].title,
+      description: t.onboarding.steps[0].description,
       icon: <Move className="w-6 h-6 text-blue-400" />,
       color: "from-blue-500/20 to-indigo-500/20 border-blue-500/30",
       illustration: (
@@ -56,8 +58,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       )
     },
     {
-      title: "2. Mint Your Card",
-      description: "Click the 'Mint' button on the imported history item to start crafting your custom Style Card.",
+      title: t.onboarding.steps[1].title,
+      description: t.onboarding.steps[1].description,
       icon: <Zap className="w-6 h-6 text-amber-400" />,
       color: "from-amber-500/20 to-orange-500/20 border-amber-500/30",
       illustration: (
@@ -75,8 +77,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       )
     },
     {
-      title: "3. Name Your Creation",
-      description: "Enter a descriptive and unique title for your new card. This helps you identify and search for it later in your Library.",
+      title: t.onboarding.steps[2].title,
+      description: t.onboarding.steps[2].description,
       icon: <Type className="w-6 h-6 text-purple-400" />,
       color: "from-purple-500/20 to-pink-500/20 border-purple-500/30",
       illustration: (
@@ -95,8 +97,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       )
     },
     {
-      title: "4. Parameter Slotting",
-      description: "Select specific segments of your prompt text to convert them into editable 'Slots' (variables).",
+      title: t.onboarding.steps[3].title,
+      description: t.onboarding.steps[3].description,
       icon: <Layers className="w-6 h-6 text-emerald-400" />,
       color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30",
       illustration: (
@@ -113,8 +115,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       )
     },
     {
-      title: "5. Choose Rarity",
-      description: "Assign a rarity tier to your card. Premium rarities feature stunning visual designs and holographic frames in the Library.",
+      title: t.onboarding.steps[4].title,
+      description: t.onboarding.steps[4].description,
       icon: <Gem className="w-6 h-6 text-cyan-400" />,
       color: "from-cyan-500/20 to-blue-500/20 border-cyan-500/30",
       illustration: (
@@ -130,8 +132,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       )
     },
     {
-      title: "6. Add to Your Hand",
-      description: "Simply click any Style Card in your Library. It will instantly move to your HandBar at the bottom of the screen.",
+      title: t.onboarding.steps[5].title,
+      description: t.onboarding.steps[5].description,
       icon: <MousePointerClick className="w-6 h-6 text-rose-400" />,
       color: "from-rose-500/20 to-red-500/20 border-rose-500/30",
       illustration: (
@@ -152,8 +154,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       )
     },
     {
-      title: "7. Edit in Workbench",
-      description: "Navigate to the Workbench tab to customize the variables of your cards, combine different styles, and generate final prompt strings.",
+      title: t.onboarding.steps[6].title,
+      description: t.onboarding.steps[6].description,
       icon: <Hammer className="w-6 h-6 text-indigo-400" />,
       color: "from-indigo-500/20 to-violet-500/20 border-indigo-500/30",
       illustration: (
@@ -203,7 +205,7 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Quick Guide ({currentStep + 1} / {steps.length})
+              {t.onboarding.quickGuide} ({currentStep + 1} / {steps.length})
             </span>
           </div>
           <button
@@ -264,16 +266,16 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
                 : "border-slate-800 text-slate-300 bg-slate-900 hover:bg-slate-800 hover:border-slate-700"
             }`}
           >
-            <ChevronLeft className="w-4 h-4" /> Back
+            <ChevronLeft className="w-4 h-4" /> {t.onboarding.back}
           </button>
           <button
             onClick={handleNext}
             className="flex-1 flex items-center justify-center gap-1 py-2 px-4 text-xs font-bold text-white rounded-lg bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-900/30 transition-all"
           >
             {currentStep === steps.length - 1 ? (
-              <>Let's Start! <Sparkles className="w-3.5 h-3.5 ml-1" /></>
+              <>{t.onboarding.letsStart} <Sparkles className="w-3.5 h-3.5 ml-1" /></>
             ) : (
-              <>Next <ChevronRight className="w-4 h-4 ml-0.5" /></>
+              <>{t.onboarding.next} <ChevronRight className="w-4 h-4 ml-0.5" /></>
             )}
           </button>
         </div>
