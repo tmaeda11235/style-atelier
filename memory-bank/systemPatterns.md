@@ -24,6 +24,7 @@ tags: []
 - **Bubble Slotting UI**: Breaking prompts into "Text" (Fixed) and "Slot" (Variable) components.
 - **Mixing Table**: Logic to merge two Style Cards (parents) into a new prompt generation.
 - **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
+- **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing by flattening mock structures.
 
 ## Data Flow
 1.  **Capture**: User generates image on Midjourney -> Content Script detects -> User drags to Side Panel.

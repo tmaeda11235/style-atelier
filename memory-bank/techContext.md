@@ -10,7 +10,7 @@ tags: []
 - **Framework**: [Plasmo](https://docs.plasmo.com/) (React + TypeScript) - Specialized for Chrome Extensions.
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand) - Lightweight and scalable state management.
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) / [Tailwind CSS](https://tailwindcss.com/) - For modern, accessible styling.
-- **Local Database**: [Dexie.js](https://dexie.org/) - Wrapper for IndexedDB.
+- **Local Database**: [Dexie.js](https://dexie.org/) - Wrapper for IndexedDB, encapsulated using the Repository Pattern in `src/lib/db.ts` for clean separation of concerns.
 
 ## Key Libraries
 - **Image Processing**: Canvas API (Native) / [satori](https://github.com/vercel/satori) (for card layout generation).
