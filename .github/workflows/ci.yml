@@ -9,7 +9,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  # ---------------------------------------------------
+  # Job 1: ユニットテストとビルド（CPU・メモリ重視）
+  # ---------------------------------------------------
+  unit-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      # 厳密な依存関係解決により、npmキャッシュの不一致を防ぐ
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build extension
+        run: npm run build
+
+  # ---------------------------------------------------
+  # Job 2: E2Eテスト（ネットワーク・プロセッサ分離）
+  # ---------------------------------------------------
+  e2e-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -21,38 +48,32 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Run unit tests
-        run: npm test
+        run: npm ci
 
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
 
+      # PlaywrightのバージョンとOSのみをキーとし、確実なキャッシュヒットを狙う
       - name: Cache Playwright browsers
         uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}-
-            ${{ runner.os }}-playwright-
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
 
+      # キャッシュミス時: ブラウザバイナリとOS依存ライブラリの両方をダウンロード
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
 
+      # キャッシュヒット時: ブラウザのDLはスキップし、Ubuntu側のOS依存ライブラリのみインストール
       - name: Install Playwright OS dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps
 
       - name: Run E2E tests
         run: npm run test:e2e -- --reporter=html
-
-      - name: Build extension
-        run: npm run build
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v7
@@ -61,4 +82,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-
