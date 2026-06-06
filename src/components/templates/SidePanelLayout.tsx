@@ -1,5 +1,5 @@
 import React from "react"
-import { HelpCircle } from "lucide-react"
+import { HelpCircle, Settings } from "lucide-react"
 import type { Tab } from "../../hooks/useTabs"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 
@@ -19,6 +19,7 @@ interface SidePanelLayoutProps {
   onOpenGuide: () => void
   isDraggingFile?: boolean
   isImporting?: boolean
+  isEasyMode?: boolean
 }
 
 export function SidePanelLayout({
@@ -35,7 +36,8 @@ export function SidePanelLayout({
   onDismissAlert,
   onOpenGuide,
   isDraggingFile,
-  isImporting
+  isImporting,
+  isEasyMode
 }: SidePanelLayoutProps) {
   return (
     <div
@@ -47,53 +49,74 @@ export function SidePanelLayout({
 
       <div className="p-4 bg-white shadow-sm z-10">
         <div className="mt-2">
-          <div className="flex justify-between items-center border-b border-slate-200">
-            <nav className="-mb-px flex space-x-4">
-              <button
-                onClick={() => onTabChange("history")}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "history"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-                  }`}
-              >
-                History
-              </button>
-              <button
-                onClick={() => onTabChange("library")}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "library"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-                  }`}
-              >
-                Library
-              </button>
-              <button
-                onClick={() => onTabChange("workbench")}
-                data-tutorial="workbench-tab"
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "workbench"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-                  }`}
-              >
-                Workbench
-              </button>
+          <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+            {isEasyMode ? (
+              <div className="flex items-center gap-2 py-2">
+                <span className="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                  <span className="text-lg">🎴</span> Library
+                </span>
+              </div>
+            ) : (
+              <nav className="-mb-px flex space-x-4">
+                <button
+                  onClick={() => onTabChange("history")}
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "history"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                >
+                  History
+                </button>
+                <button
+                  onClick={() => onTabChange("library")}
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "library"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                >
+                  Library
+                </button>
+                <button
+                  onClick={() => onTabChange("workbench")}
+                  data-tutorial="workbench-tab"
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "workbench"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                >
+                  Workbench
+                </button>
+                <button
+                  onClick={() => onTabChange("settings")}
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "settings"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                >
+                  Settings
+                </button>
+              </nav>
+            )}
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => onTabChange("settings")}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "settings"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-                  }`}
+                id="settings-nav-btn"
+                className={`text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold ${
+                  activeTab === "settings" ? "bg-blue-50 text-blue-600 hover:bg-blue-50" : ""
+                }`}
+                title="Settings"
               >
-                Settings
+                <Settings className="w-4 h-4 text-slate-500" />
+                <span className="sr-only">Settings</span>
               </button>
-            </nav>
-            <button
-              onClick={onOpenGuide}
-              className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold"
-              title="Show Guide"
-            >
-              <HelpCircle className="w-4 h-4 text-blue-500" /> Guide
-            </button>
+              <button
+                onClick={onOpenGuide}
+                className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold"
+                title="Show Guide"
+              >
+                <HelpCircle className="w-4 h-4 text-blue-500" /> Guide
+              </button>
+            </div>
           </div>
         </div>
       </div>

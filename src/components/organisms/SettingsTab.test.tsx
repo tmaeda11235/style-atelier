@@ -248,9 +248,9 @@ describe("SettingsTab", () => {
       size: "153600", // 150 KB
     });
 
-    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+    const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
-    const toggleBtn = screen.getByRole("button", { name: "" }); // Switch button has no name text inside but is a button
+    const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
     fireEvent.click(toggleBtn);
 
     await waitFor(() => {
@@ -276,10 +276,10 @@ describe("SettingsTab", () => {
     vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data");
     vi.mocked(googleDrive.importDatabase).mockResolvedValue(undefined);
 
-    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+    const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     // Enable sync
-    const toggleBtn = screen.getByRole("button", { name: "" });
+    const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
     fireEvent.click(toggleBtn);
 
     // Wait for sync to be enabled
@@ -330,10 +330,10 @@ describe("SettingsTab", () => {
     vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data");
     vi.mocked(googleDrive.importDatabase).mockResolvedValue(undefined);
 
-    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+    const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     // Enable sync
-    const toggleBtn = screen.getByRole("button", { name: "" });
+    const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
     fireEvent.click(toggleBtn);
 
     await waitFor(() => {
@@ -356,10 +356,10 @@ describe("SettingsTab", () => {
     vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
     vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
 
-    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+    const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     // Enable sync
-    const toggleBtn = screen.getByRole("button", { name: "" });
+    const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
     fireEvent.click(toggleBtn);
 
     await waitFor(() => {
@@ -393,10 +393,10 @@ describe("SettingsTab", () => {
       });
       vi.mocked(googleDrive.downloadBackup).mockReturnValue(downloadPromise);
 
-      render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+      const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
       // Enable sync
-      const toggleBtn = screen.getByRole("button", { name: "" });
+      const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
       fireEvent.click(toggleBtn);
 
       await waitFor(() => {
@@ -428,10 +428,10 @@ describe("SettingsTab", () => {
     it("handles connection timeout error gracefully", async () => {
       vi.mocked(googleDrive.downloadBackup).mockRejectedValue(new googleDrive.GDriveTimeoutError());
 
-      render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+      const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
       // Enable sync
-      const toggleBtn = screen.getByRole("button", { name: "" });
+      const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
       fireEvent.click(toggleBtn);
 
       await waitFor(() => {
@@ -528,10 +528,10 @@ describe("SettingsTab", () => {
       }
     );
 
-    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+    const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     // Enable sync
-    const toggleBtn = screen.getByRole("button", { name: "" });
+    const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
     fireEvent.click(toggleBtn);
 
     // Wait for sync to be enabled
@@ -568,10 +568,10 @@ describe("SettingsTab", () => {
       }
     );
 
-    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+    const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     // Enable sync
-    const toggleBtn = screen.getByRole("button", { name: "" });
+    const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
     fireEvent.click(toggleBtn);
 
     // Wait for sync to be enabled
@@ -595,5 +595,41 @@ describe("SettingsTab", () => {
 
     // Check status message displays progress
     expect(screen.getByText("データをダウンロード中 (60%)...")).toBeDefined();
+  });
+
+  // --- Easy Mode Tests ---
+
+  it("renders Interface Mode Settings card correctly", () => {
+    render(
+      <SettingsTab
+        addLog={mockAddLog}
+        onResetDb={mockResetDb}
+        isEasyMode={false}
+      />
+    );
+
+    expect(screen.getByText("かんたんモード (Easy Mode)")).toBeDefined();
+    expect(screen.getByText("かんたんモードを有効にする")).toBeDefined();
+  });
+
+  it("calls onToggleEasyMode when the toggle button is clicked", () => {
+    const mockToggleEasyMode = vi.fn();
+    const { container } = render(
+      <SettingsTab
+        addLog={mockAddLog}
+        onResetDb={mockResetDb}
+        isEasyMode={false}
+        onToggleEasyMode={mockToggleEasyMode}
+      />
+    );
+
+    const toggleBtn = container.querySelector("#easy-mode-toggle-btn");
+    expect(toggleBtn).not.toBeNull();
+    
+    if (toggleBtn) {
+      fireEvent.click(toggleBtn);
+    }
+
+    expect(mockToggleEasyMode).toHaveBeenCalledWith(true);
   });
 });

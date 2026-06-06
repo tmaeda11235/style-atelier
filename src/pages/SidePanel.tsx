@@ -57,18 +57,34 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
 function SidePanelInner() {
   const { isTargetSite, isLoading } = useActiveTabUrl()
   const { startTutorial, advanceIfStep } = useTutorial()
+  const { activeTab, setActiveTab } = useTabs()
   const [logs, setLogs] = useState<string[]>([])
   // New global state for connection alerts
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(null)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [isEasyMode, setIsEasyMode] = useState(false)
 
   useEffect(() => {
     const seen = localStorage.getItem("style-atelier-onboarding-seen")
     if (!seen) {
       setShowWelcome(true)
     }
+    const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true"
+    setIsEasyMode(easyMode)
+    if (easyMode) {
+      setActiveTab("library")
+    }
   }, [])
+
+  const handleToggleEasyMode = (enabled: boolean) => {
+    setIsEasyMode(enabled)
+    localStorage.setItem("style-atelier-easy-mode", enabled ? "true" : "false")
+    addLog(`Interface mode changed: ${enabled ? "EASY" : "EXPERT"}`)
+    if (enabled) {
+      setActiveTab("library")
+    }
+  }
 
   const handleStartTutorial = () => {
     localStorage.setItem("style-atelier-onboarding-seen", "true")
@@ -140,8 +156,6 @@ function SidePanelInner() {
       addLog(`Note: ${err.message || "Could not send to tab"}`)
     }
   }
-
-  const { activeTab, setActiveTab } = useTabs()
   const { 
     isDragging, 
     isDraggingFile, 
@@ -270,6 +284,7 @@ function SidePanelInner() {
             setActiveTab("history")
             startTutorial()
           }}
+          isEasyMode={isEasyMode}
         >
           {(mintingItem || variationBase) && (
             <MintingView
@@ -329,7 +344,14 @@ function SidePanelInner() {
             />
           )}
           {activeTab === "workbench" && <Workbench onStartVariationMinting={handleStartVariationMinting} addLog={addLog} setAlertType={setAlertType} />}
-          {activeTab === "settings" && <SettingsTab addLog={addLog} onResetDb={handleResetDb} />}
+          {activeTab === "settings" && (
+            <SettingsTab 
+              addLog={addLog} 
+              onResetDb={handleResetDb} 
+              isEasyMode={isEasyMode}
+              onToggleEasyMode={handleToggleEasyMode}
+            />
+          )}
 
           {/* HandBar is now inside SidePanelLayout children to ensure it stays in same context */}
           <HandBar 

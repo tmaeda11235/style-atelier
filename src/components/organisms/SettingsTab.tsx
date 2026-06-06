@@ -32,9 +32,16 @@ import { db } from "../../lib/db";
 interface SettingsTabProps {
   addLog: (log: string) => void;
   onResetDb: () => void;
+  isEasyMode?: boolean;
+  onToggleEasyMode?: (checked: boolean) => void;
 }
 
-export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
+export function SettingsTab({ 
+  addLog, 
+  onResetDb, 
+  isEasyMode = false, 
+  onToggleEasyMode = () => {} 
+}: SettingsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { estimate, checkStorage } = useStorageEstimate();
@@ -55,7 +62,13 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       : "[Cloud Backup Information]",
     restoreConfirmTime: isJapanese ? "更新日時: " : "Modified Time: ",
     restoreConfirmSize: isJapanese ? "サイズ: " : "Size: ",
-    restoreBtnText: isJapanese ? "Google Driveから強制リカバリ" : "Force Restore from Google Drive"
+    restoreBtnText: isJapanese ? "Google Driveから強制リカバリ" : "Force Restore from Google Drive",
+    easyModeLabel: isJapanese ? "かんたんモード (Easy Mode)" : "Easy Mode",
+    easyModeDesc: isJapanese 
+      ? "UIをシンプルにし、Libraryタブのみを表示します。設定には右上の歯車アイコンからいつでも戻ることができます。" 
+      : "Simplifies the UI by showing only the Library tab. You can return to Settings anytime via the gear icon.",
+    easyModeToggleLabel: isJapanese ? "かんたんモードを有効にする" : "Enable Easy Mode",
+    easyModeToggleSub: isJapanese ? "不要なタブを非表示にし、操作ミスを防ぎます" : "Hide tabs to focus on Style Card management"
   };
 
   // Sync toggle state
@@ -446,6 +459,52 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           <Settings2 className="w-5 h-5 text-blue-600" />
         </div>
         <h2 className="text-base font-bold text-slate-800">Settings</h2>
+      </div>
+
+      {/* Interface Mode Settings (Easy Mode Toggle) */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+
+        <div className="flex items-start gap-4 mb-4">
+          <div className={`p-3 rounded-xl ${isEasyMode ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
+            <Settings2 className="w-6 h-6" />
+          </div>
+          <div className="space-y-1 flex-1">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              {t.easyModeLabel}
+              {isEasyMode && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
+                  Active
+                </span>
+              )}
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {t.easyModeDesc}
+            </p>
+          </div>
+        </div>
+
+        {/* Easy Mode Toggle Switch */}
+        <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold text-slate-700">{t.easyModeToggleLabel}</span>
+            <p className="text-[10px] text-slate-400">{t.easyModeToggleSub}</p>
+          </div>
+          <button
+            type="button"
+            id="easy-mode-toggle-btn"
+            onClick={() => onToggleEasyMode(!isEasyMode)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              isEasyMode ? "bg-blue-600" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                isEasyMode ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Google Drive Card */}

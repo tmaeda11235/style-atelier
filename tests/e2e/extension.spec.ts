@@ -1169,7 +1169,7 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     }
 
     // 2. Switch to Settings tab
-    const settingsTabButton = spFrame.locator("button:has-text('Settings')");
+    const settingsTabButton = spFrame.locator("nav button:has-text('Settings')");
     await expect(settingsTabButton).toBeVisible();
     await settingsTabButton.click();
 
@@ -1398,5 +1398,66 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     });
 
     console.log("Sync and logical delete E2E logic verification passed successfully!");
+  });
+
+  test("should toggle Easy Mode and restrict tab visibility to Library only", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Easy Mode E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Verify History tab is visible initially
+    const historyTabBtn = spFrame.locator("nav button:has-text('History')");
+    await expect(historyTabBtn).toBeVisible({ timeout: 10000 });
+
+    // 3. Click Settings icon in header to navigate to Settings
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
+    await settingsNavBtn.click();
+
+    // 4. Verify Easy Mode toggle button exists in SettingsTab
+    const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn");
+    await expect(easyModeToggle).toBeVisible({ timeout: 10000 });
+
+    // 5. Toggle Easy Mode to ON
+    console.log("Enabling Easy Mode...");
+    await easyModeToggle.click();
+    await page.waitForTimeout(500);
+
+    // 6. Verify tabs are hidden and Library title is displayed
+    const libraryTitle = spFrame.locator("span:has-text('Library')");
+    await expect(libraryTitle).toBeVisible({ timeout: 10000 });
+    await expect(historyTabBtn).not.toBeVisible();
+
+    // 7. Save screenshot of active Easy Mode
+    await page.screenshot({
+      path: path.join(screenshotsDir, "easy-mode-active.png"),
+    });
+    console.log("Easy Mode active screenshot saved.");
+
+    // 8. Re-open settings via header settings button
+    await settingsNavBtn.click();
+    await page.waitForTimeout(500);
+
+    // 9. Toggle Easy Mode to OFF
+    console.log("Disabling Easy Mode...");
+    await easyModeToggle.click();
+    await page.waitForTimeout(500);
+
+    // 10. Verify typical tabs are restored (e.g. History tab visible)
+    await expect(historyTabBtn).toBeVisible({ timeout: 10000 });
+
+    // 11. Save screenshot of restored standard mode
+    await page.screenshot({
+      path: path.join(screenshotsDir, "easy-mode-deactivated.png"),
+    });
+    console.log("Easy Mode E2E test passed successfully!");
   });
 });
