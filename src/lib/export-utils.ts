@@ -1,6 +1,47 @@
 import type { StyleCard } from './db-schema';
+import { db } from './db';
 import { compressCardData, generateQRCodeUrl } from './qr-utils';
 import iconUrl from 'url:../../assets/icon.png';
+
+/**
+ * Resolves a given image source URL to a local cache URL (Object URL of local blob)
+ * if it exists in db.historyItems. Otherwise, returns the original URL.
+ */
+async function resolveLocalImageSource(src: string, card: StyleCard): Promise<string> {
+  // If it's already a local data/blob URL or placeholder asset, return as is
+  if (
+    !src ||
+    src.startsWith('data:') ||
+    src.startsWith('blob:') ||
+    src.includes('assets/icon.png') ||
+    src.startsWith('url:')
+  ) {
+    return src;
+  }
+
+  try {
+    // Look for a matching history item in associatedJobIds first
+    const jobIds = card.associatedJobIds || (card.jobId ? [card.jobId] : []);
+    for (const jobId of jobIds) {
+      const historyItem = await db.historyItems.get(jobId);
+      if (historyItem && historyItem.imageUrl === src && historyItem.localImageBlob) {
+        return URL.createObjectURL(historyItem.localImageBlob);
+      }
+    }
+
+    // Fallback: search all history items matching this imageUrl (if not too many)
+    const matchedItem = await db.historyItems
+      .filter((item) => item.imageUrl === src && !!item.localImageBlob)
+      .first();
+    if (matchedItem && matchedItem.localImageBlob) {
+      return URL.createObjectURL(matchedItem.localImageBlob);
+    }
+  } catch (err) {
+    console.warn('Failed to resolve local image from database:', err);
+  }
+
+  return src;
+}
 
 /**
  * Loads an image from a URL or Base64 string, handling CORS.
@@ -77,12 +118,26 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
   ctx.stroke();
 
   // 2. Load and Draw Art Image(s)
-  // Gather available image sources, fallback to thumbnailData
-  const rawImageSources = card.selectedThumbnails && card.selectedThumbnails.length > 0
-    ? card.selectedThumbnails.slice(0, 4)
-    : card.images && card.images.length > 0
-      ? card.images.slice(0, 4)
-      : [card.thumbnailData].filter(Boolean);
+  // Determine if card.thumbnailData is already a local base64/blob URL or placeholder asset
+  const isLocalThumb = card.thumbnailData && (
+    card.thumbnailData.startsWith('data:') ||
+    card.thumbnailData.startsWith('blob:') ||
+    card.thumbnailData.includes('assets/icon.png') ||
+    card.thumbnailData.startsWith('url:')
+  );
+
+  let rawImageSources: string[] = [];
+  if (isLocalThumb && (!card.selectedThumbnails || card.selectedThumbnails.length <= 1)) {
+    // If thumbnailData is already a local cache and we don't need a grid (0 or 1 thumbnails),
+    // prioritize it to avoid CORS issues and redundant CDN network traffic entirely.
+    rawImageSources = [card.thumbnailData];
+  } else if (card.selectedThumbnails && card.selectedThumbnails.length > 0) {
+    rawImageSources = card.selectedThumbnails.slice(0, 4);
+  } else if (card.images && card.images.length > 0) {
+    rawImageSources = card.images.slice(0, 4);
+  } else if (card.thumbnailData) {
+    rawImageSources = [card.thumbnailData];
+  }
 
   const imageSources = rawImageSources.map((src) => src === "assets/icon.png" ? iconUrl : src);
 
@@ -100,20 +155,39 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
   ctx.fillStyle = '#1e293b';
   ctx.fillRect(artX, artY, artW, artH);
 
+  // Keep track of dynamically generated object URLs so we can revoke them and prevent memory leaks
+  const objectUrlsToRevoke: string[] = [];
+
   try {
-    const loadedImages: HTMLImageElement[] = [];
+    // Resolve all image sources to local cached blobs if available
+    const resolvedSources: string[] = [];
     for (const src of imageSources) {
+      const resolved = await resolveLocalImageSource(src, card);
+      resolvedSources.push(resolved);
+      if (resolved.startsWith('blob:') && resolved !== src) {
+        objectUrlsToRevoke.push(resolved);
+      }
+    }
+
+    const loadedImages: HTMLImageElement[] = [];
+    for (let i = 0; i < resolvedSources.length; i++) {
+      const src = resolvedSources[i];
+      const originalSrc = imageSources[i];
       try {
         const img = await loadImage(src);
         loadedImages.push(img);
       } catch (err) {
         console.warn(`Failed to load image: ${src}, falling back.`, err);
-        // Fallback to card's base64 thumbnailData if CDN fetch fails
-        if (src !== card.thumbnailData && card.thumbnailData) {
+        // Fallback to card's base64 thumbnailData if CDN/blob fetch fails
+        if (originalSrc !== card.thumbnailData && card.thumbnailData) {
           try {
             const fallbackSrc = card.thumbnailData === "assets/icon.png" ? iconUrl : card.thumbnailData;
-            const fallbackImg = await loadImage(fallbackSrc);
+            const resolvedFallback = await resolveLocalImageSource(fallbackSrc, card);
+            const fallbackImg = await loadImage(resolvedFallback);
             loadedImages.push(fallbackImg);
+            if (resolvedFallback.startsWith('blob:') && resolvedFallback !== fallbackSrc) {
+              objectUrlsToRevoke.push(resolvedFallback);
+            }
           } catch (fallbackErr) {
             console.error('Fallback image failed to load as well.', fallbackErr);
           }
@@ -158,6 +232,11 @@ export async function renderCardToCanvas(card: StyleCard): Promise<HTMLCanvasEle
     }
   } catch (err: any) {
     throw new Error(`Failed to draw artwork to canvas: ${err.message || err}`);
+  } finally {
+    // Revoke object URLs to prevent memory leaks
+    for (const url of objectUrlsToRevoke) {
+      URL.revokeObjectURL(url);
+    }
   }
   ctx.restore();
 
