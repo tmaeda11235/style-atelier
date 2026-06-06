@@ -36,7 +36,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop", () => {
       await expect(mockImage).toBeVisible({ timeout: 15000 });
 
       // 3. ウェルカムダイアログの「スキップ」ボタンがあればクリック
-      const skipButton = spFrame.locator("text=スキップ");
+      const skipButton = spFrame.locator("#welcome-skip-btn");
       if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         await skipButton.click();
       }
@@ -132,7 +132,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }

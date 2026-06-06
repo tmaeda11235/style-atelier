@@ -56,15 +56,19 @@ function SidePanelInner() {
 }
 
 /**
- * Root page component – wraps everything in TutorialProvider so useTutorial
- * is available within both the SidePanelInner router and underlying views.
+ * Root page component – wraps everything in LanguageProvider and TutorialProvider so useTutorial and useLanguage
+ * are available within both the SidePanelInner router and underlying views.
  */
+import { LanguageProvider } from "../contexts/LanguageContext"
+
 function SidePanelPage() {
   return (
-    <TutorialProvider>
-      <SidePanelInner />
-    </TutorialProvider>
+    <LanguageProvider>
+      <TutorialProvider>
+        <SidePanelInner />
+      </TutorialProvider>
+    </LanguageProvider>
   )
 }
 
-export default SidePanelPage
+export default SidePanelPage

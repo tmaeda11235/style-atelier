@@ -10,6 +10,7 @@ import { CardDetailView } from "./CardDetailView"
 import { HandBar } from "./HandBar"
 import { InteractiveTutorial } from "./InteractiveTutorial"
 import { db } from "../../lib/db"
+import { useLanguage } from "../../contexts/LanguageContext"
 
 interface ExpertModeViewProps {
   isEasyMode: boolean
@@ -17,6 +18,7 @@ interface ExpertModeViewProps {
 }
 
 function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
+  const { t } = useLanguage()
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
       <div className="w-full max-w-xs bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200">
@@ -24,23 +26,25 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
           <div className="w-14 h-14 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center">
             <span className="text-3xl">🎴</span>
           </div>
-          <h2 className="text-base font-black text-white text-center">Style Atelierへようこそ！</h2>
-          <p className="text-xs text-slate-400 leading-relaxed text-center">
-            実際に操作しながら使い方を覚える<br />インタラクティブなガイドを開始しますか？
+          <h2 className="text-base font-black text-white text-center">{t.welcome.title}</h2>
+          <p className="text-xs text-slate-400 leading-relaxed text-center whitespace-pre-line">
+            {t.welcome.description}
           </p>
         </div>
         <div className="px-5 pb-5 flex flex-col gap-2">
           <button
             onClick={onStart}
+            id="welcome-start-btn"
             className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow transition-all"
           >
-            ガイドを開始する
+            {t.welcome.start}
           </button>
           <button
             onClick={onSkip}
+            id="welcome-skip-btn"
             className="w-full py-2 text-slate-500 hover:text-slate-300 text-xs font-semibold transition-all"
           >
-            スキップ（あとでGuideボタンから開始できます）
+            {t.welcome.skip}
           </button>
         </div>
       </div>

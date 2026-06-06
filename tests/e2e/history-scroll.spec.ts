@@ -28,7 +28,7 @@ test.describe("Style Atelier Sandbox E2E Tests - History Scroll", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
     
     // スキップ
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
