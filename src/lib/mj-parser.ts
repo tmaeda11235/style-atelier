@@ -7,10 +7,16 @@ export const extractJobIdFromUrl = (url: string): string | undefined => {
     if (match) return match[1]
   }
 
-  // 2. Check for MJ CDN URL
-  if (url.includes("cdn.midjourney.com")) {
-    const match = url.match(uuidPattern)
-    if (match) return match[1]
+  // 2. Check for MJ CDN URL host
+  try {
+    const parsedUrl = new URL(url)
+    const allowedHosts = ["cdn.midjourney.com"]
+    if (allowedHosts.includes(parsedUrl.hostname.toLowerCase())) {
+      const match = url.match(uuidPattern)
+      if (match) return match[1]
+    }
+  } catch {
+    // Ignore invalid URLs and fall through
   }
   
   return undefined
