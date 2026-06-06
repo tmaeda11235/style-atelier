@@ -1,17 +1,26 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { OnboardingGuide } from "./OnboardingGuide"
+import { LanguageProvider } from "../../contexts/LanguageContext"
 
 describe("OnboardingGuide", () => {
   it("does not render when isOpen is false", () => {
     const handleClose = vi.fn()
-    render(<OnboardingGuide isOpen={false} onClose={handleClose} />)
+    render(
+      <LanguageProvider>
+        <OnboardingGuide isOpen={false} onClose={handleClose} />
+      </LanguageProvider>
+    )
     expect(screen.queryByTestId("onboarding-modal")).toBeNull()
   })
 
   it("renders step 1 when isOpen is true", () => {
     const handleClose = vi.fn()
-    render(<OnboardingGuide isOpen={true} onClose={handleClose} />)
+    render(
+      <LanguageProvider>
+        <OnboardingGuide isOpen={true} onClose={handleClose} />
+      </LanguageProvider>
+    )
     expect(screen.getByTestId("onboarding-modal")).toBeDefined()
     expect(screen.getByText("Quick Guide (1 / 7)")).toBeDefined()
     expect(screen.getByText("1. History to Panel")).toBeDefined()
@@ -20,7 +29,11 @@ describe("OnboardingGuide", () => {
 
   it("navigates forward and backward through steps", () => {
     const handleClose = vi.fn()
-    render(<OnboardingGuide isOpen={true} onClose={handleClose} />)
+    render(
+      <LanguageProvider>
+        <OnboardingGuide isOpen={true} onClose={handleClose} />
+      </LanguageProvider>
+    )
 
     // Initially at step 1
     expect(screen.getByText("1. History to Panel")).toBeDefined()
@@ -43,7 +56,11 @@ describe("OnboardingGuide", () => {
 
   it("jumps to step when clicking dots indicator", () => {
     const handleClose = vi.fn()
-    render(<OnboardingGuide isOpen={true} onClose={handleClose} />)
+    render(
+      <LanguageProvider>
+        <OnboardingGuide isOpen={true} onClose={handleClose} />
+      </LanguageProvider>
+    )
 
     // Click the 4th dot (0-indexed, so index 3 is step 4)
     const dots = screen.getAllByRole("button", { name: /Go to step/i })
@@ -56,7 +73,11 @@ describe("OnboardingGuide", () => {
 
   it("calls onClose when Let's Start is clicked on final step", () => {
     const handleClose = vi.fn()
-    render(<OnboardingGuide isOpen={true} onClose={handleClose} />)
+    render(
+      <LanguageProvider>
+        <OnboardingGuide isOpen={true} onClose={handleClose} />
+      </LanguageProvider>
+    )
 
     // Go directly to final step (step 7)
     const dots = screen.getAllByRole("button", { name: /Go to step/i })
@@ -73,7 +94,11 @@ describe("OnboardingGuide", () => {
 
   it("calls onClose when close icon button is clicked", () => {
     const handleClose = vi.fn()
-    render(<OnboardingGuide isOpen={true} onClose={handleClose} />)
+    render(
+      <LanguageProvider>
+        <OnboardingGuide isOpen={true} onClose={handleClose} />
+      </LanguageProvider>
+    )
 
     const closeBtn = screen.getByRole("button", { name: /Close Guide/i })
     fireEvent.click(closeBtn)

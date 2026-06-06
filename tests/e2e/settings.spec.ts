@@ -45,7 +45,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -378,7 +378,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog if exists
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -429,5 +429,59 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
       path: path.join(screenshotsDir, "easy-mode-deactivated.png"),
     });
     console.log("Easy Mode E2E test passed successfully!");
+  });
+
+  test("should allow changing display language and verify localization in UI", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Language/i18n E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog if visible
+    const skipButton = spFrame.locator("#welcome-skip-btn");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
+    await settingsNavBtn.click();
+    await page.waitForTimeout(500);
+
+    // 3. Locate Language selector
+    const langSelect = spFrame.locator("#language-select");
+    await expect(langSelect).toBeVisible();
+
+    // 4. Switch to English
+    console.log("Switching language to English...");
+    await langSelect.selectOption("en");
+    await page.waitForTimeout(500);
+
+    // Verify UI has changed to English (Settings title should be "Settings")
+    const settingsTitleEn = spFrame.locator("h2:has-text('Settings')");
+    await expect(settingsTitleEn).toBeVisible({ timeout: 5000 });
+
+    // Capture English Settings screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "settings-lang-en.png"),
+    });
+
+    // 5. Switch to Japanese
+    console.log("Switching language to Japanese...");
+    await langSelect.selectOption("ja");
+    await page.waitForTimeout(500);
+
+    // Verify UI has changed to Japanese (Settings title should be "設定")
+    const settingsTitleJa = spFrame.locator("h2:has-text('設定')");
+    await expect(settingsTitleJa).toBeVisible({ timeout: 5000 });
+
+    // Capture Japanese Settings screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "settings-lang-ja.png"),
+    });
+
+    console.log("Language selection E2E test passed successfully!");
   });
 });

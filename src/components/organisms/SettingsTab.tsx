@@ -28,6 +28,8 @@ import {
 } from "../../lib/google-drive";
 import { useStorageEstimate } from "../../hooks/useStorageEstimate";
 import { db } from "../../lib/db";
+import { useLanguage } from "../../contexts/LanguageContext";
+import type { Language } from "../../lib/i18n";
 import { setAutoSyncEnabled } from "../../lib/auto-sync";
 
 interface SettingsTabProps {
@@ -46,31 +48,8 @@ export function SettingsTab({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { estimate, checkStorage } = useStorageEstimate();
-
-  const isJapanese = typeof navigator !== "undefined" && navigator.language?.startsWith("ja");
-  const t = {
-    cloudBackupLabel: isJapanese ? "クラウド上のバックアップ: " : "Cloud Backup: ",
-    loadingCloudBackup: isJapanese ? "クラウド情報を取得中..." : "Fetching cloud backup info...",
-    noCloudBackup: isJapanese ? "クラウド上のバックアップファイルが見つかりません" : "No cloud backup file found",
-    lastBackupLabel: isJapanese ? "ローカル最終バックアップ: " : "Last Local Backup: ",
-    syncingText: isJapanese ? "同期中..." : "Syncing...",
-    syncButtonText: isJapanese ? "Google Driveと同期 (Sync)" : "Sync with Google Drive",
-    restoreConfirmMsg: isJapanese
-      ? "Google Driveからデータを強制リカバリ（ロード）し、現在のローカルデータを完全に削除してバックアップの内容で置き換えます。\n現在のローカルデータ（この端末で新規作成したカードも含む）はすべて失われます。この操作は取り消せません。本当によろしいですか？"
-      : "Force recover database from Google Drive. This will completely overwrite all local data. Your current cards and configurations will be lost forever. This action cannot be undone. Are you sure?",
-    restoreConfirmHeader: isJapanese
-      ? "【クラウド上のバックアップ情報】"
-      : "[Cloud Backup Information]",
-    restoreConfirmTime: isJapanese ? "更新日時: " : "Modified Time: ",
-    restoreConfirmSize: isJapanese ? "サイズ: " : "Size: ",
-    restoreBtnText: isJapanese ? "Google Driveから強制リカバリ" : "Force Restore from Google Drive",
-    easyModeLabel: isJapanese ? "かんたんモード (Easy Mode)" : "Easy Mode",
-    easyModeDesc: isJapanese 
-      ? "UIをシンプルにし、Libraryタブのみを表示します。設定には右上の歯車アイコンからいつでも戻ることができます。" 
-      : "Simplifies the UI by showing only the Library tab. You can return to Settings anytime via the gear icon.",
-    easyModeToggleLabel: isJapanese ? "かんたんモードを有効にする" : "Enable Easy Mode",
-    easyModeToggleSub: isJapanese ? "不要なタブを非表示にし、操作ミスを防ぎます" : "Hide tabs to focus on Style Card management"
-  };
+  const { lang, changeLanguage, t: i18n } = useLanguage();
+  const t = i18n.settings;
 
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
@@ -220,7 +199,7 @@ export function SettingsTab({
 
     setIsSyncing(true);
     setSyncProgress(0);
-    setStatusMessage({ text: "Google Drive同期を開始中...", type: "info" });
+    setStatusMessage({ text: t.syncingStart, type: "info" });
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -229,27 +208,27 @@ export function SettingsTab({
       const token = await getOrRequestToken();
       
       // 1. Download existing backup (if any)
-      setStatusMessage({ text: "Google Driveからデータを取得中...", type: "info" });
+      setStatusMessage({ text: t.syncingFetch, type: "info" });
       const backupData = await downloadBackup(token, setAccessToken, (percent) => {
         setSyncProgress(Math.round(percent * 0.5)); // 0-50%
-        setStatusMessage({ text: `データをダウンロード中 (${percent}%)...`, type: "info" });
+        setStatusMessage({ text: `${t.syncingProgress} (${percent}%)...`, type: "info" });
       }, undefined, { signal: controller.signal });
 
       if (backupData) {
-        setStatusMessage({ text: "データをマージ中...", type: "info" });
+        setStatusMessage({ text: t.syncingMerge, type: "info" });
         await importDatabase(backupData, "merge");
       } else {
         addLog("No existing backup found. Uploading local data as new backup.");
       }
 
       // 2. Export and Upload current merged state
-      setStatusMessage({ text: "同期データを準備中...", type: "info" });
+      setStatusMessage({ text: t.syncingPrepare, type: "info" });
       const jsonData = await exportDatabase();
 
-      setStatusMessage({ text: "Google Driveへ同期中 (50%)...", type: "info" });
+      setStatusMessage({ text: `${t.syncingText} (50%)...`, type: "info" });
       await uploadBackup(token, jsonData, setAccessToken, (percent) => {
         setSyncProgress(50 + Math.round(percent * 0.5)); // 50-100%
-        setStatusMessage({ text: `データをアップロード中 (${percent}%)...`, type: "info" });
+        setStatusMessage({ text: `${t.syncingUpload} (${percent}%)...`, type: "info" });
       }, { signal: controller.signal });
 
       const now = Date.now();
@@ -268,19 +247,19 @@ export function SettingsTab({
       }
 
       addLog("Google Drive synchronization completed successfully.");
-      showStatus("同期が完了しました", "success");
+      showStatus(t.syncSuccess, "success");
       checkStorage();
     } catch (err: any) {
       if (err.name === "AbortError") {
         addLog("Sync cancelled by user.");
-        showStatus("同期がキャンセルされました", "info");
+        showStatus(t.syncCancelled, "info");
       } else if (err instanceof GDriveTimeoutError) {
         addLog("Sync failed: Connection timed out.");
-        showStatus("同期がタイムアウトしました。ネットワーク接続を確認してください。", "error");
+        showStatus(t.syncTimeout, "error");
       } else {
         console.error(err);
         addLog(`Sync failed: ${err.message || err}`);
-        showStatus(`Sync failed: ${err.message || "Unknown error"}`, "error");
+        showStatus(`${t.syncFailed}: ${err.message || "Unknown error"}`, "error");
       }
       
       // Clear token cache from Chrome on unexpected failure
@@ -333,33 +312,33 @@ export function SettingsTab({
       if (!ok) return;
 
       setRestoreProgress(0);
-      setStatusMessage({ text: "Google Driveから強制リカバリ中 (0%)...", type: "info" });
+      setStatusMessage({ text: `${t.restoreLoading} (0%)...`, type: "info" });
       
       const backupData = await downloadBackup(token, setAccessToken, (percent) => {
         setRestoreProgress(percent);
-        setStatusMessage({ text: `データをダウンロード中 (${percent}%)...`, type: "info" });
+        setStatusMessage({ text: `${t.restoreProgress} (${percent}%)...`, type: "info" });
       }, undefined, { signal: controller.signal });
       if (!backupData) {
-        showStatus("Google Driveにバックアップファイルが見つかりません。", "error");
+        showStatus(t.noCloudBackup, "error");
         addLog("Force recovery failed: Backup file not found.");
         return;
       }
 
       await importDatabase(backupData, "replace");
       addLog("Database recovered from Google Drive successfully.");
-      showStatus("強制リカバリが完了しました！", "success");
+      showStatus(t.restoreSuccess, "success");
       checkStorage();
     } catch (err: any) {
       if (err.name === "AbortError") {
         addLog("Force recovery cancelled by user.");
-        showStatus("強制リカバリがキャンセルされました", "info");
+        showStatus(t.restoreCancelled, "info");
       } else if (err instanceof GDriveTimeoutError) {
         addLog("Force recovery failed: Connection timed out.");
-        showStatus("同期がタイムアウトしました。ネットワーク接続を確認してください。", "error");
+        showStatus(t.syncTimeout, "error");
       } else {
         console.error(err);
         addLog(`Force recovery failed: ${err.message || err}`);
-        showStatus(`Force recovery failed: ${err.message || "Unknown error"}`, "error");
+        showStatus(`${t.restoreFailed}: ${err.message || "Unknown error"}`, "error");
       }
       
       if (err.name !== "AbortError" && accessToken) {
@@ -375,7 +354,7 @@ export function SettingsTab({
 
   const handleLocalExport = async () => {
     try {
-      setStatusMessage({ text: "Exporting database...", type: "info" });
+      setStatusMessage({ text: t.readingFile, type: "info" });
       const jsonData = await exportDatabase();
       const blob = new Blob([jsonData], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -390,11 +369,11 @@ export function SettingsTab({
       URL.revokeObjectURL(url);
       
       addLog("Database exported to local JSON file successfully.");
-      showStatus("エクスポートが完了しました", "success");
+      showStatus(t.importSuccess, "success");
     } catch (err: any) {
       console.error(err);
       addLog(`Export failed: ${err.message || err}`);
-      showStatus(`Export failed: ${err.message || "Unknown error"}`, "error");
+      showStatus(`${t.importFailed}: ${err.message || "Unknown error"}`, "error");
     }
   };
 
@@ -404,7 +383,7 @@ export function SettingsTab({
     
     const file = files[0];
     
-    const confirmMsg = "ローカルファイルからデータを復元（マージ）します。\n競合するデータは更新日時が新しい方が優先されますがよろしいですか？";
+    const confirmMsg = t.importConfirm;
       
     const ok = window.confirm(confirmMsg);
     if (!ok) {
@@ -412,7 +391,7 @@ export function SettingsTab({
       return;
     }
     
-    setStatusMessage({ text: "Reading file...", type: "info" });
+    setStatusMessage({ text: t.readingFile, type: "info" });
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
@@ -423,12 +402,12 @@ export function SettingsTab({
         
         await importDatabase(text, "merge");
         addLog("Database restored from local JSON file successfully.");
-        showStatus("インポートが完了しました！", "success");
+        showStatus(t.importSuccess, "success");
         checkStorage();
       } catch (err: any) {
         console.error(err);
         addLog(`Import failed: ${err.message || err}`);
-        showStatus(`Import failed: ${err.message || "Unknown error"}`, "error");
+        showStatus(`${t.importFailed}: ${err.message || "Unknown error"}`, "error");
       } finally {
         e.target.value = "";
       }
@@ -436,7 +415,7 @@ export function SettingsTab({
     
     reader.onerror = () => {
       addLog("Import failed: File reading error.");
-      showStatus("Import failed: File reading error.", "error");
+      showStatus(`${t.importFailed}: File reading error.`, "error");
       e.target.value = "";
     };
     
@@ -444,25 +423,27 @@ export function SettingsTab({
   };
 
   const handleResetDbClick = async () => {
+    const ok = window.confirm(t.resetConfirm);
+    if (!ok) return;
+
     await onResetDb();
+    showStatus(t.resetSuccess, "success");
     checkStorage();
   };
 
   const handleClearHistory = async () => {
-    const ok = window.confirm(
-      "プロンプト履歴データをすべて削除します。よろしいですか？\n(※作成したスタイルカードやカテゴリーは削除されません)"
-    );
+    const ok = window.confirm(t.clearHistoryConfirm);
     if (!ok) return;
 
     try {
       await db.historyItems.clear();
       addLog("Prompt history cleared successfully.");
-      showStatus("履歴データを削除しました", "success");
+      showStatus(t.clearHistorySuccess, "success");
       checkStorage();
     } catch (err: any) {
       console.error(err);
       addLog(`Failed to clear history: ${err.message || err}`);
-      showStatus(`Failed to clear history: ${err.message || "Unknown error"}`, "error");
+      showStatus(`${t.clearHistoryFailed}: ${err.message || "Unknown error"}`, "error");
     }
   };
 
@@ -473,7 +454,39 @@ export function SettingsTab({
         <div className="p-1.5 bg-blue-500/10 rounded-lg">
           <Settings2 className="w-5 h-5 text-blue-600" />
         </div>
-        <h2 className="text-base font-bold text-slate-800">Settings</h2>
+        <h2 className="text-base font-bold text-slate-800">{t.title}</h2>
+      </div>
+
+      {/* Language Settings */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+
+        <div className="flex items-start gap-4 mb-4">
+          <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+            <span className="text-xl">🌐</span>
+          </div>
+          <div className="space-y-1 flex-1">
+            <h3 className="text-sm font-bold text-slate-800">
+              {t.languageLabel}
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {t.languageDesc}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
+          <span className="text-xs font-bold text-slate-700">{t.languageLabel}</span>
+          <select
+            value={lang}
+            onChange={(e) => changeLanguage(e.target.value as Language)}
+            className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            id="language-select"
+          >
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
       </div>
 
       {/* Interface Mode Settings (Easy Mode Toggle) */}
@@ -533,7 +546,7 @@ export function SettingsTab({
           </div>
           <div className="space-y-1 flex-1">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-              Google Drive Cloud Sync
+              {t.gdriveSyncLabel}
               {isSyncEnabled && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
                   <ShieldCheck className="w-3 h-3 mr-0.5" /> Active
@@ -541,7 +554,7 @@ export function SettingsTab({
               )}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Backup your local style cards and binders to Google Drive. Keep your decks safe and load them on other devices.
+              {t.gdriveSyncDesc}
             </p>
           </div>
         </div>
@@ -549,8 +562,8 @@ export function SettingsTab({
         {/* Sync Toggle Switch */}
         <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
           <div className="space-y-0.5">
-            <span className="text-xs font-bold text-slate-700">Google Drive同期を有効にする</span>
-            <p className="text-[10px] text-slate-400">バックアップ・復元用のボタンが活性化します</p>
+            <span className="text-xs font-bold text-slate-700">{t.googleDriveToggleLabel}</span>
+            <p className="text-[10px] text-slate-400">{t.googleDriveToggleSub}</p>
           </div>
           <button
             type="button"
@@ -638,12 +651,12 @@ export function SettingsTab({
             {isSyncing ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                同期中... {syncProgress !== null ? `${syncProgress}%` : ""}
+                {t.syncingText} {syncProgress !== null ? `${syncProgress}%` : ""}
               </>
             ) : (
               <>
                 <RefreshCw className="w-3.5 h-3.5" />
-                Google Driveと同期 (Sync)
+                {t.syncButtonText}
               </>
             )}
           </button>
@@ -654,23 +667,23 @@ export function SettingsTab({
               {lastBackup && (
                 <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>ローカル最終バックアップ: {lastBackup}</span>
+                  <span>{t.lastBackupLabel} {lastBackup}</span>
                 </div>
               )}
               {isLoadingCloudBackup ? (
                 <div className="flex items-center gap-1 text-[10px] text-blue-400 font-medium animate-pulse">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>クラウド情報を取得中...</span>
+                  <span>{t.loadingCloudBackup}</span>
                 </div>
               ) : cloudBackup ? (
                 <div className="flex flex-col items-center gap-0.5 text-[10px] text-slate-500 font-medium bg-slate-50 rounded-lg py-1.5 px-3 border border-slate-100 w-full text-center">
                   <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Cloud Backup Preview</span>
-                  <span>更新日時: {cloudBackup.modifiedTime}</span>
-                  <span>サイズ: {cloudBackup.size}</span>
+                  <span>{t.restoreConfirmTime} {cloudBackup.modifiedTime}</span>
+                  <span>{t.restoreConfirmSize} {cloudBackup.size}</span>
                 </div>
               ) : isSyncEnabled && (
                 <div className="text-[10px] text-slate-400 font-medium">
-                  クラウド上のバックアップファイルが見つかりません
+                  {t.noCloudBackup}
                 </div>
               )}
             </div>
@@ -679,7 +692,7 @@ export function SettingsTab({
           <div className="flex items-start gap-1.5 bg-blue-50/40 rounded-xl p-3 border border-blue-100/50">
             <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
-              認証情報は拡張機能には一切保存されません。バックアップ・復元操作時の一時的なアクセス（Google Drive内の自身が作成したバックアップファイル）にのみ使用されます。
+              {t.securityNote}
             </p>
           </div>
         </div>
@@ -696,10 +709,10 @@ export function SettingsTab({
           </div>
           <div className="space-y-1 flex-1">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-              Storage Management
+              {t.storageTitle}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              ブラウザに保存されているデータの使用状況と上限を確認します。
+              {t.storageDesc}
             </p>
           </div>
         </div>
@@ -708,7 +721,7 @@ export function SettingsTab({
         {estimate ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-              <span>使用量: {estimate.usageFormatted} / {estimate.quotaFormatted}</span>
+              <span>{t.storageUsage}: {estimate.usageFormatted} / {estimate.quotaFormatted}</span>
               <span>{estimate.percentage}%</span>
             </div>
             
@@ -728,9 +741,9 @@ export function SettingsTab({
               <div className="flex items-start gap-2 bg-red-50 border border-red-200/60 rounded-xl p-3 text-red-800 text-xs">
                 <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">警告: 容量制限に近いです (使用率 90% 超)</span>
+                  <span className="font-bold">{t.storageWarning90Title}</span>
                   <p className="text-[10px] text-red-700/90 mt-0.5 leading-relaxed">
-                    新規カードの追加や復元が失敗する恐れがあります。不要な履歴データをクリアするか、不要なカードを削除してください。
+                    {t.storageWarning90Desc}
                   </p>
                 </div>
               </div>
@@ -738,9 +751,9 @@ export function SettingsTab({
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-amber-800 text-xs">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">注意: 空き容量が少なくなっています (使用率 80% 超)</span>
+                  <span className="font-bold">{t.storageWarning80Title}</span>
                   <p className="text-[10px] text-amber-700/90 mt-0.5 leading-relaxed">
-                    容量に余裕を持たせるため、不要な履歴の削除や、外部バックアップのエクスポートをご検討ください。
+                    {t.storageWarning80Desc}
                   </p>
                 </div>
               </div>
@@ -748,25 +761,25 @@ export function SettingsTab({
           </div>
         ) : (
           <div className="text-xs text-slate-400 animate-pulse">
-            ストレージ情報を取得中...
+            {t.storageLoading}
           </div>
         )}
 
         {/* Action button & Optimization description */}
         <div className="mt-4 pt-3 border-t border-slate-100 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700">プロンプト履歴のクリーンアップ</span>
+            <span className="text-xs font-bold text-slate-700">{t.cleanupHistoryLabel}</span>
             <button
               onClick={handleClearHistory}
               className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Clear History
+              {t.clearHistoryBtn || "Clear History"}
             </button>
           </div>
           
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[10px] text-slate-500 leading-relaxed font-medium">
-            <p>※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。</p>
+            <p>{lang === "ja" ? "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。" : "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images."}</p>
           </div>
         </div>
       </div>
@@ -782,10 +795,10 @@ export function SettingsTab({
           </div>
           <div className="space-y-1 flex-1">
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-              Local File Backup (Offline)
+              {t.localBackupTitle}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Export your style cards and binders to a local JSON file, or restore from a previously exported backup file. Perfect for offline migrations or keeping absolute privacy.
+              {t.localBackupDesc}
             </p>
           </div>
         </div>
@@ -799,7 +812,7 @@ export function SettingsTab({
               className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Download className="w-3.5 h-3.5" />
-              Export JSON
+              {t.exportBtn}
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -807,7 +820,7 @@ export function SettingsTab({
               className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Upload className="w-3.5 h-3.5" />
-              Import JSON
+              {t.importBtn}
             </button>
             <input
               type="file"
@@ -822,7 +835,7 @@ export function SettingsTab({
           <div className="flex items-start gap-1.5 bg-indigo-50/40 rounded-xl p-3 border border-indigo-100/50">
             <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
-              データは完全にブラウザとローカル環境のみで処理されます。外部サーバーに送信されることはなく、完全なオフライン環境でも動作します。
+              {t.privacyNote}
             </p>
           </div>
         </div>
@@ -835,9 +848,9 @@ export function SettingsTab({
             <Trash2 className="w-5 h-5" />
           </div>
           <div className="space-y-1.5 flex-1">
-            <h3 className="text-xs font-bold text-red-900">Danger Zone</h3>
+            <h3 className="text-xs font-bold text-red-900">{t.dangerZoneTitle}</h3>
             <p className="text-[10px] text-red-600/80 leading-relaxed">
-              Reset the database to its pristine state, or force recover database from Google Drive by overwriting local changes.
+              {t.dangerZoneDesc}
             </p>
             <div className="flex flex-col gap-2 mt-2">
               {isSyncEnabled && (
@@ -862,7 +875,7 @@ export function SettingsTab({
                   className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
                 >
                   <Database className="w-3.5 h-3.5" />
-                  Reset Local Database
+                  {t.resetBtn}
                 </button>
                 <button
                   onClick={handleForceRecovery}

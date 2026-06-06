@@ -5,7 +5,7 @@ import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
-
+import { LanguageProvider } from "../contexts/LanguageContext"
 import { initializeAutoSync } from "../lib/auto-sync"
 
 /**
@@ -59,14 +59,16 @@ function SidePanelInner() {
 }
 
 /**
- * Root page component – wraps everything in TutorialProvider so useTutorial
- * is available within both the SidePanelInner router and underlying views.
+ * Root page component – wraps everything in LanguageProvider and TutorialProvider so useTutorial and useLanguage
+ * are available within both the SidePanelInner router and underlying views.
  */
 function SidePanelPage() {
   return (
-    <TutorialProvider>
-      <SidePanelInner />
-    </TutorialProvider>
+    <LanguageProvider>
+      <TutorialProvider>
+        <SidePanelInner />
+      </TutorialProvider>
+    </LanguageProvider>
   )
 }
 
