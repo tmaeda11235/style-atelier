@@ -30,6 +30,7 @@ import { useStorageEstimate } from "../../hooks/useStorageEstimate";
 import { db } from "../../lib/db";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { Language } from "../../lib/i18n";
+import { setAutoSyncEnabled } from "../../lib/auto-sync";
 
 interface SettingsTabProps {
   addLog: (log: string) => void;
@@ -52,6 +53,7 @@ export function SettingsTab({
 
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false);
 
   // Google Auth states
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -79,6 +81,10 @@ export function SettingsTab({
     // Load sync enabled state
     const savedSyncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
     setIsSyncEnabled(savedSyncEnabled);
+
+    // Load auto sync enabled state
+    const savedAutoSyncEnabled = localStorage.getItem("style-atelier-auto-sync-enabled") === "true";
+    setIsAutoSyncEnabled(savedAutoSyncEnabled);
 
     if (savedSyncEnabled) {
       // Silently authorize and get backup metadata
@@ -139,6 +145,9 @@ export function SettingsTab({
       }
       setAccessToken(null);
       setCloudBackup(null);
+      // Disable auto sync if parent sync is disabled
+      setIsAutoSyncEnabled(false);
+      setAutoSyncEnabled(false);
     } else {
       // When turning sync on, fetch metadata using interactive authorization
       try {
@@ -166,6 +175,12 @@ export function SettingsTab({
         setIsLoadingCloudBackup(false);
       }
     }
+  };
+
+  const handleToggleAutoSync = (checked: boolean) => {
+    setIsAutoSyncEnabled(checked);
+    setAutoSyncEnabled(checked);
+    addLog(`Google Drive auto-sync: ${checked ? "ENABLED" : "DISABLED"}`);
   };
 
   /**
@@ -565,6 +580,30 @@ export function SettingsTab({
             />
           </button>
         </div>
+
+        {/* Auto-Sync Toggle Switch */}
+        {isSyncEnabled && (
+          <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-700">自動バックアップ（オートシンク）</span>
+              <p className="text-[10px] text-slate-400">データ変更時に自動でバックアップし、他端末の更新を反映します</p>
+            </div>
+            <button
+              type="button"
+              id="google-drive-auto-sync-btn"
+              onClick={() => handleToggleAutoSync(!isAutoSyncEnabled)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isAutoSyncEnabled ? "bg-blue-600" : "bg-slate-200"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  isAutoSyncEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        )}
 
         {/* Status / Message Display */}
         {statusMessage.text && (

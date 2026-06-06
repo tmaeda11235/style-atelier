@@ -3,8 +3,9 @@ import { useEasyModeView } from "../../hooks/useEasyModeView"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
 import { LibraryTab } from "./LibraryTab"
 import { SettingsTab } from "./SettingsTab"
-import { MintingView } from "./MintingView"
+import { SimpleMintingView } from "./SimpleMintingView"
 import { CardDetailView } from "./CardDetailView"
+import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
 import { db } from "../../lib/db"
 
 interface EasyModeViewProps {
@@ -42,6 +43,8 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
     handleRetryConnection,
     handleDismissAlert,
     handleToggleEasyMode,
+    activeSimpleWorkbenchCard,
+    setActiveSimpleWorkbenchCard,
   } = useEasyModeView({ isEasyMode, onToggleEasyMode })
 
   return (
@@ -58,6 +61,7 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
           minting.setMintingItem(null)
           minting.setVariationBase(null)
           setActiveDetailCard(null)
+          setActiveSimpleWorkbenchCard(null)
         }}
         isDragging={isDragging}
         isDraggingFile={isDraggingFile}
@@ -73,21 +77,15 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
         isEasyMode={isEasyMode}
       >
         {(minting.mintingItem || minting.variationBase) && (
-          <MintingView
+          <SimpleMintingView
             mintingItem={minting.mintingItem}
             editedSegments={minting.editedSegments}
             setEditedSegments={minting.setEditedSegments}
-            isSrefHidden={minting.isSrefHidden}
-            setIsSrefHidden={minting.setIsSrefHidden}
-            isPHidden={minting.isPHidden}
-            setIsPHidden={minting.setIsPHidden}
             onCancelMinting={() => {
               minting.setMintingItem(null)
               minting.setVariationBase(null)
             }}
             onSaveMintedCard={minting.handleSaveMintedCard}
-            selectedRarity={minting.selectedRarity}
-            setSelectedRarity={minting.setSelectedRarity}
             suggestedKeywords={minting.suggestedKeywords}
             selectedKeywords={minting.selectedKeywords}
             setSelectedKeywords={minting.setSelectedKeywords}
@@ -95,11 +93,6 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             setCustomName={minting.setCustomName}
             selectedCategory={minting.selectedCategory}
             setSelectedCategory={minting.setSelectedCategory}
-            customTags={minting.customTags}
-            setCustomTags={minting.setCustomTags}
-            detectedDominantColor={minting.detectedDominantColor}
-            detectedAccentColor={minting.detectedAccentColor}
-            detectedColorTags={minting.detectedColorTags}
           />
         )}
         {activeDetailCard && (
@@ -120,6 +113,14 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             onDelete={handleDeleteCard}
           />
         )}
+        {activeSimpleWorkbenchCard && (
+          <SimpleWorkbenchModal
+            card={activeSimpleWorkbenchCard}
+            onClose={() => setActiveSimpleWorkbenchCard(null)}
+            addLog={addLog}
+            setAlertType={setAlertType}
+          />
+        )}
 
         {activeTab === "library" && (
           <LibraryTab
@@ -127,6 +128,8 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             setAlertType={setAlertType}
             onOpenDetailCard={setActiveDetailCard}
             onNavigateToWorkbench={() => {}} // Workbench navigation is disabled in Easy Mode
+            isEasyMode={isEasyMode}
+            onOpenSimpleWorkbench={setActiveSimpleWorkbenchCard}
           />
         )}
         {activeTab === "settings" && (

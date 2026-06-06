@@ -5,6 +5,8 @@ import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
+import { LanguageProvider } from "../contexts/LanguageContext"
+import { initializeAutoSync } from "../lib/auto-sync"
 
 /**
  * Main inner container for the side panel. It manages site target detection
@@ -15,6 +17,7 @@ function SidePanelInner() {
   const [isEasyMode, setIsEasyMode] = useState(false)
 
   useEffect(() => {
+    initializeAutoSync()
     const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true"
     setIsEasyMode(easyMode)
   }, [])
@@ -59,8 +62,6 @@ function SidePanelInner() {
  * Root page component – wraps everything in LanguageProvider and TutorialProvider so useTutorial and useLanguage
  * are available within both the SidePanelInner router and underlying views.
  */
-import { LanguageProvider } from "../contexts/LanguageContext"
-
 function SidePanelPage() {
   return (
     <LanguageProvider>
@@ -71,4 +72,4 @@ function SidePanelPage() {
   )
 }
 
-export default SidePanelPage
+export default SidePanelPage
