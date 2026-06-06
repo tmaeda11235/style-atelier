@@ -1,39 +1,107 @@
----
-noteId: "31d4e5e0eeb611f0aa7a379a6036fa3e"
-tags: []
+# Style Atelier (Midjourney Style Manager)
+
+Style Atelier is a Chrome Extension designed to transform Midjourney prompt management from simple text storage into a "Trading Card Game (TCG)-like asset management" and "Atelier-like intuitive mixing" experience.
+
+**"Turn your Prompts into Assets."**
 
 ---
 
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+## Features
+
+- **TCG-style Asset Management**: Convert generated images into visual "Style Cards" with encapsulated prompt data and rarity tiers.
+- **Binder & Deck Building**: Organize collections using virtual binders, custom categories, and decks.
+- **Atelier Workspace**: An intuitive drag-and-drop workspace to mix and match styles to generate new creative prompts.
+- **Local-First & Privacy-Focused**: No remote server storing your creative ideas. All data is saved locally in IndexedDB (via Dexie.js).
+- **Google Drive Sync**: Securely backup and restore your collection via Google Drive integration.
+- **Sharing**: Exchanging styles is made easy through Exif-embedded images or QR code scanning.
+
+---
+
+## Tech Stack
+
+- **Core Framework**: [Plasmo](https://docs.plasmo.com/) (React 19 + TypeScript)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database**: [Dexie.js](https://dexie.org/) (IndexedDB wrapper)
+- **Testing**: [Vitest](https://vitest.dev/) (Unit/Integration) & [Playwright](https://playwright.dev/) (E2E)
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- **Node.js** (LTS version recommended)
+- **Google Chrome** (latest version)
+
+### Installation
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/tmaeda11235/style-atelier.git
+   cd style-atelier
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Development
+
+Start the local development server:
 ```bash
-pnpm dev
-# or
 npm run dev
 ```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+This will compile the extension in development mode.
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
+#### Loading the Extension into Chrome:
 
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
+1. Open Google Chrome and navigate to `chrome://extensions/`.
+2. Toggle on **Developer mode** in the top-right corner.
+3. Click **Load unpacked** in the top-left corner.
+4. Select the build directory: `<project-root>/build/chrome-mv3-dev`.
 
-## Making production build
+The popup, option pages, or side panels will auto-reload as you make changes to the source code.
 
-Run the following:
+---
 
+## Running Tests
+
+### Unit Tests
+Run unit tests with Vitest:
 ```bash
-pnpm build
-# or
-npm run build
+npm run test
 ```
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
+For the Vitest UI dashboard:
+```bash
+npm run test:ui
+```
 
-## Submit to the webstores
+### End-to-End Tests
+Run integration/E2E tests using Playwright:
+```bash
+npm run test:e2e
+```
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+---
+
+## Production Build
+
+Create a production-ready package:
+```bash
+npm run build
+```
+This output is saved to `build/chrome-mv3-prod`.
+
+To bundle the production build into a `.zip` file for web store submission:
+```bash
+npm run package
+```
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
