@@ -23,7 +23,8 @@ import {
   downloadBackup, 
   exportDatabase, 
   importDatabase,
-  getBackupMetadata
+  getBackupMetadata,
+  GDriveTimeoutError
 } from "../../lib/google-drive";
 
 interface SettingsTabProps {
@@ -33,6 +34,7 @@ interface SettingsTabProps {
 
 export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
@@ -88,6 +90,12 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           console.log("Silent authorization failed:", err.message);
         });
     }
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const showStatus = (text: string, type: "success" | "error" | "info") => {
@@ -95,6 +103,12 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     setTimeout(() => {
       setStatusMessage({ text: "", type: null });
     }, 6000);
+  };
+
+  const handleCancelSync = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
   };
 
   const handleToggleSync = async (checked: boolean) => {
@@ -164,17 +178,21 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
     setIsBackingUp(true);
     setStatusMessage({ text: "Creating backup and uploading...", type: "info" });
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const token = await getOrRequestToken();
       const jsonData = await exportDatabase();
-      await uploadBackup(token, jsonData);
+      await uploadBackup(token, jsonData, { signal: controller.signal });
 
       const now = Date.now();
       localStorage.setItem("style-atelier-last-backup", now.toString());
       setLastBackup(new Date(now).toLocaleString());
 
       // Fetch updated metadata
-      const meta = await getBackupMetadata(token);
+      const meta = await getBackupMetadata(token, { signal: controller.signal });
       if (meta) {
         const dateStr = new Date(meta.modifiedTime).toLocaleString();
         const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
@@ -187,17 +205,26 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       addLog("Backup uploaded to Google Drive successfully.");
       showStatus("バックアップ完了しました", "success");
     } catch (err: any) {
-      console.error(err);
-      addLog(`Backup failed: ${err.message || err}`);
-      showStatus(`Backup failed: ${err.message || "Unknown error"}`, "error");
+      if (err.name === "AbortError") {
+        addLog("Backup cancelled by user.");
+        showStatus("バックアップがキャンセルされました", "info");
+      } else if (err instanceof GDriveTimeoutError) {
+        addLog("Backup failed: Connection timed out.");
+        showStatus("同期がタイムアウトしました。ネットワーク接続を確認してください。", "error");
+      } else {
+        console.error(err);
+        addLog(`Backup failed: ${err.message || err}`);
+        showStatus(`Backup failed: ${err.message || "Unknown error"}`, "error");
+      }
       
       // Clear token cache from Chrome
-      if (accessToken) {
+      if (err.name !== "AbortError" && accessToken) {
         await clearCachedToken(accessToken);
+        setAccessToken(null);
       }
-      setAccessToken(null);
     } finally {
       setIsBackingUp(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -215,9 +242,13 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
     setIsRestoring(true);
     setStatusMessage({ text: "Downloading backup from Google Drive...", type: "info" });
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const token = await getOrRequestToken();
-      const backupData = await downloadBackup(token);
+      const backupData = await downloadBackup(token, { signal: controller.signal });
       if (!backupData) {
         showStatus("Backup file (style-atelier-backup.json) not found on Google Drive.", "error");
         addLog("Restore failed: Backup file not found.");
@@ -228,16 +259,25 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       addLog("Database restored from Google Drive successfully.");
       showStatus("データ復元が完了しました！", "success");
     } catch (err: any) {
-      console.error(err);
-      addLog(`Restore failed: ${err.message || err}`);
-      showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
-      
-      if (accessToken) {
-        await clearCachedToken(accessToken);
+      if (err.name === "AbortError") {
+        addLog("Restore cancelled by user.");
+        showStatus("データ復元がキャンセルされました", "info");
+      } else if (err instanceof GDriveTimeoutError) {
+        addLog("Restore failed: Connection timed out.");
+        showStatus("同期がタイムアウトしました。ネットワーク接続を確認してください。", "error");
+      } else {
+        console.error(err);
+        addLog(`Restore failed: ${err.message || err}`);
+        showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
       }
-      setAccessToken(null);
+      
+      if (err.name !== "AbortError" && accessToken) {
+        await clearCachedToken(accessToken);
+        setAccessToken(null);
+      }
     } finally {
       setIsRestoring(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -372,15 +412,26 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
 
         {/* Status / Message Display */}
         {statusMessage.text && (
-          <div className={`mt-3 mb-4 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
+          <div className={`mt-3 mb-4 px-3 py-2.5 rounded-xl text-xs flex items-center justify-between border animate-in fade-in duration-200 ${
             statusMessage.type === "success" ? "bg-green-50 text-green-800 border-green-200" :
             statusMessage.type === "error" ? "bg-red-50 text-red-800 border-red-200" :
             "bg-blue-50 text-blue-800 border-blue-200"
           }`}>
-            {statusMessage.type === "success" && <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />}
-            {statusMessage.type === "error" && <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />}
-            {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-blue-600 animate-spin shrink-0" />}
-            <span className="font-medium">{statusMessage.text}</span>
+            <div className="flex items-center gap-2">
+              {statusMessage.type === "success" && <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />}
+              {statusMessage.type === "error" && <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />}
+              {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-blue-600 animate-spin shrink-0" />}
+              <span className="font-medium">{statusMessage.text}</span>
+            </div>
+            {statusMessage.type === "info" && (isBackingUp || isRestoring) && (
+              <button
+                type="button"
+                onClick={handleCancelSync}
+                className="ml-2 px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold rounded-lg transition-colors border border-red-200/50"
+              >
+                Cancel
+              </button>
+            )}
           </div>
         )}
 

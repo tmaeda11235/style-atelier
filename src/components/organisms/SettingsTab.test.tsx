@@ -5,15 +5,24 @@ import { SettingsTab } from "./SettingsTab";
 import * as googleDrive from "../../lib/google-drive";
 import { exportDatabase, importDatabase } from "../../lib/google-drive";
 
-vi.mock("../../lib/google-drive", () => ({
-  authorize: vi.fn(),
-  clearCachedToken: vi.fn(),
-  uploadBackup: vi.fn(),
-  downloadBackup: vi.fn(),
-  exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'),
-  importDatabase: vi.fn().mockResolvedValue(undefined),
-  getBackupMetadata: vi.fn(),
-}));
+vi.mock("../../lib/google-drive", () => {
+  class GDriveTimeoutError extends Error {
+    constructor(message = "Google Drive API request timed out.") {
+      super(message);
+      this.name = "GDriveTimeoutError";
+    }
+  }
+  return {
+    authorize: vi.fn(),
+    clearCachedToken: vi.fn(),
+    uploadBackup: vi.fn(),
+    downloadBackup: vi.fn(),
+    exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'),
+    importDatabase: vi.fn().mockResolvedValue(undefined),
+    getBackupMetadata: vi.fn(),
+    GDriveTimeoutError,
+  };
+});
 
 describe("SettingsTab", () => {
   const mockAddLog = vi.fn();
@@ -216,7 +225,7 @@ describe("SettingsTab", () => {
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
 
     await waitFor(() => {
-      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123");
+      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Object));
       expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data");
     });
 
@@ -250,5 +259,78 @@ describe("SettingsTab", () => {
     expect(window.confirm).toHaveBeenCalledTimes(1);
     expect(googleDrive.downloadBackup).not.toHaveBeenCalled();
     expect(googleDrive.importDatabase).not.toHaveBeenCalled();
+  });
+
+  describe("Google Drive Timeout and Cancel UI behavior", () => {
+    beforeEach(() => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
+    });
+
+    it("displays Cancel button during backup and handles manual cancellation", async () => {
+      let triggerAbort: (() => void) | undefined;
+      const uploadPromise = new Promise<void>((resolve, reject) => {
+        triggerAbort = () => {
+          const err = new DOMException("The user aborted a request.", "AbortError");
+          reject(err);
+        };
+      });
+      vi.mocked(googleDrive.uploadBackup).mockReturnValue(uploadPromise);
+
+      render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+      // Enable sync
+      const toggleBtn = screen.getByRole("button", { name: "" });
+      fireEvent.click(toggleBtn);
+
+      await waitFor(() => {
+        const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
+        expect(backupBtn).not.toBeDisabled();
+      });
+
+      const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
+      fireEvent.click(backupBtn);
+
+      // Verify Cancel button is displayed
+      await waitFor(() => {
+        expect(screen.getByText("Cancel")).toBeDefined();
+      });
+
+      // Click Cancel
+      const cancelBtn = screen.getByText("Cancel");
+      fireEvent.click(cancelBtn);
+      
+      if (triggerAbort) triggerAbort();
+
+      // Verify log and status message reflect cancellation
+      await waitFor(() => {
+        expect(mockAddLog).toHaveBeenCalledWith("Backup cancelled by user.");
+        expect(screen.getByText("バックアップがキャンセルされました")).toBeDefined();
+      });
+    });
+
+    it("handles connection timeout error gracefully", async () => {
+      vi.mocked(googleDrive.uploadBackup).mockRejectedValue(new googleDrive.GDriveTimeoutError());
+
+      render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+      // Enable sync
+      const toggleBtn = screen.getByRole("button", { name: "" });
+      fireEvent.click(toggleBtn);
+
+      await waitFor(() => {
+        const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
+        expect(backupBtn).not.toBeDisabled();
+      });
+
+      const backupBtn = screen.getByRole("button", { name: /Backup Data/i });
+      fireEvent.click(backupBtn);
+
+      // Verify log and status message reflect timeout
+      await waitFor(() => {
+        expect(mockAddLog).toHaveBeenCalledWith("Backup failed: Connection timed out.");
+        expect(screen.getByText("同期がタイムアウトしました。ネットワーク接続を確認してください。")).toBeDefined();
+      });
+    });
   });
 });

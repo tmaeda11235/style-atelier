@@ -1,5 +1,50 @@
 import { db } from "./db";
 
+export class GDriveTimeoutError extends Error {
+  constructor(message = "Google Drive API request timed out.") {
+    super(message);
+    this.name = "GDriveTimeoutError";
+  }
+}
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit & { timeoutMs?: number }
+): Promise<Response> {
+  const { timeoutMs = 10000, signal, ...fetchOptions } = options;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (signal) {
+    signal.addEventListener("abort", () => {
+      controller.abort();
+    });
+    if (signal.aborted) {
+      controller.abort();
+    }
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      if (signal?.aborted) {
+        throw error;
+      }
+      throw new GDriveTimeoutError();
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+
 export interface BackupPayload {
   version: number;
   exportedAt: number;
@@ -144,12 +189,16 @@ export async function importDatabase(jsonData: string): Promise<void> {
 /**
  * Search Google Drive for an existing file named 'style-atelier-backup.json'
  */
-export async function searchBackupFile(accessToken: string): Promise<string | null> {
+export async function searchBackupFile(
+  accessToken: string,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<string | null> {
   const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`, {
+  const res = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
-    }
+    },
+    ...options
   });
 
   if (!res.ok) {
@@ -172,12 +221,16 @@ export interface BackupMetadata {
 /**
  * Search Google Drive for 'style-atelier-backup.json' and return its metadata
  */
-export async function getBackupMetadata(accessToken: string): Promise<BackupMetadata | null> {
+export async function getBackupMetadata(
+  accessToken: string,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<BackupMetadata | null> {
   const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`, {
+  const res = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
-    }
+    },
+    ...options
   });
 
   if (!res.ok) {
@@ -199,18 +252,23 @@ export async function getBackupMetadata(accessToken: string): Promise<BackupMeta
 /**
  * Upload backup payload JSON to Google Drive (create or overwrite)
  */
-export async function uploadBackup(accessToken: string, jsonData: string): Promise<void> {
-  const fileId = await searchBackupFile(accessToken);
+export async function uploadBackup(
+  accessToken: string,
+  jsonData: string,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<void> {
+  const fileId = await searchBackupFile(accessToken, options);
 
   if (fileId) {
     // File exists, overwrite it using PATCH (Simple media upload)
-    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    const res = await fetchWithTimeout(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json"
       },
-      body: jsonData
+      body: jsonData,
+      ...options
     });
 
     if (!res.ok) {
@@ -236,13 +294,14 @@ export async function uploadBackup(accessToken: string, jsonData: string): Promi
       jsonData +
       closeDelimiter;
 
-    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+    const res = await fetchWithTimeout("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": `multipart/related; boundary=${boundary}`
       },
-      body: multipartBody
+      body: multipartBody,
+      ...options
     });
 
     if (!res.ok) {
@@ -254,16 +313,20 @@ export async function uploadBackup(accessToken: string, jsonData: string): Promi
 /**
  * Download file contents of 'style-atelier-backup.json' from Google Drive
  */
-export async function downloadBackup(accessToken: string): Promise<string | null> {
-  const fileId = await searchBackupFile(accessToken);
+export async function downloadBackup(
+  accessToken: string,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<string | null> {
+  const fileId = await searchBackupFile(accessToken, options);
   if (!fileId) {
     return null;
   }
 
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+  const res = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
-    }
+    },
+    ...options
   });
 
   if (!res.ok) {
