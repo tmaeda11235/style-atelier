@@ -7,7 +7,8 @@ import {
   searchBackupFile, 
   getBackupMetadata,
   uploadBackup, 
-  downloadBackup
+  downloadBackup,
+  GDriveTimeoutError
 } from "./google-drive";
 import { db } from "./db";
 
@@ -557,6 +558,54 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       const content = await downloadBackup("token-123");
       expect(content).toBeNull();
+    });
+  });
+
+  describe("Timeout and Cancellation", () => {
+    it("should throw GDriveTimeoutError when the request times out", async () => {
+      global.fetch = vi.fn().mockImplementation((url, init) => new Promise((resolve, reject) => {
+        const signal = init?.signal;
+        const timer = setTimeout(() => {
+          resolve({ ok: true, json: vi.fn().mockResolvedValue({ files: [] }) } as any);
+        }, 100);
+
+        if (signal) {
+          signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            reject(new DOMException("The user aborted a request.", "AbortError"));
+          });
+        }
+      }));
+
+      const promise = searchBackupFile("token-123", undefined, undefined, { timeoutMs: 10 });
+      await expect(promise).rejects.toThrow(GDriveTimeoutError);
+    });
+
+    it("should throw AbortError when the request is aborted externally", async () => {
+      global.fetch = vi.fn().mockImplementation((url, init) => new Promise((resolve, reject) => {
+        const signal = init?.signal;
+        const timer = setTimeout(() => {
+          resolve({ ok: true, json: vi.fn().mockResolvedValue({ files: [] }) } as any);
+        }, 100);
+
+        if (signal) {
+          signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            reject(new DOMException("The user aborted a request.", "AbortError"));
+          });
+          if (signal.aborted) {
+            clearTimeout(timer);
+            reject(new DOMException("The user aborted a request.", "AbortError"));
+          }
+        }
+      }));
+
+      const controller = new AbortController();
+      const promise = searchBackupFile("token-123", undefined, undefined, { signal: controller.signal });
+
+      setTimeout(() => controller.abort(), 10);
+
+      await expect(promise).rejects.toThrow();
     });
   });
 

@@ -1,6 +1,49 @@
 import { db } from "./db";
 import { validateBackupPayload } from "./backup-validator";
 
+export class GDriveTimeoutError extends Error {
+  constructor(message = "Google Drive API request timed out.") {
+    super(message);
+    this.name = "GDriveTimeoutError";
+  }
+}
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit & { timeoutMs?: number }
+): Promise<Response> {
+  const { timeoutMs = 10000, signal, ...fetchOptions } = options;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (signal) {
+    signal.addEventListener("abort", () => {
+      controller.abort();
+    });
+    if (signal.aborted) {
+      controller.abort();
+    }
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      if (signal?.aborted) {
+        throw error;
+      }
+      throw new GDriveTimeoutError();
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export interface BackupPayload {
   version: number;
@@ -113,7 +156,6 @@ export async function importDatabase(jsonData: string): Promise<void> {
   }
 
   await db.transaction("rw", [db.styleCards, db.categories, db.userSettings, db.historyItems], async () => {
-
     if (payload.data.styleCards.length > 0) {
       await db.styleCards.bulkPut(payload.data.styleCards);
     }
@@ -150,25 +192,41 @@ export async function importDatabase(jsonData: string): Promise<void> {
   }
 }
 
-/**
- * Search Google Drive for an existing file named 'style-atelier-backup.json'
- */
 export interface ReauthContext {
   token: string;
 }
 
+const configureXhr = (
+  xhr: XMLHttpRequest,
+  options?: { signal?: AbortSignal; timeoutMs?: number },
+  onAbort?: () => void
+) => {
+  const timeoutMs = options?.timeoutMs ?? 10000;
+  xhr.timeout = timeoutMs;
+  
+  if (options?.signal) {
+    const onAbortTriggered = () => {
+      xhr.abort();
+      if (onAbort) onAbort();
+    };
+    options.signal.addEventListener("abort", onAbortTriggered);
+    return () => {
+      options.signal?.removeEventListener("abort", onAbortTriggered);
+    };
+  }
+  return () => {};
+};
+
 /**
  * A wrapper around fetch that automatically handles 401 Unauthorized (invalid/expired token)
- * by removing the stale cached token from Chrome identity, attempting silent re-authorization,
- * and retrying the request.
  */
 async function fetchWithReauth(
   url: string,
-  options: RequestInit,
+  options: RequestInit & { timeoutMs?: number; signal?: AbortSignal },
   context: ReauthContext,
   onTokenUpdated?: (newToken: string) => void
 ): Promise<Response> {
-  let res = await fetch(url, {
+  let res = await fetchWithTimeout(url, {
     ...options,
     headers: {
       ...options.headers,
@@ -179,10 +237,8 @@ async function fetchWithReauth(
   if (res.status === 401) {
     console.warn("Google Drive API returned 401. Stale token detected. Clearing cache and retrying silently...");
     
-    // 1. Clear cached token
     await clearCachedToken(context.token);
     
-    // 2. Silent re-authorization
     try {
       const newToken = await authorize(false); // interactive = false
       context.token = newToken;
@@ -190,8 +246,7 @@ async function fetchWithReauth(
         onTokenUpdated(newToken);
       }
       
-      // 3. Retry with new token
-      res = await fetch(url, {
+      res = await fetchWithTimeout(url, {
         ...options,
         headers: {
           ...options.headers,
@@ -213,13 +268,16 @@ async function fetchWithReauth(
 export async function searchBackupFile(
   accessToken: string,
   onTokenUpdated?: (newToken: string) => void,
-  context?: ReauthContext
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<string | null> {
   const ctx = context || { token: accessToken };
   const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
   const res = await fetchWithReauth(
     `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`,
-    {},
+    {
+      ...options
+    },
     ctx,
     onTokenUpdated
   );
@@ -247,13 +305,16 @@ export interface BackupMetadata {
 export async function getBackupMetadata(
   accessToken: string,
   onTokenUpdated?: (newToken: string) => void,
-  context?: ReauthContext
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<BackupMetadata | null> {
   const ctx = context || { token: accessToken };
   const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
   const res = await fetchWithReauth(
     `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`,
-    {},
+    {
+      ...options
+    },
     ctx,
     onTokenUpdated
   );
@@ -276,25 +337,23 @@ export async function getBackupMetadata(
 
 /**
  * Upload backup payload JSON to Google Drive (create or overwrite)
- * Supports Resumable upload for sizes >= 2MB
  */
 export async function uploadBackup(
   accessToken: string,
   jsonData: string,
   onTokenUpdated?: (newToken: string) => void,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<void> {
   const ctx = { token: accessToken };
-  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx);
+  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx, options);
   const blob = new Blob([jsonData], { type: "application/json" });
   const threshold = 2 * 1024 * 1024; // 2MB
 
   if (blob.size >= threshold) {
-    // Use Resumable upload
-    await uploadBackupResumable(ctx.token, fileId, blob, onTokenUpdated, onProgress, ctx);
+    await uploadBackupResumable(ctx.token, fileId, blob, onTokenUpdated, onProgress, ctx, options);
   } else {
-    // Use Simple upload with progress support via XMLHttpRequest
-    await uploadBackupSimple(ctx.token, fileId, jsonData, onTokenUpdated, onProgress, ctx);
+    await uploadBackupSimple(ctx.token, fileId, jsonData, onTokenUpdated, onProgress, ctx, options);
   }
 }
 
@@ -307,7 +366,8 @@ async function uploadBackupResumable(
   blob: Blob,
   onTokenUpdated?: (newToken: string) => void,
   onProgress?: (progress: number) => void,
-  context?: ReauthContext
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<void> {
   const ctx = context || { token: accessToken };
   let initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable";
@@ -323,7 +383,7 @@ async function uploadBackupResumable(
     metadata.name = "style-atelier-backup.json";
   }
 
-  // 1. Initialize Resumable session (with reauth)
+  // 1. Initialize Resumable session
   const res = await fetchWithReauth(
     initUrl,
     {
@@ -333,7 +393,8 @@ async function uploadBackupResumable(
         "X-Upload-Content-Type": "application/json",
         "X-Upload-Content-Length": blob.size.toString()
       },
-      body: JSON.stringify(metadata)
+      body: JSON.stringify(metadata),
+      ...options
     },
     ctx,
     onTokenUpdated
@@ -348,12 +409,16 @@ async function uploadBackupResumable(
     throw new Error("Failed to get resumable upload session URL (Location header missing)");
   }
 
-  // 2. Upload file content to session URL via XMLHttpRequest (with reauth support)
+  // 2. Upload file content to session URL via XMLHttpRequest
   const sendXhr = (token: string) => {
     return new Promise<number>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", uploadUrl, true);
       xhr.setRequestHeader("Content-Type", "application/json");
+
+      const cleanup = configureXhr(xhr, options, () => {
+        reject(new Error("Upload aborted by user"));
+      });
 
       if (onProgress) {
         xhr.upload.onprogress = (event) => {
@@ -365,9 +430,17 @@ async function uploadBackupResumable(
       }
 
       xhr.onload = () => {
+        cleanup();
         resolve(xhr.status);
       };
-      xhr.onerror = () => reject(new Error("Network error during resumable upload."));
+      xhr.ontimeout = () => {
+        cleanup();
+        reject(new GDriveTimeoutError());
+      };
+      xhr.onerror = () => {
+        cleanup();
+        reject(new Error("Network error during resumable upload."));
+      };
       xhr.send(blob);
     });
   };
@@ -396,7 +469,8 @@ async function uploadBackupSimple(
   jsonData: string,
   onTokenUpdated?: (newToken: string) => void,
   onProgress?: (progress: number) => void,
-  context?: ReauthContext
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<void> {
   const ctx = context || { token: accessToken };
 
@@ -409,6 +483,10 @@ async function uploadBackupSimple(
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         xhr.setRequestHeader("Content-Type", "application/json");
 
+        const cleanup = configureXhr(xhr, options, () => {
+          reject(new Error("Upload aborted by user"));
+        });
+
         if (onProgress) {
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
@@ -418,8 +496,18 @@ async function uploadBackupSimple(
           };
         }
 
-        xhr.onload = () => resolve(xhr.status);
-        xhr.onerror = () => reject(new Error("Network error during simple update."));
+        xhr.onload = () => {
+          cleanup();
+          resolve(xhr.status);
+        };
+        xhr.ontimeout = () => {
+          cleanup();
+          reject(new GDriveTimeoutError());
+        };
+        xhr.onerror = () => {
+          cleanup();
+          reject(new Error("Network error during simple update."));
+        };
         xhr.send(jsonData);
       });
     };
@@ -463,6 +551,10 @@ async function uploadBackupSimple(
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
 
+        const cleanup = configureXhr(xhr, options, () => {
+          reject(new Error("Upload aborted by user"));
+        });
+
         if (onProgress) {
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
@@ -472,8 +564,18 @@ async function uploadBackupSimple(
           };
         }
 
-        xhr.onload = () => resolve(xhr.status);
-        xhr.onerror = () => reject(new Error("Network error during simple creation."));
+        xhr.onload = () => {
+          cleanup();
+          resolve(xhr.status);
+        };
+        xhr.ontimeout = () => {
+          cleanup();
+          reject(new GDriveTimeoutError());
+        };
+        xhr.onerror = () => {
+          cleanup();
+          reject(new Error("Network error during simple creation."));
+        };
         xhr.send(multipartBody);
       });
     };
@@ -500,10 +602,11 @@ export async function downloadBackup(
   accessToken: string,
   onTokenUpdated?: (newToken: string) => void,
   onProgress?: (progress: number) => void,
-  context?: ReauthContext
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<string | null> {
   const ctx = context || { token: accessToken };
-  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx);
+  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx, options);
   if (!fileId) {
     return null;
   }
@@ -513,6 +616,10 @@ export async function downloadBackup(
       const xhr = new XMLHttpRequest();
       xhr.open("GET", `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, true);
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+      const cleanup = configureXhr(xhr, options, () => {
+        reject(new Error("Download aborted by user"));
+      });
 
       if (onProgress) {
         xhr.onprogress = (event) => {
@@ -524,13 +631,21 @@ export async function downloadBackup(
       }
 
       xhr.onload = () => {
+        cleanup();
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve({ status: xhr.status, text: xhr.responseText });
         } else {
           resolve({ status: xhr.status, text: null });
         }
       };
-      xhr.onerror = () => reject(new Error("Network error during download."));
+      xhr.ontimeout = () => {
+        cleanup();
+        reject(new GDriveTimeoutError());
+      };
+      xhr.onerror = () => {
+        cleanup();
+        reject(new Error("Network error during download."));
+      };
       xhr.send();
     });
   };
