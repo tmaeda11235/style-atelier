@@ -259,6 +259,7 @@ export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProp
                       return (
                         <div
                           key={c.id}
+                          data-testid={`material-row-${c.id}`}
                           className="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/20 gap-3"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
