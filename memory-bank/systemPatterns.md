@@ -25,6 +25,9 @@ tags: []
 - **Mixing Table**: Logic to merge two Style Cards (parents) into a new prompt generation.
 - **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
 - **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing by flattening mock structures.
+- **Feature Flags & Context Patterns**:
+  - `SettingsContext` (`useSettings`): Manages "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`).
+  - Components subscribe to `useSettings` to conditionally render advanced UI features or fall back to simplified/read-only views.
 
 ## Data Flow
 1.  **Capture**: User generates image on Midjourney -> Content Script detects -> User drags to Side Panel.
