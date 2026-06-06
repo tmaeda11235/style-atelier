@@ -16,9 +16,9 @@ export const WorkbenchProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSelectedCardIds((prev) => {
       const isSelecting = !prev.includes(cardId);
       if (isSelecting) {
-        db.styleCards.get(cardId).then((card) => {
+        db.getCard(cardId).then((card) => {
           if (card) {
-            db.styleCards.update(cardId, {
+            db.updateCard(cardId, {
               usageCount: (card.usageCount || 0) + 1
             }).catch(err => console.error("Failed to update usage count on select:", err));
           }

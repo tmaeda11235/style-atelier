@@ -26,6 +26,9 @@ vi.mock("./db", () => {
       categories: mockTable(),
       userSettings: mockTable(),
       historyItems: mockTable(),
+      getAllCards: vi.fn().mockResolvedValue([]),
+      getAllCategories: vi.fn().mockResolvedValue([]),
+      importBackupData: vi.fn().mockResolvedValue(undefined),
       transaction: vi.fn((mode, tables, cb) => cb())
     }
   };
@@ -85,8 +88,8 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         { id: "hist2", fullCommand: "prompt 2", imageUrl: "url2" }
       ];
 
-      vi.mocked(db.styleCards.toArray).mockResolvedValue(mockCards);
-      vi.mocked(db.categories.toArray).mockResolvedValue(mockCategories);
+      vi.mocked(db.getAllCards).mockResolvedValue(mockCards as any);
+      vi.mocked(db.getAllCategories).mockResolvedValue(mockCategories as any);
       vi.mocked(db.userSettings.toArray).mockResolvedValue(mockSettings);
       vi.mocked(db.historyItems.toArray).mockResolvedValue(mockHistory);
 
@@ -175,15 +178,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       await importDatabase(JSON.stringify(mockPayload));
 
-      expect(db.transaction).toHaveBeenCalled();
-      expect(db.styleCards.clear).not.toHaveBeenCalled();
-      expect(db.styleCards.bulkPut).toHaveBeenCalledWith(mockPayload.data.styleCards);
-      expect(db.categories.clear).not.toHaveBeenCalled();
-      expect(db.categories.bulkPut).toHaveBeenCalledWith(mockPayload.data.categories);
-      expect(db.userSettings.clear).not.toHaveBeenCalled();
-      expect(db.userSettings.bulkPut).toHaveBeenCalledWith(mockPayload.data.userSettings);
-      expect(db.historyItems.clear).not.toHaveBeenCalled();
-      expect(db.historyItems.bulkPut).toHaveBeenCalledWith(mockPayload.data.historyItems);
+      expect(db.importBackupData).toHaveBeenCalledWith(mockPayload.data);
     });
 
     it("should restore and merge slotHistory into localStorage, keeping incoming values first, removing duplicates, and limiting to 10 items", async () => {

@@ -55,6 +55,148 @@ export class StyleAtelierDatabase extends Dexie {
     }).upgrade(upgradeToVersion8);
   }
 
+  // --- StyleCard Operations ---
+
+  async getCard(id: string): Promise<StyleCard | undefined> {
+    return this.styleCards.get(id);
+  }
+
+  async getAllCards(): Promise<StyleCard[]> {
+    return this.styleCards.toArray();
+  }
+
+  async getPinnedCards(): Promise<StyleCard[]> {
+    return this.styleCards.filter(card => !!card.isPinned).toArray();
+  }
+
+  async getCardByJobId(jobId: string): Promise<StyleCard | undefined> {
+    let card = await this.styleCards.where("jobId").equals(jobId).first();
+    if (!card) {
+      card = await this.styleCards.where("associatedJobIds").equals(jobId).first();
+    }
+    return card;
+  }
+
+  async addCard(card: StyleCard): Promise<string> {
+    return this.styleCards.add(card);
+  }
+
+  async updateCard(id: string, changes: Partial<StyleCard>): Promise<number> {
+    return this.styleCards.update(id, changes);
+  }
+
+  async putCard(card: StyleCard): Promise<string> {
+    return this.styleCards.put(card);
+  }
+
+  async deleteCard(id: string): Promise<void> {
+    await this.deleteStyleCardAndCleanup(id);
+  }
+
+  // --- Category Operations ---
+
+  async getAllCategories(): Promise<CustomCategory[]> {
+    return this.categories.toArray();
+  }
+
+  async getCategory(id: string): Promise<CustomCategory | undefined> {
+    return this.categories.get(id);
+  }
+
+  async addCategory(category: CustomCategory): Promise<string> {
+    return this.categories.add(category);
+  }
+
+  async updateCategory(id: string, changes: Partial<CustomCategory>): Promise<number> {
+    return this.categories.update(id, changes);
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    return this.transaction("rw", [this.styleCards, this.categories], async () => {
+      await this.styleCards.where("category").equals(id).modify(card => {
+        delete card.category;
+      });
+      await this.categories.delete(id);
+    });
+  }
+
+  async mergeStyleCards(
+    representativeId: string,
+    materials: StyleCard[],
+    consumeStates: Record<string, boolean>
+  ): Promise<void> {
+    return this.transaction("rw", [this.styleCards, this.categories], async () => {
+      const representative = await this.styleCards.get(representativeId);
+      if (!representative) throw new Error("Representative card not found");
+
+      const mergedImages = [...(representative.images || [])];
+      if (representative.thumbnailData && !mergedImages.includes(representative.thumbnailData)) {
+        mergedImages.push(representative.thumbnailData);
+      }
+
+      const mergedJobIds = [...(representative.associatedJobIds || [])];
+      if (representative.jobId && !mergedJobIds.includes(representative.jobId)) {
+        mergedJobIds.push(representative.jobId);
+      }
+
+      let extraUsageCount = 0;
+
+      for (const mat of materials) {
+        if (mat.images && mat.images.length > 0) {
+          mat.images.forEach(img => {
+            if (!mergedImages.includes(img)) mergedImages.push(img);
+          });
+        } else if (mat.thumbnailData && !mergedImages.includes(mat.thumbnailData)) {
+          mergedImages.push(mat.thumbnailData);
+        }
+
+        if (mat.jobId && !mergedJobIds.includes(mat.jobId)) {
+          mergedJobIds.push(mat.jobId);
+        }
+        if (mat.associatedJobIds && mat.associatedJobIds.length > 0) {
+          mat.associatedJobIds.forEach(jid => {
+            if (!mergedJobIds.includes(jid)) mergedJobIds.push(jid);
+          });
+        }
+
+        const isConsumed = consumeStates[mat.id];
+        if (isConsumed) {
+          extraUsageCount += (mat.usageCount || 0);
+          await this.deleteStyleCardAndCleanup(mat.id);
+        }
+      }
+
+      await this.styleCards.update(representativeId, {
+        images: mergedImages,
+        associatedJobIds: mergedJobIds,
+        usageCount: (representative.usageCount || 0) + extraUsageCount,
+        updatedAt: Date.now()
+      });
+    });
+  }
+
+  async importBackupData(data: {
+    styleCards: StyleCard[];
+    categories: CustomCategory[];
+    userSettings: UserSettings[];
+    historyItems: HistoryItem[];
+  }): Promise<void> {
+    return this.transaction("rw", [this.styleCards, this.categories, this.userSettings, this.historyItems], async () => {
+      if (data.styleCards.length > 0) {
+        await this.styleCards.bulkPut(data.styleCards);
+      }
+      if (data.categories && data.categories.length > 0) {
+        await this.categories.bulkPut(data.categories);
+      }
+      if (data.userSettings && data.userSettings.length > 0) {
+        await this.userSettings.bulkPut(data.userSettings);
+      }
+      if (data.historyItems && data.historyItems.length > 0) {
+        await this.historyItems.bulkPut(data.historyItems);
+      }
+    });
+  }
+
   async deleteStyleCardAndCleanup(cardId: string) {
     return this.transaction("rw", [this.styleCards, this.categories], async () => {
       // 1. categories で iconCardId === cardId を持つものをクリーンアップ

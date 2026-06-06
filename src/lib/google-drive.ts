@@ -103,8 +103,8 @@ export async function clearCachedToken(token: string): Promise<void> {
  * Serialize Dexie database tables to a JSON string
  */
 export async function exportDatabase(): Promise<string> {
-  const cards = await db.styleCards.toArray();
-  const categories = await db.categories.toArray();
+  const cards = await db.getAllCards();
+  const categories = await db.getAllCategories();
   const settings = await db.userSettings.toArray();
   const history = await db.historyItems.toArray();
 
@@ -155,20 +155,7 @@ export async function importDatabase(jsonData: string): Promise<void> {
     throw new Error(`Database validation failed: ${validation.error}`);
   }
 
-  await db.transaction("rw", [db.styleCards, db.categories, db.userSettings, db.historyItems], async () => {
-    if (payload.data.styleCards.length > 0) {
-      await db.styleCards.bulkPut(payload.data.styleCards);
-    }
-    if (payload.data.categories && payload.data.categories.length > 0) {
-      await db.categories.bulkPut(payload.data.categories);
-    }
-    if (payload.data.userSettings && payload.data.userSettings.length > 0) {
-      await db.userSettings.bulkPut(payload.data.userSettings);
-    }
-    if (payload.data.historyItems && payload.data.historyItems.length > 0) {
-      await db.historyItems.bulkPut(payload.data.historyItems);
-    }
-  });
+  await db.importBackupData(payload.data);
 
   if (payload.data.slotHistory) {
     try {

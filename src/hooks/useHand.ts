@@ -3,15 +3,15 @@ import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 
 export function useHand() {
-  const pinnedCards = useLiveQuery(() => db.styleCards.filter((card) => !!card.isPinned).toArray())
+  const pinnedCards = useLiveQuery(() => db.getPinnedCards())
 
   const unpinCard = async (id: string) => {
     try {
-      const card = await db.styleCards.get(id)
+      const card = await db.getCard(id)
       if (card?.isVariable) {
-        await db.styleCards.delete(id)
+        await db.deleteCard(id)
       } else {
-        await db.styleCards.update(id, { isPinned: false })
+        await db.updateCard(id, { isPinned: false })
       }
     } catch (err) {
       console.error("Failed to unpin card:", err)
@@ -23,7 +23,7 @@ export function useHand() {
     try {
       await Promise.all(
         pinnedCards.map((card) =>
-          card.isVariable ? db.styleCards.delete(card.id) : db.styleCards.update(card.id, { isPinned: false })
+          card.isVariable ? db.deleteCard(card.id) : db.updateCard(card.id, { isPinned: false })
         )
       )
     } catch (err) {

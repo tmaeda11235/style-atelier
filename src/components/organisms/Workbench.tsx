@@ -216,7 +216,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
         associatedJobIds: [],
       };
 
-      await db.styleCards.add(newCard);
+      await db.addCard(newCard);
       addLog?.(`Sent "${trimmed}" to Workbench under tag "${label}"`);
     } catch (err) {
       console.error("Failed to send card to Workbench:", err);
@@ -265,7 +265,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
 
         // Increment usage count for all cards in the Workbench
         workbenchCards.forEach((card) => {
-          db.styleCards.update(card.id, { usageCount: (card.usageCount || 0) + 1 })
+          db.updateCard(card.id, { usageCount: (card.usageCount || 0) + 1 })
             .catch(err => console.error("Failed to update usage count on workbench inject:", err));
         });
 
