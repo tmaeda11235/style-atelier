@@ -180,7 +180,7 @@ describe("SettingsTab", () => {
     // Verify metadata preview is displayed
     await waitFor(() => {
       expect(screen.getByText("Cloud Backup Preview")).toBeDefined();
-      expect(screen.getByText(/更新日時: 2026\/6\/3/)).toBeDefined();
+      expect(screen.getByText(/更新日時: (2026\/6\/3|6\/3\/2026)/)).toBeDefined();
       expect(screen.getByText(/サイズ: 150\.0 KB/)).toBeDefined();
     });
   });

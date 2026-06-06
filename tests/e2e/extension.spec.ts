@@ -2,18 +2,29 @@ import { test, expect } from "@playwright/test";
 import path from "path";
 
 test.describe("Style Atelier Sandbox E2E Tests", () => {
+  test.beforeEach(async ({ page }) => {
+    page.on('console', msg => {
+      console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
+    });
+    page.on('pageerror', err => {
+      console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`);
+    });
+    page.on('requestfailed', request => {
+      console.error(`[REQUEST FAILED] ${request.url()}: ${request.failure()?.errorText}`);
+    });
+    page.on('response', response => {
+      if (response.status() >= 400) {
+        console.error(`[HTTP ERROR] ${response.url()}: ${response.status()}`);
+      }
+    });
+  });
+
   test("should render Midjourney mock and Sidepanel side-by-side and inject prompt", async ({ page }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
     
     try {
       // 1. サンドボックス親ページを開く
       console.log("Navigating to sandbox page...");
-      page.on('console', msg => {
-        console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
-      });
-      page.on('pageerror', err => {
-        console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`);
-      });
       await page.goto("/tests/sandbox/index.html");
 
       // 2. 左側 iframe (Midjourney) と 右側 iframe (サイドパネル) の取得
