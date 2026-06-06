@@ -74,19 +74,29 @@ describe("db utilities", () => {
         { id: "cat-2", name: "Cat 2", iconCardId: "card-keep-me", iconUrl: "data:image/png;..." },
       ];
 
-      const mockUpdate = vi.fn().mockResolvedValue(undefined);
+      const mockCategoriesUpdate = vi.fn().mockResolvedValue(undefined);
       const mockFilter = vi.fn().mockReturnValue({
         toArray: vi.fn().mockResolvedValue([mockCategories[0]]),
       });
-      const mockDelete = vi.fn().mockResolvedValue(undefined);
+      
+      const mockCard = {
+        id: "card-delete-me",
+        thumbnailData: "data:image/png;...",
+        images: ["data:image/png;..."],
+        selectedThumbnails: ["data:image/png;..."]
+      };
+      
+      const mockGet = vi.fn().mockResolvedValue(mockCard);
+      const mockCardsUpdate = vi.fn().mockResolvedValue(undefined);
 
       const mockDbInstance = {
         categories: {
           filter: mockFilter,
-          update: mockUpdate,
+          update: mockCategoriesUpdate,
         },
         styleCards: {
-          delete: mockDelete,
+          get: mockGet,
+          update: mockCardsUpdate,
         },
         transaction: vi.fn(async (mode, tables, callback) => {
           return callback();
@@ -110,13 +120,21 @@ describe("db utilities", () => {
       expect(filterFn({ iconCardId: "card-keep-me" })).toBe(false);
 
       // Verify category update cleared the references
-      expect(mockUpdate).toHaveBeenCalledWith("cat-1", {
+      expect(mockCategoriesUpdate).toHaveBeenCalledWith("cat-1", {
         iconCardId: undefined,
         iconUrl: undefined,
+        updatedAt: expect.any(Number)
       });
 
-      // Verify card was deleted
-      expect(mockDelete).toHaveBeenCalledWith("card-delete-me");
+      // Verify card was soft deleted and heavy data cleared
+      expect(mockGet).toHaveBeenCalledWith("card-delete-me");
+      expect(mockCardsUpdate).toHaveBeenCalledWith("card-delete-me", {
+        isDeleted: true,
+        thumbnailData: "",
+        images: [],
+        selectedThumbnails: [],
+        updatedAt: expect.any(Number)
+      });
     });
   });
 });

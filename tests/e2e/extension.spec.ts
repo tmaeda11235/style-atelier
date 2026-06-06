@@ -754,7 +754,7 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     // 13. Verify in DB that selectedThumbnails contains the new URL
     const selectedThumbnailsInDb = await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db;
-      const card = await database.styleCards.get("test-card-same-job");
+      const card = await database.getCard("test-card-same-job");
       return card?.selectedThumbnails || [];
     });
     expect(selectedThumbnailsInDb).toContain("https://example.com/new-associated-image.png");
@@ -1112,12 +1112,12 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
     await page.waitForTimeout(1000); // wait for DB transaction
 
-    // 9. Verify in DB that W1 usage count is combined (5 + 3 = 8), W2 is deleted, and W3 remains.
+    // 9. Verify in DB that W1 usage count is combined (5 + 3 = 8), W2 is soft-deleted, and W3 remains.
     const results = await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db;
-      const w1 = await database.styleCards.get("card-w1");
-      const w2 = await database.styleCards.get("card-w2");
-      const w3 = await database.styleCards.get("card-w3");
+      const w1 = await database.getCard("card-w1");
+      const w2 = await database.getCard("card-w2");
+      const w3 = await database.getCard("card-w3");
       return {
         w1Exists: !!w1,
         w1Usage: w1?.usageCount,
@@ -1155,18 +1155,18 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     await expect(settingsTabButton).toBeVisible();
     await settingsTabButton.click();
 
-    // 3. Verify Restore Mode UI is visible
-    const replaceBtn = spFrame.locator("#restore-mode-replace-btn");
-    const mergeBtn = spFrame.locator("#restore-mode-merge-btn");
-    await expect(replaceBtn).toBeVisible({ timeout: 10000 });
-    await expect(mergeBtn).toBeVisible();
+    // 3. Verify Sync and Force Recovery UI is visible
+    const syncBtn = spFrame.locator("#google-drive-sync-btn");
+    const forceRecoveryBtn = spFrame.locator("#force-recovery-btn");
+    await expect(syncBtn).toBeVisible({ timeout: 10000 });
+    await expect(forceRecoveryBtn).toBeVisible();
 
     // 4. Capture screenshot of Settings tab with new UI
     await page.screenshot({
       path: path.join(screenshotsDir, "restore-mode-ui.png"),
     });
 
-    // 5. Test replace/merge behavior via page evaluation (Dexie verification)
+    // 5. Test sync/merge and soft delete behavior via page evaluation (Dexie verification)
     const results = await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db;
       
@@ -1242,11 +1242,11 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
         historyItems: []
       };
 
-      // Scenario A: Merge Restore
+      // Scenario A: Merge Restore (Simulating Sync download phase)
       await database.importBackupData(backupPayload, "merge");
-      const afterMerge = await database.styleCards.toArray();
+      const afterMerge = await database.getAllCards();
 
-      // Reset for Scenario B: Replace Restore
+      // Reset for Scenario B: Replace Restore (Simulating Force Recovery)
       await resetData();
       await database.styleCards.bulkAdd([
         {
@@ -1278,16 +1278,72 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       ]);
 
       await database.importBackupData(backupPayload, "replace");
-      const afterReplace = await database.styleCards.toArray();
+      const afterReplace = await database.getAllCards();
+
+      // Scenario C: Logical Delete Sync
+      await resetData();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-active",
+          name: "Active Card",
+          createdAt: 1000,
+          updatedAt: 1000,
+          promptSegments: [],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: [],
+          dominantColor: "#000",
+          thumbnailData: "heavy-thumb-data"
+        }
+      ]);
+
+      const backupWithDelete = {
+        styleCards: [
+          {
+            id: "card-active",
+            name: "Active Card",
+            createdAt: 1000,
+            updatedAt: 2000, // Newer delete state
+            isDeleted: true,
+            promptSegments: [],
+            parameters: {},
+            masking: {},
+            tier: "Common",
+            tags: [],
+            dominantColor: "#000",
+            thumbnailData: "",
+            images: [],
+            selectedThumbnails: []
+          }
+        ],
+        categories: [],
+        userSettings: [],
+        historyItems: []
+      };
+
+      await database.importBackupData(backupWithDelete, "merge");
+      const activeCardsAfterDeleteSync = await database.getAllCards();
+      const physicalCardsAfterDeleteSync = await database.styleCards.toArray();
 
       return {
         afterMerge: afterMerge.map((c: any) => ({ id: c.id, name: c.name })),
-        afterReplace: afterReplace.map((c: any) => ({ id: c.id, name: c.name }))
+        afterReplace: afterReplace.map((c: any) => ({ id: c.id, name: c.name })),
+        logicalDeleteSync: {
+          activeCount: activeCardsAfterDeleteSync.length,
+          physicalCount: physicalCardsAfterDeleteSync.length,
+          card: physicalCardsAfterDeleteSync[0] ? {
+            id: physicalCardsAfterDeleteSync[0].id,
+            isDeleted: physicalCardsAfterDeleteSync[0].isDeleted,
+            thumbnailData: physicalCardsAfterDeleteSync[0].thumbnailData
+          } : null
+        }
       };
     });
 
     console.log("Merge results:", results.afterMerge);
     console.log("Replace results:", results.afterReplace);
+    console.log("Delete sync results:", results.logicalDeleteSync);
 
     // Verify Merge Results
     expect(results.afterMerge).toContainEqual({ id: "card-1", name: "Backup Card 1 (New)" });
@@ -1300,6 +1356,15 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     expect(results.afterReplace).toContainEqual({ id: "card-3", name: "Backup Only Card" });
     expect(results.afterReplace.length).toBe(2);
 
-    console.log("Restore Mode logic verification passed successfully!");
+    // Verify Logical Delete Sync Results
+    expect(results.logicalDeleteSync.activeCount).toBe(0); // Filtered out from getAllCards
+    expect(results.logicalDeleteSync.physicalCount).toBe(1); // Record still exists in IndexedDB
+    expect(results.logicalDeleteSync.card).toEqual({
+      id: "card-active",
+      isDeleted: true,
+      thumbnailData: "" // Heavy image info is cleared
+    });
+
+    console.log("Sync and logical delete E2E logic verification passed successfully!");
   });
 });

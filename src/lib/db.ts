@@ -53,20 +53,30 @@ export class StyleAtelierDatabase extends Dexie {
       userSettings: 'userId',
       categories: 'id, name, createdAt',
     }).upgrade(upgradeToVersion8);
+
+    // Version 9: Add isDeleted index to styleCards and categories, and support category updatedAt
+    this.version(9).stores({
+      styleCards: 'id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted',
+      historyItems: 'id, timestamp',
+      userSettings: 'userId',
+      categories: 'id, name, createdAt, isDeleted',
+    });
   }
 
   // --- StyleCard Operations ---
 
   async getCard(id: string): Promise<StyleCard | undefined> {
-    return this.styleCards.get(id);
+    const card = await this.styleCards.get(id);
+    if (card && card.isDeleted) return undefined;
+    return card;
   }
 
   async getAllCards(): Promise<StyleCard[]> {
-    return this.styleCards.toArray();
+    return this.styleCards.filter(card => !card.isDeleted).toArray();
   }
 
   async getPinnedCards(): Promise<StyleCard[]> {
-    return this.styleCards.filter(card => !!card.isPinned).toArray();
+    return this.styleCards.filter(card => !card.isDeleted && !!card.isPinned).toArray();
   }
 
   async getCardByJobId(jobId: string): Promise<StyleCard | undefined> {
@@ -74,6 +84,7 @@ export class StyleAtelierDatabase extends Dexie {
     if (!card) {
       card = await this.styleCards.where("associatedJobIds").equals(jobId).first();
     }
+    if (card && card.isDeleted) return undefined;
     return card;
   }
 
@@ -96,27 +107,41 @@ export class StyleAtelierDatabase extends Dexie {
   // --- Category Operations ---
 
   async getAllCategories(): Promise<CustomCategory[]> {
-    return this.categories.toArray();
+    return this.categories.filter(cat => !cat.isDeleted).toArray();
   }
 
   async getCategory(id: string): Promise<CustomCategory | undefined> {
-    return this.categories.get(id);
+    const cat = await this.categories.get(id);
+    if (cat && cat.isDeleted) return undefined;
+    return cat;
   }
 
   async addCategory(category: CustomCategory): Promise<string> {
-    return this.categories.add(category);
+    return this.categories.add({
+      ...category,
+      updatedAt: category.updatedAt || category.createdAt
+    });
   }
 
   async updateCategory(id: string, changes: Partial<CustomCategory>): Promise<number> {
-    return this.categories.update(id, changes);
+    return this.categories.update(id, {
+      ...changes,
+      updatedAt: Date.now()
+    });
   }
 
   async deleteCategory(id: string): Promise<void> {
     return this.transaction("rw", [this.styleCards, this.categories], async () => {
+      // 1. カテゴリーを論理削除し、更新日時を設定
+      await this.categories.update(id, {
+        isDeleted: true,
+        updatedAt: Date.now()
+      });
+      // 2. このカテゴリーを参照しているカードの参照を解除し、カードの更新日時も設定
       await this.styleCards.where("category").equals(id).modify(card => {
         delete card.category;
+        card.updatedAt = Date.now();
       });
-      await this.categories.delete(id);
     });
   }
 
@@ -236,8 +261,8 @@ export class StyleAtelierDatabase extends Dexie {
             if (!local) {
               toPut.push(incoming);
             } else {
-              const incomingTime = incoming.createdAt || 0;
-              const localTime = local.createdAt || 0;
+              const incomingTime = incoming.updatedAt || incoming.createdAt || 0;
+              const localTime = local.updatedAt || local.createdAt || 0;
               if (incomingTime >= localTime) {
                 toPut.push(incoming);
               }
@@ -287,10 +312,20 @@ export class StyleAtelierDatabase extends Dexie {
         await this.categories.update(cat.id, {
           iconCardId: undefined,
           iconUrl: undefined,
+          updatedAt: Date.now()
         });
       }
-      // 2. styleCards から削除
-      await this.styleCards.delete(cardId);
+      // 2. styleCards から物理削除せず論理削除し、重い画像情報をクリア
+      const card = await this.styleCards.get(cardId);
+      if (card) {
+        await this.styleCards.update(cardId, {
+          isDeleted: true,
+          thumbnailData: "",
+          images: [],
+          selectedThumbnails: [],
+          updatedAt: Date.now()
+        });
+      }
     });
   }
 }
