@@ -291,4 +291,51 @@ describe("Workbench", () => {
       expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
     });
   });
+
+  it("renders 'Mint Blended Variation' button and triggers onStartVariationMinting when in mixing mode", async () => {
+    const mockOnStartVariationMinting = vi.fn();
+    const mockSecondCard: StyleCard = {
+      ...mockTargetCard,
+      id: "card-2",
+      name: "Anime Template",
+      genealogy: { generation: 2, parentIds: [] },
+    };
+
+    vi.mocked(useWorkbench).mockReturnValue({
+      workbenchCards: [mockTargetCard, mockSecondCard],
+      handCards: [],
+      selectedCardIds: ["card-1", "card-2"],
+      toggleCardSelection: vi.fn(),
+      clearWorkbench: vi.fn(),
+      mergedPrompt: "",
+    });
+
+    render(
+      <Workbench
+        setAlertType={mockSetAlertType}
+        addLog={mockAddLog}
+        onStartVariationMinting={mockOnStartVariationMinting}
+      />
+    );
+
+    // Verify button is rendered
+    const mintButton = screen.getByText("Mint Blended Variation");
+    expect(mintButton).toBeDefined();
+
+    // Click button
+    fireEvent.click(mintButton);
+
+    expect(mockOnStartVariationMinting).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptSegments: expect.any(Array),
+        parameters: expect.any(Object),
+        genealogy: expect.objectContaining({
+          generation: 3, // max(1, 2) + 1
+          parentIds: ["card-1", "card-2"],
+          originCreatorId: "user",
+        }),
+        thumbnailData: mockTargetCard.thumbnailData,
+      })
+    );
+  });
 });
