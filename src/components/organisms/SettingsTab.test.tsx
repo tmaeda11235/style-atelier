@@ -12,7 +12,19 @@ vi.mock("../../lib/google-drive", () => ({
   uploadBackup: vi.fn(),
   downloadBackup: vi.fn(),
   exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'),
-  importDatabase: vi.fn().mockResolvedValue(undefined),
+  importDatabase: vi.fn().mockImplementation(async (jsonData: string) => {
+    const { validateBackupPayload } = await import("../../lib/backup-validator");
+    let payload: any;
+    try {
+      payload = JSON.parse(jsonData);
+    } catch (e) {
+      throw new Error("Invalid JSON format. Failed to parse backup file.");
+    }
+    const validation = validateBackupPayload(payload);
+    if (!validation.isValid) {
+      throw new Error(`Database validation failed: ${validation.error}`);
+    }
+  }),
   getBackupMetadata: vi.fn(),
 }));
 
@@ -124,7 +136,32 @@ describe("SettingsTab", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     expect(fileInput).toBeDefined();
 
-    const backupContent = '{"version": 1, "data": {"styleCards": [{"id": "c1", "name": "Card C1"}]}}';
+    const mockStyleCard = {
+      id: "card-123",
+      name: "Mock Card",
+      createdAt: 123456789,
+      updatedAt: 123456789,
+      promptSegments: [{ type: "text", value: "test command" }],
+      parameters: { ar: "16:9" },
+      masking: { isSrefHidden: false, isPHidden: false },
+      tier: "Common",
+      isFavorite: false,
+      isPinned: false,
+      usageCount: 0,
+      tags: ["test"],
+      category: "cat1",
+      dominantColor: "#ffffff",
+      thumbnailData: "data:image/png;base64,abc",
+      frameId: "default",
+      genealogy: { generation: 1, parentIds: [] }
+    };
+    const backupContent = JSON.stringify({
+      version: 1,
+      exportedAt: 123456789,
+      data: {
+        styleCards: [mockStyleCard]
+      }
+    });
     const file = new File([backupContent], "backup.json", { type: "application/json" });
 
     // Trigger file change event
@@ -151,7 +188,7 @@ describe("SettingsTab", () => {
       expect(mockAddLog).toHaveBeenCalledWith(expect.stringContaining("Import failed:"));
     });
 
-    expect(importDatabase).not.toHaveBeenCalled();
+    expect(importDatabase).toHaveBeenCalledWith(invalidContent);
   });
 
   it("cancels import if user rejects confirmation", async () => {

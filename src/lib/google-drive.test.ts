@@ -97,15 +97,55 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
   });
 
   describe("importDatabase", () => {
+    const mockStyleCard = {
+      id: "card-123",
+      name: "Mock Card",
+      createdAt: 123456789,
+      updatedAt: 123456789,
+      promptSegments: [{ type: "text", value: "test command" }],
+      parameters: { ar: "16:9" },
+      masking: { isSrefHidden: false, isPHidden: false },
+      tier: "Common",
+      isFavorite: false,
+      isPinned: false,
+      usageCount: 0,
+      tags: ["test"],
+      category: "cat1",
+      dominantColor: "#ffffff",
+      thumbnailData: "data:image/png;base64,abc",
+      frameId: "default",
+      genealogy: { generation: 1, parentIds: [] }
+    };
+
+    const mockCustomCategory = {
+      id: "cat1",
+      name: "Category 1",
+      createdAt: 123456789
+    };
+
+    const mockHistoryItem = {
+      id: "hist-123",
+      fullCommand: "full prompt",
+      imageUrl: "http://example.com/img.png",
+      timestamp: 123456789
+    };
+
+    const mockUserSettings = {
+      userId: "user-123",
+      isPro: false,
+      unlockedSkins: [],
+      branding: { enabled: false }
+    };
+
     it("should merge payload data into tables using bulkPut without clearing", async () => {
       const mockPayload = {
         version: 1,
         exportedAt: 123456,
         data: {
-          styleCards: [{ id: "c1", name: "Card C1" }],
-          categories: [{ id: "cat1", name: "Category 1" }],
-          userSettings: [{ userId: "u1", isPro: false }],
-          historyItems: [{ id: "h1", fullCommand: "cmd 1" }]
+          styleCards: [mockStyleCard],
+          categories: [mockCustomCategory],
+          userSettings: [mockUserSettings],
+          historyItems: [mockHistoryItem]
         }
       };
 
@@ -189,6 +229,38 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
     it("should throw error if payload structure is invalid", async () => {
       const invalidPayload = { foo: "bar" };
       await expect(importDatabase(JSON.stringify(invalidPayload))).rejects.toThrow();
+    });
+
+    it("should throw error if backup version is unsupported", async () => {
+      const mockPayload = {
+        version: 2,
+        exportedAt: 123456,
+        data: {
+          styleCards: [],
+          categories: [],
+          userSettings: [],
+          historyItems: []
+        }
+      };
+      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(/version.*is not supported/);
+    });
+
+    it("should throw error if styleCards schema is invalid", async () => {
+      const invalidStyleCard = {
+        ...mockStyleCard,
+        tier: "UnknownTier"
+      };
+      const mockPayload = {
+        version: 1,
+        exportedAt: 123456,
+        data: {
+          styleCards: [invalidStyleCard],
+          categories: [],
+          userSettings: [],
+          historyItems: []
+        }
+      };
+      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(/invalid tier/);
     });
   });
 

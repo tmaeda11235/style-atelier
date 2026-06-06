@@ -293,11 +293,6 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           throw new Error("File is empty.");
         }
         
-        const parsed = JSON.parse(text);
-        if (!parsed.data || !parsed.data.styleCards) {
-          throw new Error("Invalid backup file: Missing styleCards data.");
-        }
-        
         await importDatabase(text);
         addLog("Database restored from local JSON file successfully.");
         showStatus("インポートが完了しました！", "success");
