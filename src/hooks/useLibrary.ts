@@ -34,8 +34,8 @@ export function useLibrary(
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
 
-  const allCards = useLiveQuery(() => db.styleCards.toArray())
-  const categories = useLiveQuery(() => db.categories.toArray()) || []
+  const allCards = useLiveQuery(() => db.getAllCards())
+  const categories = useLiveQuery(() => db.getAllCategories()) || []
 
   const allSrefs = useMemo(() => {
     if (!allCards) return []
@@ -141,7 +141,7 @@ export function useLibrary(
       if (newPinnedStatus) {
         updateData.usageCount = (card.usageCount || 0) + 1
       }
-      await db.styleCards.update(card.id, updateData)
+      await db.updateCard(card.id, updateData)
       addLog(newPinnedStatus ? `Added ${card.name} to Workbench.` : `Removed ${card.name} from Workbench.`)
     } catch (err) {
       console.error("Failed to toggle pin:", err)
@@ -152,7 +152,7 @@ export function useLibrary(
     const hasSlots = card.promptSegments?.some((seg) => seg.type === "slot")
     if (hasSlots) {
       if (!card.isPinned) {
-        db.styleCards.update(card.id, { isPinned: true })
+        db.updateCard(card.id, { isPinned: true })
           .catch(err => console.error("Failed to pin card:", err))
       }
       addLog(`Redirected to Workbench to fill slot variables for "${card.name}".`)
@@ -187,7 +187,7 @@ export function useLibrary(
               }
             } else {
               addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
-              db.styleCards.update(card.id, { usageCount: (card.usageCount || 0) + 1 })
+              db.updateCard(card.id, { usageCount: (card.usageCount || 0) + 1 })
                 .catch((err) => console.error("Failed to update usage count on inject:", err))
             }
           })

@@ -26,6 +26,9 @@ vi.mock("../lib/db", () => ({
     categories: {
       toArray: vi.fn().mockImplementation(async () => mockCategories),
     },
+    updateCard: vi.fn().mockResolvedValue(1),
+    getAllCards: vi.fn().mockImplementation(async () => mockStyleCards),
+    getAllCategories: vi.fn().mockImplementation(async () => mockCategories),
   },
 }))
 
@@ -66,7 +69,7 @@ describe("useLibrary hook", () => {
       await result.current.togglePin(mockCard, { stopPropagation: vi.fn() } as any)
     })
 
-    expect(db.styleCards.update).toHaveBeenCalledWith("card-123", {
+    expect(db.updateCard).toHaveBeenCalledWith("card-123", {
       isPinned: true,
       usageCount: 5,
     })
@@ -89,7 +92,7 @@ describe("useLibrary hook", () => {
       await result.current.togglePin(mockCard, { stopPropagation: vi.fn() } as any)
     })
 
-    expect(db.styleCards.update).toHaveBeenCalledWith("card-123", {
+    expect(db.updateCard).toHaveBeenCalledWith("card-123", {
       isPinned: false,
     })
   })
@@ -122,7 +125,7 @@ describe("useLibrary hook", () => {
       await new Promise(resolve => setTimeout(resolve, 10))
     })
 
-    expect(db.styleCards.update).toHaveBeenCalledWith("card-123", {
+    expect(db.updateCard).toHaveBeenCalledWith("card-123", {
       usageCount: 3,
     })
   })
@@ -151,7 +154,7 @@ describe("useLibrary hook", () => {
     expect(chrome.tabs.query).not.toHaveBeenCalled()
     expect(chrome.tabs.sendMessage).not.toHaveBeenCalled()
 
-    expect(db.styleCards.update).toHaveBeenCalledWith("card-slots", {
+    expect(db.updateCard).toHaveBeenCalledWith("card-slots", {
       isPinned: true,
     })
 
@@ -183,7 +186,7 @@ describe("useLibrary hook", () => {
     expect(chrome.tabs.query).not.toHaveBeenCalled()
     expect(chrome.tabs.sendMessage).not.toHaveBeenCalled()
 
-    expect(db.styleCards.update).not.toHaveBeenCalled()
+    expect(db.updateCard).not.toHaveBeenCalled()
 
     expect(mockNavigate).toHaveBeenCalled()
     expect(mockAddLog).toHaveBeenCalledWith('Redirected to Workbench to fill slot variables for "Pinned Card with Slots".')

@@ -5,21 +5,21 @@ import { renderHook, act } from "@testing-library/react"
 import iconUrl from "url:../../assets/icon.png"
 
 vi.mock("../lib/db", () => {
-  const mockWhere = {
-    equals: vi.fn().mockReturnThis(),
-    first: vi.fn(),
-  }
   return {
     db: {
       historyItems: {
         put: vi.fn(),
       },
       styleCards: {
-        where: vi.fn(() => mockWhere),
+        where: vi.fn(),
         update: vi.fn(),
         get: vi.fn().mockResolvedValue(null),
         put: vi.fn().mockResolvedValue("imported-card-id"),
       },
+      getCard: vi.fn().mockResolvedValue(null),
+      putCard: vi.fn().mockResolvedValue("imported-card-id"),
+      getCardByJobId: vi.fn(),
+      updateCard: vi.fn(),
     },
   }
 })
@@ -78,8 +78,7 @@ describe("useDragAndDrop", () => {
     const { result } = renderHook(() => useDragAndDrop(mockAddLog))
 
     // Mock DB: style card not found
-    const styleCardsWhere = db.styleCards.where("jobId")
-    vi.mocked((styleCardsWhere as any).first).mockResolvedValue(null)
+    vi.mocked(db.getCardByJobId).mockResolvedValue(undefined)
     vi.mocked(db.historyItems.put).mockResolvedValue("test-job-id")
 
     const mockItem = {
@@ -101,7 +100,7 @@ describe("useDragAndDrop", () => {
       returnedItem = await result.current.handleDrop(dummyEvent)
     })
 
-    expect(db.styleCards.where).toHaveBeenCalledWith("jobId")
+    expect(db.getCardByJobId).toHaveBeenCalledWith("test-job-id")
     expect(db.historyItems.put).toHaveBeenCalledWith(
       expect.objectContaining({
         ...mockItem,
@@ -129,9 +128,8 @@ describe("useDragAndDrop", () => {
     }
 
     // Mock DB: style card found on first call
-    const styleCardsWhere = db.styleCards.where("jobId")
-    vi.mocked((styleCardsWhere as any).first).mockResolvedValue(mockExistingCard)
-    vi.mocked(db.styleCards.update).mockResolvedValue(1)
+    vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
+    vi.mocked(db.updateCard).mockResolvedValue(1)
 
     const mockItem = {
       id: "test-job-id",
@@ -152,8 +150,8 @@ describe("useDragAndDrop", () => {
       returnedItem = await result.current.handleDrop(dummyEvent)
     })
 
-    expect(db.styleCards.where).toHaveBeenCalledWith("jobId")
-    expect(db.styleCards.update).toHaveBeenCalledWith("card-uuid-123", {
+    expect(db.getCardByJobId).toHaveBeenCalledWith("test-job-id")
+    expect(db.updateCard).toHaveBeenCalledWith("card-uuid-123", {
       images: ["https://example.com/first.png", "https://example.com/second.png"],
       updatedAt: expect.any(Number),
     })
@@ -178,12 +176,9 @@ describe("useDragAndDrop", () => {
       thumbnailData: "https://example.com/first.png",
     }
 
-    // Mock DB: first call (jobId) returns null, second call (associatedJobIds) returns card
-    const styleCardsWhere = db.styleCards.where("jobId")
-    vi.mocked((styleCardsWhere as any).first)
-      .mockResolvedValueOnce(null) // for jobId search
-      .mockResolvedValueOnce(mockExistingCard) // for associatedJobIds search
-    vi.mocked(db.styleCards.update).mockResolvedValue(1)
+    // Mock DB: getCardByJobId returns card
+    vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
+    vi.mocked(db.updateCard).mockResolvedValue(1)
 
     const mockItem = {
       id: "test-job-id",
@@ -204,9 +199,8 @@ describe("useDragAndDrop", () => {
       returnedItem = await result.current.handleDrop(dummyEvent)
     })
 
-    expect(db.styleCards.where).toHaveBeenCalledWith("jobId")
-    expect(db.styleCards.where).toHaveBeenCalledWith("associatedJobIds")
-    expect(db.styleCards.update).toHaveBeenCalledWith("card-uuid-456", {
+    expect(db.getCardByJobId).toHaveBeenCalledWith("test-job-id")
+    expect(db.updateCard).toHaveBeenCalledWith("card-uuid-456", {
       images: ["https://example.com/first.png", "https://example.com/second.png"],
       updatedAt: expect.any(Number),
     })
@@ -255,7 +249,7 @@ describe("useDragAndDrop", () => {
         await new Promise((r) => setTimeout(r, 50))
       })
 
-      expect(db.styleCards.put).toHaveBeenCalledWith(
+      expect(db.putCard).toHaveBeenCalledWith(
         expect.objectContaining({
           id: "imported-card-id",
           name: "Imported Card",
@@ -278,9 +272,8 @@ describe("useDragAndDrop", () => {
         thumbnailData: "https://example.com/first.png",
       }
 
-      const styleCardsWhere = db.styleCards.where("jobId")
-      vi.mocked((styleCardsWhere as any).first).mockResolvedValue(mockExistingCard)
-      vi.mocked(db.styleCards.update).mockResolvedValue(1)
+      vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
+      vi.mocked(db.updateCard).mockResolvedValue(1)
 
       const mockItem = {
         id: "test-job-id",
@@ -304,7 +297,7 @@ describe("useDragAndDrop", () => {
         returnVal = await result.current.handleDrop(dummyEvent)
       })
 
-      expect(db.styleCards.update).toHaveBeenCalled()
+      expect(db.updateCard).toHaveBeenCalled()
       expect(returnVal).toEqual(mockItem)
     })
 
@@ -330,7 +323,7 @@ describe("useDragAndDrop", () => {
         await new Promise((r) => setTimeout(r, 50))
       })
 
-      expect(db.styleCards.put).toHaveBeenCalledWith(
+      expect(db.putCard).toHaveBeenCalledWith(
         expect.objectContaining({
           id: "imported-card-id",
           name: "Imported Card",
@@ -367,7 +360,7 @@ describe("useDragAndDrop", () => {
         await new Promise((r) => setTimeout(r, 50))
       })
 
-      expect(db.styleCards.put).toHaveBeenCalledWith(
+      expect(db.putCard).toHaveBeenCalledWith(
         expect.objectContaining({
           id: "imported-card-id",
           name: "Imported Card",

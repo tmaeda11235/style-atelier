@@ -22,7 +22,13 @@ vi.mock("../../lib/db", () => {
       styleCards: {
         filter: vi.fn(),
         where: vi.fn()
-      }
+      },
+      getAllCategories: vi.fn(),
+      getAllCards: vi.fn(),
+      getCategory: vi.fn(),
+      addCategory: vi.fn(),
+      updateCategory: vi.fn(),
+      deleteCategory: vi.fn(),
     }
   }
 })
@@ -45,41 +51,27 @@ describe("CategoryManagerModal", () => {
       { id: "card-1", name: "Cyber Cat", thumbnailData: "data:image/png;base64,123", isVariable: false, category: "cyberpunk" }
     ]
 
-    vi.mocked(db.categories.toArray).mockImplementation(() => mockCategories)
-    vi.mocked(db.categories.get).mockImplementation((id: string) => Promise.resolve(mockCategories.find(c => c.id === id)))
-    vi.mocked(db.categories.add).mockImplementation((cat: any) => {
+    vi.mocked(db.getAllCategories).mockImplementation(() => mockCategories as any)
+    vi.mocked(db.getCategory).mockImplementation((id: string) => Promise.resolve(mockCategories.find(c => c.id === id)))
+    vi.mocked(db.addCategory).mockImplementation((cat: any) => {
       mockCategories.push(cat)
       return Promise.resolve(cat.id)
     })
-    vi.mocked(db.categories.update).mockImplementation((id: string, changes: any) => {
+    vi.mocked(db.updateCategory).mockImplementation((id: string, changes: any) => {
       mockCategories = mockCategories.map(c => c.id === id ? { ...c, ...changes } : c)
       return Promise.resolve(1)
     })
-    vi.mocked(db.categories.delete).mockImplementation((id: string) => {
+    vi.mocked(db.deleteCategory).mockImplementation((id: string) => {
       mockCategories = mockCategories.filter(c => c.id !== id)
-      return Promise.resolve(1)
-    })
-
-    vi.mocked(db.styleCards.filter).mockReturnValue({
-      toArray: () => mockStyleCards.filter(c => !c.isVariable)
-    } as any)
-
-    vi.mocked(db.styleCards.where).mockReturnValue({
-      equals: (catId: string) => ({
-        modify: (modifier: any) => {
-          mockStyleCards.forEach(c => {
-            if (c.category === catId) {
-              if (typeof modifier === 'function') {
-                modifier(c)
-              } else {
-                Object.assign(c, modifier)
-              }
-            }
-          })
-          return Promise.resolve(1)
+      mockStyleCards.forEach(c => {
+        if (c.category === id) {
+          delete c.category
         }
       })
-    } as any)
+      return Promise.resolve()
+    })
+
+    vi.mocked(db.getAllCards).mockImplementation(() => mockStyleCards as any)
   })
 
   it("renders correctly with default state tabs", () => {
@@ -138,7 +130,7 @@ describe("CategoryManagerModal", () => {
     fireEvent.click(submitBtn)
 
     await waitFor(() => {
-      expect(db.categories.add).toHaveBeenCalledWith(expect.objectContaining({
+      expect(db.addCategory).toHaveBeenCalledWith(expect.objectContaining({
         id: "retro-space",
         name: "Retro Space",
         iconEmoji: "🚀"
@@ -173,7 +165,7 @@ describe("CategoryManagerModal", () => {
     fireEvent.click(saveBtn)
 
     await waitFor(() => {
-      expect(db.categories.update).toHaveBeenCalledWith("cyberpunk", expect.objectContaining({
+      expect(db.updateCategory).toHaveBeenCalledWith("cyberpunk", expect.objectContaining({
         name: "Neon Cyberpunk",
         iconEmoji: "🛸"
       }))
@@ -203,7 +195,7 @@ describe("CategoryManagerModal", () => {
     fireEvent.click(deleteBtn)
 
     await waitFor(() => {
-      expect(db.categories.delete).toHaveBeenCalledWith("cyberpunk")
+      expect(db.deleteCategory).toHaveBeenCalledWith("cyberpunk")
     })
 
     // Related style card category should be cleared

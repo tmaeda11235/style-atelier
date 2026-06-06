@@ -121,7 +121,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           addLog("No artwork URL found in card. Using placeholder.")
         }
 
-        const existingCard = partialCard.id ? await db.styleCards.get(partialCard.id) : null
+        const existingCard = partialCard.id ? await db.getCard(partialCard.id) : null
         
         const importedCard: StyleCard = {
           id: partialCard.id || crypto.randomUUID(),
@@ -146,7 +146,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           associatedJobIds: [],
         }
 
-        await db.styleCards.put(importedCard)
+        await db.putCard(importedCard)
         addLog(`Imported card "${importedCard.name}" successfully!`)
         triggerNotification({
           id: importedCard.id,
@@ -179,16 +179,13 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
       const item = JSON.parse(jsonData) as HistoryItem
       if (item && item.id && item.imageUrl) {
         // Query to check if a style card with this jobId already exists
-        let existingCard = await db.styleCards.where("jobId").equals(item.id).first()
-        if (!existingCard) {
-          existingCard = await db.styleCards.where("associatedJobIds").equals(item.id).first()
-        }
+        const existingCard = await db.getCardByJobId(item.id)
         
         if (existingCard) {
           const currentImages = existingCard.images || []
           if (!currentImages.includes(item.imageUrl)) {
             const updatedImages = [...currentImages, item.imageUrl]
-            await db.styleCards.update(existingCard.id, {
+            await db.updateCard(existingCard.id, {
               images: updatedImages,
               updatedAt: Date.now()
             })

@@ -75,52 +75,7 @@ export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProp
     const materials = pinnedCards.filter(c => c.id !== baseCardId)
 
     try {
-      await db.transaction("rw", db.styleCards, async () => {
-        const mergedImages = [...(representative.images || [])]
-        if (representative.thumbnailData && !mergedImages.includes(representative.thumbnailData)) {
-          mergedImages.push(representative.thumbnailData)
-        }
-
-        const mergedJobIds = [...(representative.associatedJobIds || [])]
-        if (representative.jobId && !mergedJobIds.includes(representative.jobId)) {
-          mergedJobIds.push(representative.jobId)
-        }
-
-        let extraUsageCount = 0
-
-        for (const mat of materials) {
-          if (mat.images && mat.images.length > 0) {
-            mat.images.forEach(img => {
-              if (!mergedImages.includes(img)) mergedImages.push(img)
-            })
-          } else if (mat.thumbnailData && !mergedImages.includes(mat.thumbnailData)) {
-            mergedImages.push(mat.thumbnailData)
-          }
-
-          if (mat.jobId && !mergedJobIds.includes(mat.jobId)) {
-            mergedJobIds.push(mat.jobId)
-          }
-          if (mat.associatedJobIds && mat.associatedJobIds.length > 0) {
-            mat.associatedJobIds.forEach(jid => {
-              if (!mergedJobIds.includes(jid)) mergedJobIds.push(jid)
-            })
-          }
-
-          const isConsumed = consumeStates[mat.id]
-          if (isConsumed) {
-            extraUsageCount += (mat.usageCount || 0)
-            await db.styleCards.delete(mat.id)
-          }
-        }
-
-        await db.styleCards.update(representative.id, {
-          images: mergedImages,
-          associatedJobIds: mergedJobIds,
-          usageCount: (representative.usageCount || 0) + extraUsageCount,
-          updatedAt: Date.now()
-        })
-      })
-
+      await db.mergeStyleCards(representative.id, materials, consumeStates)
       setIsMergeOpen(false)
     } catch (err) {
       console.error("Failed to merge style cards:", err)

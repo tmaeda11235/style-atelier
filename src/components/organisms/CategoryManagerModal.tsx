@@ -24,10 +24,13 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
   const [isSelectingCard, setIsSelectingCard] = useState(false)
 
   // Fetch categories
-  const categories = useLiveQuery(() => db.categories.toArray()) || []
+  const categories = useLiveQuery(() => db.getAllCategories()) || []
 
   // Fetch library cards to choose icons from
-  const libraryCards = useLiveQuery(() => db.styleCards.filter(c => !c.isVariable).toArray()) || []
+  const libraryCards = useLiveQuery(async () => {
+    const cards = await db.getAllCards()
+    return cards.filter(c => !c.isVariable)
+  }) || []
 
   const handleSelectCard = (cardId: string, thumbData: string) => {
     setIconCardId(cardId)
@@ -57,12 +60,8 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
       return
     }
     try {
-      // 1. Reassign Style Cards in this category to undefined
-      await db.styleCards.where("category").equals(categoryId).modify(card => {
-        delete card.category
-      })
-      // 2. Delete category
-      await db.categories.delete(categoryId)
+      // Reassign Style Cards and delete category encapsulated in db.deleteCategory
+      await db.deleteCategory(categoryId)
       addLog(`Deleted category "${categoryName}"`)
     } catch (err) {
       console.error("Failed to delete category:", err)
@@ -82,7 +81,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
       // Check if another category with the same derived ID exists
       const targetId = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-")
       if (targetId !== editingCategory.id) {
-        const existing = await db.categories.get(targetId)
+        const existing = await db.getCategory(targetId)
         if (existing) {
           alert("A category with this name already exists.")
           return
@@ -90,7 +89,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
       }
 
       try {
-        await db.categories.update(editingCategory.id, {
+        await db.updateCategory(editingCategory.id, {
           name: trimmedName,
           iconEmoji: emoji.trim() || undefined,
           iconUrl: iconUrl || undefined,
@@ -107,14 +106,14 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
     }
 
     const id = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-")
-    const existing = await db.categories.get(id)
+    const existing = await db.getCategory(id)
     if (existing) {
       alert("A category with this name already exists.")
       return
     }
 
     try {
-      await db.categories.add({
+      await db.addCategory({
         id,
         name: trimmedName,
         iconEmoji: emoji.trim() || undefined,

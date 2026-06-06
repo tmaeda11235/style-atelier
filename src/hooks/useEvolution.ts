@@ -25,14 +25,14 @@ export function useEvolution() {
   };
 
   const evolveCard = async (cardId: string) => {
-    const card = await db.styleCards.get(cardId);
+    const card = await db.getCard(cardId);
     if (!card) throw new Error("Card not found");
     if (!canEvolve(card)) throw new Error("Evolution requirements not met");
 
     const nextTier = getNextTier(card.tier);
     if (!nextTier) throw new Error("Already at maximum tier");
 
-    await db.styleCards.update(cardId, {
+    await db.updateCard(cardId, {
       tier: nextTier,
       updatedAt: Date.now(),
       genealogy: {
@@ -100,7 +100,7 @@ export function useEvolution() {
       associatedJobIds: [],
     };
 
-    await db.styleCards.add(newCard);
+    await db.addCard(newCard);
     return newCard.id;
   };
 

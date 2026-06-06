@@ -55,7 +55,7 @@ export function CardDetailView({
   const { pinnedCards } = useHand();
   const hasPinnedCards = pinnedCards.length > 0;
 
-  const categoriesList = useLiveQuery(() => db.categories.toArray()) || [];
+  const categoriesList = useLiveQuery(() => db.getAllCategories()) || [];
 
   const [name, setName] = useState(card.name);
   const [tier, setTier] = useState(card.tier);
@@ -81,7 +81,7 @@ export function CardDetailView({
         try {
           const fetched = await Promise.all(
             card.genealogy.parentIds.map(async (id) => {
-              const parent = await db.styleCards.get(id);
+              const parent = await db.getCard(id);
               return parent || null;
             })
           );

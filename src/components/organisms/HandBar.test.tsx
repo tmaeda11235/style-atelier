@@ -15,6 +15,9 @@ vi.mock("../../lib/db", () => ({
       update: vi.fn().mockResolvedValue(1),
       delete: vi.fn().mockResolvedValue(1),
     },
+    updateCard: vi.fn().mockResolvedValue(1),
+    deleteCard: vi.fn().mockResolvedValue(1),
+    mergeStyleCards: vi.fn().mockResolvedValue(undefined),
     transaction: vi.fn((mode, tables, cb) => cb()),
   },
 }))
@@ -152,11 +155,11 @@ describe("HandBar", () => {
     fireEvent.click(executeBtn)
 
     await waitFor(() => {
-      // Representative is card-1 (the first one)
-      expect(db.styleCards.update).toHaveBeenCalledWith("card-1", expect.objectContaining({
-        usageCount: 5, // 2 (card1) + 3 (card2)
-      }))
-      expect(db.styleCards.delete).toHaveBeenCalledWith("card-2")
+      expect(db.mergeStyleCards).toHaveBeenCalledWith(
+        "card-1",
+        [card2],
+        expect.objectContaining({ "card-2": true })
+      )
     })
   })
 })

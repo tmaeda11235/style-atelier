@@ -22,6 +22,8 @@ vi.mock("../../lib/db", () => ({
     categories: {
       toArray: vi.fn().mockResolvedValue([]),
     },
+    getCard: vi.fn(),
+    getAllCategories: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -222,7 +224,7 @@ describe("CardDetailView", () => {
     }
 
     const { db } = await import("../../lib/db")
-    vi.mocked(db.styleCards.get).mockImplementation(async (id) => {
+    vi.mocked(db.getCard).mockImplementation(async (id) => {
       if (id === "parent-uuid-1") return mockParentCard
       return undefined
     })

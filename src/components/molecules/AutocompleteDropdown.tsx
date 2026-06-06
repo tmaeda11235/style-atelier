@@ -82,7 +82,7 @@ export function AutocompleteDropdown({
 }: AutocompleteDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const styleCards = useLiveQuery(() => db.styleCards.toArray()) || []
+  const styleCards = useLiveQuery(() => db.getAllCards()) || []
 
   // Filter options based on input value
   const filteredOptions = options.filter((opt) =>

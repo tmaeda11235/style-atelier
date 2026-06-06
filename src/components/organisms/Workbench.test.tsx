@@ -26,6 +26,12 @@ vi.mock("../../lib/db", () => ({
     categories: {
       toArray: vi.fn().mockResolvedValue([]),
     },
+    addCard: vi.fn(),
+    updateCard: vi.fn().mockResolvedValue(1),
+    deleteCard: vi.fn().mockResolvedValue(1),
+    getCard: vi.fn().mockResolvedValue(null),
+    getAllCards: vi.fn().mockResolvedValue([]),
+    getAllCategories: vi.fn().mockResolvedValue([]),
     transaction: vi.fn((mode, tables, cb) => cb()),
   },
 }));
@@ -179,7 +185,7 @@ describe("Workbench", () => {
         })
       );
       // Check that usageCount was incremented
-      expect(db.styleCards.update).toHaveBeenCalledWith("card-1", {
+      expect(db.updateCard).toHaveBeenCalledWith("card-1", {
         usageCount: 6,
       });
     });
@@ -210,7 +216,7 @@ describe("Workbench", () => {
     fireEvent.click(pinButtons[0]);
 
     await waitFor(() => {
-      expect(db.styleCards.add).toHaveBeenCalledWith(
+      expect(db.addCard).toHaveBeenCalledWith(
         expect.objectContaining({
           name: "steampunk dragon",
           isPinned: true,

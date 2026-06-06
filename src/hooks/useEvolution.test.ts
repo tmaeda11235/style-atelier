@@ -9,6 +9,7 @@ vi.mock("../lib/db", () => ({
       update: vi.fn(),
       add: vi.fn().mockResolvedValue("new-card-id"),
     },
+    addCard: vi.fn().mockResolvedValue("new-card-id"),
   },
 }))
 
@@ -36,7 +37,7 @@ describe("useEvolution hook", () => {
 
     const newCardId = await createVariation(parentCards, "Variation Name", "thumbnail-url")
 
-    expect(db.styleCards.add).toHaveBeenCalledWith(
+    expect(db.addCard).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "Variation Name",
         associatedJobIds: [],
