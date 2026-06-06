@@ -123,6 +123,16 @@ if (typeof window !== "undefined") {
         addListener: () => {},
         removeListener: () => {},
       }
+    },
+    identity: {
+      getAuthToken: (details: any, callback: any) => {
+        if (callback) callback("mock-token-123");
+        return Promise.resolve("mock-token-123");
+      },
+      removeCachedAuthToken: (details: any, callback: any) => {
+        if (callback) callback();
+        return Promise.resolve();
+      }
     }
   };
 }

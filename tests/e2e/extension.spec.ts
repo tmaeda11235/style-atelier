@@ -1139,6 +1139,24 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
 
   test("should allow selecting restore mode and verify replace/merge behavior", async ({ page }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+
+    // Mock Google Drive API response
+    await page.route("https://www.googleapis.com/drive/v3/files*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          files: [
+            {
+              id: "mock-file-123",
+              modifiedTime: "2026-06-03 12:00:00",
+              size: "153600" // 150.0 KB
+            }
+          ]
+        })
+      });
+    });
+
     console.log("Navigating to sandbox page for Restore Mode E2E test...");
     await page.goto("/tests/sandbox/index.html");
 
@@ -1160,6 +1178,20 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     const forceRecoveryBtn = spFrame.locator("#force-recovery-btn");
     await expect(syncBtn).toBeVisible({ timeout: 10000 });
     await expect(forceRecoveryBtn).toBeVisible();
+
+    // Enable Google Drive synchronization
+    console.log("Enabling Google Drive sync...");
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn");
+    await expect(toggleBtn).toBeVisible();
+    await toggleBtn.click();
+
+    // Wait for the cloud backup preview to appear
+    console.log("Waiting for cloud backup preview...");
+    const previewEl = spFrame.locator("text=150.0 KB").first();
+    await expect(previewEl).toBeVisible({ timeout: 10000 });
+
+    // Scroll to the Force Recovery button to bring the Danger Zone preview into view
+    await forceRecoveryBtn.scrollIntoViewIfNeeded();
 
     // 4. Capture screenshot of Settings tab with new UI
     await page.screenshot({
