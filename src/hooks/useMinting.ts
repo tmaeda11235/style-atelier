@@ -12,6 +12,9 @@ export interface VariationBase {
   promptSegments: PromptSegment[];
   parameters: StyleCard["parameters"];
   genealogy: StyleCard["genealogy"];
+  thumbnailData?: string;
+  images?: string[];
+  selectedThumbnails?: string[];
 }
 
 export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "history" | "library" | "workbench") => void) {
@@ -131,7 +134,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       addLog(`Saving card variation`)
       parameters = variationBase!.parameters
       genealogy = variationBase!.genealogy
-      thumbnailData = "assets/icon.png" // Temporary placeholder
+      thumbnailData = variationBase!.thumbnailData || "assets/icon.png"
     }
 
     // Construct name from selected keywords and custom name
@@ -176,8 +179,8 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       genealogy,
       jobId: mintingItem ? mintingItem.id : undefined,
       associatedJobIds: mintingItem ? [mintingItem.id] : [],
-      images: mintingItem ? [mintingItem.imageUrl] : [],
-      selectedThumbnails: mintingItem ? [mintingItem.imageUrl] : [],
+      images: mintingItem ? [mintingItem.imageUrl] : (variationBase?.images || []),
+      selectedThumbnails: mintingItem ? [mintingItem.imageUrl] : (variationBase?.selectedThumbnails || []),
     }
 
     try {

@@ -18,16 +18,26 @@ export class WebDataExtractor implements IExtractor {
         prompt = img.alt || ""
     }
     
-    // Attempt to extract Job ID from parent link
     let jobId = ""
     const parentLink = img.closest("a")
-    if (parentLink && parentLink.href) {
-        const id = extractJobIdFromUrl(parentLink.href)
-        if (id) jobId = id
+
+    // 1. Attempt to extract from data-job-id attribute on the image or its parent hierarchy
+    const dataJobIdEl = img.closest("[data-job-id]")
+    if (dataJobIdEl) {
+      const attrVal = dataJobIdEl.getAttribute("data-job-id")
+      if (attrVal) jobId = attrVal
     }
 
+    // 2. Attempt to extract Job ID from parent link
     if (!jobId) {
-      // Find the unit container of the current image to search for job link
+      if (parentLink && parentLink.href) {
+        const id = extractJobIdFromUrl(parentLink.href)
+        if (id) jobId = id
+      }
+    }
+
+    // 3. Find the unit container of the current image to search for job link
+    if (!jobId) {
       const unitContainer = img.closest("#pageScroll > div") || img.closest(".absolute") || img.closest(".group")
       if (unitContainer) {
         const jobLink = unitContainer.querySelector("a[href*='/jobs/']")
@@ -38,13 +48,22 @@ export class WebDataExtractor implements IExtractor {
       }
     }
 
-    if (!jobId && typeof window !== "undefined") {
-      if (window.location.href.includes("pattern2.html")) {
-        jobId = "100cc076-ef20-46b4-8aeb-f7c294169800"
-      } else {
-        const id = extractJobIdFromUrl(window.location.href)
-        if (id) jobId = id
+    // 4. Attempt to search for job links in a wider modal/overlay context
+    if (!jobId) {
+      const modalContainer = img.closest(".fixed") || img.closest("[draggable='true']") || (typeof document !== "undefined" ? document.body : null)
+      if (modalContainer) {
+        const jobLink = modalContainer.querySelector("a[href*='/jobs/']")
+        if (jobLink && (jobLink as HTMLAnchorElement).href) {
+          const id = extractJobIdFromUrl((jobLink as HTMLAnchorElement).href)
+          if (id) jobId = id
+        }
       }
+    }
+
+    // 5. Fallback to extracting Job ID from the current page URL
+    if (!jobId && typeof window !== "undefined") {
+      const id = extractJobIdFromUrl(window.location.href)
+      if (id) jobId = id
     }
 
     if (!jobId) {
