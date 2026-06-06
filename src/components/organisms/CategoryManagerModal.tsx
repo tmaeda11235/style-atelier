@@ -1,22 +1,38 @@
-import React, { useState } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
+import { Edit2, Image as ImageIcon, Plus, Trash2, X } from "lucide-react"
+import React, { useState } from "react"
+
+import { useConfirm } from "../../contexts/ConfirmContext"
 import { db } from "../../lib/db"
+import type { CustomCategory } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
-import { X, Plus, Image as ImageIcon, Trash2, Edit2 } from "lucide-react"
-import type { CustomCategory } from "../../lib/db-schema"
 
 interface CategoryManagerModalProps {
   onClose: () => void
   addLog: (msg: string) => void
 }
 
-const SYSTEM_CATEGORY_IDS = ["style", "character", "landscape", "lighting", "camera", "abstract", "other"]
+const SYSTEM_CATEGORY_IDS = [
+  "style",
+  "character",
+  "landscape",
+  "lighting",
+  "camera",
+  "abstract",
+  "other"
+]
 
-export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalProps) {
+export function CategoryManagerModal({
+  onClose,
+  addLog
+}: CategoryManagerModalProps) {
+  const confirm = useConfirm()
   const [activeTab, setActiveTab] = useState<"create" | "manage">("create")
-  const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null)
-  
+  const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(
+    null
+  )
+
   const [name, setName] = useState("")
   const [emoji, setEmoji] = useState("")
   const [iconUrl, setIconUrl] = useState("")
@@ -27,10 +43,11 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
   const categories = useLiveQuery(() => db.getAllCategories()) || []
 
   // Fetch library cards to choose icons from
-  const libraryCards = useLiveQuery(async () => {
-    const cards = await db.getAllCards()
-    return cards.filter(c => !c.isVariable)
-  }) || []
+  const libraryCards =
+    useLiveQuery(async () => {
+      const cards = await db.getAllCards()
+      return cards.filter((c) => !c.isVariable)
+    }) || []
 
   const handleSelectCard = (cardId: string, thumbData: string) => {
     setIconCardId(cardId)
@@ -56,7 +73,14 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
   }
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Are you sure you want to delete the category "${categoryName}"? All style cards in this category will be reassigned to "No Category".`)) {
+    const ok = await confirm({
+      title: "Delete Category",
+      message: `Are you sure you want to delete the category "${categoryName}"? All style cards in this category will be reassigned to "No Category".`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "danger"
+    })
+    if (!ok) {
       return
     }
     try {
@@ -93,7 +117,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
           name: trimmedName,
           iconEmoji: emoji.trim() || undefined,
           iconUrl: iconUrl || undefined,
-          iconCardId: iconCardId || undefined,
+          iconCardId: iconCardId || undefined
         })
         addLog(`Updated category "${trimmedName}"`)
         handleCancelEdit()
@@ -119,7 +143,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
         iconEmoji: emoji.trim() || undefined,
         iconUrl: iconUrl || undefined,
         iconCardId: iconCardId || undefined,
-        createdAt: Date.now(),
+        createdAt: Date.now()
       })
       addLog(`Created category "${trimmedName}"`)
       setName("")
@@ -140,7 +164,9 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
           {isSelectingCard ? (
-            <h3 className="text-xs font-bold text-slate-800">Select Card Icon</h3>
+            <h3 className="text-xs font-bold text-slate-800">
+              Select Card Icon
+            </h3>
           ) : (
             <div className="flex gap-4">
               <button
@@ -152,8 +178,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                   activeTab === "create" && !editingCategory
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-400 hover:text-slate-600"
-                }`}
-              >
+                }`}>
                 Add Category
               </button>
               <button
@@ -165,8 +190,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                   activeTab === "manage"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-400 hover:text-slate-600"
-                }`}
-              >
+                }`}>
                 Manage Categories
               </button>
               {editingCategory && (
@@ -177,10 +201,11 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
             </div>
           )}
           <button
-            onClick={isSelectingCard ? () => setIsSelectingCard(false) : onClose}
+            onClick={
+              isSelectingCard ? () => setIsSelectingCard(false) : onClose
+            }
             className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-            aria-label="Close"
-          >
+            aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -190,7 +215,8 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
           {isSelectingCard ? (
             <div>
               <p className="text-[11px] text-slate-500 mb-3">
-                Click on a Style Card below to use its thumbnail as the icon for this category.
+                Click on a Style Card below to use its thumbnail as the icon for
+                this category.
               </p>
               {libraryCards.length === 0 ? (
                 <p className="text-xs text-slate-400 italic text-center py-6">
@@ -201,14 +227,23 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                   {libraryCards.map((card) => (
                     <div
                       key={card.id}
-                      onClick={() => handleSelectCard(card.id, card.thumbnailData)}
+                      onClick={() =>
+                        handleSelectCard(card.id, card.thumbnailData)
+                      }
                       className={`relative aspect-square cursor-pointer overflow-hidden rounded border transition-all ${
-                        iconCardId === card.id ? "border-blue-500 ring-2 ring-blue-100 shadow-sm" : "border-slate-200 hover:border-slate-400"
-                      }`}
-                    >
-                      <img src={card.thumbnailData} className="w-full h-full object-cover" alt={card.name} />
+                        iconCardId === card.id
+                          ? "border-blue-500 ring-2 ring-blue-100 shadow-sm"
+                          : "border-slate-200 hover:border-slate-400"
+                      }`}>
+                      <img
+                        src={card.thumbnailData}
+                        className="w-full h-full object-cover"
+                        alt={card.name}
+                      />
                       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-[10px] text-white font-bold px-1 py-0.5 bg-blue-500/80 rounded">Select</span>
+                        <span className="text-[10px] text-white font-bold px-1 py-0.5 bg-blue-500/80 rounded">
+                          Select
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -218,7 +253,9 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
           ) : activeTab === "create" ? (
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Category Name</label>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  Category Name
+                </label>
                 <Input
                   type="text"
                   required
@@ -231,7 +268,9 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">Emoji Icon</label>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Emoji Icon
+                  </label>
                   <Input
                     type="text"
                     value={emoji}
@@ -243,14 +282,15 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">Library Icon</label>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Library Icon
+                  </label>
                   <Button
                     type="button"
                     variant={iconUrl ? "primary" : "secondary"}
                     size="sm"
                     className="w-full flex items-center justify-center gap-1.5 h-9"
-                    onClick={() => setIsSelectingCard(true)}
-                  >
+                    onClick={() => setIsSelectingCard(true)}>
                     <ImageIcon className="w-4 h-4" />
                     {iconUrl ? "Change Icon" : "Select Image"}
                   </Button>
@@ -260,10 +300,16 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
               {/* Icon Preview */}
               {(emoji || iconUrl) && (
                 <div className="p-3 border rounded-lg bg-slate-50 flex flex-col items-center justify-center space-y-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Icon Preview</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">
+                    Icon Preview
+                  </span>
                   <div className="w-10 h-10 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden shadow-sm">
                     {iconUrl ? (
-                      <img src={iconUrl} className="w-full h-full object-cover" alt="Category Icon Preview" />
+                      <img
+                        src={iconUrl}
+                        className="w-full h-full object-cover"
+                        alt="Category Icon Preview"
+                      />
                     ) : (
                       <span className="text-lg">{emoji}</span>
                     )}
@@ -275,8 +321,7 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                         setIconUrl("")
                         setIconCardId("")
                       }}
-                      className="text-[10px] text-red-500 hover:underline font-bold"
-                    >
+                      className="text-[10px] text-red-500 hover:underline font-bold">
                       Clear Image
                     </button>
                   )}
@@ -286,10 +331,15 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
               <div className="pt-2 flex justify-end gap-2">
                 {editingCategory ? (
                   <>
-                    <Button type="button" variant="ghost" onClick={handleCancelEdit}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleCancelEdit}>
                       Cancel Edit
                     </Button>
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white">
                       Save Changes
                     </Button>
                   </>
@@ -298,7 +348,9 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                     <Button type="button" variant="ghost" onClick={onClose}>
                       Cancel
                     </Button>
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white">
                       Create Category
                     </Button>
                   </>
@@ -308,7 +360,8 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
           ) : (
             <div className="space-y-2">
               <p className="text-[11px] text-slate-500 mb-3">
-                List of custom and system categories. Custom categories can be edited or deleted.
+                List of custom and system categories. Custom categories can be
+                edited or deleted.
               </p>
               <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
                 {categories.map((cat) => {
@@ -316,20 +369,29 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                   return (
                     <div
                       key={cat.id}
-                      className="flex items-center justify-between p-2 border rounded-lg bg-white shadow-sm border-slate-100 hover:border-slate-200 transition-all"
-                    >
+                      className="flex items-center justify-between p-2 border rounded-lg bg-white shadow-sm border-slate-100 hover:border-slate-200 transition-all">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shadow-inner flex-shrink-0">
                           {cat.iconUrl ? (
-                            <img src={cat.iconUrl} className="w-full h-full object-cover" alt={cat.name} />
+                            <img
+                              src={cat.iconUrl}
+                              className="w-full h-full object-cover"
+                              alt={cat.name}
+                            />
                           ) : (
-                            <span className="text-sm leading-none">{cat.iconEmoji || "📁"}</span>
+                            <span className="text-sm leading-none">
+                              {cat.iconEmoji || "📁"}
+                            </span>
                           )}
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-slate-700 leading-tight">{cat.name}</p>
+                          <p className="text-xs font-bold text-slate-700 leading-tight">
+                            {cat.name}
+                          </p>
                           {isSystem && (
-                            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">System Default</span>
+                            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
+                              System Default
+                            </span>
                           )}
                         </div>
                       </div>
@@ -339,16 +401,14 @@ export function CategoryManagerModal({ onClose, addLog }: CategoryManagerModalPr
                             type="button"
                             onClick={() => handleStartEdit(cat)}
                             className="p-1 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-                            title="Edit Category"
-                          >
+                            title="Edit Category">
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(cat.id, cat.name)}
                             className="p-1 rounded text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            title="Delete Category"
-                          >
+                            title="Delete Category">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>

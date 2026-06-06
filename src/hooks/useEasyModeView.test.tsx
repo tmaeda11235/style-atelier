@@ -1,27 +1,33 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { useEasyModeView } from "./useEasyModeView"
+import { act, renderHook } from "@testing-library/react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
 import { db } from "../lib/db"
-import { renderHook, act } from "@testing-library/react"
+import { useEasyModeView } from "./useEasyModeView"
+
+vi.mock("../contexts/ConfirmContext", () => ({
+  useConfirm: () => (options: any) =>
+    Promise.resolve(window.confirm(options.message))
+}))
 
 vi.mock("../lib/db", () => ({
   db: {
     styleCards: {
       put: vi.fn().mockResolvedValue("card-id"),
       update: vi.fn().mockResolvedValue(1),
-      clear: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
     },
     historyItems: {
-      clear: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
     },
     userSettings: {
-      clear: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
     },
     categories: {
-      clear: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
     },
-    deleteStyleCardAndCleanup: vi.fn().mockResolvedValue(undefined),
+    deleteStyleCardAndCleanup: vi.fn().mockResolvedValue(undefined)
   },
-  seedDefaultCategories: vi.fn().mockResolvedValue(undefined),
+  seedDefaultCategories: vi.fn().mockResolvedValue(undefined)
 }))
 
 const confirmSpy = vi.spyOn(window, "confirm")
@@ -32,20 +38,23 @@ describe("useEasyModeView hook", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     confirmSpy.mockReset()
-    
+
     // Mock chrome APIs
     global.chrome = {
       tabs: {
         query: vi.fn().mockResolvedValue([{ id: 123 }]),
         sendMessage: vi.fn().mockResolvedValue({ status: "success" }),
-        reload: vi.fn(),
-      },
+        reload: vi.fn()
+      }
     } as any
   })
 
   it("should initialize with default states", () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     expect(result.current.activeTab).toBe("library")
@@ -56,7 +65,10 @@ describe("useEasyModeView hook", () => {
 
   it("should switch tab to settings", () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     act(() => {
@@ -68,7 +80,10 @@ describe("useEasyModeView hook", () => {
 
   it("should call onToggleEasyMode and reset tab to library when toggled", () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     act(() => {
@@ -86,7 +101,10 @@ describe("useEasyModeView hook", () => {
 
   it("should handle saving card details", async () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     const mockCard = { id: "card-123", name: "Test Card" } as any
@@ -102,7 +120,10 @@ describe("useEasyModeView hook", () => {
 
   it("should handle deleting a card", async () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     await act(async () => {
@@ -115,7 +136,10 @@ describe("useEasyModeView hook", () => {
 
   it("should handle injecting prompt successfully", async () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     await act(async () => {
@@ -125,7 +149,7 @@ describe("useEasyModeView hook", () => {
     expect(global.chrome.tabs.query).toHaveBeenCalled()
     expect(global.chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
       type: "INJECT_PROMPT",
-      prompt: "sunset cyberpunk",
+      prompt: "sunset cyberpunk"
     })
     expect(result.current.logs[0]).toContain("Sent prompt")
   })
@@ -133,11 +157,14 @@ describe("useEasyModeView hook", () => {
   it("should set alertType to no_input if content script returns error for chat input", async () => {
     global.chrome.tabs.sendMessage = vi.fn().mockResolvedValue({
       status: "error",
-      message: "Could not find chat input",
+      message: "Could not find chat input"
     })
 
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     await act(async () => {
@@ -149,7 +176,10 @@ describe("useEasyModeView hook", () => {
 
   it("should clear logs", () => {
     const { result } = renderHook(() =>
-      useEasyModeView({ isEasyMode: true, onToggleEasyMode: mockOnToggleEasyMode })
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
     )
 
     act(() => {
