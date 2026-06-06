@@ -100,6 +100,11 @@ export function useEasyModeView({ isEasyMode, onToggleEasyMode }: UseEasyModeVie
     if (result) {
       if (result.isImport) {
         setActiveTab("library")
+      } else {
+        const existingCard = await db.getCardByJobId(result.id)
+        if (!existingCard) {
+          minting.handleStartMinting(result)
+        }
       }
     }
   }

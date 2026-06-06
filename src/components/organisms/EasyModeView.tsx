@@ -3,7 +3,7 @@ import { useEasyModeView } from "../../hooks/useEasyModeView"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
 import { LibraryTab } from "./LibraryTab"
 import { SettingsTab } from "./SettingsTab"
-import { MintingView } from "./MintingView"
+import { SimpleMintingView } from "./SimpleMintingView"
 import { CardDetailView } from "./CardDetailView"
 import { db } from "../../lib/db"
 
@@ -73,21 +73,15 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
         isEasyMode={isEasyMode}
       >
         {(minting.mintingItem || minting.variationBase) && (
-          <MintingView
+          <SimpleMintingView
             mintingItem={minting.mintingItem}
             editedSegments={minting.editedSegments}
             setEditedSegments={minting.setEditedSegments}
-            isSrefHidden={minting.isSrefHidden}
-            setIsSrefHidden={minting.setIsSrefHidden}
-            isPHidden={minting.isPHidden}
-            setIsPHidden={minting.setIsPHidden}
             onCancelMinting={() => {
               minting.setMintingItem(null)
               minting.setVariationBase(null)
             }}
             onSaveMintedCard={minting.handleSaveMintedCard}
-            selectedRarity={minting.selectedRarity}
-            setSelectedRarity={minting.setSelectedRarity}
             suggestedKeywords={minting.suggestedKeywords}
             selectedKeywords={minting.selectedKeywords}
             setSelectedKeywords={minting.setSelectedKeywords}
@@ -95,11 +89,6 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             setCustomName={minting.setCustomName}
             selectedCategory={minting.selectedCategory}
             setSelectedCategory={minting.setSelectedCategory}
-            customTags={minting.customTags}
-            setCustomTags={minting.setCustomTags}
-            detectedDominantColor={minting.detectedDominantColor}
-            detectedAccentColor={minting.detectedAccentColor}
-            detectedColorTags={minting.detectedColorTags}
           />
         )}
         {activeDetailCard && (
