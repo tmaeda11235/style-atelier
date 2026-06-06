@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { getStorageEstimate, StorageEstimateResult } from "../lib/storage-utils";
+import { getStorageEstimate } from "../lib/storage-utils";
+import type { StorageEstimateResult } from "../lib/storage-utils";
 
 export function useStorageEstimate() {
   const [estimate, setEstimate] = useState<StorageEstimateResult | null>(null);
