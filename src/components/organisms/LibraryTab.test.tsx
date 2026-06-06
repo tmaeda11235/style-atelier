@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render as tlRender, screen, fireEvent } from "@testing-library/react"
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import React from "react"
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(ui, { wrapper: SettingsProvider, ...options })
+}
 import { LibraryTab } from "./LibraryTab"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"

@@ -1,6 +1,7 @@
 import React from "react"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
+import { PromptBubble } from "../molecules/PromptBubble"
 import type { RarityTier } from "../../lib/rarity-config"
 import { RaritySelector } from "../molecules/RaritySelector"
 import { KeywordChip } from "../molecules/KeywordChip"
@@ -10,6 +11,7 @@ import { useHand } from "../../hooks/useHand"
 import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "../../lib/db"
 import { useTutorial } from "../../contexts/TutorialContext"
+import { useSettings } from "../../contexts/SettingsContext"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -67,6 +69,7 @@ export function MintingView({
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
   const { advanceIfStep } = useTutorial()
+  const { expertFeatures } = useSettings()
 
   const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
 
@@ -130,82 +133,86 @@ export function MintingView({
               </div>
 
               {/* Category Dropdown */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full text-sm border rounded bg-white p-2"
-                >
-                  <option value="">No Category</option>
-                  {categoriesList.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.iconEmoji || "🖼️"} {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {expertFeatures.categories && (
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full text-sm border rounded bg-white p-2"
+                  >
+                    <option value="">No Category</option>
+                    {categoriesList.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.iconEmoji || "🖼️"} {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Custom Tags Section */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-500 mb-1">Custom Tags</label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {customTags.map((t, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-100"
-                    >
-                      {t}
-                      <button
-                        type="button"
-                        onClick={() => setCustomTags(customTags.filter((tag) => tag !== t))}
-                        className="text-blue-400 hover:text-red-500 text-[10px]"
+              {expertFeatures.tags && (
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Custom Tags</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {customTags.map((t, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-100"
                       >
-                        &times;
-                      </button>
-                    </span>
-                  ))}
-                  {customTags.length === 0 && (
-                    <span className="text-xs text-slate-400 italic">No custom tags added.</span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    id="custom-tag-input"
-                    placeholder="Press enter to add..."
-                    className="text-xs py-1"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault()
-                        const input = e.currentTarget
-                        const trimmed = input.value.trim().toLowerCase()
-                        if (trimmed && !customTags.includes(trimmed)) {
-                          setCustomTags([...customTags, trimmed])
-                          input.value = ""
+                        {t}
+                        <button
+                          type="button"
+                          onClick={() => setCustomTags(customTags.filter((tag) => tag !== t))}
+                          className="text-blue-400 hover:text-red-500 text-[10px]"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                    {customTags.length === 0 && (
+                      <span className="text-xs text-slate-400 italic">No custom tags added.</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      id="custom-tag-input"
+                      placeholder="Press enter to add..."
+                      className="text-xs py-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          const input = e.currentTarget
+                          const trimmed = input.value.trim().toLowerCase()
+                          if (trimmed && !customTags.includes(trimmed)) {
+                            setCustomTags([...customTags, trimmed])
+                            input.value = ""
+                          }
                         }
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="secondary"
-                    onClick={() => {
-                      const input = document.getElementById("custom-tag-input") as HTMLInputElement
-                      if (input) {
-                        const trimmed = input.value.trim().toLowerCase()
-                        if (trimmed && !customTags.includes(trimmed)) {
-                          setCustomTags([...customTags, trimmed])
-                          input.value = ""
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="secondary"
+                      onClick={() => {
+                        const input = document.getElementById("custom-tag-input") as HTMLInputElement
+                        if (input) {
+                          const trimmed = input.value.trim().toLowerCase()
+                          if (trimmed && !customTags.includes(trimmed)) {
+                            setCustomTags([...customTags, trimmed])
+                            input.value = ""
+                          }
                         }
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Dominant and Accent Color Palette preview */}
               <div className="mb-2">
@@ -243,17 +250,31 @@ export function MintingView({
               </div>
             </div>
 
-            <div data-tutorial="prompt-segment-bubble">
-              <PromptBubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
+            <div data-tutorial="prompt-segment-bubble" className="bg-white">
+              {expertFeatures.cardEditing ? (
+                <PromptBubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
+              ) : (
+                <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
+                  {editedSegments.map((segment, index) => (
+                    <PromptBubble
+                      key={index}
+                      segment={segment}
+                      tier={segment.type === "text" ? undefined : selectedRarity}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm" data-tutorial="rarity-section">
-              <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
-              <RaritySelector
-                selected={selectedRarity}
-                onSelect={setSelectedRarity}
-              />
-            </div>
+            {expertFeatures.rarity && (
+              <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm" data-tutorial="rarity-section">
+                <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
+                <RaritySelector
+                  selected={selectedRarity}
+                  onSelect={setSelectedRarity}
+                />
+              </div>
+            )}
           </>
         )}
         <div className="mt-4 p-4 border rounded-lg bg-white">

@@ -5,6 +5,7 @@ import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
+import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 
 /**
  * Main inner container for the side panel. It manages site target detection
@@ -12,16 +13,10 @@ import { ExpertModeView } from "../components/organisms/ExpertModeView"
  */
 function SidePanelInner() {
   const { isTargetSite, isLoading } = useActiveTabUrl()
-  const [isEasyMode, setIsEasyMode] = useState(false)
-
-  useEffect(() => {
-    const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true"
-    setIsEasyMode(easyMode)
-  }, [])
+  const { isEasyMode, toggleEasyMode } = useSettings()
 
   const handleToggleEasyMode = (enabled: boolean) => {
-    setIsEasyMode(enabled)
-    localStorage.setItem("style-atelier-easy-mode", enabled ? "true" : "false")
+    toggleEasyMode(enabled)
   }
 
   const handleOpenMidjourney = () => {
@@ -56,14 +51,16 @@ function SidePanelInner() {
 }
 
 /**
- * Root page component – wraps everything in TutorialProvider so useTutorial
- * is available within both the SidePanelInner router and underlying views.
+ * Root page component – wraps everything in SettingsProvider and TutorialProvider so useSettings and useTutorial
+ * are available within both the SidePanelInner router and underlying views.
  */
 function SidePanelPage() {
   return (
-    <TutorialProvider>
-      <SidePanelInner />
-    </TutorialProvider>
+    <SettingsProvider>
+      <TutorialProvider>
+        <SidePanelInner />
+      </TutorialProvider>
+    </SettingsProvider>
   )
 }
 

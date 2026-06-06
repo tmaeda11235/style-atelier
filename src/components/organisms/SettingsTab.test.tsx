@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render as tlRender, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import React from "react";
 import { SettingsTab } from "./SettingsTab";
 import * as googleDrive from "../../lib/google-drive";
 import { exportDatabase, importDatabase } from "../../lib/google-drive";
 import { db } from "../../lib/db";
+import { SettingsProvider } from "../../contexts/SettingsContext";
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(<SettingsProvider>{ui}</SettingsProvider>, options);
+};
 
 vi.mock("../../lib/google-drive", () => {
   class GDriveTimeoutError extends Error {
@@ -631,5 +636,42 @@ describe("SettingsTab", () => {
     }
 
     expect(mockToggleEasyMode).toHaveBeenCalledWith(true);
+  });
+
+  it("renders Expert Features card and allows toggling individual features", () => {
+    const { container } = render(
+      <SettingsTab
+        addLog={mockAddLog}
+        onResetDb={mockResetDb}
+        isEasyMode={false}
+      />
+    );
+
+    // Verify Title exists
+    expect(screen.getByText("エキスパート機能の個別設定")).toBeDefined();
+
+    // Verify all toggle buttons are rendered
+    const features = [
+      "stack",
+      "slot",
+      "rarity",
+      "tags",
+      "categories",
+      "multicard",
+      "cardediting",
+      "multiimage"
+    ];
+    features.forEach(feat => {
+      const btn = container.querySelector(`#expert-feature-${feat}-btn`);
+      expect(btn).not.toBeNull();
+    });
+
+    // Test toggling one of them
+    const slotToggleBtn = container.querySelector("#expert-feature-slot-btn");
+    expect(slotToggleBtn).not.toBeNull();
+    
+    if (slotToggleBtn) {
+      fireEvent.click(slotToggleBtn);
+    }
   });
 });

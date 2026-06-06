@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render as tlRender, screen, fireEvent } from "@testing-library/react"
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import React from "react"
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(ui, { wrapper: SettingsProvider, ...options })
+}
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
 import type { PromptSegment } from "../../lib/db-schema"
 

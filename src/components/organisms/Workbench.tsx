@@ -7,11 +7,13 @@ import { Button } from "../atoms/Button";
 import { Sparkles, X, Send, BookUp2, Layers } from "lucide-react";
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
+import { PromptBubble } from "../molecules/PromptBubble";
 import { ParameterEditor } from "./ParameterEditor";
 import { type AlertType } from "../molecules/ConnectionAlert";
 import { db } from "../../lib/db";
 import { MergeStackModal } from "./MergeStackModal";
 import { SlotVariablesSection } from "./SlotVariablesSection";
+import { useSettings } from "../../contexts/SettingsContext";
 
 import type { PromptSegment } from "../../lib/db-schema";
 
@@ -34,12 +36,15 @@ interface WorkbenchProps {
 export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, addLog, setAlertType }) => {
   const { workbenchCards, handCards, toggleCardSelection, clearWorkbench } = useWorkbench();
   const { canEvolve, evolveCard } = useEvolution();
+  const { expertFeatures } = useSettings();
 
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([]);
   const [editedParams, setEditedParams] = useState<any>({});
   const [isInjecting, setIsInjecting] = useState(false);
   const [slotValues, setSlotValues] = useState<Record<string, string>>({});
   const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({});
+  
+  const hasParams = Object.values(editedParams).some(v => Array.isArray(v) ? v.length > 0 : !!v);
 
 
   const isEvolutionMode = workbenchCards.length === 1;
@@ -373,26 +378,61 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
               </div>
 
               <div className="bg-white">
-                <PromptBubbleEditor
-                  initialSegments={editedSegments}
-                  onChange={setEditedSegments}
-                  tier={isEvolutionMode ? targetCard?.tier : "Common"}
-                />
+                {expertFeatures.cardEditing ? (
+                  <PromptBubbleEditor
+                    initialSegments={editedSegments}
+                    onChange={setEditedSegments}
+                    tier={isEvolutionMode ? targetCard?.tier : "Common"}
+                  />
+                ) : (
+                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
+                    {editedSegments.map((segment, index) => (
+                      <PromptBubble
+                        key={index}
+                        segment={segment}
+                        tier={segment.type === "text" ? undefined : (isEvolutionMode ? targetCard?.tier : "Common")}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Slot Variables Section */}
-              <SlotVariablesSection
-                slots={slots}
-                slotValues={slotValues}
-                onSlotValueChange={handleSlotValueChange}
-                slotHistory={slotHistory}
-                handCards={handCards}
-                onSendToWorkbench={handleSendToWorkbench}
-              />
+              {expertFeatures.slot && (
+                <SlotVariablesSection
+                  slots={slots}
+                  slotValues={slotValues}
+                  onSlotValueChange={handleSlotValueChange}
+                  slotHistory={slotHistory}
+                  handCards={handCards}
+                  onSendToWorkbench={handleSendToWorkbench}
+                />
+              )}
 
-              <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
+              {expertFeatures.cardEditing ? (
+                <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
+              ) : (
+                <div className="space-y-2 bg-slate-50/50 p-3 rounded-lg border border-slate-100 text-xs">
+                  {editedParams.ar && (
+                    <div><span className="font-bold text-slate-500">Aspect Ratio:</span> {editedParams.ar}</div>
+                  )}
+                  {editedParams.p && editedParams.p.length > 0 && (
+                    <div><span className="font-bold text-slate-500">Personalization (--p):</span> {editedParams.p.join(", ")}</div>
+                  )}
+                  {editedParams.imagePrompts && editedParams.imagePrompts.length > 0 && (
+                    <div><span className="font-bold text-slate-500">Image Prompts:</span> {editedParams.imagePrompts.join(", ")}</div>
+                  )}
+                  {editedParams.sref && editedParams.sref.length > 0 && (
+                    <div><span className="font-bold text-slate-500">Style Reference (--sref):</span> {editedParams.sref.join(", ")}</div>
+                  )}
+                  {editedParams.cref && editedParams.cref.length > 0 && (
+                    <div><span className="font-bold text-slate-500">Character Reference (--cref):</span> {editedParams.cref.join(", ")}</div>
+                  )}
+                  {!hasParams && <div className="text-slate-400 italic">No parameters defined.</div>}
+                </div>
+              )}
 
-              {isEvolutionMode && targetCard && (
+              {isEvolutionMode && targetCard && expertFeatures.stack && (
                 <div className="pt-2 border-t border-slate-100">
                   <div className="flex justify-between items-center text-xs mb-2">
                     <span className="text-slate-500">Usage Progress</span>
@@ -413,7 +453,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                 </div>
               )}
 
-              {isMixingMode && (
+              {isMixingMode && expertFeatures.stack && (
                 <Button
                   className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-md mb-2"
                   onClick={handleMintVariation}

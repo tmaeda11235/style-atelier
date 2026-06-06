@@ -8,6 +8,7 @@ import { CardThumbnail } from "../molecules/CardThumbnail"
 import { BookUp2, Layers, X } from "lucide-react"
 import { db } from "../../lib/db"
 import type { StyleCard } from "../../lib/db-schema"
+import { useSettings } from "../../contexts/SettingsContext"
 
 export interface HandBarProps {
   onNavigateToWorkbench?: () => void
@@ -16,6 +17,7 @@ export interface HandBarProps {
 
 export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProps) {
   const { pinnedCards, unpinCard, clearHand } = useHand()
+  const { expertFeatures } = useSettings()
 
   // States for merging stack/cards
   const [isMergeOpen, setIsMergeOpen] = useState(false)
@@ -23,6 +25,18 @@ export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProp
   const [consumeStates, setConsumeStates] = useState<Record<string, boolean>>({})
 
   const pinnedCardsDependency = pinnedCards.map(c => `${c.id}-${c.updatedAt || 0}`).join(",")
+
+  // Clamp pinned cards to maximum 1 if multiCard feature is disabled
+  useEffect(() => {
+    if (!expertFeatures.multiCard && pinnedCards.length > 1) {
+      const latest = pinnedCards[pinnedCards.length - 1]
+      pinnedCards.forEach(c => {
+        if (c.id !== latest.id) {
+          unpinCard(c.id)
+        }
+      })
+    }
+  }, [pinnedCardsDependency, expertFeatures.multiCard, unpinCard])
 
   // Synchronize merge state when pinned cards change
   useEffect(() => {
@@ -98,7 +112,7 @@ export function HandBar({ onNavigateToWorkbench, onOpenDetailCard }: HandBarProp
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Workbench ({pinnedCards.length})</span>
           <div className="flex gap-2">
-            {pinnedCards.length >= 2 && (
+            {pinnedCards.length >= 2 && expertFeatures.stack && (
               <Button
                 variant="secondary"
                 size="xs"

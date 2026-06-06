@@ -3,6 +3,7 @@ import { Pin } from "lucide-react";
 import { Button } from "../atoms/Button";
 import { buildPromptString } from "../../lib/prompt-utils";
 import type { StyleCard } from "../../lib/db-schema";
+import { useSettings } from "../../contexts/SettingsContext";
 
 /**
  * Props for the SlotVariablesSection component.
@@ -34,19 +35,20 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
   handCards,
   onSendToWorkbench,
 }) => {
+  const { expertFeatures } = useSettings();
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-focus the first slot input when the slot list changes
   useEffect(() => {
-    if (slots.length > 0) {
+    if (slots.length > 0 && expertFeatures.slot) {
       const timer = setTimeout(() => {
         firstInputRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [slots]);
+  }, [slots, expertFeatures.slot]);
 
-  if (slots.length === 0) return null;
+  if (!expertFeatures.slot || slots.length === 0) return null;
 
   return (
     <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">

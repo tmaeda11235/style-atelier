@@ -4,6 +4,7 @@ import type { PromptSegment } from "../../lib/db-schema"
 import type { RarityTier } from "../../lib/rarity-config"
 import { cn } from "../../lib/utils"
 import { PROMPT_DELIMITER_REGEX, PROMPT_DELIMITER_CHARS } from "../../lib/prompt-utils"
+import { useSettings } from "../../contexts/SettingsContext"
 
 /**
  * プロンプトのセグメントをチップ形式で表示し、自由なテキスト入力でトークンを追加できるエディタ。
@@ -24,6 +25,7 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
   onChange,
   tier,
 }) => {
+  const { expertFeatures } = useSettings()
   const [segments, setSegments] = useState<PromptSegment[]>(
     () => initialSegments.length > 0 ? [...initialSegments] : initialSegments
   )
@@ -49,7 +51,7 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
       .map((value) => {
         // Direct slot typing detection
         const slotMatch = value.match(/^(?:\{\{|\[|<)(.+?)(?:\}\}|\]|>)$/)
-        if (slotMatch) {
+        if (slotMatch && expertFeatures.slot) {
           const label = slotMatch[1].trim()
           return { type: "slot" as const, label, default: label }
         }
@@ -77,6 +79,7 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
     const segment = newSegments[index]
 
     if (segment.type === "text") {
+      if (!expertFeatures.slot) return
       newSegments[index] = {
         type: "slot",
         label: segment.value,
@@ -125,7 +128,11 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
           key={`${index}-${segment.type === "text" ? segment.value : segment.type === "slot" ? segment.label : segment.kind}`}
           segment={segment}
           onRemove={() => removeSegment(index)}
-          onClick={segment.type !== "chip" ? () => toggleSegmentType(index) : undefined}
+          onClick={
+            segment.type !== "chip" && (segment.type !== "text" || expertFeatures.slot)
+              ? () => toggleSegmentType(index)
+              : undefined
+          }
           tier={segment.type === "text" ? undefined : tier} // テキスト以外はカード由来として色を付ける
         />
       ))}

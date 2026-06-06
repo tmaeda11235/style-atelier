@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render as tlRender, screen, fireEvent, waitFor } from "@testing-library/react";
+import { SettingsProvider } from "../../contexts/SettingsContext";
+import React from "react";
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(ui, { wrapper: SettingsProvider, ...options });
+};
 import { Workbench } from "./Workbench";
 import { useWorkbench } from "../../hooks/useWorkbench";
 import { useEvolution } from "../../hooks/useEvolution";

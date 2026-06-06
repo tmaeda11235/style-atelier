@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render as tlRender, screen, fireEvent, waitFor } from "@testing-library/react";
 import { SlotVariablesSection } from "./SlotVariablesSection";
 import type { StyleCard } from "../../lib/db-schema";
+import { SettingsProvider } from "../../contexts/SettingsContext";
+import React from "react";
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(ui, { wrapper: SettingsProvider, ...options });
+};
 
 describe("SlotVariablesSection", () => {
   const mockSlots = [

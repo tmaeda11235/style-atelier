@@ -9,6 +9,7 @@ import { CategoryManagerModal } from "./CategoryManagerModal"
 import { ShareCardModal } from "./ShareCardModal"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 import { useTutorial } from "../../contexts/TutorialContext"
+import { useSettings } from "../../contexts/SettingsContext"
 
 interface LibraryTabProps {
   addLog: (msg: string) => void
@@ -21,6 +22,7 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
+  const { expertFeatures } = useSettings()
 
   const {
     styleCards,
@@ -68,17 +70,19 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
           className="text-xs"
         />
         <div className="flex gap-2">
-          <select
-            value={rarityFilter}
-            onChange={(e) => setRarityFilter(e.target.value as any)}
-            className="flex-1 px-1 py-1 text-[10px] border rounded bg-white"
-          >
-            <option value="All">All Rarities</option>
-            <option value="Common">Common</option>
-            <option value="Rare">Rare</option>
-            <option value="Epic">Epic</option>
-            <option value="Legendary">Legendary</option>
-          </select>
+          {expertFeatures.rarity && (
+            <select
+              value={rarityFilter}
+              onChange={(e) => setRarityFilter(e.target.value as any)}
+              className="flex-1 px-1 py-1 text-[10px] border rounded bg-white"
+            >
+              <option value="All">All Rarities</option>
+              <option value="Common">Common</option>
+              <option value="Rare">Rare</option>
+              <option value="Epic">Epic</option>
+              <option value="Legendary">Legendary</option>
+            </select>
+          )}
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
@@ -86,7 +90,7 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
-            <option value="rarity">Rarity</option>
+            {expertFeatures.rarity && <option value="rarity">Rarity</option>}
             <option value="usage">Usage</option>
             <option value="color">Color</option>
           </select>
@@ -126,48 +130,50 @@ export function LibraryTab({ addLog, setAlertType, onOpenDetailCard, onNavigateT
       </div>
 
       {/* Category Horizontal Filter Row */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <button
-          onClick={() => setCategoryFilter("All")}
-          className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
-            categoryFilter === "All"
-              ? "bg-slate-800 border-slate-800 text-white shadow-sm"
-              : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-          }`}
-        >
-          All
-        </button>
-        {categories.map((cat) => (
+      {expertFeatures.categories && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           <button
-            key={cat.id}
-            onClick={() => setCategoryFilter(cat.id)}
-            className={`flex items-center gap-1 flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
-              categoryFilter === cat.id
-                ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+            onClick={() => setCategoryFilter("All")}
+            className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
+              categoryFilter === "All"
+                ? "bg-slate-800 border-slate-800 text-white shadow-sm"
                 : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
             }`}
           >
-            {cat.iconUrl ? (
-              <img
-                src={cat.iconUrl}
-                className="w-3.5 h-3.5 rounded-full object-cover border border-white/20"
-                alt={cat.name}
-              />
-            ) : (
-              <span className="text-[11px] leading-none">{cat.iconEmoji || "🖼️"}</span>
-            )}
-            <span>{cat.name}</span>
+            All
           </button>
-        ))}
-        {/* Manage categories button */}
-        <button
-          onClick={() => setIsCategoryModalOpen(true)}
-          className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
-          title="Manage Categories"
-        >
-          <Tag className="w-3.5 h-3.5" />
-        </button>
-      </div>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setCategoryFilter(cat.id)}
+              className={`flex items-center gap-1 flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
+                categoryFilter === cat.id
+                  ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+              }`}
+            >
+              {cat.iconUrl ? (
+                <img
+                  src={cat.iconUrl}
+                  className="w-3.5 h-3.5 rounded-full object-cover border border-white/20"
+                  alt={cat.name}
+                />
+              ) : (
+                <span className="text-[11px] leading-none">{cat.iconEmoji || "🖼️"}</span>
+              )}
+              <span>{cat.name}</span>
+            </button>
+          ))}
+          {/* Manage categories button */}
+          <button
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
+            title="Manage Categories"
+          >
+            <Tag className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {styleCards !== undefined && styleCards.length > 0 ? (
         <div className="grid grid-cols-2 gap-3" data-tutorial="library-card-grid">
