@@ -4,6 +4,7 @@ import React from "react";
 import { SettingsTab } from "./SettingsTab";
 import * as googleDrive from "../../lib/google-drive";
 import { exportDatabase, importDatabase } from "../../lib/google-drive";
+import { db } from "../../lib/db";
 
 vi.mock("../../lib/google-drive", () => ({
   authorize: vi.fn(),
@@ -11,8 +12,37 @@ vi.mock("../../lib/google-drive", () => ({
   uploadBackup: vi.fn(),
   downloadBackup: vi.fn(),
   exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'),
-  importDatabase: vi.fn().mockResolvedValue(undefined),
+  importDatabase: vi.fn().mockImplementation(async (jsonData: string) => {
+    const { validateBackupPayload } = await import("../../lib/backup-validator");
+    let payload: any;
+    try {
+      payload = JSON.parse(jsonData);
+    } catch (e) {
+      throw new Error("Invalid JSON format. Failed to parse backup file.");
+    }
+    const validation = validateBackupPayload(payload);
+    if (!validation.isValid) {
+      throw new Error(`Database validation failed: ${validation.error}`);
+    }
+  }),
   getBackupMetadata: vi.fn(),
+}));
+
+vi.mock("../../lib/db", () => ({
+  db: {
+    historyItems: {
+      clear: vi.fn().mockResolvedValue(undefined),
+    },
+    styleCards: {
+      clear: vi.fn().mockResolvedValue(undefined),
+    },
+    userSettings: {
+      clear: vi.fn().mockResolvedValue(undefined),
+    },
+    categories: {
+      clear: vi.fn().mockResolvedValue(undefined),
+    },
+  },
 }));
 
 describe("SettingsTab", () => {
@@ -33,6 +63,18 @@ describe("SettingsTab", () => {
 
     // Mock console.error to keep logs clean
     vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // Mock navigator.storage.estimate
+    Object.defineProperty(window.navigator, "storage", {
+      value: {
+        estimate: vi.fn().mockResolvedValue({
+          usage: 1024 * 1024 * 5, // 5 MB
+          quota: 1024 * 1024 * 100 // 100 MB
+        })
+      },
+      configurable: true,
+      writable: true
+    });
   });
 
   afterEach(() => {
@@ -94,7 +136,32 @@ describe("SettingsTab", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     expect(fileInput).toBeDefined();
 
-    const backupContent = '{"version": 1, "data": {"styleCards": [{"id": "c1", "name": "Card C1"}]}}';
+    const mockStyleCard = {
+      id: "card-123",
+      name: "Mock Card",
+      createdAt: 123456789,
+      updatedAt: 123456789,
+      promptSegments: [{ type: "text", value: "test command" }],
+      parameters: { ar: "16:9" },
+      masking: { isSrefHidden: false, isPHidden: false },
+      tier: "Common",
+      isFavorite: false,
+      isPinned: false,
+      usageCount: 0,
+      tags: ["test"],
+      category: "cat1",
+      dominantColor: "#ffffff",
+      thumbnailData: "data:image/png;base64,abc",
+      frameId: "default",
+      genealogy: { generation: 1, parentIds: [] }
+    };
+    const backupContent = JSON.stringify({
+      version: 1,
+      exportedAt: 123456789,
+      data: {
+        styleCards: [mockStyleCard]
+      }
+    });
     const file = new File([backupContent], "backup.json", { type: "application/json" });
 
     // Trigger file change event
@@ -121,7 +188,7 @@ describe("SettingsTab", () => {
       expect(mockAddLog).toHaveBeenCalledWith(expect.stringContaining("Import failed:"));
     });
 
-    expect(importDatabase).not.toHaveBeenCalled();
+    expect(importDatabase).toHaveBeenCalledWith(invalidContent);
   });
 
   it("cancels import if user rejects confirmation", async () => {
@@ -174,13 +241,13 @@ describe("SettingsTab", () => {
 
     await waitFor(() => {
       expect(googleDrive.authorize).toHaveBeenCalledWith(true);
-      expect(googleDrive.getBackupMetadata).toHaveBeenCalledWith("mock-token-123");
+      expect(googleDrive.getBackupMetadata).toHaveBeenCalledWith("mock-token-123", expect.any(Function));
     });
 
     // Verify metadata preview is displayed
     await waitFor(() => {
       expect(screen.getByText("Cloud Backup Preview")).toBeDefined();
-      expect(screen.getByText(/更新日時: 2026\/6\/3/)).toBeDefined();
+      expect(screen.getByText(/更新日時: (2026\/6\/3|6\/3\/2026)/)).toBeDefined();
       expect(screen.getByText(/サイズ: 150\.0 KB/)).toBeDefined();
     });
   });
@@ -216,7 +283,7 @@ describe("SettingsTab", () => {
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
 
     await waitFor(() => {
-      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Function));
+      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Function), expect.any(Function));
       expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data");
     });
 
@@ -252,10 +319,79 @@ describe("SettingsTab", () => {
     expect(googleDrive.importDatabase).not.toHaveBeenCalled();
   });
 
+  // --- Storage Management Tests ---
+
+  it("renders Storage Management card correctly with normal usage", async () => {
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    expect(screen.getByText("Storage Management")).toBeDefined();
+    
+    // Wait for the estimate to resolve
+    await waitFor(() => {
+      expect(screen.getByText(/使用量: 5.0 MB \/ 100.0 MB/)).toBeDefined();
+      expect(screen.getByText("5%")).toBeDefined();
+    });
+
+    // Check that warning alerts do not render
+    expect(screen.queryByText(/注意: 空き容量が少なくなっています/)).toBeNull();
+    expect(screen.queryByText(/警告: 容量制限に近いです/)).toBeNull();
+  });
+
+  it("displays warning message when storage usage is between 80% and 90%", async () => {
+    vi.mocked(window.navigator.storage.estimate).mockResolvedValue({
+      usage: 1024 * 1024 * 85, // 85 MB
+      quota: 1024 * 1024 * 100 // 100 MB
+    });
+
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/使用量: 85.0 MB \/ 100.0 MB/)).toBeDefined();
+      expect(screen.getByText("85%")).toBeDefined();
+      expect(screen.getByText(/注意: 空き容量が少なくなっています/)).toBeDefined();
+    });
+    
+    expect(screen.queryByText(/警告: 容量制限に近いです/)).toBeNull();
+  });
+
+  it("displays danger warning message when storage usage is 90% or above", async () => {
+    vi.mocked(window.navigator.storage.estimate).mockResolvedValue({
+      usage: 1024 * 1024 * 95, // 95 MB
+      quota: 1024 * 1024 * 100 // 100 MB
+    });
+
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/使用量: 95.0 MB \/ 100.0 MB/)).toBeDefined();
+      expect(screen.getByText("95%")).toBeDefined();
+      expect(screen.getByText(/警告: 容量制限に近いです/)).toBeDefined();
+    });
+
+    expect(screen.queryByText(/注意: 空き容量が少なくなっています/)).toBeNull();
+  });
+
+  it("handles prompt history clearing successfully", async () => {
+    render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Storage Management")).toBeDefined();
+    });
+
+    const clearBtn = screen.getByRole("button", { name: /Clear History/i });
+    fireEvent.click(clearBtn);
+
+    expect(window.confirm).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(db.historyItems.clear).toHaveBeenCalled();
+      expect(mockAddLog).toHaveBeenCalledWith("Prompt history cleared successfully.");
+    });
+  });
+
   it("displays progress percentage and progress bar during backup", async () => {
     let progressCallback: any = null;
     vi.mocked(googleDrive.uploadBackup).mockImplementation(
-      async (token, jsonData, onProgress) => {
+      async (token, jsonData, onTokenUpdated, onProgress) => {
         if (onProgress) progressCallback = onProgress;
         return new Promise(() => {});
       }
@@ -295,7 +431,7 @@ describe("SettingsTab", () => {
   it("displays progress percentage and progress bar during restore", async () => {
     let progressCallback: any = null;
     vi.mocked(googleDrive.downloadBackup).mockImplementation(
-      async (token, onProgress) => {
+      async (token, onTokenUpdated, onProgress) => {
         if (onProgress) progressCallback = onProgress;
         return new Promise(() => {});
       }

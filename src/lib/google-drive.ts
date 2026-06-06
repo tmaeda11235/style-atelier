@@ -1,4 +1,6 @@
 import { db } from "./db";
+import { validateBackupPayload } from "./backup-validator";
+
 
 export interface BackupPayload {
   version: number;
@@ -98,13 +100,20 @@ export async function exportDatabase(): Promise<string> {
  * Clear existing IndexedDB tables and populate with imported JSON data
  */
 export async function importDatabase(jsonData: string): Promise<void> {
-  const payload = JSON.parse(jsonData) as BackupPayload;
-  
-  if (!payload.data || !payload.data.styleCards) {
-    throw new Error("Invalid backup data format: Missing styleCards.");
+  let payload: any;
+  try {
+    payload = JSON.parse(jsonData);
+  } catch (e) {
+    throw new Error("Invalid JSON format. Failed to parse backup file.");
+  }
+
+  const validation = validateBackupPayload(payload);
+  if (!validation.isValid) {
+    throw new Error(`Database validation failed: ${validation.error}`);
   }
 
   await db.transaction("rw", [db.styleCards, db.categories, db.userSettings, db.historyItems], async () => {
+
     if (payload.data.styleCards.length > 0) {
       await db.styleCards.bulkPut(payload.data.styleCards);
     }
@@ -144,13 +153,76 @@ export async function importDatabase(jsonData: string): Promise<void> {
 /**
  * Search Google Drive for an existing file named 'style-atelier-backup.json'
  */
-export async function searchBackupFile(accessToken: string): Promise<string | null> {
-  const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`, {
+export interface ReauthContext {
+  token: string;
+}
+
+/**
+ * A wrapper around fetch that automatically handles 401 Unauthorized (invalid/expired token)
+ * by removing the stale cached token from Chrome identity, attempting silent re-authorization,
+ * and retrying the request.
+ */
+async function fetchWithReauth(
+  url: string,
+  options: RequestInit,
+  context: ReauthContext,
+  onTokenUpdated?: (newToken: string) => void
+): Promise<Response> {
+  let res = await fetch(url, {
+    ...options,
     headers: {
-      Authorization: `Bearer ${accessToken}`
+      ...options.headers,
+      Authorization: `Bearer ${context.token}`
     }
   });
+
+  if (res.status === 401) {
+    console.warn("Google Drive API returned 401. Stale token detected. Clearing cache and retrying silently...");
+    
+    // 1. Clear cached token
+    await clearCachedToken(context.token);
+    
+    // 2. Silent re-authorization
+    try {
+      const newToken = await authorize(false); // interactive = false
+      context.token = newToken;
+      if (onTokenUpdated) {
+        onTokenUpdated(newToken);
+      }
+      
+      // 3. Retry with new token
+      res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${newToken}`
+        }
+      });
+    } catch (reauthErr: any) {
+      console.error("Silent re-authorization failed:", reauthErr);
+      throw new Error(`Google Drive authentication expired: ${reauthErr.message || reauthErr}`);
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Search Google Drive for an existing file named 'style-atelier-backup.json'
+ */
+export async function searchBackupFile(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext
+): Promise<string | null> {
+  const ctx = context || { token: accessToken };
+  const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=drive`,
+    {},
+    ctx,
+    onTokenUpdated
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to search backup file: ${res.status} ${res.statusText}`);
@@ -172,13 +244,19 @@ export interface BackupMetadata {
 /**
  * Search Google Drive for 'style-atelier-backup.json' and return its metadata
  */
-export async function getBackupMetadata(accessToken: string): Promise<BackupMetadata | null> {
+export async function getBackupMetadata(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext
+): Promise<BackupMetadata | null> {
+  const ctx = context || { token: accessToken };
   const query = encodeURIComponent("name = 'style-atelier-backup.json' and trashed = false");
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime,size)&spaces=drive`,
+    {},
+    ctx,
+    onTokenUpdated
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to get backup metadata: ${res.status} ${res.statusText}`);
@@ -203,18 +281,20 @@ export async function getBackupMetadata(accessToken: string): Promise<BackupMeta
 export async function uploadBackup(
   accessToken: string,
   jsonData: string,
+  onTokenUpdated?: (newToken: string) => void,
   onProgress?: (progress: number) => void
 ): Promise<void> {
-  const fileId = await searchBackupFile(accessToken);
+  const ctx = { token: accessToken };
+  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx);
   const blob = new Blob([jsonData], { type: "application/json" });
   const threshold = 2 * 1024 * 1024; // 2MB
 
   if (blob.size >= threshold) {
     // Use Resumable upload
-    await uploadBackupResumable(accessToken, fileId, blob, onProgress);
+    await uploadBackupResumable(ctx.token, fileId, blob, onTokenUpdated, onProgress, ctx);
   } else {
     // Use Simple upload with progress support via XMLHttpRequest
-    await uploadBackupSimple(accessToken, fileId, jsonData, onProgress);
+    await uploadBackupSimple(ctx.token, fileId, jsonData, onTokenUpdated, onProgress, ctx);
   }
 }
 
@@ -225,8 +305,11 @@ async function uploadBackupResumable(
   accessToken: string,
   fileId: string | null,
   blob: Blob,
-  onProgress?: (progress: number) => void
+  onTokenUpdated?: (newToken: string) => void,
+  onProgress?: (progress: number) => void,
+  context?: ReauthContext
 ): Promise<void> {
+  const ctx = context || { token: accessToken };
   let initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable";
   let method = "POST";
   let metadata: any = {
@@ -240,17 +323,21 @@ async function uploadBackupResumable(
     metadata.name = "style-atelier-backup.json";
   }
 
-  // 1. Initialize Resumable session
-  const res = await fetch(initUrl, {
-    method,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json; charset=UTF-8",
-      "X-Upload-Content-Type": "application/json",
-      "X-Upload-Content-Length": blob.size.toString()
+  // 1. Initialize Resumable session (with reauth)
+  const res = await fetchWithReauth(
+    initUrl,
+    {
+      method,
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": "application/json",
+        "X-Upload-Content-Length": blob.size.toString()
+      },
+      body: JSON.stringify(metadata)
     },
-    body: JSON.stringify(metadata)
-  });
+    ctx,
+    onTokenUpdated
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to initialize resumable upload: ${res.status} ${res.statusText}`);
@@ -261,49 +348,11 @@ async function uploadBackupResumable(
     throw new Error("Failed to get resumable upload session URL (Location header missing)");
   }
 
-  // 2. Upload file content to session URL
-  return new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-
-    if (onProgress) {
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          onProgress(percent);
-        }
-      };
-    }
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        reject(new Error(`Resumable upload failed: ${xhr.status} ${xhr.statusText}`));
-      }
-    };
-
-    xhr.onerror = () => reject(new Error("Network error during resumable upload."));
-    xhr.send(blob);
-  });
-}
-
-/**
- * Perform Simple upload to Google Drive with progress support via XMLHttpRequest
- */
-async function uploadBackupSimple(
-  accessToken: string,
-  fileId: string | null,
-  jsonData: string,
-  onProgress?: (progress: number) => void
-): Promise<void> {
-  if (fileId) {
-    // File exists, overwrite it using PATCH (Simple media upload)
-    return new Promise<void>((resolve, reject) => {
+  // 2. Upload file content to session URL via XMLHttpRequest (with reauth support)
+  const sendXhr = (token: string) => {
+    return new Promise<number>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("PATCH", `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, true);
-      xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+      xhr.open("PUT", uploadUrl, true);
       xhr.setRequestHeader("Content-Type", "application/json");
 
       if (onProgress) {
@@ -316,16 +365,77 @@ async function uploadBackupSimple(
       }
 
       xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-        } else {
-          reject(new Error(`Failed to update backup file: ${xhr.status} ${xhr.statusText}`));
-        }
+        resolve(xhr.status);
       };
-
-      xhr.onerror = () => reject(new Error("Network error during simple update."));
-      xhr.send(jsonData);
+      xhr.onerror = () => reject(new Error("Network error during resumable upload."));
+      xhr.send(blob);
     });
+  };
+
+  let status = await sendXhr(ctx.token);
+  if (status === 401) {
+    console.warn("Resumable upload PUT returned 401. Retrying with new token...");
+    await clearCachedToken(ctx.token);
+    const newToken = await authorize(false);
+    ctx.token = newToken;
+    if (onTokenUpdated) onTokenUpdated(newToken);
+    status = await sendXhr(newToken);
+  }
+
+  if (status < 200 || status >= 300) {
+    throw new Error(`Resumable upload failed with status: ${status}`);
+  }
+}
+
+/**
+ * Perform Simple upload to Google Drive with progress support via XMLHttpRequest
+ */
+async function uploadBackupSimple(
+  accessToken: string,
+  fileId: string | null,
+  jsonData: string,
+  onTokenUpdated?: (newToken: string) => void,
+  onProgress?: (progress: number) => void,
+  context?: ReauthContext
+): Promise<void> {
+  const ctx = context || { token: accessToken };
+
+  if (fileId) {
+    // File exists, overwrite it using PATCH (Simple media upload)
+    const sendXhr = (token: string) => {
+      return new Promise<number>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PATCH", `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, true);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        if (onProgress) {
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              onProgress(percent);
+            }
+          };
+        }
+
+        xhr.onload = () => resolve(xhr.status);
+        xhr.onerror = () => reject(new Error("Network error during simple update."));
+        xhr.send(jsonData);
+      });
+    };
+
+    let status = await sendXhr(ctx.token);
+    if (status === 401) {
+      await clearCachedToken(ctx.token);
+      const newToken = await authorize(false);
+      ctx.token = newToken;
+      if (onTokenUpdated) onTokenUpdated(newToken);
+      status = await sendXhr(newToken);
+    }
+
+    if (status < 200 || status >= 300) {
+      throw new Error(`Failed to update backup file: status ${status}`);
+    }
   } else {
     // File does not exist, create it using POST (Multipart upload to set metadata name)
     const boundary = "style_atelier_backup_boundary";
@@ -346,14 +456,66 @@ async function uploadBackupSimple(
       jsonData +
       closeDelimiter;
 
-    return new Promise<void>((resolve, reject) => {
+    const sendXhr = (token: string) => {
+      return new Promise<number>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", true);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
+
+        if (onProgress) {
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              onProgress(percent);
+            }
+          };
+        }
+
+        xhr.onload = () => resolve(xhr.status);
+        xhr.onerror = () => reject(new Error("Network error during simple creation."));
+        xhr.send(multipartBody);
+      });
+    };
+
+    let status = await sendXhr(ctx.token);
+    if (status === 401) {
+      await clearCachedToken(ctx.token);
+      const newToken = await authorize(false);
+      ctx.token = newToken;
+      if (onTokenUpdated) onTokenUpdated(newToken);
+      status = await sendXhr(newToken);
+    }
+
+    if (status < 200 || status >= 300) {
+      throw new Error(`Failed to create backup file: status ${status}`);
+    }
+  }
+}
+
+/**
+ * Download file contents of 'style-atelier-backup.json' from Google Drive with progress support
+ */
+export async function downloadBackup(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  onProgress?: (progress: number) => void,
+  context?: ReauthContext
+): Promise<string | null> {
+  const ctx = context || { token: accessToken };
+  const fileId = await searchBackupFile(ctx.token, onTokenUpdated, ctx);
+  if (!fileId) {
+    return null;
+  }
+
+  const sendXhr = (token: string) => {
+    return new Promise<{ status: number; text: string | null }>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", true);
-      xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
-      xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
+      xhr.open("GET", `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, true);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
       if (onProgress) {
-        xhr.upload.onprogress = (event) => {
+        xhr.onprogress = (event) => {
           if (event.lengthComputable) {
             const percent = Math.round((event.loaded / event.total) * 100);
             onProgress(percent);
@@ -363,53 +525,28 @@ async function uploadBackupSimple(
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
+          resolve({ status: xhr.status, text: xhr.responseText });
         } else {
-          reject(new Error(`Failed to create backup file: ${xhr.status} ${xhr.statusText}`));
+          resolve({ status: xhr.status, text: null });
         }
       };
-
-      xhr.onerror = () => reject(new Error("Network error during simple creation."));
-      xhr.send(multipartBody);
+      xhr.onerror = () => reject(new Error("Network error during download."));
+      xhr.send();
     });
-  }
-}
+  };
 
-/**
- * Download file contents of 'style-atelier-backup.json' from Google Drive with progress support
- */
-export async function downloadBackup(
-  accessToken: string,
-  onProgress?: (progress: number) => void
-): Promise<string | null> {
-  const fileId = await searchBackupFile(accessToken);
-  if (!fileId) {
-    return null;
+  let result = await sendXhr(ctx.token);
+  if (result.status === 401) {
+    await clearCachedToken(ctx.token);
+    const newToken = await authorize(false);
+    ctx.token = newToken;
+    if (onTokenUpdated) onTokenUpdated(newToken);
+    result = await sendXhr(newToken);
   }
 
-  return new Promise<string | null>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, true);
-    xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`Failed to download backup file: status ${result.status}`);
+  }
 
-    if (onProgress) {
-      xhr.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          onProgress(percent);
-        }
-      };
-    }
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.responseText);
-      } else {
-        reject(new Error(`Failed to download backup file: ${xhr.status} ${xhr.statusText}`));
-      }
-    };
-
-    xhr.onerror = () => reject(new Error("Network error during download."));
-    xhr.send();
-  });
+  return result.text;
 }

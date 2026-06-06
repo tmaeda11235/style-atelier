@@ -120,15 +120,55 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
   });
 
   describe("importDatabase", () => {
+    const mockStyleCard = {
+      id: "card-123",
+      name: "Mock Card",
+      createdAt: 123456789,
+      updatedAt: 123456789,
+      promptSegments: [{ type: "text", value: "test command" }],
+      parameters: { ar: "16:9" },
+      masking: { isSrefHidden: false, isPHidden: false },
+      tier: "Common",
+      isFavorite: false,
+      isPinned: false,
+      usageCount: 0,
+      tags: ["test"],
+      category: "cat1",
+      dominantColor: "#ffffff",
+      thumbnailData: "data:image/png;base64,abc",
+      frameId: "default",
+      genealogy: { generation: 1, parentIds: [] }
+    };
+
+    const mockCustomCategory = {
+      id: "cat1",
+      name: "Category 1",
+      createdAt: 123456789
+    };
+
+    const mockHistoryItem = {
+      id: "hist-123",
+      fullCommand: "full prompt",
+      imageUrl: "http://example.com/img.png",
+      timestamp: 123456789
+    };
+
+    const mockUserSettings = {
+      userId: "user-123",
+      isPro: false,
+      unlockedSkins: [],
+      branding: { enabled: false }
+    };
+
     it("should merge payload data into tables using bulkPut without clearing", async () => {
       const mockPayload = {
         version: 1,
         exportedAt: 123456,
         data: {
-          styleCards: [{ id: "c1", name: "Card C1" }],
-          categories: [{ id: "cat1", name: "Category 1" }],
-          userSettings: [{ userId: "u1", isPro: false }],
-          historyItems: [{ id: "h1", fullCommand: "cmd 1" }]
+          styleCards: [mockStyleCard],
+          categories: [mockCustomCategory],
+          userSettings: [mockUserSettings],
+          historyItems: [mockHistoryItem]
         }
       };
 
@@ -212,6 +252,38 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
     it("should throw error if payload structure is invalid", async () => {
       const invalidPayload = { foo: "bar" };
       await expect(importDatabase(JSON.stringify(invalidPayload))).rejects.toThrow();
+    });
+
+    it("should throw error if backup version is unsupported", async () => {
+      const mockPayload = {
+        version: 2,
+        exportedAt: 123456,
+        data: {
+          styleCards: [],
+          categories: [],
+          userSettings: [],
+          historyItems: []
+        }
+      };
+      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(/version.*is not supported/);
+    });
+
+    it("should throw error if styleCards schema is invalid", async () => {
+      const invalidStyleCard = {
+        ...mockStyleCard,
+        tier: "UnknownTier"
+      };
+      const mockPayload = {
+        version: 1,
+        exportedAt: 123456,
+        data: {
+          styleCards: [invalidStyleCard],
+          categories: [],
+          userSettings: [],
+          historyItems: []
+        }
+      };
+      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(/invalid tier/);
     });
   });
 
@@ -485,6 +557,77 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       const content = await downloadBackup("token-123");
       expect(content).toBeNull();
+    });
+  });
+
+  describe("Automatic Re-authorization on 401", () => {
+    it("should clear cached token, request new token silently, and retry searchBackupFile successfully on 401", async () => {
+      // Mock fetch: 1st returns 401, 2nd returns success (file exists)
+      global.fetch = vi.fn()
+        .mockResolvedValueOnce({
+          status: 401,
+          ok: false,
+          statusText: "Unauthorized"
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            files: [{ id: "drive-file-id-reauth", name: "style-atelier-backup.json" }]
+          })
+        });
+
+      // Mock authorize for silent flow
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        expect(opts.interactive).toBe(false);
+        callback("fresh-token-456");
+      });
+
+      mockRemoveCachedAuthToken.mockImplementation((opts, callback) => {
+        expect(opts.token).toBe("stale-token-123");
+        callback();
+      });
+
+      const onTokenUpdated = vi.fn();
+
+      const id = await searchBackupFile("stale-token-123", onTokenUpdated);
+
+      expect(id).toBe("drive-file-id-reauth");
+      expect(mockRemoveCachedAuthToken).toHaveBeenCalledWith({ token: "stale-token-123" }, expect.any(Function));
+      expect(mockGetAuthToken).toHaveBeenCalledWith({ interactive: false }, expect.any(Function));
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-token-456");
+
+      // Verify fetch calls
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      // First call has stale token
+      expect(vi.mocked(global.fetch).mock.calls[0][1]?.headers).toMatchObject({
+        Authorization: "Bearer stale-token-123"
+      });
+      // Second call has fresh token
+      expect(vi.mocked(global.fetch).mock.calls[1][1]?.headers).toMatchObject({
+        Authorization: "Bearer fresh-token-456"
+      });
+    });
+
+    it("should throw an error if silent re-authorization fails", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        status: 401,
+        ok: false,
+        statusText: "Unauthorized"
+      });
+
+      // Mock authorize to fail
+      const originalLastError = chrome.runtime.lastError;
+      (chrome.runtime as any).lastError = { message: "Silent reauth failed" };
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback(undefined);
+      });
+
+      await expect(searchBackupFile("stale-token-123")).rejects.toThrow(
+        "Google Drive authentication expired: Silent reauth failed"
+      );
+
+      // cleanup
+      (chrome.runtime as any).lastError = originalLastError;
     });
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { rgbToHsl, rgbToHex, getQuantizedColorName, analyzeImageColors, hexToRgb, hexToHsl, getColorNameFromHex } from "./color-utils";
 
 describe("Color Utilities", () => {
@@ -84,6 +84,163 @@ describe("Color Utilities", () => {
       
       const colors2 = await analyzeImageColors("url:../../assets/icon.png");
       expect(colors2.dominantName).toBe("Blue");
+    });
+
+    describe("with mock window APIs for memory leak and fallback validation", () => {
+      it("should revoke object URL on load success", async () => {
+        const originalVitest = process.env.VITEST;
+        // Temporarily disable the fast-path isTest check
+        // @ts-ignore
+        delete process.env.VITEST;
+
+        const createObjectURLMock = vi.fn().mockReturnValue("blob:mock-url");
+        const revokeObjectURLMock = vi.fn();
+        
+        const originalCreateObjectURL = global.URL.createObjectURL;
+        const originalRevokeObjectURL = global.URL.revokeObjectURL;
+        global.URL.createObjectURL = createObjectURLMock;
+        global.URL.revokeObjectURL = revokeObjectURLMock;
+
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          blob: () => Promise.resolve(new Blob(["mock-image"], { type: "image/png" }))
+        });
+        const originalFetch = global.fetch;
+        global.fetch = fetchMock;
+
+        const originalImage = global.Image;
+        class MockImage {
+          crossOrigin = "";
+          _src = "";
+          onload = () => {};
+          onerror = () => {};
+          
+          get src() {
+            return this._src;
+          }
+          
+          set src(val) {
+            this._src = val;
+            setTimeout(() => {
+              this.onload();
+            }, 0);
+          }
+        }
+        global.Image = MockImage as any;
+
+        try {
+          await analyzeImageColors("https://example.com/test-image.png");
+          expect(createObjectURLMock).toHaveBeenCalled();
+          expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url");
+        } finally {
+          process.env.VITEST = originalVitest;
+          global.URL.createObjectURL = originalCreateObjectURL;
+          global.URL.revokeObjectURL = originalRevokeObjectURL;
+          global.fetch = originalFetch;
+          global.Image = originalImage;
+        }
+      });
+
+      it("should revoke object URL on load error", async () => {
+        const originalVitest = process.env.VITEST;
+        // @ts-ignore
+        delete process.env.VITEST;
+
+        const createObjectURLMock = vi.fn().mockReturnValue("blob:mock-url");
+        const revokeObjectURLMock = vi.fn();
+        
+        const originalCreateObjectURL = global.URL.createObjectURL;
+        const originalRevokeObjectURL = global.URL.revokeObjectURL;
+        global.URL.createObjectURL = createObjectURLMock;
+        global.URL.revokeObjectURL = revokeObjectURLMock;
+
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          blob: () => Promise.resolve(new Blob(["mock-image"], { type: "image/png" }))
+        });
+        const originalFetch = global.fetch;
+        global.fetch = fetchMock;
+
+        const originalImage = global.Image;
+        class MockImage {
+          crossOrigin = "";
+          _src = "";
+          onload = () => {};
+          onerror = () => {};
+          
+          get src() {
+            return this._src;
+          }
+          
+          set src(val) {
+            this._src = val;
+            setTimeout(() => {
+              this.onerror();
+            }, 0);
+          }
+        }
+        global.Image = MockImage as any;
+
+        try {
+          await analyzeImageColors("https://example.com/test-image.png");
+          expect(createObjectURLMock).toHaveBeenCalled();
+          expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url");
+        } finally {
+          process.env.VITEST = originalVitest;
+          global.URL.createObjectURL = originalCreateObjectURL;
+          global.URL.revokeObjectURL = originalRevokeObjectURL;
+          global.fetch = originalFetch;
+          global.Image = originalImage;
+        }
+      });
+
+      it("should fallback to direct URL without object URL on fetch error", async () => {
+        const originalVitest = process.env.VITEST;
+        // @ts-ignore
+        delete process.env.VITEST;
+
+        const createObjectURLMock = vi.fn();
+        const revokeObjectURLMock = vi.fn();
+        
+        const originalCreateObjectURL = global.URL.createObjectURL;
+        const originalRevokeObjectURL = global.URL.revokeObjectURL;
+        global.URL.createObjectURL = createObjectURLMock;
+        global.URL.revokeObjectURL = revokeObjectURLMock;
+
+        const fetchMock = vi.fn().mockRejectedValue(new Error("Network error"));
+        const originalFetch = global.fetch;
+        global.fetch = fetchMock;
+
+        const originalImage = global.Image;
+        let setSrcValue = "";
+        class MockImage {
+          crossOrigin = "";
+          onload = () => {};
+          onerror = () => {};
+          
+          set src(val) {
+            setSrcValue = val;
+            setTimeout(() => {
+              this.onload();
+            }, 0);
+          }
+        }
+        global.Image = MockImage as any;
+
+        try {
+          await analyzeImageColors("https://example.com/fallback.png");
+          expect(fetchMock).toHaveBeenCalled();
+          expect(createObjectURLMock).not.toHaveBeenCalled();
+          expect(revokeObjectURLMock).not.toHaveBeenCalled();
+          expect(setSrcValue).toBe("https://example.com/fallback.png");
+        } finally {
+          process.env.VITEST = originalVitest;
+          global.URL.createObjectURL = originalCreateObjectURL;
+          global.URL.revokeObjectURL = originalRevokeObjectURL;
+          global.fetch = originalFetch;
+          global.Image = originalImage;
+        }
+      });
     });
   });
 
