@@ -107,6 +107,15 @@ export async function analyzeImageColors(imageUrl: string): Promise<ExtractedCol
     const img = new Image();
     img.crossOrigin = "Anonymous";
 
+    let objectUrlToRevoke: string | null = null;
+
+    const cleanup = () => {
+      if (objectUrlToRevoke) {
+        URL.revokeObjectURL(objectUrlToRevoke);
+        objectUrlToRevoke = null;
+      }
+    };
+
     const processImage = () => {
       try {
         const canvas = document.createElement("canvas");
@@ -209,12 +218,15 @@ export async function analyzeImageColors(imageUrl: string): Promise<ExtractedCol
           accentHex: "#000000",
           accentName: "Black",
         });
+      } finally {
+        cleanup();
       }
     };
 
     img.onload = processImage;
     img.onerror = () => {
       console.warn("Failed to load image for color analysis, using fallback");
+      cleanup();
       resolve({
         dominantHex: "#ffffff",
         dominantName: "White",
@@ -229,9 +241,15 @@ export async function analyzeImageColors(imageUrl: string): Promise<ExtractedCol
     } else {
       // Use extension host permissions to bypass CORS
       fetch(imageUrl)
-        .then((res) => res.blob())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.blob();
+        })
         .then((blob) => {
           const url = URL.createObjectURL(blob);
+          objectUrlToRevoke = url;
           img.src = url;
         })
         .catch((err) => {

@@ -55,7 +55,22 @@ export class StyleAtelierDatabase extends Dexie {
     }).upgrade(upgradeToVersion8);
   }
 
-  // TODO: Implement new data access methods
+  async deleteStyleCardAndCleanup(cardId: string) {
+    return this.transaction("rw", [this.styleCards, this.categories], async () => {
+      // 1. categories で iconCardId === cardId を持つものをクリーンアップ
+      const affectedCategories = await this.categories
+        .filter((cat) => cat.iconCardId === cardId)
+        .toArray();
+      for (const cat of affectedCategories) {
+        await this.categories.update(cat.id, {
+          iconCardId: undefined,
+          iconUrl: undefined,
+        });
+      }
+      // 2. styleCards から削除
+      await this.styleCards.delete(cardId);
+    });
+  }
 }
 
 export const db = new StyleAtelierDatabase();

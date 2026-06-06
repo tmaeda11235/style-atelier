@@ -6,6 +6,67 @@ import { Button } from "../components/atoms/Button"
 import { Clipboard, Download, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
 import "../style.css"
 
+const translations = {
+  en: {
+    loading: "Loading Style Card...",
+    errorTitle: "Error Loading Card",
+    closeWindow: "Close Window",
+    headerSubtitle: "Premium Midjourney Style Manager",
+    generatedCardView: "Generated Card View",
+    rightClickHint: "Right click to copy or save",
+    styleDetails: "Style Details",
+    category: "Category",
+    sharingOptions: "Sharing Options",
+    copyImage: "Copy Image",
+    downloadPng: "Download PNG",
+    tip: "Tip: You can paste the copied card image directly into chat apps like Discord, or post it to X (Twitter). The card includes an embedded QR code that anyone can scan to import this style into their own Style Atelier workspace.",
+    specifications: "Style Specifications",
+    promptPreview: "Prompt Segment Preview",
+    noSegments: "No prompt segments.",
+    footer: (year: number) => `Style Atelier © ${year} - Local-first prompt management`,
+    
+    // Error / Success messages
+    noCardId: "No card ID provided in URL parameters.",
+    cardNotFound: "Style card not found in database.",
+    failedLoad: "Failed to load card.",
+    failedBlob: "Failed to generate image blob.",
+    clipboardSuccess: "Copied card image to clipboard! You can now paste it into Discord, X, etc.",
+    clipboardBlocked: "Browser blocked clipboard write. Right click the image and select 'Copy image'.",
+    clipboardFailed: "Failed to copy image to clipboard.",
+    downloadStarted: "Download started successfully!",
+    downloadFailed: "Failed to download card image.",
+  },
+  ja: {
+    loading: "スタイルカードを読み込み中...",
+    errorTitle: "カード読み込みエラー",
+    closeWindow: "ウィンドウを閉じる",
+    headerSubtitle: "プレミアム Midjourney プロンプト管理ツール",
+    generatedCardView: "生成カードプレビュー",
+    rightClickHint: "右クリックでコピーまたは保存",
+    styleDetails: "スタイルの詳細",
+    category: "カテゴリ",
+    sharingOptions: "共有オプション",
+    copyImage: "画像をコピー",
+    downloadPng: "PNGをダウンロード",
+    tip: "ヒント: コピーしたカード画像は、Discordなどのチャットアプリに直接貼り付けたり、X (Twitter)に投稿したりできます。カードにはQRコードが埋め込まれており、誰でもスキャンしてこのスタイルを自身のStyle Atelierワークスペースにインポートできます。",
+    specifications: "スタイルの仕様",
+    promptPreview: "プロンプトセグメントのプレビュー",
+    noSegments: "プロンプトセグメントはありません。",
+    footer: (year: number) => `Style Atelier © ${year} - ローカルファーストのプロンプト管理`,
+    
+    // Error / Success messages
+    noCardId: "URLパラメータにカードIDが指定されていません。",
+    cardNotFound: "データベース内にスタイルカードが見つかりません。",
+    failedLoad: "カードの読み込みに失敗しました。",
+    failedBlob: "画像Blobの生成に失敗しました。",
+    clipboardSuccess: "カード画像をクリップボードにコピーしました！DiscordやX等に貼り付けられます。",
+    clipboardBlocked: "ブラウザによりクリップボード書き込みがブロックされました。画像を右クリックして「画像をコピー」を選択してください。",
+    clipboardFailed: "クリップボードへのコピーに失敗しました。",
+    downloadStarted: "ダウンロードを開始しました！",
+    downloadFailed: "カード画像のダウンロードに失敗しました。",
+  }
+}
+
 export default function SharePage() {
   const [card, setCard] = useState<StyleCard | null>(null)
   const [loading, setLoading] = useState(true)
@@ -13,18 +74,21 @@ export default function SharePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const isJapanese = typeof navigator !== "undefined" && navigator.language?.startsWith("ja")
+  const t = isJapanese ? translations.ja : translations.en
+
   useEffect(() => {
     async function loadCard() {
       try {
         const urlParams = new URLSearchParams(window.location.search)
         const id = urlParams.get("id")
         if (!id) {
-          throw new Error("No card ID provided in URL parameters.")
+          throw new Error(t.noCardId)
         }
 
         const foundCard = await db.styleCards.get(id)
         if (!foundCard) {
-          throw new Error("Style card not found in database.")
+          throw new Error(t.cardNotFound)
         }
 
         setCard(foundCard)
@@ -35,14 +99,14 @@ export default function SharePage() {
         setImageSrc(dataUrl)
       } catch (err: any) {
         console.error("Error loading shared card:", err)
-        setErrorMessage(err.message || "Failed to load card.")
+        setErrorMessage(err.message || t.failedLoad)
       } finally {
         setLoading(false)
       }
     }
 
     loadCard()
-  }, [])
+  }, [t]) // added t to dependency array since it is derived from runtime state
 
   const handleCopyToClipboard = async () => {
     if (!card) return
@@ -52,23 +116,23 @@ export default function SharePage() {
       const canvas = await renderCardToCanvas(card)
       canvas.toBlob(async (blob) => {
         if (!blob) {
-          setErrorMessage("Failed to generate image blob.")
+          setErrorMessage(t.failedBlob)
           return
         }
         try {
           await navigator.clipboard.write([
             new ClipboardItem({ "image/png": blob })
           ])
-          setSuccessMessage("Copied card image to clipboard! You can now paste it into Discord, X, etc.")
+          setSuccessMessage(t.clipboardSuccess)
         } catch (clipErr: any) {
           console.error("Clipboard Item write failed:", clipErr)
           // Fallback to text copy or show manual copy instructions
-          setErrorMessage("Browser blocked clipboard write. Right click the image and select 'Copy image'.")
+          setErrorMessage(t.clipboardBlocked)
         }
       }, "image/png")
     } catch (err: any) {
       console.error("Clipboard copy failed:", err)
-      setErrorMessage("Failed to copy image to clipboard.")
+      setErrorMessage(t.clipboardFailed)
     }
   }
 
@@ -78,14 +142,12 @@ export default function SharePage() {
     setErrorMessage(null)
     try {
       await exportCardAsImage(card)
-      setSuccessMessage("Download started successfully!")
+      setSuccessMessage(t.downloadStarted)
     } catch (err) {
       console.error("Download failed:", err)
-      setErrorMessage("Failed to download card image.")
+      setErrorMessage(t.downloadFailed)
     }
   }
-
-
 
   const handleClose = () => {
     window.close()
@@ -95,7 +157,7 @@ export default function SharePage() {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center font-sans">
         <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-slate-800 animate-spin mb-4" />
-        <p className="text-sm font-medium text-slate-400">Loading Style Card...</p>
+        <p className="text-sm font-medium text-slate-400">{t.loading}</p>
       </div>
     )
   }
@@ -106,10 +168,10 @@ export default function SharePage() {
         <div className="w-16 h-16 bg-red-950 border border-red-500/30 rounded-full flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
-        <h1 className="text-xl font-bold mb-2">Error Loading Card</h1>
+        <h1 className="text-xl font-bold mb-2">{t.errorTitle}</h1>
         <p className="text-sm text-slate-400 max-w-md text-center mb-6">{errorMessage}</p>
         <Button onClick={handleClose} variant="secondary">
-          Close Window
+          {t.closeWindow}
         </Button>
       </div>
     )
@@ -131,11 +193,11 @@ export default function SharePage() {
           </button>
           <div>
             <h1 className="text-base font-black tracking-wider text-white">Style Atelier</h1>
-            <p className="text-[10px] text-slate-500">Premium Midjourney Style Manager</p>
+            <p className="text-[10px] text-slate-500">{t.headerSubtitle}</p>
           </div>
         </div>
         <div className="text-xs px-3 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400">
-          Generated Card View
+          {t.generatedCardView}
         </div>
       </header>
 
@@ -152,7 +214,7 @@ export default function SharePage() {
               />
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                 <p className="text-xs text-white bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-700/80">
-                  Right click to copy or save
+                  {t.rightClickHint}
                 </p>
               </div>
             </div>
@@ -165,7 +227,7 @@ export default function SharePage() {
         <div className="md:col-span-6 flex flex-col gap-6">
           <div className="space-y-2">
             <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500">
-              Style Details
+              {t.styleDetails}
             </span>
             <h2 className="text-2xl font-black text-white">{card.name}</h2>
             <div className="flex gap-2">
@@ -174,7 +236,7 @@ export default function SharePage() {
               </span>
               {card.category && (
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950/40 border border-blue-900/30 text-blue-400">
-                  Category: {card.category}
+                  {t.category}: {card.category}
                 </span>
               )}
             </div>
@@ -198,7 +260,7 @@ export default function SharePage() {
           {/* Action Dashboard */}
           <div className="bg-slate-900/50 border border-slate-800/60 p-5 rounded-2xl flex flex-col gap-4">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Sharing Options
+              {t.sharingOptions}
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -207,7 +269,7 @@ export default function SharePage() {
                 className="py-3 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs"
               >
                 <Clipboard className="w-4 h-4" />
-                Copy Image
+                {t.copyImage}
               </Button>
 
               <Button
@@ -216,26 +278,24 @@ export default function SharePage() {
                 className="py-3 flex items-center justify-center gap-2 border-slate-800 bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs"
               >
                 <Download className="w-4 h-4" />
-                Download PNG
+                {t.downloadPng}
               </Button>
             </div>
 
-
-
             <p className="text-[10px] text-slate-500 leading-relaxed">
-              Tip: You can paste the copied card image directly into chat apps like Discord, or post it to X (Twitter). The card includes an embedded QR code that anyone can scan to import this style into their own Style Atelier workspace.
+              {t.tip}
             </p>
           </div>
 
           {/* Metadata Display */}
           <div className="bg-slate-900/30 border border-slate-800/40 p-4 rounded-xl space-y-3">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Style Specifications
+              {t.specifications}
             </h3>
             <div className="space-y-1">
-              <span className="text-[10px] text-slate-500 block">Prompt Segment Preview</span>
+              <span className="text-[10px] text-slate-500 block">{t.promptPreview}</span>
               <p className="text-xs text-slate-300 font-mono bg-slate-950 p-2.5 rounded border border-slate-900 overflow-x-auto whitespace-pre-wrap">
-                {card.promptSegments?.map(s => s.value).join(" ") || "No prompt segments."}
+                {card.promptSegments?.map(s => s.value).join(" ") || t.noSegments}
               </p>
             </div>
           </div>
@@ -244,7 +304,7 @@ export default function SharePage() {
 
       {/* Footer */}
       <footer className="max-w-5xl w-full mx-auto pt-6 border-t border-slate-900 text-center text-[10px] text-slate-600 mt-auto">
-        Style Atelier &copy; {new Date().getFullYear()} - Local-first prompt management
+        {t.footer(new Date().getFullYear())}
       </footer>
     </div>
   )

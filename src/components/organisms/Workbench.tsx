@@ -289,7 +289,35 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
     }
   };
 
+  const handleMintVariation = () => {
+    if (!onStartVariationMinting) return;
 
+    // Calculate max generation among parents
+    const maxParentGen = Math.max(...workbenchCards.map(c => c.genealogy?.generation || 1), 0);
+    const parentIds = workbenchCards.map(c => c.id);
+    const parentNames = workbenchCards.map(c => c.name).join(", ");
+
+    const genealogy = {
+      generation: maxParentGen + 1,
+      parentIds: parentIds,
+      originCreatorId: "user",
+      mutationNote: `Blended from: ${parentNames}`,
+    };
+
+    // Gather images from parents
+    const parentImages = workbenchCards.flatMap(c => c.images || []).filter(Boolean);
+    const parentThumbnails = workbenchCards.flatMap(c => c.selectedThumbnails || []).filter(Boolean);
+    const thumbnailData = workbenchCards[0]?.thumbnailData || "assets/icon.png";
+
+    onStartVariationMinting({
+      promptSegments: editedSegments,
+      parameters: editedParams,
+      genealogy,
+      thumbnailData,
+      images: parentImages.length > 0 ? parentImages : undefined,
+      selectedThumbnails: parentThumbnails.length > 0 ? parentThumbnails : undefined,
+    });
+  };
 
   // Extract slots
   const slots = editedSegments.filter((seg): seg is { type: "slot"; label: string; default: string } => seg.type === "slot");
@@ -379,6 +407,15 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
                     </p>
                   )}
                 </div>
+              )}
+
+              {isMixingMode && (
+                <Button
+                  className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-md mb-2"
+                  onClick={handleMintVariation}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" /> Mint Blended Variation
+                </Button>
               )}
 
               <Button
