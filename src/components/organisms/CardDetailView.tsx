@@ -9,7 +9,7 @@ import { Input } from "../atoms/Input";
 import { useHand } from "../../hooks/useHand";
 import { db } from "../../lib/db";
 import { buildPromptString } from "../../lib/prompt-utils";
-import { X, Send, Save, Download } from "lucide-react";
+import { X, Send, Save, Download, Trash2 } from "lucide-react";
 import type { AlertType } from "../molecules/ConnectionAlert";
 import { useLiveQuery } from "dexie-react-hooks";
 import { exportCardAsImage } from "../../lib/export-utils";
@@ -32,6 +32,8 @@ interface CardDetailViewProps {
   setAlertType: (type: AlertType) => void;
   /** Callback when a parent card is clicked */
   onCardSelect?: (cardId: string) => void;
+  /** Callback to delete the StyleCard */
+  onDelete?: (cardId: string) => Promise<void>;
 }
 
 /**
@@ -46,6 +48,7 @@ export function CardDetailView({
   onSave,
   setAlertType,
   onCardSelect,
+  onDelete,
 }: CardDetailViewProps) {
   const { pinnedCards } = useHand();
   const hasPinnedCards = pinnedCards.length > 0;
@@ -91,6 +94,8 @@ export function CardDetailView({
 
     fetchParents();
   }, [card]);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleExportCard = async () => {
     setIsExporting(true);
@@ -403,6 +408,17 @@ export function CardDetailView({
       {/* Footer Actions */}
       <div className="p-4 bg-white shadow-t-sm flex justify-between gap-2 border-t z-10">
         <div className="flex gap-2">
+          {onDelete && (
+            <Button
+              variant="danger"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-1.5"
+              data-testid="delete-card-button"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </Button>
+          )}
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
@@ -435,6 +451,51 @@ export function CardDetailView({
           </Button>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          data-testid="delete-confirm-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        >
+          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 text-center">
+                Cardを削除しますか？
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed text-center">
+                この操作は取り消せません。"{name}" をライブラリから完全に削除します。
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                fullWidth
+                onClick={() => setShowDeleteConfirm(false)}
+                data-testid="delete-confirm-cancel-button"
+              >
+                キャンセル
+              </Button>
+              <Button
+                variant="danger"
+                fullWidth
+                onClick={async () => {
+                  if (onDelete) {
+                    await onDelete(card.id);
+                  }
+                  setShowDeleteConfirm(false);
+                }}
+                data-testid="delete-confirm-ok-button"
+              >
+                削除する
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

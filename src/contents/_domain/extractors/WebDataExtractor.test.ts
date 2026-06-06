@@ -111,4 +111,55 @@ describe("WebDataExtractor", () => {
 
     document.body.removeChild(container)
   })
+
+  it("should extract jobId from data-job-id attribute on the image itself or its parent", () => {
+    const container = document.createElement("div")
+    container.setAttribute("data-job-id", "22222222-3333-4444-5555-666666666666")
+    container.innerHTML = `
+      <div class="overflow-clip">
+        <div class="relative group/promptText">
+          <div class="break-word">A neon cyberpunk alleyway</div>
+        </div>
+      </div>
+      <img id="test-img-data-attr" src="https://cdn.midjourney.com/placeholder.png" />
+    `
+    document.body.appendChild(container)
+    const img = document.getElementById("test-img-data-attr") as HTMLImageElement
+
+    const result = extractor.extract(img)
+
+    expect(result).not.toBeNull()
+    expect(result?.id).toBe("22222222-3333-4444-5555-666666666666")
+    expect(result?.fullCommand).toBe("A neon cyberpunk alleyway")
+
+    document.body.removeChild(container)
+  })
+
+  it("should extract jobId from a wider modal/overlay container even when sibling containers do not wrap the image directly", () => {
+    const modal = document.createElement("div")
+    modal.className = "fixed bg-white"
+    modal.innerHTML = `
+      <div class="image-wrapper">
+        <img id="test-img-modal-fallback" src="https://cdn.midjourney.com/placeholder.png" />
+      </div>
+      <div class="sidebar">
+        <div class="overflow-clip">
+          <div class="relative group/promptText">
+            <div class="break-word">A futuristic space station orbiting Mars</div>
+          </div>
+        </div>
+        <a href="https://www.midjourney.com/jobs/77777777-8888-9999-aaaa-bbbbbbbbbbbb">Job Details Link</a>
+      </div>
+    `
+    document.body.appendChild(modal)
+    const img = document.getElementById("test-img-modal-fallback") as HTMLImageElement
+
+    const result = extractor.extract(img)
+
+    expect(result).not.toBeNull()
+    expect(result?.id).toBe("77777777-8888-9999-aaaa-bbbbbbbbbbbb")
+    expect(result?.fullCommand).toBe("A futuristic space station orbiting Mars")
+
+    document.body.removeChild(modal)
+  })
 })

@@ -97,6 +97,17 @@ function SidePanelInner() {
     }
   }
 
+  const handleDeleteCard = async (cardId: string) => {
+    try {
+      await db.deleteStyleCardAndCleanup(cardId);
+      addLog("StyleCard deleted successfully.");
+      setActiveDetailCard(null);
+    } catch (err) {
+      console.error("Failed to delete style card:", err);
+      addLog("Error: Failed to delete style card.");
+    }
+  };
+
   const handleInjectPrompt = async (prompt: string) => {
     setAlertType(null);
     try {
@@ -305,6 +316,7 @@ function SidePanelInner() {
                   addLog("Warning: Selected parent card could not be found.");
                 }
               }}
+              onDelete={handleDeleteCard}
             />
           )}
           {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
