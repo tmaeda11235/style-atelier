@@ -15,6 +15,7 @@ vi.mock("../../lib/export-utils", () => ({
 vi.mock("../../lib/db", () => ({
   db: {
     styleCards: {
+      get: vi.fn(),
       update: vi.fn(),
       toArray: vi.fn().mockResolvedValue([]),
     },
@@ -88,7 +89,7 @@ describe("CardDetailView", () => {
     expect(screen.getByText("neon")).toBeDefined()
   })
 
-  it("toggles and limits thumbnail selection to max 4 in queue order", () => {
+  it("toggles and limits thumbnail selection to max 4 in queue order", async () => {
     render(<CardDetailView {...defaultProps} />)
 
     const images = screen.getAllByRole("img")
@@ -111,7 +112,9 @@ describe("CardDetailView", () => {
     fireEvent.click(cardImages[4])
     
     const saveButton = screen.getByText("Save")
-    fireEvent.click(saveButton)
+    await act(async () => {
+      fireEvent.click(saveButton)
+    })
 
     expect(defaultProps.onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -121,11 +124,12 @@ describe("CardDetailView", () => {
           "https://example.com/image4.png",
           "https://example.com/image5.png"
         ],
+        thumbnailData: expect.stringContaining("data:image/png;base64,"),
       })
     )
   })
 
-  it("adds and removes tags correctly", () => {
+  it("adds and removes tags correctly", async () => {
     render(<CardDetailView {...defaultProps} />)
 
     // Add tag
@@ -138,11 +142,14 @@ describe("CardDetailView", () => {
     fireEvent.click(removeButtons[0]) // remove first tag ("cyber")
 
     const saveButton = screen.getByText("Save")
-    fireEvent.click(saveButton)
+    await act(async () => {
+      fireEvent.click(saveButton)
+    })
 
     expect(defaultProps.onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tags: ["neon", "futuristic"],
+        thumbnailData: expect.stringContaining("data:image/png;base64,"),
       })
     )
   })
@@ -167,5 +174,127 @@ describe("CardDetailView", () => {
 
     const { exportCardAsImage } = await import("../../lib/export-utils")
     expect(exportCardAsImage).toHaveBeenCalled()
+  })
+
+  it("displays error message if export utility fails", async () => {
+    const { exportCardAsImage } = await import("../../lib/export-utils")
+    vi.mocked(exportCardAsImage).mockRejectedValueOnce(new Error("Failed to render canvas"))
+
+    render(<CardDetailView {...defaultProps} />)
+
+    const exportButton = screen.getByTestId("export-card-button")
+    
+    await act(async () => {
+      fireEvent.click(exportButton)
+    })
+
+    expect(screen.getByText("Failed to export card: Failed to render canvas")).toBeDefined()
+  })
+
+  it("renders genealogy details and triggers card selection on parent click", async () => {
+    const mockParentCard: StyleCard = {
+      id: "parent-uuid-1",
+      name: "Parent Neo Cat",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      promptSegments: [{ type: "text", value: "a parent cat" }],
+      parameters: {},
+      masking: { isSrefHidden: false, isPHidden: false },
+      tier: "Common",
+      isFavorite: false,
+      usageCount: 0,
+      tags: [],
+      dominantColor: "#000000",
+      thumbnailData: "https://example.com/parent-thumb.png",
+      frameId: "default",
+      genealogy: { generation: 1, parentIds: [] },
+    }
+
+    const mockCardWithGenealogy: StyleCard = {
+      ...mockCard,
+      id: "card-uuid-2",
+      name: "Evolution Card",
+      genealogy: {
+        generation: 2,
+        parentIds: ["parent-uuid-1", "non-existent-parent"],
+        mutationNote: "Mixed with watercolor style",
+      },
+    }
+
+    const { db } = await import("../../lib/db")
+    vi.mocked(db.styleCards.get).mockImplementation(async (id) => {
+      if (id === "parent-uuid-1") return mockParentCard
+      return undefined
+    })
+
+    const onCardSelect = vi.fn()
+
+    render(
+      <CardDetailView
+        {...defaultProps}
+        card={mockCardWithGenealogy}
+        onCardSelect={onCardSelect}
+      />
+    )
+
+    // 世代が表示されていること
+    expect(screen.getByText("Gen 2")).toBeDefined()
+
+    // 変異メモが表示されていること
+    expect(screen.getByText("Mixed with watercolor style")).toBeDefined()
+
+    // 非同期で親カードがロードされるのを待つ
+    const parentNameNode = await screen.findByText("Parent Neo Cat")
+    expect(parentNameNode).toBeDefined()
+
+    // 非表示の親カードのフォールバックが表示されていること
+    const deletedCardNode = await screen.findByText("Deleted Card")
+    expect(deletedCardNode).toBeDefined()
+
+    // 親カードをクリックすると onCardSelect が呼ばれること
+    fireEvent.click(parentNameNode)
+    expect(onCardSelect).toHaveBeenCalledWith("parent-uuid-1")
+  })
+
+  it("does not show delete button if onDelete is not provided", () => {
+    render(<CardDetailView {...defaultProps} onDelete={undefined} />)
+    expect(screen.queryByTestId("delete-card-button")).toBeNull()
+  })
+
+  it("shows delete button, opens confirmation modal, and cancels properly", () => {
+    const onDeleteMock = vi.fn().mockResolvedValue(undefined)
+    render(<CardDetailView {...defaultProps} onDelete={onDeleteMock} />)
+
+    const deleteButton = screen.getByTestId("delete-card-button")
+    expect(deleteButton).toBeDefined()
+
+    // Confirmation modal should not be visible initially
+    expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
+
+    // Click Delete -> should show confirm modal
+    fireEvent.click(deleteButton)
+    expect(screen.getByTestId("delete-confirm-modal")).toBeDefined()
+
+    // Click cancel -> modal closes, onDelete not called
+    const cancelButton = screen.getByTestId("delete-confirm-cancel-button")
+    fireEvent.click(cancelButton)
+    expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
+    expect(onDeleteMock).not.toHaveBeenCalled()
+  })
+
+  it("calls onDelete when confirmed in modal", async () => {
+    const onDeleteMock = vi.fn().mockResolvedValue(undefined)
+    render(<CardDetailView {...defaultProps} onDelete={onDeleteMock} />)
+
+    const deleteButton = screen.getByTestId("delete-card-button")
+    fireEvent.click(deleteButton)
+
+    const okButton = screen.getByTestId("delete-confirm-ok-button")
+    await act(async () => {
+      fireEvent.click(okButton)
+    })
+
+    expect(onDeleteMock).toHaveBeenCalledWith("card-uuid-1")
+    expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
   })
 })
