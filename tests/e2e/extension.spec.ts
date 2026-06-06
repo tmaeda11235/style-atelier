@@ -237,6 +237,38 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     console.log("Extraction test passed successfully!");
   });
 
+  test("should correctly extract Job ID, prompt, and image source from pattern2.html sandbox variant", async ({ page }) => {
+    console.log("Navigating to sandbox page with pattern2 variant...");
+    await page.goto("/tests/sandbox/index.html?variant=pattern2.html");
+
+    const mjFrame = page.frameLocator("#midjourney-frame");
+
+    // Wait for Midjourney mock images to render
+    console.log("Waiting for Midjourney mock images to render...");
+    const mockImage = mjFrame.locator("img[src*='0_1.jpeg']");
+    await expect(mockImage).toBeVisible({ timeout: 15000 });
+
+    // Evaluate extractor inside midjourney-frame context
+    console.log("Evaluating WebDataExtractor on the pattern2 image...");
+    const result = await mjFrame.locator("body").evaluate(() => {
+      const img = document.querySelector("img[src*='0_1.jpeg']") as HTMLImageElement;
+      if (!img) return null;
+      
+      const extractor = (window as any)._extractor;
+      if (!extractor) return { error: "Extractor not found on window" };
+
+      return extractor.extract(img);
+    });
+
+    console.log("Extracted result from pattern2:", result);
+    expect(result).not.toBeNull();
+    expect(result.id).toBe("100cc076-ef20-46b4-8aeb-f7c294169800");
+    expect(result.fullCommand).toContain("俊足の怪人");
+    expect(result.fullCommand).toContain("聖歌隊の行進");
+    expect(result.imageUrl).toContain("0_1.jpeg");
+    console.log("pattern2 variant extraction test passed successfully!");
+  });
+
   test("should render slot variables and handle pin to hand in Workbench", async ({ page }) => {
     console.log("Navigating to sandbox page for Workbench slot variable test...");
     await page.goto("/tests/sandbox/index.html");
