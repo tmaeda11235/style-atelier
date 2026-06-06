@@ -57,7 +57,7 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
       }, "image/png")
     } catch (err: any) {
       console.error("Clipboard copy failed:", err)
-      setErrorMessage("Failed to copy image to clipboard.")
+      setErrorMessage(`Failed to copy image to clipboard: ${err.message || err}`)
     } finally {
       setIsSharing(false)
     }
@@ -69,9 +69,9 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
       await exportCardAsImage(card)
       addLog(`Downloaded card "${card.name}" as PNG.`)
       onClose()
-    } catch (err) {
+    } catch (err: any) {
       console.error("Download failed:", err)
-      setErrorMessage("Failed to download image.")
+      setErrorMessage(`Failed to download image: ${err.message || err}`)
     } finally {
       setIsSharing(false)
     }

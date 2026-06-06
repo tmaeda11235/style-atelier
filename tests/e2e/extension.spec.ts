@@ -2,18 +2,29 @@ import { test, expect } from "@playwright/test";
 import path from "path";
 
 test.describe("Style Atelier Sandbox E2E Tests", () => {
+  test.beforeEach(async ({ page }) => {
+    page.on('console', msg => {
+      console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
+    });
+    page.on('pageerror', err => {
+      console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`);
+    });
+    page.on('requestfailed', request => {
+      console.error(`[REQUEST FAILED] ${request.url()}: ${request.failure()?.errorText}`);
+    });
+    page.on('response', response => {
+      if (response.status() >= 400) {
+        console.error(`[HTTP ERROR] ${response.url()}: ${response.status()}`);
+      }
+    });
+  });
+
   test("should render Midjourney mock and Sidepanel side-by-side and inject prompt", async ({ page }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
     
     try {
       // 1. サンドボックス親ページを開く
       console.log("Navigating to sandbox page...");
-      page.on('console', msg => {
-        console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
-      });
-      page.on('pageerror', err => {
-        console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`);
-      });
       await page.goto("/tests/sandbox/index.html");
 
       // 2. 左側 iframe (Midjourney) と 右側 iframe (サイドパネル) の取得
@@ -224,6 +235,38 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
     expect(result.fullCommand).toContain("超高層ビルを見上げた景色");
     expect(result.fullCommand).toContain("カードが大量に重ねられて輝いている");
     console.log("Extraction test passed successfully!");
+  });
+
+  test("should correctly extract Job ID, prompt, and image source from pattern2.html sandbox variant", async ({ page }) => {
+    console.log("Navigating to sandbox page with pattern2 variant...");
+    await page.goto("/tests/sandbox/index.html?variant=pattern2.html");
+
+    const mjFrame = page.frameLocator("#midjourney-frame");
+
+    // Wait for Midjourney mock images to render
+    console.log("Waiting for Midjourney mock images to render...");
+    const mockImage = mjFrame.locator("img[src*='0_1.jpeg']");
+    await expect(mockImage).toBeVisible({ timeout: 15000 });
+
+    // Evaluate extractor inside midjourney-frame context
+    console.log("Evaluating WebDataExtractor on the pattern2 image...");
+    const result = await mjFrame.locator("body").evaluate(() => {
+      const img = document.querySelector("img[src*='0_1.jpeg']") as HTMLImageElement;
+      if (!img) return null;
+      
+      const extractor = (window as any)._extractor;
+      if (!extractor) return { error: "Extractor not found on window" };
+
+      return extractor.extract(img);
+    });
+
+    console.log("Extracted result from pattern2:", result);
+    expect(result).not.toBeNull();
+    expect(result.id).toBe("100cc076-ef20-46b4-8aeb-f7c294169800");
+    expect(result.fullCommand).toContain("俊足の怪人");
+    expect(result.fullCommand).toContain("聖歌隊の行進");
+    expect(result.imageUrl).toContain("0_1.jpeg");
+    console.log("pattern2 variant extraction test passed successfully!");
   });
 
   test("should render slot variables and handle pin to hand in Workbench", async ({ page }) => {
