@@ -175,24 +175,104 @@ export class StyleAtelierDatabase extends Dexie {
     });
   }
 
-  async importBackupData(data: {
-    styleCards: StyleCard[];
-    categories: CustomCategory[];
-    userSettings: UserSettings[];
-    historyItems: HistoryItem[];
-  }): Promise<void> {
+  async importBackupData(
+    data: {
+      styleCards: StyleCard[];
+      categories: CustomCategory[];
+      userSettings: UserSettings[];
+      historyItems: HistoryItem[];
+    },
+    mode: 'merge' | 'replace' = 'replace'
+  ): Promise<void> {
     return this.transaction("rw", [this.styleCards, this.categories, this.userSettings, this.historyItems], async () => {
-      if (data.styleCards.length > 0) {
-        await this.styleCards.bulkPut(data.styleCards);
-      }
-      if (data.categories && data.categories.length > 0) {
-        await this.categories.bulkPut(data.categories);
-      }
-      if (data.userSettings && data.userSettings.length > 0) {
-        await this.userSettings.bulkPut(data.userSettings);
-      }
-      if (data.historyItems && data.historyItems.length > 0) {
-        await this.historyItems.bulkPut(data.historyItems);
+      if (mode === 'replace') {
+        await this.styleCards.clear();
+        await this.categories.clear();
+        await this.userSettings.clear();
+        await this.historyItems.clear();
+
+        if (data.styleCards && data.styleCards.length > 0) {
+          await this.styleCards.bulkPut(data.styleCards);
+        }
+        if (data.categories && data.categories.length > 0) {
+          await this.categories.bulkPut(data.categories);
+        }
+        if (data.userSettings && data.userSettings.length > 0) {
+          await this.userSettings.bulkPut(data.userSettings);
+        }
+        if (data.historyItems && data.historyItems.length > 0) {
+          await this.historyItems.bulkPut(data.historyItems);
+        }
+      } else {
+        if (data.styleCards && data.styleCards.length > 0) {
+          const localCards = await this.styleCards.toArray();
+          const localCardMap = new Map(localCards.map(c => [c.id, c]));
+          const toPut: StyleCard[] = [];
+
+          for (const incoming of data.styleCards) {
+            const local = localCardMap.get(incoming.id);
+            if (!local) {
+              toPut.push(incoming);
+            } else {
+              const incomingTime = incoming.updatedAt || incoming.createdAt || 0;
+              const localTime = local.updatedAt || local.createdAt || 0;
+              if (incomingTime >= localTime) {
+                toPut.push(incoming);
+              }
+            }
+          }
+          if (toPut.length > 0) {
+            await this.styleCards.bulkPut(toPut);
+          }
+        }
+
+        if (data.categories && data.categories.length > 0) {
+          const localCats = await this.categories.toArray();
+          const localCatMap = new Map(localCats.map(c => [c.id, c]));
+          const toPut: CustomCategory[] = [];
+
+          for (const incoming of data.categories) {
+            const local = localCatMap.get(incoming.id);
+            if (!local) {
+              toPut.push(incoming);
+            } else {
+              const incomingTime = incoming.createdAt || 0;
+              const localTime = local.createdAt || 0;
+              if (incomingTime >= localTime) {
+                toPut.push(incoming);
+              }
+            }
+          }
+          if (toPut.length > 0) {
+            await this.categories.bulkPut(toPut);
+          }
+        }
+
+        if (data.userSettings && data.userSettings.length > 0) {
+          await this.userSettings.bulkPut(data.userSettings);
+        }
+
+        if (data.historyItems && data.historyItems.length > 0) {
+          const localHistory = await this.historyItems.toArray();
+          const localHistoryMap = new Map(localHistory.map(h => [h.id, h]));
+          const toPut: HistoryItem[] = [];
+
+          for (const incoming of data.historyItems) {
+            const local = localHistoryMap.get(incoming.id);
+            if (!local) {
+              toPut.push(incoming);
+            } else {
+              const incomingTime = incoming.timestamp || 0;
+              const localTime = local.timestamp || 0;
+              if (incomingTime >= localTime) {
+                toPut.push(incoming);
+              }
+            }
+          }
+          if (toPut.length > 0) {
+            await this.historyItems.bulkPut(toPut);
+          }
+        }
       }
     });
   }

@@ -178,7 +178,7 @@ describe("SettingsTab", () => {
 
     await waitFor(() => {
       expect(window.confirm).toHaveBeenCalled();
-      expect(importDatabase).toHaveBeenCalledWith(backupContent);
+      expect(importDatabase).toHaveBeenCalledWith(backupContent, "replace");
       expect(mockAddLog).toHaveBeenCalledWith("Database restored from local JSON file successfully.");
     });
   });
@@ -197,7 +197,7 @@ describe("SettingsTab", () => {
       expect(mockAddLog).toHaveBeenCalledWith(expect.stringContaining("Import failed:"));
     });
 
-    expect(importDatabase).toHaveBeenCalledWith(invalidContent);
+    expect(importDatabase).toHaveBeenCalledWith(invalidContent, "replace");
   });
 
   it("cancels import if user rejects confirmation", async () => {
@@ -293,7 +293,7 @@ describe("SettingsTab", () => {
 
     await waitFor(() => {
       expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token-123", expect.any(Function), expect.any(Function), undefined, expect.any(Object));
-      expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data");
+      expect(googleDrive.importDatabase).toHaveBeenCalledWith("mock-backup-data", "replace");
     });
 
     // Reset confirm mock calls

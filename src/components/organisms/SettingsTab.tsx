@@ -51,6 +51,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
+  const [restoreMode, setRestoreMode] = useState<"replace" | "merge">("replace");
 
   // Status logs local view
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" | null }>({
@@ -242,7 +243,9 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     if (!isSyncEnabled) return;
     
     // Always display confirmation dialog
-    let confirmMsg = "Google Driveからデータを復元（ロード）し、マージします。\n同じIDのデータはバックアップの内容で上書きされますがよろしいですか？";
+    let confirmMsg = restoreMode === "replace"
+      ? "Google Driveからデータを復元（ロード）し、ローカルデータを完全に上書きします。\n現在のローカルデータはすべて失われますがよろしいですか？"
+      : "Google Driveからデータを復元（ロード）し、マージします。\n競合するデータは更新日時が新しい方が優先されますがよろしいですか？";
     if (cloudBackup) {
       confirmMsg += `\n\n【クラウド上のバックアップ情報】\n更新日時: ${cloudBackup.modifiedTime}\nサイズ: ${cloudBackup.size}`;
     }
@@ -269,7 +272,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         return;
       }
 
-      await importDatabase(backupData);
+      await importDatabase(backupData, restoreMode);
       addLog("Database restored from Google Drive successfully.");
       showStatus("データ復元が完了しました！", "success");
       checkStorage();
@@ -328,9 +331,11 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     
     const file = files[0];
     
-    const ok = window.confirm(
-      "ローカルファイルからデータを復元し、マージします。\n同じIDのデータはインポートする内容で上書きされますがよろしいですか？"
-    );
+    const confirmMsg = restoreMode === "replace"
+      ? "ローカルファイルからデータを復元し、ローカルデータを完全に上書きします。\n現在のローカルデータはすべて失われますがよろしいですか？"
+      : "ローカルファイルからデータを復元し、マージします。\n競合するデータは更新日時が新しい方が優先されますがよろしいですか？";
+      
+    const ok = window.confirm(confirmMsg);
     if (!ok) {
       e.target.value = "";
       return;
@@ -345,7 +350,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           throw new Error("File is empty.");
         }
         
-        await importDatabase(text);
+        await importDatabase(text, restoreMode);
         addLog("Database restored from local JSON file successfully.");
         showStatus("インポートが完了しました！", "success");
         checkStorage();
@@ -479,6 +484,44 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
             />
           </div>
         )}
+
+        {/* Restore Mode Selection */}
+        <div className="mt-4 bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-700">データ復元モード (Restore Mode)</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 bg-slate-200/50 p-1 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setRestoreMode("replace")}
+              className={`py-1.5 px-3 text-[11px] font-bold rounded-md transition-all duration-150 ${
+                restoreMode === "replace"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+              id="restore-mode-replace-btn"
+            >
+              上書き復元 (推奨)
+            </button>
+            <button
+              type="button"
+              onClick={() => setRestoreMode("merge")}
+              className={`py-1.5 px-3 text-[11px] font-bold rounded-md transition-all duration-150 ${
+                restoreMode === "merge"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+              id="restore-mode-merge-btn"
+            >
+              マージ復元
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400 mt-1.5 leading-normal">
+            {restoreMode === "replace"
+              ? "ローカルデータを一度すべて削除し、バックアップの内容で完全に置き換えます。ローカルで削除したカードのクリーンアップも行われます。"
+              : "ローカルデータを保持したまま、バックアップデータと統合します。ローカルで新しく更新されたカードは保護されます。"}
+          </p>
+        </div>
 
         {/* Action Buttons */}
         <div className="mt-4 space-y-4">

@@ -1136,4 +1136,170 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       path: path.join(screenshotsDir, "workbench-triple-success.png"),
     });
   });
+
+  test("should allow selecting restore mode and verify replace/merge behavior", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Restore Mode E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Switch to Settings tab
+    const settingsTabButton = spFrame.locator("button:has-text('Settings')");
+    await expect(settingsTabButton).toBeVisible();
+    await settingsTabButton.click();
+
+    // 3. Verify Restore Mode UI is visible
+    const replaceBtn = spFrame.locator("#restore-mode-replace-btn");
+    const mergeBtn = spFrame.locator("#restore-mode-merge-btn");
+    await expect(replaceBtn).toBeVisible({ timeout: 10000 });
+    await expect(mergeBtn).toBeVisible();
+
+    // 4. Capture screenshot of Settings tab with new UI
+    await page.screenshot({
+      path: path.join(screenshotsDir, "restore-mode-ui.png"),
+    });
+
+    // 5. Test replace/merge behavior via page evaluation (Dexie verification)
+    const results = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      
+      const resetData = async () => {
+        await database.styleCards.clear();
+        await database.categories.clear();
+        await database.userSettings.clear();
+        await database.historyItems.clear();
+      };
+
+      // Set initial local state
+      await resetData();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-1",
+          name: "Local Card 1 (Old)",
+          createdAt: 1000,
+          updatedAt: 1000,
+          promptSegments: [],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: [],
+          dominantColor: "#000",
+          thumbnailData: ""
+        },
+        {
+          id: "card-2",
+          name: "Local Only Card",
+          createdAt: 1000,
+          updatedAt: 1000,
+          promptSegments: [],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: [],
+          dominantColor: "#000",
+          thumbnailData: ""
+        }
+      ]);
+
+      const backupPayload = {
+        styleCards: [
+          {
+            id: "card-1",
+            name: "Backup Card 1 (New)",
+            createdAt: 1000,
+            updatedAt: 2000, // Newer!
+            promptSegments: [],
+            parameters: {},
+            masking: {},
+            tier: "Common",
+            tags: [],
+            dominantColor: "#000",
+            thumbnailData: ""
+          },
+          {
+            id: "card-3",
+            name: "Backup Only Card",
+            createdAt: 1500,
+            updatedAt: 1500,
+            promptSegments: [],
+            parameters: {},
+            masking: {},
+            tier: "Common",
+            tags: [],
+            dominantColor: "#000",
+            thumbnailData: ""
+          }
+        ],
+        categories: [],
+        userSettings: [],
+        historyItems: []
+      };
+
+      // Scenario A: Merge Restore
+      await database.importBackupData(backupPayload, "merge");
+      const afterMerge = await database.styleCards.toArray();
+
+      // Reset for Scenario B: Replace Restore
+      await resetData();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-1",
+          name: "Local Card 1 (Old)",
+          createdAt: 1000,
+          updatedAt: 1000,
+          promptSegments: [],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: [],
+          dominantColor: "#000",
+          thumbnailData: ""
+        },
+        {
+          id: "card-2",
+          name: "Local Only Card",
+          createdAt: 1000,
+          updatedAt: 1000,
+          promptSegments: [],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: [],
+          dominantColor: "#000",
+          thumbnailData: ""
+        }
+      ]);
+
+      await database.importBackupData(backupPayload, "replace");
+      const afterReplace = await database.styleCards.toArray();
+
+      return {
+        afterMerge: afterMerge.map((c: any) => ({ id: c.id, name: c.name })),
+        afterReplace: afterReplace.map((c: any) => ({ id: c.id, name: c.name }))
+      };
+    });
+
+    console.log("Merge results:", results.afterMerge);
+    console.log("Replace results:", results.afterReplace);
+
+    // Verify Merge Results
+    expect(results.afterMerge).toContainEqual({ id: "card-1", name: "Backup Card 1 (New)" });
+    expect(results.afterMerge).toContainEqual({ id: "card-2", name: "Local Only Card" });
+    expect(results.afterMerge).toContainEqual({ id: "card-3", name: "Backup Only Card" });
+    expect(results.afterMerge.length).toBe(3);
+
+    // Verify Replace Results
+    expect(results.afterReplace).toContainEqual({ id: "card-1", name: "Backup Card 1 (New)" });
+    expect(results.afterReplace).toContainEqual({ id: "card-3", name: "Backup Only Card" });
+    expect(results.afterReplace.length).toBe(2);
+
+    console.log("Restore Mode logic verification passed successfully!");
+  });
 });
