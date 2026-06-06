@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { seedDefaultCategories, upgradeToVersion8 } from "./db";
+import { seedDefaultCategories, upgradeToVersion8, StyleAtelierDatabase } from "./db";
 
 describe("db utilities", () => {
   describe("upgradeToVersion8", () => {
@@ -63,6 +63,60 @@ describe("db utilities", () => {
         iconEmoji: "👤",
       });
       expect(categoriesPassed[0].createdAt).toBeTypeOf("number");
+    });
+  });
+
+  describe("deleteStyleCardAndCleanup", () => {
+    it("should delete the card and clear category cover references if it is used as iconCardId", async () => {
+      // Mock db implementation for this test case
+      const mockCategories = [
+        { id: "cat-1", name: "Cat 1", iconCardId: "card-delete-me", iconUrl: "data:image/png;..." },
+        { id: "cat-2", name: "Cat 2", iconCardId: "card-keep-me", iconUrl: "data:image/png;..." },
+      ];
+
+      const mockUpdate = vi.fn().mockResolvedValue(undefined);
+      const mockFilter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([mockCategories[0]]),
+      });
+      const mockDelete = vi.fn().mockResolvedValue(undefined);
+
+      const mockDbInstance = {
+        categories: {
+          filter: mockFilter,
+          update: mockUpdate,
+        },
+        styleCards: {
+          delete: mockDelete,
+        },
+        transaction: vi.fn(async (mode, tables, callback) => {
+          return callback();
+        }),
+      } as any;
+
+      // Call the method on our mocked DB instance
+      await StyleAtelierDatabase.prototype.deleteStyleCardAndCleanup.call(mockDbInstance, "card-delete-me");
+
+      // Verify the transaction was called correctly
+      expect(mockDbInstance.transaction).toHaveBeenCalledWith(
+        "rw",
+        [mockDbInstance.styleCards, mockDbInstance.categories],
+        expect.any(Function)
+      );
+
+      // Verify category filter queried for the correct cardId
+      expect(mockFilter).toHaveBeenCalled();
+      const filterFn = mockFilter.mock.calls[0][0];
+      expect(filterFn({ iconCardId: "card-delete-me" })).toBe(true);
+      expect(filterFn({ iconCardId: "card-keep-me" })).toBe(false);
+
+      // Verify category update cleared the references
+      expect(mockUpdate).toHaveBeenCalledWith("cat-1", {
+        iconCardId: undefined,
+        iconUrl: undefined,
+      });
+
+      // Verify card was deleted
+      expect(mockDelete).toHaveBeenCalledWith("card-delete-me");
     });
   });
 });

@@ -25,6 +25,8 @@ import {
   importDatabase,
   getBackupMetadata
 } from "../../lib/google-drive";
+import { useStorageEstimate } from "../../hooks/useStorageEstimate";
+import { db } from "../../lib/db";
 
 interface SettingsTabProps {
   addLog: (log: string) => void;
@@ -33,6 +35,7 @@ interface SettingsTabProps {
 
 export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { estimate, checkStorage } = useStorageEstimate();
 
   // Sync toggle state
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
@@ -44,6 +47,8 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   const [lastBackup, setLastBackup] = useState<string | null>(null);
   const [cloudBackup, setCloudBackup] = useState<{ modifiedTime: string; size: string } | null>(null);
   const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
 
   // Status logs local view
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" | null }>({
@@ -68,7 +73,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         .then((token) => {
           setAccessToken(token);
           setIsLoadingCloudBackup(true);
-          getBackupMetadata(token)
+          getBackupMetadata(token, setAccessToken)
             .then((meta) => {
               if (meta) {
                 const dateStr = new Date(meta.modifiedTime).toLocaleString();
@@ -115,7 +120,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
         const token = await authorize(true);
         setAccessToken(token);
         setIsLoadingCloudBackup(true);
-        const meta = await getBackupMetadata(token);
+        const meta = await getBackupMetadata(token, setAccessToken);
         if (meta) {
           const dateStr = new Date(meta.modifiedTime).toLocaleString();
           const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
@@ -163,18 +168,22 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     }
 
     setIsBackingUp(true);
-    setStatusMessage({ text: "Creating backup and uploading...", type: "info" });
+    setUploadProgress(0);
+    setStatusMessage({ text: "Creating backup and uploading (0%)...", type: "info" });
     try {
       const token = await getOrRequestToken();
       const jsonData = await exportDatabase();
-      await uploadBackup(token, jsonData);
+      await uploadBackup(token, jsonData, setAccessToken, (percent) => {
+        setUploadProgress(percent);
+        setStatusMessage({ text: `Creating backup and uploading (${percent}%)...`, type: "info" });
+      });
 
       const now = Date.now();
       localStorage.setItem("style-atelier-last-backup", now.toString());
       setLastBackup(new Date(now).toLocaleString());
 
       // Fetch updated metadata
-      const meta = await getBackupMetadata(token);
+      const meta = await getBackupMetadata(accessToken || token, setAccessToken);
       if (meta) {
         const dateStr = new Date(meta.modifiedTime).toLocaleString();
         const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
@@ -193,11 +202,12 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       
       // Clear token cache from Chrome
       if (accessToken) {
-        await clearCachedToken(accessToken);
+        await clearCachedToken(accessToken).catch(console.error);
       }
       setAccessToken(null);
     } finally {
       setIsBackingUp(false);
+      setUploadProgress(null);
     }
   };
 
@@ -214,10 +224,14 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     if (!ok) return;
 
     setIsRestoring(true);
-    setStatusMessage({ text: "Downloading backup from Google Drive...", type: "info" });
+    setRestoreProgress(0);
+    setStatusMessage({ text: "Downloading backup from Google Drive (0%)...", type: "info" });
     try {
       const token = await getOrRequestToken();
-      const backupData = await downloadBackup(token);
+      const backupData = await downloadBackup(token, setAccessToken, (percent) => {
+        setRestoreProgress(percent);
+        setStatusMessage({ text: `Downloading backup from Google Drive (${percent}%)...`, type: "info" });
+      });
       if (!backupData) {
         showStatus("Backup file (style-atelier-backup.json) not found on Google Drive.", "error");
         addLog("Restore failed: Backup file not found.");
@@ -227,17 +241,19 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
       await importDatabase(backupData);
       addLog("Database restored from Google Drive successfully.");
       showStatus("データ復元が完了しました！", "success");
+      checkStorage();
     } catch (err: any) {
       console.error(err);
       addLog(`Restore failed: ${err.message || err}`);
       showStatus(`Restore failed: ${err.message || "Unknown error"}`, "error");
       
       if (accessToken) {
-        await clearCachedToken(accessToken);
+        await clearCachedToken(accessToken).catch(console.error);
       }
       setAccessToken(null);
     } finally {
       setIsRestoring(false);
+      setRestoreProgress(null);
     }
   };
 
@@ -289,14 +305,10 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           throw new Error("File is empty.");
         }
         
-        const parsed = JSON.parse(text);
-        if (!parsed.data || !parsed.data.styleCards) {
-          throw new Error("Invalid backup file: Missing styleCards data.");
-        }
-        
         await importDatabase(text);
         addLog("Database restored from local JSON file successfully.");
         showStatus("インポートが完了しました！", "success");
+        checkStorage();
       } catch (err: any) {
         console.error(err);
         addLog(`Import failed: ${err.message || err}`);
@@ -313,6 +325,29 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
     };
     
     reader.readAsText(file);
+  };
+
+  const handleResetDbClick = async () => {
+    await onResetDb();
+    checkStorage();
+  };
+
+  const handleClearHistory = async () => {
+    const ok = window.confirm(
+      "プロンプト履歴データをすべて削除します。よろしいですか？\n(※作成したスタイルカードやカテゴリーは削除されません)"
+    );
+    if (!ok) return;
+
+    try {
+      await db.historyItems.clear();
+      addLog("Prompt history cleared successfully.");
+      showStatus("履歴データを削除しました", "success");
+      checkStorage();
+    } catch (err: any) {
+      console.error(err);
+      addLog(`Failed to clear history: ${err.message || err}`);
+      showStatus(`Failed to clear history: ${err.message || "Unknown error"}`, "error");
+    }
   };
 
   return (
@@ -384,6 +419,16 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
           </div>
         )}
 
+        {/* Progress Bar (Only during Sync Backing up or Restoring) */}
+        {(isBackingUp || isRestoring) && (
+          <div className="mt-2 mb-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+            <div 
+              className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" 
+              style={{ width: `${isBackingUp ? (uploadProgress ?? 0) : (restoreProgress ?? 0)}%` }} 
+            />
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -395,7 +440,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               {isBackingUp ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Backing up...
+                  Backing up... {uploadProgress !== null ? `${uploadProgress}%` : ""}
                 </>
               ) : (
                 <>
@@ -412,7 +457,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               {isRestoring ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Restoring...
+                  Restoring... {restoreProgress !== null ? `${restoreProgress}%` : ""}
                 </>
               ) : (
                 <>
@@ -450,13 +495,98 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               )}
             </div>
           )}
-
-          {/* Security note */}
+           {/* Security note */}
           <div className="flex items-start gap-1.5 bg-blue-50/40 rounded-xl p-3 border border-blue-100/50">
             <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
               認証情報は拡張機能には一切保存されません。バックアップ・復元操作時の一時的なアクセス（Google Drive内の自身が作成したバックアップファイル）にのみ使用されます。
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Storage Management Card */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        {/* Subtle decorative background gradient */}
+        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+
+        <div className="flex items-start gap-4 mb-4">
+          <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+            <Database className="w-6 h-6" />
+          </div>
+          <div className="space-y-1 flex-1">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              Storage Management
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              ブラウザに保存されているデータの使用状況と上限を確認します。
+            </p>
+          </div>
+        </div>
+
+        {/* Progress Bar & Status Text */}
+        {estimate ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+              <span>使用量: {estimate.usageFormatted} / {estimate.quotaFormatted}</span>
+              <span>{estimate.percentage}%</span>
+            </div>
+            
+            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div 
+                className={`h-full transition-all duration-500 rounded-full ${
+                  estimate.percentage >= 90 ? "bg-gradient-to-r from-rose-500 to-red-500" :
+                  estimate.percentage >= 80 ? "bg-gradient-to-r from-amber-500 to-yellow-500" :
+                  "bg-gradient-to-r from-blue-500 to-indigo-500"
+                }`}
+                style={{ width: `${estimate.percentage}%` }}
+              />
+            </div>
+
+            {/* Warnings */}
+            {estimate.percentage >= 90 ? (
+              <div className="flex items-start gap-2 bg-red-50 border border-red-200/60 rounded-xl p-3 text-red-800 text-xs">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">警告: 容量制限に近いです (使用率 90% 超)</span>
+                  <p className="text-[10px] text-red-700/90 mt-0.5 leading-relaxed">
+                    新規カードの追加や復元が失敗する恐れがあります。不要な履歴データをクリアするか、不要なカードを削除してください。
+                  </p>
+                </div>
+              </div>
+            ) : estimate.percentage >= 80 ? (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-amber-800 text-xs">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">注意: 空き容量が少なくなっています (使用率 80% 超)</span>
+                  <p className="text-[10px] text-amber-700/90 mt-0.5 leading-relaxed">
+                    容量に余裕を持たせるため、不要な履歴の削除や、外部バックアップのエクスポートをご検討ください。
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 animate-pulse">
+            ストレージ情報を取得中...
+          </div>
+        )}
+
+        {/* Action button & Optimization description */}
+        <div className="mt-4 pt-3 border-t border-slate-100 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700">プロンプト履歴のクリーンアップ</span>
+            <button
+              onClick={handleClearHistory}
+              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear History
+            </button>
+          </div>
+          
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[10px] text-slate-500 leading-relaxed font-medium">
+            <p>※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。</p>
           </div>
         </div>
       </div>
@@ -530,7 +660,7 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
               Reset the database to its pristine state. This will delete all style cards, binders, histories, and categories locally. This action is irreversible unless you have a Google Drive backup.
             </p>
             <button
-              onClick={onResetDb}
+              onClick={handleResetDbClick}
               className="mt-2 px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
             >
               <Database className="w-3.5 h-3.5" />
