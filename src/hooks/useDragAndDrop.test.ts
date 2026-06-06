@@ -377,5 +377,116 @@ describe("useDragAndDrop", () => {
       expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
       expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
     })
+
+    it("should set error notification when no QR code found in the image", async () => {
+      const { readQRCodeFromImage } = await import("../lib/qr-utils")
+      vi.mocked(readQRCodeFromImage).mockResolvedValueOnce(null)
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(returnVal).toBeNull()
+      expect(result.current.droppedItem).toEqual({
+        isError: true,
+        errorMessage: "No QR code found in the image."
+      })
+    })
+
+    it("should set error notification when card data in QR code is invalid/corrupt", async () => {
+      const { decompressCardData } = await import("../lib/qr-utils")
+      vi.mocked(decompressCardData).mockReturnValueOnce({
+        id: "imported-card-id",
+        name: "", // empty name makes it invalid
+        promptSegments: [],
+      })
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      let returnVal: any
+      await act(async () => {
+        returnVal = await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(returnVal).toBeNull()
+      expect(result.current.droppedItem).toEqual({
+        isError: true,
+        errorMessage: "Invalid card data in QR code or corrupted."
+      })
+    })
+
+    it("should support Japanese error messages when navigator.language is ja", async () => {
+      const originalNavigator = global.navigator
+      // @ts-ignore
+      global.navigator = { language: "ja-JP" }
+
+      const { readQRCodeFromImage } = await import("../lib/qr-utils")
+      vi.mocked(readQRCodeFromImage).mockResolvedValueOnce(null)
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      await act(async () => {
+        await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(result.current.droppedItem).toEqual({
+        isError: true,
+        errorMessage: "画像からQRコードが検出されませんでした。"
+      })
+
+      // Restore
+      // @ts-ignore
+      global.navigator = originalNavigator
+    })
+
+    it("should set success notification on successful import", async () => {
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile],
+        },
+      } as any
+
+      await act(async () => {
+        await result.current.handleDrop(dummyEvent)
+        await new Promise((r) => setTimeout(r, 50))
+      })
+
+      expect(result.current.droppedItem).toEqual({
+        id: "imported-card-id",
+        name: "Imported Card",
+        isImport: true
+      })
+    })
   })
 })
