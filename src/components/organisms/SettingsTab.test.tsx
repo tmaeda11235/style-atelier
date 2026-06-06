@@ -292,7 +292,9 @@ describe("SettingsTab", () => {
 
     // First restore attempt
     fireEvent.click(restoreBtn);
-    expect(window.confirm).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(window.confirm).toHaveBeenCalledTimes(1);
+    });
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("クラウド上のバックアップ情報");
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
 
@@ -306,7 +308,9 @@ describe("SettingsTab", () => {
 
     // Second restore attempt - should still prompt confirmation
     fireEvent.click(restoreBtn);
-    expect(window.confirm).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(window.confirm).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("shows confirmation dialog in English when language is English", async () => {
@@ -340,7 +344,9 @@ describe("SettingsTab", () => {
     expect(restoreBtn).not.toBeDisabled();
 
     fireEvent.click(restoreBtn);
-    expect(window.confirm).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(window.confirm).toHaveBeenCalledTimes(1);
+    });
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("[Cloud Backup Information]");
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB");
   });
@@ -364,7 +370,9 @@ describe("SettingsTab", () => {
     const restoreBtn = screen.getByRole("button", { name: /Google Driveから強制リカバリ/i });
     fireEvent.click(restoreBtn);
 
-    expect(window.confirm).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(window.confirm).toHaveBeenCalledTimes(1);
+    });
     expect(googleDrive.downloadBackup).not.toHaveBeenCalled();
     expect(googleDrive.importDatabase).not.toHaveBeenCalled();
   });

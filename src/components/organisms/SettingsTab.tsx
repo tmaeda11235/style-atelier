@@ -268,25 +268,45 @@ export function SettingsTab({ addLog, onResetDb }: SettingsTabProps) {
   };
 
   const handleForceRecovery = async () => {
-    if (!isSyncEnabled) return;
+    if (!isSyncEnabled || isSyncing || isRestoring) return;
     
-    let confirmMsg = t.restoreConfirmMsg;
-    if (cloudBackup) {
-      confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${cloudBackup.modifiedTime}\n${t.restoreConfirmSize}${cloudBackup.size}`;
-    }
-    
-    const ok = window.confirm(confirmMsg);
-    if (!ok) return;
-
     setIsRestoring(true);
-    setRestoreProgress(0);
-    setStatusMessage({ text: "Google Driveから強制リカバリ中 (0%)...", type: "info" });
-
+    setStatusMessage({ text: t.loadingCloudBackup, type: "info" });
+    
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     try {
       const token = await getOrRequestToken();
+      
+      // Fetch latest backup metadata before confirmation to ensure accuracy
+      const meta = await getBackupMetadata(token, setAccessToken, undefined, { signal: controller.signal });
+      let currentBackup = cloudBackup;
+      if (meta) {
+        const dateStr = new Date(meta.modifiedTime).toLocaleString();
+        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+        currentBackup = {
+          modifiedTime: dateStr,
+          size: `${sizeKB} KB`
+        };
+        setCloudBackup(currentBackup);
+      } else {
+        setCloudBackup(null);
+        currentBackup = null;
+      }
+
+      let confirmMsg = t.restoreConfirmMsg;
+      if (currentBackup) {
+        confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${currentBackup.modifiedTime}\n${t.restoreConfirmSize}${currentBackup.size}`;
+      }
+      
+      setStatusMessage({ text: "", type: null });
+      const ok = window.confirm(confirmMsg);
+      if (!ok) return;
+
+      setRestoreProgress(0);
+      setStatusMessage({ text: "Google Driveから強制リカバリ中 (0%)...", type: "info" });
+      
       const backupData = await downloadBackup(token, setAccessToken, (percent) => {
         setRestoreProgress(percent);
         setStatusMessage({ text: `データをダウンロード中 (${percent}%)...`, type: "info" });
