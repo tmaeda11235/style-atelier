@@ -1,98 +1,105 @@
-import { test, expect } from "@playwright/test";
-import path from "path";
+import path from "path"
+import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
   test.beforeEach(async ({ page }) => {
-    page.on('console', msg => {
-      console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
-    });
-    page.on('pageerror', err => {
-      console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`);
-    });
-    page.on('requestfailed', request => {
-      console.error(`[REQUEST FAILED] ${request.url()}: ${request.failure()?.errorText}`);
-    });
-    page.on('response', response => {
+    page.on("console", (msg) => {
+      console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+    page.on("pageerror", (err) => {
+      console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`)
+    })
+    page.on("requestfailed", (request) => {
+      console.error(
+        `[REQUEST FAILED] ${request.url()}: ${request.failure()?.errorText}`
+      )
+    })
+    page.on("response", (response) => {
       if (response.status() >= 400) {
-        console.error(`[HTTP ERROR] ${response.url()}: ${response.status()}`);
+        console.error(`[HTTP ERROR] ${response.url()}: ${response.status()}`)
       }
-    });
-  });
+    })
+  })
 
-  test("should allow selecting restore mode and verify replace/merge behavior", async ({ page }) => {
-    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+  test("should allow selecting restore mode and verify replace/merge behavior", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
 
     // Mock Google Drive API response
-    await page.route("https://www.googleapis.com/drive/v3/files*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          files: [
-            {
-              id: "mock-file-123",
-              modifiedTime: "2026-06-03 12:00:00",
-              size: "153600" // 150.0 KB
-            }
-          ]
+    await page.route(
+      "https://www.googleapis.com/drive/v3/files*",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            files: [
+              {
+                id: "mock-file-123",
+                modifiedTime: "2026-06-03 12:00:00",
+                size: "153600" // 150.0 KB
+              }
+            ]
+          })
         })
-      });
-    });
+      }
+    )
 
-    console.log("Navigating to sandbox page for Restore Mode E2E test...");
-    await page.goto("/tests/sandbox/index.html");
+    console.log("Navigating to sandbox page for Restore Mode E2E test...")
+    await page.goto("/tests/sandbox/index.html")
 
-    const spFrame = page.frameLocator("#sidepanel-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame")
 
     // 1. Skip welcome dialog
-    const skipButton = spFrame.locator("#welcome-skip-btn");
+    const skipButton = spFrame.locator("#welcome-skip-btn")
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await skipButton.click();
+      await skipButton.click()
     }
 
     // 2. Switch to Settings tab
-    const settingsTabButton = spFrame.locator("nav button:has-text('Settings')");
-    await expect(settingsTabButton).toBeVisible();
-    await settingsTabButton.click();
+    const settingsTabButton = spFrame.locator("#settings-nav-btn")
+    await expect(settingsTabButton).toBeVisible()
+    await settingsTabButton.click()
 
     // 3. Verify Sync and Force Recovery UI is visible
-    const syncBtn = spFrame.locator("#google-drive-sync-btn");
-    const forceRecoveryBtn = spFrame.locator("#force-recovery-btn");
-    await expect(syncBtn).toBeVisible({ timeout: 10000 });
-    await expect(forceRecoveryBtn).toBeVisible();
+    const syncBtn = spFrame.locator("#google-drive-sync-btn")
+    const forceRecoveryBtn = spFrame.locator("#force-recovery-btn")
+    await expect(syncBtn).toBeVisible({ timeout: 10000 })
+    await expect(forceRecoveryBtn).toBeVisible()
 
     // Enable Google Drive synchronization
-    console.log("Enabling Google Drive sync...");
-    const toggleBtn = spFrame.locator("#google-drive-toggle-btn");
-    await expect(toggleBtn).toBeVisible();
-    await toggleBtn.click();
+    console.log("Enabling Google Drive sync...")
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
+    await expect(toggleBtn).toBeVisible()
+    await toggleBtn.click()
 
     // Wait for the cloud backup preview to appear
-    console.log("Waiting for cloud backup preview...");
-    const previewEl = spFrame.locator("text=150.0 KB").first();
-    await expect(previewEl).toBeVisible({ timeout: 10000 });
+    console.log("Waiting for cloud backup preview...")
+    const previewEl = spFrame.locator("text=150.0 KB").first()
+    await expect(previewEl).toBeVisible({ timeout: 10000 })
 
     // Scroll to the Force Recovery button to bring the Danger Zone preview into view
-    await forceRecoveryBtn.scrollIntoViewIfNeeded();
+    await forceRecoveryBtn.scrollIntoViewIfNeeded()
 
     // 4. Capture screenshot of Settings tab with new UI
     await page.screenshot({
-      path: path.join(screenshotsDir, "restore-mode-ui.png"),
-    });
+      path: path.join(screenshotsDir, "restore-mode-ui.png")
+    })
 
     // 5. Test sync/merge and soft delete behavior via page evaluation (Dexie verification)
     const results = await spFrame.locator("body").evaluate(async () => {
-      const database = (window as any).db;
-      
+      const database = (window as any).db
+
       const resetData = async () => {
-        await database.styleCards.clear();
-        await database.categories.clear();
-        await database.userSettings.clear();
-        await database.historyItems.clear();
-      };
+        await database.styleCards.clear()
+        await database.categories.clear()
+        await database.userSettings.clear()
+        await database.historyItems.clear()
+      }
 
       // Set initial local state
-      await resetData();
+      await resetData()
       await database.styleCards.bulkAdd([
         {
           id: "card-1",
@@ -120,7 +127,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
           dominantColor: "#000",
           thumbnailData: ""
         }
-      ]);
+      ])
 
       const backupPayload = {
         styleCards: [
@@ -154,14 +161,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
         categories: [],
         userSettings: [],
         historyItems: []
-      };
+      }
 
       // Scenario A: Merge Restore (Simulating Sync download phase)
-      await database.importBackupData(backupPayload, "merge");
-      const afterMerge = await database.getAllCards();
+      await database.importBackupData(backupPayload, "merge")
+      const afterMerge = await database.getAllCards()
 
       // Reset for Scenario B: Replace Restore (Simulating Force Recovery)
-      await resetData();
+      await resetData()
       await database.styleCards.bulkAdd([
         {
           id: "card-1",
@@ -189,13 +196,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
           dominantColor: "#000",
           thumbnailData: ""
         }
-      ]);
+      ])
 
-      await database.importBackupData(backupPayload, "replace");
-      const afterReplace = await database.getAllCards();
+      await database.importBackupData(backupPayload, "replace")
+      const afterReplace = await database.getAllCards()
 
       // Scenario C: Logical Delete Sync
-      await resetData();
+      await resetData()
       await database.styleCards.bulkAdd([
         {
           id: "card-active",
@@ -210,7 +217,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
           dominantColor: "#000",
           thumbnailData: "heavy-thumb-data"
         }
-      ]);
+      ])
 
       const backupWithDelete = {
         styleCards: [
@@ -234,116 +241,140 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
         categories: [],
         userSettings: [],
         historyItems: []
-      };
+      }
 
-      await database.importBackupData(backupWithDelete, "merge");
-      const activeCardsAfterDeleteSync = await database.getAllCards();
-      const physicalCardsAfterDeleteSync = await database.styleCards.toArray();
+      await database.importBackupData(backupWithDelete, "merge")
+      const activeCardsAfterDeleteSync = await database.getAllCards()
+      const physicalCardsAfterDeleteSync = await database.styleCards.toArray()
 
       return {
         afterMerge: afterMerge.map((c: any) => ({ id: c.id, name: c.name })),
-        afterReplace: afterReplace.map((c: any) => ({ id: c.id, name: c.name })),
+        afterReplace: afterReplace.map((c: any) => ({
+          id: c.id,
+          name: c.name
+        })),
         logicalDeleteSync: {
           activeCount: activeCardsAfterDeleteSync.length,
           physicalCount: physicalCardsAfterDeleteSync.length,
-          card: physicalCardsAfterDeleteSync[0] ? {
-            id: physicalCardsAfterDeleteSync[0].id,
-            isDeleted: physicalCardsAfterDeleteSync[0].isDeleted,
-            thumbnailData: physicalCardsAfterDeleteSync[0].thumbnailData
-          } : null
+          card: physicalCardsAfterDeleteSync[0]
+            ? {
+                id: physicalCardsAfterDeleteSync[0].id,
+                isDeleted: physicalCardsAfterDeleteSync[0].isDeleted,
+                thumbnailData: physicalCardsAfterDeleteSync[0].thumbnailData
+              }
+            : null
         }
-      };
-    });
+      }
+    })
 
-    console.log("Merge results:", results.afterMerge);
-    console.log("Replace results:", results.afterReplace);
-    console.log("Delete sync results:", results.logicalDeleteSync);
+    console.log("Merge results:", results.afterMerge)
+    console.log("Replace results:", results.afterReplace)
+    console.log("Delete sync results:", results.logicalDeleteSync)
 
     // Verify Merge Results
-    expect(results.afterMerge).toContainEqual({ id: "card-1", name: "Backup Card 1 (New)" });
-    expect(results.afterMerge).toContainEqual({ id: "card-2", name: "Local Only Card" });
-    expect(results.afterMerge).toContainEqual({ id: "card-3", name: "Backup Only Card" });
-    expect(results.afterMerge.length).toBe(3);
+    expect(results.afterMerge).toContainEqual({
+      id: "card-1",
+      name: "Backup Card 1 (New)"
+    })
+    expect(results.afterMerge).toContainEqual({
+      id: "card-2",
+      name: "Local Only Card"
+    })
+    expect(results.afterMerge).toContainEqual({
+      id: "card-3",
+      name: "Backup Only Card"
+    })
+    expect(results.afterMerge.length).toBe(3)
 
     // Verify Replace Results
-    expect(results.afterReplace).toContainEqual({ id: "card-1", name: "Backup Card 1 (New)" });
-    expect(results.afterReplace).toContainEqual({ id: "card-3", name: "Backup Only Card" });
-    expect(results.afterReplace.length).toBe(2);
+    expect(results.afterReplace).toContainEqual({
+      id: "card-1",
+      name: "Backup Card 1 (New)"
+    })
+    expect(results.afterReplace).toContainEqual({
+      id: "card-3",
+      name: "Backup Only Card"
+    })
+    expect(results.afterReplace.length).toBe(2)
 
     // Verify Logical Delete Sync Results
-    expect(results.logicalDeleteSync.activeCount).toBe(0); // Filtered out from getAllCards
-    expect(results.logicalDeleteSync.physicalCount).toBe(1); // Record still exists in IndexedDB
+    expect(results.logicalDeleteSync.activeCount).toBe(0) // Filtered out from getAllCards
+    expect(results.logicalDeleteSync.physicalCount).toBe(1) // Record still exists in IndexedDB
     expect(results.logicalDeleteSync.card).toEqual({
       id: "card-active",
       isDeleted: true,
       thumbnailData: "" // Heavy image info is cleared
-    });
+    })
 
-    console.log("Sync and logical delete E2E logic verification passed successfully!");
-  });
+    console.log(
+      "Sync and logical delete E2E logic verification passed successfully!"
+    )
+  })
 
-  test("should support auto-sync toggling and trigger backup on database changes", async ({ page }) => {
-    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+  test("should support auto-sync toggling and trigger backup on database changes", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
 
-    let uploadCallCount = 0;
+    let uploadCallCount = 0
     // Mock files list request
     await page.route("**/drive/v3/files*", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({ files: [] })
-      });
-    });
+      })
+    })
 
     // Mock file creation/upload request
     await page.route("**/upload/drive/v3/files*", async (route) => {
-      uploadCallCount++;
+      uploadCallCount++
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({ id: "mock-file-123" })
-      });
-    });
+      })
+    })
 
-    console.log("Navigating to sandbox page for Auto-Sync E2E test...");
-    await page.goto("/tests/sandbox/index.html");
+    console.log("Navigating to sandbox page for Auto-Sync E2E test...")
+    await page.goto("/tests/sandbox/index.html")
 
-    const spFrame = page.frameLocator("#sidepanel-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame")
 
     // Skip welcome dialog
-    const skipButton = spFrame.locator("#welcome-skip-btn");
+    const skipButton = spFrame.locator("#welcome-skip-btn")
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await skipButton.click();
+      await skipButton.click()
     }
 
     // Switch to Settings tab
-    const settingsTabButton = spFrame.locator("nav button:has-text('Settings')");
-    await settingsTabButton.click();
+    const settingsTabButton = spFrame.locator("#settings-nav-btn")
+    await settingsTabButton.click()
 
     // Enable Google Drive synchronization
-    const toggleBtn = spFrame.locator("#google-drive-toggle-btn");
-    await toggleBtn.click();
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
+    await toggleBtn.click()
 
     // Check that auto-sync button is visible
-    const autoSyncBtn = spFrame.locator("#google-drive-auto-sync-btn");
-    await expect(autoSyncBtn).toBeVisible({ timeout: 10000 });
+    const autoSyncBtn = spFrame.locator("#google-drive-auto-sync-btn")
+    await expect(autoSyncBtn).toBeVisible({ timeout: 10000 })
 
     // Enable auto-sync
-    await autoSyncBtn.click();
+    await autoSyncBtn.click()
 
     // Capture screenshot showing auto-sync enabled
     await page.screenshot({
-      path: path.join(screenshotsDir, "auto-sync-enabled.png"),
-    });
+      path: path.join(screenshotsDir, "auto-sync-enabled.png")
+    })
 
     // Simulate database changes inside evaluate to see if auto-backup triggers
-    console.log("Mutating database to trigger auto-backup...");
+    console.log("Mutating database to trigger auto-backup...")
     await spFrame.locator("body").evaluate(async () => {
-      const database = (window as any).db;
+      const database = (window as any).db
       // Configure fast debounce using exposed config
-      const autoSyncConfig = (window as any).autoSyncConfig;
+      const autoSyncConfig = (window as any).autoSyncConfig
       if (autoSyncConfig) {
-        autoSyncConfig.setDebounceMs(100);
+        autoSyncConfig.setDebounceMs(100)
       }
 
       // Add a style card to trigger dexie hooks
@@ -359,95 +390,99 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
         tags: [],
         dominantColor: "#000",
         thumbnailData: ""
-      });
-    });
+      })
+    })
 
     // Wait for the debounced upload call to happen (100ms debounce + some network overhead)
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(500)
 
     // Verify upload was triggered automatically
-    expect(uploadCallCount).toBeGreaterThan(0);
-    console.log("Auto-backup triggered successfully upon DB changes!");
-  });
+    expect(uploadCallCount).toBeGreaterThan(0)
+    console.log("Auto-backup triggered successfully upon DB changes!")
+  })
 
-  test("should toggle Easy Mode and restrict tab visibility to Library only", async ({ page }) => {
-    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
-    console.log("Navigating to sandbox page for Easy Mode E2E test...");
-    await page.goto("/tests/sandbox/index.html");
+  test("should toggle Easy Mode and restrict tab visibility to Library only", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Easy Mode E2E test...")
+    await page.goto("/tests/sandbox/index.html")
 
-    const spFrame = page.frameLocator("#sidepanel-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame")
 
     // 1. Skip welcome dialog if exists
-    const skipButton = spFrame.locator("#welcome-skip-btn");
+    const skipButton = spFrame.locator("#welcome-skip-btn")
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await skipButton.click();
+      await skipButton.click()
     }
 
     // 2. Verify History tab is visible initially
-    const historyTabBtn = spFrame.locator("nav button:has-text('History')");
-    await expect(historyTabBtn).toBeVisible({ timeout: 10000 });
+    const historyTabBtn = spFrame.locator("nav button:has-text('History')")
+    await expect(historyTabBtn).toBeVisible({ timeout: 10000 })
 
     // 3. Click Settings icon in header to navigate to Settings
-    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
-    await settingsNavBtn.click();
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
 
     // 4. Verify Easy Mode toggle button exists in SettingsTab
-    const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn");
-    await expect(easyModeToggle).toBeVisible({ timeout: 10000 });
+    const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
+    await expect(easyModeToggle).toBeVisible({ timeout: 10000 })
 
     // 5. Toggle Easy Mode to ON
-    console.log("Enabling Easy Mode...");
-    await easyModeToggle.click();
-    await page.waitForTimeout(500);
+    console.log("Enabling Easy Mode...")
+    await easyModeToggle.click()
+    await page.waitForTimeout(500)
 
     // 6. Verify tabs are hidden and Library title is displayed
-    const libraryTitle = spFrame.locator("span:has-text('Library')");
-    await expect(libraryTitle).toBeVisible({ timeout: 10000 });
-    await expect(historyTabBtn).not.toBeVisible();
+    const libraryTitle = spFrame.locator("span:has-text('Library')")
+    await expect(libraryTitle).toBeVisible({ timeout: 10000 })
+    await expect(historyTabBtn).not.toBeVisible()
 
     // 7. Save screenshot of active Easy Mode
     await page.screenshot({
-      path: path.join(screenshotsDir, "easy-mode-active.png"),
-    });
-    console.log("Easy Mode active screenshot saved.");
+      path: path.join(screenshotsDir, "easy-mode-active.png")
+    })
+    console.log("Easy Mode active screenshot saved.")
 
     // 8. Re-open settings via header settings button
-    await settingsNavBtn.click();
-    await page.waitForTimeout(500);
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
 
     // 9. Toggle Easy Mode to OFF
-    console.log("Disabling Easy Mode...");
-    await easyModeToggle.click();
-    await page.waitForTimeout(500);
+    console.log("Disabling Easy Mode...")
+    await easyModeToggle.click()
+    await page.waitForTimeout(500)
 
     // 10. Verify typical tabs are restored (e.g. History tab visible)
-    await expect(historyTabBtn).toBeVisible({ timeout: 10000 });
+    await expect(historyTabBtn).toBeVisible({ timeout: 10000 })
 
     // 11. Save screenshot of restored standard mode
     await page.screenshot({
-      path: path.join(screenshotsDir, "easy-mode-deactivated.png"),
-    });
-    console.log("Easy Mode E2E test passed successfully!");
-  });
+      path: path.join(screenshotsDir, "easy-mode-deactivated.png")
+    })
+    console.log("Easy Mode E2E test passed successfully!")
+  })
 
-  test("should show expert mode individual toggles and restrict features accordingly", async ({ page }) => {
-    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
-    console.log("Navigating to sandbox page for Expert Features E2E test...");
-    await page.goto("/tests/sandbox/index.html");
+  test("should show expert mode individual toggles and restrict features accordingly", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Expert Features E2E test...")
+    await page.goto("/tests/sandbox/index.html")
 
-    const spFrame = page.frameLocator("#sidepanel-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame")
 
     // 1. Skip welcome dialog if exists
-    const skipButton = spFrame.locator("#welcome-skip-btn");
+    const skipButton = spFrame.locator("#welcome-skip-btn")
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await skipButton.click();
+      await skipButton.click()
     }
 
     // 2. Click Settings icon in header
-    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
-    await settingsNavBtn.click();
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
 
     // 3. Verify all expert feature toggles are visible
     const toggles = [
@@ -459,101 +494,103 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
       "multicard",
       "cardediting",
       "multiimage"
-    ];
+    ]
     for (const toggleId of toggles) {
-      const toggle = spFrame.locator(`#expert-feature-${toggleId}-btn`);
-      await expect(toggle).toBeVisible({ timeout: 10000 });
+      const toggle = spFrame.locator(`#expert-feature-${toggleId}-btn`)
+      await expect(toggle).toBeVisible({ timeout: 10000 })
     }
 
     // 4. Capture screenshot of settings tab with expert toggles
     await page.screenshot({
-      path: path.join(screenshotsDir, "expert-features-toggles.png"),
-    });
-    console.log("Expert features toggles screenshot saved.");
+      path: path.join(screenshotsDir, "expert-features-toggles.png")
+    })
+    console.log("Expert features toggles screenshot saved.")
 
     // 5. Disable 'slot' and 'categories'
-    console.log("Disabling slot and categories features...");
-    const slotToggle = spFrame.locator("#expert-feature-slot-btn");
-    const categoriesToggle = spFrame.locator("#expert-feature-categories-btn");
-    await slotToggle.click();
-    await categoriesToggle.click();
-    await page.waitForTimeout(500);
+    console.log("Disabling slot and categories features...")
+    const slotToggle = spFrame.locator("#expert-feature-slot-btn")
+    const categoriesToggle = spFrame.locator("#expert-feature-categories-btn")
+    await slotToggle.click()
+    await categoriesToggle.click()
+    await page.waitForTimeout(500)
 
     // 6. Navigate to Library tab and verify Category bar is hidden
-    const libraryTabBtn = spFrame.locator("nav button:has-text('Library')");
-    await libraryTabBtn.click();
-    await page.waitForTimeout(500);
+    const libraryTabBtn = spFrame.locator("nav button:has-text('Library')")
+    await libraryTabBtn.click()
+    await page.waitForTimeout(500)
 
-    const categoryRow = spFrame.locator("text=Manage Categories");
-    await expect(categoryRow).not.toBeVisible();
+    const categoryRow = spFrame.locator("text=Manage Categories")
+    await expect(categoryRow).not.toBeVisible()
 
     // 7. Verify SlotVariablesSection (e.g. text 'Slot Variables') is not visible on Workbench tab
-    const workbenchTabBtn = spFrame.locator("nav button:has-text('Workbench')");
-    await workbenchTabBtn.click();
-    await page.waitForTimeout(500);
+    const workbenchTabBtn = spFrame.locator("nav button:has-text('Workbench')")
+    await workbenchTabBtn.click()
+    await page.waitForTimeout(500)
 
-    const slotVariablesTitle = spFrame.locator("text=Slot Variables");
-    await expect(slotVariablesTitle).not.toBeVisible();
+    const slotVariablesTitle = spFrame.locator("text=Slot Variables")
+    await expect(slotVariablesTitle).not.toBeVisible()
 
     // 8. Capture screenshot showing slot features disabled on workbench
     await page.screenshot({
-      path: path.join(screenshotsDir, "expert-features-disabled-workbench.png"),
-    });
+      path: path.join(screenshotsDir, "expert-features-disabled-workbench.png")
+    })
 
-    console.log("Expert features toggles E2E test passed successfully!");
-  });
+    console.log("Expert features toggles E2E test passed successfully!")
+  })
 
-  test("should allow changing display language and verify localization in UI", async ({ page }) => {
-    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
-    console.log("Navigating to sandbox page for Language/i18n E2E test...");
-    await page.goto("/tests/sandbox/index.html");
+  test("should allow changing display language and verify localization in UI", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Language/i18n E2E test...")
+    await page.goto("/tests/sandbox/index.html")
 
-    const spFrame = page.frameLocator("#sidepanel-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame")
 
     // 1. Skip welcome dialog if visible
-    const skipButton = spFrame.locator("#welcome-skip-btn");
+    const skipButton = spFrame.locator("#welcome-skip-btn")
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await skipButton.click();
+      await skipButton.click()
     }
 
     // 2. Open Settings Tab
-    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
-    await settingsNavBtn.click();
-    await page.waitForTimeout(500);
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
 
     // 3. Locate Language selector
-    const langSelect = spFrame.locator("#language-select");
-    await expect(langSelect).toBeVisible();
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
 
     // 4. Switch to English
-    console.log("Switching language to English...");
-    await langSelect.selectOption("en");
-    await page.waitForTimeout(500);
+    console.log("Switching language to English...")
+    await langSelect.selectOption("en")
+    await page.waitForTimeout(500)
 
     // Verify UI has changed to English (Settings title should be "Settings")
-    const settingsTitleEn = spFrame.locator("h2:has-text('Settings')");
-    await expect(settingsTitleEn).toBeVisible({ timeout: 5000 });
+    const settingsTitleEn = spFrame.locator("h2:has-text('Settings')")
+    await expect(settingsTitleEn).toBeVisible({ timeout: 5000 })
 
     // Capture English Settings screenshot
     await page.screenshot({
-      path: path.join(screenshotsDir, "settings-lang-en.png"),
-    });
+      path: path.join(screenshotsDir, "settings-lang-en.png")
+    })
 
     // 5. Switch to Japanese
-    console.log("Switching language to Japanese...");
-    await langSelect.selectOption("ja");
-    await page.waitForTimeout(500);
+    console.log("Switching language to Japanese...")
+    await langSelect.selectOption("ja")
+    await page.waitForTimeout(500)
 
     // Verify UI has changed to Japanese (Settings title should be "設定")
-    const settingsTitleJa = spFrame.locator("h2:has-text('設定')");
-    await expect(settingsTitleJa).toBeVisible({ timeout: 5000 });
+    const settingsTitleJa = spFrame.locator("h2:has-text('設定')")
+    await expect(settingsTitleJa).toBeVisible({ timeout: 5000 })
 
     // Capture Japanese Settings screenshot
     await page.screenshot({
-      path: path.join(screenshotsDir, "settings-lang-ja.png"),
-    });
+      path: path.join(screenshotsDir, "settings-lang-ja.png")
+    })
 
-    console.log("Language selection E2E test passed successfully!");
-  });
-});
+    console.log("Language selection E2E test passed successfully!")
+  })
+})
