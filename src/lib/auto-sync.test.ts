@@ -1,0 +1,166 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { 
+  isAutoSyncEnabled, 
+  setAutoSyncEnabled, 
+  checkAndMergeRemoteChanges, 
+  initializeAutoSync, 
+  autoSyncConfig 
+} from "./auto-sync";
+import * as googleDrive from "./google-drive";
+import { db } from "./db";
+
+vi.mock("./google-drive", () => ({
+  authorize: vi.fn(),
+  exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {}}'),
+  getBackupMetadata: vi.fn(),
+  downloadBackup: vi.fn(),
+  uploadBackup: vi.fn(),
+  importDatabase: vi.fn(),
+}));
+
+// Mock db hooks
+const mockHooks: Record<string, Function> = {};
+vi.mock("./db", () => {
+  const createHookMock = () => vi.fn((event: string, callback: Function) => {
+    mockHooks[event] = callback;
+  });
+  return {
+    db: {
+      styleCards: {
+        hook: createHookMock(),
+      },
+      categories: {
+        hook: createHookMock(),
+      },
+    },
+  };
+});
+
+describe("auto-sync", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    vi.useFakeTimers();
+    // Use short debounce/polling settings for fast tests
+    autoSyncConfig.setDebounceMs(100);
+    autoSyncConfig.setPollIntervalMs(500);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe("Configuration & Toggle State", () => {
+    it("returns false when sync or auto-sync is disabled", () => {
+      localStorage.setItem("style-atelier-sync-enabled", "false");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+      expect(isAutoSyncEnabled()).toBe(false);
+
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "false");
+      expect(isAutoSyncEnabled()).toBe(false);
+    });
+
+    it("returns true when both settings are enabled", () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+      expect(isAutoSyncEnabled()).toBe(true);
+    });
+
+    it("updates localStorage when setAutoSyncEnabled is called", () => {
+      setAutoSyncEnabled(true);
+      expect(localStorage.getItem("style-atelier-auto-sync-enabled")).toBe("true");
+
+      setAutoSyncEnabled(false);
+      expect(localStorage.getItem("style-atelier-auto-sync-enabled")).toBe("false");
+    });
+  });
+
+  describe("Automatic Backup Trigger", () => {
+    it("debounces and triggers backup when db hook is fired", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+
+      // Initialize hooks
+      initializeAutoSync();
+
+      // Ensure hook is registered and retrieve it
+      expect(db.styleCards.hook).toHaveBeenCalledWith("creating", expect.any(Function));
+      
+      const creatingHook = vi.mocked(db.styleCards.hook).mock.calls.find(call => call[0] === "creating")?.[1];
+      expect(creatingHook).toBeDefined();
+
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token");
+      vi.mocked(googleDrive.exportDatabase).mockResolvedValue('{"version":1,"data":{}}');
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
+        id: "file-1",
+        modifiedTime: "2026-06-06T12:00:00.000Z",
+        size: "100"
+      });
+
+      // Fire hook with mock transaction complete listener
+      let transactionCompleteCallback: Function = () => {};
+      const mockTransaction = {
+        on: vi.fn((event: string, callback: Function) => {
+          if (event === "complete") transactionCompleteCallback = callback;
+        })
+      };
+
+      creatingHook!(null, null, mockTransaction);
+      
+      // Complete transaction
+      transactionCompleteCallback();
+
+      // Expect upload not called immediately (debounced)
+      expect(googleDrive.uploadBackup).not.toHaveBeenCalled();
+
+      // Fast-forward time
+      await vi.advanceTimersByTimeAsync(150);
+
+      expect(googleDrive.authorize).toHaveBeenCalledWith(false);
+      expect(googleDrive.exportDatabase).toHaveBeenCalled();
+      expect(googleDrive.uploadBackup).toHaveBeenCalledWith("mock-token", '{"version":1,"data":{}}');
+      expect(localStorage.getItem("style-atelier-last-backup")).toBeDefined();
+    });
+  });
+
+  describe("Remote Change Merging", () => {
+    it("merges remote backup if remote modifiedTime is newer than local backup time", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+      localStorage.setItem("style-atelier-last-backup", "1000"); // local backup time
+
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
+        id: "file-1",
+        modifiedTime: "1970-01-01T00:00:02.000Z", // 2000ms, newer than 1000ms
+        size: "100"
+      });
+      vi.mocked(googleDrive.downloadBackup).mockResolvedValue('{"remote": true}');
+
+      await checkAndMergeRemoteChanges();
+
+      expect(googleDrive.downloadBackup).toHaveBeenCalledWith("mock-token");
+      expect(googleDrive.importDatabase).toHaveBeenCalledWith('{"remote": true}', "merge");
+      expect(localStorage.getItem("style-atelier-last-backup")).toBe("2000");
+    });
+
+    it("does not merge if remote backup is not newer", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+      localStorage.setItem("style-atelier-last-backup", "3000"); // local backup time
+
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
+        id: "file-1",
+        modifiedTime: "1970-01-01T00:00:02.000Z", // 2000ms, older than 3000ms
+        size: "100"
+      });
+
+      await checkAndMergeRemoteChanges();
+
+      expect(googleDrive.downloadBackup).not.toHaveBeenCalled();
+      expect(googleDrive.importDatabase).not.toHaveBeenCalled();
+    });
+  });
+});

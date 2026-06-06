@@ -37,6 +37,10 @@ vi.mock("../../lib/google-drive", () => {
   };
 });
 
+vi.mock("../../lib/auto-sync", () => ({
+  setAutoSyncEnabled: vi.fn(),
+}));
+
 vi.mock("../../lib/db", () => ({
   db: {
     historyItems: {
@@ -631,5 +635,56 @@ describe("SettingsTab", () => {
     }
 
     expect(mockToggleEasyMode).toHaveBeenCalledWith(true);
+  });
+
+  describe("Auto Sync Settings", () => {
+    it("renders auto-sync toggle when sync is enabled", async () => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
+
+      const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+      // Initially auto-sync toggle shouldn't be rendered because isSyncEnabled is false
+      expect(container.querySelector("#google-drive-auto-sync-btn")).toBeNull();
+
+      // Enable main sync
+      const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
+      fireEvent.click(toggleBtn);
+
+      await waitFor(() => {
+        expect(container.querySelector("#google-drive-auto-sync-btn")).not.toBeNull();
+      });
+
+      // Toggle auto-sync
+      const autoSyncBtn = container.querySelector("#google-drive-auto-sync-btn")!;
+      fireEvent.click(autoSyncBtn);
+
+      const { setAutoSyncEnabled } = await import("../../lib/auto-sync");
+      expect(setAutoSyncEnabled).toHaveBeenCalledWith(true);
+    });
+
+    it("disables auto-sync if main sync is disabled", async () => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123");
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null);
+
+      localStorage.setItem("style-atelier-sync-enabled", "true");
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true");
+
+      const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
+
+      // Ensure both are enabled on mount
+      await waitFor(() => {
+        expect(container.querySelector("#google-drive-auto-sync-btn")).not.toBeNull();
+      });
+
+      // Disable main sync
+      const toggleBtn = container.querySelector("#google-drive-toggle-btn")!;
+      fireEvent.click(toggleBtn);
+
+      const { setAutoSyncEnabled } = await import("../../lib/auto-sync");
+      // Main sync turning off should call setAutoSyncEnabled(false)
+      expect(setAutoSyncEnabled).toHaveBeenCalledWith(false);
+      expect(container.querySelector("#google-drive-auto-sync-btn")).toBeNull();
+    });
   });
 });

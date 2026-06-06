@@ -6,6 +6,8 @@ import { TutorialProvider } from "../contexts/TutorialContext"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
 
+import { initializeAutoSync } from "../lib/auto-sync"
+
 /**
  * Main inner container for the side panel. It manages site target detection
  * and handles top-level routing between Easy Mode and Expert Mode.
@@ -15,6 +17,7 @@ function SidePanelInner() {
   const [isEasyMode, setIsEasyMode] = useState(false)
 
   useEffect(() => {
+    initializeAutoSync()
     const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true"
     setIsEasyMode(easyMode)
   }, [])
