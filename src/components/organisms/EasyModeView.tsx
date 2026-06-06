@@ -5,6 +5,7 @@ import { LibraryTab } from "./LibraryTab"
 import { SettingsTab } from "./SettingsTab"
 import { MintingView } from "./MintingView"
 import { CardDetailView } from "./CardDetailView"
+import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
 import { db } from "../../lib/db"
 
 interface EasyModeViewProps {
@@ -42,6 +43,8 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
     handleRetryConnection,
     handleDismissAlert,
     handleToggleEasyMode,
+    activeSimpleWorkbenchCard,
+    setActiveSimpleWorkbenchCard,
   } = useEasyModeView({ isEasyMode, onToggleEasyMode })
 
   return (
@@ -58,6 +61,7 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
           minting.setMintingItem(null)
           minting.setVariationBase(null)
           setActiveDetailCard(null)
+          setActiveSimpleWorkbenchCard(null)
         }}
         isDragging={isDragging}
         isDraggingFile={isDraggingFile}
@@ -120,6 +124,14 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             onDelete={handleDeleteCard}
           />
         )}
+        {activeSimpleWorkbenchCard && (
+          <SimpleWorkbenchModal
+            card={activeSimpleWorkbenchCard}
+            onClose={() => setActiveSimpleWorkbenchCard(null)}
+            addLog={addLog}
+            setAlertType={setAlertType}
+          />
+        )}
 
         {activeTab === "library" && (
           <LibraryTab
@@ -127,6 +139,8 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             setAlertType={setAlertType}
             onOpenDetailCard={setActiveDetailCard}
             onNavigateToWorkbench={() => {}} // Workbench navigation is disabled in Easy Mode
+            isEasyMode={isEasyMode}
+            onOpenSimpleWorkbench={setActiveSimpleWorkbenchCard}
           />
         )}
         {activeTab === "settings" && (

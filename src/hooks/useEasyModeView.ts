@@ -18,6 +18,7 @@ export function useEasyModeView({ isEasyMode, onToggleEasyMode }: UseEasyModeVie
   const [logs, setLogs] = useState<string[]>([])
   const [alertType, setAlertType] = useState<AlertType>(null)
   const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(null)
+  const [activeSimpleWorkbenchCard, setActiveSimpleWorkbenchCard] = useState<StyleCard | null>(null)
 
   const addLog = (log: string) => {
     setLogs((prev) => [log, ...prev].slice(0, 20))
@@ -156,6 +157,8 @@ export function useEasyModeView({ isEasyMode, onToggleEasyMode }: UseEasyModeVie
     handleClearLogs,
     handleRetryConnection,
     handleDismissAlert,
-    handleToggleEasyMode: handleToggleEasyModeInternal
+    handleToggleEasyMode: handleToggleEasyModeInternal,
+    activeSimpleWorkbenchCard,
+    setActiveSimpleWorkbenchCard,
   }
 }
