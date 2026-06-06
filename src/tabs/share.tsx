@@ -68,7 +68,7 @@ export default function SharePage() {
       }, "image/png")
     } catch (err: any) {
       console.error("Clipboard copy failed:", err)
-      setErrorMessage("Failed to copy image to clipboard.")
+      setErrorMessage(`Failed to copy image to clipboard: ${err.message || err}`)
     }
   }
 
@@ -79,9 +79,9 @@ export default function SharePage() {
     try {
       await exportCardAsImage(card)
       setSuccessMessage("Download started successfully!")
-    } catch (err) {
+    } catch (err: any) {
       console.error("Download failed:", err)
-      setErrorMessage("Failed to download card image.")
+      setErrorMessage(`Failed to download card image: ${err.message || err}`)
     }
   }
 
