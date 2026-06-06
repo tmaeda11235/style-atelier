@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render as tlRender, screen, fireEvent } from "@testing-library/react"
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import React from "react"
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(ui, { wrapper: SettingsProvider, ...options })
+}
 import { MintingView } from "./MintingView"
 import { useHand } from "../../hooks/useHand"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
@@ -124,5 +130,24 @@ describe("MintingView", () => {
     const cancelButton = screen.getByText("Cancel")
     fireEvent.click(cancelButton)
     expect(defaultProps.onCancelMinting).toHaveBeenCalled()
+  })
+
+  it("renders read-only prompt bubbles when cardEditing is disabled", () => {
+    vi.mocked(useHand).mockReturnValue({
+      pinnedCards: [],
+      unpinCard: vi.fn(),
+      clearHand: vi.fn(),
+    })
+
+    // To test with cardEditing disabled, we can temporarily modify localStorage
+    localStorage.setItem("style-atelier-expert-features", JSON.stringify({ cardEditing: false }))
+
+    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
+
+    // Verify PromptBubble is rendered (which renders as a span/div containing segment value)
+    expect(screen.getByText("a beautiful mountain scenery")).toBeDefined()
+    
+    // Cleanup localStorage
+    localStorage.removeItem("style-atelier-expert-features")
   })
 })

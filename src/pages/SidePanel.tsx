@@ -5,6 +5,7 @@ import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
+import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 import { LanguageProvider } from "../contexts/LanguageContext"
 import { initializeAutoSync } from "../lib/auto-sync"
 
@@ -14,17 +15,14 @@ import { initializeAutoSync } from "../lib/auto-sync"
  */
 function SidePanelInner() {
   const { isTargetSite, isLoading } = useActiveTabUrl()
-  const [isEasyMode, setIsEasyMode] = useState(false)
+  const { isEasyMode, toggleEasyMode } = useSettings()
 
   useEffect(() => {
     initializeAutoSync()
-    const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true"
-    setIsEasyMode(easyMode)
   }, [])
 
   const handleToggleEasyMode = (enabled: boolean) => {
-    setIsEasyMode(enabled)
-    localStorage.setItem("style-atelier-easy-mode", enabled ? "true" : "false")
+    toggleEasyMode(enabled)
   }
 
   const handleOpenMidjourney = () => {
@@ -59,15 +57,17 @@ function SidePanelInner() {
 }
 
 /**
- * Root page component – wraps everything in LanguageProvider and TutorialProvider so useTutorial and useLanguage
+ * Root page component – wraps everything in SettingsProvider, LanguageProvider, and TutorialProvider so useSettings, useLanguage, and useTutorial
  * are available within both the SidePanelInner router and underlying views.
  */
 function SidePanelPage() {
   return (
     <LanguageProvider>
-      <TutorialProvider>
-        <SidePanelInner />
-      </TutorialProvider>
+      <SettingsProvider>
+        <TutorialProvider>
+          <SidePanelInner />
+        </TutorialProvider>
+      </SettingsProvider>
     </LanguageProvider>
   )
 }

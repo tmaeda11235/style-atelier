@@ -27,3 +27,4 @@ tags: []
 ## Constraints
 - **Manifest V3**: Strict security policies (no remote code execution).
 - **Storage Limits**: IndexedDB limits vary by device, but generally sufficient for metadata + thumbnails. Full images should be external references or carefully cached.
+- **LocalStorage Settings**: Settings (Easy Mode & Expert Features) are persisted locally in `localStorage`. Tests can inject mocked states by editing `localStorage` or wrapping component render functions in `SettingsProvider` (using testing-library's `wrapper` option).

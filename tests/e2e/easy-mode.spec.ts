@@ -20,7 +20,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal", () 
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // 1. Skip welcome dialog
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }

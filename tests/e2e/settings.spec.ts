@@ -311,7 +311,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const spFrame = page.frameLocator("#sidepanel-frame");
 
     // Skip welcome dialog
-    const skipButton = spFrame.locator("text=スキップ");
+    const skipButton = spFrame.locator("#welcome-skip-btn");
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click();
     }
@@ -429,6 +429,78 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
       path: path.join(screenshotsDir, "easy-mode-deactivated.png"),
     });
     console.log("Easy Mode E2E test passed successfully!");
+  });
+
+  test("should show expert mode individual toggles and restrict features accordingly", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Expert Features E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Click Settings icon in header
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn");
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 });
+    await settingsNavBtn.click();
+
+    // 3. Verify all expert feature toggles are visible
+    const toggles = [
+      "stack",
+      "slot",
+      "rarity",
+      "tags",
+      "categories",
+      "multicard",
+      "cardediting",
+      "multiimage"
+    ];
+    for (const toggleId of toggles) {
+      const toggle = spFrame.locator(`#expert-feature-${toggleId}-btn`);
+      await expect(toggle).toBeVisible({ timeout: 10000 });
+    }
+
+    // 4. Capture screenshot of settings tab with expert toggles
+    await page.screenshot({
+      path: path.join(screenshotsDir, "expert-features-toggles.png"),
+    });
+    console.log("Expert features toggles screenshot saved.");
+
+    // 5. Disable 'slot' and 'categories'
+    console.log("Disabling slot and categories features...");
+    const slotToggle = spFrame.locator("#expert-feature-slot-btn");
+    const categoriesToggle = spFrame.locator("#expert-feature-categories-btn");
+    await slotToggle.click();
+    await categoriesToggle.click();
+    await page.waitForTimeout(500);
+
+    // 6. Navigate to Library tab and verify Category bar is hidden
+    const libraryTabBtn = spFrame.locator("nav button:has-text('Library')");
+    await libraryTabBtn.click();
+    await page.waitForTimeout(500);
+
+    const categoryRow = spFrame.locator("text=Manage Categories");
+    await expect(categoryRow).not.toBeVisible();
+
+    // 7. Verify SlotVariablesSection (e.g. text 'Slot Variables') is not visible on Workbench tab
+    const workbenchTabBtn = spFrame.locator("nav button:has-text('Workbench')");
+    await workbenchTabBtn.click();
+    await page.waitForTimeout(500);
+
+    const slotVariablesTitle = spFrame.locator("text=Slot Variables");
+    await expect(slotVariablesTitle).not.toBeVisible();
+
+    // 8. Capture screenshot showing slot features disabled on workbench
+    await page.screenshot({
+      path: path.join(screenshotsDir, "expert-features-disabled-workbench.png"),
+    });
+
+    console.log("Expert features toggles E2E test passed successfully!");
   });
 
   test("should allow changing display language and verify localization in UI", async ({ page }) => {

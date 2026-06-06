@@ -3,6 +3,7 @@ import type { PromptSegment } from "../../lib/db-schema"
 import { cn } from "../../lib/utils"
 import { RARITY_CONFIG, type RarityTier } from "../../lib/rarity-config"
 import { X } from "lucide-react"
+import { useSettings } from "../../contexts/SettingsContext"
 
 /**
  * プロンプトのセグメント（テキスト、スロット、チップ）を視覚的に表現するバブルコンポーネント。
@@ -28,6 +29,7 @@ export const PromptBubble: React.FC<PromptBubbleProps> = ({
   tier,
   className,
 }) => {
+  const { expertFeatures } = useSettings()
   const rarityConfig = tier ? RARITY_CONFIG[tier] : null
 
   const bubbleClasses = cn(
@@ -54,7 +56,7 @@ export const PromptBubble: React.FC<PromptBubbleProps> = ({
         return (
           <div className="flex items-center gap-1">
             <span className="max-w-[150px] truncate">{segment.value}</span>
-            {onClick && (
+            {onClick && expertFeatures.slot && (
               <span className="text-[8px] uppercase opacity-0 group-hover:opacity-40 font-bold ml-1 transition-opacity">
                 To Slot
               </span>

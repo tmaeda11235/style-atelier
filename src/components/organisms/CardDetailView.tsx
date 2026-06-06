@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { StyleCard, PromptSegment } from "../../lib/db-schema";
 import { PromptBubbleEditor } from "./PromptBubbleEditor";
+import { PromptBubble } from "../molecules/PromptBubble";
 import iconUrl from "url:../../../assets/icon.png";
 import { ParameterEditor } from "./ParameterEditor";
 import { RaritySelector } from "../molecules/RaritySelector";
@@ -16,6 +17,7 @@ import { exportCardAsImage } from "../../lib/export-utils";
 import { TagEditor } from "../molecules/TagEditor";
 import { AssociatedImageGallery } from "../molecules/AssociatedImageGallery";
 import { createThumbnailDataUrl } from "../../lib/image-utils";
+import { useSettings } from "../../contexts/SettingsContext";
 
 
 /**
@@ -54,6 +56,7 @@ export function CardDetailView({
 }: CardDetailViewProps) {
   const { pinnedCards } = useHand();
   const hasPinnedCards = pinnedCards.length > 0;
+  const { expertFeatures } = useSettings();
 
   const categoriesList = useLiveQuery(() => db.getAllCategories()) || [];
 
@@ -74,6 +77,7 @@ export function CardDetailView({
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [parents, setParents] = useState<(StyleCard | null)[]>([]);
+  const hasParams = Object.values(parameters).some(v => Array.isArray(v) ? v.length > 0 : !!v);
 
   useEffect(() => {
     const fetchParents = async () => {
@@ -232,25 +236,29 @@ export function CardDetailView({
               onChange={(e) => setName(e.target.value)}
               placeholder="Card Name"
               className="font-bold text-slate-800 text-sm"
+              disabled={!expertFeatures.cardEditing}
             />
           </div>
 
           {/* Category Selector */}
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full text-sm border rounded bg-white p-2"
-            >
-              <option value="">No Category</option>
-              {categoriesList.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.iconEmoji || "🖼️"} {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {expertFeatures.categories && (
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full text-sm border rounded bg-white p-2"
+                disabled={!expertFeatures.cardEditing}
+              >
+                <option value="">No Category</option>
+                {categoriesList.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.iconEmoji || "🖼️"} {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Color Palette Display */}
           {(card.dominantColor || card.accentColor) && (
@@ -282,7 +290,26 @@ export function CardDetailView({
           )}
 
           {/* Tags Editor */}
-          <TagEditor tags={tags} onChange={setTags} />
+          {expertFeatures.tags && (
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Tags</label>
+              {expertFeatures.cardEditing ? (
+                <TagEditor tags={tags} onChange={setTags} />
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                  {tags.length === 0 && <span className="text-xs text-slate-400 italic">No tags.</span>}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Genealogy (Ancestry) Section */}
@@ -363,28 +390,63 @@ export function CardDetailView({
         </div>
 
         {/* Gallery & Thumbnail Selector Section */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm">
-          <AssociatedImageGallery
-            images={images}
-            selectedThumbs={selectedThumbs}
-            onToggleThumbnail={handleToggleThumbnail}
-          />
-        </div>
+        {expertFeatures.multiImage && (
+          <div className="p-4 bg-white border rounded-lg shadow-sm">
+            <AssociatedImageGallery
+              images={images}
+              selectedThumbs={selectedThumbs}
+              onToggleThumbnail={handleToggleThumbnail}
+            />
+          </div>
+        )}
 
         {/* Prompt segments bubble editor */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Prompt Recipe</h3>
-          <PromptBubbleEditor
-            initialSegments={promptSegments}
-            onChange={setPromptSegments}
-            tier={tier}
-          />
+          {expertFeatures.cardEditing ? (
+            <PromptBubbleEditor
+              initialSegments={promptSegments}
+              onChange={setPromptSegments}
+              tier={tier}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
+              {promptSegments.map((segment, index) => (
+                <PromptBubble
+                  key={index}
+                  segment={segment}
+                  tier={segment.type === "text" ? undefined : tier}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Parameters editor */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Parameters</h3>
-          <ParameterEditor parameters={parameters} onChange={setParameters} />
+          {expertFeatures.cardEditing ? (
+            <ParameterEditor parameters={parameters} onChange={setParameters} />
+          ) : (
+            <div className="space-y-2 bg-slate-50/50 p-3 rounded-lg border border-slate-100 text-xs">
+              {parameters.ar && (
+                <div><span className="font-bold text-slate-500">Aspect Ratio:</span> {parameters.ar}</div>
+              )}
+              {parameters.p && parameters.p.length > 0 && (
+                <div><span className="font-bold text-slate-500">Personalization (--p):</span> {parameters.p.join(", ")}</div>
+              )}
+              {parameters.imagePrompts && parameters.imagePrompts.length > 0 && (
+                <div><span className="font-bold text-slate-500">Image Prompts:</span> {parameters.imagePrompts.join(", ")}</div>
+              )}
+              {parameters.sref && parameters.sref.length > 0 && (
+                <div><span className="font-bold text-slate-500">Style Reference (--sref):</span> {parameters.sref.join(", ")}</div>
+              )}
+              {parameters.cref && parameters.cref.length > 0 && (
+                <div><span className="font-bold text-slate-500">Character Reference (--cref):</span> {parameters.cref.join(", ")}</div>
+              )}
+              {!hasParams && <div className="text-slate-400 italic">No parameters defined.</div>}
+            </div>
+          )}
         </div>
 
         {/* Sealing options */}
@@ -397,6 +459,7 @@ export function CardDetailView({
                 id="detail-hide-sref"
                 checked={isSrefHidden}
                 onChange={(e) => setIsSrefHidden(e.target.checked)}
+                disabled={!expertFeatures.cardEditing}
               />
               <label htmlFor="detail-hide-sref" className="text-xs text-slate-600">
                 Hide --sref when sharing
@@ -408,6 +471,7 @@ export function CardDetailView({
                 id="detail-hide-p"
                 checked={isPHidden}
                 onChange={(e) => setIsPHidden(e.target.checked)}
+                disabled={!expertFeatures.cardEditing}
               />
               <label htmlFor="detail-hide-p" className="text-xs text-slate-600">
                 Hide --p when sharing
@@ -417,10 +481,12 @@ export function CardDetailView({
         </div>
 
         {/* Rarity selector */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Rarity & Frame</h3>
-          <RaritySelector selected={tier} onSelect={setTier} />
-        </div>
+        {expertFeatures.rarity && (
+          <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Rarity & Frame</h3>
+            <RaritySelector selected={tier} onSelect={setTier} />
+          </div>
+        )}
       </div>
 
       {/* Footer Actions */}
@@ -460,13 +526,15 @@ export function CardDetailView({
             <Send className="w-4 h-4" />
             Inject
           </Button>
-          <Button
-            onClick={handleSaveChanges}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5"
-          >
-            <Save className="w-4 h-4" />
-            Save
-          </Button>
+          {expertFeatures.cardEditing && (
+            <Button
+              onClick={handleSaveChanges}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5"
+            >
+              <Save className="w-4 h-4" />
+              Save
+            </Button>
+          )}
         </div>
       </div>
 

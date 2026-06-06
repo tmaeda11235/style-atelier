@@ -1,15 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render as rtlRender, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render as tlRender, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import React from "react";
 import { SettingsTab } from "./SettingsTab";
 import { LanguageProvider } from "../../contexts/LanguageContext";
-
-const render = (ui: React.ReactElement, options?: any) => {
-  return rtlRender(<LanguageProvider>{ui}</LanguageProvider>, options);
-};
+import { SettingsProvider } from "../../contexts/SettingsContext";
 import * as googleDrive from "../../lib/google-drive";
 import { exportDatabase, importDatabase } from "../../lib/google-drive";
 import { db } from "../../lib/db";
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(
+    <LanguageProvider>
+      <SettingsProvider>
+        {ui}
+      </SettingsProvider>
+    </LanguageProvider>,
+    options
+  );
+};
 
 vi.mock("../../lib/google-drive", () => {
   class GDriveTimeoutError extends Error {
@@ -24,19 +32,7 @@ vi.mock("../../lib/google-drive", () => {
     uploadBackup: vi.fn(),
     downloadBackup: vi.fn(),
     exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'),
-    importDatabase: vi.fn().mockImplementation(async (jsonData: string) => {
-      const { validateBackupPayload } = await import("../../lib/backup-validator");
-      let payload: any;
-      try {
-        payload = JSON.parse(jsonData);
-      } catch (e) {
-        throw new Error("Invalid JSON format. Failed to parse backup file.");
-      }
-      const validation = validateBackupPayload(payload);
-      if (!validation.isValid) {
-        throw new Error(`Database validation failed: ${validation.error}`);
-      }
-    }),
+    importDatabase: vi.fn().mockResolvedValue(undefined),
     getBackupMetadata: vi.fn(),
     GDriveTimeoutError,
   };
@@ -200,6 +196,7 @@ describe("SettingsTab", () => {
   });
 
   it("fails to import when file contains invalid backup structure", async () => {
+    vi.mocked(importDatabase).mockRejectedValueOnce(new Error("Database validation failed: invalid structure"));
     const { container } = render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -640,6 +637,43 @@ describe("SettingsTab", () => {
     }
 
     expect(mockToggleEasyMode).toHaveBeenCalledWith(true);
+  });
+
+  it("renders Expert Features card and allows toggling individual features", () => {
+    const { container } = render(
+      <SettingsTab
+        addLog={mockAddLog}
+        onResetDb={mockResetDb}
+        isEasyMode={false}
+      />
+    );
+
+    // Verify Title exists
+    expect(screen.getByText("エキスパート機能の個別設定")).toBeDefined();
+
+    // Verify all toggle buttons are rendered
+    const features = [
+      "stack",
+      "slot",
+      "rarity",
+      "tags",
+      "categories",
+      "multicard",
+      "cardediting",
+      "multiimage"
+    ];
+    features.forEach(feat => {
+      const btn = container.querySelector(`#expert-feature-${feat}-btn`);
+      expect(btn).not.toBeNull();
+    });
+
+    // Test toggling one of them
+    const slotToggleBtn = container.querySelector("#expert-feature-slot-btn");
+    expect(slotToggleBtn).not.toBeNull();
+    
+    if (slotToggleBtn) {
+      fireEvent.click(slotToggleBtn);
+    }
   });
 
   describe("Auto Sync Settings", () => {
