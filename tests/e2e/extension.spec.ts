@@ -589,4 +589,551 @@ test.describe("Style Atelier Sandbox E2E Tests", () => {
       throw error;
     }
   });
+
+  test("should allow minting a new card from History (Scenario 2)", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Minting E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Clear and seed history items to guarantee the item is available
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      await database.historyItems.clear();
+      await database.historyItems.add({
+        id: "mock-history-item-to-mint",
+        fullCommand: "a beautiful cyberpunk warrior --ar 16:9 --sref https://example.com/sref1 --p p-code",
+        imageUrl: "./index_files/0_0_640_N.webp",
+        timestamp: Date.now()
+      });
+    });
+
+    // 3. Switch to History tab
+    const historyTabButton = spFrame.locator("button:has-text('History')");
+    await expect(historyTabButton).toBeVisible();
+    await historyTabButton.click();
+
+    // 4. Click "Mint Card" button
+    const mintCardBtn = spFrame.locator("button:has-text('Mint Card')").first();
+    await expect(mintCardBtn).toBeVisible({ timeout: 10000 });
+    await mintCardBtn.click();
+
+    // 5. Verify minting view container is visible
+    const mintingView = spFrame.locator("[data-testid='minting-view-container']");
+    await expect(mintingView).toBeVisible({ timeout: 10000 });
+
+    // 6. Enter Custom Name
+    const nameInput = spFrame.locator("input[placeholder='Add details...']");
+    await nameInput.fill("Warrior Note");
+
+    // 7. Select rarity "Epic"
+    const rarityBtn = spFrame.locator("button:has-text('Epic')");
+    await expect(rarityBtn).toBeVisible();
+    await rarityBtn.click();
+
+    // 8. Click Save Card
+    const saveCardBtn = spFrame.locator("button:has-text('Save Card')");
+    await expect(saveCardBtn).toBeVisible();
+    await saveCardBtn.click();
+
+    // 9. Verify minting view is closed
+    await expect(mintingView).not.toBeVisible({ timeout: 10000 });
+
+    // 10. Switch to Library tab and verify the card is there
+    const libraryTabButton = spFrame.locator("button:has-text('Library')");
+    await libraryTabButton.click();
+    await page.waitForTimeout(1000); // wait for DB query
+    const cardTitle = spFrame.locator("text=Warrior Note").first();
+    await expect(cardTitle).toBeVisible({ timeout: 10000 });
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "mint-success.png"),
+    });
+  });
+
+  test("should associate dropped history image of same job ID and allow editing thumbnails (Scenario 3)", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for same job image association E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Seed a Style Card in DB
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      await database.styleCards.clear();
+      await database.styleCards.add({
+        id: "test-card-same-job",
+        name: "Same Job Test Card",
+        jobId: "job-id-12345",
+        promptSegments: [{ type: "text", value: "testing same job" }],
+        parameters: {},
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common",
+        isFavorite: false,
+        isPinned: false,
+        usageCount: 0,
+        tags: [],
+        dominantColor: "#3b82f6",
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+        images: ["https://example.com/original-image.png"],
+        selectedThumbnails: ["https://example.com/original-image.png"],
+        associatedJobIds: []
+      });
+    });
+
+    // 3. Dispatch a drop event with the same job ID but a new image URL
+    console.log("Simulating drag-and-drop of an image from the same job ID...");
+    const dropZone = spFrame.locator(".h-full.relative.overflow-hidden");
+    const imgData = {
+      id: "job-id-12345", // Same job ID!
+      fullCommand: "testing same job --ar 16:9",
+      imageUrl: "https://example.com/new-associated-image.png", // Different image URL!
+      timestamp: Date.now()
+    };
+    await dropZone.evaluate(async (element, item) => {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("application/json", JSON.stringify(item));
+      const dragOverEvent = new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer });
+      element.dispatchEvent(dragOverEvent);
+      const dropEvent = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer });
+      element.dispatchEvent(dropEvent);
+    }, imgData);
+
+    // 4. Verify notification toast shows card name updated
+    const notification = spFrame.locator("text=Same Job Test Card").first();
+    await expect(notification).toBeVisible({ timeout: 10000 });
+
+    // 5. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')");
+    await libraryTabButton.click();
+    await page.waitForTimeout(1000); // wait for DB query
+
+    // 6. Click edit button on the card
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first();
+    await expect(editBtn).toBeVisible();
+    await editBtn.click();
+
+    // 7. Verify CardDetailView is open
+    const detailTitle = spFrame.locator("h2:has-text('Card Details')");
+    await expect(detailTitle).toBeVisible();
+
+    // 8. Verify Associated Images count is 2
+    const associatedTitle = spFrame.locator("h3:has-text('Associated Images (2)')");
+    await expect(associatedTitle).toBeVisible({ timeout: 10000 });
+
+    // 9. Click on the 2nd image (newly added) to select it as thumbnail
+    const secondImageCell = spFrame.locator("img[alt='Card Image 2']");
+    await expect(secondImageCell).toBeVisible();
+    await secondImageCell.click();
+
+    // 10. Verify selected thumbnails count is 2 / 4
+    const selectedBadge = spFrame.locator("text=Selected: 2 / 4");
+    await expect(selectedBadge).toBeVisible();
+
+    // 11. Click Save
+    const saveBtn = spFrame.locator("button:has-text('Save')");
+    await saveBtn.click();
+
+    // 12. Verify CardDetailView is closed
+    await expect(detailTitle).not.toBeVisible({ timeout: 10000 });
+
+    // 13. Verify in DB that selectedThumbnails contains the new URL
+    const selectedThumbnailsInDb = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      const card = await database.styleCards.get("test-card-same-job");
+      return card?.selectedThumbnails || [];
+    });
+    expect(selectedThumbnailsInDb).toContain("https://example.com/new-associated-image.png");
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "same-job-success.png"),
+    });
+  });
+
+  test("should filter card list by tag search in Library (Scenario 4)", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for tag search E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Seed two cards with different tags
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      await database.styleCards.clear();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-vintage",
+          name: "Vintage Card",
+          promptSegments: [{ type: "text", value: "vintage prompt" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: ["vintage", "retro"],
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-futuristic",
+          name: "Futuristic Card",
+          promptSegments: [{ type: "text", value: "futuristic prompt" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          tags: ["cyberpunk", "neon"],
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        }
+      ]);
+    });
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')");
+    await libraryTabButton.click();
+    await page.waitForTimeout(1000); // wait for DB queries
+
+    // 4. Fill search field with "cyberpunk"
+    const searchInput = spFrame.locator("input[placeholder*='Search']").first();
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill("cyberpunk");
+    await page.waitForTimeout(500); // wait for search filtering
+
+    // 5. Verify "Futuristic Card" is visible, "Vintage Card" is NOT visible
+    await expect(spFrame.locator("text=Futuristic Card")).toBeVisible();
+    await expect(spFrame.locator("text=Vintage Card")).not.toBeVisible();
+
+    // 6. Clear search, type "vintage"
+    await searchInput.fill("vintage");
+    await page.waitForTimeout(500); // wait for search filtering
+
+    // 7. Verify "Vintage Card" is visible, "Futuristic Card" is NOT visible
+    await expect(spFrame.locator("text=Vintage Card")).toBeVisible();
+    await expect(spFrame.locator("text=Futuristic Card")).not.toBeVisible();
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "search-success.png"),
+    });
+  });
+
+  test("should support Workbench-Single flow (Scenario 5)", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Workbench-Single E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const mjFrame = page.frameLocator("#midjourney-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Seed 3 cards, all pinned (so they are in the Hand)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      await database.styleCards.clear();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-w1",
+          name: "Card W1",
+          promptSegments: [
+            { type: "text", value: "cyberpunk cat" },
+            { type: "slot", label: "Color", default: "blue" }
+          ],
+          parameters: { sref: ["https://example.com/sref1"] },
+          masking: { isSrefHidden: false, isPHidden: false },
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#3b82f6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-w2",
+          name: "Card W2",
+          promptSegments: [{ type: "text", value: "neon glow" }],
+          parameters: {},
+          masking: {},
+          tier: "Rare",
+          isPinned: true,
+          dominantColor: "#ec4899",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-w3",
+          name: "Card W3",
+          promptSegments: [{ type: "text", value: "synthwave sun" }],
+          parameters: {},
+          masking: {},
+          tier: "Epic",
+          isPinned: true,
+          dominantColor: "#8b5cf6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        }
+      ]);
+    });
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')");
+    await workbenchTabButton.click();
+    await page.waitForTimeout(1000); // wait for DB queries
+
+    // Unpin Card W2 and Card W3 using the X button on their thumbnails in the HandBar
+    console.log("Unpinning Card W2 and Card W3...");
+    const cardW2 = spFrame.locator("#handbar-root .cursor-pointer").nth(1);
+    await cardW2.hover();
+    await cardW2.locator("button").last().click();
+
+    const cardW3 = spFrame.locator("#handbar-root .cursor-pointer").nth(1);
+    await cardW3.hover();
+    await cardW3.locator("button").last().click();
+
+    // Now only 1 card (Card W1) is in the Hand/Workbench
+    const activeWorkbenchCards = spFrame.locator("#handbar-root .cursor-pointer");
+    await expect(activeWorkbenchCards).toHaveCount(1);
+
+    // 4. Fill in slot value for "Color"
+    const slotInput = spFrame.locator("input[placeholder='blue']");
+    await expect(slotInput).toBeVisible({ timeout: 10000 });
+    await slotInput.fill("purple");
+
+    // 5. Try on Midjourney (Inject)
+    const injectBtn = spFrame.locator("button:has-text('Try on Midjourney')");
+    await expect(injectBtn).toBeVisible();
+    await injectBtn.click();
+
+    // 6. Verify prompt in Midjourney mock textarea
+    const mjTextarea = mjFrame.locator('textarea, [role="textbox"], [data-testid="prompt-input"]').first();
+    await expect(mjTextarea).toHaveValue("cyberpunk cat, purple --sref https://example.com/sref1", { timeout: 10000 });
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "workbench-single-success.png"),
+    });
+  });
+
+  test("should support Workbench-Double flow (Scenario 6)", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Workbench-Double E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const mjFrame = page.frameLocator("#midjourney-frame");
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Seed 3 cards, all pinned (so they are in the Hand)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      await database.styleCards.clear();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-w1",
+          name: "Card W1",
+          promptSegments: [
+            { type: "text", value: "cyberpunk cat" },
+            { type: "slot", label: "Color", default: "blue" }
+          ],
+          parameters: { sref: ["https://example.com/sref1"] },
+          masking: { isSrefHidden: false, isPHidden: false },
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#3b82f6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-w2",
+          name: "Card W2",
+          promptSegments: [{ type: "text", value: "neon glow" }],
+          parameters: { p: ["p-code-w2"] },
+          masking: { isSrefHidden: false, isPHidden: false },
+          tier: "Rare",
+          isPinned: true,
+          dominantColor: "#ec4899",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-w3",
+          name: "Card W3",
+          promptSegments: [{ type: "text", value: "synthwave sun" }],
+          parameters: {},
+          masking: {},
+          tier: "Epic",
+          isPinned: true,
+          dominantColor: "#8b5cf6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        }
+      ]);
+    });
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')");
+    await workbenchTabButton.click();
+    await page.waitForTimeout(1000); // wait for DB queries
+
+    // Workbench-Double: select two cards (W1 and W2). So unpin Card W3 (index 2).
+    console.log("Unpinning Card W3...");
+    const cardW3 = spFrame.locator("#handbar-root .cursor-pointer").nth(2);
+    await cardW3.hover();
+    await cardW3.locator("button").last().click();
+
+    // Now 2 cards are in the Hand/Workbench.
+    const activeWorkbenchCards = spFrame.locator("#handbar-root .cursor-pointer");
+    await expect(activeWorkbenchCards).toHaveCount(2);
+
+    // 4. Fill in slot value for "Color"
+    const slotInput = spFrame.locator("input[placeholder='blue']");
+    await expect(slotInput).toBeVisible({ timeout: 10000 });
+    await slotInput.fill("yellow");
+
+    // 5. Try on Midjourney (Inject)
+    const injectBtn = spFrame.locator("button:has-text('Try on Midjourney')");
+    await expect(injectBtn).toBeVisible();
+    await injectBtn.click();
+
+    // 6. Verify prompt in Midjourney mock textarea
+    const mjTextarea = mjFrame.locator('textarea, [role="textbox"], [data-testid="prompt-input"]').first();
+    await expect(mjTextarea).toHaveValue("cyberpunk cat, yellow, neon glow --sref https://example.com/sref1 --p p-code-w2", { timeout: 10000 });
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "workbench-double-success.png"),
+    });
+  });
+
+  test("should support Workbench-Triple flow (Scenario 7)", async ({ page }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots");
+    console.log("Navigating to sandbox page for Workbench-Triple E2E test...");
+    await page.goto("/tests/sandbox/index.html");
+
+    const spFrame = page.frameLocator("#sidepanel-frame");
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("text=スキップ");
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click();
+    }
+
+    // 2. Seed 3 cards, all pinned (so they are in the Hand)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      await database.styleCards.clear();
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-w1",
+          name: "Card W1",
+          promptSegments: [{ type: "text", value: "cyberpunk cat" }],
+          parameters: { sref: ["https://example.com/sref1"] },
+          masking: {},
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#3b82f6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+          usageCount: 5
+        },
+        {
+          id: "card-w2",
+          name: "Card W2",
+          promptSegments: [{ type: "text", value: "neon glow" }],
+          parameters: {},
+          masking: {},
+          tier: "Rare",
+          isPinned: true,
+          dominantColor: "#ec4899",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+          usageCount: 3
+        },
+        {
+          id: "card-w3",
+          name: "Card W3",
+          promptSegments: [{ type: "text", value: "synthwave sun" }],
+          parameters: {},
+          masking: {},
+          tier: "Epic",
+          isPinned: true,
+          dominantColor: "#8b5cf6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+          usageCount: 2
+        }
+      ]);
+    });
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')");
+    await workbenchTabButton.click();
+    await page.waitForTimeout(1000); // wait for DB queries
+
+    // 4. Click "Merge Stack" button in the HandBar
+    const mergeStackBtn = spFrame.locator("[data-testid='handbar-merge-btn']");
+    await expect(mergeStackBtn).toBeVisible({ timeout: 10000 });
+    await mergeStackBtn.click();
+
+    // 5. Verify Merge Modal is open
+    const modalTitle = spFrame.locator("h3:has-text('Merge Card Stack')");
+    await expect(modalTitle).toBeVisible();
+
+    // 6. Base Card W1 is selected by default (index 0).
+    // Let's verify that Card W2 is in the Material list and is set to "Consume" by default.
+    // And Card W3 is also in the Material list and is set to "Consume". We click on Card W3's "Consume" button to change it to "Keep".
+    console.log("Setting Card W3 integration to Keep...");
+    const cardW3Row = spFrame.locator(".space-y-2").last().locator("div", { has: spFrame.locator("p", { hasText: "Card W3" }) }).first();
+    const consumeBtn = cardW3Row.locator("button:has-text('Consume')");
+    await expect(consumeBtn).toBeVisible();
+    await consumeBtn.click();
+
+    // Verify it is now "Keep"
+    await expect(cardW3Row.locator("button:has-text('Keep')")).toBeVisible();
+
+    // 7. Click "Merge Stack" button inside the modal to execute merge
+    const modalExecuteBtn = spFrame.locator("button:has-text('Merge Stack')").nth(1);
+    await modalExecuteBtn.click();
+
+    // 8. Verify modal is closed
+    await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000); // wait for DB transaction
+
+    // 9. Verify in DB that W1 usage count is combined (5 + 3 = 8), W2 is deleted, and W3 remains.
+    const results = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db;
+      const w1 = await database.styleCards.get("card-w1");
+      const w2 = await database.styleCards.get("card-w2");
+      const w3 = await database.styleCards.get("card-w3");
+      return {
+        w1Exists: !!w1,
+        w1Usage: w1?.usageCount,
+        w2Exists: !!w2,
+        w3Exists: !!w3
+      };
+    });
+
+    console.log("Merge verification results:", results);
+    expect(results.w1Exists).toBe(true);
+    expect(results.w1Usage).toBe(8);
+    expect(results.w2Exists).toBe(false);
+    expect(results.w3Exists).toBe(true);
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "workbench-triple-success.png"),
+    });
+  });
 });

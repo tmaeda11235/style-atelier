@@ -160,6 +160,10 @@ export const Workbench: React.FC<WorkbenchProps> = ({ onStartVariationMinting, a
           const combinedIP = [...(parent.parameters.imagePrompts || []), ...(nextParams.imagePrompts || [])];
           nextParams.imagePrompts = Array.from(new Set(combinedIP)).slice(0, 5);
         }
+        if (parent.parameters?.p) {
+          const combinedP = [...(parent.parameters.p || []), ...(nextParams.p || [])];
+          nextParams.p = Array.from(new Set(combinedP)).slice(0, 5);
+        }
       });
     }
 
