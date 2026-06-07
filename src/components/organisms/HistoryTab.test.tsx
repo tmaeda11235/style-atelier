@@ -1,12 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import React from "react"
-import { HistoryTab } from "./HistoryTab"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { LanguageProvider } from "../../contexts/LanguageContext"
 import { useHistory } from "../../hooks/useHistory"
 import type { HistoryItem } from "../../lib/db-schema"
+import { HistoryTab } from "./HistoryTab"
 
 vi.mock("../../hooks/useHistory", () => ({
-  useHistory: vi.fn(),
+  useHistory: vi.fn()
 }))
 
 const mockHistoryItems: HistoryItem[] = [
@@ -20,8 +22,8 @@ const mockHistoryItems: HistoryItem[] = [
     imagePrompts: [],
     promptSegments: [],
     parameters: {},
-    dominantColor: "#000000",
-  },
+    dominantColor: "#000000"
+  }
 ]
 
 describe("HistoryTab", () => {
@@ -29,18 +31,25 @@ describe("HistoryTab", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.setItem("style-atelier-language", "ja")
   })
 
   it("renders empty container while loading", () => {
     vi.mocked(useHistory).mockReturnValue({
       historyItems: undefined,
       loadMore: vi.fn(),
-      hasMore: false,
+      hasMore: false
     })
 
-    const { container } = render(<HistoryTab onStartMinting={mockStartMinting} />)
+    const { container } = render(
+      <LanguageProvider>
+        <HistoryTab onStartMinting={mockStartMinting} />
+      </LanguageProvider>
+    )
     expect(container.firstChild).not.toBeNull()
-    const dropZone = container.querySelector('[data-tutorial="history-drop-zone"]')
+    const dropZone = container.querySelector(
+      '[data-tutorial="history-drop-zone"]'
+    )
     expect(dropZone).toBeDefined()
     expect(dropZone?.childNodes.length).toBe(0)
   })
@@ -49,12 +58,18 @@ describe("HistoryTab", () => {
     vi.mocked(useHistory).mockReturnValue({
       historyItems: [],
       loadMore: vi.fn(),
-      hasMore: false,
+      hasMore: false
     })
 
-    render(<HistoryTab onStartMinting={mockStartMinting} />)
+    render(
+      <LanguageProvider>
+        <HistoryTab onStartMinting={mockStartMinting} />
+      </LanguageProvider>
+    )
     expect(screen.getByText("履歴がありません")).toBeDefined()
-    expect(screen.getByText(/Midjourneyのプロンプト入力エリアから画像/)).toBeDefined()
+    expect(
+      screen.getByText(/Midjourneyのプロンプト入力エリアから画像/)
+    ).toBeDefined()
     expect(screen.getByRole("link", { name: "Midjourneyを開く" })).toBeDefined()
   })
 
@@ -62,10 +77,14 @@ describe("HistoryTab", () => {
     vi.mocked(useHistory).mockReturnValue({
       historyItems: mockHistoryItems,
       loadMore: vi.fn(),
-      hasMore: false,
+      hasMore: false
     })
 
-    render(<HistoryTab onStartMinting={mockStartMinting} />)
+    render(
+      <LanguageProvider>
+        <HistoryTab onStartMinting={mockStartMinting} />
+      </LanguageProvider>
+    )
     expect(screen.getByText("a majestic golden castle")).toBeDefined()
   })
 })

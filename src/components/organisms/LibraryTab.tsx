@@ -1,15 +1,17 @@
+import { BookUp2, Search, Tag } from "lucide-react"
 import React, { useState } from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import { useSettings } from "../../contexts/SettingsContext"
+import { useTutorial } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
-import { RARITY_CONFIG } from "../../lib/rarity-config"
-import { SearchField } from "../molecules/SearchField"
-import { CardThumbnail } from "../molecules/CardThumbnail"
 import type { StyleCard } from "../../lib/db-schema"
-import { Tag, BookUp2, Search } from "lucide-react"
+import { RARITY_CONFIG } from "../../lib/rarity-config"
+import { CardThumbnail } from "../molecules/CardThumbnail"
+import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+import { SearchField } from "../molecules/SearchField"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 import { ShareCardModal } from "./ShareCardModal"
-import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
-import { useTutorial } from "../../contexts/TutorialContext"
-import { useSettings } from "../../contexts/SettingsContext"
 
 interface LibraryTabProps {
   addLog: (msg: string) => void
@@ -26,12 +28,14 @@ export function LibraryTab({
   onOpenDetailCard,
   onNavigateToWorkbench,
   isEasyMode = false,
-  onOpenSimpleWorkbench,
+  onOpenSimpleWorkbench
 }: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
   const { expertFeatures } = useSettings()
+  const { t: i18n } = useLanguage()
+  const t = i18n.libraryTab
 
   const {
     styleCards,
@@ -49,11 +53,15 @@ export function LibraryTab({
     setSortBy,
     allSrefs,
     categories,
-    allCards,
+    allCards
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
   const colorOptions = [
-    { value: "All", label: "All Colors", bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)" },
+    {
+      value: "All",
+      label: "All Colors",
+      bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)"
+    },
     { value: "Red", label: "Red", bg: "#ef4444" },
     { value: "Orange", label: "Orange", bg: "#f97316" },
     { value: "Yellow", label: "Yellow", bg: "#eab308" },
@@ -65,7 +73,7 @@ export function LibraryTab({
     { value: "Brown", label: "Brown", bg: "#78350f" },
     { value: "White", label: "White", bg: "#ffffff" },
     { value: "Gray", label: "Gray", bg: "#6b7280" },
-    { value: "Black", label: "Black", bg: "#09090b" },
+    { value: "Black", label: "Black", bg: "#09090b" }
   ]
 
   return (
@@ -83,8 +91,7 @@ export function LibraryTab({
             <select
               value={rarityFilter}
               onChange={(e) => setRarityFilter(e.target.value as any)}
-              className="flex-1 px-1 py-1 text-[10px] border rounded bg-white"
-            >
+              className="flex-1 px-1 py-1 text-[10px] border rounded bg-white">
               <option value="All">All Rarities</option>
               <option value="Common">Common</option>
               <option value="Rare">Rare</option>
@@ -95,8 +102,7 @@ export function LibraryTab({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="flex-1 px-1 py-1 text-[10px] border rounded bg-white"
-          >
+            className="flex-1 px-1 py-1 text-[10px] border rounded bg-white">
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
             {expertFeatures.rarity && <option value="rarity">Rarity</option>}
@@ -107,7 +113,9 @@ export function LibraryTab({
 
         {/* Color Palette Filter */}
         <div className="flex gap-1 items-center overflow-x-auto pb-1 mt-1.5 scrollbar-none">
-          <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">Color:</span>
+          <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">
+            Color:
+          </span>
           {colorOptions.map((colorOpt) => {
             const isSelected = colorFilter === colorOpt.value
             return (
@@ -115,20 +123,23 @@ export function LibraryTab({
                 key={colorOpt.value}
                 onClick={() => setColorFilter(colorOpt.value as any)}
                 className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
-                  isSelected ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5" : "hover:scale-105"
+                  isSelected
+                    ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5"
+                    : "hover:scale-105"
                 }`}
                 style={{
                   background: colorOpt.bg,
-                  borderColor: colorOpt.value === "White" ? "#cbd5e1" : "transparent",
+                  borderColor:
+                    colorOpt.value === "White" ? "#cbd5e1" : "transparent"
                 }}
-                title={colorOpt.label}
-              >
+                title={colorOpt.label}>
                 {isSelected && (
                   <span
                     className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
-                      colorOpt.value === "White" || colorOpt.value === "Yellow" ? "text-slate-800" : "text-white"
-                    }`}
-                  >
+                      colorOpt.value === "White" || colorOpt.value === "Yellow"
+                        ? "text-slate-800"
+                        : "text-white"
+                    }`}>
                     ✓
                   </span>
                 )}
@@ -147,8 +158,7 @@ export function LibraryTab({
               categoryFilter === "All"
                 ? "bg-slate-800 border-slate-800 text-white shadow-sm"
                 : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-            }`}
-          >
+            }`}>
             All
           </button>
           {categories.map((cat) => (
@@ -159,8 +169,7 @@ export function LibraryTab({
                 categoryFilter === cat.id
                   ? "bg-blue-600 border-blue-600 text-white shadow-sm"
                   : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-              }`}
-            >
+              }`}>
               {cat.iconUrl ? (
                 <img
                   src={cat.iconUrl}
@@ -168,7 +177,9 @@ export function LibraryTab({
                   alt={cat.name}
                 />
               ) : (
-                <span className="text-[11px] leading-none">{cat.iconEmoji || "🖼️"}</span>
+                <span className="text-[11px] leading-none">
+                  {cat.iconEmoji || "🖼️"}
+                </span>
               )}
               <span>{cat.name}</span>
             </button>
@@ -177,15 +188,16 @@ export function LibraryTab({
           <button
             onClick={() => setIsCategoryModalOpen(true)}
             className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
-            title="Manage Categories"
-          >
+            title="Manage Categories">
             <Tag className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {styleCards !== undefined && styleCards.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3" data-tutorial="library-card-grid">
+        <div
+          className="grid grid-cols-2 gap-3"
+          data-tutorial="library-card-grid">
           {styleCards.map((card, idx) => {
             const config = RARITY_CONFIG[card.tier]
             const cardCategory = categories.find((c) => c.id === card.category)
@@ -201,9 +213,9 @@ export function LibraryTab({
                     advanceIfStep("card-to-hand")
                   }
                 }}
-                className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${config?.borderClass || "border-slate-200"
-                  } ${config?.glowClass || ""}`}
-              >
+                className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                  config?.borderClass || "border-slate-200"
+                } ${config?.glowClass || ""}`}>
                 <CardThumbnail
                   imageUrl={card.thumbnailData}
                   thumbnailImages={card.selectedThumbnails}
@@ -211,7 +223,9 @@ export function LibraryTab({
                   tier={card.tier}
                   isPinned={card.isPinned}
                   usageCount={card.usageCount}
-                  onPinClick={isEasyMode ? undefined : (e) => togglePin(card, e)}
+                  onPinClick={
+                    isEasyMode ? undefined : (e) => togglePin(card, e)
+                  }
                   onEditClick={(e) => {
                     e.stopPropagation()
                     onOpenDetailCard(card)
@@ -226,8 +240,11 @@ export function LibraryTab({
                   }}
                   category={cardCategory}
                 />
-                <div className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
-                  <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
+                <div
+                  className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
+                  <p className="text-xs font-bold text-slate-800 truncate">
+                    {card.name}
+                  </p>
                 </div>
               </div>
             )
@@ -235,14 +252,17 @@ export function LibraryTab({
         </div>
       ) : styleCards !== undefined ? (
         <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 rounded-xl border border-slate-200 border-dashed backdrop-blur-sm animate-in fade-in duration-300">
-          {allCards !== undefined && allCards.filter(c => !c.isVariable).length === 0 ? (
+          {allCards !== undefined &&
+          allCards.filter((c) => !c.isVariable).length === 0 ? (
             <>
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
                 <BookUp2 className="w-6 h-6 text-slate-500" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800 mb-1">スタイルカードがありません</h3>
+              <h3 className="text-sm font-bold text-slate-800 mb-1">
+                {t.emptyTitle}
+              </h3>
               <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed">
-                Historyタブから画像をドラッグ＆ドロップして、あなただけの特別なスタイルカードを作成しましょう！
+                {t.emptyDesc}
               </p>
             </>
           ) : (
@@ -250,9 +270,11 @@ export function LibraryTab({
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
                 <Search className="w-6 h-6 text-slate-500" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800 mb-1">カードが見つかりません</h3>
+              <h3 className="text-sm font-bold text-slate-800 mb-1">
+                {t.notFoundTitle}
+              </h3>
               <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed mb-4">
-                検索キーワードやフィルターの条件を変更するか、クリアしてください。
+                {t.notFoundDesc}
               </p>
               <button
                 onClick={() => {
@@ -260,9 +282,8 @@ export function LibraryTab({
                   setRarityFilter("All")
                   setCategoryFilter("All")
                 }}
-                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-sm"
-              >
-                フィルターをクリア
+                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-sm">
+                {t.clearFilters}
               </button>
             </>
           )}

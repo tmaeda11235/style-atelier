@@ -538,7 +538,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     console.log("Expert features toggles E2E test passed successfully!")
   })
 
-  test("should allow changing display language and verify localization in UI", async ({
+  test("should allow changing display language and verify localization in UI and Tabs", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -552,6 +552,18 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click()
     }
+
+    // Clear database to ensure empty states are shown
+    console.log("Clearing database to ensure empty states...")
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      if (database) {
+        await database.styleCards.clear()
+        await database.categories.clear()
+        await database.userSettings.clear()
+        await database.historyItems.clear()
+      }
+    })
 
     // 2. Open Settings Tab
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
@@ -572,6 +584,34 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const settingsTitleEn = spFrame.locator("h2:has-text('Settings')")
     await expect(settingsTitleEn).toBeVisible({ timeout: 5000 })
 
+    // Verify Tab English translations:
+    // A. History Tab empty title
+    const historyNavBtn = spFrame.locator("button[title='History']")
+    await historyNavBtn.click()
+    await page.waitForTimeout(300)
+    const historyEmptyEn = spFrame.locator("h3:has-text('No History')")
+    await expect(historyEmptyEn).toBeVisible()
+
+    // B. Library Tab empty title
+    const libraryNavBtn = spFrame.locator("button[title='Library']")
+    await libraryNavBtn.click()
+    await page.waitForTimeout(300)
+    const libraryEmptyEn = spFrame.locator("h3:has-text('No Style Cards')")
+    await expect(libraryEmptyEn).toBeVisible()
+
+    // C. Workbench Tab empty title
+    const workbenchNavBtn = spFrame.locator("button[title='Workbench']")
+    await workbenchNavBtn.click()
+    await page.waitForTimeout(300)
+    const workbenchEmptyEn = spFrame.locator(
+      "h3:has-text('Workbench is Empty')"
+    )
+    await expect(workbenchEmptyEn).toBeVisible()
+
+    // Go back to Settings
+    await settingsNavBtn.click()
+    await page.waitForTimeout(300)
+
     // Capture English Settings screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "settings-lang-en.png")
@@ -585,6 +625,33 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     // Verify UI has changed to Japanese (Settings title should be "設定")
     const settingsTitleJa = spFrame.locator("h2:has-text('設定')")
     await expect(settingsTitleJa).toBeVisible({ timeout: 5000 })
+
+    // Verify Tab Japanese translations:
+    // A. History Tab empty title
+    await historyNavBtn.click()
+    await page.waitForTimeout(300)
+    const historyEmptyJa = spFrame.locator("h3:has-text('履歴がありません')")
+    await expect(historyEmptyJa).toBeVisible()
+
+    // B. Library Tab empty title
+    await libraryNavBtn.click()
+    await page.waitForTimeout(300)
+    const libraryEmptyJa = spFrame.locator(
+      "h3:has-text('スタイルカードがありません')"
+    )
+    await expect(libraryEmptyJa).toBeVisible()
+
+    // C. Workbench Tab empty title
+    await workbenchNavBtn.click()
+    await page.waitForTimeout(300)
+    const workbenchEmptyJa = spFrame.locator(
+      "h3:has-text('Workbench は空です')"
+    )
+    await expect(workbenchEmptyJa).toBeVisible()
+
+    // Go back to Settings
+    await settingsNavBtn.click()
+    await page.waitForTimeout(300)
 
     // Capture Japanese Settings screenshot
     await page.screenshot({
