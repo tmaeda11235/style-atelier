@@ -457,5 +457,9 @@
     "settings": "設定",
     "guide": "Guide",
     "showGuide": "ガイドを表示"
+  },
+  "alerts": {
+    "handFullTitle": "手札がいっぱいです",
+    "handFullDesc": "手札（ピン留め）に登録できるカードは最大7枚です。新しいカードを登録するには、いずれかのカードのピン留めを外してください。"
   }
 }

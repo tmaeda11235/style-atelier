@@ -276,4 +276,69 @@ describe("useLibrary hook", () => {
       expect(result.current.styleCards[2].name).toBe("Gray Card")
     })
   })
+
+  describe("pinning limit", () => {
+    beforeEach(() => {
+      mockStyleCards = Array.from({ length: 7 }, (_, i) => ({
+        id: `card-pinned-${i}`,
+        name: `Pinned Card ${i}`,
+        isPinned: true,
+        usageCount: 1,
+        isVariable: false,
+        parameters: {},
+        tags: []
+      }))
+    })
+
+    it("should set alert type to hand_full and not update db when toggling pin and limit is reached", async () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      const mockCard = {
+        id: "card-new",
+        name: "New Card",
+        isPinned: false,
+        usageCount: 0,
+        parameters: {},
+        masking: {},
+        promptSegments: []
+      } as any
+
+      await act(async () => {
+        await result.current.togglePin(mockCard, {
+          stopPropagation: vi.fn()
+        } as any)
+      })
+
+      expect(mockSetAlertType).toHaveBeenCalledWith("hand_full")
+      expect(db.updateCard).not.toHaveBeenCalled()
+    })
+
+    it("should set alert type to hand_full and not update db when handleCardClick has slots and limit is reached", async () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      const mockCard = {
+        id: "card-slots-new",
+        name: "New Card with Slots",
+        isPinned: false,
+        usageCount: 0,
+        parameters: {},
+        masking: {},
+        promptSegments: [
+          { type: "text", value: "a photo of a " },
+          { type: "slot", label: "subject", default: "cat" }
+        ]
+      } as any
+
+      await act(async () => {
+        result.current.handleCardClick(mockCard)
+      })
+
+      expect(mockSetAlertType).toHaveBeenCalledWith("hand_full")
+      expect(db.updateCard).not.toHaveBeenCalled()
+    })
+  })
 })

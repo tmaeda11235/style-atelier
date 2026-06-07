@@ -457,5 +457,9 @@
     "settings": "Settings",
     "guide": "Guide",
     "showGuide": "Show Guide"
+  },
+  "alerts": {
+    "handFullTitle": "Hand is Full",
+    "handFullDesc": "You can only pin up to 7 cards. Please unpin another card first."
   }
 }
