@@ -5,16 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "../../lib/db"
 import { HistoryCard } from "./HistoryCard"
 
-vi.mock("../../lib/db", () => {
-  return {
-    db: {
-      historyItems: {
-        update: vi.fn().mockResolvedValue(1)
-      }
-    }
-  }
-})
-
 describe("HistoryCard", () => {
   const mockOnMintClick = vi.fn()
   const mockItem = {

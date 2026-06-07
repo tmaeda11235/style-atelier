@@ -56,23 +56,6 @@ vi.mock("../../lib/auto-sync", () => ({
   setAutoSyncEnabled: vi.fn()
 }))
 
-vi.mock("../../lib/db", () => ({
-  db: {
-    historyItems: {
-      clear: vi.fn().mockResolvedValue(undefined)
-    },
-    styleCards: {
-      clear: vi.fn().mockResolvedValue(undefined)
-    },
-    userSettings: {
-      clear: vi.fn().mockResolvedValue(undefined)
-    },
-    categories: {
-      clear: vi.fn().mockResolvedValue(undefined)
-    }
-  }
-}))
-
 describe("SettingsTab", () => {
   const mockAddLog = vi.fn()
   const mockResetDb = vi.fn()

@@ -5,15 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { TutorialProvider, useTutorial } from "../../contexts/TutorialContext"
 import { InteractiveTutorial } from "./InteractiveTutorial"
 
-// Mock db so InteractiveTutorial's handleMockDrop doesn't blow up
-vi.mock("../../lib/db", () => ({
-  db: {
-    historyItems: {
-      put: vi.fn().mockResolvedValue(undefined)
-    }
-  }
-}))
-
 function TutorialHarness({ children }: { children: React.ReactNode }) {
   return <TutorialProvider>{children}</TutorialProvider>
 }

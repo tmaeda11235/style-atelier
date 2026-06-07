@@ -24,21 +24,6 @@ vi.mock("../../lib/export-utils", () => ({
   exportCardAsImage: vi.fn().mockResolvedValue(undefined)
 }))
 
-vi.mock("../../lib/db", () => ({
-  db: {
-    styleCards: {
-      get: vi.fn(),
-      update: vi.fn(),
-      toArray: vi.fn().mockResolvedValue([])
-    },
-    categories: {
-      toArray: vi.fn().mockResolvedValue([])
-    },
-    getCard: vi.fn(),
-    getAllCategories: vi.fn().mockResolvedValue([])
-  }
-}))
-
 const mockCard: StyleCard = {
   id: "card-uuid-1",
   name: "Cyber Punk Cyberpunk Style",

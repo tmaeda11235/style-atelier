@@ -21,31 +21,6 @@ vi.mock("dexie-react-hooks", () => ({
   useLiveQuery: (fn: any) => fn()
 }))
 
-// Mock DB
-vi.mock("../../lib/db", () => {
-  return {
-    db: {
-      categories: {
-        toArray: vi.fn(),
-        get: vi.fn(),
-        add: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn()
-      },
-      styleCards: {
-        filter: vi.fn(),
-        where: vi.fn()
-      },
-      getAllCategories: vi.fn(),
-      getAllCards: vi.fn(),
-      getCategory: vi.fn(),
-      addCategory: vi.fn(),
-      updateCategory: vi.fn(),
-      deleteCategory: vi.fn()
-    }
-  }
-})
-
 const render = (ui: React.ReactElement, options?: any) => {
   return tlRender(<LanguageProvider>{ui}</LanguageProvider>, options)
 }
