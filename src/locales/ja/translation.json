@@ -282,7 +282,10 @@
     "step2Title": "プロンプトを調合 / カードを進化",
     "step2Desc": "2枚以上でブレンド、1枚ならプロンプトの調整や、使用回数に応じた進化が可能です。",
     "step3Title": "Midjourneyで生成",
-    "step3Desc": "「Try on Midjourney」ボタンでプロンプトをチャットへ直接送信します。"
+    "step3Desc": "「Try on Midjourney」ボタンでプロンプトをチャットへ直接送信します。",
+    "evolutionSuccessTitle": "進化完了！",
+    "evolutionSuccessDesc": "スタイルカードが新たなランクへ進化しました！",
+    "close": "閉じる"
   },
   "mergeStack": {
     "title": "カードスタックの統合",

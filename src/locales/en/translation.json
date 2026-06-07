@@ -282,7 +282,10 @@
     "step2Title": "Blend Prompts / Evolve Cards",
     "step2Desc": "Blend with 2 or more cards, or adjust prompt and evolve based on usage with a single card.",
     "step3Title": "Generate in Midjourney",
-    "step3Desc": "Send prompt directly to chat using the 'Try on Midjourney' button."
+    "step3Desc": "Send prompt directly to chat using the 'Try on Midjourney' button.",
+    "evolutionSuccessTitle": "Evolution Complete!",
+    "evolutionSuccessDesc": "Your style card has evolved to a higher tier!",
+    "close": "Close"
   },
   "mergeStack": {
     "title": "Merge Card Stack",

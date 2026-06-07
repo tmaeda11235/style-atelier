@@ -14,6 +14,7 @@ import { RarityBadge } from "../atoms/RarityBadge"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import { PromptBubble } from "../molecules/PromptBubble"
+import { EvolutionSuccessModal } from "./EvolutionSuccessModal"
 import { MergeStackModal } from "./MergeStackModal"
 import { ParameterEditor } from "./ParameterEditor"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
@@ -52,6 +53,14 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [isInjecting, setIsInjecting] = useState(false)
   const [slotValues, setSlotValues] = useState<Record<string, string>>({})
   const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({})
+  const [isEvolutionSuccessOpen, setIsEvolutionSuccessOpen] = useState(false)
+  const [evolvedCardData, setEvolvedCardData] = useState<{
+    name: string
+    thumbnailData?: string
+    selectedThumbnails?: string[]
+    oldTier: any
+    newTier: any
+  } | null>(null)
 
   const hasParams = Object.values(editedParams).some((v) =>
     Array.isArray(v) ? v.length > 0 : !!v
@@ -582,7 +591,25 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   {canEvolveTarget ? (
                     <Button
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md"
-                      onClick={() => evolveCard(targetCard.id)}>
+                      onClick={async () => {
+                        try {
+                          const oldTier = targetCard.tier
+                          const nextTier = await evolveCard(targetCard.id)
+                          setEvolvedCardData({
+                            name: targetCard.name,
+                            thumbnailData: targetCard.thumbnailData,
+                            selectedThumbnails: targetCard.selectedThumbnails,
+                            oldTier,
+                            newTier: nextTier
+                          })
+                          setIsEvolutionSuccessOpen(true)
+                          addLog?.(
+                            `Evolved card "${targetCard.name}" from ${oldTier} to ${nextTier}`
+                          )
+                        } catch (err: any) {
+                          console.error("Evolution failed:", err)
+                        }
+                      }}>
                       <Sparkles className="w-4 h-4 mr-2" /> {t.evolveBtn}
                     </Button>
                   ) : (
@@ -668,6 +695,23 @@ export const Workbench: React.FC<WorkbenchProps> = ({
           </div>
         )}
       </div>
+
+      {evolvedCardData && (
+        <EvolutionSuccessModal
+          isOpen={isEvolutionSuccessOpen}
+          onClose={() => setIsEvolutionSuccessOpen(false)}
+          cardName={evolvedCardData.name}
+          thumbnailData={evolvedCardData.thumbnailData}
+          selectedThumbnails={evolvedCardData.selectedThumbnails}
+          oldTier={evolvedCardData.oldTier}
+          newTier={evolvedCardData.newTier}
+          translation={{
+            title: i18n.workbench.evolutionSuccessTitle,
+            desc: i18n.workbench.evolutionSuccessDesc,
+            close: i18n.workbench.close
+          }}
+        />
+      )}
     </div>
   )
 }
