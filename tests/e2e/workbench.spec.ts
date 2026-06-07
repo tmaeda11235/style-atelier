@@ -521,4 +521,77 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // Verify modal is closed
     await expect(modalTitle).not.toBeVisible({ timeout: 5000 })
   })
+
+  test("should limit pinned cards to 7 and show warning alert", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Pinning Limit E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed 7 pinned cards and 1 unpinned card
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+
+      const cards = []
+      // 7 pinned cards
+      for (let i = 1; i <= 7; i++) {
+        cards.push({
+          id: `card-pinned-${i}`,
+          name: `Pinned Card ${i}`,
+          promptSegments: [{ type: "text", value: `style ${i}` }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#3b82f6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        })
+      }
+      // 1 unpinned card
+      cards.push({
+        id: "card-unpinned",
+        name: "Unpinned Card",
+        promptSegments: [{ type: "text", value: "style unpinned" }],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        isPinned: false,
+        dominantColor: "#ef4444",
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+      })
+
+      await database.styleCards.bulkAdd(cards)
+    })
+
+    // 3. Navigate to Library tab to see the unpinned card
+    const libraryTabButton = spFrame
+      .locator("button:has-text('Library')")
+      .first()
+    await libraryTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB queries
+
+    // 4. Click the unpinned card to pin it (it should trigger the 7-card limit warning)
+    const unpinnedCard = spFrame.locator("div:has-text('Unpinned Card')").last()
+    await expect(unpinnedCard).toBeVisible({ timeout: 10000 })
+    await unpinnedCard.click()
+
+    // 5. Verify the Alert is visible (the text is depending on language, but the id is alert-hand-full)
+    const alertBox = spFrame.locator("#alert-hand-full")
+    await expect(alertBox).toBeVisible({ timeout: 10000 })
+
+    // 6. Capture screenshot of the warning alert
+    await page.screenshot({
+      path: path.join(screenshotsDir, "hand-limit-warning.png")
+    })
+  })
 })

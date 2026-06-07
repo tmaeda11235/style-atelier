@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
+import { useMemo, useState } from "react"
+
+import type { AlertType } from "../components/molecules/ConnectionAlert"
+import { getColorNameFromHex, hexToHsl } from "../lib/color-utils"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
-import type { AlertType } from "../components/molecules/ConnectionAlert"
-import { getColorNameFromHex, hexToHsl } from "../lib/color-utils"
 
 export type SortOption = "newest" | "oldest" | "rarity" | "usage" | "color"
 export type RarityFilter = "All" | StyleCard["tier"]
@@ -49,7 +50,7 @@ export function useLibrary(
   const filteredAndSortedCards = useMemo(() => {
     if (!allCards) return []
 
-    let result = allCards.filter(card => !card.isVariable)
+    let result = allCards.filter((card) => !card.isVariable)
 
     // Filtering
     if (searchTag) {
@@ -60,7 +61,9 @@ export function useLibrary(
         return (
           card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
           card.name.toLowerCase().includes(tag) ||
-          card.parameters.sref?.some((url) => url.toLowerCase().includes(tag)) ||
+          card.parameters.sref?.some((url) =>
+            url.toLowerCase().includes(tag)
+          ) ||
           categoryName.includes(tag)
         )
       })
@@ -100,7 +103,9 @@ export function useLibrary(
           return weights[b.tier] - weights[a.tier]
         }
         case "color": {
-          const getSortKey = (hex: string): { isNeutral: boolean; h: number; s: number; l: number } => {
+          const getSortKey = (
+            hex: string
+          ): { isNeutral: boolean; h: number; s: number; l: number } => {
             if (!hex) return { isNeutral: true, h: 0, s: 0, l: 0 }
             try {
               const [h, s, l] = hexToHsl(hex)
@@ -131,7 +136,15 @@ export function useLibrary(
     })
 
     return result
-  }, [allCards, categories, searchTag, rarityFilter, categoryFilter, colorFilter, sortBy])
+  }, [
+    allCards,
+    categories,
+    searchTag,
+    rarityFilter,
+    categoryFilter,
+    colorFilter,
+    sortBy
+  ])
 
   const togglePin = async (card: StyleCard, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -139,10 +152,19 @@ export function useLibrary(
     try {
       const updateData: Partial<StyleCard> = { isPinned: newPinnedStatus }
       if (newPinnedStatus) {
+        const pinnedCount = allCards?.filter((c) => c.isPinned).length || 0
+        if (pinnedCount >= 7) {
+          setAlertType("hand_full")
+          return
+        }
         updateData.usageCount = (card.usageCount || 0) + 1
       }
       await db.updateCard(card.id, updateData)
-      addLog(newPinnedStatus ? `Added ${card.name} to Workbench.` : `Removed ${card.name} from Workbench.`)
+      addLog(
+        newPinnedStatus
+          ? `Added ${card.name} to Workbench.`
+          : `Removed ${card.name} from Workbench.`
+      )
     } catch (err) {
       console.error("Failed to toggle pin:", err)
     }
@@ -152,10 +174,18 @@ export function useLibrary(
     const hasSlots = card.promptSegments?.some((seg) => seg.type === "slot")
     if (hasSlots) {
       if (!card.isPinned) {
-        db.updateCard(card.id, { isPinned: true })
-          .catch(err => console.error("Failed to pin card:", err))
+        const pinnedCount = allCards?.filter((c) => c.isPinned).length || 0
+        if (pinnedCount >= 7) {
+          setAlertType("hand_full")
+          return
+        }
+        db.updateCard(card.id, { isPinned: true }).catch((err) =>
+          console.error("Failed to pin card:", err)
+        )
       }
-      addLog(`Redirected to Workbench to fill slot variables for "${card.name}".`)
+      addLog(
+        `Redirected to Workbench to fill slot variables for "${card.name}".`
+      )
       if (onNavigateToWorkbench) {
         onNavigateToWorkbench()
       }
@@ -169,38 +199,47 @@ export function useLibrary(
     if (card.masking.isPHidden) {
       maskedKeys.push("p")
     }
-    const prompt = buildPromptString(card.promptSegments, card.parameters, maskedKeys)
+    const prompt = buildPromptString(
+      card.promptSegments,
+      card.parameters,
+      maskedKeys
+    )
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0]
       if (activeTab?.id) {
         chrome.tabs
           .sendMessage(activeTab.id, {
             type: "INJECT_PROMPT",
-            prompt: prompt,
+            prompt: prompt
           })
           .then((response) => {
             if (response && response.status === "error") {
-              if (response.message && response.message.includes("Could not find chat input")) {
-                setAlertType("no_input");
+              if (
+                response.message &&
+                response.message.includes("Could not find chat input")
+              ) {
+                setAlertType("no_input")
               } else {
-                setAlertType("disconnected");
+                setAlertType("disconnected")
               }
             } else {
               addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
-              db.updateCard(card.id, { usageCount: (card.usageCount || 0) + 1 })
-                .catch((err) => console.error("Failed to update usage count on inject:", err))
+              db.updateCard(card.id, {
+                usageCount: (card.usageCount || 0) + 1
+              }).catch((err) =>
+                console.error("Failed to update usage count on inject:", err)
+              )
             }
           })
           .catch((err) => {
             // Fix: Report error to global alert system
-            console.error("Library injection failed:", err);
-            setAlertType("disconnected");
+            console.error("Library injection failed:", err)
+            setAlertType("disconnected")
             addLog(`Note: ${err.message || "Could not send to tab"}`)
           })
-
       } else {
-        addLog("No active tab found");
-        setAlertType("disconnected");
+        addLog("No active tab found")
+        setAlertType("disconnected")
       }
     })
   }
@@ -221,6 +260,6 @@ export function useLibrary(
     setSortBy,
     allSrefs,
     categories,
-    allCards,
+    allCards
   }
 }
