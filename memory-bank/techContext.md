@@ -31,7 +31,7 @@ tags: []
 
 - **Manifest V3**: Strict security policies (no remote code execution).
 - **Storage Limits**: IndexedDB limits vary by device, but generally sufficient for metadata + thumbnails. Full images should be external references or carefully cached.
-- **LocalStorage Settings**: Settings (Easy Mode & Expert Features) are persisted locally in `localStorage`. Tests can inject mocked states by editing `localStorage` or wrapping component render functions in `SettingsProvider` (using testing-library's `wrapper` option).
+- **LocalStorage Settings**: UI Settings (Easy Mode & Expert Features) and Language locale preference are persisted locally in `localStorage`. Historical user inputs for slot variables (`slotHistory`) have been migrated from `localStorage` to `IndexedDB` (v11 schema) to ensure consistent data transactions, prevent size limitation issues, and support auto-sync/backups. Tests can inject mocked states by editing `localStorage` or wrapping component render functions in `SettingsProvider` (using testing-library's `wrapper` option).
 
 ## Testing & CI
 

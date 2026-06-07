@@ -24,18 +24,15 @@ export async function exportDatabase(): Promise<string> {
 
   // Exclude local image blobs in history items to keep backup lightweight
   const historyWithoutBlobs = history.map((item) => {
-    const { localImageBlob, ...rest } = item
+    const { localImageBlob: _, ...rest } = item
     return rest
   })
 
   let slotHistory: Record<string, string[]> | undefined = undefined
   try {
-    const stored = localStorage.getItem("style_atelier_slot_history")
-    if (stored) {
-      slotHistory = JSON.parse(stored)
-    }
-  } catch (e) {
-    console.error("Failed to read slot history for backup:", e)
+    slotHistory = await db.getAllSlotHistory()
+  } catch (_e) {
+    console.error("Failed to read slot history for backup:", _e)
   }
 
   const payload: BackupPayload = {
@@ -53,45 +50,6 @@ export async function exportDatabase(): Promise<string> {
   return JSON.stringify(payload)
 }
 
-function importSlotHistory(
-  slotHistory: Record<string, string[]>,
-  mode: "merge" | "replace"
-): void {
-  try {
-    if (mode === "replace") {
-      localStorage.setItem(
-        "style_atelier_slot_history",
-        JSON.stringify(slotHistory)
-      )
-      return
-    }
-
-    const stored = localStorage.getItem("style_atelier_slot_history")
-    const existingHistory: Record<string, string[]> = stored
-      ? JSON.parse(stored)
-      : {}
-
-    const mergedHistory: Record<string, string[]> = { ...existingHistory }
-
-    for (const [key, incomingValues] of Object.entries(slotHistory)) {
-      if (Array.isArray(incomingValues)) {
-        const localValues = mergedHistory[key] || []
-        const merged = Array.from(
-          new Set([...incomingValues, ...localValues])
-        ).slice(0, 10)
-        mergedHistory[key] = merged
-      }
-    }
-
-    localStorage.setItem(
-      "style_atelier_slot_history",
-      JSON.stringify(mergedHistory)
-    )
-  } catch (e) {
-    console.error("Failed to restore/merge slot history:", e)
-  }
-}
-
 /**
  * Clear existing IndexedDB tables and populate with imported JSON data
  */
@@ -102,7 +60,7 @@ export async function importDatabase(
   let payload: any
   try {
     payload = JSON.parse(jsonData)
-  } catch (e) {
+  } catch {
     throw new Error("Invalid JSON format. Failed to parse backup file.")
   }
 
@@ -112,8 +70,4 @@ export async function importDatabase(
   }
 
   await db.importBackupData(payload.data, mode)
-
-  if (payload.data.slotHistory) {
-    importSlotHistory(payload.data.slotHistory, mode)
-  }
 }

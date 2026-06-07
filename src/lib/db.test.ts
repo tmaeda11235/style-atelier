@@ -6,6 +6,7 @@ import {
   upgradeToVersion8,
   upgradeToVersion10
 } from "./db"
+import { upgradeToVersion11 } from "./db-setup"
 
 vi.unmock("./db")
 
@@ -90,6 +91,50 @@ describe("db utilities", () => {
 
       expect(mockCards[0].thumbnailData).toContain("data:image/png;base64,")
       expect(mockCategories[0].iconUrl).toContain("data:image/png;base64,")
+    })
+  })
+
+  describe("upgradeToVersion11", () => {
+    it("should migrate slot history from localStorage to slotHistory table", async () => {
+      const mockSlotHistory = {
+        subject: ["item1", "item2"]
+      }
+      localStorage.setItem(
+        "style_atelier_slot_history",
+        JSON.stringify(mockSlotHistory)
+      )
+
+      const mockBulkAdd = vi.fn().mockReturnValue({
+        catch: vi.fn().mockImplementation((cb) => {
+          cb(new Error("mock error"))
+        })
+      })
+      const mockTable = vi.fn().mockReturnValue({
+        bulkAdd: mockBulkAdd
+      })
+      const mockTx = { table: mockTable } as any
+
+      await upgradeToVersion11(mockTx)
+
+      expect(mockTable).toHaveBeenCalledWith("slotHistory")
+      expect(mockBulkAdd).toHaveBeenCalledWith([
+        {
+          label: "subject",
+          values: ["item1", "item2"],
+          updatedAt: expect.any(Number)
+        }
+      ])
+    })
+
+    it("should handle empty localStorage or invalid JSON gracefully", async () => {
+      localStorage.removeItem("style_atelier_slot_history")
+      const mockTx = { table: vi.fn() } as any
+      await upgradeToVersion11(mockTx)
+      expect(mockTx.table).not.toHaveBeenCalled()
+
+      localStorage.setItem("style_atelier_slot_history", "invalid JSON")
+      await upgradeToVersion11(mockTx)
+      expect(mockTx.table).not.toHaveBeenCalled()
     })
   })
 
@@ -204,6 +249,123 @@ describe("db utilities", () => {
         selectedThumbnails: [],
         updatedAt: expect.any(Number)
       })
+    })
+  })
+
+  describe("importBackupData", () => {
+    it("should replace slotHistory table with incoming values in replace mode", async () => {
+      const mockSlotHistoryClear = vi.fn().mockResolvedValue(undefined)
+      const mockSlotHistoryBulkPut = vi.fn().mockResolvedValue(undefined)
+
+      const mockDbInstance = {
+        styleCards: { clear: vi.fn(), bulkPut: vi.fn() },
+        categories: { clear: vi.fn(), bulkPut: vi.fn() },
+        userSettings: { clear: vi.fn(), bulkPut: vi.fn() },
+        historyItems: { clear: vi.fn(), bulkPut: vi.fn() },
+        slotHistory: {
+          clear: mockSlotHistoryClear,
+          bulkPut: mockSlotHistoryBulkPut
+        },
+        transaction: vi.fn(async (mode, tables, callback) => {
+          return callback()
+        })
+      } as any
+
+      const mockData = {
+        styleCards: [],
+        categories: [],
+        userSettings: [],
+        historyItems: [],
+        slotHistory: {
+          subject: ["cat", "dog"]
+        }
+      }
+
+      await StyleAtelierDatabase.prototype.importBackupData.call(
+        mockDbInstance,
+        mockData,
+        "replace"
+      )
+
+      expect(mockSlotHistoryClear).toHaveBeenCalled()
+      expect(mockSlotHistoryBulkPut).toHaveBeenCalled()
+      const putItems = mockSlotHistoryBulkPut.mock.calls[0][0]
+      expect(putItems).toHaveLength(1)
+      expect(putItems[0]).toMatchObject({
+        label: "subject",
+        values: ["cat", "dog"],
+        updatedAt: expect.any(Number)
+      })
+    })
+
+    it("should merge slotHistory in merge mode, eliminating duplicates and capping at 10 items", async () => {
+      const mockSlotHistoryGet = vi.fn((label) => {
+        if (label === "subject") {
+          return Promise.resolve({
+            label: "subject",
+            values: ["1", "2", "3", "4", "5", "6", "7", "8"],
+            updatedAt: 100
+          })
+        }
+        return Promise.resolve(undefined)
+      })
+      const mockSlotHistoryPut = vi.fn().mockResolvedValue(undefined)
+
+      const mockDbInstance = {
+        styleCards: { toArray: vi.fn().mockResolvedValue([]) },
+        categories: { toArray: vi.fn().mockResolvedValue([]) },
+        userSettings: { bulkPut: vi.fn().mockResolvedValue([]) },
+        historyItems: { toArray: vi.fn().mockResolvedValue([]) },
+        slotHistory: { get: mockSlotHistoryGet, put: mockSlotHistoryPut },
+        transaction: vi.fn(async (mode, tables, callback) => {
+          return callback()
+        })
+      } as any
+
+      const mockData = {
+        styleCards: [],
+        categories: [],
+        userSettings: [],
+        historyItems: [],
+        slotHistory: {
+          subject: ["9", "10", "11", "12", "13", "1"], // '1' is duplicate
+          artist: ["picasso"]
+        }
+      }
+
+      await StyleAtelierDatabase.prototype.importBackupData.call(
+        mockDbInstance,
+        mockData,
+        "merge"
+      )
+
+      expect(mockSlotHistoryGet).toHaveBeenCalledWith("subject")
+      expect(mockSlotHistoryGet).toHaveBeenCalledWith("artist")
+
+      expect(mockSlotHistoryPut).toHaveBeenCalledTimes(2)
+      // Verify subject merge
+      const subjectPut = mockSlotHistoryPut.mock.calls.find(
+        (call: any) => call[0].label === "subject"
+      )[0]
+      expect(subjectPut.values).toEqual([
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]) // "1" duplicate removed, "6", "7", "8" sliced out since cap is 10
+      expect(subjectPut.values).toHaveLength(10)
+
+      // Verify artist merge (brand new label)
+      const artistPut = mockSlotHistoryPut.mock.calls.find(
+        (call: any) => call[0].label === "artist"
+      )[0]
+      expect(artistPut.values).toEqual(["picasso"])
     })
   })
 })

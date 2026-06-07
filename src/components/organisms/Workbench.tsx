@@ -5,7 +5,6 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useEvolution } from "../../hooks/useEvolution"
 import { useWorkbench } from "../../hooks/useWorkbench"
-import { db } from "../../lib/db"
 import type { PromptSegment } from "../../lib/db-schema"
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils"
 import { Button } from "../atoms/Button"
@@ -41,8 +40,16 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   addLog,
   setAlertType
 }) => {
-  const { workbenchCards, handCards, toggleCardSelection, clearWorkbench } =
-    useWorkbench()
+  const {
+    workbenchCards,
+    handCards,
+    toggleCardSelection,
+    clearWorkbench,
+    slotHistory,
+    saveSlotHistory,
+    addCard,
+    incrementCardUsage
+  } = useWorkbench()
   const { canEvolve, evolveCard } = useEvolution()
   const { expertFeatures } = useSettings()
   const { t: i18n } = useLanguage()
@@ -52,7 +59,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [editedParams, setEditedParams] = useState<any>({})
   const [isInjecting, setIsInjecting] = useState(false)
   const [slotValues, setSlotValues] = useState<Record<string, string>>({})
-  const [slotHistory, setSlotHistory] = useState<Record<string, string[]>>({})
   const [isEvolutionSuccessOpen, setIsEvolutionSuccessOpen] = useState(false)
   const [evolvedCardData, setEvolvedCardData] = useState<{
     name: string
@@ -74,22 +80,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const workbenchCardsDependency = workbenchCards
     .map((c) => `${c.id}-${c.updatedAt || 0}`)
     .join(",")
-
-  // Load slot history from localStorage
-  const loadSlotHistory = () => {
-    try {
-      const stored = localStorage.getItem("style_atelier_slot_history")
-      if (stored) {
-        setSlotHistory(JSON.parse(stored))
-      }
-    } catch (e) {
-      console.error("Failed to load slot history:", e)
-    }
-  }
-
-  useEffect(() => {
-    loadSlotHistory()
-  }, [])
 
   // Check connection on mount
   useEffect(() => {
@@ -268,7 +258,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
         associatedJobIds: []
       }
 
-      await db.addCard(newCard)
+      await addCard(newCard)
       addLog?.(`Sent "${trimmed}" to Workbench under tag "${label}"`)
     } catch (err) {
       console.error("Failed to send card to Workbench:", err)
@@ -323,9 +313,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
 
         // Increment usage count for all cards in the Workbench
         workbenchCards.forEach((card) => {
-          db.updateCard(card.id, {
-            usageCount: (card.usageCount || 0) + 1
-          }).catch((err) =>
+          incrementCardUsage(card.id).catch((err) =>
             console.error(
               "Failed to update usage count on workbench inject:",
               err
@@ -334,28 +322,20 @@ export const Workbench: React.FC<WorkbenchProps> = ({
         })
 
         // Save slot values to history on success
-        const existing = localStorage.getItem("style_atelier_slot_history")
-        const history: Record<string, string[]> = existing
-          ? JSON.parse(existing)
-          : {}
-
-        Object.entries(slotValues).forEach(([lbl, val]) => {
-          const trimmedVal = val.trim()
-          if (!trimmedVal) return
-          if (!history[lbl]) {
-            history[lbl] = []
+        try {
+          for (const [lbl, val] of Object.entries(slotValues)) {
+            const trimmedVal = val.trim()
+            if (!trimmedVal) continue
+            const currentValues = slotHistory[lbl] || []
+            const updatedValues = [
+              trimmedVal,
+              ...currentValues.filter((v) => v !== trimmedVal)
+            ].slice(0, 10)
+            await saveSlotHistory(lbl, updatedValues)
           }
-          history[lbl] = [
-            trimmedVal,
-            ...history[lbl].filter((v) => v !== trimmedVal)
-          ].slice(0, 10)
-        })
-
-        localStorage.setItem(
-          "style_atelier_slot_history",
-          JSON.stringify(history)
-        )
-        loadSlotHistory()
+        } catch (e) {
+          console.error("Failed to save slot history:", e)
+        }
       }
     } catch (err) {
       console.error("Injection failed:", err)

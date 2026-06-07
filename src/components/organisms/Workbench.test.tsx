@@ -11,7 +11,6 @@ import { LanguageProvider } from "../../contexts/LanguageContext"
 import { SettingsProvider } from "../../contexts/SettingsContext"
 import { useEvolution } from "../../hooks/useEvolution"
 import { useWorkbench } from "../../hooks/useWorkbench"
-import { db } from "../../lib/db"
 import type { StyleCard } from "../../lib/db-schema"
 import { Workbench } from "./Workbench"
 
@@ -105,7 +104,11 @@ describe("Workbench", () => {
       selectedCardIds: [],
       toggleCardSelection: vi.fn(),
       clearWorkbench: vi.fn(),
-      mergedPrompt: ""
+      mergedPrompt: "",
+      slotHistory: {},
+      saveSlotHistory: vi.fn(),
+      addCard: vi.fn(),
+      incrementCardUsage: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -119,7 +122,11 @@ describe("Workbench", () => {
       selectedCardIds: ["card-1"],
       toggleCardSelection: vi.fn(),
       clearWorkbench: vi.fn(),
-      mergedPrompt: ""
+      mergedPrompt: "",
+      slotHistory: {},
+      saveSlotHistory: vi.fn(),
+      addCard: vi.fn(),
+      incrementCardUsage: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -143,13 +150,19 @@ describe("Workbench", () => {
   })
 
   it("replaces slot values in prompt and persists to history on injection success", async () => {
+    const mockSaveSlotHistory = vi.fn().mockResolvedValue(undefined)
+    const mockIncrementCardUsage = vi.fn().mockResolvedValue(undefined)
     vi.mocked(useWorkbench).mockReturnValue({
       workbenchCards: [mockTargetCard],
       handCards: [],
       selectedCardIds: ["card-1"],
       toggleCardSelection: vi.fn(),
       clearWorkbench: vi.fn(),
-      mergedPrompt: ""
+      mergedPrompt: "",
+      slotHistory: {},
+      saveSlotHistory: mockSaveSlotHistory,
+      addCard: vi.fn(),
+      incrementCardUsage: mockIncrementCardUsage
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -174,27 +187,27 @@ describe("Workbench", () => {
         })
       )
       // Check that usageCount was incremented
-      expect(db.updateCard).toHaveBeenCalledWith("card-1", {
-        usageCount: 6
-      })
+      expect(mockIncrementCardUsage).toHaveBeenCalledWith("card-1")
     })
 
-    // Check value is saved to localStorage history
-    const history = JSON.parse(
-      localStorage.getItem("style_atelier_slot_history") || "{}"
-    )
-    expect(history.Subject).toContain("neon tiger")
-    expect(history.Style).toContain("neon rain")
+    // Check value is saved to IndexedDB history
+    expect(mockSaveSlotHistory).toHaveBeenCalledWith("Subject", ["neon tiger"])
+    expect(mockSaveSlotHistory).toHaveBeenCalledWith("Style", ["neon rain"])
   })
 
   it("sends slot value directly to Workbench when clicking pin button", async () => {
+    const mockAddCard = vi.fn().mockResolvedValue("new-card-id")
     vi.mocked(useWorkbench).mockReturnValue({
       workbenchCards: [mockTargetCard],
       handCards: [],
       selectedCardIds: ["card-1"],
       toggleCardSelection: vi.fn(),
       clearWorkbench: vi.fn(),
-      mergedPrompt: ""
+      mergedPrompt: "",
+      slotHistory: {},
+      saveSlotHistory: vi.fn(),
+      addCard: mockAddCard,
+      incrementCardUsage: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -207,7 +220,7 @@ describe("Workbench", () => {
     fireEvent.click(pinButtons[0])
 
     await waitFor(() => {
-      expect(db.addCard).toHaveBeenCalledWith(
+      expect(mockAddCard).toHaveBeenCalledWith(
         expect.objectContaining({
           name: "steampunk dragon",
           isPinned: true,
@@ -229,7 +242,11 @@ describe("Workbench", () => {
       selectedCardIds: ["card-1"],
       toggleCardSelection: vi.fn(),
       clearWorkbench: vi.fn(),
-      mergedPrompt: ""
+      mergedPrompt: "",
+      slotHistory: {},
+      saveSlotHistory: vi.fn(),
+      addCard: vi.fn(),
+      incrementCardUsage: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -260,7 +277,11 @@ describe("Workbench", () => {
         selectedCardIds: [],
         toggleCardSelection: vi.fn(),
         clearWorkbench: vi.fn(),
-        mergedPrompt: ""
+        mergedPrompt: "",
+        slotHistory: {},
+        saveSlotHistory: vi.fn(),
+        addCard: vi.fn(),
+        incrementCardUsage: vi.fn()
       })
 
       // Simulate chrome tabs query failing to trigger a retry
@@ -306,7 +327,11 @@ describe("Workbench", () => {
       selectedCardIds: ["card-1", "card-2"],
       toggleCardSelection: vi.fn(),
       clearWorkbench: vi.fn(),
-      mergedPrompt: ""
+      mergedPrompt: "",
+      slotHistory: {},
+      saveSlotHistory: vi.fn(),
+      addCard: vi.fn(),
+      incrementCardUsage: vi.fn()
     })
 
     render(

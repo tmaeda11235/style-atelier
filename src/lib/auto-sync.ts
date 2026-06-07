@@ -185,6 +185,16 @@ export function initializeAutoSync() {
     trigger(transaction)
   })
 
+  db.slotHistory.hook("creating", (primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+  db.slotHistory.hook("updating", (mods, primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+  db.slotHistory.hook("deleting", (primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+
   hooksRegistered = true
 
   if (isAutoSyncEnabled()) {
