@@ -7,6 +7,7 @@ import {
 import React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { LanguageProvider } from "../../contexts/LanguageContext"
 import { SettingsProvider } from "../../contexts/SettingsContext"
 import { useEvolution } from "../../hooks/useEvolution"
 import { useWorkbench } from "../../hooks/useWorkbench"
@@ -15,7 +16,12 @@ import type { StyleCard } from "../../lib/db-schema"
 import { Workbench } from "./Workbench"
 
 const render = (ui: React.ReactElement, options?: any) => {
-  return tlRender(ui, { wrapper: SettingsProvider, ...options })
+  return tlRender(
+    <LanguageProvider>
+      <SettingsProvider>{ui}</SettingsProvider>
+    </LanguageProvider>,
+    options
+  )
 }
 
 vi.mock("../../hooks/useWorkbench", () => ({
@@ -98,6 +104,7 @@ describe("Workbench", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+    localStorage.setItem("style-atelier-language", "ja")
     vi.mocked(useEvolution).mockReturnValue({
       canEvolve: vi.fn().mockReturnValue(false),
       evolveCard: vi.fn(),
@@ -333,7 +340,7 @@ describe("Workbench", () => {
     )
 
     // Verify button is rendered
-    const mintButton = screen.getByText("Mint Blended Variation")
+    const mintButton = screen.getByText("調合したカードを作成する")
     expect(mintButton).toBeDefined()
 
     // Click button

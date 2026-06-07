@@ -1,18 +1,25 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render as tlRender, screen, fireEvent } from "@testing-library/react"
-import { SettingsProvider } from "../../contexts/SettingsContext"
+import { fireEvent, screen, render as tlRender } from "@testing-library/react"
 import React from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const render = (ui: React.ReactElement, options?: any) => {
-  return tlRender(ui, { wrapper: SettingsProvider, ...options })
-}
-import { LibraryTab } from "./LibraryTab"
+import { LanguageProvider } from "../../contexts/LanguageContext"
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import { TutorialProvider } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"
-import { TutorialProvider } from "../../contexts/TutorialContext"
+import { LibraryTab } from "./LibraryTab"
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(
+    <LanguageProvider>
+      <SettingsProvider>{ui}</SettingsProvider>
+    </LanguageProvider>,
+    options
+  )
+}
 
 vi.mock("../../hooks/useLibrary", () => ({
-  useLibrary: vi.fn(),
+  useLibrary: vi.fn()
 }))
 
 const mockCards: StyleCard[] = [
@@ -32,8 +39,8 @@ const mockCards: StyleCard[] = [
     dominantColor: "#d4af37",
     thumbnailData: "data:image/png;base64,123",
     frameId: "default",
-    genealogy: { generation: 1, parentIds: [] },
-  },
+    genealogy: { generation: 1, parentIds: [] }
+  }
 ]
 
 describe("LibraryTab", () => {
@@ -44,13 +51,14 @@ describe("LibraryTab", () => {
   const defaultProps = {
     addLog: mockAddLog,
     setAlertType: mockSetAlertType,
-    onOpenDetailCard: mockOpenDetailCard,
+    onOpenDetailCard: mockOpenDetailCard
   }
 
   const mockTogglePin = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.setItem("style-atelier-language", "ja")
     vi.mocked(useLibrary).mockReturnValue({
       styleCards: mockCards,
       handleCardClick: vi.fn(),
@@ -67,37 +75,55 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: mockCards,
+      allCards: mockCards
     })
   })
 
   it("renders search field, filters, and cards", () => {
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
-    expect(screen.getByPlaceholderText("Search by tag, name or sref...")).toBeDefined()
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
+    expect(
+      screen.getByPlaceholderText("Search by tag, name or sref...")
+    ).toBeDefined()
     expect(screen.getByText("Golden Dragon")).toBeDefined()
   })
 
   it("triggers togglePin when clicking the card itself", () => {
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
     const cardElement = screen.getByText("Golden Dragon").closest(".group")
     expect(cardElement).toBeDefined()
-    
+
     fireEvent.click(cardElement!)
     expect(mockTogglePin).toHaveBeenCalledWith(mockCards[0], expect.any(Object))
   })
 
   it("triggers onOpenDetailCard when clicking the edit button on the card", () => {
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
     const editBtn = screen.getByTestId("edit-card-button")
     expect(editBtn).toBeDefined()
-    
+
     fireEvent.click(editBtn)
     expect(mockOpenDetailCard).toHaveBeenCalledWith(mockCards[0])
     expect(mockTogglePin).not.toHaveBeenCalled()
   })
 
   it("opens ShareCardModal when clicking the share button on the card", () => {
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
     const shareBtn = screen.getByTestId("share-card-button")
     expect(shareBtn).toBeDefined()
 
@@ -130,13 +156,17 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: mockCards,
+      allCards: mockCards
     })
 
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
-    
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
+
     expect(screen.getByText("Color:")).toBeDefined()
-    
+
     const redButton = screen.getByTitle("Red")
     expect(redButton).toBeDefined()
     fireEvent.click(redButton)
@@ -160,12 +190,18 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: [],
+      allCards: []
     })
 
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
     expect(screen.getByText("スタイルカードがありません")).toBeDefined()
-    expect(screen.getByText(/Historyタブから画像をドラッグ＆ドロップ/)).toBeDefined()
+    expect(
+      screen.getByText(/Historyタブから画像をドラッグ＆ドロップ/)
+    ).toBeDefined()
   })
 
   it("renders empty state when search filters return no cards and allows clearing filters", () => {
@@ -189,14 +225,22 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: mockCards,
+      allCards: mockCards
     })
 
-    render(<TutorialProvider><LibraryTab {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
     expect(screen.getByText("カードが見つかりません")).toBeDefined()
-    expect(screen.getByText(/検索キーワードやフィルターの条件を変更するか/)).toBeDefined()
+    expect(
+      screen.getByText(/検索キーワードやフィルターの条件を変更するか/)
+    ).toBeDefined()
 
-    const clearButton = screen.getByRole("button", { name: "フィルターをクリア" })
+    const clearButton = screen.getByRole("button", {
+      name: "フィルターをクリア"
+    })
     expect(clearButton).toBeDefined()
     fireEvent.click(clearButton)
 
