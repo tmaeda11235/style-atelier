@@ -3,14 +3,12 @@ import React from "react"
 
 interface StorageManagerSectionProps {
   estimate: any
-  lang: string
   handleClearHistory: () => void
   t: any
 }
 
 export function StorageManagerSection({
   estimate,
-  lang,
   handleClearHistory,
   t
 }: StorageManagerSectionProps) {
@@ -96,16 +94,12 @@ export function StorageManagerSection({
             onClick={handleClearHistory}
             className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5">
             <Trash2 className="w-3.5 h-3.5" />
-            {t.clearHistoryBtn || "Clear History"}
+            {t.clearHistoryBtn}
           </button>
         </div>
 
         <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[10px] text-slate-500 leading-relaxed font-medium">
-          <p>
-            {lang === "ja"
-              ? "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。"
-              : "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images."}
-          </p>
+          <p>{t.cleanupHistoryDesc}</p>
         </div>
       </div>
     </div>

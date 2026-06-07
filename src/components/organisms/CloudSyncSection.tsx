@@ -65,7 +65,7 @@ export function CloudSyncSection({
             {t.gdriveSyncLabel}
             {isSyncEnabled && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
-                <ShieldCheck className="w-3 h-3 mr-0.5" /> Active
+                <ShieldCheck className="w-3 h-3 mr-0.5" /> {t.activeStatus}
               </span>
             )}
           </h3>
@@ -103,11 +103,9 @@ export function CloudSyncSection({
         <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
           <div className="space-y-0.5">
             <span className="text-xs font-bold text-slate-700">
-              自動バックアップ（オートシンク）
+              {t.autoBackupLabel}
             </span>
-            <p className="text-[10px] text-slate-400">
-              データ変更時に自動でバックアップし、他端末の更新を反映します
-            </p>
+            <p className="text-[10px] text-slate-400">{t.autoBackupDesc}</p>
           </div>
           <button
             type="button"
@@ -152,7 +150,7 @@ export function CloudSyncSection({
               type="button"
               onClick={handleCancelSync}
               className="ml-2 px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold rounded-lg transition-colors border border-red-200/50">
-              Cancel
+              {t.cancelBtnText}
             </button>
           )}
         </div>
@@ -209,7 +207,7 @@ export function CloudSyncSection({
             ) : cloudBackup ? (
               <div className="flex flex-col items-center gap-0.5 text-[10px] text-slate-500 font-medium bg-slate-50 rounded-lg py-1.5 px-3 border border-slate-100 w-full text-center">
                 <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">
-                  Cloud Backup Preview
+                  {t.cloudBackupPreview}
                 </span>
                 <span>
                   {t.restoreConfirmTime} {cloudBackup.modifiedTime}
