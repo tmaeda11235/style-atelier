@@ -263,7 +263,34 @@
     "emptyDesc": "Historyタブから画像をドラッグ＆ドロップして、あなただけの特別なスタイルカードを作成しましょう！",
     "notFoundTitle": "カードが見つかりません",
     "notFoundDesc": "検索キーワードやフィルターの条件を変更するか、クリアしてください。",
-    "clearFilters": "フィルターをクリア"
+    "clearFilters": "フィルターをクリア",
+    "searchPlaceholder": "タグ、名前、srefで検索...",
+    "allRarities": "すべてのレア度",
+    "allCategories": "すべて",
+    "colorLabel": "カラー:",
+    "manageCategories": "カテゴリ管理",
+    "sortBy": {
+      "newest": "作成日が新しい順",
+      "oldest": "作成日が古い順",
+      "rarity": "レア度順",
+      "usage": "使用回数順",
+      "color": "カラー順"
+    },
+    "colors": {
+      "all": "すべてのカラー",
+      "red": "レッド",
+      "orange": "オレンジ",
+      "yellow": "イエロー",
+      "green": "グリーン",
+      "cyan": "シアン",
+      "blue": "ブルー",
+      "purple": "パープル",
+      "pink": "ピンク",
+      "brown": "ブラウン",
+      "white": "ホワイト",
+      "gray": "グレー",
+      "black": "ブラック"
+    }
   },
   "workbench": {
     "clearAll": "すべてクリア",
@@ -288,7 +315,14 @@
     "step3Desc": "「Try on Midjourney」ボタンでプロンプトをチャットへ直接送信します。",
     "evolutionSuccessTitle": "進化完了！",
     "evolutionSuccessDesc": "スタイルカードが新たなランクへ進化しました！",
-    "close": "閉じる"
+    "close": "閉じる",
+    "promptSegments": "プロンプト要素",
+    "aspectRatio": "アスペクト比:",
+    "personalization": "パーソナライズ (--p):",
+    "imagePrompts": "イメージプロンプト:",
+    "styleReference": "スタイル参照 (--sref):",
+    "characterReference": "キャラクター参照 (--cref):",
+    "noParameters": "パラメータが設定されていません。"
   },
   "mergeStack": {
     "title": "カードスタックの統合",
@@ -311,32 +345,32 @@
     "steps": [
       {
         "title": "① HistoryにD&Dする",
-        "description": "Midjourneyで生成した画像を、このパネル of Historyタブにドラッグ＆ドロップしてください。\nテスト用のサンプルを追加することもできます。",
+        "description": "Midjourneyで生成した画像を、サイドパネルのHistoryタブにドラッグ＆ドロップしてください。\nテスト用のサンプルを追加することもできます。",
         "mockActionLabel": "サンプルを追加して進む"
       },
       {
         "title": "② Mintボタンを押す",
-        "description": "追加されたHistoryアイテムの「Mint Card」ボタンを押して、カードの作成を開始してください。"
+        "description": "追加されたHistoryアイテムの「Mint」ボタンを押して、カードの作成を開始してください。"
       },
       {
         "title": "③ タイトルを入れる",
-        "description": "キーワードを選択するか、カスタム名を入力してカードのタイトルを設定してください。設定できたら「Next」を押してください。"
+        "description": "キーワードを選択するか、カスタム名を入力してカードのタイトルを設定してください。設定できたら「次へ」を押してください。"
       },
       {
         "title": "④ スロットを選ぶ",
-        "description": "プロンプトのバブルをクリックして「Slot」に変換できます。Slotは後でWorkbenchで自由に変更できる変数になります。設定できたら「Next」を押してください。"
+        "description": "プロンプトのバブルをクリックして「Slot」に変換できます。Slotは後でWorkbenchで自由に変更できる変数になります。設定できたら「次へ」を押してください。"
       },
       {
         "title": "⑤ レア度を選ぶ",
-        "description": "カードのレア度（Common / Rare / Epic / Legendary）を選択してください。選択できたら「次へ」を押してください。"
+        "description": "カードのレア度を選択してください。選択できたら「次へ」を押してください。"
       },
       {
-        "title": "⑥ Save Cardを押す",
-        "description": "「Save Card」を押してカードをLibraryに登録してください。"
+        "title": "⑥ カードを保存を押す",
+        "description": "「カードを保存」を押してカードをLibraryに登録してください。"
       },
       {
         "title": "⑦ カードをWorkbenchへ送る",
-        "description": "LibraryのStyleCardをクリックすると、画面下部のWorkbenchバーに追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。"
+        "description": "LibraryのStyleCardをクリックすると、画面下部の手札バー（HandBar）に追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。"
       },
       {
         "title": "⑧ Workbenchで編集する",
@@ -415,5 +449,13 @@
     "exporting": "エクスポート中...",
     "inject": "適用",
     "save": "保存"
+  },
+  "navigation": {
+    "history": "History",
+    "library": "Library",
+    "workbench": "Workbench",
+    "settings": "設定",
+    "guide": "Guide",
+    "showGuide": "ガイドを表示"
   }
 }

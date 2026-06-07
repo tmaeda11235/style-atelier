@@ -263,7 +263,34 @@
     "emptyDesc": "Drag and drop images from the History tab of this panel to create your own style cards!",
     "notFoundTitle": "No Cards Found",
     "notFoundDesc": "Change or clear your search terms or filters.",
-    "clearFilters": "Clear Filters"
+    "clearFilters": "Clear Filters",
+    "searchPlaceholder": "Search by tag, name or sref...",
+    "allRarities": "All Rarities",
+    "allCategories": "All",
+    "colorLabel": "Color:",
+    "manageCategories": "Manage Categories",
+    "sortBy": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "rarity": "Rarity",
+      "usage": "Usage",
+      "color": "Color"
+    },
+    "colors": {
+      "all": "All Colors",
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "cyan": "Cyan",
+      "blue": "Blue",
+      "purple": "Purple",
+      "pink": "Pink",
+      "brown": "Brown",
+      "white": "White",
+      "gray": "Gray",
+      "black": "Black"
+    }
   },
   "workbench": {
     "clearAll": "Clear All",
@@ -288,7 +315,14 @@
     "step3Desc": "Send prompt directly to chat using the 'Try on Midjourney' button.",
     "evolutionSuccessTitle": "Evolution Complete!",
     "evolutionSuccessDesc": "Your style card has evolved to a higher tier!",
-    "close": "Close"
+    "close": "Close",
+    "promptSegments": "Prompt Segments",
+    "aspectRatio": "Aspect Ratio:",
+    "personalization": "Personalization (--p):",
+    "imagePrompts": "Image Prompts:",
+    "styleReference": "Style Reference (--sref):",
+    "characterReference": "Character Reference (--cref):",
+    "noParameters": "No parameters defined."
   },
   "mergeStack": {
     "title": "Merge Card Stack",
@@ -415,5 +449,13 @@
     "exporting": "Exporting...",
     "inject": "Inject",
     "save": "Save"
+  },
+  "navigation": {
+    "history": "History",
+    "library": "Library",
+    "workbench": "Workbench",
+    "settings": "Settings",
+    "guide": "Guide",
+    "showGuide": "Show Guide"
   }
 }

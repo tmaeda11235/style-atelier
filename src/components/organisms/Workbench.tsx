@@ -476,7 +476,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
 
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500">
-                  Prompt Segments
+                  {t.promptSegments}
                 </span>
                 {expertFeatures.cardEditing && (
                   <HelpTooltip
@@ -534,7 +534,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   {editedParams.ar && (
                     <div>
                       <span className="font-bold text-slate-500">
-                        Aspect Ratio:
+                        {t.aspectRatio}
                       </span>{" "}
                       {editedParams.ar}
                     </div>
@@ -542,7 +542,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   {editedParams.p && editedParams.p.length > 0 && (
                     <div>
                       <span className="font-bold text-slate-500">
-                        Personalization (--p):
+                        {t.personalization}
                       </span>{" "}
                       {editedParams.p.join(", ")}
                     </div>
@@ -551,7 +551,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                     editedParams.imagePrompts.length > 0 && (
                       <div>
                         <span className="font-bold text-slate-500">
-                          Image Prompts:
+                          {t.imagePrompts}
                         </span>{" "}
                         {editedParams.imagePrompts.join(", ")}
                       </div>
@@ -559,7 +559,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   {editedParams.sref && editedParams.sref.length > 0 && (
                     <div>
                       <span className="font-bold text-slate-500">
-                        Style Reference (--sref):
+                        {t.styleReference}
                       </span>{" "}
                       {editedParams.sref.join(", ")}
                     </div>
@@ -567,14 +567,14 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   {editedParams.cref && editedParams.cref.length > 0 && (
                     <div>
                       <span className="font-bold text-slate-500">
-                        Character Reference (--cref):
+                        {t.characterReference}
                       </span>{" "}
                       {editedParams.cref.join(", ")}
                     </div>
                   )}
                   {!hasParams && (
                     <div className="text-slate-400 italic">
-                      No parameters defined.
+                      {t.noParameters}
                     </div>
                   )}
                 </div>
