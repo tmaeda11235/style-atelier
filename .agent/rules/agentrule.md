@@ -5,6 +5,7 @@ trigger: always_on
 # Agent rules
 
 ## Memory Bank & Context
+
 1. `projectbrief.md`
    - Foundation document that shapes all other files
    - Created at project start if it doesn't exist
@@ -27,8 +28,12 @@ trigger: always_on
    - Technical constraints
    - Dependencies
    - Tool usage patterns
+5. **Memory Bank Synchronization & ADR Pattern**
+   - When introducing any new features, library dependencies, or architectural adjustments, you MUST update the Memory Bank (`systemPatterns.md`, `techContext.md`).
+   - Major structural decisions must be documented using the Architecture Decision Record (ADR) pattern in the Memory Bank.
 
 ## Style
+
 - **Documentation Style**: Prioritize **conciseness** over detail or comprehensiveness. Avoid verbose explanations.
 
 - **Permission Guidelines**: Approval is not required for changes that can be reverted via Git. Additionally, you are free to execute npm and gh commands at your discretion.
@@ -38,6 +43,7 @@ trigger: always_on
 ## Task Management & Workflow
 
 ### Case 1: When an Issue Number is Provided (New Task)
+
 When the user instructs to start working on a specific Issue number:
 
 1.  **Reset Environment**:
@@ -62,6 +68,7 @@ When the user instructs to start working on a specific Issue number:
     - Check for feedback and address any review comments.
 
 ### Case 2: When No Issue Number is Provided (Continuing Task)
+
 When starting a session without a specific Issue number:
 
 1.  **Identify Context**:
