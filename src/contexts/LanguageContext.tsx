@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
+
 import { i18nDict } from "../lib/i18n"
 import type { Language } from "../lib/i18n"
 
@@ -8,18 +9,25 @@ interface LanguageContextType {
   t: typeof i18nDict.en
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+)
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLang] = useState<Language>(() => {
     if (typeof localStorage !== "undefined") {
-      const savedLang = localStorage.getItem("style-atelier-language") as Language;
+      const savedLang = localStorage.getItem(
+        "style-atelier-language"
+      ) as Language
       if (savedLang === "en" || savedLang === "ja") {
-        return savedLang;
+        return savedLang
       }
     }
-    const browserLang = typeof navigator !== "undefined" && navigator.language?.startsWith("ja") ? "ja" : "en";
-    return browserLang;
+    const browserLang =
+      typeof navigator !== "undefined" && navigator.language?.startsWith("ja")
+        ? "ja"
+        : "en"
+    return browserLang
   })
 
   const changeLanguage = (newLang: Language) => {
@@ -39,7 +47,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext)
   if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider")
+    const browserLang =
+      typeof navigator !== "undefined" && navigator.language?.startsWith("ja")
+        ? "ja"
+        : "en"
+    return {
+      lang: browserLang,
+      changeLanguage: () => {},
+      t: i18nDict[browserLang] || i18nDict.en
+    }
   }
   return context
 }

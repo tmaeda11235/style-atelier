@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react"
-import { X, Send } from "lucide-react"
+import { Send, X } from "lucide-react"
+import React, { useEffect, useState } from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import { db } from "../../lib/db"
+import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import { buildPromptString } from "../../lib/prompt-utils"
 import { Button } from "../atoms/Button"
 import { CardThumbnail } from "../molecules/CardThumbnail"
-import { PromptBubbleEditor } from "./PromptBubbleEditor"
-import { ParameterEditor } from "./ParameterEditor"
-import { buildPromptString } from "../../lib/prompt-utils"
-import { db } from "../../lib/db"
-import type { StyleCard, PromptSegment } from "../../lib/db-schema"
 import type { AlertType } from "../molecules/ConnectionAlert"
+import { ParameterEditor } from "./ParameterEditor"
+import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
 interface SimpleWorkbenchModalProps {
   card: StyleCard
@@ -20,24 +22,14 @@ export function SimpleWorkbenchModal({
   card,
   onClose,
   addLog,
-  setAlertType,
+  setAlertType
 }: SimpleWorkbenchModalProps) {
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
   const [editedParams, setEditedParams] = useState<any>({})
   const [isInjecting, setIsInjecting] = useState(false)
 
-  const isJapanese = typeof navigator !== "undefined" && navigator.language?.startsWith("ja")
-  const t = {
-    title: isJapanese ? "簡易 Workbench" : "Simple Workbench",
-    tryOnMidjourney: isJapanese ? "Try on Midjourney" : "Try on Midjourney",
-    injecting: isJapanese ? "Injecting..." : "Injecting...",
-    close: isJapanese ? "閉じる" : "Close",
-    cancel: isJapanese ? "キャンセル" : "Cancel",
-    promptPreview: isJapanese ? "プロンプト調整" : "Adjust Prompt",
-    injectSuccess: isJapanese ? "プロンプトを挿入しました！" : "Prompt injected successfully!",
-    checkConnectionFailed: isJapanese ? "接続確認に失敗しました" : "Connection check failed",
-    noActiveTab: isJapanese ? "アクティブなタブが見つかりません" : "No active tab found",
-  }
+  const { t: i18n } = useLanguage()
+  const t = i18n.simpleWorkbench
 
   // Load segments and parameters on mount or when card changes
   useEffect(() => {
@@ -55,7 +47,10 @@ export function SimpleWorkbenchModal({
     const checkConnection = async () => {
       if (isCancelled) return
       try {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+        const tabs = await chrome.tabs.query({
+          active: true,
+          currentWindow: true
+        })
         const activeTab = tabs[0]
         if (isCancelled) return
         if (!activeTab || !activeTab.id) {
@@ -68,7 +63,9 @@ export function SimpleWorkbenchModal({
           return
         }
 
-        const response = await chrome.tabs.sendMessage(activeTab.id, { type: "PING" })
+        const response = await chrome.tabs.sendMessage(activeTab.id, {
+          type: "PING"
+        })
         if (isCancelled) return
         setAlertType(null)
       } catch (err: any) {
@@ -103,7 +100,7 @@ export function SimpleWorkbenchModal({
       if (seg.type === "slot") {
         return {
           type: "text" as const,
-          value: seg.default || seg.label,
+          value: seg.default || seg.label
         }
       }
       return seg
@@ -112,7 +109,10 @@ export function SimpleWorkbenchModal({
     const fullPrompt = buildPromptString(resolvedSegments, editedParams)
 
     try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      })
       const activeTab = tabs[0]
 
       if (!activeTab?.id) {
@@ -121,11 +121,14 @@ export function SimpleWorkbenchModal({
 
       const response = await chrome.tabs.sendMessage(activeTab.id, {
         type: "INJECT_PROMPT",
-        prompt: fullPrompt,
+        prompt: fullPrompt
       })
 
       if (response && response.status === "error") {
-        if (response.message && response.message.includes("Could not find chat input")) {
+        if (
+          response.message &&
+          response.message.includes("Could not find chat input")
+        ) {
           setAlertType("no_input")
         } else {
           setAlertType("disconnected")
@@ -162,8 +165,7 @@ export function SimpleWorkbenchModal({
           <button
             onClick={onClose}
             className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-            aria-label="Close"
-          >
+            aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -182,7 +184,9 @@ export function SimpleWorkbenchModal({
               <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                 Card Name
               </span>
-              <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
+              <p className="text-xs font-bold text-slate-800 truncate">
+                {card.name}
+              </p>
               <div className="mt-1 flex items-center gap-1.5">
                 <span className="text-[10px] bg-slate-150 px-1.5 py-0.5 rounded text-slate-600 font-semibold">
                   {card.tier}
@@ -197,7 +201,9 @@ export function SimpleWorkbenchModal({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-500">{t.promptPreview}</label>
+            <label className="block text-xs font-semibold text-slate-500">
+              {t.promptPreview}
+            </label>
             <PromptBubbleEditor
               initialSegments={editedSegments}
               onChange={setEditedSegments}
@@ -205,7 +211,10 @@ export function SimpleWorkbenchModal({
             />
           </div>
 
-          <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
+          <ParameterEditor
+            parameters={editedParams}
+            onChange={setEditedParams}
+          />
         </div>
 
         {/* Footer */}
@@ -216,8 +225,7 @@ export function SimpleWorkbenchModal({
           <Button
             className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold"
             onClick={handleInjectPrompt}
-            disabled={isInjecting}
-          >
+            disabled={isInjecting}>
             <Send className="w-4 h-4 mr-2" />
             {isInjecting ? t.injecting : t.tryOnMidjourney}
           </Button>

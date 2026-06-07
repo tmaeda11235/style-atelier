@@ -1,7 +1,9 @@
 import { useState } from "react"
+import iconUrl from "url:../../assets/icon.png"
+
+import { useLanguage } from "../contexts/LanguageContext"
 import { db } from "../lib/db"
 import type { HistoryItem, StyleCard } from "../lib/db-schema"
-import iconUrl from "url:../../assets/icon.png"
 
 export function useDragAndDrop(addLog: (msg: string) => void) {
   const [isDragging, setIsDragging] = useState(false)
@@ -16,7 +18,8 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
     errorMessage?: string
   } | null>(null)
 
-  const isJapanese = typeof navigator !== "undefined" && navigator.language?.startsWith("ja")
+  const { t: i18n } = useLanguage()
+  const t = i18n.dragAndDrop
 
   const triggerNotification = (item: typeof droppedItem) => {
     setDroppedItem(item)
@@ -50,14 +53,18 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
     const hasJsonData = types.includes("application/json")
 
     // 1. Check if files are dropped (QR Card Image Import) - only if it is not a local JSON drag
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && !hasJsonData) {
+    if (
+      e.dataTransfer.files &&
+      e.dataTransfer.files.length > 0 &&
+      !hasJsonData
+    ) {
       const files = Array.from(e.dataTransfer.files)
       const imageFile = files.find((f) => f.type.startsWith("image/"))
       if (!imageFile) {
         addLog("No valid image file dropped.")
         triggerNotification({
           isError: true,
-          errorMessage: isJapanese ? "有効な画像ファイルがドロップされませんでした。" : "No valid image file dropped."
+          errorMessage: t.noValidImage
         })
         return null
       }
@@ -66,16 +73,15 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
       addLog("Processing dropped card image...")
 
       try {
-        const { readQRCodeFromImage, decompressCardData } = await import("../lib/qr-utils")
+        const { readQRCodeFromImage, decompressCardData } =
+          await import("../lib/qr-utils")
         const payload = await readQRCodeFromImage(imageFile)
-        
+
         if (!payload) {
           addLog("No QR code found in the image.")
           triggerNotification({
             isError: true,
-            errorMessage: isJapanese
-              ? "画像からQRコードが検出されませんでした。"
-              : "No QR code found in the image."
+            errorMessage: t.noQrCode
           })
           setIsImporting(false)
           return null
@@ -86,9 +92,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           addLog("Invalid card data in QR code.")
           triggerNotification({
             isError: true,
-            errorMessage: isJapanese
-              ? "QRコード内のカードデータが無効であるか、破損しています。"
-              : "Invalid card data in QR code or corrupted."
+            errorMessage: t.invalidCardData
           })
           setIsImporting(false)
           return null
@@ -96,22 +100,26 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
 
         const cdnUrl = partialCard.images?.[0]
         let finalThumbnailData = iconUrl
-        
+
         if (cdnUrl) {
           addLog("Fetching clean artwork from Midjourney...")
           try {
             const response = await fetch(cdnUrl)
             if (response.ok) {
               const blob = await response.blob()
-              finalThumbnailData = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader()
-                reader.onloadend = () => resolve(reader.result as string)
-                reader.onerror = reject
-                reader.readAsDataURL(blob)
-              })
+              finalThumbnailData = await new Promise<string>(
+                (resolve, reject) => {
+                  const reader = new FileReader()
+                  reader.onloadend = () => resolve(reader.result as string)
+                  reader.onerror = reject
+                  reader.readAsDataURL(blob)
+                }
+              )
               addLog("Artwork downloaded successfully.")
             } else {
-              addLog("Could not fetch artwork from Midjourney CDN. Using placeholder.")
+              addLog(
+                "Could not fetch artwork from Midjourney CDN. Using placeholder."
+              )
             }
           } catch (fetchErr) {
             console.error("CORS or network error fetching artwork:", fetchErr)
@@ -121,8 +129,10 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           addLog("No artwork URL found in card. Using placeholder.")
         }
 
-        const existingCard = partialCard.id ? await db.getCard(partialCard.id) : null
-        
+        const existingCard = partialCard.id
+          ? await db.getCard(partialCard.id)
+          : null
+
         const importedCard: StyleCard = {
           id: partialCard.id || crypto.randomUUID(),
           name: partialCard.name,
@@ -130,7 +140,10 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           updatedAt: Date.now(),
           promptSegments: partialCard.promptSegments,
           parameters: partialCard.parameters || {},
-          masking: partialCard.masking || { isSrefHidden: false, isPHidden: false },
+          masking: partialCard.masking || {
+            isSrefHidden: false,
+            isPHidden: false
+          },
           tier: partialCard.tier || "Common",
           isFavorite: existingCard?.isFavorite || false,
           usageCount: existingCard?.usageCount || 0,
@@ -143,7 +156,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
           genealogy: partialCard.genealogy || { generation: 1, parentIds: [] },
           images: cdnUrl ? [cdnUrl] : [],
           selectedThumbnails: cdnUrl ? [cdnUrl] : [],
-          associatedJobIds: [],
+          associatedJobIds: []
         }
 
         await db.putCard(importedCard)
@@ -159,9 +172,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
         addLog("Error occurred while importing card.")
         triggerNotification({
           isError: true,
-          errorMessage: isJapanese
-            ? `カードのインポート中にエラーが発生しました: ${err.message || err}`
-            : `Failed to import card: ${err.message || err}`
+          errorMessage: `${t.importFailed}${err.message || err}`
         })
       } finally {
         setIsImporting(false)
@@ -180,7 +191,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
       if (item && item.id && item.imageUrl) {
         // Query to check if a style card with this jobId already exists
         const existingCard = await db.getCardByJobId(item.id)
-        
+
         if (existingCard) {
           const currentImages = existingCard.images || []
           if (!currentImages.includes(item.imageUrl)) {
@@ -191,10 +202,16 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
             })
             addLog(`Image added to existing Style Card "${existingCard.name}".`)
           } else {
-            addLog(`Image already associated with Style Card "${existingCard.name}".`)
+            addLog(
+              `Image already associated with Style Card "${existingCard.name}".`
+            )
           }
-          
-          setDroppedItem({ id: existingCard.id, name: existingCard.name, isMerged: true })
+
+          setDroppedItem({
+            id: existingCard.id,
+            name: existingCard.name,
+            isMerged: true
+          })
           setTimeout(() => setDroppedItem(null), 3000)
           return item
         } else {
@@ -209,7 +226,10 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
               addLog("Failed to fetch history artwork from CDN.")
             }
           } catch (fetchErr) {
-            console.error("CORS or network error fetching history artwork:", fetchErr)
+            console.error(
+              "CORS or network error fetching history artwork:",
+              fetchErr
+            )
             addLog("Failed to cache history artwork.")
           }
 
@@ -238,6 +258,6 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
     droppedItem,
     handleDragOver,
     handleDragLeave,
-    handleDrop,
+    handleDrop
   }
 }

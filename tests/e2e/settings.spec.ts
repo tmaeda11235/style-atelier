@@ -594,6 +594,98 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     console.log("Language selection E2E test passed successfully!")
   })
 
+  test("should switch display language and verify localization in InteractiveTutorial", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Tutorial Localization E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if visible
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab and change language to English
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
+
+    console.log("Switching language to English...")
+    await langSelect.selectOption("en")
+    await page.waitForTimeout(500)
+
+    // 3. Click Guide button in header to trigger tutorial
+    const guideBtn = spFrame.locator("button[title='Show Guide']")
+    await expect(guideBtn).toBeVisible()
+    await guideBtn.click()
+    await page.waitForTimeout(500)
+
+    // 4. Verify InteractiveTutorial displays English texts
+    const tutorialHeader = spFrame.locator("text=Step 1 / 8")
+    await expect(tutorialHeader).toBeVisible({ timeout: 5000 })
+    const tutorialTitleEn = spFrame.locator("text=1. Drag & Drop into History")
+    await expect(tutorialTitleEn).toBeVisible()
+    const nextBtnEn = spFrame.locator("button:has-text('Next')")
+    await expect(nextBtnEn).toBeVisible()
+    const sampleBtnEn = spFrame.locator(
+      "button:has-text('Add Sample and Proceed')"
+    )
+    await expect(sampleBtnEn).toBeVisible()
+
+    // Take English Tutorial screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "tutorial-lang-en.png")
+    })
+
+    // 5. Close tutorial
+    const closeTutorialBtn = spFrame.locator(
+      "button[aria-label='Close tutorial']"
+    )
+    await expect(closeTutorialBtn).toBeVisible()
+    await closeTutorialBtn.click()
+    await page.waitForTimeout(500)
+
+    // Reopen Settings tab to show language selector again
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 6. Switch language to Japanese in Settings Tab
+    console.log("Switching language to Japanese...")
+    await langSelect.selectOption("ja")
+    await page.waitForTimeout(500)
+
+    // 7. Click Guide button again
+    await guideBtn.click()
+    await page.waitForTimeout(500)
+
+    // 8. Verify InteractiveTutorial displays Japanese texts
+    const tutorialTitleJa = spFrame.locator("text=① HistoryにD&Dする")
+    await expect(tutorialTitleJa).toBeVisible({ timeout: 5000 })
+    const nextBtnJa = spFrame.locator("button:has-text('次へ')")
+    await expect(nextBtnJa).toBeVisible()
+    const sampleBtnJa = spFrame.locator(
+      "button:has-text('サンプルを追加して進む')"
+    )
+    await expect(sampleBtnJa).toBeVisible()
+
+    // Take Japanese Tutorial screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "tutorial-lang-ja.png")
+    })
+
+    console.log("Tutorial localization E2E test passed successfully!")
+  })
+
   test("should show custom confirm dialog and handle reset database action", async ({
     page
   }) => {

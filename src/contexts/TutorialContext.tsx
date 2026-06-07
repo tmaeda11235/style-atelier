@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from "react"
+import React, { createContext, useCallback, useContext, useState } from "react"
+
+import { useLanguage } from "./LanguageContext"
 
 /** チュートリアルの各ステップ定義 */
 export type TutorialStep =
@@ -24,75 +26,58 @@ export interface TutorialStepConfig {
   mockActionLabel?: string
 }
 
-export const TUTORIAL_STEPS: TutorialStepConfig[] = [
+export const STEP_METADATA = [
   {
-    id: "drop-history",
-    title: "① HistoryにD&Dする",
-    description: "Midjourneyで生成した画像を、このパネルのHistoryタブにドラッグ＆ドロップしてください。\nテスト用のサンプルを追加することもできます。",
+    id: "drop-history" as TutorialStep,
     targetSelector: "[data-tutorial='history-drop-zone']",
-    position: "bottom",
-    autoAdvance: true,
-    mockActionLabel: "サンプルを追加して進む",
+    position: "bottom" as const,
+    autoAdvance: true
   },
   {
-    id: "mint-button",
-    title: "② Mintボタンを押す",
-    description: "追加されたHistoryアイテムの「Mint Card」ボタンを押して、カードの作成を開始してください。",
+    id: "mint-button" as TutorialStep,
     targetSelector: "[data-tutorial='mint-button']",
-    position: "bottom",
-    autoAdvance: true,
+    position: "bottom" as const,
+    autoAdvance: true
   },
   {
-    id: "title-input",
-    title: "③ タイトルを入れる",
-    description: "キーワードを選択するか、カスタム名を入力してカードのタイトルを設定してください。設定できたら「Next」を押してください。",
+    id: "title-input" as TutorialStep,
     targetSelector: "[data-tutorial='title-input']",
-    position: "bottom",
-    autoAdvance: false,
+    position: "bottom" as const,
+    autoAdvance: false
   },
   {
-    id: "slot-selection",
-    title: "④ スロットを選ぶ",
-    description: "プロンプトのバブルをクリックして「Slot」に変換できます。Slotは後でWorkbenchで自由に変更できる変数になります。設定できたら「Next」を押してください。",
+    id: "slot-selection" as TutorialStep,
     targetSelector: "[data-tutorial='prompt-segment-bubble']",
-    position: "bottom",
-    autoAdvance: false,
+    position: "bottom" as const,
+    autoAdvance: false
   },
   {
-    id: "rarity-save",
-    title: "⑤ レア度を選ぶ",
-    description: "カードのレア度（Common / Rare / Epic / Legendary）を選択してください。選択できたら「次へ」を押してください。",
+    id: "rarity-save" as TutorialStep,
     targetSelector: "[data-tutorial='rarity-section']",
-    position: "top",
-    autoAdvance: false,
+    position: "top" as const,
+    autoAdvance: false
   },
   {
-    id: "save-card",
-    title: "⑥ Save Cardを押す",
-    description: "「Save Card」を押してカードをLibraryに登録してください。",
+    id: "save-card" as TutorialStep,
     targetSelector: "[data-tutorial='mint-save-footer']",
-    position: "top",
-    autoAdvance: true,
+    position: "top" as const,
+    autoAdvance: true
   },
   {
-    id: "card-to-hand",
-    title: "⑦ カードをWorkbenchへ送る",
-    description: "LibraryのStyleCardをクリックすると、画面下部のWorkbenchバーに追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。",
+    id: "card-to-hand" as TutorialStep,
     targetSelector: "[data-tutorial='library-card-grid']",
-    position: "bottom",
-    autoAdvance: false,
+    position: "bottom" as const,
+    autoAdvance: false
   },
   {
-    id: "workbench-edit",
-    title: "⑧ Workbenchで編集する",
-    description: "Workbenchタブに切り替えると、送られたカードのSlotの値を編集し、プロンプトをMidjourneyに送信できます。ガイドは以上です！",
+    id: "workbench-edit" as TutorialStep,
     targetSelector: "[data-tutorial='workbench-tab']",
-    position: "bottom",
-    autoAdvance: false,
-  },
+    position: "bottom" as const,
+    autoAdvance: false
+  }
 ]
 
-const STEP_IDS = TUTORIAL_STEPS.map((s) => s.id) as NonNullable<TutorialStep>[]
+const STEP_IDS = STEP_METADATA.map((s) => s.id) as NonNullable<TutorialStep>[]
 
 interface TutorialContextType {
   isActive: boolean
@@ -107,14 +92,29 @@ interface TutorialContextType {
   advanceIfStep: (step: TutorialStep) => void
 }
 
-const TutorialContext = createContext<TutorialContextType | undefined>(undefined)
+const TutorialContext = createContext<TutorialContextType | undefined>(
+  undefined
+)
 
-export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
   const [isActive, setIsActive] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const { t } = useLanguage()
+
+  const tutorialSteps = STEP_METADATA.map((meta, index) => {
+    const stepTranslation = t.tutorial.steps[index]
+    return {
+      ...meta,
+      title: stepTranslation.title,
+      description: stepTranslation.description,
+      mockActionLabel: stepTranslation.mockActionLabel
+    } as TutorialStepConfig
+  })
 
   const currentStep = isActive ? STEP_IDS[currentStepIndex] : null
-  const currentConfig = isActive ? TUTORIAL_STEPS[currentStepIndex] : null
+  const currentConfig = isActive ? tutorialSteps[currentStepIndex] : null
 
   const startTutorial = useCallback(() => {
     setCurrentStepIndex(0)
@@ -163,9 +163,8 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         stopTutorial,
         nextStep,
         prevStep,
-        advanceIfStep,
-      }}
-    >
+        advanceIfStep
+      }}>
       {children}
     </TutorialContext.Provider>
   )
