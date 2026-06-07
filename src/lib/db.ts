@@ -106,6 +106,30 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
     )
   }
 
+  // --- SlotHistory Operations ---
+
+  async getSlotHistory(label: string): Promise<string[]> {
+    const item = await this.slotHistory.get(label)
+    return item ? item.values : []
+  }
+
+  async saveSlotHistory(label: string, values: string[]): Promise<void> {
+    await this.slotHistory.put({
+      label,
+      values,
+      updatedAt: Date.now()
+    })
+  }
+
+  async getAllSlotHistory(): Promise<Record<string, string[]>> {
+    const items = await this.slotHistory.toArray()
+    const history: Record<string, string[]> = {}
+    for (const item of items) {
+      history[item.label] = item.values
+    }
+    return history
+  }
+
   async mergeStyleCards(
     representativeId: string,
     materials: StyleCard[],
@@ -180,18 +204,26 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
       categories: CustomCategory[]
       userSettings: UserSettings[]
       historyItems: HistoryItem[]
+      slotHistory?: Record<string, string[]>
     },
     mode: "merge" | "replace" = "replace"
   ): Promise<void> {
     return this.transaction(
       "rw",
-      [this.styleCards, this.categories, this.userSettings, this.historyItems],
+      [
+        this.styleCards,
+        this.categories,
+        this.userSettings,
+        this.historyItems,
+        this.slotHistory
+      ],
       async () => {
         if (mode === "replace") {
           await this.styleCards.clear()
           await this.categories.clear()
           await this.userSettings.clear()
           await this.historyItems.clear()
+          await this.slotHistory.clear()
 
           if (data.styleCards && data.styleCards.length > 0) {
             await this.styleCards.bulkPut(data.styleCards)
@@ -204,6 +236,18 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
           }
           if (data.historyItems && data.historyItems.length > 0) {
             await this.historyItems.bulkPut(data.historyItems)
+          }
+          if (data.slotHistory) {
+            const items = Object.entries(data.slotHistory).map(
+              ([label, values]) => ({
+                label,
+                values,
+                updatedAt: Date.now()
+              })
+            )
+            if (items.length > 0) {
+              await this.slotHistory.bulkPut(items)
+            }
           }
         } else {
           if (data.styleCards && data.styleCards.length > 0) {
@@ -275,6 +319,25 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
             }
             if (toPut.length > 0) {
               await this.historyItems.bulkPut(toPut)
+            }
+          }
+
+          if (data.slotHistory) {
+            for (const [label, incomingValues] of Object.entries(
+              data.slotHistory
+            )) {
+              if (Array.isArray(incomingValues)) {
+                const local = await this.slotHistory.get(label)
+                const localValues = local ? local.values : []
+                const merged = Array.from(
+                  new Set([...incomingValues, ...localValues])
+                ).slice(0, 10)
+                await this.slotHistory.put({
+                  label,
+                  values: merged,
+                  updatedAt: Date.now()
+                })
+              }
             }
           }
         }

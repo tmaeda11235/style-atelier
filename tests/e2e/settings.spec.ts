@@ -707,7 +707,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await page.waitForTimeout(500)
 
     // 3. Click Guide button in header to trigger tutorial
-    const guideBtn = spFrame.locator("button[title='Show Guide']")
+    const guideBtn = spFrame.locator(
+      "button[title='Show Guide'], button[title='ガイドを表示']"
+    )
     await expect(guideBtn).toBeVisible()
     await guideBtn.click()
     await page.waitForTimeout(500)

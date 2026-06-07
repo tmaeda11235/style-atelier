@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { vi } from "vitest"
 
 import type {
@@ -128,6 +129,7 @@ export class MockStyleAtelierDatabase {
   categories = new MockTable<CustomCategory>()
   historyItems = new MockTable<HistoryItem>()
   userSettings = new MockTable<UserSettings>()
+  slotHistory = new MockTable<any>()
 
   constructor() {
     this.reset()
@@ -166,6 +168,7 @@ export class MockStyleAtelierDatabase {
     ])
     this.historyItems = new MockTable<HistoryItem>([])
     this.userSettings = new MockTable<UserSettings>([])
+    this.slotHistory = new MockTable<any>([])
   }
 
   // StyleCard Operations
@@ -323,6 +326,7 @@ export class MockStyleAtelierDatabase {
           await this.categories.clear()
           await this.userSettings.clear()
           await this.historyItems.clear()
+          await this.slotHistory.clear()
         }
         if (data.styleCards) await this.styleCards.bulkPut(data.styleCards)
         if (data.categories) await this.categories.bulkPut(data.categories)
@@ -330,8 +334,38 @@ export class MockStyleAtelierDatabase {
           await this.userSettings.bulkPut(data.userSettings)
         if (data.historyItems)
           await this.historyItems.bulkPut(data.historyItems)
+        if (data.slotHistory && mode === "replace") {
+          const items = Object.entries(data.slotHistory).map(
+            ([label, values]) => ({
+              label,
+              values,
+              updatedAt: Date.now()
+            })
+          )
+          await this.slotHistory.bulkPut(items)
+        }
       }
     )
+
+  getSlotHistory = vi.fn().mockImplementation(async (label: string) => {
+    const item = await this.slotHistory.get(label)
+    return item ? item.values : undefined
+  })
+
+  saveSlotHistory = vi
+    .fn()
+    .mockImplementation(async (label: string, values: string[]) => {
+      await this.slotHistory.put({ label, values, updatedAt: Date.now() })
+    })
+
+  getAllSlotHistory = vi.fn().mockImplementation(async () => {
+    const list = await this.slotHistory.toArray()
+    const res: Record<string, string[]> = {}
+    list.forEach((item) => {
+      res[item.label] = item.values
+    })
+    return res
+  })
 
   deleteStyleCardAndCleanup = vi
     .fn()

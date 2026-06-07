@@ -9,7 +9,9 @@ vi.mock("./db", () => {
     toArray: vi.fn().mockResolvedValue([]),
     clear: vi.fn().mockResolvedValue(undefined),
     bulkAdd: vi.fn().mockResolvedValue(undefined),
-    bulkPut: vi.fn().mockResolvedValue(undefined)
+    bulkPut: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(undefined),
+    put: vi.fn().mockResolvedValue(undefined)
   })
   return {
     db: {
@@ -17,8 +19,11 @@ vi.mock("./db", () => {
       categories: mockTable(),
       userSettings: mockTable(),
       historyItems: mockTable(),
+      slotHistory: mockTable(),
       getAllCards: vi.fn().mockResolvedValue([]),
       getAllCategories: vi.fn().mockResolvedValue([]),
+      getAllSlotHistory: vi.fn().mockResolvedValue({}),
+      saveSlotHistory: vi.fn().mockResolvedValue(undefined),
       importBackupData: vi.fn().mockResolvedValue(undefined),
       transaction: vi.fn((mode, tables, cb) => cb())
     }
@@ -67,15 +72,12 @@ describe("Backup Manager Utilities", () => {
       expect(parsed.data.historyItems[1].id).toBe("hist2")
     })
 
-    it("should include slotHistory from localStorage in the exported payload", async () => {
+    it("should include slotHistory from IndexedDB in the exported payload", async () => {
       const mockSlotHistory = {
         subject: ["cat", "dog"],
         style: ["anime"]
       }
-      localStorage.setItem(
-        "style_atelier_slot_history",
-        JSON.stringify(mockSlotHistory)
-      )
+      vi.mocked(db.getAllSlotHistory).mockResolvedValue(mockSlotHistory)
 
       const json = await exportDatabase()
       const parsed = JSON.parse(json)
@@ -145,20 +147,9 @@ describe("Backup Manager Utilities", () => {
       )
     })
 
-    it("should restore and merge slotHistory into localStorage, keeping incoming values first, removing duplicates, and limiting to 10 items", async () => {
-      const existingHistory = {
-        subject: ["existing1", "existing2", "common"],
-        style: ["minimalist"]
-      }
-      localStorage.setItem(
-        "style_atelier_slot_history",
-        JSON.stringify(existingHistory)
-      )
-
+    it("should pass slotHistory to db.importBackupData", async () => {
       const incomingHistory = {
-        subject: ["common", "incoming1", "incoming2"],
-        style: ["gothic"],
-        artist: ["picasso"]
+        subject: ["common", "incoming1", "incoming2"]
       }
 
       const mockPayload = {
@@ -175,65 +166,10 @@ describe("Backup Manager Utilities", () => {
 
       await importDatabase(JSON.stringify(mockPayload), "merge")
 
-      const restored = JSON.parse(
-        localStorage.getItem("style_atelier_slot_history") || "{}"
+      expect(db.importBackupData).toHaveBeenCalledWith(
+        mockPayload.data,
+        "merge"
       )
-
-      expect(restored.subject).toEqual([
-        "common",
-        "incoming1",
-        "incoming2",
-        "existing1",
-        "existing2"
-      ])
-      expect(restored.style).toEqual(["gothic", "minimalist"])
-      expect(restored.artist).toEqual(["picasso"])
-    })
-
-    it("should cap merged slotHistory items at 10 per variable", async () => {
-      const existingHistory = {
-        subject: ["1", "2", "3", "4", "5", "6", "7", "8"]
-      }
-      localStorage.setItem(
-        "style_atelier_slot_history",
-        JSON.stringify(existingHistory)
-      )
-
-      const incomingHistory = {
-        subject: ["9", "10", "11", "12", "13"]
-      }
-
-      const mockPayload = {
-        version: 1,
-        exportedAt: 123456,
-        data: {
-          styleCards: [],
-          categories: [],
-          userSettings: [],
-          historyItems: [],
-          slotHistory: incomingHistory
-        }
-      }
-
-      await importDatabase(JSON.stringify(mockPayload), "merge")
-
-      const restored = JSON.parse(
-        localStorage.getItem("style_atelier_slot_history") || "{}"
-      )
-
-      expect(restored.subject).toEqual([
-        "9",
-        "10",
-        "11",
-        "12",
-        "13",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5"
-      ])
-      expect(restored.subject).toHaveLength(10)
     })
 
     it("should throw error if payload structure is invalid", async () => {

@@ -59,28 +59,28 @@ export function LibraryTab({
   const colorOptions = [
     {
       value: "All",
-      label: "All Colors",
+      label: t.colors?.all || "All Colors",
       bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)"
     },
-    { value: "Red", label: "Red", bg: "#ef4444" },
-    { value: "Orange", label: "Orange", bg: "#f97316" },
-    { value: "Yellow", label: "Yellow", bg: "#eab308" },
-    { value: "Green", label: "Green", bg: "#22c55e" },
-    { value: "Cyan", label: "Cyan", bg: "#06b6d4" },
-    { value: "Blue", label: "Blue", bg: "#3b82f6" },
-    { value: "Purple", label: "Purple", bg: "#a855f7" },
-    { value: "Pink", label: "Pink", bg: "#ec4899" },
-    { value: "Brown", label: "Brown", bg: "#78350f" },
-    { value: "White", label: "White", bg: "#ffffff" },
-    { value: "Gray", label: "Gray", bg: "#6b7280" },
-    { value: "Black", label: "Black", bg: "#09090b" }
+    { value: "Red", label: t.colors?.red || "Red", bg: "#ef4444" },
+    { value: "Orange", label: t.colors?.orange || "Orange", bg: "#f97316" },
+    { value: "Yellow", label: t.colors?.yellow || "Yellow", bg: "#eab308" },
+    { value: "Green", label: t.colors?.green || "Green", bg: "#22c55e" },
+    { value: "Cyan", label: t.colors?.cyan || "Cyan", bg: "#06b6d4" },
+    { value: "Blue", label: t.colors?.blue || "Blue", bg: "#3b82f6" },
+    { value: "Purple", label: t.colors?.purple || "Purple", bg: "#a855f7" },
+    { value: "Pink", label: t.colors?.pink || "Pink", bg: "#ec4899" },
+    { value: "Brown", label: t.colors?.brown || "Brown", bg: "#78350f" },
+    { value: "White", label: t.colors?.white || "White", bg: "#ffffff" },
+    { value: "Gray", label: t.colors?.gray || "Gray", bg: "#6b7280" },
+    { value: "Black", label: t.colors?.black || "Black", bg: "#09090b" }
   ]
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
         <SearchField
-          placeholder="Search by tag, name or sref..."
+          placeholder={t.searchPlaceholder || "Search by tag, name or sref..."}
           options={allSrefs}
           value={searchTag}
           onChange={(e) => setSearchTag(e.target.value)}
@@ -92,7 +92,7 @@ export function LibraryTab({
               value={rarityFilter}
               onChange={(e) => setRarityFilter(e.target.value as any)}
               className="flex-1 px-1 py-1 text-[10px] border rounded bg-white">
-              <option value="All">All Rarities</option>
+              <option value="All">{t.allRarities || "All Rarities"}</option>
               <option value="Common">Common</option>
               <option value="Rare">Rare</option>
               <option value="Epic">Epic</option>
@@ -103,18 +103,20 @@ export function LibraryTab({
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
             className="flex-1 px-1 py-1 text-[10px] border rounded bg-white">
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            {expertFeatures.rarity && <option value="rarity">Rarity</option>}
-            <option value="usage">Usage</option>
-            <option value="color">Color</option>
+            <option value="newest">{t.sortBy?.newest || "Newest"}</option>
+            <option value="oldest">{t.sortBy?.oldest || "Oldest"}</option>
+            {expertFeatures.rarity && (
+              <option value="rarity">{t.sortBy?.rarity || "Rarity"}</option>
+            )}
+            <option value="usage">{t.sortBy?.usage || "Usage"}</option>
+            <option value="color">{t.sortBy?.color || "Color"}</option>
           </select>
         </div>
 
         {/* Color Palette Filter */}
         <div className="flex gap-1 items-center overflow-x-auto pb-1 mt-1.5 scrollbar-none">
           <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">
-            Color:
+            {t.colorLabel || "Color:"}
           </span>
           {colorOptions.map((colorOpt) => {
             const isSelected = colorFilter === colorOpt.value
@@ -159,7 +161,7 @@ export function LibraryTab({
                 ? "bg-slate-800 border-slate-800 text-white shadow-sm"
                 : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
             }`}>
-            All
+            {t.allCategories || "All"}
           </button>
           {categories.map((cat) => (
             <button
@@ -188,7 +190,7 @@ export function LibraryTab({
           <button
             onClick={() => setIsCategoryModalOpen(true)}
             className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
-            title="Manage Categories">
+            title={t.manageCategories || "Manage Categories"}>
             <Tag className="w-3.5 h-3.5" />
           </button>
         </div>

@@ -3,6 +3,7 @@ import Dexie, { type Table } from "dexie"
 import type {
   CustomCategory,
   HistoryItem,
+  SlotHistoryItem,
   StyleCard,
   UserSettings
 } from "./db-schema"
@@ -13,6 +14,7 @@ export class StyleAtelierDatabaseBase extends Dexie {
   historyItems!: Table<HistoryItem, string>
   userSettings!: Table<UserSettings, string>
   categories!: Table<CustomCategory, string>
+  slotHistory!: Table<SlotHistoryItem, string>
 
   constructor() {
     super("StyleAtelierDatabase")
@@ -110,6 +112,50 @@ export class StyleAtelierDatabaseBase extends Dexie {
         categories: "id, name, createdAt, isDeleted"
       })
       .upgrade(upgradeToVersion10)
+
+    // Version 11: Add slotHistory table and migrate localStorage slot history to IndexedDB
+    this.version(11)
+      .stores({
+        styleCards:
+          "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+        historyItems: "id, timestamp",
+        userSettings: "userId",
+        categories: "id, name, createdAt, isDeleted",
+        slotHistory: "label"
+      })
+      .upgrade(upgradeToVersion11)
+  }
+}
+
+export function upgradeToVersion11(tx: any) {
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem("style_atelier_slot_history")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        const items = Object.entries(parsed).map(([label, values]) => ({
+          label,
+          values: Array.isArray(values) ? values : [],
+          updatedAt: Date.now()
+        }))
+        if (items.length > 0) {
+          return tx
+            .table("slotHistory")
+            .bulkAdd(items)
+            .catch((err: any) => {
+              console.warn(
+                "Failed to migrate slot history during version 11 upgrade:",
+                err
+              )
+            })
+        }
+      }
+    } catch (e) {
+      console.warn(
+        "Failed to parse localStorage slot history during upgrade:",
+        e
+      )
+    }
   }
 }
 

@@ -86,7 +86,7 @@ describe("LibraryTab", () => {
       </TutorialProvider>
     )
     expect(
-      screen.getByPlaceholderText("Search by tag, name or sref...")
+      screen.getByPlaceholderText("タグ、名前、srefで検索...")
     ).toBeDefined()
     expect(screen.getByText("Golden Dragon")).toBeDefined()
   })
@@ -165,9 +165,9 @@ describe("LibraryTab", () => {
       </TutorialProvider>
     )
 
-    expect(screen.getByText("Color:")).toBeDefined()
+    expect(screen.getByText("カラー:")).toBeDefined()
 
-    const redButton = screen.getByTitle("Red")
+    const redButton = screen.getByTitle("レッド")
     expect(redButton).toBeDefined()
     fireEvent.click(redButton)
     expect(mockSetColorFilter).toHaveBeenCalledWith("Red")
