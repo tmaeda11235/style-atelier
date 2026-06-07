@@ -6,6 +6,7 @@ import {
   upgradeToVersion8,
   upgradeToVersion10
 } from "./db"
+import { upgradeToVersion11 } from "./db-setup"
 
 vi.unmock("./db")
 
@@ -90,6 +91,50 @@ describe("db utilities", () => {
 
       expect(mockCards[0].thumbnailData).toContain("data:image/png;base64,")
       expect(mockCategories[0].iconUrl).toContain("data:image/png;base64,")
+    })
+  })
+
+  describe("upgradeToVersion11", () => {
+    it("should migrate slot history from localStorage to slotHistory table", async () => {
+      const mockSlotHistory = {
+        subject: ["item1", "item2"]
+      }
+      localStorage.setItem(
+        "style_atelier_slot_history",
+        JSON.stringify(mockSlotHistory)
+      )
+
+      const mockBulkAdd = vi.fn().mockReturnValue({
+        catch: vi.fn().mockImplementation((cb) => {
+          cb(new Error("mock error"))
+        })
+      })
+      const mockTable = vi.fn().mockReturnValue({
+        bulkAdd: mockBulkAdd
+      })
+      const mockTx = { table: mockTable } as any
+
+      await upgradeToVersion11(mockTx)
+
+      expect(mockTable).toHaveBeenCalledWith("slotHistory")
+      expect(mockBulkAdd).toHaveBeenCalledWith([
+        {
+          label: "subject",
+          values: ["item1", "item2"],
+          updatedAt: expect.any(Number)
+        }
+      ])
+    })
+
+    it("should handle empty localStorage or invalid JSON gracefully", async () => {
+      localStorage.removeItem("style_atelier_slot_history")
+      const mockTx = { table: vi.fn() } as any
+      await upgradeToVersion11(mockTx)
+      expect(mockTx.table).not.toHaveBeenCalled()
+
+      localStorage.setItem("style_atelier_slot_history", "invalid JSON")
+      await upgradeToVersion11(mockTx)
+      expect(mockTx.table).not.toHaveBeenCalled()
     })
   })
 

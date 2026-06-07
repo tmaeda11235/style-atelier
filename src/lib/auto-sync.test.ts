@@ -24,22 +24,26 @@ vi.mock("./backup-manager", () => ({
 }))
 
 // Mock db hooks
-const mockHooks: Record<string, Function> = {}
+const mockHooks: Record<string, Record<string, Function>> = {
+  styleCards: {},
+  categories: {},
+  slotHistory: {}
+}
 vi.mock("./db", () => {
-  const createHookMock = () =>
+  const createHookMock = (tableName: string) =>
     vi.fn((event: string, callback: Function) => {
-      mockHooks[event] = callback
+      mockHooks[tableName][event] = callback
     })
   return {
     db: {
       styleCards: {
-        hook: createHookMock()
+        hook: createHookMock("styleCards")
       },
       categories: {
-        hook: createHookMock()
+        hook: createHookMock("categories")
       },
       slotHistory: {
-        hook: createHookMock()
+        hook: createHookMock("slotHistory")
       }
     }
   }
@@ -189,6 +193,53 @@ describe("auto-sync", () => {
 
       expect(googleDrive.downloadBackup).not.toHaveBeenCalled()
       expect(backupManager.importDatabase).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("Hooks Triggering", () => {
+    it("triggers auto backup for all hooks on styleCards, categories, and slotHistory", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+
+      initializeAutoSync()
+
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
+      vi.mocked(backupManager.exportDatabase).mockResolvedValue('{"version":1}')
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
+        id: "file-1",
+        modifiedTime: "2026-06-06T12:00:00.000Z",
+        size: "100"
+      })
+
+      const tables = ["styleCards", "categories", "slotHistory"]
+      const events = ["creating", "updating", "deleting"]
+
+      for (const table of tables) {
+        for (const event of events) {
+          const hookFn = mockHooks[table]?.[event]
+          expect(hookFn).toBeDefined()
+
+          let transactionCompleteCallback: Function = () => {}
+          const mockTransaction = {
+            on: vi.fn((ev: string, callback: Function) => {
+              if (ev === "complete") transactionCompleteCallback = callback
+            })
+          }
+
+          // Trigger the hook
+          hookFn(null, null, mockTransaction)
+          transactionCompleteCallback()
+        }
+      }
+
+      // Fast-forward once to trigger the debounced performAutoBackup
+      await vi.advanceTimersByTimeAsync(150)
+      // Flush microtasks to allow the async authorize -> exportDatabase -> uploadBackup sequence to resolve
+      for (let i = 0; i < 10; i++) {
+        await Promise.resolve()
+      }
+
+      expect(googleDrive.uploadBackup).toHaveBeenCalled()
     })
   })
 })
