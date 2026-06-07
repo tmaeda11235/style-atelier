@@ -95,7 +95,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
               {handCards.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 items-center pt-1">
                   <span className="text-[10px] text-slate-400">
-                    Fill from Workbench:
+                    {t.workbench.fillFromWorkbench}
                   </span>
                   {handCards.map((hc) => {
                     const resolvedText = buildPromptString(
@@ -118,7 +118,9 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
               {/* Historical Values list */}
               {historyList.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                  <span className="text-[10px] text-slate-400">Recent:</span>
+                  <span className="text-[10px] text-slate-400">
+                    {t.workbench.recent}
+                  </span>
                   {historyList.map((val, hIdx) => (
                     <div
                       key={hIdx}

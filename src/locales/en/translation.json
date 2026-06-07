@@ -322,7 +322,9 @@
     "imagePrompts": "Image Prompts:",
     "styleReference": "Style Reference (--sref):",
     "characterReference": "Character Reference (--cref):",
-    "noParameters": "No parameters defined."
+    "noParameters": "No parameters defined.",
+    "fillFromWorkbench": "Fill from Workbench:",
+    "recent": "Recent:"
   },
   "mergeStack": {
     "title": "Merge Card Stack",

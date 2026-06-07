@@ -322,7 +322,9 @@
     "imagePrompts": "イメージプロンプト:",
     "styleReference": "スタイル参照 (--sref):",
     "characterReference": "キャラクター参照 (--cref):",
-    "noParameters": "パラメータが設定されていません。"
+    "noParameters": "パラメータが設定されていません。",
+    "fillFromWorkbench": "ワークベンチから入力:",
+    "recent": "履歴:"
   },
   "mergeStack": {
     "title": "カードスタックの統合",
