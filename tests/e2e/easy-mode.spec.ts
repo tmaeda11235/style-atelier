@@ -30,6 +30,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
       await skipButton.click()
     }
 
+    // Verify Guide button is visible in default Expert Mode
+    const guideBtn = spFrame.locator("button[title='Show Guide']")
+    await expect(guideBtn).toBeVisible({ timeout: 10000 })
+
     // 2. Toggle Easy Mode ON
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
@@ -39,6 +43,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     await expect(easyModeToggle).toBeVisible({ timeout: 10000 })
     await easyModeToggle.click()
     await page.waitForTimeout(500)
+
+    // Verify Guide button is hidden in Easy Mode
+    await expect(guideBtn).not.toBeVisible({ timeout: 10000 })
+
+    // Save screenshot of Easy Mode layout showing the guide button is hidden
+    await page.screenshot({
+      path: path.join(screenshotsDir, "easy-mode-guide-hidden.png")
+    })
 
     // 3. Inject a mock card in Easy Mode
     await spFrame.locator("body").evaluate(async () => {
