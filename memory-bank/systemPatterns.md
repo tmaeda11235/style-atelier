@@ -32,8 +32,9 @@ tags: []
   - `SettingsContext` (`useSettings`): Manages "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`).
   - `LanguageContext` (`useLanguage`): Manages the active translation locale (English/Japanese, stored in `localStorage` under `style-atelier-language`) and exposes a compile-time typed dictionary (`t`) to components.
   - Components subscribe to these contexts to handle feature toggling and language localization dynamically.
-- **Asynchronous State Roadmap**:
-  - Transitioning from manual useEffect-based data fetching and synchronization towards React Query (`@tanstack/react-query`) to decouple IndexedDB query logic from component lifecycle.
+- **Asynchronous State & Caching**:
+  - React Query (`@tanstack/react-query`) is configured with `chrome.storage.local` persistence (via `chromeAsyncStorage` and `@tanstack/query-async-storage-persister`).
+  - Decouples IndexedDB query logic and remote synchronization from component lifecycle, providing automatic caching, cache invalidation, and a seamless fallback to `window.localStorage` when Chrome extension APIs are unavailable.
 
 ## Data Flow
 
