@@ -41,7 +41,7 @@ export default ts.config(
       },
       "boundaries/elements": [
         {
-          type: "ui",
+          type: "components",
           mode: "file",
           pattern: [
             "src/components/**/*",
@@ -52,9 +52,22 @@ export default ts.config(
           ]
         },
         {
+          type: "hooks",
+          mode: "file",
+          pattern: [
+            "src/hooks/**/*",
+            "src/contexts/**/*"
+          ]
+        },
+        {
           type: "db",
           mode: "file",
           pattern: "src/lib/db.ts"
+        },
+        {
+          type: "lib",
+          mode: "file",
+          pattern: "src/lib/**/*"
         }
       ]
     },
@@ -90,7 +103,7 @@ export default ts.config(
           message: "{{file.type}} is not allowed to import {{dependency.type}}",
           rules: [
             {
-              from: { type: "ui" },
+              from: { type: "components" },
               disallow: [
                 { to: { type: "db" } }
               ]

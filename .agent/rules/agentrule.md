@@ -31,6 +31,12 @@ trigger: always_on
 5. **Memory Bank Synchronization & ADR Pattern**
    - When introducing any new features, library dependencies, or architectural adjustments, you MUST update the Memory Bank (`systemPatterns.md`, `techContext.md`).
    - Major structural decisions must be documented using the Architecture Decision Record (ADR) pattern in the Memory Bank.
+   - Always ensure that the documentation in the Memory Bank matches the actual implementation.
+
+6. **Layer Boundaries & File Size Rules**
+   - **No direct database queries inside UI components**: Files in `src/components/` must not import `src/lib/db.ts` directly. Always use hooks or services.
+   - **Maintain test mock purity**: Do not place business logic or simulate database state transition logic in test mocks (e.g. `tests/mocks/db.ts`).
+   - **File and Function Limits**: Keep components under 300 lines (excluding blank lines and comments) and functions under 50 lines. Refactor when limits are exceeded.
 
 ## Style
 

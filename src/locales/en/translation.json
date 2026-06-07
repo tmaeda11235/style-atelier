@@ -138,7 +138,10 @@
     "activeStatus": "Active",
     "cancelBtnText": "Cancel",
     "cloudBackupPreview": "Cloud Backup Preview",
-    "cleanupHistoryDesc": "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images."
+    "cleanupHistoryDesc": "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images.",
+    "deleteCardTitle": "Delete Card?",
+    "deleteCardMessage": "This action cannot be undone. \"{{cardName}}\" will be permanently deleted from the library.",
+    "deleteBtn": "Delete"
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
