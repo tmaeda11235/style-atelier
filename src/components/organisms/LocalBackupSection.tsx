@@ -1,0 +1,76 @@
+import { Download, FileJson, Lock, Upload } from "lucide-react"
+import React from "react"
+
+interface LocalBackupSectionProps {
+  fileInputRef: React.RefObject<HTMLInputElement | null>
+  isSyncing: boolean
+  isRestoring: boolean
+  handleLocalExport: () => void
+  handleLocalImport: (e: React.ChangeEvent<HTMLInputElement>) => void
+  t: any
+}
+
+export function LocalBackupSection({
+  fileInputRef,
+  isSyncing,
+  isRestoring,
+  handleLocalExport,
+  handleLocalImport,
+  t
+}: LocalBackupSectionProps) {
+  return (
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      {/* Subtle decorative background gradient */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+
+      <div className="flex items-start gap-4 mb-4">
+        <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+          <FileJson className="w-6 h-6" />
+        </div>
+        <div className="space-y-1 flex-1">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+            {t.localBackupTitle}
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {t.localBackupDesc}
+          </p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-4 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={handleLocalExport}
+            disabled={isSyncing || isRestoring}
+            className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+            <Download className="w-3.5 h-3.5" />
+            {t.exportBtn}
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSyncing || isRestoring}
+            className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+            <Upload className="w-3.5 h-3.5" />
+            {t.importBtn}
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleLocalImport}
+            accept=".json"
+            className="hidden"
+          />
+        </div>
+
+        {/* Privacy Note */}
+        <div className="flex items-start gap-1.5 bg-indigo-50/40 rounded-xl p-3 border border-indigo-100/50">
+          <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
+          <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
+            {t.privacyNote}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
