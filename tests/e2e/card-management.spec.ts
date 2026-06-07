@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier Sandbox E2E Tests - Card Management", () => {
+test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-01", () => {
   test.beforeEach(async ({ page }) => {
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
@@ -83,7 +84,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management", () => {
 
     // 2. Seed two cards with different tags
     await spFrame.locator("body").evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
       await database.styleCards.clear()
       await database.styleCards.bulkAdd([

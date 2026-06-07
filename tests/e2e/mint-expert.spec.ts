@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -38,7 +39,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
 
     // 2. Clear and seed history items to guarantee the item is available
     await spFrame.locator("body").evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
       await database.historyItems.clear()
       await database.historyItems.add({
