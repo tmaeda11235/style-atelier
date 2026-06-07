@@ -1,16 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
-import { HistoryCard } from "./HistoryCard"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import { db } from "../../lib/db"
+import { HistoryCard } from "./HistoryCard"
 
 vi.mock("../../lib/db", () => {
   return {
     db: {
       historyItems: {
-        update: vi.fn().mockResolvedValue(1),
-      },
-    },
+        update: vi.fn().mockResolvedValue(1)
+      }
+    }
   }
 })
 
@@ -20,20 +21,18 @@ describe("HistoryCard", () => {
     id: "job-123",
     fullCommand: "sunset over Tokyo cyberpunk style",
     imageUrl: "https://example.com/cdn/job-123.png",
-    timestamp: 1234567,
+    timestamp: 1234567
   }
 
   beforeEach(() => {
     vi.clearAllMocks()
-    
-    // URL methods mocking
-    global.URL.createObjectURL = vi.fn().mockReturnValue("blob:http://localhost/mock-uuid")
-    global.URL.revokeObjectURL = vi.fn()
-    
+
     // fetch mocking
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      blob: vi.fn().mockResolvedValue(new Blob(["bytes"], { type: "image/png" })),
+      blob: vi
+        .fn()
+        .mockResolvedValue(new Blob(["bytes"], { type: "image/png" }))
     })
   })
 
@@ -51,9 +50,11 @@ describe("HistoryCard", () => {
 
     // Verify fetch and update have been called
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("https://example.com/cdn/job-123.png")
+      expect(global.fetch).toHaveBeenCalledWith(
+        "https://example.com/cdn/job-123.png"
+      )
       expect(db.historyItems.update).toHaveBeenCalledWith("job-123", {
-        localImageBlob: expect.any(Blob),
+        localImageBlob: expect.any(Blob)
       })
     })
   })
@@ -62,14 +63,14 @@ describe("HistoryCard", () => {
     const mockBlob = new Blob(["test"], { type: "image/png" })
     const itemWithBlob = {
       ...mockItem,
-      localImageBlob: mockBlob,
+      localImageBlob: mockBlob
     }
 
     render(<HistoryCard item={itemWithBlob} onMintClick={mockOnMintClick} />)
 
     const img = screen.getByRole("img")
     expect(img.getAttribute("src")).toBe("blob:http://localhost/mock-uuid")
-    expect(global.URL.createObjectURL).toHaveBeenCalledWith(mockBlob)
+    expect(URL.createObjectURL).toHaveBeenCalledWith(mockBlob)
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
@@ -77,14 +78,18 @@ describe("HistoryCard", () => {
     const mockBlob = new Blob(["test"], { type: "image/png" })
     const itemWithBlob = {
       ...mockItem,
-      localImageBlob: mockBlob,
+      localImageBlob: mockBlob
     }
 
-    const { unmount } = render(<HistoryCard item={itemWithBlob} onMintClick={mockOnMintClick} />)
+    const { unmount } = render(
+      <HistoryCard item={itemWithBlob} onMintClick={mockOnMintClick} />
+    )
 
     unmount()
 
-    expect(global.URL.revokeObjectURL).toHaveBeenCalledWith("blob:http://localhost/mock-uuid")
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(
+      "blob:http://localhost/mock-uuid"
+    )
   })
 
   it("calls onMintClick when Mint Card button is clicked", () => {

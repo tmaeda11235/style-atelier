@@ -46,13 +46,8 @@ describe("useExpertModeView hook", () => {
     localStorage.clear()
 
     // Mock chrome APIs
-    global.chrome = {
-      tabs: {
-        query: vi.fn().mockResolvedValue([{ id: 123 }]),
-        sendMessage: vi.fn().mockResolvedValue({ status: "success" }),
-        reload: vi.fn()
-      }
-    } as any
+    vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 123 }] as any)
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
   })
 
   it("should initialize with default states and check onboarding status", () => {

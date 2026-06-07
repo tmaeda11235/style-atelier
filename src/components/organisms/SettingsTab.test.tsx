@@ -76,35 +76,16 @@ vi.mock("../../lib/db", () => ({
 describe("SettingsTab", () => {
   const mockAddLog = vi.fn()
   const mockResetDb = vi.fn()
-  const originalConfirm = window.confirm
 
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
 
-    // Mock URL object URL APIs
-    global.URL.createObjectURL = vi
-      .fn()
-      .mockReturnValue("blob:http://localhost/mock-uuid")
-    global.URL.revokeObjectURL = vi.fn()
-
-    // Mock window.confirm
+    // Reset window.confirm to default true to avoid leakage from other tests
     window.confirm = vi.fn().mockReturnValue(true)
 
     // Mock console.error to keep logs clean
     vi.spyOn(console, "error").mockImplementation(() => {})
-
-    // Mock navigator.storage.estimate
-    Object.defineProperty(window.navigator, "storage", {
-      value: {
-        estimate: vi.fn().mockResolvedValue({
-          usage: 1024 * 1024 * 5, // 5 MB
-          quota: 1024 * 1024 * 100 // 100 MB
-        })
-      },
-      configurable: true,
-      writable: true
-    })
 
     // Mock navigator.language to default to Japanese for existing tests
     Object.defineProperty(window.navigator, "language", {
@@ -115,7 +96,6 @@ describe("SettingsTab", () => {
   })
 
   afterEach(() => {
-    window.confirm = originalConfirm
     vi.restoreAllMocks()
   })
 
