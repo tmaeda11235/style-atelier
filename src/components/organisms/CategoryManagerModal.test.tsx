@@ -1,11 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { CategoryManagerModal } from "./CategoryManagerModal"
+import {
+  fireEvent,
+  screen,
+  render as tlRender,
+  waitFor
+} from "@testing-library/react"
+import React from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { LanguageProvider } from "../../contexts/LanguageContext"
 import { db } from "../../lib/db"
+import { CategoryManagerModal } from "./CategoryManagerModal"
 
 // Mock dexie-react-hooks
 vi.mock("dexie-react-hooks", () => ({
-  useLiveQuery: (fn: any) => fn(),
+  useLiveQuery: (fn: any) => fn()
 }))
 
 // Mock DB
@@ -28,10 +36,14 @@ vi.mock("../../lib/db", () => {
       getCategory: vi.fn(),
       addCategory: vi.fn(),
       updateCategory: vi.fn(),
-      deleteCategory: vi.fn(),
+      deleteCategory: vi.fn()
     }
   }
 })
+
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(<LanguageProvider>{ui}</LanguageProvider>, options)
+}
 
 describe("CategoryManagerModal", () => {
   const handleClose = vi.fn()
@@ -42,28 +54,54 @@ describe("CategoryManagerModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    
+    localStorage.clear()
+
+    Object.defineProperty(window.navigator, "language", {
+      value: "en-US",
+      configurable: true,
+      writable: true
+    })
+
     mockCategories = [
       { id: "style", name: "Style", iconEmoji: "🎨" },
-      { id: "cyberpunk", name: "Cyberpunk", iconEmoji: "🛸", createdAt: Date.now() }
+      {
+        id: "cyberpunk",
+        name: "Cyberpunk",
+        iconEmoji: "🛸",
+        createdAt: Date.now()
+      }
     ]
     mockStyleCards = [
-      { id: "card-1", name: "Cyber Cat", thumbnailData: "data:image/png;base64,123", isVariable: false, category: "cyberpunk" }
+      {
+        id: "card-1",
+        name: "Cyber Cat",
+        thumbnailData: "data:image/png;base64,123",
+        isVariable: false,
+        category: "cyberpunk"
+      }
     ]
 
-    vi.mocked(db.getAllCategories).mockImplementation(() => mockCategories as any)
-    vi.mocked(db.getCategory).mockImplementation((id: string) => Promise.resolve(mockCategories.find(c => c.id === id)))
+    vi.mocked(db.getAllCategories).mockImplementation(
+      () => mockCategories as any
+    )
+    vi.mocked(db.getCategory).mockImplementation((id: string) =>
+      Promise.resolve(mockCategories.find((c) => c.id === id))
+    )
     vi.mocked(db.addCategory).mockImplementation((cat: any) => {
       mockCategories.push(cat)
       return Promise.resolve(cat.id)
     })
-    vi.mocked(db.updateCategory).mockImplementation((id: string, changes: any) => {
-      mockCategories = mockCategories.map(c => c.id === id ? { ...c, ...changes } : c)
-      return Promise.resolve(1)
-    })
+    vi.mocked(db.updateCategory).mockImplementation(
+      (id: string, changes: any) => {
+        mockCategories = mockCategories.map((c) =>
+          c.id === id ? { ...c, ...changes } : c
+        )
+        return Promise.resolve(1)
+      }
+    )
     vi.mocked(db.deleteCategory).mockImplementation((id: string) => {
-      mockCategories = mockCategories.filter(c => c.id !== id)
-      mockStyleCards.forEach(c => {
+      mockCategories = mockCategories.filter((c) => c.id !== id)
+      mockStyleCards.forEach((c) => {
         if (c.category === id) {
           delete c.category
         }
@@ -75,12 +113,7 @@ describe("CategoryManagerModal", () => {
   })
 
   it("renders correctly with default state tabs", () => {
-    render(
-      <CategoryManagerModal
-        onClose={handleClose}
-        addLog={handleAddLog}
-      />
-    )
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
 
     expect(screen.getByText("Add Category")).toBeDefined()
     expect(screen.getByText("Manage Categories")).toBeDefined()
@@ -89,12 +122,7 @@ describe("CategoryManagerModal", () => {
   })
 
   it("switches to Manage tab and shows custom and default categories", async () => {
-    render(
-      <CategoryManagerModal
-        onClose={handleClose}
-        addLog={handleAddLog}
-      />
-    )
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
 
     const manageTab = screen.getByText("Manage Categories")
     fireEvent.click(manageTab)
@@ -113,12 +141,7 @@ describe("CategoryManagerModal", () => {
   })
 
   it("allows creating a new custom category", async () => {
-    render(
-      <CategoryManagerModal
-        onClose={handleClose}
-        addLog={handleAddLog}
-      />
-    )
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
 
     const nameInput = screen.getByPlaceholderText("e.g. Cyberpunk, Retro")
     fireEvent.change(nameInput, { target: { value: "Retro Space" } })
@@ -130,23 +153,73 @@ describe("CategoryManagerModal", () => {
     fireEvent.click(submitBtn)
 
     await waitFor(() => {
-      expect(db.addCategory).toHaveBeenCalledWith(expect.objectContaining({
-        id: "retro-space",
-        name: "Retro Space",
-        iconEmoji: "🚀"
-      }))
+      expect(db.addCategory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "retro-space",
+          name: "Retro Space",
+          iconEmoji: "🚀"
+        })
+      )
     })
 
     expect(handleAddLog).toHaveBeenCalledWith('Created category "Retro Space"')
   })
 
+  it("allows creating a new category with a complex emoji (surrogate pairs and ZWJ)", async () => {
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
+
+    const nameInput = screen.getByPlaceholderText("e.g. Cyberpunk, Retro")
+    fireEvent.change(nameInput, { target: { value: "Mages" } })
+
+    const emojiInput = screen.getByPlaceholderText("e.g. 🎨, 🛸")
+    // Inputting a complex emoji "🧙‍♂️" (man mage) which has multiple code units/points
+    fireEvent.change(emojiInput, { target: { value: "🧙‍♂️" } })
+
+    const submitBtn = screen.getByText("Create Category")
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(db.addCategory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "mages",
+          name: "Mages",
+          iconEmoji: "🧙‍♂️"
+        })
+      )
+    })
+
+    expect(handleAddLog).toHaveBeenCalledWith('Created category "Mages"')
+  })
+
+  it("trims the input emoji to the first grapheme cluster", async () => {
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
+
+    const nameInput = screen.getByPlaceholderText("e.g. Cyberpunk, Retro")
+    fireEvent.change(nameInput, { target: { value: "Mixed" } })
+
+    const emojiInput = screen.getByPlaceholderText("e.g. 🎨, 🛸")
+    // Inputting multiple emojis: 🧙‍♂️ (first grapheme) and 🚀 (second grapheme)
+    fireEvent.change(emojiInput, { target: { value: "🧙‍♂️🚀" } })
+
+    // It should be trimmed to the first grapheme "🧙‍♂️"
+    expect(emojiInput.value).toBe("🧙‍♂️")
+
+    const submitBtn = screen.getByText("Create Category")
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(db.addCategory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "mixed",
+          name: "Mixed",
+          iconEmoji: "🧙‍♂️"
+        })
+      )
+    })
+  })
+
   it("allows editing an existing custom category", async () => {
-    render(
-      <CategoryManagerModal
-        onClose={handleClose}
-        addLog={handleAddLog}
-      />
-    )
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
 
     // Switch to manage tab
     fireEvent.click(screen.getByText("Manage Categories"))
@@ -156,8 +229,8 @@ describe("CategoryManagerModal", () => {
     fireEvent.click(editBtn)
 
     // Verify it switched back to creation form with edit state
-    expect(screen.getByText("Edit \"Cyberpunk\"")).toBeDefined()
-    
+    expect(screen.getByText('Edit "Cyberpunk"')).toBeDefined()
+
     const nameInput = screen.getByDisplayValue("Cyberpunk")
     fireEvent.change(nameInput, { target: { value: "Neon Cyberpunk" } })
 
@@ -165,24 +238,24 @@ describe("CategoryManagerModal", () => {
     fireEvent.click(saveBtn)
 
     await waitFor(() => {
-      expect(db.updateCategory).toHaveBeenCalledWith("cyberpunk", expect.objectContaining({
-        name: "Neon Cyberpunk",
-        iconEmoji: "🛸"
-      }))
+      expect(db.updateCategory).toHaveBeenCalledWith(
+        "cyberpunk",
+        expect.objectContaining({
+          name: "Neon Cyberpunk",
+          iconEmoji: "🛸"
+        })
+      )
     })
 
-    expect(handleAddLog).toHaveBeenCalledWith('Updated category "Neon Cyberpunk"')
+    expect(handleAddLog).toHaveBeenCalledWith(
+      'Updated category "Neon Cyberpunk"'
+    )
   })
 
   it("allows deleting an existing custom category and updates related style cards", async () => {
     vi.spyOn(window, "confirm").mockImplementation(() => true)
 
-    render(
-      <CategoryManagerModal
-        onClose={handleClose}
-        addLog={handleAddLog}
-      />
-    )
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
 
     // Switch to manage tab
     fireEvent.click(screen.getByText("Manage Categories"))
