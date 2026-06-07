@@ -37,6 +37,9 @@ vi.mock("./db", () => {
       },
       categories: {
         hook: createHookMock()
+      },
+      slotHistory: {
+        hook: createHookMock()
       }
     }
   }
