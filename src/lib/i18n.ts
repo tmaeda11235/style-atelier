@@ -226,9 +226,23 @@ export const i18nDict = {
       noValidImage: "No valid image file dropped.",
       noQrCode: "No QR code found in the image.",
       invalidCardData: "Invalid card data in QR code or corrupted.",
-      importFailed: "Failed to import card: "
+      importFailed: "Failed to import card: ",
+      dropOverlay: "Drop QR Card Image to Import",
+      importing: "Importing Card...",
+      importSuccess: 'Imported Card "{name}" successfully!',
+      associated: 'Associated with Card "{name}"!',
+      historyAdded: "New History Item Added!"
     },
     share: {
+      shareTitle: "Share Style Card",
+      copyImageBtn: "Copy Image to Clipboard",
+      openPageBtn: "Open Dedicated Image Page",
+      downloadPngBtn: "Download PNG Image",
+      tierLabel: "Tier:",
+      srefIdLabel: "Sref ID:",
+      failedGenerate: "Failed to generate card image.",
+      blockedCopy:
+        "Browser blocked clipboard copy. Try opening the image page.",
       loading: "Loading Style Card...",
       errorTitle: "Error Loading Card",
       closeWindow: "Close Window",
@@ -303,6 +317,24 @@ export const i18nDict = {
       step3Title: "Generate in Midjourney",
       step3Desc:
         "Send prompt directly to chat using the 'Try on Midjourney' button."
+    },
+    mergeStack: {
+      title: "Merge Card Stack",
+      description:
+        "Select one card to keep as the base recipe. Choose whether to consume the other cards to inherit their usage counts.",
+      representative: "Representative Card (Choose 1)",
+      material: "Material Cards Integration",
+      consume: "Consume",
+      keep: "Keep",
+      cancel: "Cancel",
+      merge: "Merge Stack",
+      merging: "Merging...",
+      baseCard: "Base Card:",
+      combinedImages: "Combined Images:",
+      previewUsage: "Preview Usage Count:",
+      imagesCount: "{count} images",
+      uses: "Uses: {count}",
+      usesToTransfer: "Uses to transfer: {count}"
     },
     tutorial: {
       steps: [
@@ -585,9 +617,23 @@ export const i18nDict = {
       noQrCode: "画像からQRコードが検出されませんでした。",
       invalidCardData:
         "QRコード内のカードデータが無効であるか、破損しています。",
-      importFailed: "カードのインポート中にエラーが発生しました: "
+      importFailed: "カードのインポート中にエラーが発生しました: ",
+      dropOverlay: "QRカード画像をドロップしてインポート",
+      importing: "カードをインポート中...",
+      importSuccess: "カード「{name}」を正常にインポートしました！",
+      associated: "カード「{name}」に関連付けられました！",
+      historyAdded: "新しい履歴アイテムが追加されました！"
     },
     share: {
+      shareTitle: "スタイルカードの共有",
+      copyImageBtn: "画像をクリップボードにコピー",
+      openPageBtn: "専用画像ページを開く",
+      downloadPngBtn: "PNG画像をダウンロード",
+      tierLabel: "レア度:",
+      srefIdLabel: "Sref ID:",
+      failedGenerate: "カード画像の生成に失敗しました。",
+      blockedCopy:
+        "ブラウザによりクリップボードへのコピーがブロックされました。画像ページを開くか、画像を右クリックしてコピーしてください。",
       loading: "スタイルカードを読み込み中...",
       errorTitle: "カード読み込みエラー",
       closeWindow: "ウィンドウを閉じる",
@@ -663,6 +709,24 @@ export const i18nDict = {
       step3Title: "Midjourneyで生成",
       step3Desc:
         "「Try on Midjourney」ボタンでプロンプトをチャットへ直接送信します。"
+    },
+    mergeStack: {
+      title: "カードスタックの統合",
+      description:
+        "ベースとなるレシピとして残すカードを1つ選択します。他のカードを消費して、その使用回数を引き継ぐかどうかを選択します。",
+      representative: "代表カード (1つ選択)",
+      material: "素材カードの統合",
+      consume: "消費する",
+      keep: "維持する",
+      cancel: "キャンセル",
+      merge: "スタックを統合",
+      merging: "統合中...",
+      baseCard: "ベースカード:",
+      combinedImages: "結合された画像:",
+      previewUsage: "予想される使用回数:",
+      imagesCount: "{count} 枚の画像",
+      uses: "使用回数: {count}",
+      usesToTransfer: "引き継ぐ使用回数: {count}"
     },
     tutorial: {
       steps: [

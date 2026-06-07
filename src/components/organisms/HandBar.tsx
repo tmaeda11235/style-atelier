@@ -136,7 +136,7 @@ export function HandBar({
                   className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold px-2 py-0.5"
                   data-testid="handbar-merge-btn">
                   <Layers className="w-3 h-3" />
-                  Merge Stack
+                  {t.mergeStack.merge}
                 </Button>
                 <HelpTooltip
                   content={t.helpTooltips.stack}
@@ -149,7 +149,7 @@ export function HandBar({
               size="xs"
               onClick={clearHand}
               className="text-slate-400 hover:text-red-500">
-              Clear All
+              {t.workbench.clearAll}
             </Button>
           </div>
         </div>
@@ -194,7 +194,7 @@ export function HandBar({
               <div className="p-4 bg-slate-50 border-b flex items-center justify-between">
                 <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-blue-500" />
-                  Merge Card Stack
+                  {t.mergeStack.title}
                 </h3>
                 <Button
                   variant="ghost"
@@ -207,13 +207,12 @@ export function HandBar({
 
               <div className="p-4 flex-1 overflow-y-auto space-y-4">
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Select one card to keep as the base recipe. Choose whether to
-                  consume the other cards to inherit their usage counts.
+                  {t.mergeStack.description}
                 </p>
 
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Representative Card (Choose 1)
+                    {t.mergeStack.representative}
                   </h4>
                   <div className="space-y-2">
                     {pinnedCards.map((c) => {
@@ -243,7 +242,10 @@ export function HandBar({
                               {c.name}
                             </p>
                             <p className="text-[10px] text-slate-400">
-                              Uses: {c.usageCount || 0}
+                              {t.mergeStack.uses.replace(
+                                "{count}",
+                                String(c.usageCount || 0)
+                              )}
                             </p>
                           </div>
                           <div
@@ -261,7 +263,7 @@ export function HandBar({
                 {pinnedCards.length > 1 && (
                   <div className="space-y-3 pt-2 border-t border-slate-100">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Material Cards Integration
+                      {t.mergeStack.material}
                     </h4>
                     <div className="space-y-2">
                       {pinnedCards
@@ -290,7 +292,10 @@ export function HandBar({
                                     {c.name}
                                   </p>
                                   <p className="text-[9px] text-slate-400">
-                                    Uses to transfer: {c.usageCount || 0}
+                                    {t.mergeStack.usesToTransfer.replace(
+                                      "{count}",
+                                      String(c.usageCount || 0)
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -309,7 +314,9 @@ export function HandBar({
                                       ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
                                       : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
                                   }`}>
-                                  {isConsumed ? "Consume" : "Keep"}
+                                  {isConsumed
+                                    ? t.mergeStack.consume
+                                    : t.mergeStack.keep}
                                 </button>
                               </div>
                             </div>
@@ -322,27 +329,31 @@ export function HandBar({
                 {baseCard && (
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 space-y-1.5">
                     <div className="flex justify-between text-[11px] text-slate-600">
-                      <span>Base Card:</span>
+                      <span>{t.mergeStack.baseCard}</span>
                       <span className="font-semibold truncate max-w-[150px]">
                         {baseCard.name}
                       </span>
                     </div>
                     <div className="flex justify-between text-[11px] text-slate-600">
-                      <span>Combined Images:</span>
+                      <span>{t.mergeStack.combinedImages}</span>
                       <span className="font-semibold font-mono">
-                        {
-                          pinnedCards.reduce((acc, c) => {
-                            const urls = [...(c.images || [])]
-                            if (c.thumbnailData) urls.push(c.thumbnailData)
-                            urls.forEach((u) => acc.add(u))
-                            return acc
-                          }, new Set<string>()).size
-                        }{" "}
-                        images
+                        {t.mergeStack.imagesCount.replace(
+                          "{count}",
+                          String(
+                            pinnedCards.reduce((acc, c) => {
+                              const urls = [...(c.images || [])]
+                              if (c.thumbnailData) urls.push(c.thumbnailData)
+                              urls.forEach((u) => acc.add(u))
+                              return acc
+                            }, new Set<string>()).size
+                          )
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs pt-1.5 border-t border-slate-200 text-slate-700">
-                      <span className="font-medium">Preview Usage Count:</span>
+                      <span className="font-medium">
+                        {t.mergeStack.previewUsage}
+                      </span>
                       <div className="flex items-center gap-1 font-bold text-blue-600">
                         <span>{baseCard.usageCount || 0}</span>
                         {additionalUses > 0 && (
@@ -364,12 +375,12 @@ export function HandBar({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsMergeOpen(false)}>
-                  Cancel
+                  {t.mergeStack.cancel}
                 </Button>
                 <Button
                   onClick={handleExecuteMerge}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1.5 shadow-sm shadow-blue-200">
-                  Merge Stack
+                  {t.mergeStack.merge}
                 </Button>
               </div>
             </div>
