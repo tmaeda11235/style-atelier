@@ -145,3 +145,11 @@ Object.defineProperty(global, "triggerChromeEvent", {
   writable: true,
   configurable: true
 })
+
+// ==========================================
+// 6. Global Database Mock
+// ==========================================
+vi.mock("./src/lib/db", async () => {
+  const { db } = await import("./tests/mocks/db")
+  return { db }
+})

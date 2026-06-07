@@ -32,28 +32,6 @@ vi.mock("../../hooks/useEvolution", () => ({
   useEvolution: vi.fn()
 }))
 
-vi.mock("../../lib/db", () => ({
-  db: {
-    styleCards: {
-      add: vi.fn(),
-      update: vi.fn().mockResolvedValue(1),
-      delete: vi.fn().mockResolvedValue(1),
-      get: vi.fn().mockResolvedValue(null),
-      toArray: vi.fn().mockResolvedValue([])
-    },
-    categories: {
-      toArray: vi.fn().mockResolvedValue([])
-    },
-    addCard: vi.fn(),
-    updateCard: vi.fn().mockResolvedValue(1),
-    deleteCard: vi.fn().mockResolvedValue(1),
-    getCard: vi.fn().mockResolvedValue(null),
-    getAllCards: vi.fn().mockResolvedValue([]),
-    getAllCategories: vi.fn().mockResolvedValue([]),
-    transaction: vi.fn((mode, tables, cb) => cb())
-  }
-}))
-
 describe("Workbench", () => {
   const mockSetAlertType = vi.fn()
   const mockAddLog = vi.fn()

@@ -5,15 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "../../lib/db"
 import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
 
-// Mock DB
-vi.mock("../../lib/db", () => {
-  return {
-    db: {
-      updateCard: vi.fn()
-    }
-  }
-})
-
 // Mock PromptBubbleEditor and ParameterEditor to simplify layout testing
 vi.mock("./PromptBubbleEditor", () => ({
   PromptBubbleEditor: ({ initialSegments, onChange }: any) => (
