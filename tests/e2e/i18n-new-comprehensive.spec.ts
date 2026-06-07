@@ -103,15 +103,20 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     await expect(rarityOption).toBeAttached()
     await expect(sortByNewest).toBeAttached()
 
-    // Seed 1 card to view parameter labels in Workbench
+    // Seed 1 card with slot and 1 helper hand card to view parameter labels in Workbench
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
+      await database.slotHistory.clear()
       await database.styleCards.bulkAdd([
         {
           id: "card-comprehensive-i18n-1",
           name: "Test Parameter Card",
-          promptSegments: [{ type: "text", value: "cyberpunk dreamscape" }],
+          promptSegments: [
+            { type: "text", value: "a " },
+            { type: "slot", label: "adjective", default: "neon" },
+            { type: "text", value: " cyberpunk cat" }
+          ],
           parameters: {
             ar: "16:9",
             p: ["v6_code"],
@@ -124,8 +129,21 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
           dominantColor: "#3b82f6",
           thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
           usageCount: 5
+        },
+        {
+          id: "card-comprehensive-i18n-2",
+          name: "Quick Fill Card",
+          promptSegments: [{ type: "text", value: "vibrant colors" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          isPinned: true, // Keep in hand to trigger "Fill from Workbench:"
+          dominantColor: "#10b981",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+          usageCount: 1
         }
       ])
+      await database.saveSlotHistory("adjective", ["retro", "futuristic"])
     })
 
     // Click library card to pin/workbench
@@ -158,6 +176,14 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     await expect(personalizationLabel).toBeVisible()
     await expect(styleRefLabel).toBeVisible()
     await expect(characterRefLabel).toBeVisible()
+
+    // Verify slot variable labels in English
+    const fillFromWorkbenchLabel = spFrame.locator(
+      "span:has-text('Fill from Workbench:')"
+    )
+    const recentLabel = spFrame.locator("span:has-text('Recent:')")
+    await expect(fillFromWorkbenchLabel).toBeVisible()
+    await expect(recentLabel).toBeVisible()
 
     // Take screenshot of English comprehensive layout
     await page.screenshot({
@@ -225,6 +251,14 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     await expect(personalizationLabelJa).toBeVisible()
     await expect(styleRefLabelJa).toBeVisible()
     await expect(characterRefLabelJa).toBeVisible()
+
+    // Verify slot variable labels in Japanese
+    const fillFromWorkbenchLabelJa = spFrame.locator(
+      "span:has-text('ワークベンチから入力:')"
+    )
+    const recentLabelJa = spFrame.locator("span:has-text('履歴:')")
+    await expect(fillFromWorkbenchLabelJa).toBeVisible()
+    await expect(recentLabelJa).toBeVisible()
 
     // Take screenshot of Japanese comprehensive layout
     await page.screenshot({
