@@ -14,6 +14,7 @@ import * as backupManager from "../../lib/backup-manager"
 import { exportDatabase, importDatabase } from "../../lib/backup-manager"
 import { db } from "../../lib/db"
 import * as googleDrive from "../../lib/google-drive"
+import { QueryTestProvider } from "../../test/react-query-helper"
 import { SettingsTab } from "./SettingsTab"
 
 vi.mock("../../contexts/ConfirmContext", () => ({
@@ -23,9 +24,11 @@ vi.mock("../../contexts/ConfirmContext", () => ({
 
 const render = (ui: React.ReactElement, options?: any) => {
   return tlRender(
-    <LanguageProvider>
-      <SettingsProvider>{ui}</SettingsProvider>
-    </LanguageProvider>,
+    <QueryTestProvider>
+      <LanguageProvider>
+        <SettingsProvider>{ui}</SettingsProvider>
+      </LanguageProvider>
+    </QueryTestProvider>,
     options
   )
 }

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ConfirmProvider } from "../contexts/ConfirmContext"
 import { LanguageProvider } from "../contexts/LanguageContext"
+import { QueryTestProvider } from "../test/react-query-helper"
 import { useSettingsGoogleDrive } from "./useSettingsGoogleDrive"
 
 // Mock auto-sync
@@ -32,7 +33,9 @@ describe("useSettingsGoogleDrive", () => {
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <LanguageProvider>
-      <ConfirmProvider>{children}</ConfirmProvider>
+      <ConfirmProvider>
+        <QueryTestProvider>{children}</QueryTestProvider>
+      </ConfirmProvider>
     </LanguageProvider>
   )
 

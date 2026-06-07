@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 
 import { useConfirm } from "../contexts/ConfirmContext"
@@ -26,18 +27,12 @@ export function useSettingsGoogleDrive({
   const confirm = useConfirm()
   const { t: i18n } = useLanguage()
   const t = i18n.settings
+  const queryClient = useQueryClient()
 
   const [isSyncEnabled, setIsSyncEnabled] = useState(false)
   const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [isSyncing, setIsSyncing] = useState(false)
-  const [isRestoring, setIsRestoring] = useState(false)
   const [lastBackup, setLastBackup] = useState<string | null>(null)
-  const [cloudBackup, setCloudBackup] = useState<{
-    modifiedTime: string
-    size: string
-  } | null>(null)
-  const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false)
   const [syncProgress, setSyncProgress] = useState<number | null>(null)
   const [restoreProgress, setRestoreProgress] = useState<number | null>(null)
 
@@ -48,6 +43,29 @@ export function useSettingsGoogleDrive({
     text: "",
     type: null
   })
+
+  // Google Drive backup metadata Query
+  const cloudBackupQuery = useQuery({
+    queryKey: ["gdriveBackupMetadata", accessToken],
+    queryFn: async () => {
+      if (!accessToken) return null
+      const meta = await getBackupMetadata(accessToken, setAccessToken)
+      if (meta) {
+        const dateStr = new Date(meta.modifiedTime).toLocaleString()
+        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
+        return {
+          modifiedTime: dateStr,
+          size: `${sizeKB} KB`
+        }
+      }
+      return null
+    },
+    enabled: isSyncEnabled && !!accessToken,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  })
+
+  const cloudBackup = cloudBackupQuery.data ?? null
+  const isLoadingCloudBackup = cloudBackupQuery.isLoading
 
   useEffect(() => {
     // Load last backup time
@@ -67,26 +85,10 @@ export function useSettingsGoogleDrive({
     setIsAutoSyncEnabled(savedAutoSyncEnabled)
 
     if (savedSyncEnabled) {
-      // Silently authorize and get backup metadata
+      // Silently authorize
       authorize(false)
         .then((token) => {
           setAccessToken(token)
-          setIsLoadingCloudBackup(true)
-          getBackupMetadata(token, setAccessToken)
-            .then((meta) => {
-              if (meta) {
-                const dateStr = new Date(meta.modifiedTime).toLocaleString()
-                const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
-                setCloudBackup({
-                  modifiedTime: dateStr,
-                  size: `${sizeKB} KB`
-                })
-              } else {
-                setCloudBackup(null)
-              }
-            })
-            .catch((err) => console.error(err))
-            .finally(() => setIsLoadingCloudBackup(false))
         })
         .catch((err) => {
           console.log("Silent authorization failed:", err.message)
@@ -126,25 +128,13 @@ export function useSettingsGoogleDrive({
         clearCachedToken(accessToken).catch(console.error)
       }
       setAccessToken(null)
-      setCloudBackup(null)
+      queryClient.setQueryData(["gdriveBackupMetadata", accessToken], null)
       setIsAutoSyncEnabled(false)
       setAutoSyncEnabled(false)
     } else {
       try {
         const token = await authorize(true)
         setAccessToken(token)
-        setIsLoadingCloudBackup(true)
-        const meta = await getBackupMetadata(token, setAccessToken)
-        if (meta) {
-          const dateStr = new Date(meta.modifiedTime).toLocaleString()
-          const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
-          setCloudBackup({
-            modifiedTime: dateStr,
-            size: `${sizeKB} KB`
-          })
-        } else {
-          setCloudBackup(null)
-        }
       } catch (err: any) {
         console.error(err)
         addLog(`Sync authorization failed: ${err.message || err}`)
@@ -154,8 +144,6 @@ export function useSettingsGoogleDrive({
         )
         setIsSyncEnabled(false)
         localStorage.setItem("style-atelier-sync-enabled", "false")
-      } finally {
-        setIsLoadingCloudBackup(false)
       }
     }
   }
@@ -173,208 +161,219 @@ export function useSettingsGoogleDrive({
     return token
   }
 
-  const handleSync = async () => {
-    if (!isSyncEnabled) return
+  // Google Drive synchronization Mutation
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      if (!isSyncEnabled) return
 
-    setIsSyncing(true)
-    setSyncProgress(0)
-    setStatusMessage({ text: t.syncingStart, type: "info" })
+      setSyncProgress(0)
+      setStatusMessage({ text: t.syncingStart, type: "info" })
 
-    const controller = new AbortController()
-    abortControllerRef.current = controller
+      const controller = new AbortController()
+      abortControllerRef.current = controller
 
-    try {
-      const token = await getOrRequestToken()
+      try {
+        const token = await getOrRequestToken()
 
-      setStatusMessage({ text: t.syncingFetch, type: "info" })
-      const backupData = await downloadBackup(
-        token,
-        setAccessToken,
-        (percent) => {
-          setSyncProgress(Math.round(percent * 0.5))
-          setStatusMessage({
-            text: `${t.syncingProgress} (${percent}%)...`,
-            type: "info"
-          })
-        },
-        undefined,
-        { signal: controller.signal }
-      )
-
-      if (backupData) {
-        setStatusMessage({ text: t.syncingMerge, type: "info" })
-        await importDatabase(backupData, "merge")
-      } else {
-        addLog("No existing backup found. Uploading local data as new backup.")
-      }
-
-      setStatusMessage({ text: t.syncingPrepare, type: "info" })
-      const jsonData = await exportDatabase()
-
-      setStatusMessage({ text: `${t.syncingText} (50%)...`, type: "info" })
-      await uploadBackup(
-        token,
-        jsonData,
-        setAccessToken,
-        (percent) => {
-          setSyncProgress(50 + Math.round(percent * 0.5))
-          setStatusMessage({
-            text: `${t.syncingUpload} (${percent}%)...`,
-            type: "info"
-          })
-        },
-        { signal: controller.signal }
-      )
-
-      const now = Date.now()
-      localStorage.setItem("style-atelier-last-backup", now.toString())
-      setLastBackup(new Date(now).toLocaleString())
-
-      const meta = await getBackupMetadata(token, setAccessToken, undefined, {
-        signal: controller.signal
-      })
-      if (meta) {
-        const dateStr = new Date(meta.modifiedTime).toLocaleString()
-        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
-        setCloudBackup({
-          modifiedTime: dateStr,
-          size: `${sizeKB} KB`
-        })
-      }
-
-      addLog("Google Drive synchronization completed successfully.")
-      showStatus(t.syncSuccess, "success")
-      checkStorage()
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        addLog("Sync cancelled by user.")
-        showStatus(t.syncCancelled, "info")
-      } else if (err instanceof GDriveTimeoutError) {
-        addLog("Sync failed: Connection timed out.")
-        showStatus(t.syncTimeout, "error")
-      } else {
-        console.error(err)
-        addLog(`Sync failed: ${err.message || err}`)
-        showStatus(
-          `${t.syncFailed}: ${err.message || "Unknown error"}`,
-          "error"
+        setStatusMessage({ text: t.syncingFetch, type: "info" })
+        const backupData = await downloadBackup(
+          token,
+          setAccessToken,
+          (percent) => {
+            setSyncProgress(Math.round(percent * 0.5))
+            setStatusMessage({
+              text: `${t.syncingProgress} (${percent}%)...`,
+              type: "info"
+            })
+          },
+          undefined,
+          { signal: controller.signal }
         )
-      }
 
-      if (err.name !== "AbortError" && accessToken) {
-        await clearCachedToken(accessToken).catch(console.error)
-        setAccessToken(null)
+        if (backupData) {
+          setStatusMessage({ text: t.syncingMerge, type: "info" })
+          await importDatabase(backupData, "merge")
+        } else {
+          addLog(
+            "No existing backup found. Uploading local data as new backup."
+          )
+        }
+
+        setStatusMessage({ text: t.syncingPrepare, type: "info" })
+        const jsonData = await exportDatabase()
+
+        setStatusMessage({ text: `${t.syncingText} (50%)...`, type: "info" })
+        await uploadBackup(
+          token,
+          jsonData,
+          setAccessToken,
+          (percent) => {
+            setSyncProgress(50 + Math.round(percent * 0.5))
+            setStatusMessage({
+              text: `${t.syncingUpload} (${percent}%)...`,
+              type: "info"
+            })
+          },
+          { signal: controller.signal }
+        )
+
+        const now = Date.now()
+        localStorage.setItem("style-atelier-last-backup", now.toString())
+        setLastBackup(new Date(now).toLocaleString())
+
+        addLog("Google Drive synchronization completed successfully.")
+        showStatus(t.syncSuccess, "success")
+        checkStorage()
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          addLog("Sync cancelled by user.")
+          showStatus(t.syncCancelled, "info")
+        } else if (err instanceof GDriveTimeoutError) {
+          addLog("Sync failed: Connection timed out.")
+          showStatus(t.syncTimeout, "error")
+        } else {
+          console.error(err)
+          addLog(`Sync failed: ${err.message || err}`)
+          showStatus(
+            `${t.syncFailed}: ${err.message || "Unknown error"}`,
+            "error"
+          )
+        }
+
+        if (err.name !== "AbortError" && accessToken) {
+          await clearCachedToken(accessToken).catch(console.error)
+          setAccessToken(null)
+        }
+        throw err
+      } finally {
+        abortControllerRef.current = null
+        setSyncProgress(null)
       }
-    } finally {
-      setIsSyncing(false)
-      abortControllerRef.current = null
-      setSyncProgress(null)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["gdriveBackupMetadata", accessToken]
+      })
     }
+  })
+
+  // Google Drive restore Mutation
+  const restoreMutation = useMutation({
+    mutationFn: async () => {
+      if (!isSyncEnabled || syncMutation.isPending || restoreMutation.isPending)
+        return
+
+      setStatusMessage({ text: t.loadingCloudBackup, type: "info" })
+
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+
+      try {
+        const token = await getOrRequestToken()
+
+        const meta = await getBackupMetadata(token, setAccessToken, undefined, {
+          signal: controller.signal
+        })
+        let currentBackup = cloudBackup
+        if (meta) {
+          const dateStr = new Date(meta.modifiedTime).toLocaleString()
+          const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
+          currentBackup = {
+            modifiedTime: dateStr,
+            size: `${sizeKB} KB`
+          }
+        } else {
+          currentBackup = null
+        }
+
+        let confirmMsg = t.restoreConfirmMsg
+        if (currentBackup) {
+          confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${currentBackup.modifiedTime}\n${t.restoreConfirmSize}${currentBackup.size}`
+        }
+
+        setStatusMessage({ text: "", type: null })
+        const ok = await confirm({
+          title: t.confirmTitle,
+          message: confirmMsg,
+          confirmText: t.confirmBtn,
+          cancelText: t.cancelBtn,
+          variant: "danger"
+        })
+        if (!ok) return
+
+        setRestoreProgress(0)
+        setStatusMessage({ text: `${t.restoreLoading} (0%)...`, type: "info" })
+
+        const backupData = await downloadBackup(
+          token,
+          setAccessToken,
+          (percent) => {
+            setRestoreProgress(percent)
+            setStatusMessage({
+              text: `${t.restoreProgress} (${percent}%)...`,
+              type: "info"
+            })
+          },
+          undefined,
+          { signal: controller.signal }
+        )
+        if (!backupData) {
+          showStatus(t.noCloudBackup, "error")
+          addLog("Force recovery failed: Backup file not found.")
+          return
+        }
+
+        await importDatabase(backupData, "replace")
+        addLog("Database recovered from Google Drive successfully.")
+        showStatus(t.restoreSuccess, "success")
+        checkStorage()
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          addLog("Force recovery cancelled by user.")
+          showStatus(t.restoreCancelled, "info")
+        } else if (err instanceof GDriveTimeoutError) {
+          addLog("Force recovery failed: Connection timed out.")
+          showStatus(t.syncTimeout, "error")
+        } else {
+          console.error(err)
+          addLog(`Force recovery failed: ${err.message || err}`)
+          showStatus(
+            `${t.restoreFailed}: ${err.message || "Unknown error"}`,
+            "error"
+          )
+        }
+
+        if (err.name !== "AbortError" && accessToken) {
+          await clearCachedToken(accessToken).catch(console.error)
+          setAccessToken(null)
+        }
+        throw err
+      } finally {
+        abortControllerRef.current = null
+        setRestoreProgress(null)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["gdriveBackupMetadata", accessToken]
+      })
+    }
+  })
+
+  const handleSync = () => {
+    syncMutation.mutate()
   }
 
-  const handleForceRecovery = async () => {
-    if (!isSyncEnabled || isSyncing || isRestoring) return
-
-    setIsRestoring(true)
-    setStatusMessage({ text: t.loadingCloudBackup, type: "info" })
-
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-
-    try {
-      const token = await getOrRequestToken()
-
-      const meta = await getBackupMetadata(token, setAccessToken, undefined, {
-        signal: controller.signal
-      })
-      let currentBackup = cloudBackup
-      if (meta) {
-        const dateStr = new Date(meta.modifiedTime).toLocaleString()
-        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
-        currentBackup = {
-          modifiedTime: dateStr,
-          size: `${sizeKB} KB`
-        }
-        setCloudBackup(currentBackup)
-      } else {
-        setCloudBackup(null)
-        currentBackup = null
-      }
-
-      let confirmMsg = t.restoreConfirmMsg
-      if (currentBackup) {
-        confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${currentBackup.modifiedTime}\n${t.restoreConfirmSize}${currentBackup.size}`
-      }
-
-      setStatusMessage({ text: "", type: null })
-      const ok = await confirm({
-        title: t.confirmTitle,
-        message: confirmMsg,
-        confirmText: t.confirmBtn,
-        cancelText: t.cancelBtn,
-        variant: "danger"
-      })
-      if (!ok) return
-
-      setRestoreProgress(0)
-      setStatusMessage({ text: `${t.restoreLoading} (0%)...`, type: "info" })
-
-      const backupData = await downloadBackup(
-        token,
-        setAccessToken,
-        (percent) => {
-          setRestoreProgress(percent)
-          setStatusMessage({
-            text: `${t.restoreProgress} (${percent}%)...`,
-            type: "info"
-          })
-        },
-        undefined,
-        { signal: controller.signal }
-      )
-      if (!backupData) {
-        showStatus(t.noCloudBackup, "error")
-        addLog("Force recovery failed: Backup file not found.")
-        return
-      }
-
-      await importDatabase(backupData, "replace")
-      addLog("Database recovered from Google Drive successfully.")
-      showStatus(t.restoreSuccess, "success")
-      checkStorage()
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        addLog("Force recovery cancelled by user.")
-        showStatus(t.restoreCancelled, "info")
-      } else if (err instanceof GDriveTimeoutError) {
-        addLog("Force recovery failed: Connection timed out.")
-        showStatus(t.syncTimeout, "error")
-      } else {
-        console.error(err)
-        addLog(`Force recovery failed: ${err.message || err}`)
-        showStatus(
-          `${t.restoreFailed}: ${err.message || "Unknown error"}`,
-          "error"
-        )
-      }
-
-      if (err.name !== "AbortError" && accessToken) {
-        await clearCachedToken(accessToken).catch(console.error)
-        setAccessToken(null)
-      }
-    } finally {
-      setIsRestoring(false)
-      abortControllerRef.current = null
-      setRestoreProgress(null)
-    }
+  const handleForceRecovery = () => {
+    restoreMutation.mutate()
   }
 
   return {
     isSyncEnabled,
     isAutoSyncEnabled,
     accessToken,
-    isSyncing,
-    isRestoring,
+    isSyncing: syncMutation.isPending,
+    isRestoring: restoreMutation.isPending,
     lastBackup,
     cloudBackup,
     isLoadingCloudBackup,
