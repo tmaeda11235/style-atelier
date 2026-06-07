@@ -40,13 +40,26 @@ vi.mock("../../lib/google-drive", () => {
       this.name = "GDriveTimeoutError"
     }
   }
+  const authorize = vi.fn()
+  const clearCachedToken = vi.fn().mockResolvedValue(undefined)
+  const uploadBackup = vi.fn()
+  const downloadBackup = vi.fn()
+  const getBackupMetadata = vi.fn()
+  const defaultGoogleDriveClient = {
+    authorize,
+    clearCachedToken,
+    uploadBackup,
+    downloadBackup,
+    getBackupMetadata
+  }
   return {
-    authorize: vi.fn(),
-    clearCachedToken: vi.fn().mockResolvedValue(undefined),
-    uploadBackup: vi.fn(),
-    downloadBackup: vi.fn(),
-    getBackupMetadata: vi.fn(),
-    GDriveTimeoutError
+    authorize,
+    clearCachedToken,
+    uploadBackup,
+    downloadBackup,
+    getBackupMetadata,
+    GDriveTimeoutError,
+    defaultGoogleDriveClient
   }
 })
 
@@ -344,7 +357,6 @@ describe("SettingsTab", () => {
         "mock-token-123",
         expect.any(Function),
         expect.any(Function),
-        undefined,
         expect.any(Object)
       )
       expect(backupManager.importDatabase).toHaveBeenCalledWith(
@@ -825,8 +837,12 @@ describe("SettingsTab", () => {
 
       const { setAutoSyncEnabled } = await import("../../lib/auto-sync")
       // Main sync turning off should call setAutoSyncEnabled(false)
-      expect(setAutoSyncEnabled).toHaveBeenCalledWith(false)
-      expect(container.querySelector("#google-drive-auto-sync-btn")).toBeNull()
+      await waitFor(() => {
+        expect(setAutoSyncEnabled).toHaveBeenCalledWith(false)
+        expect(
+          container.querySelector("#google-drive-auto-sync-btn")
+        ).toBeNull()
+      })
     })
   })
 
