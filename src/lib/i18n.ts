@@ -192,6 +192,103 @@ export const i18nDict = {
       errUpdateFailed: "Failed to update category. Please try again.",
       logCreated: 'Created category "{name}"',
       errAddFailed: "Failed to add category. Please try again."
+    },
+    simpleWorkbench: {
+      title: "Simple Workbench",
+      tryOnMidjourney: "Try on Midjourney",
+      injecting: "Injecting...",
+      close: "Close",
+      cancel: "Cancel",
+      promptPreview: "Adjust Prompt",
+      injectSuccess: "Prompt injected successfully!",
+      checkConnectionFailed: "Connection check failed",
+      noActiveTab: "No active tab found"
+    },
+    dragAndDrop: {
+      noValidImage: "No valid image file dropped.",
+      noQrCode: "No QR code found in the image.",
+      invalidCardData: "Invalid card data in QR code or corrupted.",
+      importFailed: "Failed to import card: "
+    },
+    share: {
+      loading: "Loading Style Card...",
+      errorTitle: "Error Loading Card",
+      closeWindow: "Close Window",
+      headerSubtitle: "Premium Midjourney Style Manager",
+      generatedCardView: "Generated Card View",
+      rightClickHint: "Right click to copy or save",
+      styleDetails: "Style Details",
+      category: "Category",
+      sharingOptions: "Sharing Options",
+      copyImage: "Copy Image",
+      downloadPng: "Download PNG",
+      tip: "Tip: You can paste the copied card image directly into chat apps like Discord, or post it to X (Twitter). The card includes an embedded QR code that anyone can scan to import this style into their own Style Atelier workspace.",
+      specifications: "Style Specifications",
+      promptPreview: "Prompt Segment Preview",
+      noSegments: "No prompt segments.",
+      footer: "Style Atelier © {year} - Local-first prompt management",
+      noCardId: "No card ID provided in URL parameters.",
+      cardNotFound: "Style card not found in database.",
+      failedLoad: "Failed to load card.",
+      failedBlob: "Failed to generate image blob.",
+      clipboardSuccess:
+        "Copied card image to clipboard! You can now paste it into Discord, X, etc.",
+      clipboardBlocked:
+        "Browser blocked clipboard write. Right click the image and select 'Copy image'.",
+      clipboardFailed: "Failed to copy image to clipboard.",
+      downloadStarted: "Download started successfully!",
+      downloadFailed: "Failed to download card image."
+    },
+    interactiveTutorial: {
+      adding: "Adding...",
+      back: "Back",
+      done: "Done!",
+      next: "Next",
+      autoAdvanceHint: "Perform the action or click 'Next' to proceed"
+    },
+    tutorial: {
+      steps: [
+        {
+          title: "1. Drag & Drop into History",
+          description:
+            "Drag and drop any generated image from Midjourney directly into the History tab of this panel.\nYou can also add a sample image for testing.",
+          mockActionLabel: "Add Sample and Proceed"
+        },
+        {
+          title: "2. Click Mint Button",
+          description:
+            "Click the 'Mint Card' button on the imported history item to start crafting your card."
+        },
+        {
+          title: "3. Name Your Creation",
+          description:
+            "Select keywords or enter a custom name to set the card title. Click 'Next' when done."
+        },
+        {
+          title: "4. Select Slots",
+          description:
+            "Click prompt bubbles to convert them into 'Slots' (editable variables on the Workbench). Click 'Next' when done."
+        },
+        {
+          title: "5. Choose Rarity",
+          description:
+            "Assign a rarity tier (Common / Rare / Epic / Legendary) to your card. Click 'Next' when done."
+        },
+        {
+          title: "6. Save Your Card",
+          description: "Click 'Save Card' to register it in your Library."
+        },
+        {
+          title: "7. Send Card to Workbench",
+          description:
+            "Click the style card in your Library to add it to the HandBar and sync with the Workbench. Click 'Next' when done."
+        },
+        {
+          title: "8. Edit in Workbench",
+          description:
+            "Switch to the Workbench tab to customize variable slots and send prompts to Midjourney. That's it!"
+        }
+      ]
     }
   },
   ja: {
@@ -388,6 +485,105 @@ export const i18nDict = {
       errUpdateFailed: "カテゴリの更新に失敗しました。もう一度お試しください。",
       logCreated: 'カテゴリ "{name}" を作成しました',
       errAddFailed: "カテゴリの追加に失敗しました。もう一度お試しください。"
+    },
+    simpleWorkbench: {
+      title: "簡易 Workbench",
+      tryOnMidjourney: "Try on Midjourney",
+      injecting: "Injecting...",
+      close: "閉じる",
+      cancel: "キャンセル",
+      promptPreview: "プロンプト調整",
+      injectSuccess: "プロンプトを挿入しました！",
+      checkConnectionFailed: "接続確認に失敗しました",
+      noActiveTab: "アクティブなタブが見つかりません"
+    },
+    dragAndDrop: {
+      noValidImage: "有効な画像ファイルがドロップされませんでした。",
+      noQrCode: "画像からQRコードが検出されませんでした。",
+      invalidCardData:
+        "QRコード内のカードデータが無効であるか、破損しています。",
+      importFailed: "カードのインポート中にエラーが発生しました: "
+    },
+    share: {
+      loading: "スタイルカードを読み込み中...",
+      errorTitle: "カード読み込みエラー",
+      closeWindow: "ウィンドウを閉じる",
+      headerSubtitle: "プレミアム Midjourney プロンプト管理ツール",
+      generatedCardView: "生成カードプレビュー",
+      rightClickHint: "右クリックでコピーまたは保存",
+      styleDetails: "スタイルの詳細",
+      category: "カテゴリ",
+      sharingOptions: "共有オプション",
+      copyImage: "画像をコピー",
+      downloadPng: "PNGをダウンロード",
+      tip: "ヒント: コピーしたカード画像は、Discordなどのチャットアプリに直接貼り付けたり、X (Twitter)に投稿したりできます。カードにはQRコードが埋め込まれており、誰でもスキャンしてこのスタイルを自身のStyle Atelierワークスペースにインポートできます。",
+      specifications: "スタイルの仕様",
+      promptPreview: "プロンプトセグメントのプレビュー",
+      noSegments: "プロンプトセグメントはありません。",
+      footer: "Style Atelier © {year} - ローカルファーストのプロンプト管理",
+      noCardId: "URLパラメータにカードIDが指定されていません。",
+      cardNotFound: "データベース内にスタイルカードが見つかりません。",
+      failedLoad: "カードの読み込みに失敗しました。",
+      failedBlob: "画像Blobの生成に失敗しました。",
+      clipboardSuccess:
+        "カード画像をクリップボードにコピーしました！DiscordやX等に貼り付けられます。",
+      clipboardBlocked:
+        "ブラウザによりクリップボード書き込みがブロックされました。画像を右クリックして「画像をコピー」を選択してください。",
+      clipboardFailed: "クリップボードへのコピーに失敗しました。",
+      downloadStarted: "ダウンロードを開始しました！",
+      downloadFailed: "カード画像のダウンロードに失敗しました。"
+    },
+    interactiveTutorial: {
+      adding: "追加中...",
+      back: "戻る",
+      done: "完了！",
+      next: "次へ",
+      autoAdvanceHint: "操作を行うか、「次へ」を押すと進みます"
+    },
+    tutorial: {
+      steps: [
+        {
+          title: "① HistoryにD&Dする",
+          description:
+            "Midjourneyで生成した画像を、このパネル of Historyタブにドラッグ＆ドロップしてください。\nテスト用のサンプルを追加することもできます。",
+          mockActionLabel: "サンプルを追加して進む"
+        },
+        {
+          title: "② Mintボタンを押す",
+          description:
+            "追加されたHistoryアイテムの「Mint Card」ボタンを押して、カードの作成を開始してください。"
+        },
+        {
+          title: "③ タイトルを入れる",
+          description:
+            "キーワードを選択するか、カスタム名を入力してカードのタイトルを設定してください。設定できたら「Next」を押してください。"
+        },
+        {
+          title: "④ スロットを選ぶ",
+          description:
+            "プロンプトのバブルをクリックして「Slot」に変換できます。Slotは後でWorkbenchで自由に変更できる変数になります。設定できたら「Next」を押してください。"
+        },
+        {
+          title: "⑤ レア度を選ぶ",
+          description:
+            "カードのレア度（Common / Rare / Epic / Legendary）を選択してください。選択できたら「次へ」を押してください。"
+        },
+        {
+          title: "⑥ Save Cardを押す",
+          description:
+            "「Save Card」を押してカードをLibraryに登録してください。"
+        },
+        {
+          title: "⑦ カードをWorkbenchへ送る",
+          description:
+            "LibraryのStyleCardをクリックすると、画面下部のWorkbenchバーに追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。"
+        },
+        {
+          title: "⑧ Workbenchで編集する",
+          description:
+            "Workbenchタブに切り替えると、送られたカードのSlotの値を編集し、プロンプトをMidjourneyに送信できます。ガイドは以上です！"
+        }
+      ]
     }
   }
 }

@@ -1,16 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, act } from "@testing-library/react"
-import { InteractiveTutorial } from "./InteractiveTutorial"
-import { TutorialProvider, useTutorial } from "../../contexts/TutorialContext"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { TutorialProvider, useTutorial } from "../../contexts/TutorialContext"
+import { InteractiveTutorial } from "./InteractiveTutorial"
 
 // Mock db so InteractiveTutorial's handleMockDrop doesn't blow up
 vi.mock("../../lib/db", () => ({
   db: {
     historyItems: {
-      put: vi.fn().mockResolvedValue(undefined),
-    },
-  },
+      put: vi.fn().mockResolvedValue(undefined)
+    }
+  }
 }))
 
 function TutorialHarness({ children }: { children: React.ReactNode }) {
@@ -29,9 +30,17 @@ function StepAdvancer() {
 
 describe("InteractiveTutorial", () => {
   beforeEach(() => {
+    // Mock navigator.language to ensure Japanese translations are loaded
+    Object.defineProperty(window.navigator, "language", {
+      value: "ja",
+      configurable: true
+    })
     // Mock querySelector to return a dummy element with getBoundingClientRect
     vi.spyOn(document, "querySelector").mockImplementation((selector) => {
-      if (typeof selector === "string" && selector.startsWith("[data-tutorial=")) {
+      if (
+        typeof selector === "string" &&
+        selector.startsWith("[data-tutorial=")
+      ) {
         const div = document.createElement("div")
         div.getBoundingClientRect = () => ({
           top: 100,
@@ -42,7 +51,7 @@ describe("InteractiveTutorial", () => {
           right: 250,
           x: 50,
           y: 100,
-          toJSON: () => ({}),
+          toJSON: () => ({})
         })
         return div
       }
@@ -163,7 +172,7 @@ describe("InteractiveTutorial", () => {
 
     expect(screen.getByTestId("interactive-tutorial")).toBeDefined()
     expect(screen.getByText(/Step 1 \/ 8/)).toBeDefined()
-    
+
     // The tooltip should still be visible even though querySelector returned null
     const tooltip = screen.getByText("① HistoryにD&Dする")
     expect(tooltip).toBeDefined()

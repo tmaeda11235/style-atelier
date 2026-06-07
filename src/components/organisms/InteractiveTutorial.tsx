@@ -1,5 +1,13 @@
-import React, { useEffect, useRef, useState, useCallback } from "react"
-import { X, ChevronLeft, ChevronRight, Sparkles, AlertTriangle } from "lucide-react"
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  X
+} from "lucide-react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { db } from "../../lib/db"
 
@@ -17,11 +25,23 @@ const PADDING = 8
  * ターゲット要素をスポットライトで強調し、ツールチップで説明を表示する。
  */
 export function InteractiveTutorial() {
-  const { isActive, currentStep, currentStepIndex, currentConfig, totalSteps, nextStep, prevStep, stopTutorial } =
-    useTutorial()
+  const {
+    isActive,
+    currentStep,
+    currentStepIndex,
+    currentConfig,
+    totalSteps,
+    nextStep,
+    prevStep,
+    stopTutorial
+  } = useTutorial()
+  const { t: i18n } = useLanguage()
+  const t = i18n.interactiveTutorial
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null)
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
-  const [arrowSide, setArrowSide] = useState<"top" | "bottom" | "left" | "right">("bottom")
+  const [arrowSide, setArrowSide] = useState<
+    "top" | "bottom" | "left" | "right"
+  >("bottom")
   const [isMockLoading, setIsMockLoading] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>(0)
@@ -42,7 +62,7 @@ export function InteractiveTutorial() {
       setTooltipStyle({
         top: `${Math.max(8, (viewportHeight - tipHeight) / 2)}px`,
         left: `${Math.max(8, (viewportWidth - tipWidth) / 2)}px`,
-        width: `${tipWidth}px`,
+        width: `${tipWidth}px`
       })
       return
     }
@@ -54,7 +74,7 @@ export function InteractiveTutorial() {
       top: rect.top - parentRect.top - PADDING,
       left: rect.left - parentRect.left - PADDING,
       width: rect.width + PADDING * 2,
-      height: rect.height + PADDING * 2,
+      height: rect.height + PADDING * 2
     }
     setSpotlightRect(sr)
 
@@ -131,7 +151,7 @@ export function InteractiveTutorial() {
     setTooltipStyle({
       top: `${top}px`,
       left: `${left}px`,
-      width: `${tipWidth}px`,
+      width: `${tipWidth}px`
     })
   }, [currentConfig])
 
@@ -219,9 +239,10 @@ export function InteractiveTutorial() {
     try {
       const sampleItem = {
         id: `tutorial-sample-${Date.now()}`,
-        fullCommand: "A majestic neon cyberpunk samurai --ar 1:1 --sref https://example.com/style.jpg --s 750",
+        fullCommand:
+          "A majestic neon cyberpunk samurai --ar 1:1 --sref https://example.com/style.jpg --s 750",
         imageUrl: "https://picsum.photos/seed/tutorial/512/512",
-        timestamp: Date.now(),
+        timestamp: Date.now()
       }
       await db.historyItems.put(sampleItem)
       // Advance step after a short delay so the UI can update
@@ -248,7 +269,7 @@ export function InteractiveTutorial() {
     const base: React.CSSProperties = {
       position: "fixed",
       background: bg,
-      pointerEvents: "none",
+      pointerEvents: "none"
     }
 
     if (!spotlightRect) {
@@ -281,8 +302,7 @@ export function InteractiveTutorial() {
   return (
     <div
       className="fixed inset-0 z-[100] pointer-events-none"
-      data-testid="interactive-tutorial"
-    >
+      data-testid="interactive-tutorial">
       {/* 4-rect spotlight overlay - only covers areas outside the spotlight */}
       {renderSpotlight()}
 
@@ -294,7 +314,7 @@ export function InteractiveTutorial() {
             top: spotlightRect.top,
             left: spotlightRect.left,
             width: spotlightRect.width,
-            height: spotlightRect.height,
+            height: spotlightRect.height
           }}
         />
       )}
@@ -303,8 +323,7 @@ export function InteractiveTutorial() {
       <div
         ref={tooltipRef}
         className="fixed pointer-events-auto z-[101] animate-in fade-in zoom-in-95 duration-200"
-        style={tooltipStyle}
-      >
+        style={tooltipStyle}>
         <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-slate-950 px-4 py-3 flex justify-between items-center border-b border-slate-800">
@@ -317,8 +336,7 @@ export function InteractiveTutorial() {
             <button
               onClick={stopTutorial}
               className="text-slate-600 hover:text-slate-300 transition-colors p-1 rounded"
-              aria-label="Close tutorial"
-            >
+              aria-label="Close tutorial">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -327,13 +345,17 @@ export function InteractiveTutorial() {
           <div className="w-full bg-slate-800 h-1">
             <div
               className="bg-blue-500 h-1 transition-all duration-500"
-              style={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
+              style={{
+                width: `${((currentStepIndex + 1) / totalSteps) * 100}%`
+              }}
             />
           </div>
 
           {/* Content */}
           <div className="px-4 py-3">
-            <h3 className="text-sm font-bold text-white mb-1.5">{currentConfig.title}</h3>
+            <h3 className="text-sm font-bold text-white mb-1.5">
+              {currentConfig.title}
+            </h3>
             <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
               {currentConfig.description}
             </p>
@@ -345,12 +367,11 @@ export function InteractiveTutorial() {
               <button
                 onClick={handleMockDrop}
                 disabled={isMockLoading}
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-xs text-slate-200 font-semibold transition-all disabled:opacity-50"
-              >
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-xs text-slate-200 font-semibold transition-all disabled:opacity-50">
                 {isMockLoading ? (
                   <span className="flex items-center gap-2">
                     <div className="w-3 h-3 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
-                    追加中...
+                    {t.adding}
                   </span>
                 ) : (
                   <>
@@ -366,7 +387,7 @@ export function InteractiveTutorial() {
           <div className="px-4 pb-4 flex flex-col gap-2">
             {currentConfig.autoAdvance && (
               <span className="text-[10px] text-slate-500 italic text-center w-full block">
-                操作を行うか、「次へ」を押すと進みます
+                {t.autoAdvanceHint}
               </span>
             )}
             <div className="flex gap-2 justify-between items-center w-full">
@@ -377,19 +398,21 @@ export function InteractiveTutorial() {
                   isFirstStep
                     ? "border-slate-800 text-slate-700 cursor-not-allowed"
                     : "border-slate-700 text-slate-300 bg-slate-800 hover:bg-slate-700"
-                }`}
-              >
-                <ChevronLeft className="w-3.5 h-3.5" /> 戻る
+                }`}>
+                <ChevronLeft className="w-3.5 h-3.5" /> {t.back}
               </button>
 
               <button
                 onClick={isLastStep ? stopTutorial : nextStep}
-                className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg text-white shadow transition-all"
-              >
+                className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg text-white shadow transition-all">
                 {isLastStep ? (
-                  <>完了！ <Sparkles className="w-3.5 h-3.5 ml-0.5" /></>
+                  <>
+                    {t.done} <Sparkles className="w-3.5 h-3.5 ml-0.5" />
+                  </>
                 ) : (
-                  <>次へ <ChevronRight className="w-3.5 h-3.5" /></>
+                  <>
+                    {t.next} <ChevronRight className="w-3.5 h-3.5" />
+                  </>
                 )}
               </button>
             </div>
@@ -397,20 +420,23 @@ export function InteractiveTutorial() {
         </div>
 
         {/* Arrow pointing toward the spotlight */}
-        {spotlightRect && (() => {
-          const arrowClass: Record<string, string> = {
-            bottom: "bottom-full left-1/2 -translate-x-1/2 mb-0.5 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800",
-            top: "top-full left-1/2 -translate-x-1/2 mt-0.5 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800",
-            left: "left-full top-1/2 -translate-y-1/2 ml-0.5 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800",
-            right: "right-full top-1/2 -translate-y-1/2 mr-0.5 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800",
-          }
-          return (
-            <div
-              className={`absolute w-0 h-0 border-8 ${arrowClass[arrowSide] || arrowClass.bottom}`}
-              style={{ pointerEvents: "none" }}
-            />
-          )
-        })()}
+        {spotlightRect &&
+          (() => {
+            const arrowClass: Record<string, string> = {
+              bottom:
+                "bottom-full left-1/2 -translate-x-1/2 mb-0.5 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800",
+              top: "top-full left-1/2 -translate-x-1/2 mt-0.5 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800",
+              left: "left-full top-1/2 -translate-y-1/2 ml-0.5 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800",
+              right:
+                "right-full top-1/2 -translate-y-1/2 mr-0.5 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800"
+            }
+            return (
+              <div
+                className={`absolute w-0 h-0 border-8 ${arrowClass[arrowSide] || arrowClass.bottom}`}
+                style={{ pointerEvents: "none" }}
+              />
+            )
+          })()}
       </div>
     </div>
   )
