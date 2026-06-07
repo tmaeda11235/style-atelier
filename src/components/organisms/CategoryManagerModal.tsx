@@ -2,6 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { Edit2, Image as ImageIcon, Plus, Trash2, X } from "lucide-react"
 import React, { useState } from "react"
 
+import { useConfirm } from "../../contexts/ConfirmContext"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { db } from "../../lib/db"
 import type { CustomCategory } from "../../lib/db-schema"
@@ -27,6 +28,7 @@ export function CategoryManagerModal({
   onClose,
   addLog
 }: CategoryManagerModalProps) {
+  const confirm = useConfirm()
   const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState<"create" | "manage">("create")
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(
@@ -96,9 +98,14 @@ export function CategoryManagerModal({
   }
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (
-      !confirm(t.categoryManager.confirmDelete.replace("{name}", categoryName))
-    ) {
+    const ok = await confirm({
+      title: t.categoryManager.deleteTooltip,
+      message: t.categoryManager.confirmDelete.replace("{name}", categoryName),
+      confirmText: t.categoryManager.deleteTooltip,
+      cancelText: t.categoryManager.cancel,
+      variant: "danger"
+    })
+    if (!ok) {
       return
     }
     try {

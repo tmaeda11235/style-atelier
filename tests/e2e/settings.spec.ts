@@ -593,4 +593,71 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
 
     console.log("Language selection E2E test passed successfully!")
   })
+
+  test("should show custom confirm dialog and handle reset database action", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Custom Confirm Dialog E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if visible
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 3. Locate Reset DB button (Danger Zone)
+    const resetDbBtn = spFrame.locator("#reset-db-btn")
+    await resetDbBtn.scrollIntoViewIfNeeded()
+    await expect(resetDbBtn).toBeVisible()
+
+    // 4. Click Reset DB button to open the custom confirm dialog
+    console.log("Clicking Reset DB button...")
+    await resetDbBtn.click()
+    await page.waitForTimeout(500)
+
+    // 5. Verify custom confirm dialog is visible
+    const dialogContainer = spFrame.locator("#confirmation-dialog-container")
+    await expect(dialogContainer).toBeVisible()
+
+    // Capture screenshot of the custom confirm dialog
+    await page.screenshot({
+      path: path.join(screenshotsDir, "custom-confirm-dialog.png")
+    })
+    console.log("Custom confirm dialog screenshot saved.")
+
+    // 6. Click Cancel on the custom confirm dialog
+    const cancelBtn = spFrame.locator("#confirm-dialog-cancel-btn")
+    await expect(cancelBtn).toBeVisible()
+    await cancelBtn.click()
+    await page.waitForTimeout(300)
+
+    // Verify dialog is closed
+    await expect(dialogContainer).not.toBeVisible()
+
+    // 7. Click Reset DB button again
+    await resetDbBtn.click()
+    await page.waitForTimeout(500)
+    await expect(dialogContainer).toBeVisible()
+
+    // 8. Click Confirm on the custom confirm dialog
+    const confirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(confirmBtn).toBeVisible()
+    await confirmBtn.click()
+
+    // Verify reset success log or status
+    await page.waitForTimeout(1000)
+    console.log("Custom confirm dialog E2E test passed successfully!")
+  })
 })

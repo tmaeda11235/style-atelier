@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react"
-import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
-import { NonTargetSiteView } from "../components/organisms/NonTargetSiteView"
-import { WorkbenchProvider } from "../contexts/WorkbenchContext"
-import { TutorialProvider } from "../contexts/TutorialContext"
+import React, { useEffect, useState } from "react"
+
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
-import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
+import { NonTargetSiteView } from "../components/organisms/NonTargetSiteView"
+import { ConfirmProvider } from "../contexts/ConfirmContext"
 import { LanguageProvider } from "../contexts/LanguageContext"
+import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
+import { TutorialProvider } from "../contexts/TutorialContext"
+import { WorkbenchProvider } from "../contexts/WorkbenchContext"
+import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
 import { initializeAutoSync } from "../lib/auto-sync"
 
 /**
@@ -29,7 +31,9 @@ function SidePanelInner() {
     if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id) {
-          chrome.tabs.update(tabs[0].id, { url: "https://www.midjourney.com/imagine" })
+          chrome.tabs.update(tabs[0].id, {
+            url: "https://www.midjourney.com/imagine"
+          })
         }
       })
     } else {
@@ -48,9 +52,15 @@ function SidePanelInner() {
   return (
     <WorkbenchProvider>
       {isEasyMode ? (
-        <EasyModeView isEasyMode={isEasyMode} onToggleEasyMode={handleToggleEasyMode} />
+        <EasyModeView
+          isEasyMode={isEasyMode}
+          onToggleEasyMode={handleToggleEasyMode}
+        />
       ) : (
-        <ExpertModeView isEasyMode={isEasyMode} onToggleEasyMode={handleToggleEasyMode} />
+        <ExpertModeView
+          isEasyMode={isEasyMode}
+          onToggleEasyMode={handleToggleEasyMode}
+        />
       )}
     </WorkbenchProvider>
   )
@@ -65,7 +75,9 @@ function SidePanelPage() {
     <LanguageProvider>
       <SettingsProvider>
         <TutorialProvider>
-          <SidePanelInner />
+          <ConfirmProvider>
+            <SidePanelInner />
+          </ConfirmProvider>
         </TutorialProvider>
       </SettingsProvider>
     </LanguageProvider>

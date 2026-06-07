@@ -1,458 +1,546 @@
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  Cloud, 
-  UploadCloud, 
-  DownloadCloud, 
-  CheckCircle2, 
-  AlertTriangle, 
-  RefreshCw, 
-  Lock, 
-  ShieldCheck, 
-  Database, 
-  Trash2,
-  Settings2,
+import {
+  AlertTriangle,
+  CheckCircle2,
   Clock,
-  FileJson,
+  Cloud,
+  Database,
   Download,
-  Upload
-} from "lucide-react";
-import { 
-  authorize, 
+  DownloadCloud,
+  FileJson,
+  Lock,
+  RefreshCw,
+  Settings2,
+  ShieldCheck,
+  Trash2,
+  Upload,
+  UploadCloud
+} from "lucide-react"
+import React, { useEffect, useRef, useState } from "react"
+
+import { useConfirm } from "../../contexts/ConfirmContext"
+import { useLanguage } from "../../contexts/LanguageContext"
+import { useSettings } from "../../contexts/SettingsContext"
+import { useStorageEstimate } from "../../hooks/useStorageEstimate"
+import { setAutoSyncEnabled } from "../../lib/auto-sync"
+import { db } from "../../lib/db"
+import {
+  authorize,
   clearCachedToken,
-  uploadBackup, 
-  downloadBackup, 
-  exportDatabase, 
-  importDatabase,
+  downloadBackup,
+  exportDatabase,
+  GDriveTimeoutError,
   getBackupMetadata,
-  GDriveTimeoutError
-} from "../../lib/google-drive";
-import { useStorageEstimate } from "../../hooks/useStorageEstimate";
-import { db } from "../../lib/db";
-import { useSettings } from "../../contexts/SettingsContext";
-import { useLanguage } from "../../contexts/LanguageContext";
-import type { Language } from "../../lib/i18n";
-import { setAutoSyncEnabled } from "../../lib/auto-sync";
+  importDatabase,
+  uploadBackup
+} from "../../lib/google-drive"
+import type { Language } from "../../lib/i18n"
 
 interface SettingsTabProps {
-  addLog: (log: string) => void;
-  onResetDb: () => void;
-  isEasyMode?: boolean;
-  onToggleEasyMode?: (checked: boolean) => void;
+  addLog: (log: string) => void
+  onResetDb: () => void
+  isEasyMode?: boolean
+  onToggleEasyMode?: (checked: boolean) => void
 }
 
-export function SettingsTab({ 
-  addLog, 
-  onResetDb, 
-  isEasyMode = false, 
-  onToggleEasyMode = () => {} 
+export function SettingsTab({
+  addLog,
+  onResetDb,
+  isEasyMode = false,
+  onToggleEasyMode = () => {}
 }: SettingsTabProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const { estimate, checkStorage } = useStorageEstimate();
-  
-  const contextSettings = useSettings();
-  const currentEasyMode = isEasyMode || contextSettings.isEasyMode;
-  const currentToggleEasyMode = onToggleEasyMode || contextSettings.toggleEasyMode;
-  const { expertFeatures, updateExpertFeature } = contextSettings;
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const { estimate, checkStorage } = useStorageEstimate()
 
-  const { lang, changeLanguage, t: i18n } = useLanguage();
-  const t = i18n.settings;
+  const confirm = useConfirm()
+  const contextSettings = useSettings()
+  const currentEasyMode = isEasyMode || contextSettings.isEasyMode
+  const currentToggleEasyMode =
+    onToggleEasyMode || contextSettings.toggleEasyMode
+  const { expertFeatures, updateExpertFeature } = contextSettings
+
+  const { lang, changeLanguage, t: i18n } = useLanguage()
+  const t = i18n.settings
 
   // Sync toggle state
-  const [isSyncEnabled, setIsSyncEnabled] = useState(false);
-  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false);
+  const [isSyncEnabled, setIsSyncEnabled] = useState(false)
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false)
 
   // Google Auth states
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [lastBackup, setLastBackup] = useState<string | null>(null);
-  const [cloudBackup, setCloudBackup] = useState<{ modifiedTime: string; size: string } | null>(null);
-  const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false);
-  const [syncProgress, setSyncProgress] = useState<number | null>(null);
-  const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [isRestoring, setIsRestoring] = useState(false)
+  const [lastBackup, setLastBackup] = useState<string | null>(null)
+  const [cloudBackup, setCloudBackup] = useState<{
+    modifiedTime: string
+    size: string
+  } | null>(null)
+  const [isLoadingCloudBackup, setIsLoadingCloudBackup] = useState(false)
+  const [syncProgress, setSyncProgress] = useState<number | null>(null)
+  const [restoreProgress, setRestoreProgress] = useState<number | null>(null)
 
   // Status logs local view
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" | null }>({
+  const [statusMessage, setStatusMessage] = useState<{
+    text: string
+    type: "success" | "error" | "info" | null
+  }>({
     text: "",
-    type: null,
-  });
+    type: null
+  })
 
   useEffect(() => {
     // Load last backup time
-    const savedLastBackup = localStorage.getItem("style-atelier-last-backup");
+    const savedLastBackup = localStorage.getItem("style-atelier-last-backup")
     if (savedLastBackup) {
-      setLastBackup(new Date(parseInt(savedLastBackup)).toLocaleString());
+      setLastBackup(new Date(parseInt(savedLastBackup)).toLocaleString())
     }
 
     // Load sync enabled state
-    const savedSyncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
-    setIsSyncEnabled(savedSyncEnabled);
+    const savedSyncEnabled =
+      localStorage.getItem("style-atelier-sync-enabled") === "true"
+    setIsSyncEnabled(savedSyncEnabled)
 
     // Load auto sync enabled state
-    const savedAutoSyncEnabled = localStorage.getItem("style-atelier-auto-sync-enabled") === "true";
-    setIsAutoSyncEnabled(savedAutoSyncEnabled);
+    const savedAutoSyncEnabled =
+      localStorage.getItem("style-atelier-auto-sync-enabled") === "true"
+    setIsAutoSyncEnabled(savedAutoSyncEnabled)
 
     if (savedSyncEnabled) {
       // Silently authorize and get backup metadata
       authorize(false)
         .then((token) => {
-          setAccessToken(token);
-          setIsLoadingCloudBackup(true);
+          setAccessToken(token)
+          setIsLoadingCloudBackup(true)
           getBackupMetadata(token, setAccessToken)
             .then((meta) => {
               if (meta) {
-                const dateStr = new Date(meta.modifiedTime).toLocaleString();
-                const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+                const dateStr = new Date(meta.modifiedTime).toLocaleString()
+                const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
                 setCloudBackup({
                   modifiedTime: dateStr,
                   size: `${sizeKB} KB`
-                });
+                })
               } else {
-                setCloudBackup(null);
+                setCloudBackup(null)
               }
             })
             .catch((err) => console.error(err))
-            .finally(() => setIsLoadingCloudBackup(false));
+            .finally(() => setIsLoadingCloudBackup(false))
         })
         .catch((err) => {
-          console.log("Silent authorization failed:", err.message);
-        });
+          console.log("Silent authorization failed:", err.message)
+        })
     }
 
     return () => {
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        abortControllerRef.current.abort()
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const showStatus = (text: string, type: "success" | "error" | "info") => {
-    setStatusMessage({ text, type });
+    setStatusMessage({ text, type })
     setTimeout(() => {
-      setStatusMessage({ text: "", type: null });
-    }, 6000);
-  };
+      setStatusMessage({ text: "", type: null })
+    }, 6000)
+  }
 
   const handleCancelSync = () => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      abortControllerRef.current.abort()
     }
-  };
+  }
 
   const handleToggleSync = async (checked: boolean) => {
-    setIsSyncEnabled(checked);
-    localStorage.setItem("style-atelier-sync-enabled", checked ? "true" : "false");
-    addLog(`Google Drive synchronization: ${checked ? "ENABLED" : "DISABLED"}`);
-    
+    setIsSyncEnabled(checked)
+    localStorage.setItem(
+      "style-atelier-sync-enabled",
+      checked ? "true" : "false"
+    )
+    addLog(`Google Drive synchronization: ${checked ? "ENABLED" : "DISABLED"}`)
+
     if (!checked) {
       // Clear token when turning sync off
       if (accessToken) {
-        clearCachedToken(accessToken).catch(console.error);
+        clearCachedToken(accessToken).catch(console.error)
       }
-      setAccessToken(null);
-      setCloudBackup(null);
+      setAccessToken(null)
+      setCloudBackup(null)
       // Disable auto sync if parent sync is disabled
-      setIsAutoSyncEnabled(false);
-      setAutoSyncEnabled(false);
+      setIsAutoSyncEnabled(false)
+      setAutoSyncEnabled(false)
     } else {
       // When turning sync on, fetch metadata using interactive authorization
       try {
-        const token = await authorize(true);
-        setAccessToken(token);
-        setIsLoadingCloudBackup(true);
-        const meta = await getBackupMetadata(token, setAccessToken);
+        const token = await authorize(true)
+        setAccessToken(token)
+        setIsLoadingCloudBackup(true)
+        const meta = await getBackupMetadata(token, setAccessToken)
         if (meta) {
-          const dateStr = new Date(meta.modifiedTime).toLocaleString();
-          const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+          const dateStr = new Date(meta.modifiedTime).toLocaleString()
+          const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
           setCloudBackup({
             modifiedTime: dateStr,
             size: `${sizeKB} KB`
-          });
+          })
         } else {
-          setCloudBackup(null);
+          setCloudBackup(null)
         }
       } catch (err: any) {
-        console.error(err);
-        addLog(`Sync authorization failed: ${err.message || err}`);
-        showStatus(`Authorization failed: ${err.message || "Unknown error"}`, "error");
-        setIsSyncEnabled(false);
-        localStorage.setItem("style-atelier-sync-enabled", "false");
+        console.error(err)
+        addLog(`Sync authorization failed: ${err.message || err}`)
+        showStatus(
+          `Authorization failed: ${err.message || "Unknown error"}`,
+          "error"
+        )
+        setIsSyncEnabled(false)
+        localStorage.setItem("style-atelier-sync-enabled", "false")
       } finally {
-        setIsLoadingCloudBackup(false);
+        setIsLoadingCloudBackup(false)
       }
     }
-  };
+  }
 
   const handleToggleAutoSync = (checked: boolean) => {
-    setIsAutoSyncEnabled(checked);
-    setAutoSyncEnabled(checked);
-    addLog(`Google Drive auto-sync: ${checked ? "ENABLED" : "DISABLED"}`);
-  };
+    setIsAutoSyncEnabled(checked)
+    setAutoSyncEnabled(checked)
+    addLog(`Google Drive auto-sync: ${checked ? "ENABLED" : "DISABLED"}`)
+  }
 
   /**
    * Helper to retrieve token from memory or request a new one via Identity flow
    */
   const getOrRequestToken = async (): Promise<string> => {
-    if (accessToken) return accessToken;
-    
-    const token = await authorize(true);
-    setAccessToken(token);
-    return token;
-  };
+    if (accessToken) return accessToken
+
+    const token = await authorize(true)
+    setAccessToken(token)
+    return token
+  }
 
   const handleSync = async () => {
-    if (!isSyncEnabled) return;
+    if (!isSyncEnabled) return
 
-    setIsSyncing(true);
-    setSyncProgress(0);
-    setStatusMessage({ text: t.syncingStart, type: "info" });
+    setIsSyncing(true)
+    setSyncProgress(0)
+    setStatusMessage({ text: t.syncingStart, type: "info" })
 
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
     try {
-      const token = await getOrRequestToken();
-      
+      const token = await getOrRequestToken()
+
       // 1. Download existing backup (if any)
-      setStatusMessage({ text: t.syncingFetch, type: "info" });
-      const backupData = await downloadBackup(token, setAccessToken, (percent) => {
-        setSyncProgress(Math.round(percent * 0.5)); // 0-50%
-        setStatusMessage({ text: `${t.syncingProgress} (${percent}%)...`, type: "info" });
-      }, undefined, { signal: controller.signal });
+      setStatusMessage({ text: t.syncingFetch, type: "info" })
+      const backupData = await downloadBackup(
+        token,
+        setAccessToken,
+        (percent) => {
+          setSyncProgress(Math.round(percent * 0.5)) // 0-50%
+          setStatusMessage({
+            text: `${t.syncingProgress} (${percent}%)...`,
+            type: "info"
+          })
+        },
+        undefined,
+        { signal: controller.signal }
+      )
 
       if (backupData) {
-        setStatusMessage({ text: t.syncingMerge, type: "info" });
-        await importDatabase(backupData, "merge");
+        setStatusMessage({ text: t.syncingMerge, type: "info" })
+        await importDatabase(backupData, "merge")
       } else {
-        addLog("No existing backup found. Uploading local data as new backup.");
+        addLog("No existing backup found. Uploading local data as new backup.")
       }
 
       // 2. Export and Upload current merged state
-      setStatusMessage({ text: t.syncingPrepare, type: "info" });
-      const jsonData = await exportDatabase();
+      setStatusMessage({ text: t.syncingPrepare, type: "info" })
+      const jsonData = await exportDatabase()
 
-      setStatusMessage({ text: `${t.syncingText} (50%)...`, type: "info" });
-      await uploadBackup(token, jsonData, setAccessToken, (percent) => {
-        setSyncProgress(50 + Math.round(percent * 0.5)); // 50-100%
-        setStatusMessage({ text: `${t.syncingUpload} (${percent}%)...`, type: "info" });
-      }, { signal: controller.signal });
+      setStatusMessage({ text: `${t.syncingText} (50%)...`, type: "info" })
+      await uploadBackup(
+        token,
+        jsonData,
+        setAccessToken,
+        (percent) => {
+          setSyncProgress(50 + Math.round(percent * 0.5)) // 50-100%
+          setStatusMessage({
+            text: `${t.syncingUpload} (${percent}%)...`,
+            type: "info"
+          })
+        },
+        { signal: controller.signal }
+      )
 
-      const now = Date.now();
-      localStorage.setItem("style-atelier-last-backup", now.toString());
-      setLastBackup(new Date(now).toLocaleString());
+      const now = Date.now()
+      localStorage.setItem("style-atelier-last-backup", now.toString())
+      setLastBackup(new Date(now).toLocaleString())
 
       // Fetch updated metadata
-      const meta = await getBackupMetadata(token, setAccessToken, undefined, { signal: controller.signal });
+      const meta = await getBackupMetadata(token, setAccessToken, undefined, {
+        signal: controller.signal
+      })
       if (meta) {
-        const dateStr = new Date(meta.modifiedTime).toLocaleString();
-        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+        const dateStr = new Date(meta.modifiedTime).toLocaleString()
+        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
         setCloudBackup({
           modifiedTime: dateStr,
           size: `${sizeKB} KB`
-        });
+        })
       }
 
-      addLog("Google Drive synchronization completed successfully.");
-      showStatus(t.syncSuccess, "success");
-      checkStorage();
+      addLog("Google Drive synchronization completed successfully.")
+      showStatus(t.syncSuccess, "success")
+      checkStorage()
     } catch (err: any) {
       if (err.name === "AbortError") {
-        addLog("Sync cancelled by user.");
-        showStatus(t.syncCancelled, "info");
+        addLog("Sync cancelled by user.")
+        showStatus(t.syncCancelled, "info")
       } else if (err instanceof GDriveTimeoutError) {
-        addLog("Sync failed: Connection timed out.");
-        showStatus(t.syncTimeout, "error");
+        addLog("Sync failed: Connection timed out.")
+        showStatus(t.syncTimeout, "error")
       } else {
-        console.error(err);
-        addLog(`Sync failed: ${err.message || err}`);
-        showStatus(`${t.syncFailed}: ${err.message || "Unknown error"}`, "error");
+        console.error(err)
+        addLog(`Sync failed: ${err.message || err}`)
+        showStatus(
+          `${t.syncFailed}: ${err.message || "Unknown error"}`,
+          "error"
+        )
       }
-      
+
       // Clear token cache from Chrome on unexpected failure
       if (err.name !== "AbortError" && accessToken) {
-        await clearCachedToken(accessToken).catch(console.error);
-        setAccessToken(null);
+        await clearCachedToken(accessToken).catch(console.error)
+        setAccessToken(null)
       }
     } finally {
-      setIsSyncing(false);
-      abortControllerRef.current = null;
-      setSyncProgress(null);
+      setIsSyncing(false)
+      abortControllerRef.current = null
+      setSyncProgress(null)
     }
-  };
+  }
 
   const handleForceRecovery = async () => {
-    if (!isSyncEnabled || isSyncing || isRestoring) return;
-    
-    setIsRestoring(true);
-    setStatusMessage({ text: t.loadingCloudBackup, type: "info" });
-    
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+    if (!isSyncEnabled || isSyncing || isRestoring) return
+
+    setIsRestoring(true)
+    setStatusMessage({ text: t.loadingCloudBackup, type: "info" })
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
     try {
-      const token = await getOrRequestToken();
-      
+      const token = await getOrRequestToken()
+
       // Fetch latest backup metadata before confirmation to ensure accuracy
-      const meta = await getBackupMetadata(token, setAccessToken, undefined, { signal: controller.signal });
-      let currentBackup = cloudBackup;
+      const meta = await getBackupMetadata(token, setAccessToken, undefined, {
+        signal: controller.signal
+      })
+      let currentBackup = cloudBackup
       if (meta) {
-        const dateStr = new Date(meta.modifiedTime).toLocaleString();
-        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1);
+        const dateStr = new Date(meta.modifiedTime).toLocaleString()
+        const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
         currentBackup = {
           modifiedTime: dateStr,
           size: `${sizeKB} KB`
-        };
-        setCloudBackup(currentBackup);
+        }
+        setCloudBackup(currentBackup)
       } else {
-        setCloudBackup(null);
-        currentBackup = null;
+        setCloudBackup(null)
+        currentBackup = null
       }
 
-      let confirmMsg = t.restoreConfirmMsg;
+      let confirmMsg = t.restoreConfirmMsg
       if (currentBackup) {
-        confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${currentBackup.modifiedTime}\n${t.restoreConfirmSize}${currentBackup.size}`;
+        confirmMsg += `\n\n${t.restoreConfirmHeader}\n${t.restoreConfirmTime}${currentBackup.modifiedTime}\n${t.restoreConfirmSize}${currentBackup.size}`
       }
-      
-      setStatusMessage({ text: "", type: null });
-      const ok = window.confirm(confirmMsg);
-      if (!ok) return;
 
-      setRestoreProgress(0);
-      setStatusMessage({ text: `${t.restoreLoading} (0%)...`, type: "info" });
-      
-      const backupData = await downloadBackup(token, setAccessToken, (percent) => {
-        setRestoreProgress(percent);
-        setStatusMessage({ text: `${t.restoreProgress} (${percent}%)...`, type: "info" });
-      }, undefined, { signal: controller.signal });
+      setStatusMessage({ text: "", type: null })
+      const ok = await confirm({
+        title: t.confirmTitle,
+        message: confirmMsg,
+        confirmText: t.confirmBtn,
+        cancelText: t.cancelBtn,
+        variant: "danger"
+      })
+      if (!ok) return
+
+      setRestoreProgress(0)
+      setStatusMessage({ text: `${t.restoreLoading} (0%)...`, type: "info" })
+
+      const backupData = await downloadBackup(
+        token,
+        setAccessToken,
+        (percent) => {
+          setRestoreProgress(percent)
+          setStatusMessage({
+            text: `${t.restoreProgress} (${percent}%)...`,
+            type: "info"
+          })
+        },
+        undefined,
+        { signal: controller.signal }
+      )
       if (!backupData) {
-        showStatus(t.noCloudBackup, "error");
-        addLog("Force recovery failed: Backup file not found.");
-        return;
+        showStatus(t.noCloudBackup, "error")
+        addLog("Force recovery failed: Backup file not found.")
+        return
       }
 
-      await importDatabase(backupData, "replace");
-      addLog("Database recovered from Google Drive successfully.");
-      showStatus(t.restoreSuccess, "success");
-      checkStorage();
+      await importDatabase(backupData, "replace")
+      addLog("Database recovered from Google Drive successfully.")
+      showStatus(t.restoreSuccess, "success")
+      checkStorage()
     } catch (err: any) {
       if (err.name === "AbortError") {
-        addLog("Force recovery cancelled by user.");
-        showStatus(t.restoreCancelled, "info");
+        addLog("Force recovery cancelled by user.")
+        showStatus(t.restoreCancelled, "info")
       } else if (err instanceof GDriveTimeoutError) {
-        addLog("Force recovery failed: Connection timed out.");
-        showStatus(t.syncTimeout, "error");
+        addLog("Force recovery failed: Connection timed out.")
+        showStatus(t.syncTimeout, "error")
       } else {
-        console.error(err);
-        addLog(`Force recovery failed: ${err.message || err}`);
-        showStatus(`${t.restoreFailed}: ${err.message || "Unknown error"}`, "error");
+        console.error(err)
+        addLog(`Force recovery failed: ${err.message || err}`)
+        showStatus(
+          `${t.restoreFailed}: ${err.message || "Unknown error"}`,
+          "error"
+        )
       }
-      
+
       if (err.name !== "AbortError" && accessToken) {
-        await clearCachedToken(accessToken).catch(console.error);
-        setAccessToken(null);
+        await clearCachedToken(accessToken).catch(console.error)
+        setAccessToken(null)
       }
     } finally {
-      setIsRestoring(false);
-      abortControllerRef.current = null;
-      setRestoreProgress(null);
+      setIsRestoring(false)
+      abortControllerRef.current = null
+      setRestoreProgress(null)
     }
-  };
+  }
 
   const handleLocalExport = async () => {
     try {
-      setStatusMessage({ text: t.readingFile, type: "info" });
-      const jsonData = await exportDatabase();
-      const blob = new Blob([jsonData], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement("a");
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      link.href = url;
-      link.download = `style-atelier-backup-${timestamp}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      addLog("Database exported to local JSON file successfully.");
-      showStatus(t.importSuccess, "success");
+      setStatusMessage({ text: t.readingFile, type: "info" })
+      const jsonData = await exportDatabase()
+      const blob = new Blob([jsonData], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+
+      const link = document.createElement("a")
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+      link.href = url
+      link.download = `style-atelier-backup-${timestamp}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      addLog("Database exported to local JSON file successfully.")
+      showStatus(t.importSuccess, "success")
     } catch (err: any) {
-      console.error(err);
-      addLog(`Export failed: ${err.message || err}`);
-      showStatus(`${t.importFailed}: ${err.message || "Unknown error"}`, "error");
+      console.error(err)
+      addLog(`Export failed: ${err.message || err}`)
+      showStatus(
+        `${t.importFailed}: ${err.message || "Unknown error"}`,
+        "error"
+      )
     }
-  };
+  }
 
   const handleLocalImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    const file = files[0];
-    
-    const confirmMsg = t.importConfirm;
-      
-    const ok = window.confirm(confirmMsg);
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+
+    const confirmMsg = t.importConfirm
+
+    const ok = await confirm({
+      title: t.confirmTitle,
+      message: confirmMsg,
+      confirmText: t.confirmBtn,
+      cancelText: t.cancelBtn,
+      variant: "danger"
+    })
     if (!ok) {
-      e.target.value = "";
-      return;
+      e.target.value = ""
+      return
     }
-    
-    setStatusMessage({ text: t.readingFile, type: "info" });
-    const reader = new FileReader();
+
+    setStatusMessage({ text: t.readingFile, type: "info" })
+    const reader = new FileReader()
     reader.onload = async (event) => {
       try {
-        const text = event.target?.result as string;
+        const text = event.target?.result as string
         if (!text) {
-          throw new Error("File is empty.");
+          throw new Error("File is empty.")
         }
-        
-        await importDatabase(text, "merge");
-        addLog("Database restored from local JSON file successfully.");
-        showStatus(t.importSuccess, "success");
-        checkStorage();
+
+        await importDatabase(text, "merge")
+        addLog("Database restored from local JSON file successfully.")
+        showStatus(t.importSuccess, "success")
+        checkStorage()
       } catch (err: any) {
-        console.error(err);
-        addLog(`Import failed: ${err.message || err}`);
-        showStatus(`${t.importFailed}: ${err.message || "Unknown error"}`, "error");
+        console.error(err)
+        addLog(`Import failed: ${err.message || err}`)
+        showStatus(
+          `${t.importFailed}: ${err.message || "Unknown error"}`,
+          "error"
+        )
       } finally {
-        e.target.value = "";
+        e.target.value = ""
       }
-    };
-    
+    }
+
     reader.onerror = () => {
-      addLog("Import failed: File reading error.");
-      showStatus(`${t.importFailed}: File reading error.`, "error");
-      e.target.value = "";
-    };
-    
-    reader.readAsText(file);
-  };
+      addLog("Import failed: File reading error.")
+      showStatus(`${t.importFailed}: File reading error.`, "error")
+      e.target.value = ""
+    }
+
+    reader.readAsText(file)
+  }
 
   const handleResetDbClick = async () => {
-    const ok = window.confirm(t.resetConfirm);
-    if (!ok) return;
+    const ok = await confirm({
+      title: t.confirmTitle,
+      message: t.resetConfirm,
+      confirmText: t.confirmBtn,
+      cancelText: t.cancelBtn,
+      variant: "danger"
+    })
+    if (!ok) return
 
-    await onResetDb();
-    showStatus(t.resetSuccess, "success");
-    checkStorage();
-  };
+    await onResetDb()
+    showStatus(t.resetSuccess, "success")
+    checkStorage()
+  }
 
   const handleClearHistory = async () => {
-    const ok = window.confirm(t.clearHistoryConfirm);
-    if (!ok) return;
+    const ok = await confirm({
+      title: t.confirmTitle,
+      message: t.clearHistoryConfirm,
+      confirmText: t.confirmBtn,
+      cancelText: t.cancelBtn,
+      variant: "danger"
+    })
+    if (!ok) return
 
     try {
-      await db.historyItems.clear();
-      addLog("Prompt history cleared successfully.");
-      showStatus(t.clearHistorySuccess, "success");
-      checkStorage();
+      await db.historyItems.clear()
+      addLog("Prompt history cleared successfully.")
+      showStatus(t.clearHistorySuccess, "success")
+      checkStorage()
     } catch (err: any) {
-      console.error(err);
-      addLog(`Failed to clear history: ${err.message || err}`);
-      showStatus(`${t.clearHistoryFailed}: ${err.message || "Unknown error"}`, "error");
+      console.error(err)
+      addLog(`Failed to clear history: ${err.message || err}`)
+      showStatus(
+        `${t.clearHistoryFailed}: ${err.message || "Unknown error"}`,
+        "error"
+      )
     }
-  };
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -483,13 +571,14 @@ export function SettingsTab({
         </div>
 
         <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
-          <span className="text-xs font-bold text-slate-700">{t.languageLabel}</span>
+          <span className="text-xs font-bold text-slate-700">
+            {t.languageLabel}
+          </span>
           <select
             value={lang}
             onChange={(e) => changeLanguage(e.target.value as Language)}
             className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            id="language-select"
-          >
+            id="language-select">
             <option value="en">English</option>
             <option value="ja">日本語</option>
           </select>
@@ -501,7 +590,8 @@ export function SettingsTab({
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
         <div className="flex items-start gap-4 mb-4">
-          <div className={`p-3 rounded-xl ${currentEasyMode ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
+          <div
+            className={`p-3 rounded-xl ${currentEasyMode ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
             <Settings2 className="w-6 h-6" />
           </div>
           <div className="space-y-1 flex-1">
@@ -522,7 +612,9 @@ export function SettingsTab({
         {/* Easy Mode Toggle Switch */}
         <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
           <div className="space-y-0.5">
-            <span className="text-xs font-bold text-slate-700">{t.easyModeToggleLabel}</span>
+            <span className="text-xs font-bold text-slate-700">
+              {t.easyModeToggleLabel}
+            </span>
             <p className="text-[10px] text-slate-400">{t.easyModeToggleSub}</p>
           </div>
           <button
@@ -531,8 +623,7 @@ export function SettingsTab({
             onClick={() => currentToggleEasyMode(!currentEasyMode)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
               currentEasyMode ? "bg-blue-600" : "bg-slate-200"
-            }`}
-          >
+            }`}>
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                 currentEasyMode ? "translate-x-5" : "translate-x-0"
@@ -544,7 +635,9 @@ export function SettingsTab({
 
       {/* Expert Mode Features Toggle Config */}
       {!currentEasyMode && (
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden" id="expert-features-section">
+        <div
+          className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+          id="expert-features-section">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
           <div className="flex items-start gap-4 mb-4">
@@ -564,25 +657,34 @@ export function SettingsTab({
           <div className="space-y-5 border-t border-slate-100 pt-4">
             {/* Group: Card Features */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t.groupCardFeatures}</h4>
+              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                {t.groupCardFeatures}
+              </h4>
               <div className="space-y-3">
                 {/* Rarity */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureRarityLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureRaritySub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureRarityLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureRaritySub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-rarity-btn"
-                    onClick={() => updateExpertFeature("rarity", !expertFeatures.rarity)}
+                    onClick={() =>
+                      updateExpertFeature("rarity", !expertFeatures.rarity)
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.rarity ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        expertFeatures.rarity ? "translate-x-4" : "translate-x-0"
+                        expertFeatures.rarity
+                          ? "translate-x-4"
+                          : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -590,17 +692,22 @@ export function SettingsTab({
                 {/* Tags */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureTagsLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureTagsSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureTagsLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureTagsSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-tags-btn"
-                    onClick={() => updateExpertFeature("tags", !expertFeatures.tags)}
+                    onClick={() =>
+                      updateExpertFeature("tags", !expertFeatures.tags)
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.tags ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                         expertFeatures.tags ? "translate-x-4" : "translate-x-0"
@@ -611,20 +718,32 @@ export function SettingsTab({
                 {/* Card Editing */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureCardEditingLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureCardEditingSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureCardEditingLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureCardEditingSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-cardediting-btn"
-                    onClick={() => updateExpertFeature("cardEditing", !expertFeatures.cardEditing)}
+                    onClick={() =>
+                      updateExpertFeature(
+                        "cardEditing",
+                        !expertFeatures.cardEditing
+                      )
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      expertFeatures.cardEditing ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                      expertFeatures.cardEditing
+                        ? "bg-blue-600"
+                        : "bg-slate-200"
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        expertFeatures.cardEditing ? "translate-x-4" : "translate-x-0"
+                        expertFeatures.cardEditing
+                          ? "translate-x-4"
+                          : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -634,25 +753,37 @@ export function SettingsTab({
 
             {/* Group: Organization */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t.groupOrganization}</h4>
+              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                {t.groupOrganization}
+              </h4>
               <div className="space-y-3">
                 {/* Categories */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureCategoriesLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureCategoriesSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureCategoriesLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureCategoriesSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-categories-btn"
-                    onClick={() => updateExpertFeature("categories", !expertFeatures.categories)}
+                    onClick={() =>
+                      updateExpertFeature(
+                        "categories",
+                        !expertFeatures.categories
+                      )
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.categories ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        expertFeatures.categories ? "translate-x-4" : "translate-x-0"
+                        expertFeatures.categories
+                          ? "translate-x-4"
+                          : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -660,17 +791,22 @@ export function SettingsTab({
                 {/* Stack */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureStackLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureStackSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureStackLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureStackSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-stack-btn"
-                    onClick={() => updateExpertFeature("stack", !expertFeatures.stack)}
+                    onClick={() =>
+                      updateExpertFeature("stack", !expertFeatures.stack)
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.stack ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                         expertFeatures.stack ? "translate-x-4" : "translate-x-0"
@@ -683,22 +819,29 @@ export function SettingsTab({
 
             {/* Group: Workbench */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t.groupWorkbench}</h4>
+              <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                {t.groupWorkbench}
+              </h4>
               <div className="space-y-3">
                 {/* Slot */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureSlotLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureSlotSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureSlotLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureSlotSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-slot-btn"
-                    onClick={() => updateExpertFeature("slot", !expertFeatures.slot)}
+                    onClick={() =>
+                      updateExpertFeature("slot", !expertFeatures.slot)
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.slot ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                         expertFeatures.slot ? "translate-x-4" : "translate-x-0"
@@ -709,20 +852,30 @@ export function SettingsTab({
                 {/* Multi-card */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureMultiCardLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureMultiCardSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureMultiCardLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureMultiCardSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-multicard-btn"
-                    onClick={() => updateExpertFeature("multiCard", !expertFeatures.multiCard)}
+                    onClick={() =>
+                      updateExpertFeature(
+                        "multiCard",
+                        !expertFeatures.multiCard
+                      )
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.multiCard ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        expertFeatures.multiCard ? "translate-x-4" : "translate-x-0"
+                        expertFeatures.multiCard
+                          ? "translate-x-4"
+                          : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -730,20 +883,30 @@ export function SettingsTab({
                 {/* Multi-image */}
                 <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-bold text-slate-700">{t.featureMultiImageLabel}</span>
-                    <p className="text-[10px] text-slate-400">{t.featureMultiImageSub}</p>
+                    <span className="text-xs font-bold text-slate-700">
+                      {t.featureMultiImageLabel}
+                    </span>
+                    <p className="text-[10px] text-slate-400">
+                      {t.featureMultiImageSub}
+                    </p>
                   </div>
                   <button
                     type="button"
                     id="expert-feature-multiimage-btn"
-                    onClick={() => updateExpertFeature("multiImage", !expertFeatures.multiImage)}
+                    onClick={() =>
+                      updateExpertFeature(
+                        "multiImage",
+                        !expertFeatures.multiImage
+                      )
+                    }
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                       expertFeatures.multiImage ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
+                    }`}>
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        expertFeatures.multiImage ? "translate-x-4" : "translate-x-0"
+                        expertFeatures.multiImage
+                          ? "translate-x-4"
+                          : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -760,7 +923,8 @@ export function SettingsTab({
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
         <div className="flex items-start gap-4 mb-4">
-          <div className={`p-3 rounded-xl ${isSyncEnabled ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
+          <div
+            className={`p-3 rounded-xl ${isSyncEnabled ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}>
             <Cloud className="w-6 h-6" />
           </div>
           <div className="space-y-1 flex-1">
@@ -781,8 +945,12 @@ export function SettingsTab({
         {/* Sync Toggle Switch */}
         <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
           <div className="space-y-0.5">
-            <span className="text-xs font-bold text-slate-700">{t.googleDriveToggleLabel}</span>
-            <p className="text-[10px] text-slate-400">{t.googleDriveToggleSub}</p>
+            <span className="text-xs font-bold text-slate-700">
+              {t.googleDriveToggleLabel}
+            </span>
+            <p className="text-[10px] text-slate-400">
+              {t.googleDriveToggleSub}
+            </p>
           </div>
           <button
             type="button"
@@ -790,8 +958,7 @@ export function SettingsTab({
             onClick={() => handleToggleSync(!isSyncEnabled)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
               isSyncEnabled ? "bg-blue-600" : "bg-slate-200"
-            }`}
-          >
+            }`}>
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                 isSyncEnabled ? "translate-x-5" : "translate-x-0"
@@ -804,8 +971,12 @@ export function SettingsTab({
         {isSyncEnabled && (
           <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
             <div className="space-y-0.5">
-              <span className="text-xs font-bold text-slate-700">自動バックアップ（オートシンク）</span>
-              <p className="text-[10px] text-slate-400">データ変更時に自動でバックアップし、他端末の更新を反映します</p>
+              <span className="text-xs font-bold text-slate-700">
+                自動バックアップ（オートシンク）
+              </span>
+              <p className="text-[10px] text-slate-400">
+                データ変更時に自動でバックアップし、他端末の更新を反映します
+              </p>
             </div>
             <button
               type="button"
@@ -813,8 +984,7 @@ export function SettingsTab({
               onClick={() => handleToggleAutoSync(!isAutoSyncEnabled)}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                 isAutoSyncEnabled ? "bg-blue-600" : "bg-slate-200"
-              }`}
-            >
+              }`}>
               <span
                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                   isAutoSyncEnabled ? "translate-x-5" : "translate-x-0"
@@ -826,23 +996,31 @@ export function SettingsTab({
 
         {/* Status / Message Display */}
         {statusMessage.text && (
-          <div className={`mt-3 mb-4 px-3 py-2.5 rounded-xl text-xs flex items-center justify-between border animate-in fade-in duration-200 ${
-            statusMessage.type === "success" ? "bg-green-50 text-green-800 border-green-200" :
-            statusMessage.type === "error" ? "bg-red-50 text-red-800 border-red-200" :
-            "bg-blue-50 text-blue-800 border-blue-200"
-          }`}>
+          <div
+            className={`mt-3 mb-4 px-3 py-2.5 rounded-xl text-xs flex items-center justify-between border animate-in fade-in duration-200 ${
+              statusMessage.type === "success"
+                ? "bg-green-50 text-green-800 border-green-200"
+                : statusMessage.type === "error"
+                  ? "bg-red-50 text-red-800 border-red-200"
+                  : "bg-blue-50 text-blue-800 border-blue-200"
+            }`}>
             <div className="flex items-center gap-2">
-              {statusMessage.type === "success" && <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />}
-              {statusMessage.type === "error" && <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />}
-              {statusMessage.type === "info" && <RefreshCw className="w-4 h-4 text-blue-600 animate-spin shrink-0" />}
+              {statusMessage.type === "success" && (
+                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+              )}
+              {statusMessage.type === "error" && (
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+              )}
+              {statusMessage.type === "info" && (
+                <RefreshCw className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
+              )}
               <span className="font-medium">{statusMessage.text}</span>
             </div>
             {statusMessage.type === "info" && (isSyncing || isRestoring) && (
               <button
                 type="button"
                 onClick={handleCancelSync}
-                className="ml-2 px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold rounded-lg transition-colors border border-red-200/50"
-              >
+                className="ml-2 px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold rounded-lg transition-colors border border-red-200/50">
                 Cancel
               </button>
             )}
@@ -852,9 +1030,11 @@ export function SettingsTab({
         {/* Progress Bar (Only during Sync or Force Recovering) */}
         {(isSyncing || isRestoring) && (
           <div className="mt-2 mb-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
-            <div 
-              className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" 
-              style={{ width: `${isSyncing ? (syncProgress ?? 0) : (restoreProgress ?? 0)}%` }} 
+            <div
+              className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse"
+              style={{
+                width: `${isSyncing ? (syncProgress ?? 0) : (restoreProgress ?? 0)}%`
+              }}
             />
           </div>
         )}
@@ -865,12 +1045,12 @@ export function SettingsTab({
             onClick={handleSync}
             disabled={!isSyncEnabled || isSyncing || isRestoring}
             className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-            id="google-drive-sync-btn"
-          >
+            id="google-drive-sync-btn">
             {isSyncing ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                {t.syncingText} {syncProgress !== null ? `${syncProgress}%` : ""}
+                {t.syncingText}{" "}
+                {syncProgress !== null ? `${syncProgress}%` : ""}
               </>
             ) : (
               <>
@@ -886,7 +1066,9 @@ export function SettingsTab({
               {lastBackup && (
                 <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>{t.lastBackupLabel} {lastBackup}</span>
+                  <span>
+                    {t.lastBackupLabel} {lastBackup}
+                  </span>
                 </div>
               )}
               {isLoadingCloudBackup ? (
@@ -896,18 +1078,26 @@ export function SettingsTab({
                 </div>
               ) : cloudBackup ? (
                 <div className="flex flex-col items-center gap-0.5 text-[10px] text-slate-500 font-medium bg-slate-50 rounded-lg py-1.5 px-3 border border-slate-100 w-full text-center">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Cloud Backup Preview</span>
-                  <span>{t.restoreConfirmTime} {cloudBackup.modifiedTime}</span>
-                  <span>{t.restoreConfirmSize} {cloudBackup.size}</span>
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">
+                    Cloud Backup Preview
+                  </span>
+                  <span>
+                    {t.restoreConfirmTime} {cloudBackup.modifiedTime}
+                  </span>
+                  <span>
+                    {t.restoreConfirmSize} {cloudBackup.size}
+                  </span>
                 </div>
-              ) : isSyncEnabled && (
-                <div className="text-[10px] text-slate-400 font-medium">
-                  {t.noCloudBackup}
-                </div>
+              ) : (
+                isSyncEnabled && (
+                  <div className="text-[10px] text-slate-400 font-medium">
+                    {t.noCloudBackup}
+                  </div>
+                )
               )}
             </div>
           )}
-           {/* Security note */}
+          {/* Security note */}
           <div className="flex items-start gap-1.5 bg-blue-50/40 rounded-xl p-3 border border-blue-100/50">
             <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
@@ -940,16 +1130,21 @@ export function SettingsTab({
         {estimate ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-              <span>{t.storageUsage}: {estimate.usageFormatted} / {estimate.quotaFormatted}</span>
+              <span>
+                {t.storageUsage}: {estimate.usageFormatted} /{" "}
+                {estimate.quotaFormatted}
+              </span>
               <span>{estimate.percentage}%</span>
             </div>
-            
+
             <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-              <div 
+              <div
                 className={`h-full transition-all duration-500 rounded-full ${
-                  estimate.percentage >= 90 ? "bg-gradient-to-r from-rose-500 to-red-500" :
-                  estimate.percentage >= 80 ? "bg-gradient-to-r from-amber-500 to-yellow-500" :
-                  "bg-gradient-to-r from-blue-500 to-indigo-500"
+                  estimate.percentage >= 90
+                    ? "bg-gradient-to-r from-rose-500 to-red-500"
+                    : estimate.percentage >= 80
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-500"
+                      : "bg-gradient-to-r from-blue-500 to-indigo-500"
                 }`}
                 style={{ width: `${estimate.percentage}%` }}
               />
@@ -987,18 +1182,23 @@ export function SettingsTab({
         {/* Action button & Optimization description */}
         <div className="mt-4 pt-3 border-t border-slate-100 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700">{t.cleanupHistoryLabel}</span>
+            <span className="text-xs font-bold text-slate-700">
+              {t.cleanupHistoryLabel}
+            </span>
             <button
               onClick={handleClearHistory}
-              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5"
-            >
+              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5">
               <Trash2 className="w-3.5 h-3.5" />
               {t.clearHistoryBtn || "Clear History"}
             </button>
           </div>
-          
+
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[10px] text-slate-500 leading-relaxed font-medium">
-            <p>{lang === "ja" ? "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。" : "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images."}</p>
+            <p>
+              {lang === "ja"
+                ? "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。"
+                : "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images."}
+            </p>
           </div>
         </div>
       </div>
@@ -1028,16 +1228,14 @@ export function SettingsTab({
             <button
               onClick={handleLocalExport}
               disabled={isSyncing || isRestoring}
-              className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-            >
+              className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
               <Download className="w-3.5 h-3.5" />
               {t.exportBtn}
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isSyncing || isRestoring}
-              className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
-            >
+              className="py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 disabled:opacity-30 disabled:hover:bg-white text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
               <Upload className="w-3.5 h-3.5" />
               {t.importBtn}
             </button>
@@ -1067,7 +1265,9 @@ export function SettingsTab({
             <Trash2 className="w-5 h-5" />
           </div>
           <div className="space-y-1.5 flex-1">
-            <h3 className="text-xs font-bold text-red-900">{t.dangerZoneTitle}</h3>
+            <h3 className="text-xs font-bold text-red-900">
+              {t.dangerZoneTitle}
+            </h3>
             <p className="text-[10px] text-red-600/80 leading-relaxed">
               {t.dangerZoneDesc}
             </p>
@@ -1081,7 +1281,8 @@ export function SettingsTab({
                     </span>
                   ) : cloudBackup ? (
                     <span>
-                      {t.cloudBackupLabel}{cloudBackup.modifiedTime} ({cloudBackup.size})
+                      {t.cloudBackupLabel}
+                      {cloudBackup.modifiedTime} ({cloudBackup.size})
                     </span>
                   ) : (
                     <span className="text-slate-400">{t.noCloudBackup}</span>
@@ -1090,9 +1291,9 @@ export function SettingsTab({
               )}
               <div className="flex flex-wrap gap-2">
                 <button
+                  id="reset-db-btn"
                   onClick={handleResetDbClick}
-                  className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5"
-                >
+                  className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5">
                   <Database className="w-3.5 h-3.5" />
                   {t.resetBtn}
                 </button>
@@ -1100,8 +1301,7 @@ export function SettingsTab({
                   onClick={handleForceRecovery}
                   disabled={!isSyncEnabled || isSyncing || isRestoring}
                   className="px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 disabled:opacity-30"
-                  id="force-recovery-btn"
-                >
+                  id="force-recovery-btn">
                   <DownloadCloud className="w-3.5 h-3.5 text-red-500" />
                   {t.restoreBtnText}
                 </button>
@@ -1111,5 +1311,5 @@ export function SettingsTab({
         </div>
       </div>
     </div>
-  );
+  )
 }

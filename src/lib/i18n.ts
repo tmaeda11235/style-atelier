@@ -117,6 +117,11 @@ export const i18nDict = {
       importBtn: "Import JSON",
       importConfirm:
         "Restore (merge) data from local file. Conflicting data will resolve to the newer modification date. Proceed?",
+      resetConfirm:
+        "Are you sure you want to reset the database? This will delete all style cards and prompt history.",
+      confirmBtn: "Confirm",
+      cancelBtn: "Cancel",
+      confirmTitle: "Confirm Action",
       readingFile: "Reading file...",
       importSuccess: "Database restored from local JSON file successfully!",
       importFailed: "Import failed",
@@ -308,6 +313,11 @@ export const i18nDict = {
       importBtn: "JSONインポート",
       importConfirm:
         "ローカルファイルからデータを復元（マージ）します。\n競合するデータは更新日時が新しい方が優先されますがよろしいですか？",
+      resetConfirm:
+        "データベースを完全に初期化します。作成したすべてのスタイルカードや履歴が削除されます。本当によろしいですか？",
+      confirmBtn: "確認",
+      cancelBtn: "キャンセル",
+      confirmTitle: "実行の確認",
       readingFile: "ファイルを読み込み中...",
       importSuccess: "インポートが完了しました！",
       importFailed: "インポートに失敗しました",

@@ -131,22 +131,22 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories", () => {
       await expect(editedCategoryFilterBtn).toBeVisible({ timeout: 15000 })
 
       // 12. 削除する (モーダルは既に開いていてManage tabになっているので、そのまま削除を実行できる)
-      // 削除用 confirm をモックする
-      console.log("13. Registering dialog mock...")
-      page.once("dialog", async (dialog) => {
-        expect(dialog.message()).toContain("Are you sure you want to delete")
-        await dialog.accept()
-      })
-
-      console.log("14. Clicking Delete Category button...")
+      console.log("13. Clicking Delete Category button...")
       const deleteBtn = spFrame
         .getByRole("button", { name: "Delete Category" })
         .first()
       await expect(deleteBtn).toBeVisible({ timeout: 10000 })
       await deleteBtn.click()
+      await page.waitForTimeout(500)
+
+      // 13. カスタム確認ダイアログの操作
+      console.log("14. Handling custom confirmation dialog...")
+      const confirmOkBtn = spFrame.locator("#confirm-dialog-ok-btn")
+      await expect(confirmOkBtn).toBeVisible({ timeout: 10000 })
+      await confirmOkBtn.click()
       await page.waitForTimeout(1000)
 
-      // 13. モーダルを閉じる
+      // 14. モーダルを閉じる
       console.log("15. Closing category modal...")
       const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
       await expect(closeBtn).toBeVisible({ timeout: 10000 })
@@ -173,7 +173,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories", () => {
       throw error
     }
   })
-
   test("should allow creating a category with complex emoji (surrogate pairs and ZWJ) and trimming logic", async ({
     page
   }) => {
@@ -271,15 +270,19 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories", () => {
       await manageTabBtn.click()
       await page.waitForTimeout(1000)
 
-      page.once("dialog", async (dialog) => {
-        await dialog.accept()
-      })
-
+      console.log("10. Clicking Delete Category button...")
       const deleteBtn = spFrame
         .getByRole("button", { name: "Delete Category" })
         .first()
       await expect(deleteBtn).toBeVisible({ timeout: 10000 })
       await deleteBtn.click()
+      await page.waitForTimeout(500)
+
+      // Handling custom confirmation dialog
+      console.log("11. Handling custom confirmation dialog...")
+      const confirmOkBtn = spFrame.locator("#confirm-dialog-ok-btn")
+      await expect(confirmOkBtn).toBeVisible({ timeout: 10000 })
+      await confirmOkBtn.click()
       await page.waitForTimeout(1000)
 
       // Close modal

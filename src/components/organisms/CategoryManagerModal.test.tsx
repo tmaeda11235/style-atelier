@@ -11,6 +11,11 @@ import { LanguageProvider } from "../../contexts/LanguageContext"
 import { db } from "../../lib/db"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 
+vi.mock("../../contexts/ConfirmContext", () => ({
+  useConfirm: () => (options: any) =>
+    Promise.resolve(window.confirm(options.message))
+}))
+
 // Mock dexie-react-hooks
 vi.mock("dexie-react-hooks", () => ({
   useLiveQuery: (fn: any) => fn()

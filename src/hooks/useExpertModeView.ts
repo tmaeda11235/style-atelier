@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react"
-import { db, seedDefaultCategories } from "../lib/db"
-import { useTabs } from "./useTabs"
+import { useEffect, useState } from "react"
+
+import type { AlertType } from "../components/molecules/ConnectionAlert"
+import { useConfirm } from "../contexts/ConfirmContext"
 import { useTutorial } from "../contexts/TutorialContext"
+import { db, seedDefaultCategories } from "../lib/db"
+import type { StyleCard } from "../lib/db-schema"
 import { useDragAndDrop } from "./useDragAndDrop"
 import { useMinting } from "./useMinting"
-import type { AlertType } from "../components/molecules/ConnectionAlert"
-import type { StyleCard } from "../lib/db-schema"
+import { useTabs } from "./useTabs"
 
 interface UseExpertModeViewProps {
   isEasyMode: boolean
@@ -15,12 +17,18 @@ interface UseExpertModeViewProps {
 /**
  * Custom hook encapsulating the logic and state for the Expert Mode of the Style Atelier Sidepanel.
  */
-export function useExpertModeView({ isEasyMode, onToggleEasyMode }: UseExpertModeViewProps) {
+export function useExpertModeView({
+  isEasyMode,
+  onToggleEasyMode
+}: UseExpertModeViewProps) {
+  const confirm = useConfirm()
   const { startTutorial, advanceIfStep } = useTutorial()
   const { activeTab, setActiveTab } = useTabs()
   const [logs, setLogs] = useState<string[]>([])
   const [alertType, setAlertType] = useState<AlertType>(null)
-  const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(null)
+  const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(
+    null
+  )
   const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
@@ -78,17 +86,23 @@ export function useExpertModeView({ isEasyMode, onToggleEasyMode }: UseExpertMod
   const handleInjectPrompt = async (prompt: string) => {
     setAlertType(null)
     try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      })
       const activeTabEl = tabs[0]
       if (!activeTabEl?.id) {
         throw new Error("No active tab found")
       }
       const response = await chrome.tabs.sendMessage(activeTabEl.id, {
         type: "INJECT_PROMPT",
-        prompt: prompt,
+        prompt: prompt
       })
       if (response && response.status === "error") {
-        if (response.message && response.message.includes("Could not find chat input")) {
+        if (
+          response.message &&
+          response.message.includes("Could not find chat input")
+        ) {
           setAlertType("no_input")
         } else {
           setAlertType("disconnected")
@@ -96,9 +110,16 @@ export function useExpertModeView({ isEasyMode, onToggleEasyMode }: UseExpertMod
       } else {
         addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
         if (activeDetailCard) {
-          db.styleCards.update(activeDetailCard.id, {
-            usageCount: (activeDetailCard.usageCount || 0) + 1
-          }).catch(err => console.error("Failed to update usage count on details inject:", err))
+          db.styleCards
+            .update(activeDetailCard.id, {
+              usageCount: (activeDetailCard.usageCount || 0) + 1
+            })
+            .catch((err) =>
+              console.error(
+                "Failed to update usage count on details inject:",
+                err
+              )
+            )
         }
       }
     } catch (err: any) {
@@ -137,8 +158,20 @@ export function useExpertModeView({ isEasyMode, onToggleEasyMode }: UseExpertMod
   }
 
   const handleResetDb = async () => {
-    if (window.confirm("Are you sure you want to delete ALL DATA?")) {
-      await Promise.all([db.historyItems.clear(), db.styleCards.clear(), db.userSettings.clear(), db.categories.clear()])
+    const ok = await confirm({
+      title: "Reset Database",
+      message: "Are you sure you want to delete ALL DATA?",
+      confirmText: "Reset",
+      cancelText: "Cancel",
+      variant: "danger"
+    })
+    if (ok) {
+      await Promise.all([
+        db.historyItems.clear(),
+        db.styleCards.clear(),
+        db.userSettings.clear(),
+        db.categories.clear()
+      ])
       await seedDefaultCategories()
       localStorage.removeItem("style-atelier-onboarding-seen")
       addLog("All data cleared.")
@@ -162,7 +195,9 @@ export function useExpertModeView({ isEasyMode, onToggleEasyMode }: UseExpertMod
     if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id) {
-          chrome.tabs.update(tabs[0].id, { url: "https://www.midjourney.com/imagine" })
+          chrome.tabs.update(tabs[0].id, {
+            url: "https://www.midjourney.com/imagine"
+          })
         }
       })
     } else {
