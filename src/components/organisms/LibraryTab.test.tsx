@@ -128,14 +128,14 @@ describe("LibraryTab", () => {
     expect(shareBtn).toBeDefined()
 
     // Initially modal is not in document
-    expect(screen.queryByText("Share Style Card")).toBeNull()
+    expect(screen.queryByText("スタイルカードの共有")).toBeNull()
 
     // Click share button
     fireEvent.click(shareBtn)
 
     // Modal should now be in the document
-    expect(screen.getByText("Share Style Card")).toBeDefined()
-    expect(screen.getByText("Open Dedicated Image Page")).toBeDefined()
+    expect(screen.getByText("スタイルカードの共有")).toBeDefined()
+    expect(screen.getByText("専用画像ページを開く")).toBeDefined()
   })
 
   it("renders color filters and handles color filter click", () => {

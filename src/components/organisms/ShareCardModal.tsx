@@ -1,9 +1,18 @@
+import {
+  AlertCircle,
+  Clipboard,
+  Download,
+  ExternalLink,
+  Share2,
+  X
+} from "lucide-react"
 import React, { useState } from "react"
-import type { StyleCard } from "../../lib/db-schema"
-import { Button } from "../atoms/Button"
 import iconUrl from "url:../../../assets/icon.png"
-import { X, Share2, ExternalLink, Download, AlertCircle, Clipboard } from "lucide-react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import type { StyleCard } from "../../lib/db-schema"
 import { exportCardAsImage, renderCardToCanvas } from "../../lib/export-utils"
+import { Button } from "../atoms/Button"
 
 interface ShareCardModalProps {
   card: StyleCard
@@ -20,10 +29,12 @@ interface ShareCardModalProps {
 export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
   const [isSharing, setIsSharing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   const handleOpenSharePage = () => {
     try {
-      const sharePageUrl = chrome.runtime.getURL("tabs/share.html") + `?id=${card.id}`
+      const sharePageUrl =
+        chrome.runtime.getURL("tabs/share.html") + `?id=${card.id}`
       chrome.tabs.create({ url: sharePageUrl })
       addLog(`Opened share page for card "${card.name}".`)
       onClose()
@@ -41,7 +52,7 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
       const canvas = await renderCardToCanvas(card)
       canvas.toBlob(async (blob) => {
         if (!blob) {
-          setErrorMessage("Failed to generate card image.")
+          setErrorMessage(t.share.failedGenerate)
           return
         }
         try {
@@ -52,12 +63,14 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
           onClose()
         } catch (clipErr: any) {
           console.error("Clipboard copy failed:", clipErr)
-          setErrorMessage("Browser blocked clipboard copy. Try opening the image page.")
+          setErrorMessage(t.share.blockedCopy)
         }
       }, "image/png")
     } catch (err: any) {
       console.error("Clipboard copy failed:", err)
-      setErrorMessage(`Failed to copy image to clipboard: ${err.message || err}`)
+      setErrorMessage(
+        `Failed to copy image to clipboard: ${err.message || err}`
+      )
     } finally {
       setIsSharing(false)
     }
@@ -81,23 +94,20 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
     <div
       data-testid="share-card-modal-overlay"
       className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end"
-      onClick={onClose}
-    >
+      onClick={onClose}>
       {/* Drawer Container */}
       <div
         className="bg-white rounded-t-xl max-h-[85%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             <Share2 className="w-4 h-4 text-blue-500" />
-            <span>Share Style Card</span>
+            <span>{t.share.shareTitle}</span>
           </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-          >
+            className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -108,17 +118,26 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
           <div className="flex items-center gap-3 p-3 bg-slate-50 border rounded-lg">
             <div className="w-16 h-16 rounded overflow-hidden border border-slate-200 shadow-sm flex-shrink-0">
               <img
-                src={(!card.thumbnailData || card.thumbnailData === "assets/icon.png") ? iconUrl : card.thumbnailData}
+                src={
+                  !card.thumbnailData ||
+                  card.thumbnailData === "assets/icon.png"
+                    ? iconUrl
+                    : card.thumbnailData
+                }
                 className="w-full h-full object-cover"
                 alt={card.name}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Tier: {card.tier}</p>
+              <p className="text-xs font-bold text-slate-800 truncate">
+                {card.name}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                {t.share.tierLabel} {card.tier}
+              </p>
               {card.parameters?.sref && (
                 <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                  Sref ID: {card.parameters.sref}
+                  {t.share.srefIdLabel} {card.parameters.sref}
                 </p>
               )}
             </div>
@@ -137,10 +156,9 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
               onClick={handleCopyToClipboard}
               disabled={isSharing}
               className="w-full py-2.5 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
-              data-testid="share-copy-button"
-            >
+              data-testid="share-copy-button">
               <Clipboard className="w-4 h-4" />
-              Copy Image to Clipboard
+              {t.share.copyImageBtn}
             </Button>
 
             <Button
@@ -148,10 +166,9 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
               variant="outline"
               disabled={isSharing}
               className="w-full py-2.5 flex items-center justify-center gap-2 text-slate-700 border-slate-300 hover:bg-slate-50 font-bold text-xs"
-              data-testid="share-page-button"
-            >
+              data-testid="share-page-button">
               <ExternalLink className="w-4 h-4" />
-              Open Dedicated Image Page
+              {t.share.openPageBtn}
             </Button>
 
             <Button
@@ -159,10 +176,9 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
               variant="secondary"
               disabled={isSharing}
               className="w-full py-2.5 flex items-center justify-center gap-2 text-slate-800 font-bold text-xs"
-              data-testid="share-download-button"
-            >
+              data-testid="share-download-button">
               <Download className="w-4 h-4" />
-              Download PNG Image
+              {t.share.downloadPngBtn}
             </Button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import type {
   StyleCard,
   UserSettings
 } from "./db-schema"
+import { createThumbnailDataUrl } from "./image-utils"
 
 export class StyleAtelierDatabaseBase extends Dexie {
   styleCards!: Table<StyleCard, string>
@@ -98,6 +99,17 @@ export class StyleAtelierDatabaseBase extends Dexie {
       userSettings: "userId",
       categories: "id, name, createdAt, isDeleted"
     })
+
+    // Version 10: Compress existing large thumbnailData and category iconUrls using browser-image-compression
+    this.version(10)
+      .stores({
+        styleCards:
+          "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+        historyItems: "id, timestamp",
+        userSettings: "userId",
+        categories: "id, name, createdAt, isDeleted"
+      })
+      .upgrade(upgradeToVersion10)
   }
 }
 
@@ -110,4 +122,47 @@ export function upgradeToVersion8(tx: any) {
         card.associatedJobIds = card.jobId ? [card.jobId] : []
       }
     })
+}
+
+export async function upgradeToVersion10(tx: any) {
+  const cardsTable = tx.table("styleCards")
+  const categoriesTable = tx.table("categories")
+
+  const cards = await cardsTable.toArray()
+  for (const card of cards) {
+    if (card.thumbnailData && card.thumbnailData.startsWith("data:image/")) {
+      try {
+        const compressed = await createThumbnailDataUrl(card.thumbnailData)
+        if (compressed && compressed !== card.thumbnailData) {
+          card.thumbnailData = compressed
+          card.updatedAt = Date.now()
+          await cardsTable.put(card)
+        }
+      } catch (err) {
+        console.warn(
+          `Failed to compress card thumbnail in migration for card ${card.id}:`,
+          err
+        )
+      }
+    }
+  }
+
+  const categories = await categoriesTable.toArray()
+  for (const category of categories) {
+    if (category.iconUrl && category.iconUrl.startsWith("data:image/")) {
+      try {
+        const compressed = await createThumbnailDataUrl(category.iconUrl)
+        if (compressed && compressed !== category.iconUrl) {
+          category.iconUrl = compressed
+          category.updatedAt = Date.now()
+          await categoriesTable.put(category)
+        }
+      } catch (err) {
+        console.warn(
+          `Failed to compress category icon in migration for category ${category.id}:`,
+          err
+        )
+      }
+    }
+  }
 }
