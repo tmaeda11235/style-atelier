@@ -1,17 +1,20 @@
-import React from "react"
-import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
-import { PromptBubbleEditor } from "./PromptBubbleEditor"
-import { PromptBubble } from "../molecules/PromptBubble"
-import type { RarityTier } from "../../lib/rarity-config"
-import { RaritySelector } from "../molecules/RaritySelector"
-import { KeywordChip } from "../molecules/KeywordChip"
-import { Button } from "../atoms/Button"
-import { Input } from "../atoms/Input"
-import { useHand } from "../../hooks/useHand"
 import { useLiveQuery } from "dexie-react-hooks"
-import { db } from "../../lib/db"
-import { useTutorial } from "../../contexts/TutorialContext"
+import React from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
+import { useTutorial } from "../../contexts/TutorialContext"
+import { useHand } from "../../hooks/useHand"
+import { db } from "../../lib/db"
+import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
+import type { RarityTier } from "../../lib/rarity-config"
+import { Button } from "../atoms/Button"
+import { HelpTooltip } from "../atoms/HelpTooltip"
+import { Input } from "../atoms/Input"
+import { KeywordChip } from "../molecules/KeywordChip"
+import { PromptBubble } from "../molecules/PromptBubble"
+import { RaritySelector } from "../molecules/RaritySelector"
+import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -64,12 +67,13 @@ export function MintingView({
   setCustomTags = () => {},
   detectedDominantColor = "#ffffff",
   detectedAccentColor = "#ffffff",
-  detectedColorTags = [],
+  detectedColorTags = []
 }: MintingViewProps) {
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
   const { advanceIfStep } = useTutorial()
   const { expertFeatures } = useSettings()
+  const { t } = useLanguage()
 
   const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
 
@@ -89,27 +93,35 @@ export function MintingView({
   return (
     <div
       data-testid="minting-view-container"
-      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}
-    >
+      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}>
       <div className="p-4 bg-white shadow-sm">
         <h2 className="text-lg font-bold text-slate-800">Mint New Card</h2>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {mintingItem && (
           <>
-            <img src={mintingItem.imageUrl} className="w-full h-auto rounded-lg mb-4 shadow-md" />
+            <img
+              src={mintingItem.imageUrl}
+              className="w-full h-auto rounded-lg mb-4 shadow-md"
+            />
 
             <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
-              <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Card Identity</h3>
+              <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
+                Card Identity
+              </h3>
               <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-500 mb-1">Preview Name</label>
+                <label className="block text-xs font-medium text-slate-500 mb-1">
+                  Preview Name
+                </label>
                 <div className="p-2 bg-slate-100 rounded border text-sm font-bold text-slate-800 min-h-[2.5rem] flex items-center">
                   {currentName}
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-500 mb-2">Select Keywords</label>
+                <label className="block text-xs font-medium text-slate-500 mb-2">
+                  Select Keywords
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {suggestedKeywords.map((kw, i) => (
                     <KeywordChip
@@ -123,7 +135,9 @@ export function MintingView({
               </div>
 
               <div className="mb-4" data-tutorial="title-input">
-                <label className="block text-xs font-medium text-slate-500 mb-1">Custom Name / Note</label>
+                <label className="block text-xs font-medium text-slate-500 mb-1">
+                  Custom Name / Note
+                </label>
                 <Input
                   type="text"
                   value={customName}
@@ -135,12 +149,17 @@ export function MintingView({
               {/* Category Dropdown */}
               {expertFeatures.categories && (
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
+                  <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
+                    Category
+                    <HelpTooltip
+                      content={t.helpTooltips.categories}
+                      position="top-left"
+                    />
+                  </label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full text-sm border rounded bg-white p-2"
-                  >
+                    className="w-full text-sm border rounded bg-white p-2">
                     <option value="">No Category</option>
                     {categoriesList.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -154,25 +173,33 @@ export function MintingView({
               {/* Custom Tags Section */}
               {expertFeatures.tags && (
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Custom Tags</label>
+                  <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
+                    Custom Tags
+                    <HelpTooltip
+                      content={t.helpTooltips.tags}
+                      position="top-left"
+                    />
+                  </label>
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {customTags.map((t, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-100"
-                      >
+                        className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-100">
                         {t}
                         <button
                           type="button"
-                          onClick={() => setCustomTags(customTags.filter((tag) => tag !== t))}
-                          className="text-blue-400 hover:text-red-500 text-[10px]"
-                        >
+                          onClick={() =>
+                            setCustomTags(customTags.filter((tag) => tag !== t))
+                          }
+                          className="text-blue-400 hover:text-red-500 text-[10px]">
                           &times;
                         </button>
                       </span>
                     ))}
                     {customTags.length === 0 && (
-                      <span className="text-xs text-slate-400 italic">No custom tags added.</span>
+                      <span className="text-xs text-slate-400 italic">
+                        No custom tags added.
+                      </span>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -198,7 +225,9 @@ export function MintingView({
                       size="xs"
                       variant="secondary"
                       onClick={() => {
-                        const input = document.getElementById("custom-tag-input") as HTMLInputElement
+                        const input = document.getElementById(
+                          "custom-tag-input"
+                        ) as HTMLInputElement
                         if (input) {
                           const trimmed = input.value.trim().toLowerCase()
                           if (trimmed && !customTags.includes(trimmed)) {
@@ -206,8 +235,7 @@ export function MintingView({
                             input.value = ""
                           }
                         }
-                      }}
-                    >
+                      }}>
                       Add
                     </Button>
                   </div>
@@ -216,7 +244,9 @@ export function MintingView({
 
               {/* Dominant and Accent Color Palette preview */}
               <div className="mb-2">
-                <label className="block text-xs font-medium text-slate-500 mb-2">Detected Palette</label>
+                <label className="block text-xs font-medium text-slate-500 mb-2">
+                  Detected Palette
+                </label>
                 <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
                   <div className="flex items-center gap-2">
                     <div
@@ -224,7 +254,9 @@ export function MintingView({
                       style={{ backgroundColor: detectedDominantColor }}
                       title="Dominant Color"
                     />
-                    <span className="text-xs font-bold text-slate-700">Dominant</span>
+                    <span className="text-xs font-bold text-slate-700">
+                      Dominant
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div
@@ -232,15 +264,16 @@ export function MintingView({
                       style={{ backgroundColor: detectedAccentColor }}
                       title="Accent Color"
                     />
-                    <span className="text-xs font-bold text-slate-700">Accent</span>
+                    <span className="text-xs font-bold text-slate-700">
+                      Accent
+                    </span>
                   </div>
                   {detectedColorTags.length > 0 && (
                     <div className="flex flex-wrap gap-1 ml-auto">
                       {detectedColorTags.map((colName, i) => (
                         <span
                           key={i}
-                          className="bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold"
-                        >
+                          className="bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
                           🎨 {colName}
                         </span>
                       ))}
@@ -250,25 +283,50 @@ export function MintingView({
               </div>
             </div>
 
-            <div data-tutorial="prompt-segment-bubble" className="bg-white">
-              {expertFeatures.cardEditing ? (
-                <PromptBubbleEditor initialSegments={editedSegments} onChange={setEditedSegments} tier={selectedRarity} />
-              ) : (
-                <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
-                  {editedSegments.map((segment, index) => (
-                    <PromptBubble
-                      key={index}
-                      segment={segment}
-                      tier={segment.type === "text" ? undefined : selectedRarity}
-                    />
-                  ))}
-                </div>
-              )}
+            <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
+              <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
+                Prompt Segments
+                {expertFeatures.slot && (
+                  <HelpTooltip
+                    content={t.helpTooltips.slot}
+                    position="top-left"
+                  />
+                )}
+              </h3>
+              <div data-tutorial="prompt-segment-bubble" className="bg-white">
+                {expertFeatures.cardEditing ? (
+                  <PromptBubbleEditor
+                    initialSegments={editedSegments}
+                    onChange={setEditedSegments}
+                    tier={selectedRarity}
+                  />
+                ) : (
+                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
+                    {editedSegments.map((segment, index) => (
+                      <PromptBubble
+                        key={index}
+                        segment={segment}
+                        tier={
+                          segment.type === "text" ? undefined : selectedRarity
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {expertFeatures.rarity && (
-              <div className="mt-6 p-4 border rounded-lg bg-white shadow-sm" data-tutorial="rarity-section">
-                <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">Rarity & Frame</h3>
+              <div
+                className="mt-6 p-4 border rounded-lg bg-white shadow-sm"
+                data-tutorial="rarity-section">
+                <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
+                  Rarity & Frame
+                  <HelpTooltip
+                    content={t.helpTooltips.rarity}
+                    position="top-left"
+                  />
+                </h3>
                 <RaritySelector
                   selected={selectedRarity}
                   onSelect={setSelectedRarity}
@@ -303,19 +361,17 @@ export function MintingView({
           </div>
         </div>
       </div>
-      <div className="p-4 bg-white shadow-t-sm flex justify-end gap-2" data-tutorial="mint-save-footer">
-        <Button
-          variant="ghost"
-          onClick={onCancelMinting}
-        >
+      <div
+        className="p-4 bg-white shadow-t-sm flex justify-end gap-2"
+        data-tutorial="mint-save-footer">
+        <Button variant="ghost" onClick={onCancelMinting}>
           Cancel
         </Button>
         <Button
           onClick={async () => {
             await onSaveMintedCard()
             advanceIfStep("save-card")
-          }}
-        >
+          }}>
           Save Card
         </Button>
       </div>

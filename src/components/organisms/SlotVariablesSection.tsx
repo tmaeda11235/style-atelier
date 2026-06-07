@@ -1,26 +1,29 @@
-import React, { useEffect, useRef } from "react";
-import { Pin } from "lucide-react";
-import { Button } from "../atoms/Button";
-import { buildPromptString } from "../../lib/prompt-utils";
-import type { StyleCard } from "../../lib/db-schema";
-import { useSettings } from "../../contexts/SettingsContext";
+import { Pin } from "lucide-react"
+import React, { useEffect, useRef } from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import { useSettings } from "../../contexts/SettingsContext"
+import type { StyleCard } from "../../lib/db-schema"
+import { buildPromptString } from "../../lib/prompt-utils"
+import { Button } from "../atoms/Button"
+import { HelpTooltip } from "../atoms/HelpTooltip"
 
 /**
  * Props for the SlotVariablesSection component.
  */
 export interface SlotVariablesSectionProps {
   /** The list of slot variables extracted from current segments */
-  slots: { label: string; default: string }[];
+  slots: { label: string; default: string }[]
   /** Current values mapped by slot label */
-  slotValues: Record<string, string>;
+  slotValues: Record<string, string>
   /** Callback triggered when a slot's value changes */
-  onSlotValueChange: (label: string, value: string) => void;
+  onSlotValueChange: (label: string, value: string) => void
   /** Current historical values mapped by slot label */
-  slotHistory: Record<string, string[]>;
+  slotHistory: Record<string, string[]>
   /** List of cards currently in the Hand for quick-filling values */
-  handCards: StyleCard[];
+  handCards: StyleCard[]
   /** Callback triggered to send a slot value as a new card to the Workbench */
-  onSendToWorkbench: (value: string, label: string) => Promise<void>;
+  onSendToWorkbench: (value: string, label: string) => Promise<void>
 }
 
 /**
@@ -33,33 +36,35 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
   onSlotValueChange,
   slotHistory,
   handCards,
-  onSendToWorkbench,
+  onSendToWorkbench
 }) => {
-  const { expertFeatures } = useSettings();
-  const firstInputRef = useRef<HTMLInputElement>(null);
+  const { expertFeatures } = useSettings()
+  const { t } = useLanguage()
+  const firstInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-focus the first slot input when the slot list changes
   useEffect(() => {
     if (slots.length > 0 && expertFeatures.slot) {
       const timer = setTimeout(() => {
-        firstInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
+        firstInputRef.current?.focus()
+      }, 50)
+      return () => clearTimeout(timer)
     }
-  }, [slots, expertFeatures.slot]);
+  }, [slots, expertFeatures.slot])
 
-  if (!expertFeatures.slot || slots.length === 0) return null;
+  if (!expertFeatures.slot || slots.length === 0) return null
 
   return (
     <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">
       <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
         Slot Variables
+        <HelpTooltip content={t.helpTooltips.slot} position="top-left" />
       </h4>
       <div className="space-y-3">
         {slots.map((slot, index) => {
-          const label = slot.label;
-          const currentValue = slotValues[label] ?? "";
-          const historyList = slotHistory[label] || [];
+          const label = slot.label
+          const currentValue = slotValues[label] ?? ""
+          const historyList = slotHistory[label] || []
 
           return (
             <div key={`${label}-${index}`} className="space-y-1">
@@ -81,8 +86,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                   size="xs"
                   onClick={() => onSendToWorkbench(currentValue, label)}
                   title="Send to Workbench"
-                  className="text-slate-400 hover:text-blue-500"
-                >
+                  className="text-slate-400 hover:text-blue-500">
                   <Pin className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -90,19 +94,23 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
               {/* Quick selection from Hand cards */}
               {handCards.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                  <span className="text-[10px] text-slate-400">Fill from Workbench:</span>
+                  <span className="text-[10px] text-slate-400">
+                    Fill from Workbench:
+                  </span>
                   {handCards.map((hc) => {
-                    const resolvedText = buildPromptString(hc.promptSegments, hc.parameters);
+                    const resolvedText = buildPromptString(
+                      hc.promptSegments,
+                      hc.parameters
+                    )
                     return (
                       <button
                         key={hc.id}
                         type="button"
                         onClick={() => onSlotValueChange(label, resolvedText)}
-                        className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded transition-colors"
-                      >
+                        className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded transition-colors">
                         {hc.name}
                       </button>
-                    );
+                    )
                   })}
                 </div>
               )}
@@ -114,21 +122,18 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                   {historyList.map((val, hIdx) => (
                     <div
                       key={hIdx}
-                      className="flex items-center bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 gap-1"
-                    >
+                      className="flex items-center bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 gap-1">
                       <button
                         type="button"
                         onClick={() => onSlotValueChange(label, val)}
-                        className="text-[10px] text-slate-600 hover:text-slate-800 transition-colors"
-                      >
+                        className="text-[10px] text-slate-600 hover:text-slate-800 transition-colors">
                         {val}
                       </button>
                       <button
                         type="button"
                         onClick={() => onSendToWorkbench(val, label)}
                         title="Send this value to Workbench"
-                        className="text-slate-400 hover:text-blue-500"
-                      >
+                        className="text-slate-400 hover:text-blue-500">
                         <Pin className="w-2.5 h-2.5" />
                       </button>
                     </div>
@@ -136,9 +141,9 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                 </div>
               )}
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
-};
+  )
+}

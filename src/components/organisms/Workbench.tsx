@@ -9,6 +9,7 @@ import { db } from "../../lib/db"
 import type { PromptSegment } from "../../lib/db-schema"
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils"
 import { Button } from "../atoms/Button"
+import { HelpTooltip } from "../atoms/HelpTooltip"
 import { RarityBadge } from "../atoms/RarityBadge"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 import { type AlertType } from "../molecules/ConnectionAlert"
@@ -450,11 +451,29 @@ export const Workbench: React.FC<WorkbenchProps> = ({
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-700">
+                <h3 className="flex items-center gap-1 text-sm font-bold text-slate-700">
                   {isEvolutionMode ? t.evolution : t.variationRecipe}
+                  {isMixingMode && (
+                    <HelpTooltip
+                      content={i18n.helpTooltips.multiCard}
+                      position="bottom-left"
+                    />
+                  )}
                 </h3>
                 {isEvolutionMode && targetCard && (
                   <RarityBadge tier={targetCard.tier} />
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">
+                  Prompt Segments
+                </span>
+                {expertFeatures.cardEditing && (
+                  <HelpTooltip
+                    content={i18n.helpTooltips.cardEditing}
+                    position="bottom-left"
+                  />
                 )}
               </div>
 

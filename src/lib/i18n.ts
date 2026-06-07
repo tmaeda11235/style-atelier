@@ -155,6 +155,22 @@ export const i18nDict = {
       featureMultiImageLabel: "Multi-image Selection",
       featureMultiImageSub: "Select up to 4 images for the card thumbnail grid"
     },
+    helpTooltips: {
+      stack:
+        "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
+      slot: "Slot: Click on prompt segments to turn them into editable variable slots on the Workbench. Helpful for parameters you change frequently.",
+      rarity:
+        "Rarity: Assigning higher rarity levels unlocks visual effects and premium frames in your Library.",
+      tags: "Tags: Add search tags to categorize and filter your style cards in the Library.",
+      categories:
+        "Category: Organize your cards into custom categories (binders). You can manage them in the settings tab.",
+      multiCard:
+        "Multi-card: Pin multiple cards on the Workbench to blend their prompt segments, sref, and other parameters together.",
+      cardEditing:
+        "Card Editing: Allows modifying the name, prompt bubbles, and parameter options of your created style cards.",
+      multiImage:
+        "Multi-image: Select up to 4 images to create a dynamic thumbnail grid for your style card."
+    },
     categoryManager: {
       selectCardIcon: "Select Card Icon",
       addCategory: "Add Category",
@@ -487,6 +503,22 @@ export const i18nDict = {
         "作成済みのカード名やプロンプト内容を後から編集します",
       featureMultiImageLabel: "複数画像選択（サムネイル）",
       featureMultiImageSub: "カードに複数の画像を登録し、スライド表示します"
+    },
+    helpTooltips: {
+      stack:
+        "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
+      slot: "Slot（変数穴あけ）: プロンプトの単語をクリックして変数に変換します。値はWorkbenchで動的に入力できます。",
+      rarity:
+        "レアリティ: カードにレアリティを設定します。レアリティが高いほど、ライブラリで特別な視覚効果やフレームが適用されます。",
+      tags: "タグ: 検索用のタグを付与し、ライブラリでカードを絞り込みやすくします。",
+      categories:
+        "カテゴリ: バインダー内のカードを分類して管理します。カテゴリの設定は設定タブから行えます。",
+      multiCard:
+        "複数カード同時使用: ワークベンチに複数のカードを配置し、プロンプトセグメントやパラメータを自動で合成・調合します。",
+      cardEditing:
+        "カード編集: 作成済みのカード名やプロンプト内容、パラメータ設定などを後から編集できるようにします。",
+      multiImage:
+        "複数画像選択: カードに最大4枚の画像を登録し、サムネイルグリッドとして表示します。"
     },
     categoryManager: {
       selectCardIcon: "カードアイコンの選択",
