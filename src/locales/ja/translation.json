@@ -130,7 +130,15 @@
     "featureMultiImageLabel": "複数画像選択（サムネイル）",
     "featureMultiImageSub": "カードに複数の画像を登録し、スライド表示します",
     "tipsBarToggleLabel": "Tipsバーを表示する",
-    "tipsBarToggleSub": "画面下部に使い方のヒントを自動ローテーション表示します"
+    "tipsBarToggleSub": "画面下部に使い方のヒントを自動ローテーション表示します",
+    "resetBtn": "データベースをリセット",
+    "clearHistoryBtn": "履歴をクリア",
+    "autoBackupLabel": "自動バックアップ（オートシンク）",
+    "autoBackupDesc": "データ変更時に自動でバックアップし、他端末の更新を反映します",
+    "activeStatus": "アクティブ",
+    "cancelBtnText": "キャンセル",
+    "cloudBackupPreview": "クラウドバックアップのプレビュー",
+    "cleanupHistoryDesc": "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",

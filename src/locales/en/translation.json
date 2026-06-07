@@ -130,7 +130,15 @@
     "featureMultiImageLabel": "Multi-image Selection",
     "featureMultiImageSub": "Select up to 4 images for the card thumbnail grid",
     "tipsBarToggleLabel": "Enable Tips Bar",
-    "tipsBarToggleSub": "Show a cycling tips bar at the bottom of the screen"
+    "tipsBarToggleSub": "Show a cycling tips bar at the bottom of the screen",
+    "resetBtn": "Reset Database",
+    "clearHistoryBtn": "Clear History",
+    "autoBackupLabel": "Auto Backup (Auto Sync)",
+    "autoBackupDesc": "Automatically backups data on change and reflects updates from other devices.",
+    "activeStatus": "Active",
+    "cancelBtnText": "Cancel",
+    "cloudBackupPreview": "Cloud Backup Preview",
+    "cleanupHistoryDesc": "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images."
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",

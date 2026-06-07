@@ -224,7 +224,6 @@ export function SettingsTab({
       {/* Storage Management Card */}
       <StorageManagerSection
         estimate={estimate}
-        lang={lang}
         handleClearHistory={handleClearHistory}
         t={t}
       />

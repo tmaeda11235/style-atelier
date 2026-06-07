@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -584,6 +585,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     const settingsTitleEn = spFrame.locator("h2:has-text('Settings')")
     await expect(settingsTitleEn).toBeVisible({ timeout: 5000 })
 
+    // Verify translated elements in English
+    const resetBtnEn = spFrame.locator("#reset-db-btn")
+    await expect(resetBtnEn).toHaveText("Reset Database")
+    const clearHistoryBtnEn = spFrame.locator(
+      "button:has-text('Clear History')"
+    )
+    await expect(clearHistoryBtnEn).toBeVisible()
+
     // Verify Tab English translations:
     // A. History Tab empty title
     const historyNavBtn = spFrame.locator("button[title='History']")
@@ -625,6 +634,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     // Verify UI has changed to Japanese (Settings title should be "設定")
     const settingsTitleJa = spFrame.locator("h2:has-text('設定')")
     await expect(settingsTitleJa).toBeVisible({ timeout: 5000 })
+
+    // Verify translated elements in Japanese
+    const resetBtnJa = spFrame.locator("#reset-db-btn")
+    await expect(resetBtnJa).toHaveText("データベースをリセット")
+    const clearHistoryBtnJa = spFrame.locator("button:has-text('履歴をクリア')")
+    await expect(clearHistoryBtnJa).toBeVisible()
 
     // Verify Tab Japanese translations:
     // A. History Tab empty title

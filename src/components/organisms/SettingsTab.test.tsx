@@ -293,7 +293,7 @@ describe("SettingsTab", () => {
 
     // Verify metadata preview is displayed
     await waitFor(() => {
-      expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+      expect(screen.getByText("クラウドバックアップのプレビュー")).toBeDefined()
       expect(
         screen.getByText(/更新日時: (2026\/6\/3|6\/3\/2026)/)
       ).toBeDefined()
@@ -321,7 +321,7 @@ describe("SettingsTab", () => {
 
     // Wait for sync to be enabled
     await waitFor(() => {
-      expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+      expect(screen.getByText("クラウドバックアップのプレビュー")).toBeDefined()
     })
 
     const restoreBtn = screen.getByRole("button", {
@@ -480,11 +480,11 @@ describe("SettingsTab", () => {
 
       // Verify Cancel button is displayed
       await waitFor(() => {
-        expect(screen.getByText("Cancel")).toBeDefined()
+        expect(screen.getByText("キャンセル")).toBeDefined()
       })
 
       // Click Cancel
-      const cancelBtn = screen.getByText("Cancel")
+      const cancelBtn = screen.getByText("キャンセル")
       fireEvent.click(cancelBtn)
 
       if (triggerAbort) triggerAbort()
@@ -596,7 +596,7 @@ describe("SettingsTab", () => {
       expect(screen.getByText("ストレージ管理")).toBeDefined()
     })
 
-    const clearBtn = screen.getByRole("button", { name: /Clear History/i })
+    const clearBtn = screen.getByRole("button", { name: /履歴をクリア/i })
     fireEvent.click(clearBtn)
 
     expect(window.confirm).toHaveBeenCalled()
