@@ -447,4 +447,78 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       path: path.join(screenshotsDir, "workbench-triple-success.png")
     })
   })
+
+  test("should show evolution success modal when evolving a card", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for evolution E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed a Common card that is ready to evolve (usageCount = 5)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-evolve-test",
+          name: "Evolve Test Card",
+          promptSegments: [{ type: "text", value: "futuristic landscape" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#94a3b8",
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%2394a3b8'/></svg>",
+          usageCount: 5
+        }
+      ])
+    })
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB queries
+
+    // 4. Verify the Evolve button is visible and click it
+    const evolveBtn = spFrame.locator(
+      "button:has-text('Evolve to Next Tier'), button:has-text('次のランクへ進化')"
+    )
+    await expect(evolveBtn).toBeVisible({ timeout: 10000 })
+    await evolveBtn.click()
+
+    // 5. Verify the Evolution Success Modal is visible
+    const modalTitle = spFrame.locator(
+      "h2:has-text('EVOLUTION COMPLETE!'), h2:has-text('進化完了！')"
+    )
+    await expect(modalTitle).toBeVisible({ timeout: 10000 })
+
+    // Verify card name is in the modal
+    const modalCardName = spFrame.locator("h3:has-text('Evolve Test Card')")
+    await expect(modalCardName).toBeVisible()
+
+    // 6. Capture screenshot of the modal
+    await page.screenshot({
+      path: path.join(screenshotsDir, "evolution-success-modal.png")
+    })
+
+    // 7. Click Close button in the modal and verify it closes
+    const closeBtn = spFrame.locator(
+      "button:has-text('Close'), button:has-text('閉じる')"
+    )
+    await expect(closeBtn).toBeVisible()
+    await closeBtn.click()
+
+    // Verify modal is closed
+    await expect(modalTitle).not.toBeVisible({ timeout: 5000 })
+  })
 })
