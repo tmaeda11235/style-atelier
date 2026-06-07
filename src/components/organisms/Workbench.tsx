@@ -456,7 +456,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   {isMixingMode && (
                     <HelpTooltip
                       content={i18n.helpTooltips.multiCard}
-                      position="top"
+                      position="bottom-left"
                     />
                   )}
                 </h3>
@@ -472,7 +472,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                 {expertFeatures.cardEditing && (
                   <HelpTooltip
                     content={i18n.helpTooltips.cardEditing}
-                    position="top"
+                    position="bottom-left"
                   />
                 )}
               </div>

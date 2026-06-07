@@ -153,7 +153,7 @@ export function MintingView({
                     Category
                     <HelpTooltip
                       content={t.helpTooltips.categories}
-                      position="top"
+                      position="top-left"
                     />
                   </label>
                   <select
@@ -175,7 +175,10 @@ export function MintingView({
                 <div className="mb-4">
                   <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
                     Custom Tags
-                    <HelpTooltip content={t.helpTooltips.tags} position="top" />
+                    <HelpTooltip
+                      content={t.helpTooltips.tags}
+                      position="top-left"
+                    />
                   </label>
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {customTags.map((t, idx) => (
@@ -284,7 +287,10 @@ export function MintingView({
               <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
                 Prompt Segments
                 {expertFeatures.slot && (
-                  <HelpTooltip content={t.helpTooltips.slot} position="top" />
+                  <HelpTooltip
+                    content={t.helpTooltips.slot}
+                    position="top-left"
+                  />
                 )}
               </h3>
               <div data-tutorial="prompt-segment-bubble" className="bg-white">
@@ -316,7 +322,10 @@ export function MintingView({
                 data-tutorial="rarity-section">
                 <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
                   Rarity & Frame
-                  <HelpTooltip content={t.helpTooltips.rarity} position="top" />
+                  <HelpTooltip
+                    content={t.helpTooltips.rarity}
+                    position="top-left"
+                  />
                 </h3>
                 <RaritySelector
                   selected={selectedRarity}

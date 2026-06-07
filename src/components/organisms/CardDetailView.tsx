@@ -254,7 +254,7 @@ export function CardDetailView({
             {expertFeatures.cardEditing && (
               <HelpTooltip
                 content={t.helpTooltips.cardEditing}
-                position="top"
+                position="bottom-left"
               />
             )}
           </h3>
@@ -279,7 +279,7 @@ export function CardDetailView({
                 Category
                 <HelpTooltip
                   content={t.helpTooltips.categories}
-                  position="top"
+                  position="top-left"
                 />
               </label>
               <select
@@ -337,7 +337,10 @@ export function CardDetailView({
             <div>
               <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1.5">
                 Tags
-                <HelpTooltip content={t.helpTooltips.tags} position="top" />
+                <HelpTooltip
+                  content={t.helpTooltips.tags}
+                  position="top-left"
+                />
               </label>
               {expertFeatures.cardEditing ? (
                 <TagEditor tags={tags} onChange={setTags} />
@@ -584,7 +587,10 @@ export function CardDetailView({
           <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
             <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
               Rarity & Frame
-              <HelpTooltip content={t.helpTooltips.rarity} position="top" />
+              <HelpTooltip
+                content={t.helpTooltips.rarity}
+                position="top-left"
+              />
             </h3>
             <RaritySelector selected={tier} onSelect={setTier} />
           </div>

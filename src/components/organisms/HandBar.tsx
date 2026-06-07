@@ -138,7 +138,10 @@ export function HandBar({
                   <Layers className="w-3 h-3" />
                   Merge Stack
                 </Button>
-                <HelpTooltip content={t.helpTooltips.stack} position="top" />
+                <HelpTooltip
+                  content={t.helpTooltips.stack}
+                  position="top-right"
+                />
               </div>
             )}
             <Button

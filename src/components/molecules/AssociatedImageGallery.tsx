@@ -33,7 +33,10 @@ export const AssociatedImageGallery: React.FC<AssociatedImageGalleryProps> = ({
       <div className="flex justify-between items-center">
         <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
           Associated Images ({images.length})
-          <HelpTooltip content={t.helpTooltips.multiImage} position="top" />
+          <HelpTooltip
+            content={t.helpTooltips.multiImage}
+            position="top-left"
+          />
         </h3>
         <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-full">
           Selected: {selectedThumbs.length} / 4

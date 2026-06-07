@@ -5,7 +5,15 @@ import { cn } from "../../lib/utils"
 
 interface HelpTooltipProps {
   content: string
-  position?: "top" | "bottom" | "left" | "right"
+  position?:
+    | "top"
+    | "bottom"
+    | "left"
+    | "right"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right"
   className?: string
 }
 
@@ -20,7 +28,15 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
       "top-full left-1/2 -translate-x-1/2 mt-2 after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-b-slate-900",
     left: "right-full top-1/2 -translate-y-1/2 mr-2 after:content-[''] after:absolute after:left-full after:top-1/2 after:-translate-y-1/2 after:border-4 after:border-transparent after:border-l-slate-900",
     right:
-      "left-full top-1/2 -translate-y-1/2 ml-2 after:content-[''] after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-4 after:border-transparent after:border-r-slate-900"
+      "left-full top-1/2 -translate-y-1/2 ml-2 after:content-[''] after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-4 after:border-transparent after:border-r-slate-900",
+    "top-left":
+      "bottom-full left-0 mb-2 after:content-[''] after:absolute after:top-full after:left-1.5 after:border-4 after:border-transparent after:border-t-slate-900",
+    "top-right":
+      "bottom-full right-0 mb-2 after:content-[''] after:absolute after:top-full after:right-1.5 after:border-4 after:border-transparent after:border-t-slate-900",
+    "bottom-left":
+      "top-full left-0 mt-2 after:content-[''] after:absolute after:bottom-full after:left-1.5 after:border-4 after:border-transparent after:border-b-slate-900",
+    "bottom-right":
+      "top-full right-0 mt-2 after:content-[''] after:absolute after:bottom-full after:right-1.5 after:border-4 after:border-transparent after:border-b-slate-900"
   }
 
   return (
