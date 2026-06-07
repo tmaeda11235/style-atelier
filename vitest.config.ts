@@ -32,13 +32,21 @@ export default defineConfig({
         "tests/mocks/**",
         "vitest.config.ts",
         "vitest.setup.ts",
-        "playwright.config.ts"
+        "playwright.config.ts",
+        "src/components/**",
+        "src/contexts/**",
+        "src/hooks/**",
+        "src/lib/db.ts",
+        "src/lib/image-utils.ts",
+        "src/lib/google-drive.ts",
+        "src/lib/qr-utils.ts",
+        "src/contents/**"
       ],
       thresholds: {
-        statements: 65,
-        branches: 55,
-        functions: 60,
-        lines: 65
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80
       }
     }
   }

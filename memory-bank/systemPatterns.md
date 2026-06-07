@@ -67,3 +67,18 @@ To ensure maintainability and scalability, the project follows a strict director
   - `src/background.ts`: Extension background script.
   - `src/sidepanel.tsx`: Main entry point for the side panel UI.
   - `src/content.ts`: Content scripts (if applicable).
+
+## AI-Driven Development & Layer Boundaries
+
+To maintain clean architecture and prevent technical debt, the following strict boundaries are enforced:
+
+1. **No Direct Database Queries in UI Components**:
+   - React components in `src/components/` must not import `src/lib/db.ts` or make direct queries to the database.
+   - All database interactions must be encapsulated within custom hooks (in `src/hooks/`) or services, utilizing Zustand state or React Query for asynchronous state.
+2. **Pure Test Mocks**:
+   - Mock databases and utility mocks (e.g., in `tests/mocks/`) must remain pure mocks and not contain business logic.
+   - Test expectations should verify interactions with the mock rather than replicating real database logic or state transitions inside the mock.
+3. **File Length Limits**:
+   - Component files should not exceed 300 lines of code (excluding comments and blank lines).
+   - Functions should be kept under 50 lines.
+   - Files exceeding these limits should be refactored by extracting state, hooks, or sub-components.

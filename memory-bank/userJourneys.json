@@ -1,0 +1,143 @@
+{
+  "journeys": [
+    {
+      "id": "@J-MINT-EXPERT-01",
+      "name": "エキスパートミント",
+      "description": "エキスパートモードで画像からスタイルカードを作成する",
+      "steps": ["画像上のMintボタン押下", "プロンプト解析", "カード保存"],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-MINT-EASY-01",
+      "name": "かんたんミント",
+      "description": "かんたんモードで画像からスタイルカードを作成する",
+      "steps": ["画像上のMintボタン押下", "簡易保存"],
+      "nextJourneys": ["@J-ORG-EASY-01", "@J-WB-EASY-01"]
+    },
+    {
+      "id": "@J-ORG-EXPERT-01",
+      "name": "カード管理（エキスパート）",
+      "description": "エキスパート向けカード管理（編集・削除）",
+      "steps": ["ライブラリを開く", "カード選択", "編集・削除実行"],
+      "nextJourneys": ["@J-ORG-EXPERT-02", "@J-WB-EXPERT-01", "@J-IO-QR-OUT"]
+    },
+    {
+      "id": "@J-ORG-EXPERT-02",
+      "name": "カテゴリ管理",
+      "description": "カテゴリの作成と割り当て",
+      "steps": [
+        "カテゴリ管理モーダルを開く",
+        "新規カテゴリ作成",
+        "カードに割り当て"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-ORG-EASY-01",
+      "name": "かんたんライブラリ",
+      "description": "かんたんモードのライブラリ（カード閲覧・選択）",
+      "steps": ["ライブラリを開く", "カードを見る"],
+      "nextJourneys": ["@J-WB-EASY-01"]
+    },
+    {
+      "id": "@J-WB-EXPERT-01",
+      "name": "ワークベンチ（エキスパート）",
+      "description": "エキスパートモードでプロンプトを構築する",
+      "steps": ["Workbenchを開く", "カードを選ぶ", "プロンプトをマージ"],
+      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-03"]
+    },
+    {
+      "id": "@J-WB-EXPERT-02",
+      "name": "ドラッグ＆ドロップ操作",
+      "description": "ドラッグ＆ドロップでカードを配置する",
+      "steps": ["カードをドラッグ", "Handエリアにドロップ", "順序入れ替え"],
+      "nextJourneys": ["@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-EXPERT-03",
+      "name": "プロンプトインジェクション",
+      "description": "Midjourneyへのプロンプトインジェクション",
+      "steps": ["Injectボタン押下", "Discordの入力欄にテキスト反映"],
+      "nextJourneys": ["@J-MINT-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-EASY-01",
+      "name": "かんたんワークベンチ",
+      "description": "かんたんモードでプロンプトを合成する",
+      "steps": ["Workbenchを開く", "ベースカードを選ぶ", "ワンクリック合成"],
+      "nextJourneys": ["@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-IO-QR-OUT",
+      "name": "QRエクスポート",
+      "description": "スタイルカードをQRコードとして出力する",
+      "steps": ["カード詳細を開く", "Share as QR押下", "QRコード表示"],
+      "nextJourneys": []
+    },
+    {
+      "id": "@J-IO-QR-IN",
+      "name": "QRインポート",
+      "description": "QRコードを読み取ってカードをインポートする",
+      "steps": ["Import via QR選択", "QRスキャン", "カード保存"],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-EASY-01"]
+    },
+    {
+      "id": "@J-IO-BACKUP",
+      "name": "データバックアップ",
+      "description": "アプリケーションデータのバックアップエクスポート",
+      "steps": ["Settingsを開く", "Backupボタン押下", "ZIPファイル保存"],
+      "nextJourneys": ["@J-SET-01"]
+    },
+    {
+      "id": "@J-IO-RESTORE",
+      "name": "データリストア",
+      "description": "バックアップデータからのリストア",
+      "steps": [
+        "Settingsを開く",
+        "Restoreボタン押下",
+        "ファイル選択",
+        "データ復元"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-SYS-01",
+      "name": "履歴表示",
+      "description": "履歴（History）の閲覧とスクロール",
+      "steps": [
+        "Historyパネルを開く",
+        "無限スクロール",
+        "過去のプロンプト再利用"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-SYS-02",
+      "name": "エキスパートヘルプ",
+      "description": "エキスパート向けヘルプツールチップの確認",
+      "steps": ["?アイコンにホバー", "ツールチップ表示", "仕様の確認"],
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-SYS-03",
+      "name": "Tipsバー",
+      "description": "使い方Tipsバーの操作",
+      "steps": ["画面下部のTipsバーを見る", "次へボタン押下", "非表示にする"],
+      "nextJourneys": []
+    },
+    {
+      "id": "@J-SYS-04",
+      "name": "言語切り替え",
+      "description": "多言語（i18n）切り替えと表示",
+      "steps": ["言語設定を変更", "UIテキストの再描画"],
+      "nextJourneys": ["@J-SET-01"]
+    },
+    {
+      "id": "@J-SET-01",
+      "name": "アプリ設定",
+      "description": "アプリケーション設定の変更",
+      "steps": ["Settingsパネルを開く", "トグル変更", "保存"],
+      "nextJourneys": ["@J-IO-BACKUP", "@J-IO-RESTORE", "@J-SYS-04"]
+    }
+  ]
+}
