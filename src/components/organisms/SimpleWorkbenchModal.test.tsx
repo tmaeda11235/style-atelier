@@ -1,24 +1,16 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
-import { db } from "../../lib/db"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-// Mock chrome extension API
-const chromeMock = {
-  tabs: {
-    query: vi.fn(),
-    sendMessage: vi.fn(),
-  },
-}
-global.chrome = chromeMock as any
+import { db } from "../../lib/db"
+import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
 
 // Mock DB
 vi.mock("../../lib/db", () => {
   return {
     db: {
-      updateCard: vi.fn(),
-    },
+      updateCard: vi.fn()
+    }
   }
 })
 
@@ -26,11 +18,14 @@ vi.mock("../../lib/db", () => {
 vi.mock("./PromptBubbleEditor", () => ({
   PromptBubbleEditor: ({ initialSegments, onChange }: any) => (
     <div data-testid="prompt-bubble-editor">
-      <button onClick={() => onChange([...initialSegments, { type: "text", value: "new-tag" }])}>
+      <button
+        onClick={() =>
+          onChange([...initialSegments, { type: "text", value: "new-tag" }])
+        }>
         Add Tag
       </button>
     </div>
-  ),
+  )
 }))
 
 vi.mock("./ParameterEditor", () => ({
@@ -40,7 +35,7 @@ vi.mock("./ParameterEditor", () => ({
         Set Aspect Ratio
       </button>
     </div>
-  ),
+  )
 }))
 
 describe("SimpleWorkbenchModal", () => {
@@ -50,7 +45,7 @@ describe("SimpleWorkbenchModal", () => {
     tier: "Rare",
     promptSegments: [{ type: "text", value: "neon glow" }],
     parameters: { ar: "1:1" },
-    thumbnailData: "data:image/png;base64,abc",
+    thumbnailData: "data:image/png;base64,abc"
   }
 
   const mockOnClose = vi.fn()
@@ -59,8 +54,10 @@ describe("SimpleWorkbenchModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    chromeMock.tabs.query.mockResolvedValue([{ id: 1, status: "complete" }])
-    chromeMock.tabs.sendMessage.mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.query).mockResolvedValue([
+      { id: 1, status: "complete" }
+    ] as any)
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
     vi.mocked(db.updateCard).mockResolvedValue(1 as any)
   })
 
@@ -115,10 +112,13 @@ describe("SimpleWorkbenchModal", () => {
     fireEvent.click(injectBtn)
 
     await waitFor(() => {
-      expect(chromeMock.tabs.query).toHaveBeenCalledWith({ active: true, currentWindow: true })
-      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(1, {
+      expect(chrome.tabs.query).toHaveBeenCalledWith({
+        active: true,
+        currentWindow: true
+      })
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
         type: "INJECT_PROMPT",
-        prompt: "neon glow --ar 1:1",
+        prompt: "neon glow --ar 1:1"
       })
       expect(db.updateCard).toHaveBeenCalledWith("card-123", { usageCount: 1 })
       expect(mockAddLog).toHaveBeenCalledWith("Prompt injected successfully!")
@@ -147,9 +147,9 @@ describe("SimpleWorkbenchModal", () => {
     fireEvent.click(injectBtn)
 
     await waitFor(() => {
-      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(1, {
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
         type: "INJECT_PROMPT",
-        prompt: "neon glow, new-tag --ar 16:9",
+        prompt: "neon glow, new-tag --ar 16:9"
       })
     })
   })

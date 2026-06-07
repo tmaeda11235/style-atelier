@@ -40,13 +40,8 @@ describe("useEasyModeView hook", () => {
     confirmSpy.mockReset()
 
     // Mock chrome APIs
-    global.chrome = {
-      tabs: {
-        query: vi.fn().mockResolvedValue([{ id: 123 }]),
-        sendMessage: vi.fn().mockResolvedValue({ status: "success" }),
-        reload: vi.fn()
-      }
-    } as any
+    vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 123 }] as any)
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
   })
 
   it("should initialize with default states", () => {
@@ -146,8 +141,8 @@ describe("useEasyModeView hook", () => {
       await result.current.handleInjectPrompt("sunset cyberpunk")
     })
 
-    expect(global.chrome.tabs.query).toHaveBeenCalled()
-    expect(global.chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
+    expect(chrome.tabs.query).toHaveBeenCalled()
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
       type: "INJECT_PROMPT",
       prompt: "sunset cyberpunk"
     })
@@ -155,7 +150,7 @@ describe("useEasyModeView hook", () => {
   })
 
   it("should set alertType to no_input if content script returns error for chat input", async () => {
-    global.chrome.tabs.sendMessage = vi.fn().mockResolvedValue({
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       status: "error",
       message: "Could not find chat input"
     })

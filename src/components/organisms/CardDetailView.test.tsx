@@ -1,21 +1,27 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render as tlRender, screen, fireEvent, act } from "@testing-library/react"
-import { SettingsProvider } from "../../contexts/SettingsContext"
+import {
+  act,
+  fireEvent,
+  screen,
+  render as tlRender
+} from "@testing-library/react"
 import React from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import { useHand } from "../../hooks/useHand"
+import type { StyleCard } from "../../lib/db-schema"
+import { CardDetailView } from "./CardDetailView"
 
 const render = (ui: React.ReactElement, options?: any) => {
   return tlRender(ui, { wrapper: SettingsProvider, ...options })
 }
-import { CardDetailView } from "./CardDetailView"
-import { useHand } from "../../hooks/useHand"
-import type { StyleCard } from "../../lib/db-schema"
 
 vi.mock("../../hooks/useHand", () => ({
-  useHand: vi.fn(),
+  useHand: vi.fn()
 }))
 
 vi.mock("../../lib/export-utils", () => ({
-  exportCardAsImage: vi.fn().mockResolvedValue(undefined),
+  exportCardAsImage: vi.fn().mockResolvedValue(undefined)
 }))
 
 vi.mock("../../lib/db", () => ({
@@ -23,32 +29,22 @@ vi.mock("../../lib/db", () => ({
     styleCards: {
       get: vi.fn(),
       update: vi.fn(),
-      toArray: vi.fn().mockResolvedValue([]),
+      toArray: vi.fn().mockResolvedValue([])
     },
     categories: {
-      toArray: vi.fn().mockResolvedValue([]),
+      toArray: vi.fn().mockResolvedValue([])
     },
     getCard: vi.fn(),
-    getAllCategories: vi.fn().mockResolvedValue([]),
-  },
+    getAllCategories: vi.fn().mockResolvedValue([])
+  }
 }))
-
-// Mock chrome API
-global.chrome = {
-  tabs: {
-    query: vi.fn(),
-    sendMessage: vi.fn(),
-  },
-} as any
 
 const mockCard: StyleCard = {
   id: "card-uuid-1",
   name: "Cyber Punk Cyberpunk Style",
   createdAt: Date.now(),
   updatedAt: Date.now(),
-  promptSegments: [
-    { type: "text", value: "a neon cyber punk cat" },
-  ],
+  promptSegments: [{ type: "text", value: "a neon cyber punk cat" }],
   parameters: { ar: "16:9" },
   masking: { isSrefHidden: false, isPHidden: false },
   tier: "Epic",
@@ -66,7 +62,7 @@ const mockCard: StyleCard = {
   ],
   selectedThumbnails: ["https://example.com/thumb.png"],
   frameId: "default",
-  genealogy: { generation: 1, parentIds: [] },
+  genealogy: { generation: 1, parentIds: [] }
 }
 
 describe("CardDetailView", () => {
@@ -75,7 +71,7 @@ describe("CardDetailView", () => {
     onClose: vi.fn(),
     onInject: vi.fn(),
     onSave: vi.fn(),
-    setAlertType: vi.fn(),
+    setAlertType: vi.fn()
   }
 
   beforeEach(() => {
@@ -83,7 +79,7 @@ describe("CardDetailView", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn(),
+      clearHand: vi.fn()
     })
   })
 
@@ -101,7 +97,9 @@ describe("CardDetailView", () => {
     render(<CardDetailView {...defaultProps} />)
 
     const images = screen.getAllByRole("img")
-    const cardImages = images.filter((img) => img.getAttribute("alt")?.includes("Card Image"))
+    const cardImages = images.filter((img) =>
+      img.getAttribute("alt")?.includes("Card Image")
+    )
     expect(cardImages).toHaveLength(5)
 
     // Image 1 is currently selected ("1st")
@@ -111,14 +109,14 @@ describe("CardDetailView", () => {
     fireEvent.click(cardImages[1]) // becomes 2nd
     fireEvent.click(cardImages[2]) // becomes 3rd
     fireEvent.click(cardImages[3]) // becomes 4th
-    
+
     expect(screen.getByText("2nd")).toBeDefined()
     expect(screen.getByText("3rd")).toBeDefined()
     expect(screen.getByText("4th")).toBeDefined()
 
     // Click Image 5: since 1, 2, 3, 4 are selected, 1 will be deselected, 2 becomes 1st, 3 becomes 2nd, 4 becomes 3rd, 5 becomes 4th
     fireEvent.click(cardImages[4])
-    
+
     const saveButton = screen.getByText("Save")
     await act(async () => {
       fireEvent.click(saveButton)
@@ -132,7 +130,7 @@ describe("CardDetailView", () => {
           "https://example.com/image4.png",
           "https://example.com/image5.png"
         ],
-        thumbnailData: expect.stringContaining("data:image/png;base64,"),
+        thumbnailData: expect.stringContaining("data:image/png;base64,")
       })
     )
   })
@@ -157,7 +155,7 @@ describe("CardDetailView", () => {
     expect(defaultProps.onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tags: ["neon", "futuristic"],
-        thumbnailData: expect.stringContaining("data:image/png;base64,"),
+        thumbnailData: expect.stringContaining("data:image/png;base64,")
       })
     )
   })
@@ -168,14 +166,16 @@ describe("CardDetailView", () => {
     const injectButton = screen.getByText("Inject")
     fireEvent.click(injectButton)
 
-    expect(defaultProps.onInject).toHaveBeenCalledWith("a neon cyber punk cat --ar 16:9")
+    expect(defaultProps.onInject).toHaveBeenCalledWith(
+      "a neon cyber punk cat --ar 16:9"
+    )
   })
 
   it("triggers export utility on export click", async () => {
     render(<CardDetailView {...defaultProps} />)
 
     const exportButton = screen.getByTestId("export-card-button")
-    
+
     await act(async () => {
       fireEvent.click(exportButton)
     })
@@ -186,17 +186,21 @@ describe("CardDetailView", () => {
 
   it("displays error message if export utility fails", async () => {
     const { exportCardAsImage } = await import("../../lib/export-utils")
-    vi.mocked(exportCardAsImage).mockRejectedValueOnce(new Error("Failed to render canvas"))
+    vi.mocked(exportCardAsImage).mockRejectedValueOnce(
+      new Error("Failed to render canvas")
+    )
 
     render(<CardDetailView {...defaultProps} />)
 
     const exportButton = screen.getByTestId("export-card-button")
-    
+
     await act(async () => {
       fireEvent.click(exportButton)
     })
 
-    expect(screen.getByText("Failed to export card: Failed to render canvas")).toBeDefined()
+    expect(
+      screen.getByText("Failed to export card: Failed to render canvas")
+    ).toBeDefined()
   })
 
   it("renders genealogy details and triggers card selection on parent click", async () => {
@@ -215,7 +219,7 @@ describe("CardDetailView", () => {
       dominantColor: "#000000",
       thumbnailData: "https://example.com/parent-thumb.png",
       frameId: "default",
-      genealogy: { generation: 1, parentIds: [] },
+      genealogy: { generation: 1, parentIds: [] }
     }
 
     const mockCardWithGenealogy: StyleCard = {
@@ -225,8 +229,8 @@ describe("CardDetailView", () => {
       genealogy: {
         generation: 2,
         parentIds: ["parent-uuid-1", "non-existent-parent"],
-        mutationNote: "Mixed with watercolor style",
-      },
+        mutationNote: "Mixed with watercolor style"
+      }
     }
 
     const { db } = await import("../../lib/db")

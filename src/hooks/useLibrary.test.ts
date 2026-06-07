@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { useLibrary } from "./useLibrary"
+import { act, renderHook } from "@testing-library/react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
 import { db } from "../lib/db"
-import { renderHook, act } from "@testing-library/react"
+import { useLibrary } from "./useLibrary"
 
 let mockStyleCards: any[] = []
 let mockCategories: any[] = []
@@ -21,24 +22,16 @@ vi.mock("../lib/db", () => ({
   db: {
     styleCards: {
       update: vi.fn().mockResolvedValue(1),
-      toArray: vi.fn().mockImplementation(async () => mockStyleCards),
+      toArray: vi.fn().mockImplementation(async () => mockStyleCards)
     },
     categories: {
-      toArray: vi.fn().mockImplementation(async () => mockCategories),
+      toArray: vi.fn().mockImplementation(async () => mockCategories)
     },
     updateCard: vi.fn().mockResolvedValue(1),
     getAllCards: vi.fn().mockImplementation(async () => mockStyleCards),
-    getAllCategories: vi.fn().mockImplementation(async () => mockCategories),
-  },
+    getAllCategories: vi.fn().mockImplementation(async () => mockCategories)
+  }
 }))
-
-// Mock chrome API
-global.chrome = {
-  tabs: {
-    query: vi.fn(),
-    sendMessage: vi.fn(),
-  },
-} as any
 
 describe("useLibrary hook", () => {
   const mockAddLog = vi.fn()
@@ -53,8 +46,10 @@ describe("useLibrary hook", () => {
   })
 
   it("should increment usageCount when toggling pin (adding to hand)", async () => {
-    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
-    
+    const { result } = renderHook(() =>
+      useLibrary(mockAddLog, mockSetAlertType)
+    )
+
     const mockCard = {
       id: "card-123",
       name: "Test Card",
@@ -62,22 +57,26 @@ describe("useLibrary hook", () => {
       usageCount: 4,
       parameters: {},
       masking: {},
-      promptSegments: [],
+      promptSegments: []
     } as any
 
     await act(async () => {
-      await result.current.togglePin(mockCard, { stopPropagation: vi.fn() } as any)
+      await result.current.togglePin(mockCard, {
+        stopPropagation: vi.fn()
+      } as any)
     })
 
     expect(db.updateCard).toHaveBeenCalledWith("card-123", {
       isPinned: true,
-      usageCount: 5,
+      usageCount: 5
     })
   })
 
   it("should NOT increment usageCount when toggling pin to remove from hand", async () => {
-    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
-    
+    const { result } = renderHook(() =>
+      useLibrary(mockAddLog, mockSetAlertType)
+    )
+
     const mockCard = {
       id: "card-123",
       name: "Test Card",
@@ -85,21 +84,25 @@ describe("useLibrary hook", () => {
       usageCount: 4,
       parameters: {},
       masking: {},
-      promptSegments: [],
+      promptSegments: []
     } as any
 
     await act(async () => {
-      await result.current.togglePin(mockCard, { stopPropagation: vi.fn() } as any)
+      await result.current.togglePin(mockCard, {
+        stopPropagation: vi.fn()
+      } as any)
     })
 
     expect(db.updateCard).toHaveBeenCalledWith("card-123", {
-      isPinned: false,
+      isPinned: false
     })
   })
 
   it("should increment usageCount when prompt is successfully injected", async () => {
-    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
-    
+    const { result } = renderHook(() =>
+      useLibrary(mockAddLog, mockSetAlertType)
+    )
+
     const mockCard = {
       id: "card-123",
       name: "Test Card",
@@ -107,7 +110,7 @@ describe("useLibrary hook", () => {
       usageCount: 2,
       parameters: {},
       masking: {},
-      promptSegments: [{ type: "text", value: "hello" }],
+      promptSegments: [{ type: "text", value: "hello" }]
     } as any
 
     await act(async () => {
@@ -117,22 +120,24 @@ describe("useLibrary hook", () => {
     expect(chrome.tabs.query).toHaveBeenCalled()
     expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
       type: "INJECT_PROMPT",
-      prompt: "hello",
+      prompt: "hello"
     })
 
     // Wait for the async message response chain to finish and call db update
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 10))
     })
 
     expect(db.updateCard).toHaveBeenCalledWith("card-123", {
-      usageCount: 3,
+      usageCount: 3
     })
   })
 
   it("should pin card and call onNavigateToWorkbench if card has slot variables", async () => {
     const mockNavigate = vi.fn()
-    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType, mockNavigate))
+    const { result } = renderHook(() =>
+      useLibrary(mockAddLog, mockSetAlertType, mockNavigate)
+    )
 
     const mockCard = {
       id: "card-slots",
@@ -144,7 +149,7 @@ describe("useLibrary hook", () => {
       promptSegments: [
         { type: "text", value: "a photo of a " },
         { type: "slot", label: "subject", default: "cat" }
-      ],
+      ]
     } as any
 
     await act(async () => {
@@ -155,16 +160,20 @@ describe("useLibrary hook", () => {
     expect(chrome.tabs.sendMessage).not.toHaveBeenCalled()
 
     expect(db.updateCard).toHaveBeenCalledWith("card-slots", {
-      isPinned: true,
+      isPinned: true
     })
 
     expect(mockNavigate).toHaveBeenCalled()
-    expect(mockAddLog).toHaveBeenCalledWith('Redirected to Workbench to fill slot variables for "Card with Slots".')
+    expect(mockAddLog).toHaveBeenCalledWith(
+      'Redirected to Workbench to fill slot variables for "Card with Slots".'
+    )
   })
 
   it("should call onNavigateToWorkbench but NOT pin card if card with slot variables is already pinned", async () => {
     const mockNavigate = vi.fn()
-    const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType, mockNavigate))
+    const { result } = renderHook(() =>
+      useLibrary(mockAddLog, mockSetAlertType, mockNavigate)
+    )
 
     const mockCard = {
       id: "card-slots-pinned",
@@ -176,7 +185,7 @@ describe("useLibrary hook", () => {
       promptSegments: [
         { type: "text", value: "a photo of a " },
         { type: "slot", label: "subject", default: "cat" }
-      ],
+      ]
     } as any
 
     await act(async () => {
@@ -189,7 +198,9 @@ describe("useLibrary hook", () => {
     expect(db.updateCard).not.toHaveBeenCalled()
 
     expect(mockNavigate).toHaveBeenCalled()
-    expect(mockAddLog).toHaveBeenCalledWith('Redirected to Workbench to fill slot variables for "Pinned Card with Slots".')
+    expect(mockAddLog).toHaveBeenCalledWith(
+      'Redirected to Workbench to fill slot variables for "Pinned Card with Slots".'
+    )
   })
 
   describe("filtering and sorting by dominantColor", () => {
@@ -233,8 +244,10 @@ describe("useLibrary hook", () => {
     })
 
     it("filters cards by dominantColor", () => {
-      const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
-      
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
       expect(result.current.styleCards).toHaveLength(3)
 
       act(() => {
@@ -251,8 +264,10 @@ describe("useLibrary hook", () => {
     })
 
     it("sorts cards by color", () => {
-      const { result } = renderHook(() => useLibrary(mockAddLog, mockSetAlertType))
-      
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
       act(() => {
         result.current.setSortBy("color")
       })

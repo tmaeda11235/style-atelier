@@ -1,16 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { 
-  exportDatabase, 
-  importDatabase, 
-  authorize, 
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "./db"
+import {
+  authorize,
   clearCachedToken,
-  searchBackupFile, 
-  getBackupMetadata,
-  uploadBackup, 
   downloadBackup,
-  GDriveTimeoutError
-} from "./google-drive";
-import { db } from "./db";
+  exportDatabase,
+  GDriveTimeoutError,
+  getBackupMetadata,
+  importDatabase,
+  searchBackupFile,
+  uploadBackup
+} from "./google-drive"
 
 // Mock Dexie db
 vi.mock("./db", () => {
@@ -19,7 +20,7 @@ vi.mock("./db", () => {
     clear: vi.fn().mockResolvedValue(undefined),
     bulkAdd: vi.fn().mockResolvedValue(undefined),
     bulkPut: vi.fn().mockResolvedValue(undefined)
-  });
+  })
   return {
     db: {
       styleCards: mockTable(),
@@ -31,97 +32,91 @@ vi.mock("./db", () => {
       importBackupData: vi.fn().mockResolvedValue(undefined),
       transaction: vi.fn((mode, tables, cb) => cb())
     }
-  };
-});
+  }
+})
 
 // Mock XMLHttpRequest
-const mockXhrInstances: any[] = [];
+const mockXhrInstances: any[] = []
 class MockXMLHttpRequest {
-  open = vi.fn();
-  setRequestHeader = vi.fn();
-  send = vi.fn();
-  onload = null as any;
-  onerror = null as any;
-  onprogress = null as any;
-  status = 200;
-  statusText = "OK";
-  responseText = "";
+  open = vi.fn()
+  setRequestHeader = vi.fn()
+  send = vi.fn()
+  onload = null as any
+  onerror = null as any
+  onprogress = null as any
+  status = 200
+  statusText = "OK"
+  responseText = ""
   upload = {
     onprogress: null as any
-  };
+  }
 
   constructor() {
-    mockXhrInstances.push(this);
+    mockXhrInstances.push(this)
   }
 }
-(global as any).XMLHttpRequest = MockXMLHttpRequest;
-
-// Mock Chrome APIs
-const mockGetAuthToken = vi.fn();
-const mockRemoveCachedAuthToken = vi.fn();
-
-global.chrome = {
-  identity: {
-    getAuthToken: mockGetAuthToken,
-    removeCachedAuthToken: mockRemoveCachedAuthToken,
-  },
-  runtime: {
-    lastError: undefined
-  }
-} as any;
+;(global as any).XMLHttpRequest = MockXMLHttpRequest
 
 describe("Google Drive Utilities (getAuthToken Flow)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    localStorage.clear();
-    global.fetch = vi.fn();
-    mockXhrInstances.length = 0;
-  });
+    vi.clearAllMocks()
+    localStorage.clear()
+    global.fetch = vi.fn()
+    mockXhrInstances.length = 0
+  })
 
   describe("exportDatabase", () => {
     it("should serialize database tables and exclude localImageBlob from historyItems", async () => {
-      const mockCards = [{ id: "card1", name: "Card 1" }];
-      const mockCategories = [{ id: "cat1", name: "Category 1" }];
-      const mockSettings = [{ userId: "user1", isPro: true }];
+      const mockCards = [{ id: "card1", name: "Card 1" }]
+      const mockCategories = [{ id: "cat1", name: "Category 1" }]
+      const mockSettings = [{ userId: "user1", isPro: true }]
       const mockHistory = [
-        { id: "hist1", fullCommand: "prompt 1", imageUrl: "url1", localImageBlob: new Blob() },
+        {
+          id: "hist1",
+          fullCommand: "prompt 1",
+          imageUrl: "url1",
+          localImageBlob: new Blob()
+        },
         { id: "hist2", fullCommand: "prompt 2", imageUrl: "url2" }
-      ];
+      ]
 
-      vi.mocked(db.getAllCards).mockResolvedValue(mockCards as any);
-      vi.mocked(db.getAllCategories).mockResolvedValue(mockCategories as any);
-      vi.mocked(db.userSettings.toArray).mockResolvedValue(mockSettings);
-      vi.mocked(db.historyItems.toArray).mockResolvedValue(mockHistory);
+      vi.mocked(db.getAllCards).mockResolvedValue(mockCards as any)
+      vi.mocked(db.getAllCategories).mockResolvedValue(mockCategories as any)
+      vi.mocked(db.userSettings.toArray).mockResolvedValue(mockSettings)
+      vi.mocked(db.historyItems.toArray).mockResolvedValue(mockHistory)
 
-      const json = await exportDatabase();
-      const parsed = JSON.parse(json);
+      const json = await exportDatabase()
+      const parsed = JSON.parse(json)
 
-      expect(parsed.version).toBe(1);
-      expect(parsed.exportedAt).toBeLessThanOrEqual(Date.now());
-      expect(parsed.data.styleCards).toEqual(mockCards);
-      expect(parsed.data.categories).toEqual(mockCategories);
-      expect(parsed.data.userSettings).toEqual(mockSettings);
-      
+      expect(parsed.version).toBe(1)
+      expect(parsed.exportedAt).toBeLessThanOrEqual(Date.now())
+      expect(parsed.data.styleCards).toEqual(mockCards)
+      expect(parsed.data.categories).toEqual(mockCategories)
+      expect(parsed.data.userSettings).toEqual(mockSettings)
+
       // localImageBlob should be excluded
-      expect(parsed.data.historyItems).toHaveLength(2);
-      expect(parsed.data.historyItems[0]).not.toHaveProperty("localImageBlob");
-      expect(parsed.data.historyItems[0].id).toBe("hist1");
-      expect(parsed.data.historyItems[1].id).toBe("hist2");
-    });
+      expect(parsed.data.historyItems).toHaveLength(2)
+      expect(parsed.data.historyItems[0]).not.toHaveProperty("localImageBlob")
+      expect(parsed.data.historyItems[0].id).toBe("hist1")
+      expect(parsed.data.historyItems[1].id).toBe("hist2")
+    })
 
     it("should include slotHistory from localStorage in the exported payload", async () => {
       const mockSlotHistory = {
         subject: ["cat", "dog"],
         style: ["anime"]
-      };
-      localStorage.setItem("style_atelier_slot_history", JSON.stringify(mockSlotHistory));
+      }
+      localStorage.setItem(
+        "style_atelier_slot_history",
+        JSON.stringify(mockSlotHistory)
+      )
 
-      const json = await exportDatabase();
-      const parsed = JSON.parse(json);
+      const json = await exportDatabase()
+      const parsed = JSON.parse(json)
 
-      expect(parsed.data.slotHistory).toEqual(mockSlotHistory);
-    });
-  });
+      expect(parsed.data.slotHistory).toEqual(mockSlotHistory)
+    })
+  })
 
   describe("importDatabase", () => {
     const mockStyleCard = {
@@ -142,27 +137,27 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       thumbnailData: "data:image/png;base64,abc",
       frameId: "default",
       genealogy: { generation: 1, parentIds: [] }
-    };
+    }
 
     const mockCustomCategory = {
       id: "cat1",
       name: "Category 1",
       createdAt: 123456789
-    };
+    }
 
     const mockHistoryItem = {
       id: "hist-123",
       fullCommand: "full prompt",
       imageUrl: "http://example.com/img.png",
       timestamp: 123456789
-    };
+    }
 
     const mockUserSettings = {
       userId: "user-123",
       isPro: false,
       unlockedSkins: [],
       branding: { enabled: false }
-    };
+    }
 
     it("should merge payload data into tables using bulkPut without clearing", async () => {
       const mockPayload = {
@@ -174,25 +169,31 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
           userSettings: [mockUserSettings],
           historyItems: [mockHistoryItem]
         }
-      };
+      }
 
-      await importDatabase(JSON.stringify(mockPayload));
+      await importDatabase(JSON.stringify(mockPayload))
 
-      expect(db.importBackupData).toHaveBeenCalledWith(mockPayload.data, "replace");
-    });
+      expect(db.importBackupData).toHaveBeenCalledWith(
+        mockPayload.data,
+        "replace"
+      )
+    })
 
     it("should restore and merge slotHistory into localStorage, keeping incoming values first, removing duplicates, and limiting to 10 items", async () => {
       const existingHistory = {
         subject: ["existing1", "existing2", "common"],
         style: ["minimalist"]
-      };
-      localStorage.setItem("style_atelier_slot_history", JSON.stringify(existingHistory));
+      }
+      localStorage.setItem(
+        "style_atelier_slot_history",
+        JSON.stringify(existingHistory)
+      )
 
       const incomingHistory = {
         subject: ["common", "incoming1", "incoming2"],
         style: ["gothic"],
         artist: ["picasso"]
-      };
+      }
 
       const mockPayload = {
         version: 1,
@@ -204,26 +205,37 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
           historyItems: [],
           slotHistory: incomingHistory
         }
-      };
+      }
 
-      await importDatabase(JSON.stringify(mockPayload), "merge");
+      await importDatabase(JSON.stringify(mockPayload), "merge")
 
-      const restored = JSON.parse(localStorage.getItem("style_atelier_slot_history") || "{}");
+      const restored = JSON.parse(
+        localStorage.getItem("style_atelier_slot_history") || "{}"
+      )
 
-      expect(restored.subject).toEqual(["common", "incoming1", "incoming2", "existing1", "existing2"]);
-      expect(restored.style).toEqual(["gothic", "minimalist"]);
-      expect(restored.artist).toEqual(["picasso"]);
-    });
+      expect(restored.subject).toEqual([
+        "common",
+        "incoming1",
+        "incoming2",
+        "existing1",
+        "existing2"
+      ])
+      expect(restored.style).toEqual(["gothic", "minimalist"])
+      expect(restored.artist).toEqual(["picasso"])
+    })
 
     it("should cap merged slotHistory items at 10 per variable", async () => {
       const existingHistory = {
         subject: ["1", "2", "3", "4", "5", "6", "7", "8"]
-      };
-      localStorage.setItem("style_atelier_slot_history", JSON.stringify(existingHistory));
+      }
+      localStorage.setItem(
+        "style_atelier_slot_history",
+        JSON.stringify(existingHistory)
+      )
 
       const incomingHistory = {
         subject: ["9", "10", "11", "12", "13"]
-      };
+      }
 
       const mockPayload = {
         version: 1,
@@ -235,20 +247,35 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
           historyItems: [],
           slotHistory: incomingHistory
         }
-      };
+      }
 
-      await importDatabase(JSON.stringify(mockPayload), "merge");
+      await importDatabase(JSON.stringify(mockPayload), "merge")
 
-      const restored = JSON.parse(localStorage.getItem("style_atelier_slot_history") || "{}");
+      const restored = JSON.parse(
+        localStorage.getItem("style_atelier_slot_history") || "{}"
+      )
 
-      expect(restored.subject).toEqual(["9", "10", "11", "12", "13", "1", "2", "3", "4", "5"]);
-      expect(restored.subject).toHaveLength(10);
-    });
+      expect(restored.subject).toEqual([
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ])
+      expect(restored.subject).toHaveLength(10)
+    })
 
     it("should throw error if payload structure is invalid", async () => {
-      const invalidPayload = { foo: "bar" };
-      await expect(importDatabase(JSON.stringify(invalidPayload))).rejects.toThrow();
-    });
+      const invalidPayload = { foo: "bar" }
+      await expect(
+        importDatabase(JSON.stringify(invalidPayload))
+      ).rejects.toThrow()
+    })
 
     it("should throw error if backup version is unsupported", async () => {
       const mockPayload = {
@@ -260,15 +287,17 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
           userSettings: [],
           historyItems: []
         }
-      };
-      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(/version.*is not supported/);
-    });
+      }
+      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(
+        /version.*is not supported/
+      )
+    })
 
     it("should throw error if styleCards schema is invalid", async () => {
       const invalidStyleCard = {
         ...mockStyleCard,
         tier: "UnknownTier"
-      };
+      }
       const mockPayload = {
         version: 1,
         exportedAt: 123456,
@@ -278,104 +307,123 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
           userSettings: [],
           historyItems: []
         }
-      };
-      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(/invalid tier/);
-    });
-  });
+      }
+      await expect(importDatabase(JSON.stringify(mockPayload))).rejects.toThrow(
+        /invalid tier/
+      )
+    })
+  })
 
   describe("authorize", () => {
     it("should resolve access token on successful getAuthToken call", async () => {
-      mockGetAuthToken.mockImplementation((opts, callback) => {
-        callback("mock-token-123");
-      });
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback("mock-token-123")
+        }
+      )
 
-      const token = await authorize(true);
-      expect(token).toBe("mock-token-123");
-      expect(mockGetAuthToken).toHaveBeenCalledWith(
+      const token = await authorize(true)
+      expect(token).toBe("mock-token-123")
+      expect(chrome.identity.getAuthToken).toHaveBeenCalledWith(
         expect.objectContaining({ interactive: true }),
         expect.any(Function)
-      );
-    });
+      )
+    })
 
     it("should reject with error when chrome runtime reports error", async () => {
-      const originalLastError = chrome.runtime.lastError;
-      (chrome.runtime as any).lastError = { message: "User cancelled authentication" };
-      mockGetAuthToken.mockImplementation((opts, callback) => {
-        callback(undefined);
-      });
+      const originalLastError = chrome.runtime.lastError
+      ;(chrome.runtime as any).lastError = {
+        message: "User cancelled authentication"
+      }
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback(undefined)
+        }
+      )
 
-      await expect(authorize()).rejects.toThrow("User cancelled authentication");
-      
+      await expect(authorize()).rejects.toThrow("User cancelled authentication")
+
       // cleanup
-      (chrome.runtime as any).lastError = originalLastError;
-    });
-  });
+      ;(chrome.runtime as any).lastError = originalLastError
+    })
+  })
 
   describe("clearCachedToken", () => {
     it("should call removeCachedAuthToken with correct token", async () => {
-      mockRemoveCachedAuthToken.mockImplementation((opts, callback) => {
-        callback();
-      });
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback()
+        }
+      )
 
-      await clearCachedToken("stale-token");
-      expect(mockRemoveCachedAuthToken).toHaveBeenCalledWith(
+      await clearCachedToken("stale-token")
+      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalledWith(
         { token: "stale-token" },
         expect.any(Function)
-      );
-    });
-  });
+      )
+    })
+  })
 
   describe("searchBackupFile", () => {
     it("should return file ID if backup file exists", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
-          files: [{ id: "drive-file-id-789", name: "style-atelier-backup.json" }]
+          files: [
+            { id: "drive-file-id-789", name: "style-atelier-backup.json" }
+          ]
         })
-      });
+      })
 
-      const id = await searchBackupFile("token-123");
-      expect(id).toBe("drive-file-id-789");
-    });
+      const id = await searchBackupFile("token-123")
+      expect(id).toBe("drive-file-id-789")
+    })
 
     it("should return null if backup file does not exist", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ files: [] })
-      });
+      })
 
-      const id = await searchBackupFile("token-123");
-      expect(id).toBeNull();
-    });
-  });
+      const id = await searchBackupFile("token-123")
+      expect(id).toBeNull()
+    })
+  })
 
   describe("getBackupMetadata", () => {
     it("should return backup metadata if backup file exists", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
-          files: [{ id: "drive-file-id-789", name: "style-atelier-backup.json", modifiedTime: "2026-06-03T12:00:00.000Z", size: "102400" }]
+          files: [
+            {
+              id: "drive-file-id-789",
+              name: "style-atelier-backup.json",
+              modifiedTime: "2026-06-03T12:00:00.000Z",
+              size: "102400"
+            }
+          ]
         })
-      });
+      })
 
-      const meta = await getBackupMetadata("token-123");
+      const meta = await getBackupMetadata("token-123")
       expect(meta).toEqual({
         id: "drive-file-id-789",
         modifiedTime: "2026-06-03T12:00:00.000Z",
         size: "102400"
-      });
-    });
+      })
+    })
 
     it("should return null if backup file does not exist", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ files: [] })
-      });
+      })
 
-      const meta = await getBackupMetadata("token-123");
-      expect(meta).toBeNull();
-    });
-  });
+      const meta = await getBackupMetadata("token-123")
+      expect(meta).toBeNull()
+    })
+  })
 
   describe("uploadBackup", () => {
     it("should perform PATCH (Update) if backup file already exists (under 2MB)", async () => {
@@ -385,95 +433,120 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         json: vi.fn().mockResolvedValue({
           files: [{ id: "existing-file-id", name: "style-atelier-backup.json" }]
         })
-      });
+      })
 
-      const onProgress = vi.fn();
-      const uploadPromise = uploadBackup("token-123", '{"data": "test"}', onProgress);
+      const onProgress = vi.fn()
+      const uploadPromise = uploadBackup(
+        "token-123",
+        '{"data": "test"}',
+        onProgress
+      )
 
       // Wait a tick for async searchBackupFile
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockXhrInstances).toHaveLength(1);
-      const xhr = mockXhrInstances[0];
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
       expect(xhr.open).toHaveBeenCalledWith(
         "PATCH",
         "https://www.googleapis.com/upload/drive/v3/files/existing-file-id?uploadType=media",
         true
-      );
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith("Authorization", "Bearer token-123");
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith("Content-Type", "application/json");
+      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        "Authorization",
+        "Bearer token-123"
+      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        "Content-Type",
+        "application/json"
+      )
 
       // Trigger progress
       if (xhr.upload.onprogress) {
-        xhr.upload.onprogress({ lengthComputable: true, loaded: 50, total: 100 } as any);
-        expect(onProgress).toHaveBeenCalledWith(50);
+        xhr.upload.onprogress({
+          lengthComputable: true,
+          loaded: 50,
+          total: 100
+        } as any)
+        expect(onProgress).toHaveBeenCalledWith(50)
       }
 
       // Complete request
-      xhr.status = 200;
-      xhr.onload();
+      xhr.status = 200
+      xhr.onload()
 
-      await expect(uploadPromise).resolves.toBeUndefined();
-    });
+      await expect(uploadPromise).resolves.toBeUndefined()
+    })
 
     it("should perform POST Multipart (Create) if backup file does not exist (under 2MB)", async () => {
       // 1st fetch (search) returns empty files list
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: vi.fn().mockResolvedValue({ files: [] })
-      });
+      })
 
-      const onProgress = vi.fn();
-      const uploadPromise = uploadBackup("token-123", '{"data": "new"}', onProgress);
+      const onProgress = vi.fn()
+      const uploadPromise = uploadBackup(
+        "token-123",
+        '{"data": "new"}',
+        onProgress
+      )
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockXhrInstances).toHaveLength(1);
-      const xhr = mockXhrInstances[0];
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
       expect(xhr.open).toHaveBeenCalledWith(
         "POST",
         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
         true
-      );
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith("Authorization", "Bearer token-123");
+      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        "Authorization",
+        "Bearer token-123"
+      )
       expect(xhr.setRequestHeader).toHaveBeenCalledWith(
         "Content-Type",
         expect.stringContaining("multipart/related; boundary=")
-      );
+      )
 
       // Complete request
-      xhr.status = 200;
-      xhr.onload();
+      xhr.status = 200
+      xhr.onload()
 
-      await expect(uploadPromise).resolves.toBeUndefined();
-    });
+      await expect(uploadPromise).resolves.toBeUndefined()
+    })
 
     it("should perform Resumable Upload (PATCH) if backup file already exists and size >= 2MB", async () => {
       // 1st fetch (search) returns file ID
       // 2nd fetch (init Resumable) returns 200 with Location header
-      global.fetch = vi.fn()
+      global.fetch = vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
           json: vi.fn().mockResolvedValue({
-            files: [{ id: "existing-file-id", name: "style-atelier-backup.json" }]
+            files: [
+              { id: "existing-file-id", name: "style-atelier-backup.json" }
+            ]
           })
         })
         .mockResolvedValueOnce({
           ok: true,
           headers: {
-            get: (name: string) => name === "Location" ? "https://resumable-session-url" : null
+            get: (name: string) =>
+              name === "Location" ? "https://resumable-session-url" : null
           }
-        });
+        })
 
       // Generate a string that exceeds 2MB threshold
-      const largeData = "a".repeat(2 * 1024 * 1024 + 10);
-      const onProgress = vi.fn();
-      const uploadPromise = uploadBackup("token-123", largeData, onProgress);
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      const onProgress = vi.fn()
+      const uploadPromise = uploadBackup("token-123", largeData, onProgress)
 
-      await new Promise((resolve) => setTimeout(resolve, 0)); // wait searchBackupFile
-      await new Promise((resolve) => setTimeout(resolve, 0)); // wait init resumable fetch
+      await new Promise((resolve) => setTimeout(resolve, 0)) // wait searchBackupFile
+      await new Promise((resolve) => setTimeout(resolve, 0)) // wait init resumable fetch
 
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenCalledTimes(2)
       expect(global.fetch).toHaveBeenLastCalledWith(
         "https://www.googleapis.com/upload/drive/v3/files/existing-file-id?uploadType=resumable",
         expect.objectContaining({
@@ -485,26 +558,37 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
             "X-Upload-Content-Length": expect.any(String)
           }
         })
-      );
+      )
 
-      expect(mockXhrInstances).toHaveLength(1);
-      const xhr = mockXhrInstances[0];
-      expect(xhr.open).toHaveBeenCalledWith("PUT", "https://resumable-session-url", true);
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith("Content-Type", "application/json");
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      expect(xhr.open).toHaveBeenCalledWith(
+        "PUT",
+        "https://resumable-session-url",
+        true
+      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        "Content-Type",
+        "application/json"
+      )
 
       // Trigger progress
       if (xhr.upload.onprogress) {
-        xhr.upload.onprogress({ lengthComputable: true, loaded: 75, total: 100 } as any);
-        expect(onProgress).toHaveBeenCalledWith(75);
+        xhr.upload.onprogress({
+          lengthComputable: true,
+          loaded: 75,
+          total: 100
+        } as any)
+        expect(onProgress).toHaveBeenCalledWith(75)
       }
 
       // Complete request
-      xhr.status = 200;
-      xhr.onload();
+      xhr.status = 200
+      xhr.onload()
 
-      await expect(uploadPromise).resolves.toBeUndefined();
-    });
-  });
+      await expect(uploadPromise).resolves.toBeUndefined()
+    })
+  })
 
   describe("downloadBackup", () => {
     it("should return file contents if file exists", async () => {
@@ -514,100 +598,130 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         json: vi.fn().mockResolvedValue({
           files: [{ id: "file-id-456", name: "style-atelier-backup.json" }]
         })
-      });
+      })
 
-      const onProgress = vi.fn();
-      const downloadPromise = downloadBackup("token-123", onProgress);
+      const onProgress = vi.fn()
+      const downloadPromise = downloadBackup("token-123", onProgress)
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockXhrInstances).toHaveLength(1);
-      const xhr = mockXhrInstances[0];
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
       expect(xhr.open).toHaveBeenCalledWith(
         "GET",
         "https://www.googleapis.com/drive/v3/files/file-id-456?alt=media",
         true
-      );
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith("Authorization", "Bearer token-123");
+      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+        "Authorization",
+        "Bearer token-123"
+      )
 
       // Trigger progress
       if (xhr.onprogress) {
-        xhr.onprogress({ lengthComputable: true, loaded: 40, total: 100 } as any);
-        expect(onProgress).toHaveBeenCalledWith(40);
+        xhr.onprogress({
+          lengthComputable: true,
+          loaded: 40,
+          total: 100
+        } as any)
+        expect(onProgress).toHaveBeenCalledWith(40)
       }
 
       // Complete request
-      xhr.status = 200;
-      xhr.responseText = '{"version": 1, "data": {}}';
-      xhr.onload();
+      xhr.status = 200
+      xhr.responseText = '{"version": 1, "data": {}}'
+      xhr.onload()
 
-      const content = await downloadPromise;
-      expect(content).toBe('{"version": 1, "data": {}}');
-    });
+      const content = await downloadPromise
+      expect(content).toBe('{"version": 1, "data": {}}')
+    })
 
     it("should return null if file does not exist", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ files: [] })
-      });
+      })
 
-      const content = await downloadBackup("token-123");
-      expect(content).toBeNull();
-    });
-  });
+      const content = await downloadBackup("token-123")
+      expect(content).toBeNull()
+    })
+  })
 
   describe("Timeout and Cancellation", () => {
     it("should throw GDriveTimeoutError when the request times out", async () => {
-      global.fetch = vi.fn().mockImplementation((url, init) => new Promise((resolve, reject) => {
-        const signal = init?.signal;
-        const timer = setTimeout(() => {
-          resolve({ ok: true, json: vi.fn().mockResolvedValue({ files: [] }) } as any);
-        }, 100);
+      global.fetch = vi.fn().mockImplementation(
+        (url, init) =>
+          new Promise((resolve, reject) => {
+            const signal = init?.signal
+            const timer = setTimeout(() => {
+              resolve({
+                ok: true,
+                json: vi.fn().mockResolvedValue({ files: [] })
+              } as any)
+            }, 100)
 
-        if (signal) {
-          signal.addEventListener("abort", () => {
-            clearTimeout(timer);
-            reject(new DOMException("The user aborted a request.", "AbortError"));
-          });
-        }
-      }));
+            if (signal) {
+              signal.addEventListener("abort", () => {
+                clearTimeout(timer)
+                reject(
+                  new DOMException("The user aborted a request.", "AbortError")
+                )
+              })
+            }
+          })
+      )
 
-      const promise = searchBackupFile("token-123", undefined, undefined, { timeoutMs: 10 });
-      await expect(promise).rejects.toThrow(GDriveTimeoutError);
-    });
+      const promise = searchBackupFile("token-123", undefined, undefined, {
+        timeoutMs: 10
+      })
+      await expect(promise).rejects.toThrow(GDriveTimeoutError)
+    })
 
     it("should throw AbortError when the request is aborted externally", async () => {
-      global.fetch = vi.fn().mockImplementation((url, init) => new Promise((resolve, reject) => {
-        const signal = init?.signal;
-        const timer = setTimeout(() => {
-          resolve({ ok: true, json: vi.fn().mockResolvedValue({ files: [] }) } as any);
-        }, 100);
+      global.fetch = vi.fn().mockImplementation(
+        (url, init) =>
+          new Promise((resolve, reject) => {
+            const signal = init?.signal
+            const timer = setTimeout(() => {
+              resolve({
+                ok: true,
+                json: vi.fn().mockResolvedValue({ files: [] })
+              } as any)
+            }, 100)
 
-        if (signal) {
-          signal.addEventListener("abort", () => {
-            clearTimeout(timer);
-            reject(new DOMException("The user aborted a request.", "AbortError"));
-          });
-          if (signal.aborted) {
-            clearTimeout(timer);
-            reject(new DOMException("The user aborted a request.", "AbortError"));
-          }
-        }
-      }));
+            if (signal) {
+              signal.addEventListener("abort", () => {
+                clearTimeout(timer)
+                reject(
+                  new DOMException("The user aborted a request.", "AbortError")
+                )
+              })
+              if (signal.aborted) {
+                clearTimeout(timer)
+                reject(
+                  new DOMException("The user aborted a request.", "AbortError")
+                )
+              }
+            }
+          })
+      )
 
-      const controller = new AbortController();
-      const promise = searchBackupFile("token-123", undefined, undefined, { signal: controller.signal });
+      const controller = new AbortController()
+      const promise = searchBackupFile("token-123", undefined, undefined, {
+        signal: controller.signal
+      })
 
-      setTimeout(() => controller.abort(), 10);
+      setTimeout(() => controller.abort(), 10)
 
-      await expect(promise).rejects.toThrow();
-    });
-  });
+      await expect(promise).rejects.toThrow()
+    })
+  })
 
   describe("Automatic Re-authorization on 401", () => {
     it("should clear cached token, request new token silently, and retry searchBackupFile successfully on 401", async () => {
       // Mock fetch: 1st returns 401, 2nd returns success (file exists)
-      global.fetch = vi.fn()
+      global.fetch = vi
+        .fn()
         .mockResolvedValueOnce({
           status: 401,
           ok: false,
@@ -616,62 +730,76 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         .mockResolvedValueOnce({
           ok: true,
           json: vi.fn().mockResolvedValue({
-            files: [{ id: "drive-file-id-reauth", name: "style-atelier-backup.json" }]
+            files: [
+              { id: "drive-file-id-reauth", name: "style-atelier-backup.json" }
+            ]
           })
-        });
+        })
 
       // Mock authorize for silent flow
-      mockGetAuthToken.mockImplementation((opts, callback) => {
-        expect(opts.interactive).toBe(false);
-        callback("fresh-token-456");
-      });
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          expect(opts.interactive).toBe(false)
+          callback("fresh-token-456")
+        }
+      )
 
-      mockRemoveCachedAuthToken.mockImplementation((opts, callback) => {
-        expect(opts.token).toBe("stale-token-123");
-        callback();
-      });
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          expect(opts.token).toBe("stale-token-123")
+          callback()
+        }
+      )
 
-      const onTokenUpdated = vi.fn();
+      const onTokenUpdated = vi.fn()
 
-      const id = await searchBackupFile("stale-token-123", onTokenUpdated);
+      const id = await searchBackupFile("stale-token-123", onTokenUpdated)
 
-      expect(id).toBe("drive-file-id-reauth");
-      expect(mockRemoveCachedAuthToken).toHaveBeenCalledWith({ token: "stale-token-123" }, expect.any(Function));
-      expect(mockGetAuthToken).toHaveBeenCalledWith({ interactive: false }, expect.any(Function));
-      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-token-456");
+      expect(id).toBe("drive-file-id-reauth")
+      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalledWith(
+        { token: "stale-token-123" },
+        expect.any(Function)
+      )
+      expect(chrome.identity.getAuthToken).toHaveBeenCalledWith(
+        { interactive: false },
+        expect.any(Function)
+      )
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-token-456")
 
       // Verify fetch calls
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenCalledTimes(2)
       // First call has stale token
       expect(vi.mocked(global.fetch).mock.calls[0][1]?.headers).toMatchObject({
         Authorization: "Bearer stale-token-123"
-      });
+      })
       // Second call has fresh token
       expect(vi.mocked(global.fetch).mock.calls[1][1]?.headers).toMatchObject({
         Authorization: "Bearer fresh-token-456"
-      });
-    });
+      })
+    })
 
     it("should throw an error if silent re-authorization fails", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         status: 401,
         ok: false,
         statusText: "Unauthorized"
-      });
+      })
 
       // Mock authorize to fail
-      const originalLastError = chrome.runtime.lastError;
-      (chrome.runtime as any).lastError = { message: "Silent reauth failed" };
-      mockGetAuthToken.mockImplementation((opts, callback) => {
-        callback(undefined);
-      });
+      const originalLastError = chrome.runtime.lastError
+      ;(chrome.runtime as any).lastError = { message: "Silent reauth failed" }
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback(undefined)
+        }
+      )
 
       await expect(searchBackupFile("stale-token-123")).rejects.toThrow(
         "Google Drive authentication expired: Silent reauth failed"
-      );
+      )
 
       // cleanup
-      (chrome.runtime as any).lastError = originalLastError;
-    });
-  });
-});
+      ;(chrome.runtime as any).lastError = originalLastError
+    })
+  })
+})
