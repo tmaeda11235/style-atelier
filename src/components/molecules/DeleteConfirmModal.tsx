@@ -1,5 +1,6 @@
 import { Trash2 } from "lucide-react"
 import React from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "../atoms/Button"
 
@@ -16,6 +17,8 @@ export function DeleteConfirmModal({
   onClose,
   onConfirm
 }: DeleteConfirmModalProps) {
+  const { t } = useTranslation()
+
   if (!isOpen) return null
 
   return (
@@ -28,11 +31,13 @@ export function DeleteConfirmModal({
             <Trash2 className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 text-center">
-            Cardを削除しますか？
+            {t("settings.deleteCardTitle", "Cardを削除しますか？")}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed text-center">
-            この操作は取り消せません。"{cardName}"
-            をライブラリから完全に削除します。
+            {t("settings.deleteCardMessage", {
+              cardName,
+              defaultValue: `この操作は取り消せません。"${cardName}" をライブラリから完全に削除します。`
+            })}
           </p>
         </div>
         <div className="flex gap-3">
@@ -41,14 +46,14 @@ export function DeleteConfirmModal({
             fullWidth
             onClick={onClose}
             data-testid="delete-confirm-cancel-button">
-            キャンセル
+            {t("settings.cancelBtnText", "キャンセル")}
           </Button>
           <Button
             variant="danger"
             fullWidth
             onClick={onConfirm}
             data-testid="delete-confirm-ok-button">
-            削除する
+            {t("settings.deleteBtn", "削除する")}
           </Button>
         </div>
       </div>

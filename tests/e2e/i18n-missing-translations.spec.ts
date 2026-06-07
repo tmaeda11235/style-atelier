@@ -77,9 +77,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
 
     // 3. Test Merge Stack Modal Localization
     console.log("Testing Merge Stack Modal localization...")
-    const workbenchTabBtn = spFrame.locator(
-      "button[title='Workbench'], button[title='ワークベンチ']"
-    )
     // Switch to workbench to see HandBar
     const libraryTabBtn = spFrame.locator(
       "button[title='Library'], button[title='ライブラリ']"
@@ -120,7 +117,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     await page.waitForTimeout(500)
 
     // Hover card and click share button
-    const cardEl = spFrame.locator("#card-i18n-1").first()
     const shareCardBtn = spFrame
       .locator("[data-testid='share-card-button']")
       .first()
@@ -170,9 +166,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
 
     // Verify Drag Overlay Text in Japanese
     // Due to event simulation, layout should show the overlay text "QRカード画像をドロップしてインポート"
-    const dragOverlayText = spFrame.locator(
-      "text=QRカード画像をドロップしてインポート"
-    )
     // Since drag events are tricky to fully trigger E2E without real files,
     // let's evaluate directly or mock the state.
     // If it's not fully visible via the simulated event, we can test imports/messages toast instead.
@@ -184,7 +177,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     console.log("Testing Drag-drop Toast localization...")
     await spFrame.locator("body").evaluate(async () => {
       // Set droppedItem state directly to trigger toast
-      const appRoot = document.getElementById("handbar-root") || document.body
       // We can mock index.tsx's droppedItem state or just evaluate the template with mock prop.
       // But we can trigger the drop handler function directly in sandbox if exposed,
       // or we can mock/evaluate the database insertion which triggers toast.
@@ -204,7 +196,9 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    console.log("Navigating to sandbox page for localized card deletion E2E test...")
+    console.log(
+      "Navigating to sandbox page for localized card deletion E2E test..."
+    )
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
@@ -264,9 +258,13 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     await expect(titleEn).toHaveText("Delete Card?")
 
     const messageEn = deleteModal.locator("p")
-    await expect(messageEn).toHaveText(/This action cannot be undone. "Cyberpunk Girl" will be permanently deleted from the library./)
+    await expect(messageEn).toHaveText(
+      /This action cannot be undone. "Cyberpunk Girl" will be permanently deleted from the library./
+    )
 
-    const cancelBtnEn = spFrame.locator("[data-testid='delete-confirm-cancel-button']")
+    const cancelBtnEn = spFrame.locator(
+      "[data-testid='delete-confirm-cancel-button']"
+    )
     await expect(cancelBtnEn).toHaveText("Cancel")
 
     const okBtnEn = spFrame.locator("[data-testid='delete-confirm-ok-button']")
@@ -304,9 +302,13 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     await expect(titleJa).toHaveText("Cardを削除しますか？")
 
     const messageJa = deleteModal.locator("p")
-    await expect(messageJa).toHaveText(/この操作は取り消せません。"Cyberpunk Girl" をライブラリから完全に削除します。/)
+    await expect(messageJa).toHaveText(
+      /この操作は取り消せません。"Cyberpunk Girl" をライブラリから完全に削除します。/
+    )
 
-    const cancelBtnJa = spFrame.locator("[data-testid='delete-confirm-cancel-button']")
+    const cancelBtnJa = spFrame.locator(
+      "[data-testid='delete-confirm-cancel-button']"
+    )
     await expect(cancelBtnJa).toHaveText("キャンセル")
 
     const okBtnJa = spFrame.locator("[data-testid='delete-confirm-ok-button']")
