@@ -1,14 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState
+} from "react"
 
 export interface ExpertFeatures {
-  stack: boolean;         // Stack（カード統合）
-  slot: boolean;          // Slot（変数穴あけ）
-  rarity: boolean;        // レアリティ選択
-  tags: boolean;          // タグ機能
-  categories: boolean;    // カテゴリ管理
-  multiCard: boolean;     // 複数カード同時使用
-  cardEditing: boolean;   // カード編集機能
-  multiImage: boolean;    // カードサムネイルへの複数画像選択
+  stack: boolean // Stack（カード統合）
+  slot: boolean // Slot（変数穴あけ）
+  rarity: boolean // レアリティ選択
+  tags: boolean // タグ機能
+  categories: boolean // カテゴリ管理
+  multiCard: boolean // 複数カード同時使用
+  cardEditing: boolean // カード編集機能
+  multiImage: boolean // カードサムネイルへの複数画像選択
 }
 
 export const DEFAULT_EXPERT_FEATURES: ExpertFeatures = {
@@ -19,56 +25,82 @@ export const DEFAULT_EXPERT_FEATURES: ExpertFeatures = {
   categories: true,
   multiCard: true,
   cardEditing: true,
-  multiImage: true,
-};
-
-interface SettingsContextType {
-  isEasyMode: boolean;
-  toggleEasyMode: (enabled: boolean) => void;
-  expertFeatures: ExpertFeatures;
-  updateExpertFeature: (key: keyof ExpertFeatures, enabled: boolean) => void;
+  multiImage: true
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+interface SettingsContextType {
+  isEasyMode: boolean
+  toggleEasyMode: (enabled: boolean) => void
+  expertFeatures: ExpertFeatures
+  updateExpertFeature: (key: keyof ExpertFeatures, enabled: boolean) => void
+  showTipsBar: boolean
+  toggleTipsBar: (enabled: boolean) => void
+}
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isEasyMode, setIsEasyMode] = useState<boolean>(false);
-  const [expertFeatures, setExpertFeatures] = useState<ExpertFeatures>(DEFAULT_EXPERT_FEATURES);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined
+)
+
+export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
+  const [isEasyMode, setIsEasyMode] = useState<boolean>(false)
+  const [expertFeatures, setExpertFeatures] = useState<ExpertFeatures>(
+    DEFAULT_EXPERT_FEATURES
+  )
+  const [showTipsBar, setShowTipsBar] = useState<boolean>(true)
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true";
-    setIsEasyMode(easyMode);
+    const easyMode = localStorage.getItem("style-atelier-easy-mode") === "true"
+    setIsEasyMode(easyMode)
 
-    const savedFeatures = localStorage.getItem("style-atelier-expert-features");
+    const savedTipsBar = localStorage.getItem("style-atelier-show-tips-bar")
+    setShowTipsBar(savedTipsBar !== "false")
+
+    const savedFeatures = localStorage.getItem("style-atelier-expert-features")
     if (savedFeatures) {
       try {
-        const parsed = JSON.parse(savedFeatures);
+        const parsed = JSON.parse(savedFeatures)
         setExpertFeatures({
           ...DEFAULT_EXPERT_FEATURES,
-          ...parsed,
-        });
+          ...parsed
+        })
       } catch (e) {
-        console.error("Failed to parse expert features from localStorage", e);
-        setExpertFeatures(DEFAULT_EXPERT_FEATURES);
+        console.error("Failed to parse expert features from localStorage", e)
+        setExpertFeatures(DEFAULT_EXPERT_FEATURES)
       }
     } else {
-      setExpertFeatures(DEFAULT_EXPERT_FEATURES);
+      setExpertFeatures(DEFAULT_EXPERT_FEATURES)
     }
-  }, []);
+  }, [])
 
   const toggleEasyMode = useCallback((enabled: boolean) => {
-    setIsEasyMode(enabled);
-    localStorage.setItem("style-atelier-easy-mode", enabled ? "true" : "false");
-  }, []);
+    setIsEasyMode(enabled)
+    localStorage.setItem("style-atelier-easy-mode", enabled ? "true" : "false")
+  }, [])
 
-  const updateExpertFeature = useCallback((key: keyof ExpertFeatures, enabled: boolean) => {
-    setExpertFeatures((prev) => {
-      const updated = { ...prev, [key]: enabled };
-      localStorage.setItem("style-atelier-expert-features", JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+  const toggleTipsBar = useCallback((enabled: boolean) => {
+    setShowTipsBar(enabled)
+    localStorage.setItem(
+      "style-atelier-show-tips-bar",
+      enabled ? "true" : "false"
+    )
+  }, [])
+
+  const updateExpertFeature = useCallback(
+    (key: keyof ExpertFeatures, enabled: boolean) => {
+      setExpertFeatures((prev) => {
+        const updated = { ...prev, [key]: enabled }
+        localStorage.setItem(
+          "style-atelier-expert-features",
+          JSON.stringify(updated)
+        )
+        return updated
+      })
+    },
+    []
+  )
 
   return (
     <SettingsContext.Provider
@@ -77,17 +109,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         toggleEasyMode,
         expertFeatures,
         updateExpertFeature,
-      }}
-    >
+        showTipsBar,
+        toggleTipsBar
+      }}>
       {children}
     </SettingsContext.Provider>
-  );
-};
+  )
+}
 
 export const useSettings = () => {
-  const context = useContext(SettingsContext);
+  const context = useContext(SettingsContext)
   if (context === undefined) {
-    throw new Error("useSettings must be used within a SettingsProvider");
+    throw new Error("useSettings must be used within a SettingsProvider")
   }
-  return context;
-};
+  return context
+}

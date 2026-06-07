@@ -1,19 +1,13 @@
 import "@testing-library/jest-dom"
+import "vitest-canvas-mock"
+import "fake-indexeddb/auto"
 
 import { vi } from "vitest"
 
 // ==========================================
 // 1. IndexedDB Mock
 // ==========================================
-Object.defineProperty(window, "indexedDB", {
-  writable: true,
-  value: {
-    open: () => ({
-      addEventListener: () => {},
-      removeEventListener: () => {}
-    })
-  }
-})
+// fake-indexeddb/auto handles this automatically
 
 // ==========================================
 // 2. URL Object URL Mock

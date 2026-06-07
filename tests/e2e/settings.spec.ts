@@ -702,7 +702,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     await expect(tutorialHeader).toBeVisible({ timeout: 5000 })
     const tutorialTitleEn = spFrame.locator("text=1. Drag & Drop into History")
     await expect(tutorialTitleEn).toBeVisible()
-    const nextBtnEn = spFrame.locator("button:has-text('Next')")
+    const nextBtnEn = spFrame.locator(
+      "[data-testid='interactive-tutorial'] button:has-text('Next')"
+    )
     await expect(nextBtnEn).toBeVisible()
     const sampleBtnEn = spFrame.locator(
       "button:has-text('Add Sample and Proceed')"
@@ -738,7 +740,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings", () => {
     // 8. Verify InteractiveTutorial displays Japanese texts
     const tutorialTitleJa = spFrame.locator("text=① HistoryにD&Dする")
     await expect(tutorialTitleJa).toBeVisible({ timeout: 5000 })
-    const nextBtnJa = spFrame.locator("button:has-text('次へ')")
+    const nextBtnJa = spFrame.locator(
+      "[data-testid='interactive-tutorial'] button:has-text('次へ')"
+    )
     await expect(nextBtnJa).toBeVisible()
     const sampleBtnJa = spFrame.locator(
       "button:has-text('サンプルを追加して進む')"
