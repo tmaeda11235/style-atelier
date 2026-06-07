@@ -246,6 +246,46 @@ export const i18nDict = {
       next: "Next",
       autoAdvanceHint: "Perform the action or click 'Next' to proceed"
     },
+    historyTab: {
+      emptyTitle: "No History",
+      emptyDesc:
+        "Drag and drop any generated image from Midjourney directly into the History tab of the Side Panel to import it.",
+      openMidjourney: "Open Midjourney",
+      loading: "Loading..."
+    },
+    libraryTab: {
+      emptyTitle: "No Style Cards",
+      emptyDesc:
+        "Drag and drop images from the History tab of this panel to create your own style cards!",
+      notFoundTitle: "No Cards Found",
+      notFoundDesc: "Change or clear your search terms or filters.",
+      clearFilters: "Clear Filters"
+    },
+    workbench: {
+      clearAll: "Clear All",
+      addPromptDesc: "Add style cards to Workbench from Library",
+      evolution: "Evolution",
+      variationRecipe: "Variation Recipe",
+      usageProgress: "Usage Progress",
+      uses: "uses",
+      evolveBtn: "Evolve to Next Tier",
+      evolveNeedMore: "Need more uses to evolve this card",
+      mintBlended: "Mint Blended Variation",
+      tryOnMidjourney: "Try on Midjourney",
+      injecting: "Injecting...",
+      emptyTitle: "Workbench is empty",
+      emptyDesc:
+        "Pin style cards from the Library tab to start blending styles or evolving cards.",
+      guideTitle: "How to Use Guide",
+      step1Title: "Pin Styles",
+      step1Desc: "Send your favorite styles from Library to the Workbench.",
+      step2Title: "Blend Prompts / Evolve Cards",
+      step2Desc:
+        "Blend with 2 or more cards, or adjust prompt and evolve based on usage with a single card.",
+      step3Title: "Generate in Midjourney",
+      step3Desc:
+        "Send prompt directly to chat using the 'Try on Midjourney' button."
+    },
     tutorial: {
       steps: [
         {
@@ -539,6 +579,47 @@ export const i18nDict = {
       done: "完了！",
       next: "次へ",
       autoAdvanceHint: "操作を行うか、「次へ」を押すと進みます"
+    },
+    historyTab: {
+      emptyTitle: "履歴がありません",
+      emptyDesc:
+        "Midjourneyのプロンプト入力エリアから画像をドラッグ＆ドロップするか、MidjourneyのWebサイトからスタイルを連携してください。",
+      openMidjourney: "Midjourneyを開く",
+      loading: "読み込み中..."
+    },
+    libraryTab: {
+      emptyTitle: "スタイルカードがありません",
+      emptyDesc:
+        "Historyタブから画像をドラッグ＆ドロップして、あなただけの特別なスタイルカードを作成しましょう！",
+      notFoundTitle: "カードが見つかりません",
+      notFoundDesc:
+        "検索キーワードやフィルターの条件を変更するか、クリアしてください。",
+      clearFilters: "フィルターをクリア"
+    },
+    workbench: {
+      clearAll: "すべてクリア",
+      addPromptDesc: "LibraryからスタイルカードをWorkbenchに追加してください",
+      evolution: "進化",
+      variationRecipe: "調合（レシピ）",
+      usageProgress: "使用状況",
+      uses: "回使用",
+      evolveBtn: "次のランクへ進化",
+      evolveNeedMore: "カードを進化させるにはさらに使用回数が必要です",
+      mintBlended: "調合したカードを作成する",
+      tryOnMidjourney: "Try on Midjourney",
+      injecting: "Injecting...",
+      emptyTitle: "Workbench は空です",
+      emptyDesc:
+        "Libraryタブからスタイルカードをピン留めして、スタイルの調合やカードの進化を開始しましょう。",
+      guideTitle: "使い方ガイド",
+      step1Title: "スタイルをピン留め",
+      step1Desc: "Libraryからお気に入りのスタイルをWorkbenchへ送ります。",
+      step2Title: "プロンプトを調合 / カードを進化",
+      step2Desc:
+        "2枚以上でブレンド、1枚ならプロンプトの調整や、使用回数に応じた進化が可能です。",
+      step3Title: "Midjourneyで生成",
+      step3Desc:
+        "「Try on Midjourney」ボタンでプロンプトをチャットへ直接送信します。"
     },
     tutorial: {
       steps: [
