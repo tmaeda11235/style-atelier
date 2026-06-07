@@ -1,6 +1,7 @@
 import { BookOpen, BookUp2, HelpCircle, History, Settings } from "lucide-react"
 import React from "react"
 
+import { useLanguage } from "../../contexts/LanguageContext"
 import type { Tab } from "../../hooks/useTabs"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 
@@ -40,6 +41,7 @@ export function SidePanelLayout({
   isImporting,
   isEasyMode
 }: SidePanelLayoutProps) {
+  const { t } = useLanguage()
   return (
     <div
       className={`w-full h-screen flex flex-col font-sans text-slate-800 transition-colors ${
@@ -144,7 +146,7 @@ export function SidePanelLayout({
               </svg>
             </div>
             <span className="text-xs font-bold text-blue-600 mt-2 bg-white px-2 py-0.5 rounded shadow-sm">
-              Drop QR Card Image to Import
+              {t.dragAndDrop.dropOverlay}
             </span>
           </div>
         )}
@@ -170,7 +172,7 @@ export function SidePanelLayout({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               <span className="text-xs font-bold text-slate-700">
-                Importing Card...
+                {t.dragAndDrop.importing}
               </span>
             </div>
           </div>
@@ -218,10 +220,16 @@ export function SidePanelLayout({
                 </div>
                 <p className="text-xs font-bold text-slate-800 leading-tight">
                   {droppedItem.isImport
-                    ? `Imported Card "${droppedItem.name || "New Card"}" successfully!`
+                    ? t.dragAndDrop.importSuccess.replace(
+                        "{name}",
+                        droppedItem.name || "New Card"
+                      )
                     : droppedItem.isMerged
-                      ? `Associated with Card "${droppedItem.name || "Existing Card"}"!`
-                      : "New History Item Added!"}
+                      ? t.dragAndDrop.associated.replace(
+                          "{name}",
+                          droppedItem.name || "Existing Card"
+                        )
+                      : t.dragAndDrop.historyAdded}
                 </p>
               </div>
             )}
