@@ -42,6 +42,29 @@ async function fetchWithTimeout(
   }
 }
 
+export interface GoogleDriveClient {
+  authorize(interactive?: boolean): Promise<string>
+  clearCachedToken(token: string): Promise<void>
+  getBackupMetadata(
+    token: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<BackupMetadata | null>
+  uploadBackup(
+    token: string,
+    jsonData: string,
+    onTokenUpdated?: (newToken: string) => void,
+    onProgress?: (progress: number) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<void>
+  downloadBackup(
+    token: string,
+    onTokenUpdated?: (newToken: string) => void,
+    onProgress?: (progress: number) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<string | null>
+}
+
 /**
  * Trigger OAuth2 authorization flow using chrome.identity.getAuthToken (Native Chrome Extension flow)
  */
@@ -618,4 +641,14 @@ export async function downloadBackup(
   }
 
   return result.text
+}
+
+export const defaultGoogleDriveClient: GoogleDriveClient = {
+  authorize,
+  clearCachedToken,
+  getBackupMetadata: (token, onTokenUpdated, options) =>
+    getBackupMetadata(token, onTokenUpdated, undefined, options),
+  uploadBackup,
+  downloadBackup: (token, onTokenUpdated, onProgress, options) =>
+    downloadBackup(token, onTokenUpdated, onProgress, undefined, options)
 }
