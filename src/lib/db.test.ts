@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest"
 import {
   seedDefaultCategories,
   StyleAtelierDatabase,
-  upgradeToVersion8
+  upgradeToVersion8,
+  upgradeToVersion10
 } from "./db"
 
 vi.unmock("./db")
@@ -43,6 +44,52 @@ describe("db utilities", () => {
       const card3 = { jobId: "job-123", associatedJobIds: ["job-abc"] } as any
       modifyCallback!(card3)
       expect(card3.associatedJobIds).toEqual(["job-abc"])
+    })
+  })
+
+  describe("upgradeToVersion10", () => {
+    it("should compress large base64 thumbnails and category iconUrls", async () => {
+      const mockCards = [
+        {
+          id: "card-1",
+          thumbnailData: "data:image/png;base64,large-image-data..."
+        },
+        { id: "card-2", thumbnailData: "" }
+      ]
+      const mockCategories = [
+        { id: "cat-1", iconUrl: "data:image/png;base64,large-image-data..." },
+        { id: "cat-2", iconEmoji: "🎨" }
+      ]
+
+      const mockCardsPut = vi.fn().mockResolvedValue(undefined)
+      const mockCategoriesPut = vi.fn().mockResolvedValue(undefined)
+
+      const mockCardsTable = {
+        toArray: vi.fn().mockResolvedValue(mockCards),
+        put: mockCardsPut
+      }
+      const mockCategoriesTable = {
+        toArray: vi.fn().mockResolvedValue(mockCategories),
+        put: mockCategoriesPut
+      }
+
+      const mockTable = vi.fn((tableName) => {
+        if (tableName === "styleCards") return mockCardsTable
+        if (tableName === "categories") return mockCategoriesTable
+        return null
+      })
+
+      const mockTx = { table: mockTable } as any
+
+      await upgradeToVersion10(mockTx)
+
+      expect(mockTable).toHaveBeenCalledWith("styleCards")
+      expect(mockTable).toHaveBeenCalledWith("categories")
+      expect(mockCardsPut).toHaveBeenCalled()
+      expect(mockCategoriesPut).toHaveBeenCalled()
+
+      expect(mockCards[0].thumbnailData).toContain("data:image/png;base64,")
+      expect(mockCategories[0].iconUrl).toContain("data:image/png;base64,")
     })
   })
 
