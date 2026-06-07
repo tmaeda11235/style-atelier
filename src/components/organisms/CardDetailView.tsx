@@ -1,21 +1,23 @@
 import { useLiveQuery } from "dexie-react-hooks"
 import { AlertCircle, Download, Save, Send, Trash2, X } from "lucide-react"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import iconUrl from "url:../../../assets/icon.png"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
+import { useCardDetailsForm } from "../../hooks/useCardDetailsForm"
+import { useCardExporter } from "../../hooks/useCardExporter"
 import { useHand } from "../../hooks/useHand"
 import { db } from "../../lib/db"
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
-import { exportCardAsImage } from "../../lib/export-utils"
-import { createThumbnailDataUrl } from "../../lib/image-utils"
 import { buildPromptString } from "../../lib/prompt-utils"
 import { Button } from "../atoms/Button"
 import { HelpTooltip } from "../atoms/HelpTooltip"
 import { Input } from "../atoms/Input"
 import { AssociatedImageGallery } from "../molecules/AssociatedImageGallery"
 import type { AlertType } from "../molecules/ConnectionAlert"
+import { DeleteConfirmModal } from "../molecules/DeleteConfirmModal"
+import { GenealogySection } from "../molecules/GenealogySection"
 import { PromptBubble } from "../molecules/PromptBubble"
 import { RaritySelector } from "../molecules/RaritySelector"
 import { TagEditor } from "../molecules/TagEditor"
@@ -63,156 +65,47 @@ export function CardDetailView({
 
   const categoriesList = useLiveQuery(() => db.getAllCategories()) || []
 
-  const [name, setName] = useState(card.name)
-  const [tier, setTier] = useState(card.tier)
-  const [promptSegments, setPromptSegments] = useState<PromptSegment[]>(
-    card.promptSegments || []
-  )
-  const [parameters, setParameters] = useState<StyleCard["parameters"]>(
-    card.parameters || {}
-  )
-  const [isSrefHidden, setIsSrefHidden] = useState(
-    card.masking?.isSrefHidden || false
-  )
-  const [isPHidden, setIsPHidden] = useState(card.masking?.isPHidden || false)
-  const [category, setCategory] = useState(card.category || "")
+  const {
+    name,
+    setName,
+    tier,
+    setTier,
+    promptSegments,
+    setPromptSegments,
+    parameters,
+    setParameters,
+    isSrefHidden,
+    setIsSrefHidden,
+    isPHidden,
+    setIsPHidden,
+    category,
+    setCategory,
+    tags,
+    setTags,
+    selectedThumbs,
+    parents,
+    images,
+    handleToggleThumbnail,
+    handleSaveChanges
+  } = useCardDetailsForm(card, onSave)
 
-  // Tags editing state
-  const [tags, setTags] = useState<string[]>(card.tags || [])
-
-  // Image and Thumbnail Selection state
-  const images =
-    card.images && card.images.length > 0
-      ? card.images
-      : [card.thumbnailData].filter(Boolean)
-  const [selectedThumbs, setSelectedThumbs] = useState<string[]>(
-    card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : [])
+  const { isExporting, errorMessage, handleExportCard } = useCardExporter(
+    card,
+    name,
+    tier,
+    promptSegments,
+    parameters,
+    tags,
+    images,
+    selectedThumbs,
+    category || undefined
   )
-  const [isExporting, setIsExporting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [parents, setParents] = useState<(StyleCard | null)[]>([])
-  const hasParams = Object.values(parameters).some((v) =>
-    Array.isArray(v) ? v.length > 0 : !!v
-  )
-
-  useEffect(() => {
-    const fetchParents = async () => {
-      if (card.genealogy?.parentIds && card.genealogy.parentIds.length > 0) {
-        try {
-          const fetched = await Promise.all(
-            card.genealogy.parentIds.map(async (id) => {
-              const parent = await db.getCard(id)
-              return parent || null
-            })
-          )
-          setParents(fetched)
-        } catch (err) {
-          console.error("Failed to fetch parent cards:", err)
-          setParents(card.genealogy.parentIds.map(() => null))
-        }
-      } else {
-        setParents([])
-      }
-    }
-
-    fetchParents()
-  }, [card])
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const handleExportCard = async () => {
-    setIsExporting(true)
-    setErrorMessage(null)
-    try {
-      const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png"
-      const tempCard: StyleCard = {
-        ...card,
-        name,
-        tier,
-        promptSegments,
-        parameters,
-        tags,
-        images,
-        selectedThumbnails: selectedThumbs,
-        thumbnailData: primaryThumb,
-        category: category || undefined,
-        dominantColor: card.dominantColor,
-        accentColor: card.accentColor
-      }
-      await exportCardAsImage(tempCard)
-    } catch (err: any) {
-      console.error("Failed to export card:", err)
-      setErrorMessage(`Failed to export card: ${err.message || err}`)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  // Sync state if card changes
-  useEffect(() => {
-    setName(card.name)
-    setTier(card.tier)
-    setPromptSegments(card.promptSegments || [])
-    setParameters(card.parameters || {})
-    setIsSrefHidden(card.masking?.isSrefHidden || false)
-    setIsPHidden(card.masking?.isPHidden || false)
-    setCategory(card.category || "")
-    setTags(card.tags || [])
-    setSelectedThumbs(
-      card.selectedThumbnails ||
-        (card.thumbnailData ? [card.thumbnailData] : [])
-    )
-  }, [card])
-
-  const handleToggleThumbnail = (imgUrl: string) => {
-    if (selectedThumbs.includes(imgUrl)) {
-      // Remove it
-      setSelectedThumbs(selectedThumbs.filter((url) => url !== imgUrl))
-    } else {
-      // Add it. If already 4 selected, shift the queue
-      if (selectedThumbs.length < 4) {
-        setSelectedThumbs([...selectedThumbs, imgUrl])
-      } else {
-        setSelectedThumbs([...selectedThumbs.slice(1), imgUrl])
-      }
-    }
-  }
-
-  const handleSaveChanges = async () => {
-    // Fallback thumbnail data for older fields compatibility
-    const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png"
-
-    let thumbnailData = primaryThumb
-    try {
-      thumbnailData = await createThumbnailDataUrl(primaryThumb)
-    } catch (err) {
-      console.error("Failed to convert thumbnail to Base64:", err)
-    }
-
-    const updatedCard: StyleCard = {
-      ...card,
-      name,
-      tier,
-      promptSegments,
-      parameters,
-      tags,
-      images,
-      selectedThumbnails: selectedThumbs,
-      thumbnailData,
-      category: category || undefined,
-      masking: {
-        isSrefHidden,
-        isPHidden
-      },
-      updatedAt: Date.now()
-    }
-
-    try {
-      await onSave(updatedCard)
-    } catch (err) {
-      console.error("Failed to save style card updates:", err)
-    }
-  }
+  const hasParams = Object.values(parameters).some((v) =>
+    Array.isArray(v) ? v.length > 0 : !!v
+  )
 
   const handleTryOnMidjourney = async () => {
     const maskedKeys: (keyof StyleCard["parameters"])[] = []
@@ -365,93 +258,11 @@ export function CardDetailView({
         </div>
 
         {/* Genealogy (Ancestry) Section */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Ancestry & Evolution
-          </h3>
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">
-              Generation
-            </span>
-            <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs font-bold border border-blue-100">
-              Gen {card.genealogy?.generation || 1}
-            </span>
-          </div>
-
-          {/* Mutation Note */}
-          {card.genealogy?.mutationNote && (
-            <div>
-              <span className="block text-xs font-medium text-slate-500 mb-1">
-                Mutation Note
-              </span>
-              <div className="text-xs bg-slate-50 text-slate-600 p-2.5 rounded border border-slate-100 max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                {card.genealogy.mutationNote}
-              </div>
-            </div>
-          )}
-
-          {/* Parent Cards */}
-          {card.genealogy?.parentIds && card.genealogy.parentIds.length > 0 && (
-            <div>
-              <span className="block text-xs font-medium text-slate-500 mb-2">
-                Parent Cards
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                {parents.map((parent, idx) => {
-                  const parentId = card.genealogy.parentIds[idx]
-                  if (!parent) {
-                    return (
-                      <div
-                        key={parentId || idx}
-                        className="flex items-center gap-2 p-2 bg-slate-50 border rounded-lg text-slate-400 select-none opacity-60"
-                        title="This parent card has been deleted">
-                        <div className="w-8 h-8 rounded bg-slate-200 border flex items-center justify-center text-xs">
-                          🗑️
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold truncate">
-                            Deleted Card
-                          </p>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            ID: {parentId.slice(0, 8)}...
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <button
-                      key={parent.id}
-                      onClick={() => onCardSelect && onCardSelect(parent.id)}
-                      className="flex items-center gap-2 p-2 bg-white hover:bg-slate-50 border hover:border-slate-300 rounded-lg text-left transition-all group w-full">
-                      {parent.thumbnailData ? (
-                        <img
-                          src={parent.thumbnailData}
-                          alt={parent.name}
-                          className="w-8 h-8 rounded object-cover border border-slate-100 group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded bg-slate-100 border flex items-center justify-center text-xs">
-                          🎨
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-                          {parent.name}
-                        </p>
-                        <p className="text-[10px] text-slate-400 truncate">
-                          Gen {parent.genealogy?.generation || 1}
-                        </p>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+        <GenealogySection
+          card={card}
+          parents={parents}
+          onCardSelect={onCardSelect}
+        />
 
         {/* Gallery & Thumbnail Selector Section */}
         {expertFeatures.multiImage && (
@@ -643,47 +454,17 @@ export function CardDetailView({
       </div>
 
       {/* Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div
-          data-testid="delete-confirm-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                <Trash2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 text-center">
-                Cardを削除しますか？
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed text-center">
-                この操作は取り消せません。"{name}"
-                をライブラリから完全に削除します。
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                fullWidth
-                onClick={() => setShowDeleteConfirm(false)}
-                data-testid="delete-confirm-cancel-button">
-                キャンセル
-              </Button>
-              <Button
-                variant="danger"
-                fullWidth
-                onClick={async () => {
-                  if (onDelete) {
-                    await onDelete(card.id)
-                  }
-                  setShowDeleteConfirm(false)
-                }}
-                data-testid="delete-confirm-ok-button">
-                削除する
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirm}
+        cardName={name}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          if (onDelete) {
+            await onDelete(card.id)
+          }
+          setShowDeleteConfirm(false)
+        }}
+      />
     </div>
   )
 }
