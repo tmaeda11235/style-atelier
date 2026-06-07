@@ -1,0 +1,340 @@
+{
+  "welcome": {
+    "title": "Welcome to Style Atelier!",
+    "description": "Would you like to start the interactive guide to learn how to use it?",
+    "start": "Start Guide",
+    "skip": "Skip (You can start it later from the Guide button)"
+  },
+  "onboarding": {
+    "quickGuide": "Quick Guide",
+    "back": "Back",
+    "next": "Next",
+    "letsStart": "Let's Start!",
+    "steps": [
+      {
+        "title": "1. History to Panel",
+        "description": "Drag and drop any generated image from Midjourney directly into the History tab of the Side Panel to import it."
+      },
+      {
+        "title": "2. Mint Your Card",
+        "description": "Click the 'Mint' button on the imported history item to start crafting your custom Style Card."
+      },
+      {
+        "title": "3. Name Your Creation",
+        "description": "Enter a descriptive and unique title for your new card. This helps you identify and search for it later in your Library."
+      },
+      {
+        "title": "4. Parameter Slotting",
+        "description": "Select specific segments of your prompt text to convert them into editable 'Slots' (variables)."
+      },
+      {
+        "title": "5. Choose Rarity",
+        "description": "Assign a rarity tier to your card. Premium rarities feature stunning visual designs and holographic frames in the Library."
+      },
+      {
+        "title": "6. Add to Your Hand",
+        "description": "Simply click any Style Card in your Library. It will instantly move to your HandBar at the bottom of the screen."
+      },
+      {
+        "title": "7. Edit in Workbench",
+        "description": "Navigate to the Workbench tab to customize the variables of your cards, combine different styles, and generate final prompt strings."
+      }
+    ]
+  },
+  "settings": {
+    "title": "Settings",
+    "languageLabel": "Language",
+    "languageDesc": "Switch the interface display language.",
+    "easyModeLabel": "Easy Mode",
+    "easyModeDesc": "Simplifies the UI by showing only the Library tab. You can return to Settings anytime via the gear icon.",
+    "easyModeToggleLabel": "Enable Easy Mode",
+    "easyModeToggleSub": "Hide tabs to focus on Style Card management",
+    "gdriveSyncLabel": "Google Drive Cloud Sync",
+    "gdriveSyncDesc": "Backup your local style cards and binders to Google Drive. Keep your decks safe and load them on other devices.",
+    "cloudBackupLabel": "Cloud Backup: ",
+    "loadingCloudBackup": "Fetching cloud backup info...",
+    "noCloudBackup": "No cloud backup file found",
+    "lastBackupLabel": "Last Local Backup: ",
+    "syncingText": "Syncing...",
+    "syncButtonText": "Sync with Google Drive",
+    "syncingStart": "Starting Google Drive sync...",
+    "syncingFetch": "Fetching data from Google Drive...",
+    "syncingProgress": "Downloading data",
+    "syncingMerge": "Merging data...",
+    "syncingPrepare": "Preparing sync data...",
+    "syncingUpload": "Uploading data...",
+    "syncSuccess": "Sync completed successfully",
+    "syncCancelled": "Sync cancelled by user",
+    "syncTimeout": "Sync timed out. Please check your network connection.",
+    "syncFailed": "Sync failed",
+    "restoreConfirmMsg": "Force recover database from Google Drive. This will completely overwrite all local data. Your current cards and configurations will be lost forever. This action cannot be undone. Are you sure?",
+    "restoreConfirmHeader": "[Cloud Backup Information]",
+    "restoreConfirmTime": "Modified Time: ",
+    "restoreConfirmSize": "Size: ",
+    "restoreBtnText": "Force Restore from Google Drive",
+    "restoreLoading": "Restoring from Google Drive...",
+    "restoreProgress": "Downloading data",
+    "restoreSuccess": "Force recovery completed successfully!",
+    "restoreFailed": "Force recovery failed",
+    "restoreCancelled": "Force recovery cancelled by user",
+    "googleDriveToggleLabel": "Enable Google Drive Sync",
+    "googleDriveToggleSub": "Activates backup and restore buttons",
+    "securityNote": "Credentials are never saved in the extension. They are only used for temporary access during backup and restore operations.",
+    "storageTitle": "Storage Management",
+    "storageDesc": "Check database usage and limit in the browser.",
+    "storageUsage": "Usage",
+    "storageLoading": "Loading storage info...",
+    "storageWarning90Title": "Warning: Low space (Over 90% used)",
+    "storageWarning90Desc": "Adding new cards or restoring may fail. Please clear history or delete unused cards.",
+    "storageWarning80Title": "Notice: Low space (Over 80% used)",
+    "storageWarning80Desc": "Consider clearing history or exporting a backup to free up space.",
+    "cleanupHistoryLabel": "Cleanup Prompt History",
+    "clearHistoryConfirm": "Are you sure you want to delete all prompt history? (Style Cards and Categories will not be deleted)",
+    "clearHistorySuccess": "Prompt history cleared successfully",
+    "clearHistoryFailed": "Failed to clear history",
+    "localBackupTitle": "Local File Backup (Offline)",
+    "localBackupDesc": "Export your style cards and binders to a local JSON file, or restore from a previously exported backup file. Perfect for offline migrations or keeping absolute privacy.",
+    "exportBtn": "Export JSON",
+    "importBtn": "Import JSON",
+    "importConfirm": "Restore (merge) data from local file. Conflicting data will resolve to the newer modification date. Proceed?",
+    "resetConfirm": "Are you sure you want to reset the database? This will delete all style cards and prompt history.",
+    "confirmBtn": "Confirm",
+    "cancelBtn": "Cancel",
+    "confirmTitle": "Confirm Action",
+    "readingFile": "Reading file...",
+    "importSuccess": "Database restored from local JSON file successfully!",
+    "importFailed": "Import failed",
+    "privacyNote": "Data is processed entirely in the browser and local environment. It is never sent to any external server and works offline.",
+    "dangerZoneTitle": "Danger Zone",
+    "dangerZoneDesc": "Reset the database to its pristine state, or force recover database from Google Drive by overwriting local changes.",
+    "resetSuccess": "Database reset completed successfully.",
+    "expertFeaturesTitle": "Expert Features Configuration",
+    "expertFeaturesDesc": "Select which advanced features to enable in Expert Mode.",
+    "groupCardFeatures": "Card Features",
+    "groupOrganization": "Organization",
+    "groupWorkbench": "Workbench Features",
+    "featureStackLabel": "Card Stacking (Stack)",
+    "featureStackSub": "Merge pinned cards to create new cards",
+    "featureSlotLabel": "Prompt Slotting (Slot)",
+    "featureSlotSub": "Turn prompt segments into editable variables",
+    "featureRarityLabel": "Rarity Selection",
+    "featureRaritySub": "Assign and filter cards by rarity levels",
+    "featureTagsLabel": "Tagging Feature",
+    "featureTagsSub": "Add custom tags to cards for easy searching",
+    "featureCategoriesLabel": "Category Management",
+    "featureCategoriesSub": "Organize cards into customizable categories",
+    "featureMultiCardLabel": "Multi-card Usage",
+    "featureMultiCardSub": "Pin and mix multiple cards on the workbench",
+    "featureCardEditingLabel": "Card Editing",
+    "featureCardEditingSub": "Edit the name, prompt, and parameters of created cards",
+    "featureMultiImageLabel": "Multi-image Selection",
+    "featureMultiImageSub": "Select up to 4 images for the card thumbnail grid",
+    "tipsBarToggleLabel": "Enable Tips Bar",
+    "tipsBarToggleSub": "Show a cycling tips bar at the bottom of the screen"
+  },
+  "helpTooltips": {
+    "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
+    "slot": "Slot: Click on prompt segments to turn them into editable variable slots on the Workbench. Helpful for parameters you change frequently.",
+    "rarity": "Rarity: Assigning higher rarity levels unlocks visual effects and premium frames in your Library.",
+    "tags": "Tags: Add search tags to categorize and filter your style cards in the Library.",
+    "categories": "Category: Organize your cards into custom categories (binders). You can manage them in the settings tab.",
+    "multiCard": "Multi-card: Pin multiple cards on the Workbench to blend their prompt segments, sref, and other parameters together.",
+    "cardEditing": "Card Editing: Allows modifying the name, prompt bubbles, and parameter options of your created style cards.",
+    "multiImage": "Multi-image: Select up to 4 images to create a dynamic thumbnail grid for your style card."
+  },
+  "categoryManager": {
+    "selectCardIcon": "Select Card Icon",
+    "addCategory": "Add Category",
+    "manageCategories": "Manage Categories",
+    "editCategoryName": "Edit \"{name}\"",
+    "clickToUseThumb": "Click on a Style Card below to use its thumbnail as the icon for this category.",
+    "noCardsFound": "No cards found in Library.",
+    "select": "Select",
+    "categoryName": "Category Name",
+    "placeholderName": "e.g. Cyberpunk, Retro",
+    "emojiIcon": "Emoji Icon",
+    "placeholderEmoji": "e.g. 🎨, 🛸",
+    "libraryIcon": "Library Icon",
+    "changeIcon": "Change Icon",
+    "selectImage": "Select Image",
+    "iconPreview": "Icon Preview",
+    "clearImage": "Clear Image",
+    "cancelEdit": "Cancel Edit",
+    "saveChanges": "Save Changes",
+    "cancel": "Cancel",
+    "createCategory": "Create Category",
+    "listDescription": "List of custom and system categories. Custom categories can be edited or deleted.",
+    "systemDefault": "System Default",
+    "editTooltip": "Edit Category",
+    "deleteTooltip": "Delete Category",
+    "confirmDelete": "Are you sure you want to delete the category \"{name}\"? All style cards in this category will be reassigned to \"No Category\".",
+    "logDeleted": "Deleted category \"{name}\"",
+    "errDeleteFailed": "Failed to delete category. Please try again.",
+    "alertEnterName": "Please enter a category name.",
+    "alertAlreadyExists": "A category with this name already exists.",
+    "logUpdated": "Updated category \"{name}\"",
+    "errUpdateFailed": "Failed to update category. Please try again.",
+    "logCreated": "Created category \"{name}\"",
+    "errAddFailed": "Failed to add category. Please try again."
+  },
+  "simpleWorkbench": {
+    "title": "Simple Workbench",
+    "tryOnMidjourney": "Try on Midjourney",
+    "injecting": "Injecting...",
+    "close": "Close",
+    "cancel": "Cancel",
+    "promptPreview": "Adjust Prompt",
+    "injectSuccess": "Prompt injected successfully!",
+    "checkConnectionFailed": "Connection check failed",
+    "noActiveTab": "No active tab found"
+  },
+  "dragAndDrop": {
+    "noValidImage": "No valid image file dropped.",
+    "noQrCode": "No QR code found in the image.",
+    "invalidCardData": "Invalid card data in QR code or corrupted.",
+    "importFailed": "Failed to import card: ",
+    "dropOverlay": "Drop QR Card Image to Import",
+    "importing": "Importing Card...",
+    "importSuccess": "Imported Card \"{name}\" successfully!",
+    "associated": "Associated with Card \"{name}\"!",
+    "historyAdded": "New History Item Added!"
+  },
+  "share": {
+    "shareTitle": "Share Style Card",
+    "copyImageBtn": "Copy Image to Clipboard",
+    "openPageBtn": "Open Dedicated Image Page",
+    "downloadPngBtn": "Download PNG Image",
+    "tierLabel": "Tier:",
+    "srefIdLabel": "Sref ID:",
+    "failedGenerate": "Failed to generate card image.",
+    "blockedCopy": "Browser blocked clipboard copy. Try opening the image page.",
+    "loading": "Loading Style Card...",
+    "errorTitle": "Error Loading Card",
+    "closeWindow": "Close Window",
+    "headerSubtitle": "Premium Midjourney Style Manager",
+    "generatedCardView": "Generated Card View",
+    "rightClickHint": "Right click to copy or save",
+    "styleDetails": "Style Details",
+    "category": "Category",
+    "sharingOptions": "Sharing Options",
+    "copyImage": "Copy Image",
+    "downloadPng": "Download PNG",
+    "tip": "Tip: You can paste the copied card image directly into chat apps like Discord, or post it to X (Twitter). The card includes an embedded QR code that anyone can scan to import this style into their own Style Atelier workspace.",
+    "specifications": "Style Specifications",
+    "promptPreview": "Prompt Segment Preview",
+    "noSegments": "No prompt segments.",
+    "footer": "Style Atelier © {year} - Local-first prompt management",
+    "noCardId": "No card ID provided in URL parameters.",
+    "cardNotFound": "Style card not found in database.",
+    "failedLoad": "Failed to load card.",
+    "failedBlob": "Failed to generate image blob.",
+    "clipboardSuccess": "Copied card image to clipboard! You can now paste it into Discord, X, etc.",
+    "clipboardBlocked": "Browser blocked clipboard write. Right click the image and select 'Copy image'.",
+    "clipboardFailed": "Failed to copy image to clipboard.",
+    "downloadStarted": "Download started successfully!",
+    "downloadFailed": "Failed to download card image."
+  },
+  "interactiveTutorial": {
+    "adding": "Adding...",
+    "back": "Back",
+    "done": "Done!",
+    "next": "Next",
+    "autoAdvanceHint": "Perform the action or click 'Next' to proceed"
+  },
+  "historyTab": {
+    "emptyTitle": "No History",
+    "emptyDesc": "Drag and drop any generated image from Midjourney directly into the History tab of the Side Panel to import it.",
+    "openMidjourney": "Open Midjourney",
+    "loading": "Loading..."
+  },
+  "libraryTab": {
+    "emptyTitle": "No Style Cards",
+    "emptyDesc": "Drag and drop images from the History tab of this panel to create your own style cards!",
+    "notFoundTitle": "No Cards Found",
+    "notFoundDesc": "Change or clear your search terms or filters.",
+    "clearFilters": "Clear Filters"
+  },
+  "workbench": {
+    "clearAll": "Clear All",
+    "addPromptDesc": "Add style cards to Workbench from Library",
+    "evolution": "Evolution",
+    "variationRecipe": "Variation Recipe",
+    "usageProgress": "Usage Progress",
+    "uses": "uses",
+    "evolveBtn": "Evolve to Next Tier",
+    "evolveNeedMore": "Need more uses to evolve this card",
+    "mintBlended": "Mint Blended Variation",
+    "tryOnMidjourney": "Try on Midjourney",
+    "injecting": "Injecting...",
+    "emptyTitle": "Workbench is empty",
+    "emptyDesc": "Pin style cards from the Library tab to start blending styles or evolving cards.",
+    "guideTitle": "How to Use Guide",
+    "step1Title": "Pin Styles",
+    "step1Desc": "Send your favorite styles from Library to the Workbench.",
+    "step2Title": "Blend Prompts / Evolve Cards",
+    "step2Desc": "Blend with 2 or more cards, or adjust prompt and evolve based on usage with a single card.",
+    "step3Title": "Generate in Midjourney",
+    "step3Desc": "Send prompt directly to chat using the 'Try on Midjourney' button."
+  },
+  "mergeStack": {
+    "title": "Merge Card Stack",
+    "description": "Select one card to keep as the base recipe. Choose whether to consume the other cards to inherit their usage counts.",
+    "representative": "Representative Card (Choose 1)",
+    "material": "Material Cards Integration",
+    "consume": "Consume",
+    "keep": "Keep",
+    "cancel": "Cancel",
+    "merge": "Merge Stack",
+    "merging": "Merging...",
+    "baseCard": "Base Card:",
+    "combinedImages": "Combined Images:",
+    "previewUsage": "Preview Usage Count:",
+    "imagesCount": "{count} images",
+    "uses": "Uses: {count}",
+    "usesToTransfer": "Uses to transfer: {count}"
+  },
+  "tutorial": {
+    "steps": [
+      {
+        "title": "1. Drag & Drop into History",
+        "description": "Drag and drop any generated image from Midjourney directly into the History tab of this panel.\nYou can also add a sample image for testing.",
+        "mockActionLabel": "Add Sample and Proceed"
+      },
+      {
+        "title": "2. Click Mint Button",
+        "description": "Click the 'Mint Card' button on the imported history item to start crafting your card."
+      },
+      {
+        "title": "3. Name Your Creation",
+        "description": "Select keywords or enter a custom name to set the card title. Click 'Next' when done."
+      },
+      {
+        "title": "4. Select Slots",
+        "description": "Click prompt bubbles to convert them into 'Slots' (editable variables on the Workbench). Click 'Next' when done."
+      },
+      {
+        "title": "5. Choose Rarity",
+        "description": "Assign a rarity tier (Common / Rare / Epic / Legendary) to your card. Click 'Next' when done."
+      },
+      {
+        "title": "6. Save Your Card",
+        "description": "Click 'Save Card' to register it in your Library."
+      },
+      {
+        "title": "7. Send Card to Workbench",
+        "description": "Click the style card in your Library to add it to the HandBar and sync with the Workbench. Click 'Next' when done."
+      },
+      {
+        "title": "8. Edit in Workbench",
+        "description": "Switch to the Workbench tab to customize variable slots and send prompts to Midjourney. That's it!"
+      }
+    ]
+  },
+  "tipsList": [
+    "💡 Use Stack to merge multiple cards and evolve your styles.",
+    "💡 Convert prompt segments to Slots to define editable variables.",
+    "💡 Add custom tags to cards for fast and organized searching.",
+    "💡 Premium rarities feature stunning visual designs and holographic frames.",
+    "💡 Drag & Drop any Midjourney image directly into History to start minting."
+  ]
+}

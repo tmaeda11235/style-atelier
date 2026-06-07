@@ -1,7 +1,7 @@
 import { ExternalLink, History } from "lucide-react"
 import React, { useEffect, useRef } from "react"
+import { useTranslation } from "react-i18next"
 
-import { useLanguage } from "../../contexts/LanguageContext"
 import { useHistory } from "../../hooks/useHistory"
 import type { HistoryItem } from "../../lib/db-schema"
 import { HistoryCard } from "../molecules/HistoryCard"
@@ -13,8 +13,7 @@ interface HistoryTabProps {
 export function HistoryTab({ onStartMinting }: HistoryTabProps) {
   const { historyItems, loadMore, hasMore } = useHistory()
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const { t: i18n } = useLanguage()
-  const t = i18n.historyTab
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (!hasMore || !historyItems || historyItems.length < 50) return
@@ -52,17 +51,17 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
           <History className="w-6 h-6 text-slate-500" />
         </div>
         <h3 className="text-sm font-bold text-slate-800 mb-1">
-          {t.emptyTitle}
+          {t("historyTab.emptyTitle")}
         </h3>
         <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed mb-4">
-          {t.emptyDesc}
+          {t("historyTab.emptyDesc")}
         </p>
         <a
           href="https://www.midjourney.com/explore"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
-          <span>{t.openMidjourney}</span>
+          <span>{t("historyTab.openMidjourney")}</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
@@ -84,7 +83,7 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
           ref={sentinelRef}
           className="py-4 text-center text-xs text-zinc-500 font-medium flex items-center justify-center gap-2">
           <span className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></span>
-          <span>{t.loading}</span>
+          <span>{t("historyTab.loading")}</span>
         </div>
       )}
     </div>
