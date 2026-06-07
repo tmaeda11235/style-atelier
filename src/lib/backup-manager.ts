@@ -53,6 +53,45 @@ export async function exportDatabase(): Promise<string> {
   return JSON.stringify(payload)
 }
 
+function importSlotHistory(
+  slotHistory: Record<string, string[]>,
+  mode: "merge" | "replace"
+): void {
+  try {
+    if (mode === "replace") {
+      localStorage.setItem(
+        "style_atelier_slot_history",
+        JSON.stringify(slotHistory)
+      )
+      return
+    }
+
+    const stored = localStorage.getItem("style_atelier_slot_history")
+    const existingHistory: Record<string, string[]> = stored
+      ? JSON.parse(stored)
+      : {}
+
+    const mergedHistory: Record<string, string[]> = { ...existingHistory }
+
+    for (const [key, incomingValues] of Object.entries(slotHistory)) {
+      if (Array.isArray(incomingValues)) {
+        const localValues = mergedHistory[key] || []
+        const merged = Array.from(
+          new Set([...incomingValues, ...localValues])
+        ).slice(0, 10)
+        mergedHistory[key] = merged
+      }
+    }
+
+    localStorage.setItem(
+      "style_atelier_slot_history",
+      JSON.stringify(mergedHistory)
+    )
+  } catch (e) {
+    console.error("Failed to restore/merge slot history:", e)
+  }
+}
+
 /**
  * Clear existing IndexedDB tables and populate with imported JSON data
  */
@@ -75,39 +114,6 @@ export async function importDatabase(
   await db.importBackupData(payload.data, mode)
 
   if (payload.data.slotHistory) {
-    try {
-      if (mode === "replace") {
-        localStorage.setItem(
-          "style_atelier_slot_history",
-          JSON.stringify(payload.data.slotHistory)
-        )
-      } else {
-        const stored = localStorage.getItem("style_atelier_slot_history")
-        const existingHistory: Record<string, string[]> = stored
-          ? JSON.parse(stored)
-          : {}
-
-        const mergedHistory: Record<string, string[]> = { ...existingHistory }
-
-        for (const [key, incomingValues] of Object.entries(
-          payload.data.slotHistory
-        )) {
-          if (Array.isArray(incomingValues)) {
-            const localValues = mergedHistory[key] || []
-            const merged = Array.from(
-              new Set([...incomingValues, ...localValues])
-            ).slice(0, 10)
-            mergedHistory[key] = merged
-          }
-        }
-
-        localStorage.setItem(
-          "style_atelier_slot_history",
-          JSON.stringify(mergedHistory)
-        )
-      }
-    } catch (e) {
-      console.error("Failed to restore/merge slot history:", e)
-    }
+    importSlotHistory(payload.data.slotHistory, mode)
   }
 }
