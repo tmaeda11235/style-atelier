@@ -1,10 +1,12 @@
+import { useLiveQuery } from "dexie-react-hooks"
 import React from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import { db } from "../../lib/db"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
-import { PromptBubbleEditor } from "./PromptBubbleEditor"
 import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
-import { useLiveQuery } from "dexie-react-hooks"
-import { db } from "../../lib/db"
+import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
 interface SimpleMintingViewProps {
   mintingItem: HistoryItem | null
@@ -38,9 +40,10 @@ export function SimpleMintingView({
   customName,
   setCustomName,
   selectedCategory = "",
-  setSelectedCategory = () => {},
+  setSelectedCategory = () => {}
 }: SimpleMintingViewProps) {
   const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
+  const { t } = useLanguage()
 
   // Ensure a category is always selected if categories exist
   React.useEffect(() => {
@@ -60,22 +63,25 @@ export function SimpleMintingView({
   const currentName =
     selectedKeywords.length > 0
       ? `${selectedKeywords.join(" ")}${customName ? ` (${customName})` : ""}`
-      : customName || "New Card"
+      : customName || t.minting.newCardDefault
 
   return (
     <div
       data-testid="simple-minting-view-container"
-      className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-20 flex flex-col items-center justify-center p-4 font-sans"
-    >
+      className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-20 flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-slate-800 tracking-tight">Quick Card Creator</h2>
-            <p className="text-[10px] text-slate-500 font-medium">Mint your style instantly</p>
+            <h2 className="text-sm font-black text-slate-800 tracking-tight">
+              {t.minting.quickCardCreator}
+            </h2>
+            <p className="text-[10px] text-slate-500 font-medium">
+              {t.minting.mintInstantly}
+            </p>
           </div>
           <span className="text-xs bg-blue-600/10 text-blue-600 px-2 py-0.5 rounded-full font-bold">
-            Easy Mode
+            {t.minting.easyMode}
           </span>
         </div>
 
@@ -88,7 +94,7 @@ export function SimpleMintingView({
                 <img
                   src={mintingItem.imageUrl}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  alt="Minting Preview"
+                  alt={t.minting.preview}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
               </div>
@@ -99,7 +105,7 @@ export function SimpleMintingView({
                 {suggestedKeywords.length > 0 && (
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Quick Keywords
+                      {t.minting.quickKeywords}
                     </label>
                     <div className="flex flex-wrap gap-1">
                       {suggestedKeywords.map((kw, i) => {
@@ -113,8 +119,7 @@ export function SimpleMintingView({
                               isSelected
                                 ? "bg-blue-600 border-blue-600 text-white shadow-sm"
                                 : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
-                            }`}
-                          >
+                            }`}>
                             {kw}
                           </button>
                         )
@@ -126,30 +131,32 @@ export function SimpleMintingView({
                 {/* Custom Card Name */}
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Card Name
+                    {t.minting.cardName}
                   </label>
                   <Input
                     type="text"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    placeholder="Enter custom card name..."
+                    placeholder={t.minting.enterCustomName}
                     className="h-9 text-xs focus-visible:ring-blue-600 rounded-xl"
                   />
                   <div className="mt-1 text-[9px] text-slate-400 font-medium">
-                    Preview: <span className="font-bold text-slate-700">{currentName}</span>
+                    {t.minting.preview}:{" "}
+                    <span className="font-bold text-slate-700">
+                      {currentName}
+                    </span>
                   </div>
                 </div>
 
                 {/* Category Dropdown (Required) */}
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Category (Required)
+                    {t.minting.categoryRequired}
                   </label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full text-xs border border-slate-200 rounded-xl bg-white p-2 h-9 font-medium text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                  >
+                    className="w-full text-xs border border-slate-200 rounded-xl bg-white p-2 h-9 font-medium text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
                     {categoriesList.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.iconEmoji || "🖼️"} {cat.name}
@@ -162,7 +169,7 @@ export function SimpleMintingView({
               {/* Prompt Bubble Editor */}
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Prompt Segments
+                  {t.minting.promptSegments}
                 </label>
                 <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2">
                   <PromptBubbleEditor
@@ -181,15 +188,13 @@ export function SimpleMintingView({
           <Button
             variant="ghost"
             onClick={onCancelMinting}
-            className="h-9 text-xs rounded-xl hover:bg-slate-200/50"
-          >
-            Cancel
+            className="h-9 text-xs rounded-xl hover:bg-slate-200/50">
+            {t.minting.cancel}
           </Button>
           <Button
             onClick={onSaveMintedCard}
-            className="h-9 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 font-bold px-4"
-          >
-            Save to Library
+            className="h-9 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 font-bold px-4">
+            {t.minting.saveToLibrary}
           </Button>
         </div>
       </div>
