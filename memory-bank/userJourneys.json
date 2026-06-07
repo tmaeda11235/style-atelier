@@ -25,7 +25,11 @@
       "id": "@J-ORG-EXPERT-02",
       "name": "カテゴリ管理",
       "description": "カテゴリの作成と割り当て",
-      "steps": ["カテゴリ管理モーダルを開く", "新規カテゴリ作成", "カードに割り当て"],
+      "steps": [
+        "カテゴリ管理モーダルを開く",
+        "新規カテゴリ作成",
+        "カードに割り当て"
+      ],
       "nextJourneys": ["@J-ORG-EXPERT-01"]
     },
     {
@@ -88,14 +92,23 @@
       "id": "@J-IO-RESTORE",
       "name": "データリストア",
       "description": "バックアップデータからのリストア",
-      "steps": ["Settingsを開く", "Restoreボタン押下", "ファイル選択", "データ復元"],
+      "steps": [
+        "Settingsを開く",
+        "Restoreボタン押下",
+        "ファイル選択",
+        "データ復元"
+      ],
       "nextJourneys": ["@J-ORG-EXPERT-01"]
     },
     {
       "id": "@J-SYS-01",
       "name": "履歴表示",
       "description": "履歴（History）の閲覧とスクロール",
-      "steps": ["Historyパネルを開く", "無限スクロール", "過去のプロンプト再利用"],
+      "steps": [
+        "Historyパネルを開く",
+        "無限スクロール",
+        "過去のプロンプト再利用"
+      ],
       "nextJourneys": ["@J-WB-EXPERT-01"]
     },
     {
