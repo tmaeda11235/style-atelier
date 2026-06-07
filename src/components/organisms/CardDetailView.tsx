@@ -410,44 +410,48 @@ export function CardDetailView({
         )}
       </div>
 
-      {/* Footer Actions */}
-      <div className="p-4 bg-white shadow-t-sm flex justify-between gap-2 border-t z-10">
-        <div className="flex gap-2">
-          {onDelete && (
-            <Button
-              variant="danger"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-1.5"
-              data-testid="delete-card-button">
-              <Trash2 className="w-4 h-4" />
-              {t.cardDetail.delete}
+      <div className="p-4 bg-white shadow-t-sm flex flex-col gap-2 border-t z-10">
+        {/* Row 1: Secondary Actions (Delete, Cancel, Export) */}
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex gap-1.5">
+            {onDelete && (
+              <Button
+                variant="danger"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-1"
+                data-testid="delete-card-button">
+                <Trash2 className="w-3.5 h-3.5" />
+                {t.cardDetail.delete}
+              </Button>
+            )}
+            <Button variant="ghost" onClick={onClose} className="px-2">
+              {t.cardDetail.cancel}
             </Button>
-          )}
-          <Button variant="ghost" onClick={onClose}>
-            {t.cardDetail.cancel}
-          </Button>
+          </div>
           <Button
             variant="outline"
             onClick={handleExportCard}
             disabled={isExporting}
-            className="flex items-center gap-1.5 border-slate-300 hover:bg-slate-50 text-slate-700"
+            className="flex items-center gap-1 border-slate-300 hover:bg-slate-50 text-slate-700 px-2.5"
             data-testid="export-card-button">
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
             {isExporting ? t.cardDetail.exporting : t.cardDetail.export}
           </Button>
         </div>
-        <div className="flex gap-2">
+
+        {/* Row 2: Primary Actions (Inject, Save) */}
+        <div className="flex gap-2 mt-1">
           <Button
             variant="secondary"
             onClick={handleTryOnMidjourney}
-            className="flex items-center gap-1.5">
+            className="flex-1 flex items-center justify-center gap-1.5 py-2">
             <Send className="w-4 h-4" />
             {t.cardDetail.inject}
           </Button>
           {expertFeatures.cardEditing && (
             <Button
               onClick={handleSaveChanges}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5">
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 py-2">
               <Save className="w-4 h-4" />
               {t.cardDetail.save}
             </Button>

@@ -137,4 +137,56 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
       path: path.join(screenshotsDir, "search-success.png")
     })
   })
+
+  test("should display responsive action buttons in CardDetailView footer without layout distortion", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for footer layout E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Welcomeダイアログのスキップ
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Libraryタブへ切り替え
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await expect(libraryTabButton).toBeVisible()
+    await libraryTabButton.click()
+
+    // カードの編集ボタンをクリックして詳細ビューを開く
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.click()
+
+    // 各フッターボタンの表示確認
+    const deleteBtn = spFrame.locator("[data-testid='delete-card-button']")
+    const cancelBtn = spFrame.locator("button:has-text('Cancel')")
+    const exportBtn = spFrame.locator("[data-testid='export-card-button']")
+    const injectBtn = spFrame.locator("button:has-text('Inject')")
+    const saveBtn = spFrame.locator("button:has-text('Save')")
+
+    await expect(deleteBtn).toBeVisible()
+    await expect(cancelBtn).toBeVisible()
+    await expect(exportBtn).toBeVisible()
+    await expect(injectBtn).toBeVisible()
+    await expect(saveBtn).toBeVisible()
+
+    // 描画待ち
+    await page.waitForTimeout(1000)
+
+    // フッターのスクリーンショットを撮影（UX変更点の検証）
+    const footerContainer = spFrame
+      .locator("[data-testid='card-detail-view-container']")
+      .locator("div.shadow-t-sm")
+    await expect(footerContainer).toBeVisible()
+
+    await footerContainer.screenshot({
+      path: path.join(screenshotsDir, "card-detail-footer-responsive.png")
+    })
+  })
 })
