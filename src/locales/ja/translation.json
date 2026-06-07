@@ -1,6 +1,6 @@
 {
   "welcome": {
-    "title": "Welcome to Style Atelierへようこそ！",
+    "title": "Style Atelierへようこそ！",
     "description": "実際に操作しながら使い方を覚える\nインタラクティブなガイドを開始しますか？",
     "start": "ガイドを開始する",
     "skip": "スキップ（あとでGuideボタンから開始できます）"
@@ -50,7 +50,7 @@
     "easyModeToggleLabel": "かんたんモードを有効にする",
     "easyModeToggleSub": "不要なタブを非表示にし、操作ミスを防ぎます",
     "gdriveSyncLabel": "Google Drive クラウド同期",
-    "gdriveSyncDesc": "ローガーのスタイルカードやバインダーをGoogle Driveにバックアップします。データを安全に保管し、他のデバイスで読み込むことができます。",
+    "gdriveSyncDesc": "ローカルのスタイルカードやバインダーをGoogle Driveにバックアップします。データを安全に保管し、他のデバイスで読み込むことができます。",
     "cloudBackupLabel": "クラウド上のバックアップ: ",
     "loadingCloudBackup": "クラウド情報を取得中...",
     "noCloudBackup": "クラウド上のバックアップファイルが見つかりません",
@@ -192,9 +192,22 @@
     "noValidImage": "有効な画像ファイルがドロップされませんでした。",
     "noQrCode": "画像からQRコードが検出されませんでした。",
     "invalidCardData": "QRコード内のカードデータが無効であるか、破損しています。",
-    "importFailed": "カードのインポート中にエラーが発生しました: "
+    "importFailed": "カードのインポート中にエラーが発生しました: ",
+    "dropOverlay": "QRカード画像をドロップしてインポート",
+    "importing": "カードをインポート中...",
+    "importSuccess": "カード「{name}」を正常にインポートしました！",
+    "associated": "カード「{name}」に関連付けられました！",
+    "historyAdded": "新しい履歴アイテムが追加されました！"
   },
   "share": {
+    "shareTitle": "スタイルカードの共有",
+    "copyImageBtn": "画像をクリップボードにコピー",
+    "openPageBtn": "専用画像ページを開く",
+    "downloadPngBtn": "PNG画像をダウンロード",
+    "tierLabel": "レア度:",
+    "srefIdLabel": "Sref ID:",
+    "failedGenerate": "カード画像の生成に失敗しました。",
+    "blockedCopy": "ブラウザによりクリップボードへのコピーがブロックされました。画像ページを開くか、画像を右クリックしてコピーしてください。",
     "loading": "スタイルカードを読み込み中...",
     "errorTitle": "カード読み込みエラー",
     "closeWindow": "ウィンドウを閉じる",
@@ -262,6 +275,23 @@
     "step2Desc": "2枚以上でブレンド、1枚ならプロンプトの調整や、使用回数に応じた進化が可能です。",
     "step3Title": "Midjourneyで生成",
     "step3Desc": "「Try on Midjourney」ボタンでプロンプトをチャットへ直接送信します。"
+  },
+  "mergeStack": {
+    "title": "カードスタックの統合",
+    "description": "ベースとなるレシピとして残すカードを1つ選択します。他のカードを消費して、その使用回数を引き継ぐかどうかを選択します。",
+    "representative": "代表カード (1つ選択)",
+    "material": "素材カードの統合",
+    "consume": "消費する",
+    "keep": "維持する",
+    "cancel": "キャンセル",
+    "merge": "スタックを統合",
+    "merging": "統合中...",
+    "baseCard": "ベースカード:",
+    "combinedImages": "結合された画像:",
+    "previewUsage": "予想される使用回数:",
+    "imagesCount": "{count} 枚の画像",
+    "uses": "使用回数: {count}",
+    "usesToTransfer": "引き継ぐ使用回数: {count}"
   },
   "tutorial": {
     "steps": [

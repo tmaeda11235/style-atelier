@@ -192,9 +192,22 @@
     "noValidImage": "No valid image file dropped.",
     "noQrCode": "No QR code found in the image.",
     "invalidCardData": "Invalid card data in QR code or corrupted.",
-    "importFailed": "Failed to import card: "
+    "importFailed": "Failed to import card: ",
+    "dropOverlay": "Drop QR Card Image to Import",
+    "importing": "Importing Card...",
+    "importSuccess": "Imported Card \"{name}\" successfully!",
+    "associated": "Associated with Card \"{name}\"!",
+    "historyAdded": "New History Item Added!"
   },
   "share": {
+    "shareTitle": "Share Style Card",
+    "copyImageBtn": "Copy Image to Clipboard",
+    "openPageBtn": "Open Dedicated Image Page",
+    "downloadPngBtn": "Download PNG Image",
+    "tierLabel": "Tier:",
+    "srefIdLabel": "Sref ID:",
+    "failedGenerate": "Failed to generate card image.",
+    "blockedCopy": "Browser blocked clipboard copy. Try opening the image page.",
     "loading": "Loading Style Card...",
     "errorTitle": "Error Loading Card",
     "closeWindow": "Close Window",
@@ -262,6 +275,23 @@
     "step2Desc": "Blend with 2 or more cards, or adjust prompt and evolve based on usage with a single card.",
     "step3Title": "Generate in Midjourney",
     "step3Desc": "Send prompt directly to chat using the 'Try on Midjourney' button."
+  },
+  "mergeStack": {
+    "title": "Merge Card Stack",
+    "description": "Select one card to keep as the base recipe. Choose whether to consume the other cards to inherit their usage counts.",
+    "representative": "Representative Card (Choose 1)",
+    "material": "Material Cards Integration",
+    "consume": "Consume",
+    "keep": "Keep",
+    "cancel": "Cancel",
+    "merge": "Merge Stack",
+    "merging": "Merging...",
+    "baseCard": "Base Card:",
+    "combinedImages": "Combined Images:",
+    "previewUsage": "Preview Usage Count:",
+    "imagesCount": "{count} images",
+    "uses": "Uses: {count}",
+    "usesToTransfer": "Uses to transfer: {count}"
   },
   "tutorial": {
     "steps": [
