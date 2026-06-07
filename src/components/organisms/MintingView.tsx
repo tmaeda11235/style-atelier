@@ -88,14 +88,14 @@ export function MintingView({
   const currentName =
     selectedKeywords.length > 0
       ? `${selectedKeywords.join(" ")}${customName ? ` (${customName})` : ""}`
-      : customName || "New Card"
+      : customName || t.minting.newCardDefault
 
   return (
     <div
       data-testid="minting-view-container"
       className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}>
       <div className="p-4 bg-white shadow-sm">
-        <h2 className="text-lg font-bold text-slate-800">Mint New Card</h2>
+        <h2 className="text-lg font-bold text-slate-800">{t.minting.title}</h2>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {mintingItem && (
@@ -107,11 +107,11 @@ export function MintingView({
 
             <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
               <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
-                Card Identity
+                {t.minting.cardIdentity}
               </h3>
               <div className="mb-4">
                 <label className="block text-xs font-medium text-slate-500 mb-1">
-                  Preview Name
+                  {t.minting.previewName}
                 </label>
                 <div className="p-2 bg-slate-100 rounded border text-sm font-bold text-slate-800 min-h-[2.5rem] flex items-center">
                   {currentName}
@@ -120,7 +120,7 @@ export function MintingView({
 
               <div className="mb-4">
                 <label className="block text-xs font-medium text-slate-500 mb-2">
-                  Select Keywords
+                  {t.minting.selectKeywords}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {suggestedKeywords.map((kw, i) => (
@@ -136,13 +136,13 @@ export function MintingView({
 
               <div className="mb-4" data-tutorial="title-input">
                 <label className="block text-xs font-medium text-slate-500 mb-1">
-                  Custom Name / Note
+                  {t.minting.customName}
                 </label>
                 <Input
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Add details..."
+                  placeholder={t.minting.addDetailsPlaceholder}
                 />
               </div>
 
@@ -150,7 +150,7 @@ export function MintingView({
               {expertFeatures.categories && (
                 <div className="mb-4">
                   <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                    Category
+                    {t.minting.category}
                     <HelpTooltip
                       content={t.helpTooltips.categories}
                       position="top-left"
@@ -160,7 +160,7 @@ export function MintingView({
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full text-sm border rounded bg-white p-2">
-                    <option value="">No Category</option>
+                    <option value="">{t.minting.noCategory}</option>
                     {categoriesList.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.iconEmoji || "🖼️"} {cat.name}
@@ -174,7 +174,7 @@ export function MintingView({
               {expertFeatures.tags && (
                 <div className="mb-4">
                   <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                    Custom Tags
+                    {t.minting.customTags}
                     <HelpTooltip
                       content={t.helpTooltips.tags}
                       position="top-left"
@@ -198,7 +198,7 @@ export function MintingView({
                     ))}
                     {customTags.length === 0 && (
                       <span className="text-xs text-slate-400 italic">
-                        No custom tags added.
+                        {t.minting.noCustomTags}
                       </span>
                     )}
                   </div>
@@ -206,7 +206,7 @@ export function MintingView({
                     <Input
                       type="text"
                       id="custom-tag-input"
-                      placeholder="Press enter to add..."
+                      placeholder={t.minting.pressEnterToAdd}
                       className="text-xs py-1"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -236,7 +236,7 @@ export function MintingView({
                           }
                         }
                       }}>
-                      Add
+                      {t.minting.add}
                     </Button>
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export function MintingView({
               {/* Dominant and Accent Color Palette preview */}
               <div className="mb-2">
                 <label className="block text-xs font-medium text-slate-500 mb-2">
-                  Detected Palette
+                  {t.minting.detectedPalette}
                 </label>
                 <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
                   <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ export function MintingView({
                       title="Dominant Color"
                     />
                     <span className="text-xs font-bold text-slate-700">
-                      Dominant
+                      {t.minting.dominant}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -265,7 +265,7 @@ export function MintingView({
                       title="Accent Color"
                     />
                     <span className="text-xs font-bold text-slate-700">
-                      Accent
+                      {t.minting.accent}
                     </span>
                   </div>
                   {detectedColorTags.length > 0 && (
@@ -285,7 +285,7 @@ export function MintingView({
 
             <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
               <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
-                Prompt Segments
+                {t.minting.promptSegments}
                 {expertFeatures.slot && (
                   <HelpTooltip
                     content={t.helpTooltips.slot}
@@ -321,7 +321,7 @@ export function MintingView({
                 className="mt-6 p-4 border rounded-lg bg-white shadow-sm"
                 data-tutorial="rarity-section">
                 <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
-                  Rarity & Frame
+                  {t.minting.rarityFrame}
                   <HelpTooltip
                     content={t.helpTooltips.rarity}
                     position="top-left"
@@ -336,7 +336,7 @@ export function MintingView({
           </>
         )}
         <div className="mt-4 p-4 border rounded-lg bg-white">
-          <h3 className="text-sm font-bold mb-2">Sealing Options</h3>
+          <h3 className="text-sm font-bold mb-2">{t.minting.sealingOptions}</h3>
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -345,7 +345,7 @@ export function MintingView({
               onChange={(e) => setIsSrefHidden(e.target.checked)}
             />
             <label htmlFor="hide-sref" className="text-sm">
-              Hide --sref when sharing
+              {t.minting.hideSref}
             </label>
           </div>
           <div className="flex items-center gap-2 mt-2">
@@ -356,7 +356,7 @@ export function MintingView({
               onChange={(e) => setIsPHidden(e.target.checked)}
             />
             <label htmlFor="hide-p" className="text-sm">
-              Hide --p when sharing
+              {t.minting.hideP}
             </label>
           </div>
         </div>
@@ -365,14 +365,14 @@ export function MintingView({
         className="p-4 bg-white shadow-t-sm flex justify-end gap-2"
         data-tutorial="mint-save-footer">
         <Button variant="ghost" onClick={onCancelMinting}>
-          Cancel
+          {t.minting.cancel}
         </Button>
         <Button
           onClick={async () => {
             await onSaveMintedCard()
             advanceIfStep("save-card")
           }}>
-          Save Card
+          {t.minting.saveCard}
         </Button>
       </div>
     </div>

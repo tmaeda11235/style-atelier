@@ -122,7 +122,9 @@ export function CardDetailView({
       className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}>
       {/* Header */}
       <div className="p-4 bg-white shadow-sm flex items-center justify-between border-b">
-        <h2 className="text-lg font-bold text-slate-800">Card Details</h2>
+        <h2 className="text-lg font-bold text-slate-800">
+          {t.cardDetail.title}
+        </h2>
         <Button
           variant="ghost"
           size="xs"
@@ -143,7 +145,7 @@ export function CardDetailView({
         {/* Card Metadata Section */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-4">
           <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
-            Identity
+            {t.cardDetail.identity}
             {expertFeatures.cardEditing && (
               <HelpTooltip
                 content={t.helpTooltips.cardEditing}
@@ -153,13 +155,13 @@ export function CardDetailView({
           </h3>
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">
-              Card Name
+              {t.cardDetail.cardName}
             </label>
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Card Name"
+              placeholder={t.cardDetail.cardNamePlaceholder}
               className="font-bold text-slate-800 text-sm"
               disabled={!expertFeatures.cardEditing}
             />
@@ -169,7 +171,7 @@ export function CardDetailView({
           {expertFeatures.categories && (
             <div>
               <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                Category
+                {t.cardDetail.category}
                 <HelpTooltip
                   content={t.helpTooltips.categories}
                   position="top-left"
@@ -180,7 +182,7 @@ export function CardDetailView({
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full text-sm border rounded bg-white p-2"
                 disabled={!expertFeatures.cardEditing}>
-                <option value="">No Category</option>
+                <option value="">{t.cardDetail.noCategory}</option>
                 {categoriesList.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.iconEmoji || "🖼️"} {cat.name}
@@ -194,7 +196,7 @@ export function CardDetailView({
           {(card.dominantColor || card.accentColor) && (
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-2">
-                Detected Palette
+                {t.cardDetail.detectedPalette}
               </label>
               <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
                 {card.dominantColor && (
@@ -205,7 +207,7 @@ export function CardDetailView({
                       title="Dominant Color"
                     />
                     <span className="text-xs font-bold text-slate-700">
-                      Dominant ({card.dominantColor})
+                      {t.cardDetail.dominant} ({card.dominantColor})
                     </span>
                   </div>
                 )}
@@ -217,7 +219,7 @@ export function CardDetailView({
                       title="Accent Color"
                     />
                     <span className="text-xs font-bold text-slate-700">
-                      Accent ({card.accentColor})
+                      {t.cardDetail.accent} ({card.accentColor})
                     </span>
                   </div>
                 )}
@@ -229,7 +231,7 @@ export function CardDetailView({
           {expertFeatures.tags && (
             <div>
               <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1.5">
-                Tags
+                {t.cardDetail.tags}
                 <HelpTooltip
                   content={t.helpTooltips.tags}
                   position="top-left"
@@ -248,7 +250,7 @@ export function CardDetailView({
                   ))}
                   {tags.length === 0 && (
                     <span className="text-xs text-slate-400 italic">
-                      No tags.
+                      {t.cardDetail.noTags}
                     </span>
                   )}
                 </div>
@@ -278,7 +280,7 @@ export function CardDetailView({
         {/* Prompt segments bubble editor */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Prompt Recipe
+            {t.cardDetail.promptRecipe}
           </h3>
           {expertFeatures.cardEditing ? (
             <PromptBubbleEditor
@@ -302,7 +304,7 @@ export function CardDetailView({
         {/* Parameters editor */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Parameters
+            {t.cardDetail.parameters}
           </h3>
           {expertFeatures.cardEditing ? (
             <ParameterEditor parameters={parameters} onChange={setParameters} />
@@ -311,7 +313,7 @@ export function CardDetailView({
               {parameters.ar && (
                 <div>
                   <span className="font-bold text-slate-500">
-                    Aspect Ratio:
+                    {t.cardDetail.aspectRatio}
                   </span>{" "}
                   {parameters.ar}
                 </div>
@@ -319,7 +321,7 @@ export function CardDetailView({
               {parameters.p && parameters.p.length > 0 && (
                 <div>
                   <span className="font-bold text-slate-500">
-                    Personalization (--p):
+                    {t.cardDetail.personalization}
                   </span>{" "}
                   {parameters.p.join(", ")}
                 </div>
@@ -328,7 +330,7 @@ export function CardDetailView({
                 parameters.imagePrompts.length > 0 && (
                   <div>
                     <span className="font-bold text-slate-500">
-                      Image Prompts:
+                      {t.cardDetail.imagePrompts}
                     </span>{" "}
                     {parameters.imagePrompts.join(", ")}
                   </div>
@@ -336,7 +338,7 @@ export function CardDetailView({
               {parameters.sref && parameters.sref.length > 0 && (
                 <div>
                   <span className="font-bold text-slate-500">
-                    Style Reference (--sref):
+                    {t.cardDetail.styleReference}
                   </span>{" "}
                   {parameters.sref.join(", ")}
                 </div>
@@ -344,14 +346,14 @@ export function CardDetailView({
               {parameters.cref && parameters.cref.length > 0 && (
                 <div>
                   <span className="font-bold text-slate-500">
-                    Character Reference (--cref):
+                    {t.cardDetail.characterReference}
                   </span>{" "}
                   {parameters.cref.join(", ")}
                 </div>
               )}
               {!hasParams && (
                 <div className="text-slate-400 italic">
-                  No parameters defined.
+                  {t.cardDetail.noParameters}
                 </div>
               )}
             </div>
@@ -361,7 +363,7 @@ export function CardDetailView({
         {/* Sealing options */}
         <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Sealing Options
+            {t.cardDetail.sealingOptions}
           </h3>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -375,7 +377,7 @@ export function CardDetailView({
               <label
                 htmlFor="detail-hide-sref"
                 className="text-xs text-slate-600">
-                Hide --sref when sharing
+                {t.cardDetail.hideSref}
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -387,7 +389,7 @@ export function CardDetailView({
                 disabled={!expertFeatures.cardEditing}
               />
               <label htmlFor="detail-hide-p" className="text-xs text-slate-600">
-                Hide --p when sharing
+                {t.cardDetail.hideP}
               </label>
             </div>
           </div>
@@ -397,7 +399,7 @@ export function CardDetailView({
         {expertFeatures.rarity && (
           <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
             <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
-              Rarity & Frame
+              {t.cardDetail.rarityFrame}
               <HelpTooltip
                 content={t.helpTooltips.rarity}
                 position="top-left"
@@ -418,11 +420,11 @@ export function CardDetailView({
               className="flex items-center gap-1.5"
               data-testid="delete-card-button">
               <Trash2 className="w-4 h-4" />
-              Delete
+              {t.cardDetail.delete}
             </Button>
           )}
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t.cardDetail.cancel}
           </Button>
           <Button
             variant="outline"
@@ -431,7 +433,7 @@ export function CardDetailView({
             className="flex items-center gap-1.5 border-slate-300 hover:bg-slate-50 text-slate-700"
             data-testid="export-card-button">
             <Download className="w-4 h-4" />
-            {isExporting ? "Exporting..." : "Export"}
+            {isExporting ? t.cardDetail.exporting : t.cardDetail.export}
           </Button>
         </div>
         <div className="flex gap-2">
@@ -440,14 +442,14 @@ export function CardDetailView({
             onClick={handleTryOnMidjourney}
             className="flex items-center gap-1.5">
             <Send className="w-4 h-4" />
-            Inject
+            {t.cardDetail.inject}
           </Button>
           {expertFeatures.cardEditing && (
             <Button
               onClick={handleSaveChanges}
               className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5">
               <Save className="w-4 h-4" />
-              Save
+              {t.cardDetail.save}
             </Button>
           )}
         </div>
