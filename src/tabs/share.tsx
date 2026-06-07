@@ -101,34 +101,20 @@ export function SharePageInner() {
   const t = i18n.share
 
   const { card, loading, imageSrc, error: loadError } = useLoadCard(t)
-  const {
-    copy,
-    success: copySuccess,
-    error: copyError,
-    setError: setCopyError,
-    setSuccess: setCopySuccess
-  } = useClipboardCopy(card, t)
-  const {
-    download,
-    success: dlSuccess,
-    error: dlError,
-    setError: setDlError,
-    setSuccess: setDlSuccess
-  } = useDownloadCard(card, t)
+  const copyState = useClipboardCopy(card, t)
+  const dlState = useDownloadCard(card, t)
 
   const handleCopyToClipboard = () => {
-    setDlSuccess(null)
-    setDlError(null)
-    copy()
+    dlState.setSuccess(null)
+    dlState.setError(null)
+    copyState.copy()
   }
 
   const handleDownload = () => {
-    setCopySuccess(null)
-    setCopyError(null)
-    download()
+    copyState.setSuccess(null)
+    copyState.setError(null)
+    dlState.download()
   }
-
-  const handleClose = () => window.close()
 
   if (loading || (loadError && !card) || !card) {
     return (
@@ -136,7 +122,7 @@ export function SharePageInner() {
         loading={loading}
         loadError={loadError}
         card={card}
-        onClose={handleClose}
+        onClose={() => window.close()}
         t={t}
       />
     )
@@ -146,11 +132,11 @@ export function SharePageInner() {
     <SharePageContent
       card={card}
       imageSrc={imageSrc}
-      activeSuccess={copySuccess || dlSuccess}
-      activeError={copyError || dlError}
+      activeSuccess={copyState.success || dlState.success}
+      activeError={copyState.error || dlState.error}
       handleCopyToClipboard={handleCopyToClipboard}
       handleDownload={handleDownload}
-      handleClose={handleClose}
+      handleClose={() => window.close()}
       t={t}
     />
   )

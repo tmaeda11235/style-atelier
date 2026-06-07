@@ -235,6 +235,41 @@ interface SharePageContentProps {
   t: TranslationType
 }
 
+export function ShareCardDetails({
+  card,
+  t
+}: {
+  card: StyleCard
+  t: TranslationType
+}) {
+  return (
+    <div className="space-y-2">
+      <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500">
+        {t.styleDetails}
+      </span>
+      <h2 className="text-2xl font-black text-white">{card.name}</h2>
+      <div className="flex gap-2">
+        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900 border border-slate-800 text-slate-400">
+          {card.tier}
+        </span>
+        {card.category && (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950/40 border border-blue-900/30 text-blue-400">
+            {t.category}: {card.category}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function ShareFooter({ t }: { t: TranslationType }) {
+  return (
+    <footer className="max-w-5xl w-full mx-auto pt-6 border-t border-slate-900 text-center text-[10px] text-slate-600 mt-auto">
+      {t.footer.replace("{year}", new Date().getFullYear().toString())}
+    </footer>
+  )
+}
+
 export function SharePageContent({
   card,
   imageSrc,
@@ -257,22 +292,7 @@ export function SharePageContent({
           />
         </div>
         <div className="md:col-span-6 flex flex-col gap-6">
-          <div className="space-y-2">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500">
-              {t.styleDetails}
-            </span>
-            <h2 className="text-2xl font-black text-white">{card.name}</h2>
-            <div className="flex gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900 border border-slate-800 text-slate-400">
-                {card.tier}
-              </span>
-              {card.category && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950/40 border border-blue-900/30 text-blue-400">
-                  {t.category}: {card.category}
-                </span>
-              )}
-            </div>
-          </div>
+          <ShareCardDetails card={card} t={t} />
           <FeedbackMessage success={activeSuccess} error={activeError} />
           <ActionDashboard
             onCopy={handleCopyToClipboard}
@@ -282,9 +302,7 @@ export function SharePageContent({
           <SpecificationView promptSegments={card.promptSegments} t={t} />
         </div>
       </main>
-      <footer className="max-w-5xl w-full mx-auto pt-6 border-t border-slate-900 text-center text-[10px] text-slate-600 mt-auto">
-        {t.footer.replace("{year}", new Date().getFullYear().toString())}
-      </footer>
+      <ShareFooter t={t} />
     </div>
   )
 }
