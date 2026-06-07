@@ -822,4 +822,30 @@ describe("SettingsTab", () => {
       expect(container.querySelector("#google-drive-auto-sync-btn")).toBeNull()
     })
   })
+
+  describe("Tips Bar Settings", () => {
+    it("renders Tips Bar toggle switch correctly", () => {
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+      expect(screen.getAllByText("Tipsバーを表示する").length).toBeGreaterThan(
+        0
+      )
+      expect(container.querySelector("#tips-bar-toggle-btn")).not.toBeNull()
+    })
+
+    it("toggles showTipsBar state on click", async () => {
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+      const toggleBtn = container.querySelector("#tips-bar-toggle-btn")!
+
+      // Default should be true (saved in local storage after interaction)
+      fireEvent.click(toggleBtn)
+      expect(localStorage.getItem("style-atelier-show-tips-bar")).toBe("false")
+
+      fireEvent.click(toggleBtn)
+      expect(localStorage.getItem("style-atelier-show-tips-bar")).toBe("true")
+    })
+  })
 })
