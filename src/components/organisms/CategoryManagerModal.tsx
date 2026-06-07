@@ -3,6 +3,7 @@ import { Edit2, Image as ImageIcon, Plus, Trash2, X } from "lucide-react"
 import React, { useState } from "react"
 
 import { useConfirm } from "../../contexts/ConfirmContext"
+import { useLanguage } from "../../contexts/LanguageContext"
 import { db } from "../../lib/db"
 import type { CustomCategory } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
@@ -28,6 +29,7 @@ export function CategoryManagerModal({
   addLog
 }: CategoryManagerModalProps) {
   const confirm = useConfirm()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState<"create" | "manage">("create")
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(
     null
@@ -48,6 +50,29 @@ export function CategoryManagerModal({
       const cards = await db.getAllCards()
       return cards.filter((c) => !c.isVariable)
     }) || []
+
+  const handleEmojiChange = (value: string) => {
+    if (!value) {
+      setEmoji("")
+      return
+    }
+    try {
+      const segmenter = new Intl.Segmenter()
+      const segments = [...segmenter.segment(value)]
+      if (segments.length > 0) {
+        setEmoji(segments[0].segment)
+      } else {
+        setEmoji("")
+      }
+    } catch (e) {
+      const chars = Array.from(value)
+      if (chars.length > 0) {
+        setEmoji(chars[0])
+      } else {
+        setEmoji("")
+      }
+    }
+  }
 
   const handleSelectCard = (cardId: string, thumbData: string) => {
     setIconCardId(cardId)
@@ -74,10 +99,10 @@ export function CategoryManagerModal({
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
     const ok = await confirm({
-      title: "Delete Category",
-      message: `Are you sure you want to delete the category "${categoryName}"? All style cards in this category will be reassigned to "No Category".`,
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      title: t.categoryManager.deleteTooltip,
+      message: t.categoryManager.confirmDelete.replace("{name}", categoryName),
+      confirmText: t.categoryManager.deleteTooltip,
+      cancelText: t.categoryManager.cancel,
       variant: "danger"
     })
     if (!ok) {
@@ -86,10 +111,10 @@ export function CategoryManagerModal({
     try {
       // Reassign Style Cards and delete category encapsulated in db.deleteCategory
       await db.deleteCategory(categoryId)
-      addLog(`Deleted category "${categoryName}"`)
+      addLog(t.categoryManager.logDeleted.replace("{name}", categoryName))
     } catch (err) {
       console.error("Failed to delete category:", err)
-      alert("Failed to delete category. Please try again.")
+      alert(t.categoryManager.errDeleteFailed)
     }
   }
 
@@ -97,7 +122,7 @@ export function CategoryManagerModal({
     e.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName) {
-      alert("Please enter a category name.")
+      alert(t.categoryManager.alertEnterName)
       return
     }
 
@@ -107,7 +132,7 @@ export function CategoryManagerModal({
       if (targetId !== editingCategory.id) {
         const existing = await db.getCategory(targetId)
         if (existing) {
-          alert("A category with this name already exists.")
+          alert(t.categoryManager.alertAlreadyExists)
           return
         }
       }
@@ -119,12 +144,12 @@ export function CategoryManagerModal({
           iconUrl: iconUrl || undefined,
           iconCardId: iconCardId || undefined
         })
-        addLog(`Updated category "${trimmedName}"`)
+        addLog(t.categoryManager.logUpdated.replace("{name}", trimmedName))
         handleCancelEdit()
         setActiveTab("manage")
       } catch (err) {
         console.error("Failed to update category:", err)
-        alert("Failed to update category. Please try again.")
+        alert(t.categoryManager.errUpdateFailed)
       }
       return
     }
@@ -132,7 +157,7 @@ export function CategoryManagerModal({
     const id = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-")
     const existing = await db.getCategory(id)
     if (existing) {
-      alert("A category with this name already exists.")
+      alert(t.categoryManager.alertAlreadyExists)
       return
     }
 
@@ -145,7 +170,7 @@ export function CategoryManagerModal({
         iconCardId: iconCardId || undefined,
         createdAt: Date.now()
       })
-      addLog(`Created category "${trimmedName}"`)
+      addLog(t.categoryManager.logCreated.replace("{name}", trimmedName))
       setName("")
       setEmoji("")
       setIconUrl("")
@@ -153,7 +178,7 @@ export function CategoryManagerModal({
       onClose()
     } catch (err) {
       console.error("Failed to add category:", err)
-      alert("Failed to add category. Please try again.")
+      alert(t.categoryManager.errAddFailed)
     }
   }
 
@@ -165,7 +190,7 @@ export function CategoryManagerModal({
         <div className="p-4 border-b flex items-center justify-between">
           {isSelectingCard ? (
             <h3 className="text-xs font-bold text-slate-800">
-              Select Card Icon
+              {t.categoryManager.selectCardIcon}
             </h3>
           ) : (
             <div className="flex gap-4">
@@ -179,7 +204,7 @@ export function CategoryManagerModal({
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-400 hover:text-slate-600"
                 }`}>
-                Add Category
+                {t.categoryManager.addCategory}
               </button>
               <button
                 onClick={() => {
@@ -191,11 +216,14 @@ export function CategoryManagerModal({
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-400 hover:text-slate-600"
                 }`}>
-                Manage Categories
+                {t.categoryManager.manageCategories}
               </button>
               {editingCategory && (
                 <span className="text-xs font-bold pb-1 border-b-2 border-blue-600 text-blue-600">
-                  Edit "{editingCategory.name}"
+                  {t.categoryManager.editCategoryName.replace(
+                    "{name}",
+                    editingCategory.name
+                  )}
                 </span>
               )}
             </div>
@@ -205,7 +233,7 @@ export function CategoryManagerModal({
               isSelectingCard ? () => setIsSelectingCard(false) : onClose
             }
             className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-            aria-label="Close">
+            aria-label={t.categoryManager.cancel}>
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -215,12 +243,11 @@ export function CategoryManagerModal({
           {isSelectingCard ? (
             <div>
               <p className="text-[11px] text-slate-500 mb-3">
-                Click on a Style Card below to use its thumbnail as the icon for
-                this category.
+                {t.categoryManager.clickToUseThumb}
               </p>
               {libraryCards.length === 0 ? (
                 <p className="text-xs text-slate-400 italic text-center py-6">
-                  No cards found in Library.
+                  {t.categoryManager.noCardsFound}
                 </p>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
@@ -242,7 +269,7 @@ export function CategoryManagerModal({
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-[10px] text-white font-bold px-1 py-0.5 bg-blue-500/80 rounded">
-                          Select
+                          {t.categoryManager.select}
                         </span>
                       </div>
                     </div>
@@ -254,14 +281,14 @@ export function CategoryManagerModal({
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  Category Name
+                  {t.categoryManager.categoryName}
                 </label>
                 <Input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Cyberpunk, Retro"
+                  placeholder={t.categoryManager.placeholderName}
                   className="text-xs"
                 />
               </div>
@@ -269,21 +296,20 @@ export function CategoryManagerModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1">
-                    Emoji Icon
+                    {t.categoryManager.emojiIcon}
                   </label>
                   <Input
                     type="text"
                     value={emoji}
-                    onChange={(e) => setEmoji(e.target.value)}
-                    placeholder="e.g. 🎨, 🛸"
-                    maxLength={2}
+                    onChange={(e) => handleEmojiChange(e.target.value)}
+                    placeholder={t.categoryManager.placeholderEmoji}
                     className="text-xs text-center"
                     disabled={!!iconUrl}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1">
-                    Library Icon
+                    {t.categoryManager.libraryIcon}
                   </label>
                   <Button
                     type="button"
@@ -292,7 +318,9 @@ export function CategoryManagerModal({
                     className="w-full flex items-center justify-center gap-1.5 h-9"
                     onClick={() => setIsSelectingCard(true)}>
                     <ImageIcon className="w-4 h-4" />
-                    {iconUrl ? "Change Icon" : "Select Image"}
+                    {iconUrl
+                      ? t.categoryManager.changeIcon
+                      : t.categoryManager.selectImage}
                   </Button>
                 </div>
               </div>
@@ -301,7 +329,7 @@ export function CategoryManagerModal({
               {(emoji || iconUrl) && (
                 <div className="p-3 border rounded-lg bg-slate-50 flex flex-col items-center justify-center space-y-2">
                   <span className="text-[10px] font-bold text-slate-400 uppercase">
-                    Icon Preview
+                    {t.categoryManager.iconPreview}
                   </span>
                   <div className="w-10 h-10 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden shadow-sm">
                     {iconUrl ? (
@@ -322,7 +350,7 @@ export function CategoryManagerModal({
                         setIconCardId("")
                       }}
                       className="text-[10px] text-red-500 hover:underline font-bold">
-                      Clear Image
+                      {t.categoryManager.clearImage}
                     </button>
                   )}
                 </div>
@@ -335,23 +363,23 @@ export function CategoryManagerModal({
                       type="button"
                       variant="ghost"
                       onClick={handleCancelEdit}>
-                      Cancel Edit
+                      {t.categoryManager.cancelEdit}
                     </Button>
                     <Button
                       type="submit"
                       className="bg-blue-600 hover:bg-blue-700 text-white">
-                      Save Changes
+                      {t.categoryManager.saveChanges}
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button type="button" variant="ghost" onClick={onClose}>
-                      Cancel
+                      {t.categoryManager.cancel}
                     </Button>
                     <Button
                       type="submit"
                       className="bg-blue-600 hover:bg-blue-700 text-white">
-                      Create Category
+                      {t.categoryManager.createCategory}
                     </Button>
                   </>
                 )}
@@ -360,8 +388,7 @@ export function CategoryManagerModal({
           ) : (
             <div className="space-y-2">
               <p className="text-[11px] text-slate-500 mb-3">
-                List of custom and system categories. Custom categories can be
-                edited or deleted.
+                {t.categoryManager.listDescription}
               </p>
               <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
                 {categories.map((cat) => {
@@ -390,7 +417,7 @@ export function CategoryManagerModal({
                           </p>
                           {isSystem && (
                             <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
-                              System Default
+                              {t.categoryManager.systemDefault}
                             </span>
                           )}
                         </div>
@@ -401,14 +428,14 @@ export function CategoryManagerModal({
                             type="button"
                             onClick={() => handleStartEdit(cat)}
                             className="p-1 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-                            title="Edit Category">
+                            title={t.categoryManager.editTooltip}>
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(cat.id, cat.name)}
                             className="p-1 rounded text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            title="Delete Category">
+                            title={t.categoryManager.deleteTooltip}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>

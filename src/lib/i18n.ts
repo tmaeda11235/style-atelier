@@ -154,6 +154,44 @@ export const i18nDict = {
         "Edit the name, prompt, and parameters of created cards",
       featureMultiImageLabel: "Multi-image Selection",
       featureMultiImageSub: "Select up to 4 images for the card thumbnail grid"
+    },
+    categoryManager: {
+      selectCardIcon: "Select Card Icon",
+      addCategory: "Add Category",
+      manageCategories: "Manage Categories",
+      editCategoryName: 'Edit "{name}"',
+      clickToUseThumb:
+        "Click on a Style Card below to use its thumbnail as the icon for this category.",
+      noCardsFound: "No cards found in Library.",
+      select: "Select",
+      categoryName: "Category Name",
+      placeholderName: "e.g. Cyberpunk, Retro",
+      emojiIcon: "Emoji Icon",
+      placeholderEmoji: "e.g. 🎨, 🛸",
+      libraryIcon: "Library Icon",
+      changeIcon: "Change Icon",
+      selectImage: "Select Image",
+      iconPreview: "Icon Preview",
+      clearImage: "Clear Image",
+      cancelEdit: "Cancel Edit",
+      saveChanges: "Save Changes",
+      cancel: "Cancel",
+      createCategory: "Create Category",
+      listDescription:
+        "List of custom and system categories. Custom categories can be edited or deleted.",
+      systemDefault: "System Default",
+      editTooltip: "Edit Category",
+      deleteTooltip: "Delete Category",
+      confirmDelete:
+        'Are you sure you want to delete the category "{name}"? All style cards in this category will be reassigned to "No Category".',
+      logDeleted: 'Deleted category "{name}"',
+      errDeleteFailed: "Failed to delete category. Please try again.",
+      alertEnterName: "Please enter a category name.",
+      alertAlreadyExists: "A category with this name already exists.",
+      logUpdated: 'Updated category "{name}"',
+      errUpdateFailed: "Failed to update category. Please try again.",
+      logCreated: 'Created category "{name}"',
+      errAddFailed: "Failed to add category. Please try again."
     }
   },
   ja: {
@@ -312,6 +350,44 @@ export const i18nDict = {
         "作成済みのカード名やプロンプト内容を後から編集します",
       featureMultiImageLabel: "複数画像選択（サムネイル）",
       featureMultiImageSub: "カードに複数の画像を登録し、スライド表示します"
+    },
+    categoryManager: {
+      selectCardIcon: "カードアイコンの選択",
+      addCategory: "カテゴリ追加",
+      manageCategories: "カテゴリ管理",
+      editCategoryName: '"{name}" を編集',
+      clickToUseThumb:
+        "下のスタイルカードをクリックして、サムネイルをカテゴリのアイコンとして使用します。",
+      noCardsFound: "ライブラリにカードが見つかりません。",
+      select: "選択",
+      categoryName: "カテゴリ名",
+      placeholderName: "例: サイバーパンク、レトロ",
+      emojiIcon: "絵文字アイコン",
+      placeholderEmoji: "例: 🎨, 🛸",
+      libraryIcon: "ライブラリ画像",
+      changeIcon: "アイコン変更",
+      selectImage: "画像を選択",
+      iconPreview: "アイコンプレビュー",
+      clearImage: "画像をクリア",
+      cancelEdit: "編集をキャンセル",
+      saveChanges: "変更を保存",
+      cancel: "キャンセル",
+      createCategory: "カテゴリを作成",
+      listDescription:
+        "カスタムおよびシステムカテゴリの一覧です。カスタムカテゴリは編集または削除できます。",
+      systemDefault: "システムデフォルト",
+      editTooltip: "カテゴリを編集",
+      deleteTooltip: "カテゴリを削除",
+      confirmDelete:
+        'カテゴリ "{name}" を削除してもよろしいですか？このカテゴリ内のすべてのスタイルカードは「カテゴリなし」に再割り当てされます。',
+      logDeleted: 'カテゴリ "{name}" を削除しました',
+      errDeleteFailed: "カテゴリの削除に失敗しました。もう一度お試しください。",
+      alertEnterName: "カテゴリ名を入力してください。",
+      alertAlreadyExists: "この名前のカテゴリは既に存在します。",
+      logUpdated: 'カテゴリ "{name}" を更新しました',
+      errUpdateFailed: "カテゴリの更新に失敗しました。もう一度お試しください。",
+      logCreated: 'カテゴリ "{name}" を作成しました',
+      errAddFailed: "カテゴリの追加に失敗しました。もう一度お試しください。"
     }
   }
 }

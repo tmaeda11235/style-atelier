@@ -1,6 +1,13 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import {
+  fireEvent,
+  screen,
+  render as tlRender,
+  waitFor
+} from "@testing-library/react"
+import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { LanguageProvider } from "../../contexts/LanguageContext"
 import { db } from "../../lib/db"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 
@@ -39,6 +46,10 @@ vi.mock("../../lib/db", () => {
   }
 })
 
+const render = (ui: React.ReactElement, options?: any) => {
+  return tlRender(<LanguageProvider>{ui}</LanguageProvider>, options)
+}
+
 describe("CategoryManagerModal", () => {
   const handleClose = vi.fn()
   const handleAddLog = vi.fn()
@@ -48,6 +59,13 @@ describe("CategoryManagerModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
+
+    Object.defineProperty(window.navigator, "language", {
+      value: "en-US",
+      configurable: true,
+      writable: true
+    })
 
     mockCategories = [
       { id: "style", name: "Style", iconEmoji: "🎨" },
@@ -150,6 +168,59 @@ describe("CategoryManagerModal", () => {
     })
 
     expect(handleAddLog).toHaveBeenCalledWith('Created category "Retro Space"')
+  })
+
+  it("allows creating a new category with a complex emoji (surrogate pairs and ZWJ)", async () => {
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
+
+    const nameInput = screen.getByPlaceholderText("e.g. Cyberpunk, Retro")
+    fireEvent.change(nameInput, { target: { value: "Mages" } })
+
+    const emojiInput = screen.getByPlaceholderText("e.g. 🎨, 🛸")
+    // Inputting a complex emoji "🧙‍♂️" (man mage) which has multiple code units/points
+    fireEvent.change(emojiInput, { target: { value: "🧙‍♂️" } })
+
+    const submitBtn = screen.getByText("Create Category")
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(db.addCategory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "mages",
+          name: "Mages",
+          iconEmoji: "🧙‍♂️"
+        })
+      )
+    })
+
+    expect(handleAddLog).toHaveBeenCalledWith('Created category "Mages"')
+  })
+
+  it("trims the input emoji to the first grapheme cluster", async () => {
+    render(<CategoryManagerModal onClose={handleClose} addLog={handleAddLog} />)
+
+    const nameInput = screen.getByPlaceholderText("e.g. Cyberpunk, Retro")
+    fireEvent.change(nameInput, { target: { value: "Mixed" } })
+
+    const emojiInput = screen.getByPlaceholderText("e.g. 🎨, 🛸")
+    // Inputting multiple emojis: 🧙‍♂️ (first grapheme) and 🚀 (second grapheme)
+    fireEvent.change(emojiInput, { target: { value: "🧙‍♂️🚀" } })
+
+    // It should be trimmed to the first grapheme "🧙‍♂️"
+    expect(emojiInput.value).toBe("🧙‍♂️")
+
+    const submitBtn = screen.getByText("Create Category")
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(db.addCategory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "mixed",
+          name: "Mixed",
+          iconEmoji: "🧙‍♂️"
+        })
+      )
+    })
   })
 
   it("allows editing an existing custom category", async () => {

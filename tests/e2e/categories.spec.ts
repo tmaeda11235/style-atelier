@@ -148,7 +148,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories", () => {
 
       // 14. モーダルを閉じる
       console.log("15. Closing category modal...")
-      const closeBtn = spFrame.getByRole("button", { name: "Close" }).first()
+      const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
       await expect(closeBtn).toBeVisible({ timeout: 10000 })
       await closeBtn.click()
       await page.waitForTimeout(500)
@@ -169,6 +169,133 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories", () => {
       )
       await page.screenshot({
         path: path.join(screenshotsDir, "custom-category-failure.png")
+      })
+      throw error
+    }
+  })
+  test("should allow creating a category with complex emoji (surrogate pairs and ZWJ) and trimming logic", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    page.on("console", (msg) => {
+      console.log(`[EMOJI CATEGORY TEST CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+    page.on("pageerror", (err) => {
+      console.error(`[EMOJI CATEGORY TEST ERROR] ${err.message}\n${err.stack}`)
+    })
+
+    try {
+      console.log("1. Navigating to sandbox page...")
+      await page.goto("/tests/sandbox/index.html")
+
+      const spFrame = page.frameLocator("#sidepanel-frame")
+
+      // Skip welcome if visible
+      console.log("2. Checking for welcome dialog...")
+      const skipButton = spFrame.locator("#welcome-skip-btn")
+      if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await skipButton.click()
+        await page.waitForTimeout(500)
+      }
+
+      // Switch to Library tab
+      console.log("3. Switching to Library tab...")
+      const libraryTabButton = spFrame.locator("button:has-text('Library')")
+      await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
+      await libraryTabButton.click()
+      await page.waitForTimeout(1000)
+
+      // Open Category Modal
+      console.log("4. Opening category modal...")
+      const addCategoryBtn = spFrame.locator(
+        "button[title='Manage Categories']"
+      )
+      await expect(addCategoryBtn).toBeVisible({ timeout: 15000 })
+      await addCategoryBtn.click()
+      await page.waitForTimeout(500)
+
+      // Fill Name
+      console.log("5. Filling category name...")
+      const nameInput = spFrame.locator(
+        "input[placeholder='e.g. Cyberpunk, Retro']"
+      )
+      await expect(nameInput).toBeVisible({ timeout: 10000 })
+      await nameInput.fill("Mage Category")
+
+      // Input complex emoji Mage + another emoji to test trimming
+      console.log("6. Inputting complex emoji to test validation...")
+      const emojiInput = spFrame.locator("input[placeholder='e.g. 🎨, 🛸']")
+      // "🧙‍♂️" is a man mage (5 UTF-16 code units: 🧙, ZWJ, male sign). "🚀" is rocket.
+      // After filling "🧙‍♂️🚀", the trimming logic should trim it to "🧙‍♂️".
+      await emojiInput.fill("🧙‍♂️🚀")
+
+      // Wait for input change handler and check value
+      await expect(emojiInput).toHaveValue("🧙‍♂️")
+
+      // Submit
+      console.log("7. Creating category...")
+      const submitBtn = spFrame.locator("button:has-text('Create Category')")
+      await submitBtn.click()
+      await page.waitForTimeout(1000)
+
+      // Verify category filter button added with the complex emoji
+      console.log("8. Verifying category filter button with emoji...")
+      const newCategoryFilterBtn = spFrame.locator(
+        "button:has-text('Mage Category')"
+      )
+      await expect(newCategoryFilterBtn).toBeVisible({ timeout: 15000 })
+      const btnText = await newCategoryFilterBtn.innerText()
+      console.log(
+        `[EMOJI CATEGORY TEST] Rendered button text is: ${JSON.stringify(btnText)}`
+      )
+      expect(btnText).toContain("🧙")
+
+      console.log("Emoji category E2E test passed successfully!")
+
+      // Screenshot for PR
+      await page.screenshot({
+        path: path.join(screenshotsDir, "emoji-category-success.png")
+      })
+
+      // Cleanup: delete the category
+      console.log("9. Re-opening category modal to delete...")
+      await addCategoryBtn.click()
+      await page.waitForTimeout(500)
+
+      const manageTabBtn = spFrame.locator(
+        "button:has-text('Manage Categories')"
+      )
+      await expect(manageTabBtn).toBeVisible({ timeout: 10000 })
+      await manageTabBtn.click()
+      await page.waitForTimeout(1000)
+
+      console.log("10. Clicking Delete Category button...")
+      const deleteBtn = spFrame
+        .getByRole("button", { name: "Delete Category" })
+        .first()
+      await expect(deleteBtn).toBeVisible({ timeout: 10000 })
+      await deleteBtn.click()
+      await page.waitForTimeout(500)
+
+      // Handling custom confirmation dialog
+      console.log("11. Handling custom confirmation dialog...")
+      const confirmOkBtn = spFrame.locator("#confirm-dialog-ok-btn")
+      await expect(confirmOkBtn).toBeVisible({ timeout: 10000 })
+      await confirmOkBtn.click()
+      await page.waitForTimeout(1000)
+
+      // Close modal
+      const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
+      await expect(closeBtn).toBeVisible({ timeout: 10000 })
+      await closeBtn.click()
+      await page.waitForTimeout(500)
+    } catch (error) {
+      console.error(
+        "Emoji category E2E test failed, capturing failure screenshot..."
+      )
+      await page.screenshot({
+        path: path.join(screenshotsDir, "emoji-category-failure.png")
       })
       throw error
     }
