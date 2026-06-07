@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations", () => {
+test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SYS-04", () => {
   test.beforeEach(async ({ page }) => {
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
@@ -197,5 +198,133 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations", () 
       path: path.join(screenshotsDir, "i18n-japanese-layout.png")
     })
     console.log("Japanese layout screenshot saved.")
+  })
+
+  test("should translate card deletion confirmation modal in English and Japanese", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for localized card deletion E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed a card
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.add({
+        id: "card-delete-test",
+        name: "Cyberpunk Girl",
+        promptSegments: [{ type: "text", value: "cyberpunk girl prompt" }],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        tags: [],
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+      })
+    })
+
+    // 3. Switch to Settings tab and set language to English
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
+    await langSelect.selectOption("en")
+    await page.waitForTimeout(500)
+
+    // 4. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await libraryTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB query
+
+    // 5. Open card details
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.click()
+
+    // 6. Click Delete Card button to show English delete confirmation modal
+    const deleteBtn = spFrame.locator("[data-testid='delete-card-button']")
+    await expect(deleteBtn).toBeVisible()
+    await deleteBtn.click()
+
+    // 7. Verify English text in delete modal
+    const deleteModal = spFrame.locator("[data-testid='delete-confirm-modal']")
+    await expect(deleteModal).toBeVisible()
+
+    const titleEn = deleteModal.locator("h3")
+    await expect(titleEn).toHaveText("Delete Card?")
+
+    const messageEn = deleteModal.locator("p")
+    await expect(messageEn).toHaveText(/This action cannot be undone. "Cyberpunk Girl" will be permanently deleted from the library./)
+
+    const cancelBtnEn = spFrame.locator("[data-testid='delete-confirm-cancel-button']")
+    await expect(cancelBtnEn).toHaveText("Cancel")
+
+    const okBtnEn = spFrame.locator("[data-testid='delete-confirm-ok-button']")
+    await expect(okBtnEn).toHaveText("Delete")
+
+    // Take screenshot of English delete confirm dialog
+    await page.screenshot({
+      path: path.join(screenshotsDir, "delete-confirm-modal-en.png")
+    })
+    console.log("English delete confirmation modal screenshot saved.")
+
+    // 8. Cancel English modal
+    await cancelBtnEn.click()
+    await expect(deleteModal).not.toBeVisible()
+
+    // 9. Go back to Settings and switch language to Japanese
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+    await langSelect.selectOption("ja")
+    await page.waitForTimeout(500)
+
+    // 10. Switch back to Library
+    await libraryTabButton.click()
+    await page.waitForTimeout(1000)
+
+    // 11. Open card details again
+    await editBtn.click()
+
+    // 12. Click Delete Card button to show Japanese delete confirmation modal
+    await deleteBtn.click()
+    await expect(deleteModal).toBeVisible()
+
+    // 13. Verify Japanese text in delete modal
+    const titleJa = deleteModal.locator("h3")
+    await expect(titleJa).toHaveText("Cardを削除しますか？")
+
+    const messageJa = deleteModal.locator("p")
+    await expect(messageJa).toHaveText(/この操作は取り消せません。"Cyberpunk Girl" をライブラリから完全に削除します。/)
+
+    const cancelBtnJa = spFrame.locator("[data-testid='delete-confirm-cancel-button']")
+    await expect(cancelBtnJa).toHaveText("キャンセル")
+
+    const okBtnJa = spFrame.locator("[data-testid='delete-confirm-ok-button']")
+    await expect(okBtnJa).toHaveText("削除する")
+
+    // Take screenshot of Japanese delete confirm dialog
+    await page.screenshot({
+      path: path.join(screenshotsDir, "delete-confirm-modal-ja.png")
+    })
+    console.log("Japanese delete confirmation modal screenshot saved.")
+
+    // 14. Cancel Japanese modal and close details view
+    await cancelBtnJa.click()
+    await expect(deleteModal).not.toBeVisible()
+
+    const cancelDetailsBtn = spFrame.locator("button:has-text('Cancel')")
+    if (await cancelDetailsBtn.isVisible().catch(() => false)) {
+      await cancelDetailsBtn.click()
+    }
   })
 })

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
-test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal", () => {
+test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB-EASY-01", () => {
   test.beforeEach(async ({ page }) => {
     page.on('console', msg => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);

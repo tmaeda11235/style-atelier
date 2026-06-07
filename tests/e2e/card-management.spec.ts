@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
-test.describe("Style Atelier Sandbox E2E Tests - Card Management", () => {
+test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-01", () => {
   test.beforeEach(async ({ page }) => {
     page.on('console', msg => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`);
