@@ -1,23 +1,31 @@
 import React from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
 import { useExpertModeView } from "../../hooks/useExpertModeView"
+import { db } from "../../lib/db"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
-import { HistoryTab } from "./HistoryTab"
-import { LibraryTab } from "./LibraryTab"
-import { Workbench } from "./Workbench"
-import { SettingsTab } from "./SettingsTab"
-import { MintingView } from "./MintingView"
 import { CardDetailView } from "./CardDetailView"
 import { HandBar } from "./HandBar"
+import { HistoryTab } from "./HistoryTab"
 import { InteractiveTutorial } from "./InteractiveTutorial"
-import { db } from "../../lib/db"
-import { useLanguage } from "../../contexts/LanguageContext"
+import { LibraryTab } from "./LibraryTab"
+import { MintingView } from "./MintingView"
+import { SettingsTab } from "./SettingsTab"
+import { TipsBar } from "./TipsBar"
+import { Workbench } from "./Workbench"
 
 interface ExpertModeViewProps {
   isEasyMode: boolean
   onToggleEasyMode: (enabled: boolean) => void
 }
 
-function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
+function WelcomeDialog({
+  onStart,
+  onSkip
+}: {
+  onStart: () => void
+  onSkip: () => void
+}) {
   const { t } = useLanguage()
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
@@ -26,7 +34,9 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
           <div className="w-14 h-14 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center">
             <span className="text-3xl">🎴</span>
           </div>
-          <h2 className="text-base font-black text-white text-center">{t.welcome.title}</h2>
+          <h2 className="text-base font-black text-white text-center">
+            {t.welcome.title}
+          </h2>
           <p className="text-xs text-slate-400 leading-relaxed text-center whitespace-pre-line">
             {t.welcome.description}
           </p>
@@ -35,15 +45,13 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
           <button
             onClick={onStart}
             id="welcome-start-btn"
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow transition-all"
-          >
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow transition-all">
             {t.welcome.start}
           </button>
           <button
             onClick={onSkip}
             id="welcome-skip-btn"
-            className="w-full py-2 text-slate-500 hover:text-slate-300 text-xs font-semibold transition-all"
-          >
+            className="w-full py-2 text-slate-500 hover:text-slate-300 text-xs font-semibold transition-all">
             {t.welcome.skip}
           </button>
         </div>
@@ -56,7 +64,10 @@ function WelcomeDialog({ onStart, onSkip }: { onStart: () => void; onSkip: () =>
  * ExpertModeView component - acts as a fully featured user interface displaying all
  * tabs (history, library, workbench, settings) and supporting tutorials, history minting, and mixing.
  */
-export function ExpertModeView({ isEasyMode, onToggleEasyMode }: ExpertModeViewProps) {
+export function ExpertModeView({
+  isEasyMode,
+  onToggleEasyMode
+}: ExpertModeViewProps) {
   const {
     activeTab,
     setActiveTab,
@@ -86,7 +97,7 @@ export function ExpertModeView({ isEasyMode, onToggleEasyMode }: ExpertModeViewP
     handleOpenGuide,
     handleStartTutorial,
     handleSkipTutorial,
-    handleToggleEasyMode,
+    handleToggleEasyMode
   } = useExpertModeView({ isEasyMode, onToggleEasyMode })
 
   return (
@@ -94,8 +105,7 @@ export function ExpertModeView({ isEasyMode, onToggleEasyMode }: ExpertModeViewP
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="h-full relative overflow-hidden"
-    >
+      className="h-full relative overflow-hidden">
       <SidePanelLayout
         activeTab={activeTab}
         onTabChange={(tab) => {
@@ -115,8 +125,7 @@ export function ExpertModeView({ isEasyMode, onToggleEasyMode }: ExpertModeViewP
         onRetryConnection={handleRetryConnection}
         onDismissAlert={handleDismissAlert}
         onOpenGuide={handleOpenGuide}
-        isEasyMode={isEasyMode}
-      >
+        isEasyMode={isEasyMode}>
         {(minting.mintingItem || minting.variationBase) && (
           <MintingView
             mintingItem={minting.mintingItem}
@@ -166,7 +175,9 @@ export function ExpertModeView({ isEasyMode, onToggleEasyMode }: ExpertModeViewP
           />
         )}
 
-        {activeTab === "history" && <HistoryTab onStartMinting={handleStartMinting} />}
+        {activeTab === "history" && (
+          <HistoryTab onStartMinting={handleStartMinting} />
+        )}
         {activeTab === "library" && (
           <LibraryTab
             addLog={addLog}
@@ -195,10 +206,14 @@ export function ExpertModeView({ isEasyMode, onToggleEasyMode }: ExpertModeViewP
           onNavigateToWorkbench={() => setActiveTab("workbench")}
           onOpenDetailCard={setActiveDetailCard}
         />
+        <TipsBar />
       </SidePanelLayout>
 
       {showWelcome && (
-        <WelcomeDialog onStart={handleStartTutorial} onSkip={handleSkipTutorial} />
+        <WelcomeDialog
+          onStart={handleStartTutorial}
+          onSkip={handleSkipTutorial}
+        />
       )}
 
       <InteractiveTutorial />

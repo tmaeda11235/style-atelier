@@ -150,6 +150,49 @@ export function SettingsTab({
         </div>
       </div>
 
+      {/* Tips Bar Settings */}
+      <div
+        className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+        id="settings-tips-bar-section">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+
+        <div className="flex items-start gap-4 mb-4">
+          <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+            <span className="text-xl">💡</span>
+          </div>
+          <div className="space-y-1 flex-1">
+            <h3 className="text-sm font-bold text-slate-800">
+              {t.tipsBarToggleLabel || "Enable Tips Bar"}
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {t.tipsBarToggleSub ||
+                "Show a cycling tips bar at the bottom of the screen"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
+          <span className="text-xs font-bold text-slate-700">
+            {t.tipsBarToggleLabel || "Enable Tips Bar"}
+          </span>
+          <button
+            type="button"
+            id="tips-bar-toggle-btn"
+            onClick={() =>
+              contextSettings.toggleTipsBar(!contextSettings.showTipsBar)
+            }
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              contextSettings.showTipsBar ? "bg-blue-600" : "bg-slate-200"
+            }`}>
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                contextSettings.showTipsBar ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
       {/* Interface Mode Settings (Easy Mode Toggle) */}
       <EasyModeSection
         currentEasyMode={currentEasyMode}

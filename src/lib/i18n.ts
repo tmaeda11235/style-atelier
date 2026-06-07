@@ -153,7 +153,9 @@ export const i18nDict = {
       featureCardEditingSub:
         "Edit the name, prompt, and parameters of created cards",
       featureMultiImageLabel: "Multi-image Selection",
-      featureMultiImageSub: "Select up to 4 images for the card thumbnail grid"
+      featureMultiImageSub: "Select up to 4 images for the card thumbnail grid",
+      tipsBarToggleLabel: "Enable Tips Bar",
+      tipsBarToggleSub: "Show a cycling tips bar at the bottom of the screen"
     },
     helpTooltips: {
       stack:
@@ -345,7 +347,14 @@ export const i18nDict = {
             "Switch to the Workbench tab to customize variable slots and send prompts to Midjourney. That's it!"
         }
       ]
-    }
+    },
+    tipsList: [
+      "💡 Use Stack to merge multiple cards and evolve your styles.",
+      "💡 Convert prompt segments to Slots to define editable variables.",
+      "💡 Add custom tags to cards for fast and organized searching.",
+      "💡 Premium rarities feature stunning visual designs and holographic frames.",
+      "💡 Drag & Drop any Midjourney image directly into History to start minting."
+    ]
   },
   ja: {
     welcome: {
@@ -502,7 +511,9 @@ export const i18nDict = {
       featureCardEditingSub:
         "作成済みのカード名やプロンプト内容を後から編集します",
       featureMultiImageLabel: "複数画像選択（サムネイル）",
-      featureMultiImageSub: "カードに複数の画像を登録し、スライド表示します"
+      featureMultiImageSub: "カードに複数の画像を登録し、スライド表示します",
+      tipsBarToggleLabel: "Tipsバーを表示する",
+      tipsBarToggleSub: "画面下部に使い方のヒントを自動ローテーション表示します"
     },
     helpTooltips: {
       stack:
@@ -697,6 +708,13 @@ export const i18nDict = {
             "Workbenchタブに切り替えると、送られたカードのSlotの値を編集し、プロンプトをMidjourneyに送信できます。ガイドは以上です！"
         }
       ]
-    }
+    },
+    tipsList: [
+      "💡 Stack（カード統合）を使うと、複数のカードをマージして進化できます。",
+      "💡 プロンプトの単語をクリックしてSlot（変数）にすると、動的に値を入力できます。",
+      "💡 カードにカスタムタグを設定すると、ライブラリで簡単に検索できます。",
+      "💡 高いレアリティを設定すると、特別なホログラムフレームなどの視覚効果が有効になります。",
+      "💡 Midjourneyの画像をHistoryへドラッグ＆ドロップすると、簡単にカードを作成できます。"
+    ]
   }
 }
