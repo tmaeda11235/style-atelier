@@ -90,4 +90,15 @@ describe("TipsBar", () => {
     expect(tipsBarDiv?.className).toContain("bottom-0")
     expect(tipsBarDiv?.className).not.toContain("bottom-[92px]")
   })
+
+  it("renders tips bar text with formatting classes but no title attribute", () => {
+    const { container } = renderTipsBar()
+
+    const tipText = container.querySelector("#tips-bar-text")
+    expect(tipText).not.toBeNull()
+    expect(tipText?.className).toContain("whitespace-normal")
+    expect(tipText?.className).toContain("break-words")
+    expect(tipText?.className).not.toContain("truncate")
+    expect(tipText?.getAttribute("title")).toBeNull()
+  })
 })
