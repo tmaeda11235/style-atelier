@@ -28,6 +28,7 @@ tags: []
 - **Mixing Table**: Logic to merge two Style Cards (parents) into a new prompt generation.
 - **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
 - **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing by flattening mock structures.
+- **Database Schema Migration**: Schema versions handle migrations, with v11 introducing `slotHistory` as a dedicated object store to hold previous inputs for slots.
 - **Feature Flags & Context Patterns**:
   - `SettingsContext` (`useSettings`): Manages "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`).
   - `LanguageContext` (`useLanguage`): Manages the active translation locale (English/Japanese, stored in `localStorage` under `style-atelier-language`) and exposes a compile-time typed dictionary (`t`) to components.
