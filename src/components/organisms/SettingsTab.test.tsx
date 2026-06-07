@@ -10,9 +10,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { LanguageProvider } from "../../contexts/LanguageContext"
 import { SettingsProvider } from "../../contexts/SettingsContext"
+import * as backupManager from "../../lib/backup-manager"
+import { exportDatabase, importDatabase } from "../../lib/backup-manager"
 import { db } from "../../lib/db"
 import * as googleDrive from "../../lib/google-drive"
-import { exportDatabase, importDatabase } from "../../lib/google-drive"
 import { SettingsTab } from "./SettingsTab"
 
 vi.mock("../../contexts/ConfirmContext", () => ({
@@ -41,16 +42,19 @@ vi.mock("../../lib/google-drive", () => {
     clearCachedToken: vi.fn().mockResolvedValue(undefined),
     uploadBackup: vi.fn(),
     downloadBackup: vi.fn(),
-    exportDatabase: vi
-      .fn()
-      .mockResolvedValue(
-        '{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'
-      ),
-    importDatabase: vi.fn().mockResolvedValue(undefined),
     getBackupMetadata: vi.fn(),
     GDriveTimeoutError
   }
 })
+
+vi.mock("../../lib/backup-manager", () => ({
+  exportDatabase: vi
+    .fn()
+    .mockResolvedValue(
+      '{"version": 1, "data": {"styleCards": [], "categories": [], "userSettings": [], "historyItems": []}}'
+    ),
+  importDatabase: vi.fn().mockResolvedValue(undefined)
+}))
 
 vi.mock("../../lib/auto-sync", () => ({
   setAutoSyncEnabled: vi.fn()
@@ -302,7 +306,7 @@ describe("SettingsTab", () => {
       size: "153600"
     })
     vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data")
-    vi.mocked(googleDrive.importDatabase).mockResolvedValue(undefined)
+    vi.mocked(backupManager.importDatabase).mockResolvedValue(undefined)
 
     const { container } = render(
       <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
@@ -340,7 +344,7 @@ describe("SettingsTab", () => {
         undefined,
         expect.any(Object)
       )
-      expect(googleDrive.importDatabase).toHaveBeenCalledWith(
+      expect(backupManager.importDatabase).toHaveBeenCalledWith(
         "mock-backup-data",
         "replace"
       )
@@ -371,7 +375,7 @@ describe("SettingsTab", () => {
       size: "153600"
     })
     vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data")
-    vi.mocked(googleDrive.importDatabase).mockResolvedValue(undefined)
+    vi.mocked(backupManager.importDatabase).mockResolvedValue(undefined)
 
     const { container } = render(
       <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
@@ -429,7 +433,7 @@ describe("SettingsTab", () => {
       expect(window.confirm).toHaveBeenCalledTimes(1)
     })
     expect(googleDrive.downloadBackup).not.toHaveBeenCalled()
-    expect(googleDrive.importDatabase).not.toHaveBeenCalled()
+    expect(backupManager.importDatabase).not.toHaveBeenCalled()
   })
 
   describe("Google Drive Timeout and Cancel UI behavior", () => {

@@ -1,181 +1,193 @@
-import { db } from "./db";
+import { exportDatabase, importDatabase } from "./backup-manager"
+import { db } from "./db"
 import {
   authorize,
-  exportDatabase,
-  getBackupMetadata,
   downloadBackup,
-  uploadBackup,
-  importDatabase
-} from "./google-drive";
+  getBackupMetadata,
+  uploadBackup
+} from "./google-drive"
 
-let isInternalChange = false;
-let debounceTimer: number | null = null;
-let pollTimer: number | null = null;
-let lastCheckedRemoteTime: string | null = null;
+let isInternalChange = false
+let debounceTimer: number | null = null
+let pollTimer: number | null = null
+let lastCheckedRemoteTime: string | null = null
 
 // Default configuration
-let debounceMs = 10000; // 10 seconds debounce
-let pollIntervalMs = 60000; // 60 seconds polling
+let debounceMs = 10000 // 10 seconds debounce
+let pollIntervalMs = 60000 // 60 seconds polling
 
 export const autoSyncConfig = {
   getDebounceMs: () => debounceMs,
   setDebounceMs: (ms: number) => {
-    debounceMs = ms;
+    debounceMs = ms
   },
   getPollIntervalMs: () => pollIntervalMs,
   setPollIntervalMs: (ms: number) => {
-    pollIntervalMs = ms;
+    pollIntervalMs = ms
     if (isAutoSyncEnabled()) {
-      stopPolling();
-      startPolling();
+      stopPolling()
+      startPolling()
     }
   }
-};
+}
 
 if (typeof window !== "undefined") {
-  (window as any).autoSyncConfig = autoSyncConfig;
+  ;(window as any).autoSyncConfig = autoSyncConfig
 }
 
 export function isAutoSyncEnabled(): boolean {
-  const syncEnabled = localStorage.getItem("style-atelier-sync-enabled") === "true";
-  const autoSyncEnabled = localStorage.getItem("style-atelier-auto-sync-enabled") === "true";
-  return syncEnabled && autoSyncEnabled;
+  const syncEnabled =
+    localStorage.getItem("style-atelier-sync-enabled") === "true"
+  const autoSyncEnabled =
+    localStorage.getItem("style-atelier-auto-sync-enabled") === "true"
+  return syncEnabled && autoSyncEnabled
 }
 
 export function setAutoSyncEnabled(enabled: boolean) {
-  localStorage.setItem("style-atelier-auto-sync-enabled", enabled ? "true" : "false");
+  localStorage.setItem(
+    "style-atelier-auto-sync-enabled",
+    enabled ? "true" : "false"
+  )
   if (enabled) {
-    startPolling();
+    startPolling()
   } else {
-    stopPolling();
+    stopPolling()
     if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
+      clearTimeout(debounceTimer)
+      debounceTimer = null
     }
   }
 }
 
 // Trigger auto backup when database changes (debounced)
 function triggerAutoBackup() {
-  if (isInternalChange || !isAutoSyncEnabled()) return;
+  if (isInternalChange || !isAutoSyncEnabled()) return
 
   if (debounceTimer) {
-    clearTimeout(debounceTimer);
+    clearTimeout(debounceTimer)
   }
 
   debounceTimer = window.setTimeout(async () => {
-    debounceTimer = null;
-    await performAutoBackup();
-  }, debounceMs);
+    debounceTimer = null
+    await performAutoBackup()
+  }, debounceMs)
 }
 
 // Perform the backup upload silently
 async function performAutoBackup() {
-  if (!isAutoSyncEnabled()) return;
+  if (!isAutoSyncEnabled()) return
   try {
-    const token = await authorize(false); // Silent authentication
-    const jsonData = await exportDatabase();
-    await uploadBackup(token, jsonData);
-    const now = Date.now();
-    localStorage.setItem("style-atelier-last-backup", now.toString());
-    
+    const token = await authorize(false) // Silent authentication
+    const jsonData = await exportDatabase()
+    await uploadBackup(token, jsonData)
+    const now = Date.now()
+    localStorage.setItem("style-atelier-last-backup", now.toString())
+
     // Retrieve metadata immediately after backup to avoid self-triggered download in next poll
-    const meta = await getBackupMetadata(token);
+    const meta = await getBackupMetadata(token)
     if (meta) {
-      lastCheckedRemoteTime = meta.modifiedTime;
+      lastCheckedRemoteTime = meta.modifiedTime
     }
-    console.log("Auto-backup completed successfully.");
+    console.log("Auto-backup completed successfully.")
   } catch (err) {
-    console.error("Auto-backup failed:", err);
+    console.error("Auto-backup failed:", err)
   }
 }
 
 // Polling for remote updates
 function startPolling() {
-  if (pollTimer) return;
+  if (pollTimer) return
   pollTimer = window.setInterval(async () => {
-    await checkAndMergeRemoteChanges();
-  }, pollIntervalMs);
+    await checkAndMergeRemoteChanges()
+  }, pollIntervalMs)
 }
 
 function stopPolling() {
   if (pollTimer) {
-    clearInterval(pollTimer);
-    pollTimer = null;
+    clearInterval(pollTimer)
+    pollTimer = null
   }
 }
 
 export async function checkAndMergeRemoteChanges() {
-  if (!isAutoSyncEnabled()) return;
+  if (!isAutoSyncEnabled()) return
   try {
-    const token = await authorize(false); // Silent authentication
-    const meta = await getBackupMetadata(token);
-    if (!meta) return;
+    const token = await authorize(false) // Silent authentication
+    const meta = await getBackupMetadata(token)
+    if (!meta) return
 
-    const remoteModifiedTime = new Date(meta.modifiedTime).getTime();
-    const lastBackupStr = localStorage.getItem("style-atelier-last-backup");
-    const lastBackupTime = lastBackupStr ? parseInt(lastBackupStr) : 0;
+    const remoteModifiedTime = new Date(meta.modifiedTime).getTime()
+    const lastBackupStr = localStorage.getItem("style-atelier-last-backup")
+    const lastBackupTime = lastBackupStr ? parseInt(lastBackupStr) : 0
 
     // If Google Drive has a newer backup, and we haven't processed this specific modifiedTime yet
-    if (remoteModifiedTime > lastBackupTime && meta.modifiedTime !== lastCheckedRemoteTime) {
-      console.log(`Newer remote backup detected: ${meta.modifiedTime}. Starting auto-merge.`);
-      const backupData = await downloadBackup(token);
+    if (
+      remoteModifiedTime > lastBackupTime &&
+      meta.modifiedTime !== lastCheckedRemoteTime
+    ) {
+      console.log(
+        `Newer remote backup detected: ${meta.modifiedTime}. Starting auto-merge.`
+      )
+      const backupData = await downloadBackup(token)
       if (backupData) {
-        isInternalChange = true;
+        isInternalChange = true
         try {
-          await importDatabase(backupData, "merge");
-          console.log("Auto-merge completed successfully.");
-          localStorage.setItem("style-atelier-last-backup", remoteModifiedTime.toString());
-          lastCheckedRemoteTime = meta.modifiedTime;
+          await importDatabase(backupData, "merge")
+          console.log("Auto-merge completed successfully.")
+          localStorage.setItem(
+            "style-atelier-last-backup",
+            remoteModifiedTime.toString()
+          )
+          lastCheckedRemoteTime = meta.modifiedTime
         } finally {
-          isInternalChange = false;
+          isInternalChange = false
         }
       }
     } else {
-      lastCheckedRemoteTime = meta.modifiedTime;
+      lastCheckedRemoteTime = meta.modifiedTime
     }
   } catch (err) {
-    console.error("Auto-merge check failed:", err);
+    console.error("Auto-merge check failed:", err)
   }
 }
 
 // Initialize and hook Dexie database
-let hooksRegistered = false;
+let hooksRegistered = false
 
 export function initializeAutoSync() {
-  if (hooksRegistered) return;
+  if (hooksRegistered) return
 
   const trigger = (transaction: any) => {
     if (transaction && transaction.on) {
-      transaction.on('complete', () => {
-        triggerAutoBackup();
-      });
+      transaction.on("complete", () => {
+        triggerAutoBackup()
+      })
     }
-  };
+  }
 
-  db.styleCards.hook('creating', (primKey, obj, transaction) => {
-    trigger(transaction);
-  });
-  db.styleCards.hook('updating', (mods, primKey, obj, transaction) => {
-    trigger(transaction);
-  });
-  db.styleCards.hook('deleting', (primKey, obj, transaction) => {
-    trigger(transaction);
-  });
+  db.styleCards.hook("creating", (primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+  db.styleCards.hook("updating", (mods, primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+  db.styleCards.hook("deleting", (primKey, obj, transaction) => {
+    trigger(transaction)
+  })
 
-  db.categories.hook('creating', (primKey, obj, transaction) => {
-    trigger(transaction);
-  });
-  db.categories.hook('updating', (mods, primKey, obj, transaction) => {
-    trigger(transaction);
-  });
-  db.categories.hook('deleting', (primKey, obj, transaction) => {
-    trigger(transaction);
-  });
+  db.categories.hook("creating", (primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+  db.categories.hook("updating", (mods, primKey, obj, transaction) => {
+    trigger(transaction)
+  })
+  db.categories.hook("deleting", (primKey, obj, transaction) => {
+    trigger(transaction)
+  })
 
-  hooksRegistered = true;
+  hooksRegistered = true
 
   if (isAutoSyncEnabled()) {
-    startPolling();
+    startPolling()
   }
 }

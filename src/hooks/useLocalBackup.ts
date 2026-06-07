@@ -1,6 +1,6 @@
 import { useConfirm } from "../contexts/ConfirmContext"
 import { useLanguage } from "../contexts/LanguageContext"
-import { exportDatabase, importDatabase } from "../lib/google-drive"
+import { exportDatabase, importDatabase } from "../lib/backup-manager"
 
 interface UseLocalBackupProps {
   addLog: (log: string) => void

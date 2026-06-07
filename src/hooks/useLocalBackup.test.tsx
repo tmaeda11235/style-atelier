@@ -7,7 +7,7 @@ import { LanguageProvider } from "../contexts/LanguageContext"
 import { useLocalBackup } from "./useLocalBackup"
 
 // Mock google-drive library
-vi.mock("../lib/google-drive", () => ({
+vi.mock("../lib/backup-manager", () => ({
   exportDatabase: vi.fn(),
   importDatabase: vi.fn()
 }))

@@ -3,14 +3,13 @@ import { useEffect, useRef, useState } from "react"
 import { useConfirm } from "../contexts/ConfirmContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import { setAutoSyncEnabled } from "../lib/auto-sync"
+import { exportDatabase, importDatabase } from "../lib/backup-manager"
 import {
   authorize,
   clearCachedToken,
   downloadBackup,
-  exportDatabase,
   GDriveTimeoutError,
   getBackupMetadata,
-  importDatabase,
   uploadBackup
 } from "../lib/google-drive"
 

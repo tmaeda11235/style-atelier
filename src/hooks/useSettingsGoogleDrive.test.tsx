@@ -16,11 +16,14 @@ vi.mock("../lib/google-drive", () => ({
   authorize: vi.fn().mockResolvedValue("mock-token"),
   clearCachedToken: vi.fn(),
   downloadBackup: vi.fn(),
-  exportDatabase: vi.fn(),
   GDriveTimeoutError: class extends Error {},
   getBackupMetadata: vi.fn().mockResolvedValue(null),
-  importDatabase: vi.fn(),
   uploadBackup: vi.fn()
+}))
+
+vi.mock("../lib/backup-manager", () => ({
+  exportDatabase: vi.fn(),
+  importDatabase: vi.fn()
 }))
 
 describe("useSettingsGoogleDrive", () => {
