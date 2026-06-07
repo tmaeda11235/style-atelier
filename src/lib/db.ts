@@ -6,7 +6,7 @@ import type {
 } from "./db-schema"
 import { StyleAtelierDatabaseBase } from "./db-setup"
 
-export { upgradeToVersion8 } from "./db-setup"
+export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
 
 export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   // --- StyleCard Operations ---
