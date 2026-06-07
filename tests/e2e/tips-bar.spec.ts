@@ -78,5 +78,29 @@ test.describe("Style Atelier Sandbox E2E Tests - Tips Bar @J-SYS-03", () => {
 
     // Verify Tips Bar is back
     await expect(tipsBar).toBeVisible()
+
+    // 6. Resize viewport to narrow width (e.g., 320px) to verify responsive wrap
+    console.log("Resizing viewport to narrow width (320px)...")
+    await page.setViewportSize({ width: 320, height: 600 })
+    await page.waitForTimeout(500)
+
+    // Verify Tips Bar is still visible
+    await expect(tipsBar).toBeVisible()
+    await expect(tipText).toBeVisible()
+
+    // Verify it is not truncated (scrollWidth <= clientWidth due to whitespace-normal)
+    const isTruncated = await tipText.evaluate(
+      (el) => el.scrollWidth > el.clientWidth
+    )
+    expect(isTruncated).toBe(false)
+
+    // Capture screenshot of narrow viewport showing wrapped text
+    await page.screenshot({
+      path: path.join(screenshotsDir, "tips-bar-narrow.png")
+    })
+    console.log("Narrow Tips Bar screenshot saved.")
+
+    // Restore viewport size
+    await page.setViewportSize({ width: 1920, height: 1080 })
   })
 })
