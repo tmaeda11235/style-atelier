@@ -125,6 +125,26 @@ const chromeMock = {
   identity: {
     getAuthToken: vi.fn(),
     removeCachedAuthToken: vi.fn()
+  },
+  storage: {
+    local: {
+      get: vi.fn().mockImplementation((keys) => {
+        if (typeof keys === "string") {
+          return Promise.resolve({ [keys]: undefined })
+        }
+        if (Array.isArray(keys)) {
+          const res: Record<string, any> = {}
+          keys.forEach((k) => {
+            res[k] = undefined
+          })
+          return Promise.resolve(res)
+        }
+        return Promise.resolve(keys || {})
+      }),
+      set: vi.fn().mockResolvedValue(undefined),
+      remove: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
+    }
   }
 }
 
