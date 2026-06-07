@@ -60,44 +60,50 @@ export function SidePanelLayout({
             {isEasyMode ? (
               <div className="flex items-center gap-2 py-2">
                 <span className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                  <span className="text-lg">🎴</span> Library
+                  <span className="text-lg">🎴</span> {t.navigation.library}
                 </span>
               </div>
             ) : (
               <nav className="-mb-px flex space-x-4">
                 <button
                   onClick={() => onTabChange("history")}
-                  title="History"
+                  title={t.navigation.history}
                   className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-1.5 ${
                     activeTab === "history"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-slate-500 hover:text-slate-700"
                   }`}>
                   <History className="w-4 h-4" />
-                  <span className="hidden sm:inline">History</span>
+                  <span className="hidden sm:inline">
+                    {t.navigation.history}
+                  </span>
                 </button>
                 <button
                   onClick={() => onTabChange("library")}
-                  title="Library"
+                  title={t.navigation.library}
                   className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-1.5 ${
                     activeTab === "library"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-slate-500 hover:text-slate-700"
                   }`}>
                   <BookOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Library</span>
+                  <span className="hidden sm:inline">
+                    {t.navigation.library}
+                  </span>
                 </button>
                 <button
                   onClick={() => onTabChange("workbench")}
                   data-tutorial="workbench-tab"
-                  title="Workbench"
+                  title={t.navigation.workbench}
                   className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-1.5 ${
                     activeTab === "workbench"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-slate-500 hover:text-slate-700"
                   }`}>
                   <BookUp2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Workbench</span>
+                  <span className="hidden sm:inline">
+                    {t.navigation.workbench}
+                  </span>
                 </button>
               </nav>
             )}
@@ -110,16 +116,16 @@ export function SidePanelLayout({
                     ? "bg-blue-50 text-blue-600 hover:bg-blue-50"
                     : ""
                 }`}
-                title="Settings">
+                title={t.navigation.settings}>
                 <Settings className="w-4 h-4 text-slate-500" />
-                <span className="sr-only">Settings</span>
+                <span className="sr-only">{t.navigation.settings}</span>
               </button>
               <button
                 onClick={onOpenGuide}
                 className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold"
-                title="Show Guide">
+                title={t.navigation.showGuide}>
                 <HelpCircle className="w-4 h-4 text-blue-500" />
-                <span className="hidden sm:inline">Guide</span>
+                <span className="hidden sm:inline">{t.navigation.guide}</span>
               </button>
             </div>
           </div>
