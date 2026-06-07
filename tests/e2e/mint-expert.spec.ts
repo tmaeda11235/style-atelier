@@ -37,7 +37,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
       await skipButton.click()
     }
 
-    // 2. Clear and seed history items to guarantee the item is available
+    // 2. Clear and seed history items & categories to guarantee they are available
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.historyItems.clear()
@@ -47,6 +47,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
           "a beautiful cyberpunk warrior --ar 16:9 --sref https://example.com/sref1 --p p-code",
         imageUrl: "./index_files/0_0_640_N.webp",
         timestamp: Date.now()
+      })
+      await database.categories.clear()
+      await database.categories.add({
+        id: "category-expert-1",
+        name: "Cyberpunk Tech",
+        iconEmoji: "🦾"
       })
     })
 
@@ -75,23 +81,63 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
     await expect(rarityBtn).toBeVisible()
     await rarityBtn.click()
 
-    // 8. Click Save Card
-    const saveCardBtn = spFrame.locator("button:has-text('Save Card')")
+    // 8. Select category "Cyberpunk Tech"
+    const categorySelect = spFrame.locator("select").first()
+    await expect(categorySelect).toBeVisible()
+    await categorySelect.selectOption({ value: "category-expert-1" })
+
+    // 9. Add custom tag "expert-tag"
+    const tagInput = spFrame.locator("#custom-tag-input")
+    await expect(tagInput).toBeVisible()
+    await tagInput.fill("expert-tag")
+    await tagInput.press("Enter")
+
+    // Verify tag chip is visible in Minting View
+    const tagChip = spFrame.locator("span:has-text('expert-tag')")
+    await expect(tagChip).toBeVisible()
+
+    // 10. Click Save Card
+    const saveCardBtn = spFrame.locator(
+      "button:has-text('Save Card'), button:has-text('カードを保存')"
+    )
     await expect(saveCardBtn).toBeVisible()
     await saveCardBtn.click()
 
-    // 9. Verify minting view is closed
+    // 11. Verify minting view is closed
     await expect(mintingView).not.toBeVisible({ timeout: 10000 })
 
-    // 10. Switch to Library tab and verify the card is there
+    // 12. Switch to Library tab and verify the card is there
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
     await page.waitForTimeout(1000) // wait for DB query
     const cardTitle = spFrame.locator("text=Expert Warrior Note").first()
     await expect(cardTitle).toBeVisible({ timeout: 10000 })
 
+    // 13. Click "Edit Card" to open CardDetailView and verify Rarity, Category, and Tags
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    await expect(editBtn).toBeVisible()
+    await editBtn.click()
+
+    // Verify Card Detail view container is visible
+    const detailView = spFrame.locator(
+      "[data-testid='card-detail-view-container']"
+    )
+    await expect(detailView).toBeVisible({ timeout: 5000 })
+
+    // Verify Category option has correct value selected
+    const detailCategorySelect = detailView.locator("select").first()
+    await expect(detailCategorySelect).toHaveValue("category-expert-1")
+
+    // Verify tag "expert-tag" is present
+    const detailTagChip = detailView.locator("span:has-text('expert-tag')")
+    await expect(detailTagChip).toBeVisible()
+
     await page.screenshot({
-      path: path.join(screenshotsDir, "mint-expert-success.png")
+      path: path.join(screenshotsDir, "mint-expert-detail-verify.png")
     })
+
+    // Close the detail view
+    const closeDetailBtn = detailView.locator("button").first()
+    await closeDetailBtn.click()
   })
 })
