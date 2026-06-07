@@ -120,13 +120,15 @@ export function SidePanelLayout({
                 <Settings className="w-4 h-4 text-slate-500" />
                 <span className="sr-only">{t.navigation.settings}</span>
               </button>
-              <button
-                onClick={onOpenGuide}
-                className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold"
-                title={t.navigation.showGuide}>
-                <HelpCircle className="w-4 h-4 text-blue-500" />
-                <span className="hidden sm:inline">{t.navigation.guide}</span>
-              </button>
+              {!isEasyMode && (
+                <button
+                  onClick={onOpenGuide}
+                  className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 py-1 px-2 hover:bg-slate-100 rounded-lg transition-all font-semibold"
+                  title={t.navigation.showGuide}>
+                  <HelpCircle className="w-4 h-4 text-blue-500" />
+                  <span className="hidden sm:inline">{t.navigation.guide}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
