@@ -16,7 +16,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     })
   })
 
-  test("should allow exporting style card as image (QR output) and importing from it (QR input) @J-IO-QR", async ({
+  test("should allow exporting style card as image (QR output) and importing from it (QR input) @J-IO-QR-OUT @J-IO-QR-IN", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -164,7 +164,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     console.log("QR Import E2E validation passed successfully!")
   })
 
-  test("should allow exporting local database backup and importing from it @J-IO-LOCAL", async ({
+  test("should allow exporting local database backup and importing from it @J-IO-BACKUP @J-IO-RESTORE", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
