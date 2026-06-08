@@ -84,6 +84,8 @@ export default ts.config(
       "@typescript-eslint/no-unsafe-function-type": "warn",
       "@typescript-eslint/no-wrapper-object-types": "warn",
       "@typescript-eslint/ban-ts-comment": "off",
+      "preserve-caught-error": "off",
+      "no-useless-assignment": "warn",
 
       // Cognitive Complexity (eslint-plugin-sonarjs)
       "sonarjs/cognitive-complexity": ["error", 15],
