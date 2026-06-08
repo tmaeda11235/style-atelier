@@ -44,7 +44,7 @@
       "name": "ワークベンチ（エキスパート）",
       "description": "エキスパートモードでプロンプトを構築する",
       "steps": ["Workbenchを開く", "カードを選ぶ", "プロンプトをマージ"],
-      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-03"]
+      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-03", "@J-WB-EXPERT-04"]
     },
     {
       "id": "@J-WB-EXPERT-02",
@@ -138,6 +138,17 @@
       "description": "アプリケーション設定の変更",
       "steps": ["Settingsパネルを開く", "トグル変更", "保存"],
       "nextJourneys": ["@J-IO-BACKUP", "@J-IO-RESTORE", "@J-SYS-04"]
+    },
+    {
+      "id": "@J-WB-EXPERT-04",
+      "name": "スロット変数操作 (ポップオーバー & Dnd)",
+      "description": "スロット変数エリアでのサジェスト選択およびカードのドラッグ＆ドロップ適用",
+      "steps": [
+        "スロット入力フィールドフォーカス",
+        "ポップオーバーサジェスト選択",
+        "カードをスロットにドラッグ＆ドロップ"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01"]
     }
   ]
 }
