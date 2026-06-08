@@ -205,11 +205,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
       await skipButton.click()
     }
 
-    // 2. Seed 25 cards to database (page size is 20)
+    // 2. Seed 24 cards to database (page size is 12)
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
-      const cards = Array.from({ length: 25 }, (_, i) => ({
+      const cards = Array.from({ length: 24 }, (_, i) => ({
         id: `card-paginated-${i}`,
         name: `Card ${String(i).padStart(2, "0")}`,
         promptSegments: [{ type: "text", value: `prompt ${i}` }],
@@ -228,11 +228,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await libraryTabButton.click()
     await page.waitForTimeout(1000) // wait for DB queries
 
-    // 4. Verify exactly 20 cards are loaded on the first page
-    // (Card 00 to Card 19)
+    // 4. Verify exactly 12 cards are loaded on the first page
+    // (Card 00 to Card 11)
     await expect(spFrame.locator("text=Card 00")).toBeVisible()
-    await expect(spFrame.locator("text=Card 19")).toBeVisible()
-    await expect(spFrame.locator("text=Card 20")).not.toBeVisible()
+    await expect(spFrame.locator("text=Card 11")).toBeVisible()
+    await expect(spFrame.locator("text=Card 12")).not.toBeVisible()
 
     // 5. Verify Show More button is visible
     const showMoreBtn = spFrame.locator("[data-testid='show-more-button']")
@@ -247,11 +247,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await showMoreBtn.click()
     await page.waitForTimeout(500) // Wait for lazy loading
 
-    // 7. Verify Card 20 is now visible, and we have 25 cards total
-    await expect(spFrame.locator("text=Card 20")).toBeVisible()
-    await expect(spFrame.locator("text=Card 24")).toBeVisible()
+    // 7. Verify Card 12 is now visible, and we have 24 cards total
+    await expect(spFrame.locator("text=Card 12")).toBeVisible()
+    await expect(spFrame.locator("text=Card 23")).toBeVisible()
 
-    // 8. Verify Show More button is hidden because all 25 cards are loaded
+    // 8. Verify Show More button is hidden because all 24 cards are loaded
     await expect(showMoreBtn).not.toBeVisible()
 
     // Capture second page screenshot

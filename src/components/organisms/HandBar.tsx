@@ -6,7 +6,6 @@ import iconUrl from "url:../../../assets/icon.png"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useHand } from "../../hooks/useHand"
-import { db } from "../../lib/db"
 import type { StyleCard } from "../../lib/db-schema"
 import { buildPromptString } from "../../lib/prompt-utils"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
@@ -23,7 +22,7 @@ export function HandBar({
   onNavigateToWorkbench,
   onOpenDetailCard
 }: HandBarProps) {
-  const { pinnedCards, unpinCard, clearHand } = useHand()
+  const { pinnedCards, unpinCard, clearHand, mergeCards } = useHand()
   const { expertFeatures } = useSettings()
   const { t } = useLanguage()
 
@@ -150,7 +149,7 @@ export function HandBar({
     const materials = pinnedCards.filter((c) => c.id !== baseCardId)
 
     try {
-      await db.mergeStyleCards(representative.id, materials, consumeStates)
+      await mergeCards(representative.id, materials, consumeStates)
       setIsMergeOpen(false)
     } catch (err) {
       console.error("Failed to merge style cards:", err)

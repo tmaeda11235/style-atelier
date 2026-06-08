@@ -52,8 +52,8 @@ export function useLibrary(
   const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
-  const [visibleCount, setVisibleCount] = useState(20)
-  const pageSize = 20
+  const [visibleCount, setVisibleCount] = useState(12)
+  const pageSize = 12
 
   // 1. メタデータのみを抽出して取得（重いthumbnailDataなどをReact Stateに全件保持しない）
   const allCardsMeta = useLiveQuery(async () => {

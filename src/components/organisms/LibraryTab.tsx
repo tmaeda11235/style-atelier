@@ -59,6 +59,42 @@ export function LibraryTab({
     loadMore
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
+  const colorScrollRef = React.useRef<HTMLDivElement>(null)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(false)
+
+  const checkScroll = () => {
+    const container = colorScrollRef.current
+    if (container) {
+      const { scrollLeft, scrollWidth, clientWidth } = container
+      setShowLeftArrow(scrollLeft > 2)
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 2)
+    }
+  }
+
+  React.useEffect(() => {
+    const container = colorScrollRef.current
+    if (container) {
+      checkScroll()
+      container.addEventListener("scroll", checkScroll)
+      window.addEventListener("resize", checkScroll)
+      const timer = setTimeout(checkScroll, 100)
+      return () => {
+        container.removeEventListener("scroll", checkScroll)
+        window.removeEventListener("resize", checkScroll)
+        clearTimeout(timer)
+      }
+    }
+  }, [styleCards])
+
+  const scrollColors = (direction: "left" | "right") => {
+    const container = colorScrollRef.current
+    if (container) {
+      const scrollAmount = direction === "left" ? -80 : 80
+      container.scrollBy({ left: scrollAmount, behavior: "smooth" })
+    }
+  }
+
   const colorOptions = [
     {
       value: "All",
@@ -117,40 +153,75 @@ export function LibraryTab({
         </div>
 
         {/* Color Palette Filter */}
-        <div className="flex gap-1 items-center overflow-x-auto pb-1 mt-1.5 scrollbar-none">
+        <div className="flex gap-1 items-center mt-1.5 select-none w-full">
           <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">
             {t.colorLabel || "Color:"}
           </span>
-          {colorOptions.map((colorOpt) => {
-            const isSelected = colorFilter === colorOpt.value
-            return (
+          <div className="relative flex-1 flex items-center min-w-0">
+            {showLeftArrow && (
               <button
-                key={colorOpt.value}
-                onClick={() => setColorFilter(colorOpt.value as any)}
-                className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
-                  isSelected
-                    ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5"
-                    : "hover:scale-105"
-                }`}
-                style={{
-                  background: colorOpt.bg,
-                  borderColor:
-                    colorOpt.value === "White" ? "#cbd5e1" : "transparent"
-                }}
-                title={colorOpt.label}>
-                {isSelected && (
-                  <span
-                    className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
-                      colorOpt.value === "White" || colorOpt.value === "Yellow"
-                        ? "text-slate-800"
-                        : "text-white"
-                    }`}>
-                    ✓
-                  </span>
-                )}
+                onClick={() => scrollColors("left")}
+                className="absolute left-0 z-10 w-4 h-4 bg-white/95 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center border border-slate-200 shadow hover:bg-slate-50 transition-colors text-[9px] font-bold"
+                aria-label="Scroll left">
+                ‹
               </button>
-            )
-          })}
+            )}
+            <div
+              ref={colorScrollRef}
+              className="flex gap-1 items-center overflow-x-auto pb-1 scrollbar-none w-full"
+              style={{
+                maskImage: `linear-gradient(to right, ${
+                  showLeftArrow ? "transparent" : "white"
+                } 0%, white 12px, white calc(100% - 12px), ${
+                  showRightArrow ? "transparent" : "white"
+                } 100%)`,
+                WebkitMaskImage: `linear-gradient(to right, ${
+                  showLeftArrow ? "transparent" : "white"
+                } 0%, white 12px, white calc(100% - 12px), ${
+                  showRightArrow ? "transparent" : "white"
+                } 100%)`
+              }}>
+              {colorOptions.map((colorOpt) => {
+                const isSelected = colorFilter === colorOpt.value
+                return (
+                  <button
+                    key={colorOpt.value}
+                    onClick={() => setColorFilter(colorOpt.value as any)}
+                    className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
+                      isSelected
+                        ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5"
+                        : "hover:scale-105"
+                    }`}
+                    style={{
+                      background: colorOpt.bg,
+                      borderColor:
+                        colorOpt.value === "White" ? "#cbd5e1" : "transparent"
+                    }}
+                    title={colorOpt.label}>
+                    {isSelected && (
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
+                          colorOpt.value === "White" ||
+                          colorOpt.value === "Yellow"
+                            ? "text-slate-800"
+                            : "text-white"
+                        }`}>
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            {showRightArrow && (
+              <button
+                onClick={() => scrollColors("right")}
+                className="absolute right-0 z-10 w-4 h-4 bg-white/95 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center border border-slate-200 shadow hover:bg-slate-50 transition-colors text-[9px] font-bold"
+                aria-label="Scroll right">
+                ›
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -267,15 +338,13 @@ export function LibraryTab({
             })}
           </div>
           {hasMore && (
-            <div className="flex justify-center mt-6 mb-4 px-2 animate-in fade-in duration-300">
-              <button
-                onClick={loadMore}
-                className="w-full py-2.5 px-4 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-200 transition-all shadow-sm hover:shadow active:scale-[0.98] focus:outline-none flex items-center justify-center gap-2 group cursor-pointer"
-                data-testid="show-more-button">
-                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:translate-y-0.5 transition-transform" />
-                {t.showMore || "Show More"}
-              </button>
-            </div>
+            <button
+              onClick={loadMore}
+              className="mt-4 w-full py-2 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs transition-all hover:scale-[1.01] active:scale-[0.99] shadow-md hover:shadow-indigo-500/20 duration-200 border border-white/10"
+              id="library-load-more-btn"
+              data-testid="show-more-button">
+              {t.showMore || t.loadMore || "Load More"}
+            </button>
           )}
         </>
       ) : styleCards !== undefined ? (

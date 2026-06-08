@@ -20,6 +20,15 @@ vi.mock("../../hooks/useHand", () => ({
   useHand: vi.fn()
 }))
 
+vi.mock("../../hooks/useCategories", () => ({
+  useCategories: vi.fn().mockReturnValue({ data: [] })
+}))
+
+vi.mock("../../hooks/useStyleCards", () => ({
+  useStyleCards: vi.fn().mockReturnValue({ data: [] }),
+  useUpdateStyleCard: vi.fn().mockReturnValue({ mutateAsync: vi.fn() })
+}))
+
 vi.mock("../../lib/export-utils", () => ({
   exportCardAsImage: vi.fn().mockResolvedValue(undefined)
 }))

@@ -4,10 +4,10 @@ import React, { useRef } from "react"
 import { useConfirm } from "../../contexts/ConfirmContext"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
+import { useHistory } from "../../hooks/useHistory"
 import { useLocalBackup } from "../../hooks/useLocalBackup"
 import { useSettingsGoogleDrive } from "../../hooks/useSettingsGoogleDrive"
 import { useStorageEstimate } from "../../hooks/useStorageEstimate"
-import { db } from "../../lib/db"
 import type { Language } from "../../lib/i18n"
 import { CloudSyncSection } from "./CloudSyncSection"
 import { DangerZoneSection } from "./DangerZoneSection"
@@ -32,6 +32,7 @@ export function SettingsTab({
   const { estimate, checkStorage } = useStorageEstimate()
   const confirm = useConfirm()
   const contextSettings = useSettings()
+  const { clearHistory } = useHistory()
 
   const currentEasyMode = isEasyMode || contextSettings.isEasyMode
   const currentToggleEasyMode =
@@ -93,7 +94,7 @@ export function SettingsTab({
     if (!ok) return
 
     try {
-      await db.historyItems.clear()
+      await clearHistory()
       addLog("Prompt history cleared successfully.")
       showStatus(t.clearHistorySuccess, "success")
       checkStorage()
