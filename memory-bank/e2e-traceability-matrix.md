@@ -13,10 +13,10 @@
 | **@J-WB-EXPERT-02**   | ドラッグ＆ドロップ操作                  | ✔️ `tests\e2e\drag-and-drop.spec.ts`                                                              |
 | **@J-WB-EXPERT-03**   | プロンプトインジェクション              | ✔️ `tests\e2e\prompt-injection.spec.ts`                                                           |
 | **@J-WB-EASY-01**     | かんたんワークベンチ                    | ✔️ `tests\e2e\easy-mode.spec.ts`                                                                  |
-| **@J-IO-QR-OUT**      | QRエクスポート                          | ❌ 未カバー (Missing)                                                                             |
-| **@J-IO-QR-IN**       | QRインポート                            | ❌ 未カバー (Missing)                                                                             |
-| **@J-IO-BACKUP**      | データバックアップ                      | ❌ 未カバー (Missing)                                                                             |
-| **@J-IO-RESTORE**     | データリストア                          | ❌ 未カバー (Missing)                                                                             |
+| **@J-IO-QR-OUT**      | QRエクスポート                          | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
+| **@J-IO-QR-IN**       | QRインポート                            | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
+| **@J-IO-BACKUP**      | データバックアップ                      | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
+| **@J-IO-RESTORE**     | データリストア                          | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
 | **@J-SYS-01**         | 履歴表示                                | ✔️ `tests\e2e\history-scroll.spec.ts`                                                             |
 | **@J-SYS-02**         | エキスパートヘルプ                      | ✔️ `tests\e2e\expert-help.spec.ts`                                                                |
 | **@J-SYS-03**         | Tipsバー                                | ✔️ `tests\e2e\tips-bar.spec.ts`                                                                   |
@@ -27,5 +27,5 @@
 ## サマリー
 
 - 全ジャーニー数: 19
-- カバー済み: 15
-- 未カバー: 4
+- カバー済み: 19
+- 未カバー: 0
