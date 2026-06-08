@@ -9,6 +9,14 @@ export interface CustomCategory {
   isDeleted?: boolean // Soft delete flag
 }
 
+export interface CardVersion {
+  id: string // バージョンのユニークID (e.g. UUID)
+  timestamp: number // 保存された日時
+  promptSegments: PromptSegment[]
+  parameters: StyleCard["parameters"]
+  name: string // 保存時のカード名
+}
+
 export interface StyleCard {
   // --- Basic Identity ---
   id: string // UUID (e.g., "550e8400-e29b...")
@@ -67,6 +75,7 @@ export interface StyleCard {
   associatedJobIds?: string[] // Merged Midjourney Job IDs
   images?: string[] // Associated image URLs
   selectedThumbnails?: string[] // Selected image URLs for thumbnail display (up to 2)
+  versionHistory?: CardVersion[] // 過去のプロンプト・パラメータ変更履歴（最大10件）
 }
 
 // プロンプトの構成要素（バブル）

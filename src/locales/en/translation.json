@@ -458,7 +458,10 @@
     "export": "Export",
     "exporting": "Exporting...",
     "inject": "Inject",
-    "save": "Save"
+    "save": "Save",
+    "versionHistory": "Version History",
+    "rollback": "Restore",
+    "rollbackNotice": "Restored from history. Click Save to apply changes."
   },
   "navigation": {
     "history": "History",

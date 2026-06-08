@@ -31,6 +31,7 @@ stateDiagram-v2
   _J_ORG_SEARCH_01 : ライブラリ検索・フィルタ・スクロール
   _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
   _J_TUTORIAL_01 : インタラクティブチュートリアル
+  _J_ORG_VERSION_01 : バージョン履歴管理
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -40,6 +41,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_IO_QR_OUT
   _J_ORG_EXPERT_01 --> _J_ORG_COLOR_FILTER_01
   _J_ORG_EXPERT_01 --> _J_ORG_SEARCH_01
+  _J_ORG_EXPERT_01 --> _J_ORG_VERSION_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
   _J_ORG_EASY_01 --> _J_ORG_COLOR_FILTER_01
@@ -69,6 +71,7 @@ stateDiagram-v2
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_02
   _J_TUTORIAL_01 --> _J_MINT_EXPERT_01
   _J_TUTORIAL_01 --> _J_WB_EXPERT_01
+  _J_ORG_VERSION_01 --> _J_ORG_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -380,6 +383,19 @@ flowchart TD
   S2 --> S3
 ```
 
-```
+### @J-ORG-VERSION-01: バージョン履歴管理
 
+スタイルカード詳細画面で過去のプロンプト・パラメータ変更履歴を確認し、任意のバージョンにロールバックする
+
+```mermaid
+flowchart TD
+  S1["カード詳細を開く"]
+  S2["変更履歴リストを表示"]
+  S1 --> S2
+  S3["任意のバージョンで復元を選択"]
+  S2 --> S3
+  S4["フォーム上で復元された値を確認"]
+  S3 --> S4
+  S5["保存して確定"]
+  S4 --> S5
 ```

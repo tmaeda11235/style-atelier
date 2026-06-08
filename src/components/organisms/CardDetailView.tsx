@@ -1,4 +1,13 @@
-import { AlertCircle, Download, Save, Send, Trash2, X } from "lucide-react"
+import {
+  AlertCircle,
+  Download,
+  History,
+  RotateCcw,
+  Save,
+  Send,
+  Trash2,
+  X
+} from "lucide-react"
 import React, { useState } from "react"
 import iconUrl from "url:../../../assets/icon.png"
 
@@ -85,8 +94,21 @@ export function CardDetailView({
     parents,
     images,
     handleToggleThumbnail,
-    handleSaveChanges
+    handleSaveChanges,
+    handleRollback
   } = useCardDetailsForm(card, onSave)
+
+  const [showRollbackNotice, setShowRollbackNotice] = useState(false)
+
+  const triggerRollback = (version: any) => {
+    handleRollback(version)
+    setShowRollbackNotice(true)
+  }
+
+  const onSaveClick = async () => {
+    await handleSaveChanges()
+    setShowRollbackNotice(false)
+  }
 
   const { isExporting, errorMessage, handleExportCard } = useCardExporter(
     card,
@@ -138,6 +160,17 @@ export function CardDetailView({
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {showRollbackNotice && (
+          <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-[11px] flex items-start gap-1.5 shadow-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span className="flex-1">{t.cardDetail.rollbackNotice}</span>
+            <button
+              onClick={() => setShowRollbackNotice(false)}
+              className="text-amber-500 hover:text-amber-700 font-bold ml-1">
+              ✕
+            </button>
+          </div>
+        )}
         {errorMessage && (
           <div className="p-2.5 bg-red-50 border border-red-100 rounded-lg text-red-600 text-[11px] flex items-start gap-1.5 shadow-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -450,6 +483,42 @@ export function CardDetailView({
             <RaritySelector selected={tier} onSelect={setTier} />
           </div>
         )}
+
+        {/* Version History Section */}
+        {expertFeatures.cardEditing &&
+          card.versionHistory &&
+          card.versionHistory.length > 0 && (
+            <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
+              <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                <History className="w-3.5 h-3.5" />
+                {t.cardDetail.versionHistory}
+              </h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {card.versionHistory.map((version) => (
+                  <div
+                    key={version.id}
+                    className="flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-100 transition-colors text-xs">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-slate-700">
+                        {version.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(version.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="xs"
+                      onClick={() => triggerRollback(version)}
+                      className="flex items-center gap-1 text-[11px] px-2 py-1 border-slate-200 hover:border-slate-300 text-slate-600 bg-white">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      {t.cardDetail.rollback}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
       </div>
 
       <div className="p-4 bg-white shadow-t-sm flex flex-col gap-2 border-t z-10">
@@ -492,7 +561,7 @@ export function CardDetailView({
           </Button>
           {expertFeatures.cardEditing && (
             <Button
-              onClick={handleSaveChanges}
+              onClick={onSaveClick}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 py-2">
               <Save className="w-4 h-4" />
               {t.cardDetail.save}

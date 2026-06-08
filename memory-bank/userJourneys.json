@@ -30,7 +30,8 @@
         "@J-WB-EXPERT-01",
         "@J-IO-QR-OUT",
         "@J-ORG-COLOR-FILTER-01",
-        "@J-ORG-SEARCH-01"
+        "@J-ORG-SEARCH-01",
+        "@J-ORG-VERSION-01"
       ]
     },
     {
@@ -218,6 +219,19 @@
         "チュートリアル完了"
       ],
       "nextJourneys": ["@J-MINT-EXPERT-01", "@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-ORG-VERSION-01",
+      "name": "バージョン履歴管理",
+      "description": "スタイルカード詳細画面で過去のプロンプト・パラメータ変更履歴を確認し、任意のバージョンにロールバックする",
+      "steps": [
+        "カード詳細を開く",
+        "変更履歴リストを表示",
+        "任意のバージョンで復元を選択",
+        "フォーム上で復元された値を確認",
+        "保存して確定"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"]
     }
   ]
 }

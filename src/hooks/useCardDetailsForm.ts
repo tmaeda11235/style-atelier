@@ -93,6 +93,42 @@ export function useCardDetailsForm(
       console.error("Failed to convert thumbnail to Base64:", err)
     }
 
+    const isSegmentsEqual = (a: PromptSegment[], b: PromptSegment[]) => {
+      return JSON.stringify(a) === JSON.stringify(b)
+    }
+
+    const isParamsEqual = (
+      a: StyleCard["parameters"],
+      b: StyleCard["parameters"]
+    ) => {
+      return JSON.stringify(a) === JSON.stringify(b)
+    }
+
+    const isChanged =
+      card.name !== name ||
+      !isSegmentsEqual(card.promptSegments || [], promptSegments) ||
+      !isParamsEqual(card.parameters || {}, parameters)
+
+    let updatedVersionHistory = card.versionHistory
+      ? [...card.versionHistory]
+      : []
+
+    if (isChanged) {
+      const newVersion = {
+        id: crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).substring(2, 11),
+        timestamp: card.updatedAt || card.createdAt,
+        name: card.name,
+        promptSegments: card.promptSegments || [],
+        parameters: card.parameters || {}
+      }
+      updatedVersionHistory = [newVersion, ...updatedVersionHistory].slice(
+        0,
+        10
+      )
+    }
+
     const updatedCard: StyleCard = {
       ...card,
       name,
@@ -108,6 +144,7 @@ export function useCardDetailsForm(
         isSrefHidden,
         isPHidden
       },
+      versionHistory: updatedVersionHistory,
       updatedAt: Date.now()
     }
 
@@ -116,6 +153,12 @@ export function useCardDetailsForm(
     } catch (err) {
       console.error("Failed to save style card updates:", err)
     }
+  }
+
+  const handleRollback = (version: any) => {
+    setName(version.name)
+    setPromptSegments(version.promptSegments || [])
+    setParameters(version.parameters || {})
   }
 
   return {
@@ -140,6 +183,7 @@ export function useCardDetailsForm(
     parents,
     images,
     handleToggleThumbnail,
-    handleSaveChanges
+    handleSaveChanges,
+    handleRollback
   }
 }

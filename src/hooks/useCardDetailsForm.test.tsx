@@ -102,4 +102,53 @@ describe("useCardDetailsForm", () => {
     })
     expect(result.current.selectedThumbs).toEqual(["img2"])
   })
+
+  it("tracks version history on changes", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const { result } = renderHook(() => useCardDetailsForm(mockCard, onSave))
+
+    act(() => {
+      result.current.setName("Changed Name")
+    })
+
+    await act(async () => {
+      await result.current.handleSaveChanges()
+    })
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Changed Name",
+        versionHistory: expect.arrayContaining([
+          expect.objectContaining({
+            name: "Original Name",
+            promptSegments: mockCard.promptSegments,
+            parameters: mockCard.parameters
+          })
+        ])
+      })
+    )
+  })
+
+  it("rolls back to a previous version", () => {
+    const onSave = vi.fn()
+    const { result } = renderHook(() => useCardDetailsForm(mockCard, onSave))
+
+    const oldVersion = {
+      id: "v-1",
+      timestamp: Date.now() - 10000,
+      name: "Old Version Name",
+      promptSegments: [{ type: "text", value: "old prompt" }],
+      parameters: { ar: "1:1" }
+    }
+
+    act(() => {
+      result.current.handleRollback(oldVersion)
+    })
+
+    expect(result.current.name).toBe("Old Version Name")
+    expect(result.current.promptSegments).toEqual([
+      { type: "text", value: "old prompt" }
+    ])
+    expect(result.current.parameters).toEqual({ ar: "1:1" })
+  })
 })
