@@ -44,14 +44,19 @@
       "name": "ワークベンチ（エキスパート）",
       "description": "エキスパートモードでプロンプトを構築する",
       "steps": ["Workbenchを開く", "カードを選ぶ", "プロンプトをマージ"],
-      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-03", "@J-WB-EXPERT-04"]
+      "nextJourneys": [
+        "@J-WB-EXPERT-02",
+        "@J-WB-EXPERT-03",
+        "@J-WB-EXPERT-04",
+        "@J-WB-EXPERT-05"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-02",
       "name": "ドラッグ＆ドロップ操作",
       "description": "ドラッグ＆ドロップでカードを配置する",
       "steps": ["カードをドラッグ", "Handエリアにドロップ", "順序入れ替え"],
-      "nextJourneys": ["@J-WB-EXPERT-01"]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-05"]
     },
     {
       "id": "@J-WB-EXPERT-03",
@@ -149,6 +154,18 @@
         "カードをスロットにドラッグ＆ドロップ"
       ],
       "nextJourneys": ["@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-EXPERT-05",
+      "name": "手札バー（HandBar）の最小化・折りたたみ",
+      "description": "画面の表示領域を確保するために手札バーを最小化し、必要に応じて展開する",
+      "steps": [
+        "最小化ボタン押下",
+        "手札バーが折りたたまれる",
+        "展開ボタン押下（または新規カード追加で自動展開）",
+        "手札バーが再展開される"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-02"]
     }
   ]
 }
