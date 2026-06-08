@@ -1,4 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks"
+import FlexSearch from "flexsearch"
 import { useMemo, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
@@ -34,39 +35,99 @@ export function useLibrary(
   const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
+  const [visibleCount, setVisibleCount] = useState(12)
 
-  const allCards = useLiveQuery(() => db.getAllCards())
+  const totalCount =
+    useLiveQuery(async () => {
+      return await db.styleCards
+        .where("isDeleted")
+        .notEqual(1)
+        .filter((c) => !c.isVariable)
+        .count()
+    }) || 0
+
+  const isDefaultView =
+    !searchTag &&
+    rarityFilter === "All" &&
+    categoryFilter === "All" &&
+    colorFilter === "All"
+
+  const allCards = useLiveQuery(async () => {
+    if (isDefaultView) {
+      if (sortBy === "newest") {
+        const cards = await db.styleCards
+          .where("isDeleted")
+          .notEqual(1)
+          .reverse()
+          .sortBy("createdAt")
+        return cards.filter((c) => !c.isVariable).slice(0, visibleCount)
+      } else if (sortBy === "oldest") {
+        const cards = await db.styleCards
+          .where("isDeleted")
+          .notEqual(1)
+          .sortBy("createdAt")
+        return cards.filter((c) => !c.isVariable).slice(0, visibleCount)
+      }
+    }
+    return db.getAllCards()
+  }, [isDefaultView, sortBy, visibleCount])
+
   const categories = useLiveQuery(() => db.getAllCategories()) || []
 
   const allSrefs = useMemo(() => {
     if (!allCards) return []
     const srefs = new Set<string>()
     allCards.forEach((card) => {
-      card.parameters.sref?.forEach((url) => srefs.add(url))
+      card.parameters?.sref?.forEach((url) => srefs.add(url))
     })
     return Array.from(srefs)
   }, [allCards])
+
+  // FlexSearch indexing for performance
+  const searchIndex = useMemo(() => {
+    // @ts-ignore
+    const index = new FlexSearch.Index({
+      tokenize: "forward",
+      resolution: 9
+    })
+
+    if (!allCards) return index
+
+    allCards.forEach((card) => {
+      if (card.isVariable) return
+      const catObj = categories.find((c) => c.id === card.category)
+      const categoryName = catObj ? catObj.name : ""
+
+      const textToIndex = [
+        card.name,
+        card.tags?.join(" ") || "",
+        card.parameters?.sref?.join(" ") || "",
+        categoryName
+      ]
+        .join(" ")
+        .toLowerCase()
+
+      index.add(card.id, textToIndex)
+    })
+
+    return index
+  }, [allCards, categories])
+
+  const searchResults = useMemo(() => {
+    if (!searchTag || !searchIndex) return null
+    // @ts-ignore
+    const results = searchIndex.search(searchTag.toLowerCase())
+    return new Set(results)
+  }, [searchTag, searchIndex])
 
   const filteredAndSortedCards = useMemo(() => {
     if (!allCards) return []
 
     let result = allCards.filter((card) => !card.isVariable)
 
-    // Filtering
-    if (searchTag) {
-      const tag = searchTag.toLowerCase()
-      result = result.filter((card) => {
-        const catObj = categories.find((c) => c.id === card.category)
-        const categoryName = catObj ? catObj.name.toLowerCase() : ""
-        return (
-          card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
-          card.name.toLowerCase().includes(tag) ||
-          card.parameters.sref?.some((url) =>
-            url.toLowerCase().includes(tag)
-          ) ||
-          categoryName.includes(tag)
-        )
-      })
+    // Filtering using FlexSearch matching IDs
+    if (searchTag && searchResults) {
+      result = result.filter((card) => searchResults.has(card.id))
     }
 
     if (rarityFilter !== "All") {
@@ -140,11 +201,23 @@ export function useLibrary(
     allCards,
     categories,
     searchTag,
+    searchResults,
     rarityFilter,
     categoryFilter,
     colorFilter,
     sortBy
   ])
+
+  const hasMore = isDefaultView
+    ? totalCount > visibleCount
+    : filteredAndSortedCards.length > visibleCount
+  const visibleCards = useMemo(() => {
+    return filteredAndSortedCards.slice(0, visibleCount)
+  }, [filteredAndSortedCards, visibleCount])
+
+  const loadMore = () => {
+    setVisibleCount((prev) => prev + 12)
+  }
 
   const togglePin = async (card: StyleCard, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -245,7 +318,7 @@ export function useLibrary(
   }
 
   return {
-    styleCards: filteredAndSortedCards,
+    styleCards: visibleCards,
     handleCardClick,
     togglePin,
     searchTag,
@@ -260,6 +333,10 @@ export function useLibrary(
     setSortBy,
     allSrefs,
     categories,
-    allCards
+    allCards,
+    hasMore,
+    loadMore,
+    visibleCount,
+    setVisibleCount
   }
 }

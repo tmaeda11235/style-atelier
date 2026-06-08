@@ -341,4 +341,56 @@ describe("useLibrary hook", () => {
       expect(db.updateCard).not.toHaveBeenCalled()
     })
   })
+
+  describe("FlexSearch & pagination", () => {
+    beforeEach(() => {
+      mockStyleCards = Array.from({ length: 15 }, (_, i) => ({
+        id: `card-${i}`,
+        name: `Card ${i} name`,
+        tags: [`tag-${i}`],
+        parameters: { sref: [`sref-${i}`] },
+        tier: "Common",
+        createdAt: 1000 + i,
+        usageCount: 0,
+        isVariable: false
+      }))
+    })
+
+    it("should initialize with default visibleCount of 12 and limit card results", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      expect(result.current.styleCards).toHaveLength(12)
+      expect(result.current.hasMore).toBe(true)
+    })
+
+    it("should load more cards when calling loadMore", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      expect(result.current.styleCards).toHaveLength(12)
+
+      act(() => {
+        result.current.loadMore()
+      })
+
+      expect(result.current.styleCards).toHaveLength(15)
+      expect(result.current.hasMore).toBe(false)
+    })
+
+    it("should search and match cards using FlexSearch query indexing", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      act(() => {
+        result.current.setSearchTag("Card 5")
+      })
+
+      expect(result.current.styleCards.length).toBeGreaterThan(0)
+      expect(result.current.styleCards[0].id).toBe("card-5")
+    })
+  })
 })

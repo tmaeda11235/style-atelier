@@ -19,7 +19,12 @@
       "name": "カード管理（エキスパート）",
       "description": "エキスパート向けカード管理（編集・削除）",
       "steps": ["ライブラリを開く", "カード選択", "編集・削除実行"],
-      "nextJourneys": ["@J-ORG-EXPERT-02", "@J-WB-EXPERT-01", "@J-IO-QR-OUT"]
+      "nextJourneys": [
+        "@J-ORG-EXPERT-02",
+        "@J-WB-EXPERT-01",
+        "@J-IO-QR-OUT",
+        "@J-ORG-SEARCH-01"
+      ]
     },
     {
       "id": "@J-ORG-EXPERT-02",
@@ -121,7 +126,7 @@
     {
       "id": "@J-SYS-03",
       "name": "Tipsバー",
-      "description": "使い方Tipsバーの操作",
+      "description": "使い方Tipsバー of 操作",
       "steps": ["画面下部のTipsバーを見る", "次へボタン押下", "非表示にする"],
       "nextJourneys": []
     },
@@ -149,6 +154,19 @@
         "カードをスロットにドラッグ＆ドロップ"
       ],
       "nextJourneys": ["@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-ORG-SEARCH-01",
+      "name": "ライブラリ検索・フィルタ・スクロール",
+      "description": "FlexSearchを用いた高速検索およびカラーフィルタの横スクロール操作",
+      "steps": [
+        "ライブラリを開く",
+        "検索フィールドにキーワード入力",
+        "カラーパレットフィルタを横スクロールで確認",
+        "カラーフィルタをクリックして絞り込み",
+        "「もっと読み込む」ボタンをクリックして追加表示"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"]
     }
   ]
 }
