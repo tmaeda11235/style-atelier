@@ -43,6 +43,9 @@ tags: []
 - **Tutorial Spotlight & Position Synchronization**:
   - Tutorial spotlight positioning, window resize/scroll event listeners, click-blocking logic, and database mock insertions are fully encapsulated in the `useSpotlight` custom hook (`src/hooks/useSpotlight.ts`).
   - Decouples DOM calculations and window event handlers from the `InteractiveTutorial` overlay component (`src/components/organisms/InteractiveTutorial.tsx`), maintaining clean separation of concerns and keeping component file size well within constraints (under 300 lines).
+- **Chrome Extension API & Prompt Injection Decoupling**:
+  - Chrome extension connection monitoring (ping/retry) and prompt injection logic (sending to Midjourney tab, updating usage stats, slot value persistence) are fully decoupled from `Workbench.tsx` and encapsulated into reusable hooks `useChromeTabConnection.ts` and `usePromptInjector.ts`.
+  - This keeps the UI component clean, focused on rendering (under 300 lines limit), and enables straightforward unit testing without mocking heavy layout structures.
 
 ## Data Flow
 
