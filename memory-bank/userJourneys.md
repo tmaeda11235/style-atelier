@@ -27,6 +27,7 @@ stateDiagram-v2
   _J_SYS_04 : 言語切り替え
   _J_SET_01 : アプリ設定
   _J_WB_EXPERT_04 : スロット変数操作 (ポップオーバー & Dnd)
+  _J_ORG_SEARCH_01 : ライブラリ検索・フィルタ・スクロール
   _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
   _J_TUTORIAL_01 : インタラクティブチュートリアル
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
@@ -36,6 +37,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_EXPERT_02
   _J_ORG_EXPERT_01 --> _J_WB_EXPERT_01
   _J_ORG_EXPERT_01 --> _J_IO_QR_OUT
+  _J_ORG_EXPERT_01 --> _J_ORG_SEARCH_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_02
@@ -58,6 +60,7 @@ stateDiagram-v2
   _J_SET_01 --> _J_IO_RESTORE
   _J_SET_01 --> _J_SYS_04
   _J_WB_EXPERT_04 --> _J_WB_EXPERT_01
+  _J_ORG_SEARCH_01 --> _J_ORG_EXPERT_01
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_02
   _J_TUTORIAL_01 --> _J_MINT_EXPERT_01
@@ -265,7 +268,7 @@ flowchart TD
 
 ### @J-SYS-03: Tipsバー
 
-使い方Tipsバーの操作
+使い方Tipsバー of 操作
 
 ```mermaid
 flowchart TD
@@ -311,6 +314,23 @@ flowchart TD
   S1 --> S2
   S3["カードをスロットにドラッグ＆ドロップ"]
   S2 --> S3
+```
+
+### @J-ORG-SEARCH-01: ライブラリ検索・フィルタ・スクロール
+
+FlexSearchを用いた高速検索およびカラーフィルタの横スクロール操作
+
+```mermaid
+flowchart TD
+  S1["ライブラリを開く"]
+  S2["検索フィールドにキーワード入力"]
+  S1 --> S2
+  S3["カラーパレットフィルタを横スクロールで確認"]
+  S2 --> S3
+  S4["カラーフィルタをクリックして絞り込み"]
+  S3 --> S4
+  S5["「もっと読み込む」ボタンをクリックして追加表示"]
+  S4 --> S5
 ```
 
 ### @J-WB-EXPERT-05: 手札バー（HandBar）の最小化・折りたたみ
