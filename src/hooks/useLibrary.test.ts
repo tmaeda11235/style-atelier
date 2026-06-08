@@ -14,6 +14,9 @@ vi.mock("dexie-react-hooks", () => ({
     if (fnStr.includes("categories")) {
       return mockCategories
     }
+    if (fnStr.includes("count")) {
+      return mockStyleCards.length
+    }
     return mockStyleCards
   }
 }))
@@ -352,6 +355,7 @@ describe("useLibrary hook", () => {
         tier: "Common",
         createdAt: 1000 + i,
         usageCount: 0,
+        isDeleted: 0,
         isVariable: false
       }))
     })
