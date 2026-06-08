@@ -45,7 +45,11 @@ export function SidePanelLayout({
   return (
     <div
       className={`w-full h-screen flex flex-col font-sans text-slate-800 transition-colors ${
-        isDragging ? "bg-blue-50" : "bg-slate-50"
+        isDraggingFile
+          ? "bg-blue-50"
+          : isDragging
+            ? "bg-indigo-50"
+            : "bg-slate-50"
       }`}>
       {/* Global Alert at the very top */}
       <ConnectionAlert
@@ -155,6 +159,17 @@ export function SidePanelLayout({
             </div>
             <span className="text-xs font-bold text-blue-600 mt-2 bg-white px-2 py-0.5 rounded shadow-sm">
               {t.dragAndDrop.dropOverlay}
+            </span>
+          </div>
+        )}
+
+        {isDragging && !isDraggingFile && (
+          <div className="absolute inset-0 bg-indigo-500/10 border-2 border-dashed border-indigo-500 rounded-lg flex flex-col items-center justify-center z-50 backdrop-blur-[2px] pointer-events-none animate-pulse">
+            <div className="bg-white p-4 rounded-full shadow-lg flex items-center justify-center border border-indigo-100">
+              <History className="w-8 h-8 text-indigo-500" />
+            </div>
+            <span className="text-xs font-bold text-indigo-600 mt-2 bg-white px-2 py-0.5 rounded shadow-sm">
+              {t.dragAndDrop.dropHistoryOverlay}
             </span>
           </div>
         )}
