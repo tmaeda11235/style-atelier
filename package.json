@@ -4,6 +4,10 @@
   "version": "0.2.0",
   "description": "Style Atelier is a prompt manager for midjourney.",
   "author": "tmaeda11235@gmail.com",
+  "alias": {
+    "jiti": false,
+    "@tailwindcss/oxide": false
+  },
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -13,7 +17,8 @@
     "test:e2e": "playwright test",
     "lint": "eslint src/",
     "prepare": "husky",
-    "test:mutate": "stryker run"
+    "test:mutate": "stryker run",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@tanstack/query-async-storage-persister": "^5.101.0",
@@ -56,7 +61,6 @@
     "@vitest/coverage-v8": "^4.1.8",
     "@vitest/ui": "^4.1.8",
     "autoprefixer": "^10.4.23",
-    "@eslint/js": "^10.0.1",
     "eslint": "^10.4.1",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^6.0.2",
@@ -68,6 +72,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
+    "patch-package": "^8.0.1",
     "postcss": "^8.5.6",
     "prettier": "3.8.3",
     "tailwindcss": "^4.3.0",
