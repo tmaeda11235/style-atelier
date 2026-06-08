@@ -41,7 +41,7 @@ export function SimpleMintingView({
   selectedCategory = "",
   setSelectedCategory = () => {}
 }: SimpleMintingViewProps) {
-  const { data: categoriesList = [] } = useCategories()
+  const categoriesList = useCategories()
   const { t } = useLanguage()
 
   // Ensure a category is always selected if categories exist

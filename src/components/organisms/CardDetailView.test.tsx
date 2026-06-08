@@ -21,12 +21,11 @@ vi.mock("../../hooks/useHand", () => ({
 }))
 
 vi.mock("../../hooks/useCategories", () => ({
-  useCategories: vi.fn().mockReturnValue({ data: [] })
+  useCategories: vi.fn().mockReturnValue([])
 }))
 
 vi.mock("../../hooks/useStyleCards", () => ({
-  useStyleCards: vi.fn().mockReturnValue({ data: [] }),
-  useUpdateStyleCard: vi.fn().mockReturnValue({ mutateAsync: vi.fn() })
+  useStyleCards: vi.fn().mockReturnValue([])
 }))
 
 vi.mock("../../lib/export-utils", () => ({

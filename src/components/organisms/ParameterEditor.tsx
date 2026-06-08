@@ -58,7 +58,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
     }
   }
 
-  const { data: allCards = [] } = useStyleCards()
+  const allCards = useStyleCards()
 
   const allSrefs = useMemo(() => {
     const srefs = new Set<string>()
