@@ -1,5 +1,5 @@
 import { BookUp2, ChevronDown, Search, Tag } from "lucide-react"
-import React, { useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
@@ -34,6 +34,7 @@ export function LibraryTab({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
+
   const { expertFeatures } = useSettings()
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
@@ -59,39 +60,52 @@ export function LibraryTab({
     loadMore
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
-  const colorScrollRef = React.useRef<HTMLDivElement>(null)
+  const colorScrollRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
 
-  const checkScroll = () => {
-    const container = colorScrollRef.current
-    if (container) {
-      const { scrollLeft, scrollWidth, clientWidth } = container
-      setShowLeftArrow(scrollLeft > 2)
-      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 2)
+  const checkScroll = useCallback(() => {
+    const el = colorScrollRef.current
+    if (el) {
+      const { scrollLeft, scrollWidth, clientWidth } = el
+      setShowLeftArrow(scrollLeft > 1)
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1)
     }
-  }
+  }, [])
 
-  React.useEffect(() => {
-    const container = colorScrollRef.current
-    if (container) {
+  useEffect(() => {
+    const el = colorScrollRef.current
+    if (el) {
       checkScroll()
-      container.addEventListener("scroll", checkScroll)
+      el.addEventListener("scroll", checkScroll)
       window.addEventListener("resize", checkScroll)
+
       const timer = setTimeout(checkScroll, 100)
+
+      let resizeObserver: ResizeObserver | null = null
+      if (typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(() => {
+          checkScroll()
+        })
+        resizeObserver.observe(el)
+      }
+
       return () => {
-        container.removeEventListener("scroll", checkScroll)
+        el.removeEventListener("scroll", checkScroll)
         window.removeEventListener("resize", checkScroll)
         clearTimeout(timer)
+        if (resizeObserver) {
+          resizeObserver.disconnect()
+        }
       }
     }
-  }, [styleCards])
+  }, [checkScroll, styleCards])
 
   const scrollColors = (direction: "left" | "right") => {
-    const container = colorScrollRef.current
-    if (container) {
-      const scrollAmount = direction === "left" ? -80 : 80
-      container.scrollBy({ left: scrollAmount, behavior: "smooth" })
+    const el = colorScrollRef.current
+    if (el) {
+      const scrollAmount = direction === "left" ? -100 : 100
+      el.scrollBy({ left: scrollAmount, behavior: "smooth" })
     }
   }
 
@@ -168,6 +182,7 @@ export function LibraryTab({
             )}
             <div
               ref={colorScrollRef}
+              data-testid="color-scroll-container"
               className="flex gap-1 items-center overflow-x-auto pb-1 scrollbar-none w-full"
               style={{
                 maskImage: `linear-gradient(to right, ${

@@ -13,6 +13,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 : カード管理（エキスパート）
   _J_ORG_EXPERT_02 : カテゴリ管理
   _J_ORG_EASY_01 : かんたんライブラリ
+  _J_ORG_COLOR_FILTER_01 : カラーフィルター操作
   _J_WB_EXPERT_01 : ワークベンチ（エキスパート）
   _J_WB_EXPERT_02 : ドラッグ＆ドロップ操作
   _J_WB_EXPERT_03 : プロンプトインジェクション
@@ -37,9 +38,12 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_EXPERT_02
   _J_ORG_EXPERT_01 --> _J_WB_EXPERT_01
   _J_ORG_EXPERT_01 --> _J_IO_QR_OUT
+  _J_ORG_EXPERT_01 --> _J_ORG_COLOR_FILTER_01
   _J_ORG_EXPERT_01 --> _J_ORG_SEARCH_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
+  _J_ORG_EASY_01 --> _J_ORG_COLOR_FILTER_01
+  _J_ORG_COLOR_FILTER_01 --> _J_ORG_EXPERT_01
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_02
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_03
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_04
@@ -134,6 +138,21 @@ flowchart TD
   S1 --> S2
   S3["カードを見る"]
   S2 --> S3
+```
+
+### @J-ORG-COLOR-FILTER-01: カラーフィルター操作
+
+カラーパレットフィルターを横スクロール・選択してカードを絞り込む
+
+```mermaid
+flowchart TD
+  S1["ライブラリを開く"]
+  S2["カラーフィルターを横スクロール"]
+  S1 --> S2
+  S3["色を選択"]
+  S2 --> S3
+  S4["絞り込まれたカードを確認"]
+  S3 --> S4
 ```
 
 ### @J-WB-EXPERT-01: ワークベンチ（エキスパート）

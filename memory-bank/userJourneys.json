@@ -29,6 +29,7 @@
         "@J-ORG-EXPERT-02",
         "@J-WB-EXPERT-01",
         "@J-IO-QR-OUT",
+        "@J-ORG-COLOR-FILTER-01",
         "@J-ORG-SEARCH-01"
       ]
     },
@@ -52,7 +53,19 @@
         "もっと見るによるカード読み込み",
         "カードを見る"
       ],
-      "nextJourneys": ["@J-WB-EASY-01"]
+      "nextJourneys": ["@J-WB-EASY-01", "@J-ORG-COLOR-FILTER-01"]
+    },
+    {
+      "id": "@J-ORG-COLOR-FILTER-01",
+      "name": "カラーフィルター操作",
+      "description": "カラーパレットフィルターを横スクロール・選択してカードを絞り込む",
+      "steps": [
+        "ライブラリを開く",
+        "カラーフィルターを横スクロール",
+        "色を選択",
+        "絞り込まれたカードを確認"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"]
     },
     {
       "id": "@J-WB-EXPERT-01",
