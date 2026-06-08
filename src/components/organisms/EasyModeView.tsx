@@ -1,12 +1,13 @@
 import React from "react"
+
 import { useEasyModeView } from "../../hooks/useEasyModeView"
+import { getStyleCardById } from "../../lib/style-card-store"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
+import { CardDetailView } from "./CardDetailView"
 import { LibraryTab } from "./LibraryTab"
 import { SettingsTab } from "./SettingsTab"
 import { SimpleMintingView } from "./SimpleMintingView"
-import { CardDetailView } from "./CardDetailView"
 import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
-import { db } from "../../lib/db"
 
 interface EasyModeViewProps {
   isEasyMode: boolean
@@ -17,7 +18,10 @@ interface EasyModeViewProps {
  * EasyModeView component - acts as a simplified user interface displaying only
  * the library and settings, optimized for basic operations.
  */
-export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps) {
+export function EasyModeView({
+  isEasyMode,
+  onToggleEasyMode
+}: EasyModeViewProps) {
   const {
     activeTab,
     setActiveTab,
@@ -44,7 +48,7 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
     handleDismissAlert,
     handleToggleEasyMode,
     activeSimpleWorkbenchCard,
-    setActiveSimpleWorkbenchCard,
+    setActiveSimpleWorkbenchCard
   } = useEasyModeView({ isEasyMode, onToggleEasyMode })
 
   return (
@@ -52,8 +56,7 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="h-full relative overflow-hidden"
-    >
+      className="h-full relative overflow-hidden">
       <SidePanelLayout
         activeTab={activeTab}
         onTabChange={(tab) => {
@@ -74,8 +77,7 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
         onRetryConnection={handleRetryConnection}
         onDismissAlert={handleDismissAlert}
         onOpenGuide={() => {}} // Guide is not supported in Easy Mode
-        isEasyMode={isEasyMode}
-      >
+        isEasyMode={isEasyMode}>
         {(minting.mintingItem || minting.variationBase) && (
           <SimpleMintingView
             mintingItem={minting.mintingItem}
@@ -103,7 +105,7 @@ export function EasyModeView({ isEasyMode, onToggleEasyMode }: EasyModeViewProps
             onSave={handleSaveCardDetails}
             setAlertType={setAlertType}
             onCardSelect={async (cardId) => {
-              const targetCard = await db.styleCards.get(cardId)
+              const targetCard = await getStyleCardById(cardId)
               if (targetCard) {
                 setActiveDetailCard(targetCard)
               } else {

@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks"
-import FlexSearch from "flexsearch"
+import { Index } from "flexsearch"
 import { useMemo, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
@@ -25,6 +25,23 @@ export type ColorFilter =
   | "Black"
   | "Gray"
 
+interface StyleCardMetadata {
+  id: string
+  name: string
+  tags: string[]
+  tier: StyleCard["tier"]
+  category?: string
+  dominantColor?: string
+  createdAt: number
+  usageCount: number
+  isPinned: boolean
+  isVariable: boolean
+  sref: string[]
+  promptSegments: StyleCard["promptSegments"]
+  parameters: StyleCard["parameters"]
+  masking: StyleCard["masking"]
+}
+
 export function useLibrary(
   addLog: (msg: string) => void,
   setAlertType: (type: AlertType) => void,
@@ -36,65 +53,77 @@ export function useLibrary(
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [visibleCount, setVisibleCount] = useState(12)
+  const pageSize = 12
 
-  const allCards = useLiveQuery(() => db.getAllCards()) || []
+  // 1. メタデータのみを抽出して取得（重いthumbnailDataなどをReact Stateに全件保持しない）
+  const allCardsMeta = useLiveQuery(async () => {
+    const cards = await db.getAllCards()
+    return cards.map(
+      (c): StyleCardMetadata => ({
+        id: c.id,
+        name: c.name,
+        tags: c.tags || [],
+        tier: c.tier,
+        category: c.category,
+        dominantColor: c.dominantColor,
+        createdAt: c.createdAt,
+        usageCount: c.usageCount || 0,
+        isPinned: !!c.isPinned,
+        isVariable: !!c.isVariable,
+        sref: c.parameters?.sref || [],
+        promptSegments: c.promptSegments,
+        parameters: c.parameters,
+        masking: c.masking
+      })
+    )
+  })
 
   const categories = useLiveQuery(() => db.getAllCategories()) || []
 
-  const allSrefs = useMemo(() => {
-    if (!allCards) return []
-    const srefs = new Set<string>()
-    allCards.forEach((card) => {
-      card.parameters?.sref?.forEach((url) => srefs.add(url))
-    })
-    return Array.from(srefs)
-  }, [allCards])
-
-  // FlexSearch indexing for performance
-  const searchIndex = useMemo(() => {
-    // @ts-ignore
-    const index = new FlexSearch.Index({
+  // 2. 検索用の FlexSearch インデックス構築
+  const flexsearchIndex = useMemo(() => {
+    if (!allCardsMeta) return null
+    const index = new Index({
       tokenize: "forward",
       resolution: 9
     })
-
-    if (!allCards) return index
-
-    allCards.forEach((card) => {
-      if (card.isVariable) return
+    allCardsMeta.forEach((card) => {
       const catObj = categories.find((c) => c.id === card.category)
-      const categoryName = catObj ? catObj.name : ""
-
-      const textToIndex = [
+      const categoryName = catObj ? catObj.name.toLowerCase() : ""
+      const searchText = [
         card.name,
-        card.tags?.join(" ") || "",
-        card.parameters?.sref?.join(" ") || "",
+        ...(card.tags || []),
+        ...(card.sref || []),
         categoryName
       ]
         .join(" ")
         .toLowerCase()
-
-      index.add(card.id, textToIndex)
+      index.add(card.id, searchText)
     })
-
     return index
-  }, [allCards, categories])
+  }, [allCardsMeta, categories])
 
-  const searchResults = useMemo(() => {
-    if (!searchTag || !searchIndex) return null
-    // @ts-ignore
-    const results = searchIndex.search(searchTag.toLowerCase())
-    return new Set(results)
-  }, [searchTag, searchIndex])
+  const allSrefs = useMemo(() => {
+    if (!allCardsMeta) return []
+    const srefs = new Set<string>()
+    allCardsMeta.forEach((card) => {
+      card.sref?.forEach((url) => srefs.add(url))
+    })
+    return Array.from(srefs)
+  }, [allCardsMeta])
 
-  const filteredAndSortedCards = useMemo(() => {
-    if (!allCards) return []
+  // 3. メモリ上での軽量フィルタリングとソート
+  const filteredAndSortedMeta = useMemo(() => {
+    if (!allCardsMeta) return []
 
-    let result = allCards.filter((card) => !card.isVariable)
+    let result = allCardsMeta.filter((card) => !card.isVariable)
 
-    // Filtering using FlexSearch matching IDs
-    if (searchTag && searchResults) {
-      result = result.filter((card) => searchResults.has(card.id))
+    // FlexSearchによる高速テキスト検索
+    if (searchTag && flexsearchIndex) {
+      const query = searchTag.toLowerCase()
+      const matchedIds = flexsearchIndex.search(query)
+      const matchedSet = new Set(matchedIds)
+      result = result.filter((card) => matchedSet.has(card.id))
     }
 
     if (rarityFilter !== "All") {
@@ -105,7 +134,6 @@ export function useLibrary(
       result = result.filter((card) => card.category === categoryFilter)
     }
 
-    // Dominant Color filtering
     if (colorFilter !== "All") {
       result = result.filter((card) => {
         if (!card.dominantColor) return false
@@ -117,7 +145,6 @@ export function useLibrary(
       })
     }
 
-    // Sorting
     result.sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -165,32 +192,54 @@ export function useLibrary(
 
     return result
   }, [
-    allCards,
+    allCardsMeta,
     categories,
     searchTag,
-    searchResults,
+    flexsearchIndex,
     rarityFilter,
     categoryFilter,
     colorFilter,
     sortBy
   ])
 
-  const hasMore = filteredAndSortedCards.length > visibleCount
-  const visibleCards = useMemo(() => {
-    return filteredAndSortedCards.slice(0, visibleCount)
-  }, [filteredAndSortedCards, visibleCount])
+  // 検索条件やソート条件が変わったら、表示件数をリセットする
+  useMemo(() => {
+    setVisibleCount(pageSize)
+  }, [searchTag, rarityFilter, categoryFilter, colorFilter, sortBy])
 
-  const loadMore = () => {
-    setVisibleCount((prev) => prev + 12)
-  }
+  const visibleMeta = useMemo(() => {
+    return filteredAndSortedMeta.slice(0, visibleCount)
+  }, [filteredAndSortedMeta, visibleCount])
 
-  const togglePin = async (card: StyleCard, e: React.MouseEvent) => {
+  const visibleIds = useMemo(() => {
+    return visibleMeta.map((card) => card.id)
+  }, [visibleMeta])
+
+  // 4. 表示対象のカード実体（サムネイル等含む）のみをIndexedDBからバルク取得
+  const visibleCards = useLiveQuery(async () => {
+    if (!visibleIds || visibleIds.length === 0) return []
+    const cards = await db.styleCards.bulkGet(visibleIds)
+    const idToCardMap = new Map<string, StyleCard>()
+    cards.forEach((card) => {
+      if (card && !card.isDeleted) {
+        idToCardMap.set(card.id, card)
+      }
+    })
+    return visibleIds
+      .map((id) => idToCardMap.get(id))
+      .filter((card): card is StyleCard => !!card)
+  }, [visibleIds])
+
+  const togglePin = async (
+    card: StyleCard | StyleCardMetadata,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation()
     const newPinnedStatus = !card.isPinned
     try {
       const updateData: Partial<StyleCard> = { isPinned: newPinnedStatus }
       if (newPinnedStatus) {
-        const pinnedCount = allCards?.filter((c) => c.isPinned).length || 0
+        const pinnedCount = allCardsMeta?.filter((c) => c.isPinned).length || 0
         if (pinnedCount >= 7) {
           setAlertType("hand_full")
           return
@@ -208,11 +257,11 @@ export function useLibrary(
     }
   }
 
-  const handleCardClick = (card: StyleCard) => {
+  const handleCardClick = (card: StyleCard | StyleCardMetadata) => {
     const hasSlots = card.promptSegments?.some((seg) => seg.type === "slot")
     if (hasSlots) {
       if (!card.isPinned) {
-        const pinnedCount = allCards?.filter((c) => c.isPinned).length || 0
+        const pinnedCount = allCardsMeta?.filter((c) => c.isPinned).length || 0
         if (pinnedCount >= 7) {
           setAlertType("hand_full")
           return
@@ -270,7 +319,6 @@ export function useLibrary(
             }
           })
           .catch((err) => {
-            // Fix: Report error to global alert system
             console.error("Library injection failed:", err)
             setAlertType("disconnected")
             addLog(`Note: ${err.message || "Could not send to tab"}`)
@@ -282,8 +330,11 @@ export function useLibrary(
     })
   }
 
+  const hasMore = filteredAndSortedMeta.length > visibleCount
+  const loadMore = () => setVisibleCount((prev) => prev + pageSize)
+
   return {
-    styleCards: visibleCards,
+    styleCards: visibleCards || [],
     handleCardClick,
     togglePin,
     searchTag,
@@ -298,10 +349,9 @@ export function useLibrary(
     setSortBy,
     allSrefs,
     categories,
-    allCards,
+    allCards: allCardsMeta,
     hasMore,
     loadMore,
-    visibleCount,
-    setVisibleCount
+    totalMatchedCount: filteredAndSortedMeta.length
   }
 }

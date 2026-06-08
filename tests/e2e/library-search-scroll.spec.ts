@@ -115,10 +115,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     await expect(allCardsInGrid).toHaveCount(1, { timeout: 10000 })
     await expect(allCardsInGrid.first().locator("p")).toHaveText("Fancy Card 5")
 
-    // Clear search
+    // Clear search (should reset visibleCount back to 12)
     await searchField.fill("")
     await page.waitForTimeout(1000)
-    await expect(allCardsInGrid).toHaveCount(15, { timeout: 10000 })
+    await expect(allCardsInGrid).toHaveCount(12, { timeout: 10000 })
 
     // 4. Color Filter Check
     console.log("Applying Color Filter (Red)...")

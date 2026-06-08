@@ -1,4 +1,4 @@
-import { BookUp2, Search, Tag } from "lucide-react"
+import { BookUp2, ChevronDown, Search, Tag } from "lucide-react"
 import React, { useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
@@ -271,77 +271,82 @@ export function LibraryTab({
       )}
 
       {styleCards !== undefined && styleCards.length > 0 ? (
-        <div
-          className="grid grid-cols-2 gap-3"
-          data-tutorial="library-card-grid">
-          {styleCards.map((card, idx) => {
-            const config = RARITY_CONFIG[card.tier]
-            const cardCategory = categories.find((c) => c.id === card.category)
-            return (
-              <div
-                key={card.id}
-                data-tutorial={idx === 0 ? "library-card" : undefined}
-                onClick={(e) => {
-                  if (isEasyMode) {
-                    onOpenSimpleWorkbench?.(card)
-                  } else {
-                    togglePin(card, e)
-                    advanceIfStep("card-to-hand")
-                  }
-                }}
-                className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                  config?.borderClass || "border-slate-200"
-                } ${config?.glowClass || ""}`}>
-                <CardThumbnail
-                  imageUrl={card.thumbnailData}
-                  thumbnailImages={card.selectedThumbnails}
-                  alt={card.name}
-                  tier={card.tier}
-                  isPinned={card.isPinned}
-                  usageCount={card.usageCount}
-                  onPinClick={
-                    isEasyMode ? undefined : (e) => togglePin(card, e)
-                  }
-                  onEditClick={(e) => {
-                    e.stopPropagation()
-                    onOpenDetailCard(card)
-                  }}
-                  onInjectClick={(e) => {
-                    e.stopPropagation()
-                    handleCardClick(card)
-                  }}
-                  onShareClick={(e) => {
-                    e.stopPropagation()
-                    setSharingCard(card)
-                  }}
-                  category={cardCategory}
-                  draggable={true}
-                  onDragStart={(e) => {
-                    const text = buildPromptString(
-                      card.promptSegments,
-                      card.parameters
-                    )
-                    e.dataTransfer.setData("text/plain", text)
-                  }}
-                />
+        <>
+          <div
+            className="grid grid-cols-2 gap-3"
+            data-tutorial="library-card-grid">
+            {styleCards.map((card, idx) => {
+              const config = RARITY_CONFIG[card.tier]
+              const cardCategory = categories.find(
+                (c) => c.id === card.category
+              )
+              return (
                 <div
-                  className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
-                  <p className="text-xs font-bold text-slate-800 truncate">
-                    {card.name}
-                  </p>
+                  key={card.id}
+                  data-tutorial={idx === 0 ? "library-card" : undefined}
+                  onClick={(e) => {
+                    if (isEasyMode) {
+                      onOpenSimpleWorkbench?.(card)
+                    } else {
+                      togglePin(card, e)
+                      advanceIfStep("card-to-hand")
+                    }
+                  }}
+                  className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                    config?.borderClass || "border-slate-200"
+                  } ${config?.glowClass || ""}`}>
+                  <CardThumbnail
+                    imageUrl={card.thumbnailData}
+                    thumbnailImages={card.selectedThumbnails}
+                    alt={card.name}
+                    tier={card.tier}
+                    isPinned={card.isPinned}
+                    usageCount={card.usageCount}
+                    onPinClick={
+                      isEasyMode ? undefined : (e) => togglePin(card, e)
+                    }
+                    onEditClick={(e) => {
+                      e.stopPropagation()
+                      onOpenDetailCard(card)
+                    }}
+                    onInjectClick={(e) => {
+                      e.stopPropagation()
+                      handleCardClick(card)
+                    }}
+                    onShareClick={(e) => {
+                      e.stopPropagation()
+                      setSharingCard(card)
+                    }}
+                    category={cardCategory}
+                    draggable={true}
+                    onDragStart={(e) => {
+                      const text = buildPromptString(
+                        card.promptSegments,
+                        card.parameters
+                      )
+                      e.dataTransfer.setData("text/plain", text)
+                    }}
+                  />
+                  <div
+                    className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
+                    <p className="text-xs font-bold text-slate-800 truncate">
+                      {card.name}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
           {hasMore && (
             <button
               onClick={loadMore}
-              className="col-span-2 mt-2 w-full py-2 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs transition-all hover:scale-[1.01] active:scale-[0.99] shadow-md hover:shadow-indigo-500/20 duration-200 border border-white/10"
-              id="library-load-more-btn">
-              {t.loadMore || "Load More"}
+              className="mt-4 w-full py-2 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs transition-all hover:scale-[1.01] active:scale-[0.99] shadow-md hover:shadow-indigo-500/20 duration-200 border border-white/10"
+              id="library-load-more-btn"
+              data-testid="show-more-button">
+              {t.showMore || t.loadMore || "Load More"}
             </button>
           )}
-        </div>
+        </>
       ) : styleCards !== undefined ? (
         <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 rounded-xl border border-slate-200 border-dashed backdrop-blur-sm animate-in fade-in duration-300">
           {allCards !== undefined &&

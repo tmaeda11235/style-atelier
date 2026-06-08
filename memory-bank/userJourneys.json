@@ -18,7 +18,13 @@
       "id": "@J-ORG-EXPERT-01",
       "name": "カード管理（エキスパート）",
       "description": "エキスパート向けカード管理（編集・削除）",
-      "steps": ["ライブラリを開く", "カード選択", "編集・削除実行"],
+      "steps": [
+        "ライブラリを開く",
+        "テキスト・フィルタ検索",
+        "もっと見るによるカード読み込み",
+        "カード選択",
+        "編集・削除実行"
+      ],
       "nextJourneys": [
         "@J-ORG-EXPERT-02",
         "@J-WB-EXPERT-01",
@@ -41,7 +47,11 @@
       "id": "@J-ORG-EASY-01",
       "name": "かんたんライブラリ",
       "description": "かんたんモードのライブラリ（カード閲覧・選択）",
-      "steps": ["ライブラリを開く", "カードを見る"],
+      "steps": [
+        "ライブラリを開く",
+        "もっと見るによるカード読み込み",
+        "カードを見る"
+      ],
       "nextJourneys": ["@J-WB-EASY-01"]
     },
     {
@@ -49,14 +59,19 @@
       "name": "ワークベンチ（エキスパート）",
       "description": "エキスパートモードでプロンプトを構築する",
       "steps": ["Workbenchを開く", "カードを選ぶ", "プロンプトをマージ"],
-      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-03", "@J-WB-EXPERT-04"]
+      "nextJourneys": [
+        "@J-WB-EXPERT-02",
+        "@J-WB-EXPERT-03",
+        "@J-WB-EXPERT-04",
+        "@J-WB-EXPERT-05"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-02",
       "name": "ドラッグ＆ドロップ操作",
       "description": "ドラッグ＆ドロップでカードを配置する",
       "steps": ["カードをドラッグ", "Handエリアにドロップ", "順序入れ替え"],
-      "nextJourneys": ["@J-WB-EXPERT-01"]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-05"]
     },
     {
       "id": "@J-WB-EXPERT-03",
@@ -167,6 +182,29 @@
         "「もっと読み込む」ボタンをクリックして追加表示"
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-EXPERT-05",
+      "name": "手札バー（HandBar）の最小化・折りたたみ",
+      "description": "画面の表示領域を確保するために手札バーを最小化し、必要に応じて展開する",
+      "steps": [
+        "最小化ボタン押下",
+        "手札バーが折りたたまれる",
+        "展開ボタン押下（または新規カード追加で自動展開）",
+        "手札バーが再展開される"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-02"]
+    },
+    {
+      "id": "@J-TUTORIAL-01",
+      "name": "インタラクティブチュートリアル",
+      "description": "新規ユーザー向けのインタラクティブチュートリアル（オンボーディング）の実行",
+      "steps": [
+        "「チュートリアルを開始する」ボタン押下",
+        "ステップ進行（ドラッグ＆ドロップ、Mintボタンクリック、保存など）",
+        "チュートリアル完了"
+      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01", "@J-WB-EXPERT-01"]
     }
   ]
 }
