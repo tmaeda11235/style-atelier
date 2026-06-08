@@ -1,4 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks"
+import { Index } from "flexsearch"
 import { useMemo, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
@@ -24,6 +25,23 @@ export type ColorFilter =
   | "Black"
   | "Gray"
 
+interface StyleCardMetadata {
+  id: string
+  name: string
+  tags: string[]
+  tier: StyleCard["tier"]
+  category?: string
+  dominantColor?: string
+  createdAt: number
+  usageCount: number
+  isPinned: boolean
+  isVariable: boolean
+  sref: string[]
+  promptSegments: StyleCard["promptSegments"]
+  parameters: StyleCard["parameters"]
+  masking: StyleCard["masking"]
+}
+
 export function useLibrary(
   addLog: (msg: string) => void,
   setAlertType: (type: AlertType) => void,
@@ -34,39 +52,78 @@ export function useLibrary(
   const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
+  const [visibleCount, setVisibleCount] = useState(20)
+  const pageSize = 20
 
-  const allCards = useLiveQuery(() => db.getAllCards())
+  // 1. メタデータのみを抽出して取得（重いthumbnailDataなどをReact Stateに全件保持しない）
+  const allCardsMeta = useLiveQuery(async () => {
+    const cards = await db.getAllCards()
+    return cards.map(
+      (c): StyleCardMetadata => ({
+        id: c.id,
+        name: c.name,
+        tags: c.tags || [],
+        tier: c.tier,
+        category: c.category,
+        dominantColor: c.dominantColor,
+        createdAt: c.createdAt,
+        usageCount: c.usageCount || 0,
+        isPinned: !!c.isPinned,
+        isVariable: !!c.isVariable,
+        sref: c.parameters?.sref || [],
+        promptSegments: c.promptSegments,
+        parameters: c.parameters,
+        masking: c.masking
+      })
+    )
+  })
+
   const categories = useLiveQuery(() => db.getAllCategories()) || []
 
+  // 2. 検索用の FlexSearch インデックス構築
+  const flexsearchIndex = useMemo(() => {
+    if (!allCardsMeta) return null
+    const index = new Index({
+      tokenize: "forward",
+      resolution: 9
+    })
+    allCardsMeta.forEach((card) => {
+      const catObj = categories.find((c) => c.id === card.category)
+      const categoryName = catObj ? catObj.name.toLowerCase() : ""
+      const searchText = [
+        card.name,
+        ...(card.tags || []),
+        ...(card.sref || []),
+        categoryName
+      ]
+        .join(" ")
+        .toLowerCase()
+      index.add(card.id, searchText)
+    })
+    return index
+  }, [allCardsMeta, categories])
+
   const allSrefs = useMemo(() => {
-    if (!allCards) return []
+    if (!allCardsMeta) return []
     const srefs = new Set<string>()
-    allCards.forEach((card) => {
-      card.parameters.sref?.forEach((url) => srefs.add(url))
+    allCardsMeta.forEach((card) => {
+      card.sref?.forEach((url) => srefs.add(url))
     })
     return Array.from(srefs)
-  }, [allCards])
+  }, [allCardsMeta])
 
-  const filteredAndSortedCards = useMemo(() => {
-    if (!allCards) return []
+  // 3. メモリ上での軽量フィルタリングとソート
+  const filteredAndSortedMeta = useMemo(() => {
+    if (!allCardsMeta) return []
 
-    let result = allCards.filter((card) => !card.isVariable)
+    let result = allCardsMeta.filter((card) => !card.isVariable)
 
-    // Filtering
-    if (searchTag) {
-      const tag = searchTag.toLowerCase()
-      result = result.filter((card) => {
-        const catObj = categories.find((c) => c.id === card.category)
-        const categoryName = catObj ? catObj.name.toLowerCase() : ""
-        return (
-          card.tags?.some((t) => t.toLowerCase().includes(tag)) ||
-          card.name.toLowerCase().includes(tag) ||
-          card.parameters.sref?.some((url) =>
-            url.toLowerCase().includes(tag)
-          ) ||
-          categoryName.includes(tag)
-        )
-      })
+    // FlexSearchによる高速テキスト検索
+    if (searchTag && flexsearchIndex) {
+      const query = searchTag.toLowerCase()
+      const matchedIds = flexsearchIndex.search(query)
+      const matchedSet = new Set(matchedIds)
+      result = result.filter((card) => matchedSet.has(card.id))
     }
 
     if (rarityFilter !== "All") {
@@ -77,7 +134,6 @@ export function useLibrary(
       result = result.filter((card) => card.category === categoryFilter)
     }
 
-    // Dominant Color filtering
     if (colorFilter !== "All") {
       result = result.filter((card) => {
         if (!card.dominantColor) return false
@@ -89,7 +145,6 @@ export function useLibrary(
       })
     }
 
-    // Sorting
     result.sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -137,22 +192,54 @@ export function useLibrary(
 
     return result
   }, [
-    allCards,
+    allCardsMeta,
     categories,
     searchTag,
+    flexsearchIndex,
     rarityFilter,
     categoryFilter,
     colorFilter,
     sortBy
   ])
 
-  const togglePin = async (card: StyleCard, e: React.MouseEvent) => {
+  // 検索条件やソート条件が変わったら、表示件数をリセットする
+  useMemo(() => {
+    setVisibleCount(pageSize)
+  }, [searchTag, rarityFilter, categoryFilter, colorFilter, sortBy])
+
+  const visibleMeta = useMemo(() => {
+    return filteredAndSortedMeta.slice(0, visibleCount)
+  }, [filteredAndSortedMeta, visibleCount])
+
+  const visibleIds = useMemo(() => {
+    return visibleMeta.map((card) => card.id)
+  }, [visibleMeta])
+
+  // 4. 表示対象のカード実体（サムネイル等含む）のみをIndexedDBからバルク取得
+  const visibleCards = useLiveQuery(async () => {
+    if (!visibleIds || visibleIds.length === 0) return []
+    const cards = await db.styleCards.bulkGet(visibleIds)
+    const idToCardMap = new Map<string, StyleCard>()
+    cards.forEach((card) => {
+      if (card && !card.isDeleted) {
+        idToCardMap.set(card.id, card)
+      }
+    })
+    return visibleIds
+      .map((id) => idToCardMap.get(id))
+      .filter((card): card is StyleCard => !!card)
+  }, [visibleIds])
+
+  const togglePin = async (
+    card: StyleCard | StyleCardMetadata,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation()
     const newPinnedStatus = !card.isPinned
     try {
       const updateData: Partial<StyleCard> = { isPinned: newPinnedStatus }
       if (newPinnedStatus) {
-        const pinnedCount = allCards?.filter((c) => c.isPinned).length || 0
+        const pinnedCount = allCardsMeta?.filter((c) => c.isPinned).length || 0
         if (pinnedCount >= 7) {
           setAlertType("hand_full")
           return
@@ -170,11 +257,11 @@ export function useLibrary(
     }
   }
 
-  const handleCardClick = (card: StyleCard) => {
+  const handleCardClick = (card: StyleCard | StyleCardMetadata) => {
     const hasSlots = card.promptSegments?.some((seg) => seg.type === "slot")
     if (hasSlots) {
       if (!card.isPinned) {
-        const pinnedCount = allCards?.filter((c) => c.isPinned).length || 0
+        const pinnedCount = allCardsMeta?.filter((c) => c.isPinned).length || 0
         if (pinnedCount >= 7) {
           setAlertType("hand_full")
           return
@@ -232,7 +319,6 @@ export function useLibrary(
             }
           })
           .catch((err) => {
-            // Fix: Report error to global alert system
             console.error("Library injection failed:", err)
             setAlertType("disconnected")
             addLog(`Note: ${err.message || "Could not send to tab"}`)
@@ -244,8 +330,11 @@ export function useLibrary(
     })
   }
 
+  const hasMore = filteredAndSortedMeta.length > visibleCount
+  const loadMore = () => setVisibleCount((prev) => prev + pageSize)
+
   return {
-    styleCards: filteredAndSortedCards,
+    styleCards: visibleCards || [],
     handleCardClick,
     togglePin,
     searchTag,
@@ -260,6 +349,9 @@ export function useLibrary(
     setSortBy,
     allSrefs,
     categories,
-    allCards
+    allCards: allCardsMeta,
+    hasMore,
+    loadMore,
+    totalMatchedCount: filteredAndSortedMeta.length
   }
 }

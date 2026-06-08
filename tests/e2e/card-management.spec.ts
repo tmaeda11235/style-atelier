@@ -189,4 +189,74 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
       path: path.join(screenshotsDir, "card-detail-footer-responsive.png")
     })
   })
+
+  test("should load first page of cards, show More button, and load next page when clicked", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for library pagination E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed 25 cards to database (page size is 20)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      const cards = Array.from({ length: 25 }, (_, i) => ({
+        id: `card-paginated-${i}`,
+        name: `Card ${String(i).padStart(2, "0")}`,
+        promptSegments: [{ type: "text", value: `prompt ${i}` }],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        tags: ["test-paginated"],
+        createdAt: Date.now() - i * 1000, // Sorted newest first
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+      }))
+      await database.styleCards.bulkAdd(cards)
+    })
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await libraryTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB queries
+
+    // 4. Verify exactly 20 cards are loaded on the first page
+    // (Card 00 to Card 19)
+    await expect(spFrame.locator("text=Card 00")).toBeVisible()
+    await expect(spFrame.locator("text=Card 19")).toBeVisible()
+    await expect(spFrame.locator("text=Card 20")).not.toBeVisible()
+
+    // 5. Verify Show More button is visible
+    const showMoreBtn = spFrame.locator("[data-testid='show-more-button']")
+    await expect(showMoreBtn).toBeVisible()
+
+    // Capture first page screenshot
+    await spFrame.locator("[data-tutorial='library-card-grid']").screenshot({
+      path: path.join(screenshotsDir, "library-pagination-page1.png")
+    })
+
+    // 6. Click Show More button
+    await showMoreBtn.click()
+    await page.waitForTimeout(500) // Wait for lazy loading
+
+    // 7. Verify Card 20 is now visible, and we have 25 cards total
+    await expect(spFrame.locator("text=Card 20")).toBeVisible()
+    await expect(spFrame.locator("text=Card 24")).toBeVisible()
+
+    // 8. Verify Show More button is hidden because all 25 cards are loaded
+    await expect(showMoreBtn).not.toBeVisible()
+
+    // Capture second page screenshot
+    await spFrame.locator("[data-tutorial='library-card-grid']").screenshot({
+      path: path.join(screenshotsDir, "library-pagination-page2.png")
+    })
+  })
 })

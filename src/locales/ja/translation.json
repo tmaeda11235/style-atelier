@@ -265,6 +265,7 @@
     "notFoundDesc": "検索キーワードやフィルターの条件を変更するか、クリアしてください。",
     "clearFilters": "フィルターをクリア",
     "searchPlaceholder": "タグ、名前、srefで検索...",
+    "showMore": "もっと見る",
     "allRarities": "すべてのレア度",
     "allCategories": "すべて",
     "colorLabel": "カラー:",
