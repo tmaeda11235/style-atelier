@@ -14,22 +14,22 @@ export async function getStyleCardById(
 /**
  * Retrieves all non-deleted StyleCards.
  */
-export async function getAllStyleCards(): Promise<StyleCard[]> {
-  return await db.getAllCards()
+export function getAllStyleCards(): Promise<StyleCard[]> {
+  return db.getAllCards()
 }
 
 /**
  * Retrieves pinned StyleCards.
  */
-export async function getPinnedStyleCards(): Promise<StyleCard[]> {
-  return await db.getPinnedCards()
+export function getPinnedStyleCards(): Promise<StyleCard[]> {
+  return db.getPinnedCards()
 }
 
 /**
  * Retrieves all categories.
  */
-export async function getAllCategories(): Promise<CustomCategory[]> {
-  return await db.getAllCategories()
+export function getAllCategories(): Promise<CustomCategory[]> {
+  return db.getAllCategories()
 }
 
 /**
