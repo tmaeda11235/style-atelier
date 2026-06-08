@@ -74,7 +74,7 @@ export function MintingView({
   const { expertFeatures } = useSettings()
   const { t } = useLanguage()
 
-  const { data: categoriesList = [] } = useCategories()
+  const categoriesList = useCategories()
 
   const toggleKeyword = (keyword: string) => {
     if (selectedKeywords.includes(keyword)) {

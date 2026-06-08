@@ -37,7 +37,7 @@ vi.mock("../../hooks/useStyleCards", () => ({
 }))
 
 vi.mock("../../hooks/useCategories", () => ({
-  useCategories: vi.fn().mockReturnValue({ data: [] })
+  useCategories: vi.fn().mockReturnValue([])
 }))
 
 describe("Workbench", () => {

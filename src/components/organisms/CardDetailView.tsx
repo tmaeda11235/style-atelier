@@ -62,7 +62,7 @@ export function CardDetailView({
   const { expertFeatures } = useSettings()
   const { t } = useLanguage()
 
-  const { data: categoriesList = [] } = useCategories()
+  const categoriesList = useCategories()
 
   const {
     name,
