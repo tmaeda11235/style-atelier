@@ -218,6 +218,17 @@
         "チュートリアル完了"
       ],
       "nextJourneys": ["@J-MINT-EXPERT-01", "@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-IO-MJ-DRAG-IN",
+      "name": "Midjourney履歴ドラッグインポート & フィードバック",
+      "description": "Midjourneyから生成履歴や画像をドラッグ＆ドロップしてインポートする（ドラッグ時の視覚的フィードバック付）",
+      "steps": [
+        "Midjourney画像をドラッグ",
+        "サイドパネル上にオーバーレイ（インディゴ/ブルー）が表示されることを確認",
+        "ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"
+      ],
+      "nextJourneys": ["@J-SYS-01", "@J-MINT-EASY-01"]
     }
   ]
 }

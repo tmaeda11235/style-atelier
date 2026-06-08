@@ -369,7 +369,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
     console.log("Easy Mode Drag-and-drop E2E test passed successfully!")
   })
 
-  test("should display drag overlays when dragging files or items over sidepanel", async ({
+  test("should display drag overlays when dragging files or items over sidepanel @J-IO-MJ-DRAG-IN", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")

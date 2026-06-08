@@ -31,6 +31,7 @@ stateDiagram-v2
   _J_ORG_SEARCH_01 : ライブラリ検索・フィルタ・スクロール
   _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
   _J_TUTORIAL_01 : インタラクティブチュートリアル
+  _J_IO_MJ_DRAG_IN : Midjourney履歴ドラッグインポート & フィードバック
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -69,6 +70,8 @@ stateDiagram-v2
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_02
   _J_TUTORIAL_01 --> _J_MINT_EXPERT_01
   _J_TUTORIAL_01 --> _J_WB_EXPERT_01
+  _J_IO_MJ_DRAG_IN --> _J_SYS_01
+  _J_IO_MJ_DRAG_IN --> _J_MINT_EASY_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -380,6 +383,15 @@ flowchart TD
   S2 --> S3
 ```
 
-```
+### @J-IO-MJ-DRAG-IN: Midjourney履歴ドラッグインポート & フィードバック
 
+Midjourneyから生成履歴や画像をドラッグ＆ドロップしてインポートする（ドラッグ時の視覚的フィードバック付）
+
+```mermaid
+flowchart TD
+  S1["Midjourney画像をドラッグ"]
+  S2["サイドパネル上にオーバーレイ（インディゴ/ブルー）が表示されることを確認"]
+  S1 --> S2
+  S3["ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"]
+  S2 --> S3
 ```
