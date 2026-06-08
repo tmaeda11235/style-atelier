@@ -28,7 +28,7 @@ jobs:
 
       # 厳密な依存関係解決により、npmキャッシュの不一致を防ぐ
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run lint
         run: npm run lint
@@ -54,7 +54,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Get Playwright version
         id: playwright-version
