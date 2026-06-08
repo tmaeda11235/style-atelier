@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test"
 
 /**
  * Playwright E2E test configuration for style-atelier Chrome Extension.
@@ -9,7 +9,7 @@ export default defineConfig({
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {
-    timeout: 5000,
+    timeout: 5000
   },
   /* Run tests in files in parallel */
   fullyParallel: false, // Keep serial for extension state/storage isolation if needed
@@ -30,25 +30,26 @@ export default defineConfig({
     /* Capture screenshot after each test. */
     screenshot: "on",
     /* Record video only when a test fails. */
-    video: "retain-on-failure",
+    video: "retain-on-failure"
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1920, height: 1080 },
-      },
-    },
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1920, height: 1080 }
+      }
+    }
   ],
 
   /* Run local dev server before starting the tests */
   webServer: {
-    command: "npx vite --config tests/sandbox/vite.config.ts --port 5173",
+    command:
+      "npx vite --config tests/sandbox/vite.config.ts --port 5173 --strictPort",
     port: 5173,
     reuseExistingServer: !process.env.CI,
-    timeout: 15 * 1000,
-  },
-});
+    timeout: 15 * 1000
+  }
+})
