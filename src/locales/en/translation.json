@@ -470,6 +470,12 @@
   },
   "alerts": {
     "handFullTitle": "Hand is Full",
-    "handFullDesc": "You can only pin up to 7 cards. Please unpin another card first."
+    "handFullDesc": "You can only pin up to 7 cards. Please unpin another card first.",
+    "disconnectedTitle": "Connection Lost",
+    "disconnectedDesc": "The extension has lost connection to the page. This usually happens after an update or prolonged inactivity.",
+    "disconnectedBtn": "Reload Page",
+    "noInputTitle": "Input Not Found",
+    "noInputDesc": "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view.",
+    "noInputBtn": "Retry Connection"
   }
 }
