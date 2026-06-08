@@ -14,9 +14,6 @@ vi.mock("dexie-react-hooks", () => ({
     if (fnStr.includes("categories")) {
       return mockCategories
     }
-    if (fnStr.includes("count")) {
-      return mockStyleCards.length
-    }
     return mockStyleCards
   }
 }))

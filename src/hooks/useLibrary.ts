@@ -37,40 +37,7 @@ export function useLibrary(
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [visibleCount, setVisibleCount] = useState(12)
 
-  const totalCount =
-    useLiveQuery(async () => {
-      return await db.styleCards
-        .where("isDeleted")
-        .notEqual(1)
-        .filter((c) => !c.isVariable)
-        .count()
-    }) || 0
-
-  const isDefaultView =
-    !searchTag &&
-    rarityFilter === "All" &&
-    categoryFilter === "All" &&
-    colorFilter === "All"
-
-  const allCards = useLiveQuery(async () => {
-    if (isDefaultView) {
-      if (sortBy === "newest") {
-        const cards = await db.styleCards
-          .where("isDeleted")
-          .notEqual(1)
-          .reverse()
-          .sortBy("createdAt")
-        return cards.filter((c) => !c.isVariable).slice(0, visibleCount)
-      } else if (sortBy === "oldest") {
-        const cards = await db.styleCards
-          .where("isDeleted")
-          .notEqual(1)
-          .sortBy("createdAt")
-        return cards.filter((c) => !c.isVariable).slice(0, visibleCount)
-      }
-    }
-    return db.getAllCards()
-  }, [isDefaultView, sortBy, visibleCount])
+  const allCards = useLiveQuery(() => db.getAllCards()) || []
 
   const categories = useLiveQuery(() => db.getAllCategories()) || []
 
@@ -208,9 +175,7 @@ export function useLibrary(
     sortBy
   ])
 
-  const hasMore = isDefaultView
-    ? totalCount > visibleCount
-    : filteredAndSortedCards.length > visibleCount
+  const hasMore = filteredAndSortedCards.length > visibleCount
   const visibleCards = useMemo(() => {
     return filteredAndSortedCards.slice(0, visibleCount)
   }, [filteredAndSortedCards, visibleCount])
