@@ -36,6 +36,14 @@ tags: []
 - **Asynchronous State & Caching**:
   - React Query (`@tanstack/react-query`) is configured with `chrome.storage.local` persistence (via `chromeAsyncStorage` and `@tanstack/query-async-storage-persister`).
   - Decouples IndexedDB query logic and remote synchronization from component lifecycle, providing automatic caching, cache invalidation, and a seamless fallback to `window.localStorage` when Chrome extension APIs are unavailable.
+- **State Management Separation of Concerns**:
+  - **UI Synchronous State (Local/Global UI)**: **Zustand** is used for synchronous UI state (e.g., active tabs, drag-and-drop actions, modal states) shared across components.
+  - **DB Reactive State (Local Persistent Data)**: **Dexie (`useLiveQuery`)** acts as the Single Source of Truth (SSOT) for IndexedDB collections (e.g., style cards, categories, slot history). To prevent cache inconsistency, React Query must NOT be used to cache or query local IndexedDB data. Real-time updates from background syncing must propagate to the UI via `useLiveQuery`.
+  - **Asynchronous & Remote Cache (Network/Async Boundary)**: **React Query** handles network-bound or heavy asynchronous processes (e.g., Google Drive metadata queries, token authorization, uploading/downloading backup files).
+- **Data Access Layer Boundaries**:
+  - UI components in `src/components/` must not import `src/lib/db.ts` or execute direct database queries.
+  - Query functions (`queryFn`) and mutations (`mutationFn`) must execute operations through the data access layer (encapsulated under `src/lib/`).
+  - Components access data exclusively via custom React hooks (`src/hooks/`) or state stores, avoiding direct dependencies on database instances or external API clients.
 - **Library Search & Performance Optimization**:
   - Utilizes `FlexSearch` client-side indexer to enable high-performance, real-time filtering across name, tags, and categories.
   - Implements memory-friendly client-side pagination ("Load More" pattern) in `useLibrary` to limit active DOM node counts in the style grid, preventing rendering-based UI freeze.
