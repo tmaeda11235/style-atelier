@@ -8,9 +8,7 @@ import { ParameterEditor } from "./ParameterEditor"
 let mockStyleCards: any[] = []
 
 vi.mock("../../hooks/useStyleCards", () => ({
-  useStyleCards: () => ({
-    data: mockStyleCards
-  })
+  useStyleCards: () => mockStyleCards
 }))
 
 describe("ParameterEditor", () => {

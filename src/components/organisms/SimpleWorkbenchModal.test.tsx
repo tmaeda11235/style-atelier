@@ -2,15 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { useUpdateStyleCard } from "../../hooks/useStyleCards"
 import { db } from "../../lib/db"
+import { updateStyleCard } from "../../lib/style-card-store"
 import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
 
-const mockMutateAsync = vi.fn().mockResolvedValue(1)
-vi.mock("../../hooks/useStyleCards", () => ({
-  useUpdateStyleCard: () => ({
-    mutateAsync: mockMutateAsync
-  })
+vi.mock("../../lib/style-card-store", () => ({
+  updateStyleCard: vi.fn().mockResolvedValue(1)
 }))
 
 // Mock PromptBubbleEditor and ParameterEditor to simplify layout testing
@@ -57,7 +54,7 @@ describe("SimpleWorkbenchModal", () => {
       { id: 1, status: "complete" }
     ] as any)
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
-    mockMutateAsync.mockClear()
+    vi.mocked(updateStyleCard).mockClear()
   })
 
   it("renders card name, details and inputs correctly", () => {
@@ -119,9 +116,8 @@ describe("SimpleWorkbenchModal", () => {
         type: "INJECT_PROMPT",
         prompt: "neon glow --ar 1:1"
       })
-      expect(mockMutateAsync).toHaveBeenCalledWith({
-        id: "card-123",
-        changes: { usageCount: 1 }
+      expect(updateStyleCard).toHaveBeenCalledWith("card-123", {
+        usageCount: 1
       })
       expect(mockAddLog).toHaveBeenCalledWith("Prompt injected successfully!")
     })
