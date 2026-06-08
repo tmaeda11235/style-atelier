@@ -2,7 +2,7 @@ import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useExpertModeView } from "../../hooks/useExpertModeView"
-import { db } from "../../lib/db"
+import { getStyleCardById } from "../../lib/style-card-store"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
 import { CardDetailView } from "./CardDetailView"
 import { HandBar } from "./HandBar"
@@ -164,7 +164,7 @@ export function ExpertModeView({
             onSave={handleSaveCardDetails}
             setAlertType={setAlertType}
             onCardSelect={async (cardId) => {
-              const targetCard = await db.styleCards.get(cardId)
+              const targetCard = await getStyleCardById(cardId)
               if (targetCard) {
                 setActiveDetailCard(targetCard)
               } else {

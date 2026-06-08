@@ -3,7 +3,9 @@ import React, { useEffect, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
+import { useChromeTabConnection } from "../../hooks/useChromeTabConnection"
 import { useEvolution } from "../../hooks/useEvolution"
+import { usePromptInjector } from "../../hooks/usePromptInjector"
 import { useWorkbench } from "../../hooks/useWorkbench"
 import type { PromptSegment } from "../../lib/db-schema"
 import { buildPromptString, mergePromptSegments } from "../../lib/prompt-utils"
@@ -57,7 +59,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({
 
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
   const [editedParams, setEditedParams] = useState<any>({})
-  const [isInjecting, setIsInjecting] = useState(false)
   const [slotValues, setSlotValues] = useState<Record<string, string>>({})
   const [isEvolutionSuccessOpen, setIsEvolutionSuccessOpen] = useState(false)
   const [evolvedCardData, setEvolvedCardData] = useState<{
@@ -82,78 +83,11 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     .join(",")
 
   // Check connection on mount
-  useEffect(() => {
-    let retryCount = 0
-    const maxRetries = 3
-    let timerId: any = null
-    let isCancelled = false
-
-    const checkConnection = async () => {
-      if (isCancelled) return
-      try {
-        const tabs = await chrome.tabs.query({
-          active: true,
-          currentWindow: true
-        })
-        const activeTab = tabs[0]
-        if (isCancelled) return
-        if (!activeTab) {
-          addLog?.("Check Connection: No active tab returned from query.")
-          return
-        }
-        if (!activeTab.id) {
-          addLog?.(
-            `Check Connection: Active tab has no ID. URL: ${activeTab.url}`
-          )
-          return
-        }
-
-        // If the tab is still loading, wait and retry
-        if (activeTab.status !== "complete") {
-          addLog?.(
-            `Check Connection: Tab is still loading (status: ${activeTab.status}). Retrying in 1s...`
-          )
-          timerId = setTimeout(checkConnection, 1000)
-          return
-        }
-
-        addLog?.(
-          `Checking connection to Tab ${activeTab.id} (${activeTab.url})...`
-        )
-        // Simple PING to check if content script is alive
-        const response = await chrome.tabs.sendMessage(activeTab.id, {
-          type: "PING"
-        })
-        if (isCancelled) return
-        addLog?.(
-          `Check Connection: Success! Ping response: ${JSON.stringify(response)}`
-        )
-        setAlertType(null)
-      } catch (err: any) {
-        if (isCancelled) return
-        console.log("Connection check failed:", err)
-        addLog?.(
-          `Connection check failed (attempt ${retryCount + 1}/${maxRetries}): ${err?.message || JSON.stringify(err)}`
-        )
-
-        if (retryCount < maxRetries) {
-          retryCount++
-          timerId = setTimeout(checkConnection, 1500) // Wait 1.5s and retry
-        } else {
-          setAlertType("disconnected")
-        }
-      }
-    }
-
-    checkConnection()
-
-    return () => {
-      isCancelled = true
-      if (timerId) {
-        clearTimeout(timerId)
-      }
-    }
-  }, [workbenchCardsDependency])
+  useChromeTabConnection({
+    workbenchCardsDependency,
+    setAlertType,
+    addLog
+  })
 
   // Load segments, parameters, and initialize slotValues when workbenchCards changes
   useEffect(() => {
@@ -265,84 +199,17 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     }
   }
 
-  const handleInjectPrompt = async () => {
-    if (workbenchCards.length === 0) return
-    setIsInjecting(true)
-    setAlertType(null)
+  const { isInjecting, injectPrompt } = usePromptInjector({
+    workbenchCards,
+    slotHistory,
+    saveSlotHistory,
+    incrementCardUsage,
+    setAlertType,
+    addLog
+  })
 
-    // Replace slot segments with their filled variable values
-    const resolvedSegments = editedSegments.map((seg) => {
-      if (seg.type === "slot") {
-        return {
-          type: "text" as const,
-          value: slotValues[seg.label] || seg.default || seg.label
-        }
-      }
-      return seg
-    })
-
-    const fullPrompt = buildPromptString(resolvedSegments, editedParams)
-
-    try {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true
-      })
-      const activeTab = tabs[0]
-
-      if (!activeTab?.id) {
-        throw new Error("No active tab found")
-      }
-
-      const response = await chrome.tabs.sendMessage(activeTab.id, {
-        type: "INJECT_PROMPT",
-        prompt: fullPrompt
-      })
-
-      if (response && response.status === "error") {
-        if (
-          response.message &&
-          response.message.includes("Could not find chat input")
-        ) {
-          setAlertType("no_input")
-        } else {
-          setAlertType("disconnected")
-        }
-      } else {
-        addLog?.(`Prompt injected successfully!`)
-
-        // Increment usage count for all cards in the Workbench
-        workbenchCards.forEach((card) => {
-          incrementCardUsage(card.id).catch((err) =>
-            console.error(
-              "Failed to update usage count on workbench inject:",
-              err
-            )
-          )
-        })
-
-        // Save slot values to history on success
-        try {
-          for (const [lbl, val] of Object.entries(slotValues)) {
-            const trimmedVal = val.trim()
-            if (!trimmedVal) continue
-            const currentValues = slotHistory[lbl] || []
-            const updatedValues = [
-              trimmedVal,
-              ...currentValues.filter((v) => v !== trimmedVal)
-            ].slice(0, 10)
-            await saveSlotHistory(lbl, updatedValues)
-          }
-        } catch (e) {
-          console.error("Failed to save slot history:", e)
-        }
-      }
-    } catch (err) {
-      console.error("Injection failed:", err)
-      setAlertType("disconnected")
-    } finally {
-      setIsInjecting(false)
-    }
+  const handleInjectPrompt = () => {
+    injectPrompt(editedSegments, editedParams, slotValues)
   }
 
   const handleMintVariation = () => {

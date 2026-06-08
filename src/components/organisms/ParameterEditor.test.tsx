@@ -7,10 +7,10 @@ import { ParameterEditor } from "./ParameterEditor"
 
 let mockStyleCards: any[] = []
 
-vi.mock("dexie-react-hooks", () => ({
-  useLiveQuery: (fn: any) => {
-    return mockStyleCards
-  }
+vi.mock("../../hooks/useStyleCards", () => ({
+  useStyleCards: () => ({
+    data: mockStyleCards
+  })
 }))
 
 describe("ParameterEditor", () => {
@@ -165,5 +165,73 @@ describe("ParameterEditor", () => {
     expect(
       screen.getByText("https://example.com/existing-cref.png")
     ).toBeDefined()
+  })
+
+  it("should render advanced parameters accordion and toggle display of inputs", () => {
+    const mockOnChange = vi.fn()
+    render(<ParameterEditor parameters={{}} onChange={mockOnChange} />)
+
+    // Check accordion button renders
+    const accordionBtn = screen.getByRole("button", {
+      name: /Advanced Parameters/
+    })
+    expect(accordionBtn).toBeDefined()
+
+    // Clicking the accordion should open it
+    fireEvent.click(accordionBtn)
+
+    // Verify checkbox labels for new parameters
+    expect(screen.getByLabelText("Stylize (--stylize)")).toBeDefined()
+    expect(screen.getByLabelText("Chaos (--chaos)")).toBeDefined()
+    expect(screen.getByLabelText("Weird (--weird)")).toBeDefined()
+    expect(screen.getByLabelText("Tile (--tile)")).toBeDefined()
+    expect(screen.getByLabelText("Style Raw (--style raw)")).toBeDefined()
+  })
+
+  it("should propagate changes for advanced parameters", () => {
+    const mockOnChange = vi.fn()
+    const { rerender } = render(
+      <ParameterEditor parameters={{}} onChange={mockOnChange} />
+    )
+
+    const accordionBtn = screen.getByRole("button", {
+      name: /Advanced Parameters/
+    })
+    fireEvent.click(accordionBtn)
+
+    // Check Stylize checkbox
+    const stylizeCheckbox = screen.getByLabelText(
+      "Stylize (--stylize)"
+    ) as HTMLInputElement
+    fireEvent.click(stylizeCheckbox)
+
+    // Should call onChange with default value (100)
+    expect(mockOnChange).toHaveBeenCalledWith({ stylize: 100 })
+
+    // Rerender with stylize value to test slider/input change
+    rerender(
+      <ParameterEditor parameters={{ stylize: 100 }} onChange={mockOnChange} />
+    )
+
+    // Find the number input for Stylize (it has value 100)
+    const stylizeInput = screen.getByRole("spinbutton") as HTMLInputElement
+    expect(stylizeInput.value).toBe("100")
+
+    // Change input value
+    fireEvent.change(stylizeInput, { target: { value: "350" } })
+    expect(mockOnChange).toHaveBeenCalledWith({ stylize: 350 })
+
+    // Test flags (Tile / Raw)
+    const tileCheckbox = screen.getByLabelText(
+      "Tile (--tile)"
+    ) as HTMLInputElement
+    fireEvent.click(tileCheckbox)
+    expect(mockOnChange).toHaveBeenCalledWith({ stylize: 100, tile: true })
+
+    const rawCheckbox = screen.getByLabelText(
+      "Style Raw (--style raw)"
+    ) as HTMLInputElement
+    fireEvent.click(rawCheckbox)
+    expect(mockOnChange).toHaveBeenCalledWith({ stylize: 100, raw: true })
   })
 })

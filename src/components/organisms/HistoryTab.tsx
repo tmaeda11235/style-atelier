@@ -11,7 +11,7 @@ interface HistoryTabProps {
 }
 
 export function HistoryTab({ onStartMinting }: HistoryTabProps) {
-  const { historyItems, loadMore, hasMore } = useHistory()
+  const { historyItems, loadMore, hasMore, updateHistoryItem } = useHistory()
   const sentinelRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
 
@@ -74,7 +74,13 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
         <div
           key={item.id}
           data-tutorial={idx === 0 ? "mint-button" : undefined}>
-          <HistoryCard item={item} onMintClick={onStartMinting} />
+          <HistoryCard
+            item={item}
+            onMintClick={onStartMinting}
+            onImageCached={(id, blob) =>
+              updateHistoryItem(id, { localImageBlob: blob })
+            }
+          />
         </div>
       ))}
 

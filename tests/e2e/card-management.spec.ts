@@ -189,4 +189,176 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
       path: path.join(screenshotsDir, "card-detail-footer-responsive.png")
     })
   })
+
+  test("should load first page of cards, show More button, and load next page when clicked", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for library pagination E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed 24 cards to database (page size is 12)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      const cards = Array.from({ length: 24 }, (_, i) => ({
+        id: `card-paginated-${i}`,
+        name: `Card ${String(i).padStart(2, "0")}`,
+        promptSegments: [{ type: "text", value: `prompt ${i}` }],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        tags: ["test-paginated"],
+        createdAt: Date.now() - i * 1000, // Sorted newest first
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+      }))
+      await database.styleCards.bulkAdd(cards)
+    })
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await libraryTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB queries
+
+    // 4. Verify exactly 12 cards are loaded on the first page
+    // (Card 00 to Card 11)
+    await expect(spFrame.locator("text=Card 00")).toBeVisible()
+    await expect(spFrame.locator("text=Card 11")).toBeVisible()
+    await expect(spFrame.locator("text=Card 12")).not.toBeVisible()
+
+    // 5. Verify Show More button is visible
+    const showMoreBtn = spFrame.locator("[data-testid='show-more-button']")
+    await expect(showMoreBtn).toBeVisible()
+
+    // Capture first page screenshot
+    await spFrame.locator("[data-tutorial='library-card-grid']").screenshot({
+      path: path.join(screenshotsDir, "library-pagination-page1.png")
+    })
+
+    // 6. Click Show More button
+    await showMoreBtn.click()
+    await page.waitForTimeout(500) // Wait for lazy loading
+
+    // 7. Verify Card 12 is now visible, and we have 24 cards total
+    await expect(spFrame.locator("text=Card 12")).toBeVisible()
+    await expect(spFrame.locator("text=Card 23")).toBeVisible()
+
+    // 8. Verify Show More button is hidden because all 24 cards are loaded
+    await expect(showMoreBtn).not.toBeVisible()
+
+    // Capture second page screenshot
+    await spFrame.locator("[data-tutorial='library-card-grid']").screenshot({
+      path: path.join(screenshotsDir, "library-pagination-page2.png")
+    })
+  })
+
+  test("should allow editing and saving Midjourney advanced parameters", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for advanced parameters E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await expect(libraryTabButton).toBeVisible()
+    await libraryTabButton.click()
+
+    // 3. Open Card Detail View
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.click()
+
+    // 4. Open Advanced Parameters accordion
+    const advancedParamsHeader = spFrame.locator(
+      "button:has-text('Advanced Parameters')"
+    )
+    await expect(advancedParamsHeader).toBeVisible()
+    await advancedParamsHeader.click()
+
+    // 5. Check Stylize checkbox to enable it
+    const stylizeCheckbox = spFrame
+      .locator("input[type='checkbox'] + span:has-text('Stylize')")
+      .or(
+        spFrame.locator(
+          "label:has-text('Stylize (--stylize)') input[type='checkbox']"
+        )
+      )
+    await expect(stylizeCheckbox).toBeVisible()
+    await stylizeCheckbox.check()
+
+    // 6. Enter a value for Stylize
+    const stylizeInput = spFrame.locator("input[type='number']").first()
+    await expect(stylizeInput).toBeVisible()
+    await stylizeInput.fill("450")
+
+    // 7. Check Tile checkbox
+    const tileCheckbox = spFrame.locator(
+      "label:has-text('Tile (--tile)') input[type='checkbox']"
+    )
+    await expect(tileCheckbox).toBeVisible()
+    await tileCheckbox.check()
+
+    // Take screenshot of the parameter editor in detail panel
+    await page.waitForTimeout(500)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "advanced-parameters-editor.png")
+    })
+
+    // 8. Save
+    const saveBtn = spFrame.locator("button:has-text('Save')")
+    await saveBtn.click()
+
+    // 9. Navigate to Settings and disable Card Editing feature
+    const settingsBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsBtn).toBeVisible()
+    await settingsBtn.click()
+
+    const cardEditingBtn = spFrame.locator("#expert-feature-cardediting-btn")
+    await expect(cardEditingBtn).toBeVisible()
+    await cardEditingBtn.click()
+
+    // 10. Switch back to Library tab
+    await expect(libraryTabButton).toBeVisible()
+    await libraryTabButton.click()
+
+    // 11. Re-open Card Detail View to verify read-only presentation and persistence
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.click()
+
+    // Check read-only parameters list
+    const readOnlyStylize = spFrame.locator("text=Stylize (--stylize): 450")
+    const readOnlyTile = spFrame.locator("text=Tile (--tile): true")
+    await expect(readOnlyStylize).toBeVisible()
+    await expect(readOnlyTile).toBeVisible()
+
+    // Take screenshot of read-only mode showing the new params
+    await page.waitForTimeout(500)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "advanced-parameters-readonly.png")
+    })
+
+    // Clean up: Reset Card Editing setting to true for other tests
+    await settingsBtn.click()
+    await expect(cardEditingBtn).toBeVisible()
+    await cardEditingBtn.click()
+  })
 })

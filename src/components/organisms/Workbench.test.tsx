@@ -31,6 +31,15 @@ vi.mock("../../hooks/useEvolution", () => ({
   useEvolution: vi.fn()
 }))
 
+vi.mock("../../hooks/useStyleCards", () => ({
+  useStyleCards: vi.fn().mockReturnValue({ data: [] }),
+  useUpdateStyleCard: vi.fn().mockReturnValue({ mutateAsync: vi.fn() })
+}))
+
+vi.mock("../../hooks/useCategories", () => ({
+  useCategories: vi.fn().mockReturnValue({ data: [] })
+}))
+
 describe("Workbench", () => {
   const mockSetAlertType = vi.fn()
   const mockAddLog = vi.fn()
@@ -254,8 +263,12 @@ describe("Workbench", () => {
     const subjectInput = screen.getByPlaceholderText("dog") as HTMLInputElement
     expect(subjectInput.value).toBe("dog")
 
+    // Focus on the input first to show popover
+    fireEvent.focus(subjectInput)
+
     // Click on Hand card button under Subject to fill it
     const fillButtons = screen.getAllByRole("button", { name: "cyberpunk cat" })
+    fireEvent.mouseDown(fillButtons[0])
     fireEvent.click(fillButtons[0])
 
     expect(subjectInput.value).toBe("cyberpunk cat")

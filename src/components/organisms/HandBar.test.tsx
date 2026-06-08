@@ -69,7 +69,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     const { container } = render(
@@ -88,7 +89,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     render(
@@ -109,7 +111,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     render(
@@ -129,7 +132,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     render(
@@ -146,10 +150,12 @@ describe("HandBar", () => {
   })
 
   it("shows 'Merge Stack' button when 2+ cards are pinned, opens modal, and executes merge", async () => {
+    const mockMergeCards = vi.fn().mockResolvedValue(undefined)
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1, card2],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: mockMergeCards
     })
 
     render(
@@ -179,11 +185,77 @@ describe("HandBar", () => {
     fireEvent.click(executeBtn)
 
     await waitFor(() => {
-      expect(db.mergeStyleCards).toHaveBeenCalledWith(
+      expect(mockMergeCards).toHaveBeenCalledWith(
         "card-1",
         [card2],
         expect.objectContaining({ "card-2": true })
       )
     })
+  })
+
+  it("toggles collapse state on collapse button click and stores in localStorage", () => {
+    vi.mocked(useHand).mockReturnValue({
+      pinnedCards: [card1],
+      unpinCard: vi.fn(),
+      clearHand: vi.fn()
+    })
+
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem")
+
+    render(
+      <HandBar
+        onNavigateToWorkbench={mockNavigate}
+        onOpenDetailCard={mockOpenDetail}
+      />
+    )
+
+    const toggleBtn = screen.getByTestId("handbar-toggle-collapse-btn")
+    expect(toggleBtn).toBeDefined()
+
+    // Initially not collapsed, so clear all button should be visible
+    expect(screen.queryByText("Clear All")).not.toBeNull()
+
+    // Click to collapse
+    fireEvent.click(toggleBtn)
+    expect(setItemSpy).toHaveBeenCalledWith("handbar_collapsed", "true")
+
+    // Clear all button should be hidden when collapsed
+    expect(screen.queryByText("Clear All")).toBeNull()
+
+    // Click to expand again
+    fireEvent.click(toggleBtn)
+    expect(setItemSpy).toHaveBeenCalledWith("handbar_collapsed", "false")
+    expect(screen.queryByText("Clear All")).not.toBeNull()
+  })
+
+  it("expands when collapsed and container is clicked", () => {
+    vi.mocked(useHand).mockReturnValue({
+      pinnedCards: [card1],
+      unpinCard: vi.fn(),
+      clearHand: vi.fn()
+    })
+
+    // Mock localStorage to start as collapsed
+    const getItemSpy = vi
+      .spyOn(Storage.prototype, "getItem")
+      .mockReturnValue("true")
+
+    const { container } = render(
+      <HandBar
+        onNavigateToWorkbench={mockNavigate}
+        onOpenDetailCard={mockOpenDetail}
+      />
+    )
+
+    expect(screen.queryByText("Clear All")).toBeNull()
+
+    // Click container to expand
+    const root = container.querySelector("#handbar-root")
+    expect(root).toBeDefined()
+    fireEvent.click(root!)
+
+    expect(screen.queryByText("Clear All")).not.toBeNull()
+
+    getItemSpy.mockRestore()
   })
 })

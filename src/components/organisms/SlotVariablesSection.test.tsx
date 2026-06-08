@@ -1,19 +1,25 @@
-import { describe, it, expect, vi } from "vitest";
-import { render as tlRender, screen, fireEvent, waitFor } from "@testing-library/react";
-import { SlotVariablesSection } from "./SlotVariablesSection";
-import type { StyleCard } from "../../lib/db-schema";
-import { SettingsProvider } from "../../contexts/SettingsContext";
-import React from "react";
+import {
+  fireEvent,
+  screen,
+  render as tlRender,
+  waitFor
+} from "@testing-library/react"
+import React from "react"
+import { describe, expect, it, vi } from "vitest"
+
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import type { StyleCard } from "../../lib/db-schema"
+import { SlotVariablesSection } from "./SlotVariablesSection"
 
 const render = (ui: React.ReactElement, options?: any) => {
-  return tlRender(ui, { wrapper: SettingsProvider, ...options });
-};
+  return tlRender(ui, { wrapper: SettingsProvider, ...options })
+}
 
 describe("SlotVariablesSection", () => {
   const mockSlots = [
     { label: "Subject", default: "dog" },
-    { label: "Style", default: "cyberpunk" },
-  ];
+    { label: "Style", default: "cyberpunk" }
+  ]
 
   const mockHandCard: StyleCard = {
     id: "card-hand-1",
@@ -30,12 +36,12 @@ describe("SlotVariablesSection", () => {
     dominantColor: "#00ff00",
     thumbnailData: "",
     frameId: "default",
-    genealogy: { generation: 1, parentIds: [] },
-  };
+    genealogy: { generation: 1, parentIds: [] }
+  }
 
   const mockHistory = {
-    Subject: ["red dragon", "space explorer"],
-  };
+    Subject: ["red dragon", "space explorer"]
+  }
 
   it("does not render when slots array is empty", () => {
     const { container } = render(
@@ -47,12 +53,12 @@ describe("SlotVariablesSection", () => {
         handCards={[]}
         onSendToWorkbench={vi.fn()}
       />
-    );
-    expect(container.firstChild).toBeNull();
-  });
+    )
+    expect(container.firstChild).toBeNull()
+  })
 
   it("renders inputs with default value and handles focus/change", async () => {
-    const mockChange = vi.fn();
+    const mockChange = vi.fn()
     render(
       <SlotVariablesSection
         slots={mockSlots}
@@ -62,22 +68,22 @@ describe("SlotVariablesSection", () => {
         handCards={[]}
         onSendToWorkbench={vi.fn()}
       />
-    );
+    )
 
-    const subjectInput = screen.getByPlaceholderText("dog") as HTMLInputElement;
-    expect(subjectInput.value).toBe("dog");
+    const subjectInput = screen.getByPlaceholderText("dog") as HTMLInputElement
+    expect(subjectInput.value).toBe("dog")
 
     // Check first input auto-focus
     await waitFor(() => {
-      expect(document.activeElement).toBe(subjectInput);
-    });
+      expect(document.activeElement).toBe(subjectInput)
+    })
 
-    fireEvent.change(subjectInput, { target: { value: "neon tiger" } });
-    expect(mockChange).toHaveBeenCalledWith("Subject", "neon tiger");
-  });
+    fireEvent.change(subjectInput, { target: { value: "neon tiger" } })
+    expect(mockChange).toHaveBeenCalledWith("Subject", "neon tiger")
+  })
 
   it("triggers send to Workbench when pin button is clicked", () => {
-    const mockSend = vi.fn();
+    const mockSend = vi.fn()
     render(
       <SlotVariablesSection
         slots={mockSlots}
@@ -87,16 +93,16 @@ describe("SlotVariablesSection", () => {
         handCards={[]}
         onSendToWorkbench={mockSend}
       />
-    );
+    )
 
-    const sendBtn = screen.getAllByTitle("Send to Workbench")[0];
-    fireEvent.click(sendBtn);
+    const sendBtn = screen.getAllByTitle("Send to Workbench")[0]
+    fireEvent.click(sendBtn)
 
-    expect(mockSend).toHaveBeenCalledWith("cat", "Subject");
-  });
+    expect(mockSend).toHaveBeenCalledWith("cat", "Subject")
+  })
 
   it("allows selecting value from Hand cards", () => {
-    const mockChange = vi.fn();
+    const mockChange = vi.fn()
     render(
       <SlotVariablesSection
         slots={mockSlots}
@@ -106,16 +112,20 @@ describe("SlotVariablesSection", () => {
         handCards={[mockHandCard]}
         onSendToWorkbench={vi.fn()}
       />
-    );
+    )
 
-    const handBtn = screen.getAllByRole("button", { name: "neon tiger" })[0];
-    fireEvent.click(handBtn);
+    const subjectInput = screen.getByPlaceholderText("dog")
+    fireEvent.focus(subjectInput)
 
-    expect(mockChange).toHaveBeenCalledWith("Subject", "neon tiger");
-  });
+    const handBtn = screen.getAllByRole("button", { name: "neon tiger" })[0]
+    fireEvent.mouseDown(handBtn)
+    fireEvent.click(handBtn)
+
+    expect(mockChange).toHaveBeenCalledWith("Subject", "neon tiger")
+  })
 
   it("allows selecting value from history", () => {
-    const mockChange = vi.fn();
+    const mockChange = vi.fn()
     render(
       <SlotVariablesSection
         slots={mockSlots}
@@ -125,11 +135,15 @@ describe("SlotVariablesSection", () => {
         handCards={[]}
         onSendToWorkbench={vi.fn()}
       />
-    );
+    )
 
-    const historyBtn = screen.getAllByRole("button", { name: "red dragon" })[0];
-    fireEvent.click(historyBtn);
+    const subjectInput = screen.getByPlaceholderText("dog")
+    fireEvent.focus(subjectInput)
 
-    expect(mockChange).toHaveBeenCalledWith("Subject", "red dragon");
-  });
-});
+    const historyBtn = screen.getAllByRole("button", { name: "red dragon" })[0]
+    fireEvent.mouseDown(historyBtn)
+    fireEvent.click(historyBtn)
+
+    expect(mockChange).toHaveBeenCalledWith("Subject", "red dragon")
+  })
+})

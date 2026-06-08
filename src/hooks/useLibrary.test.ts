@@ -9,10 +9,18 @@ let mockCategories: any[] = []
 
 // Mock dexie-react-hooks
 vi.mock("dexie-react-hooks", () => ({
-  useLiveQuery: (fn: any) => {
+  useLiveQuery: (fn: any, deps: any[] = []) => {
     const fnStr = fn.toString()
     if (fnStr.includes("categories")) {
       return mockCategories
+    }
+    if (fnStr.includes("bulkGet")) {
+      const visibleIds = deps[0]
+      if (!visibleIds || visibleIds.length === 0) return []
+      const idToCard = new Map(mockStyleCards.map((c) => [c.id, c]))
+      return visibleIds
+        .map((id: string) => idToCard.get(id))
+        .filter((c: any) => !!c && !c.isDeleted)
     }
     return mockStyleCards
   }
@@ -22,7 +30,11 @@ vi.mock("../lib/db", () => ({
   db: {
     styleCards: {
       update: vi.fn().mockResolvedValue(1),
-      toArray: vi.fn().mockImplementation(async () => mockStyleCards)
+      toArray: vi.fn().mockImplementation(async () => mockStyleCards),
+      bulkGet: vi.fn().mockImplementation(async (ids: string[]) => {
+        const idToCard = new Map(mockStyleCards.map((c) => [c.id, c]))
+        return ids.map((id) => idToCard.get(id))
+      })
     },
     categories: {
       toArray: vi.fn().mockImplementation(async () => mockCategories)
@@ -339,6 +351,59 @@ describe("useLibrary hook", () => {
 
       expect(mockSetAlertType).toHaveBeenCalledWith("hand_full")
       expect(db.updateCard).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("FlexSearch & pagination", () => {
+    beforeEach(() => {
+      mockStyleCards = Array.from({ length: 15 }, (_, i) => ({
+        id: `card-${i}`,
+        name: `Card ${i} name`,
+        tags: [`tag-${i}`],
+        parameters: { sref: [`sref-${i}`] },
+        tier: "Common",
+        createdAt: 1000 + i,
+        usageCount: 0,
+        isDeleted: 0,
+        isVariable: false
+      }))
+    })
+
+    it("should initialize with default visibleCount of 12 and limit card results", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      expect(result.current.styleCards).toHaveLength(12)
+      expect(result.current.hasMore).toBe(true)
+    })
+
+    it("should load more cards when calling loadMore", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      expect(result.current.styleCards).toHaveLength(12)
+
+      act(() => {
+        result.current.loadMore()
+      })
+
+      expect(result.current.styleCards).toHaveLength(15)
+      expect(result.current.hasMore).toBe(false)
+    })
+
+    it("should search and match cards using FlexSearch query indexing", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      act(() => {
+        result.current.setSearchTag("Card 5")
+      })
+
+      expect(result.current.styleCards.length).toBeGreaterThan(0)
+      expect(result.current.styleCards[0].id).toBe("card-5")
     })
   })
 })
