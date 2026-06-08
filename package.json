@@ -26,6 +26,7 @@
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.2.0",
     "fflate": "^0.8.3",
+    "flexsearch": "^0.8.212",
     "i18next": "^26.3.1",
     "jsqr": "^1.4.0",
     "lucide-react": "^1.17.0",

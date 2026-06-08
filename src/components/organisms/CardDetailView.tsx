@@ -102,9 +102,12 @@ export function CardDetailView({
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const hasParams = Object.values(parameters).some((v) =>
-    Array.isArray(v) ? v.length > 0 : !!v
-  )
+  const hasParams = Object.entries(parameters).some(([key, v]) => {
+    if (v === undefined) return false
+    if (Array.isArray(v)) return v.length > 0
+    if (typeof v === "boolean") return v
+    return v !== "" && v !== null
+  })
 
   const handleTryOnMidjourney = async () => {
     const maskedKeys: (keyof StyleCard["parameters"])[] = []
@@ -348,6 +351,46 @@ export function CardDetailView({
                     {t.cardDetail.characterReference}
                   </span>{" "}
                   {parameters.cref.join(", ")}
+                </div>
+              )}
+              {parameters.stylize !== undefined && (
+                <div>
+                  <span className="font-bold text-slate-500">
+                    {t.cardDetail.stylize}:
+                  </span>{" "}
+                  {parameters.stylize}
+                </div>
+              )}
+              {parameters.chaos !== undefined && (
+                <div>
+                  <span className="font-bold text-slate-500">
+                    {t.cardDetail.chaos}:
+                  </span>{" "}
+                  {parameters.chaos}
+                </div>
+              )}
+              {parameters.weird !== undefined && (
+                <div>
+                  <span className="font-bold text-slate-500">
+                    {t.cardDetail.weird}:
+                  </span>{" "}
+                  {parameters.weird}
+                </div>
+              )}
+              {parameters.tile && (
+                <div>
+                  <span className="font-bold text-slate-500">
+                    {t.cardDetail.tile}:
+                  </span>{" "}
+                  true
+                </div>
+              )}
+              {parameters.raw && (
+                <div>
+                  <span className="font-bold text-slate-500">
+                    {t.cardDetail.raw}:
+                  </span>{" "}
+                  true
                 </div>
               )}
               {!hasParams && (
