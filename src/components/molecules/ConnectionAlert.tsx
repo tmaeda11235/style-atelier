@@ -16,7 +16,10 @@ export const ConnectionAlert = ({
   onRetry,
   onDismiss
 }: ConnectionAlertProps) => {
-  const { t } = useLanguage()
+  const context = useLanguage()
+  const { t } = context
+  console.log("DEBUG_LOG: lang is", context.lang)
+  console.log("DEBUG_LOG: alerts is", (t as any).alerts)
   if (!type) return null
 
   const DismissButton = () =>
@@ -34,10 +37,12 @@ export const ConnectionAlert = ({
       <div className="relative bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm flex gap-3 text-amber-900 shadow-sm pr-8">
         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
         <div className="flex-1 space-y-2">
-          <p className="font-semibold">Connection Lost</p>
+          <p className="font-semibold">
+            {(t as any).alerts?.disconnectedTitle || "Connection Lost"}
+          </p>
           <p className="text-amber-800/80 text-xs leading-relaxed">
-            The extension has lost connection to the page. This usually happens
-            after an update or prolonged inactivity.
+            {(t as any).alerts?.disconnectedDesc ||
+              "The extension has lost connection to the page. This usually happens after an update or prolonged inactivity."}
           </p>
           <Button
             size="sm"
@@ -48,7 +53,7 @@ export const ConnectionAlert = ({
               if (onDismiss) onDismiss()
             }}>
             <RefreshCw className="w-3 h-3 mr-2" />
-            Reload Page
+            {(t as any).alerts?.disconnectedBtn || "Reload Page"}
           </Button>
         </div>
         <DismissButton />
@@ -61,10 +66,12 @@ export const ConnectionAlert = ({
       <div className="relative bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm flex gap-3 text-blue-900 shadow-sm pr-8">
         <ExternalLink className="w-5 h-5 text-blue-600 shrink-0" />
         <div className="flex-1 space-y-2">
-          <p className="font-semibold">Input Not Found</p>
+          <p className="font-semibold">
+            {(t as any).alerts?.noInputTitle || "Input Not Found"}
+          </p>
           <p className="text-blue-800/80 text-xs leading-relaxed">
-            Could not find the chat input. Please ensure you are on the "Create"
-            page or the Midjourney gallery details view.
+            {(t as any).alerts?.noInputDesc ||
+              "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view."}
           </p>
           <Button
             size="sm"
@@ -72,7 +79,7 @@ export const ConnectionAlert = ({
             className="bg-white border-blue-300 hover:bg-blue-50 text-blue-800 w-full justify-center"
             onClick={onRetry}>
             <RefreshCw className="w-3 h-3 mr-2" />
-            Retry Connection
+            {(t as any).alerts?.noInputBtn || "Retry Connection"}
           </Button>
         </div>
         <DismissButton />
