@@ -26,6 +26,7 @@ stateDiagram-v2
   _J_SYS_03 : Tipsバー
   _J_SYS_04 : 言語切り替え
   _J_SET_01 : アプリ設定
+  _J_WB_EXPERT_04 : スロット変数操作 (ポップオーバー & Dnd)
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -37,6 +38,7 @@ stateDiagram-v2
   _J_ORG_EASY_01 --> _J_WB_EASY_01
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_02
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_03
+  _J_WB_EXPERT_01 --> _J_WB_EXPERT_04
   _J_WB_EXPERT_02 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_03 --> _J_MINT_EXPERT_01
   _J_WB_EASY_01 --> _J_WB_EXPERT_01
@@ -51,6 +53,7 @@ stateDiagram-v2
   _J_SET_01 --> _J_IO_BACKUP
   _J_SET_01 --> _J_IO_RESTORE
   _J_SET_01 --> _J_SYS_04
+  _J_WB_EXPERT_04 --> _J_WB_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -280,5 +283,18 @@ flowchart TD
   S2["トグル変更"]
   S1 --> S2
   S3["保存"]
+  S2 --> S3
+```
+
+### @J-WB-EXPERT-04: スロット変数操作 (ポップオーバー & Dnd)
+
+スロット変数エリアでのサジェスト選択およびカードのドラッグ＆ドロップ適用
+
+```mermaid
+flowchart TD
+  S1["スロット入力フィールドフォーカス"]
+  S2["ポップオーバーサジェスト選択"]
+  S1 --> S2
+  S3["カードをスロットにドラッグ＆ドロップ"]
   S2 --> S3
 ```

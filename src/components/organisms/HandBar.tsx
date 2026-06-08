@@ -8,6 +8,7 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useHand } from "../../hooks/useHand"
 import { db } from "../../lib/db"
 import type { StyleCard } from "../../lib/db-schema"
+import { buildPromptString } from "../../lib/prompt-utils"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { Button } from "../atoms/Button"
 import { HelpTooltip } from "../atoms/HelpTooltip"
@@ -172,6 +173,14 @@ export function HandBar({
                     unpinCard(card.id)
                   }}
                   className={`flex-shrink-0 border-2 transition-all ${config.borderClass}`}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    const text = buildPromptString(
+                      card.promptSegments,
+                      card.parameters
+                    )
+                    e.dataTransfer.setData("text/plain", text)
+                  }}
                 />
               </div>
             )
