@@ -1,34 +1,35 @@
-import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
-import jsQR from 'jsqr';
-import QRCode from 'qrcode';
-import type { StyleCard } from './db-schema';
+import { deflateSync, inflateSync, strFromU8, strToU8 } from "fflate"
+import jsQR from "jsqr"
+import QRCode from "qrcode"
+
+import type { StyleCard } from "./db-schema"
 
 // Helper to convert Uint8Array to Base64 in both Node and Browser
 function uint8ArrayToBase64(arr: Uint8Array): string {
-  if (typeof Buffer !== 'undefined') {
-    return Buffer.from(arr).toString('base64');
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(arr).toString("base64")
   }
-  let binary = '';
-  const len = arr.byteLength;
+  let binary = ""
+  const len = arr.byteLength
   for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(arr[i]);
+    binary += String.fromCharCode(arr[i])
   }
-  return btoa(binary);
+  return btoa(binary)
 }
 
 // Helper to convert Base64 to Uint8Array in both Node and Browser
 function base64ToUint8Array(base64: string): Uint8Array {
-  if (typeof Buffer !== 'undefined') {
-    const buf = Buffer.from(base64, 'base64');
-    return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+  if (typeof Buffer !== "undefined") {
+    const buf = Buffer.from(base64, "base64")
+    return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
   }
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
+  const binaryString = atob(base64)
+  const len = binaryString.length
+  const bytes = new Uint8Array(len)
   for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+    bytes[i] = binaryString.charCodeAt(i)
   }
-  return bytes;
+  return bytes
 }
 
 /**
@@ -36,12 +37,12 @@ function base64ToUint8Array(base64: string): Uint8Array {
  * Strips heavy visual data like thumbnailData.
  */
 export function compressCardData(card: StyleCard): string {
-  const parameters = { ...card.parameters };
+  const parameters = { ...card.parameters }
   if (card.masking?.isSrefHidden) {
-    delete parameters.sref;
+    delete parameters.sref
   }
   if (card.masking?.isPHidden) {
-    delete parameters.p;
+    delete parameters.p
   }
 
   const cleanCard = {
@@ -52,15 +53,15 @@ export function compressCardData(card: StyleCard): string {
     tier: card.tier,
     frameId: card.frameId,
     category: card.category,
-    imageUrl: card.images?.[0] || card.selectedThumbnails?.[0] || '',
+    imageUrl: card.images?.[0] || card.selectedThumbnails?.[0] || "",
     accentColor: card.accentColor,
-    dominantColor: card.dominantColor,
-  };
+    dominantColor: card.dominantColor
+  }
 
-  const jsonStr = JSON.stringify(cleanCard);
-  const bytes = strToU8(jsonStr);
-  const compressed = deflateSync(bytes);
-  return uint8ArrayToBase64(compressed);
+  const jsonStr = JSON.stringify(cleanCard)
+  const bytes = strToU8(jsonStr)
+  const compressed = deflateSync(bytes)
+  return uint8ArrayToBase64(compressed)
 }
 
 /**
@@ -68,17 +69,17 @@ export function compressCardData(card: StyleCard): string {
  */
 export function decompressCardData(payload: string): Partial<StyleCard> {
   try {
-    let base64Data = payload;
-    if (payload.includes('?data=')) {
-      const match = payload.match(/[?&]data=([^&]+)/);
+    let base64Data = payload
+    if (payload.includes("?data=")) {
+      const match = payload.match(/[?&]data=([^&]+)/)
       if (match && match[1]) {
-        base64Data = decodeURIComponent(match[1]);
+        base64Data = decodeURIComponent(match[1])
       }
     }
-    const compressedBytes = base64ToUint8Array(base64Data);
-    const decompressedBytes = inflateSync(compressedBytes);
-    const jsonStr = strFromU8(decompressedBytes);
-    const data = JSON.parse(jsonStr);
+    const compressedBytes = base64ToUint8Array(base64Data)
+    const decompressedBytes = inflateSync(compressedBytes)
+    const jsonStr = strFromU8(decompressedBytes)
+    const data = JSON.parse(jsonStr)
 
     // Reconstruct the StyleCard object fields
     const card: Partial<StyleCard> = {
@@ -90,30 +91,33 @@ export function decompressCardData(payload: string): Partial<StyleCard> {
       frameId: data.frameId,
       category: data.category,
       accentColor: data.accentColor,
-      dominantColor: data.dominantColor,
-    };
-
-    if (data.imageUrl) {
-      card.images = [data.imageUrl];
-      card.selectedThumbnails = [data.imageUrl];
+      dominantColor: data.dominantColor
     }
 
-    return card;
+    if (data.imageUrl) {
+      card.images = [data.imageUrl]
+      card.selectedThumbnails = [data.imageUrl]
+    }
+
+    return card
   } catch (error) {
-    console.error('Failed to decompress card data:', error);
-    throw new Error('Invalid QR payload or compression error');
+    console.error("Failed to decompress card data:", error)
+    throw new Error("Invalid QR payload or compression error", { cause: error })
   }
 }
 
 /**
  * Generates a Data URL for a QR Code image containing the payload string.
  */
-export function generateQRCodeUrl(payload: string, width?: number): Promise<string> {
+export function generateQRCodeUrl(
+  payload: string,
+  width?: number
+): Promise<string> {
   return QRCode.toDataURL(payload, {
-    errorCorrectionLevel: 'M', // Medium error correction is a good balance for data capacity
+    errorCorrectionLevel: "M", // Medium error correction is a good balance for data capacity
     margin: 2,
-    width: width || 200,
-  });
+    width: width || 200
+  })
 }
 
 /**
@@ -121,36 +125,36 @@ export function generateQRCodeUrl(payload: string, width?: number): Promise<stri
  */
 export function readQRCodeFromImage(file: File): Promise<string | null> {
   return new Promise((resolve) => {
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (e) => {
-      const img = new Image();
+      const img = new Image()
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
+        const canvas = document.createElement("canvas")
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext("2d")
         if (!ctx) {
-          resolve(null);
-          return;
+          resolve(null)
+          return
         }
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0)
         try {
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          const code = jsQR(imageData.data, imageData.width, imageData.height)
           if (code) {
-            resolve(code.data);
+            resolve(code.data)
           } else {
-            resolve(null);
+            resolve(null)
           }
         } catch (err) {
-          console.error('Error extracting image data for QR scanning:', err);
-          resolve(null);
+          console.error("Error extracting image data for QR scanning:", err)
+          resolve(null)
         }
-      };
-      img.onerror = () => resolve(null);
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
+      }
+      img.onerror = () => resolve(null)
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => resolve(null)
+    reader.readAsDataURL(file)
+  })
 }
