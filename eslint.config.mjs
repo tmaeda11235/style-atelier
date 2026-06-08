@@ -7,6 +7,9 @@ import boundaries from "eslint-plugin-boundaries";
 import importPlugin from "eslint-plugin-import";
 
 export default ts.config(
+  {
+    ignores: ["postcss.config.js"]
+  },
   js.configs.recommended,
   ...ts.configs.recommended,
   {
