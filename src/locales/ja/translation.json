@@ -205,6 +205,7 @@
     "invalidCardData": "QRコード内のカードデータが無効であるか、破損しています。",
     "importFailed": "カードのインポート中にエラーが発生しました: ",
     "dropOverlay": "QRカード画像をドロップしてインポート",
+    "dropHistoryOverlay": "ここにドロップしてプロンプト履歴を追加",
     "importing": "カードをインポート中...",
     "importSuccess": "カード「{name}」を正常にインポートしました！",
     "associated": "カード「{name}」に関連付けられました！",

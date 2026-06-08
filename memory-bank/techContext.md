@@ -10,7 +10,7 @@ tags: []
 - **Framework**: [Plasmo](https://docs.plasmo.com/) (React + TypeScript) - Specialized for Chrome Extensions.
 - **State Management**: Zustand for UI state; react-i18next & i18next for localization; `@tanstack/react-query` (with `@tanstack/react-query-persist-client` and `@tanstack/query-async-storage-persister`) for asynchronous database state and caching.
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) / [Tailwind CSS](https://tailwindcss.com/) - For modern, accessible styling.
-- **Local Database**: [Dexie.js](https://dexie.org/) - Wrapper for IndexedDB, encapsulated using the Repository Pattern in `src/lib/db.ts` for clean separation of concerns.
+- **Local Database**: [Dexie.js](https://dexie.org/) - Wrapper for IndexedDB, encapsulated using the Repository Pattern in `src/lib/db.ts` (modularized under `src/lib/db/`) for clean separation of concerns.
 
 ## Key Libraries
 

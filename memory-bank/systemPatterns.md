@@ -27,8 +27,12 @@ tags: []
 - **Bubble Slotting UI**: Breaking prompts into "Text" (Fixed) and "Slot" (Variable) components.
 - **Mixing Table**: Logic to merge two Style Cards (parents) into a new prompt generation.
 - **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
-- **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing by flattening mock structures.
+- **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing. Heavy transactions (backup import, card merging) are modularized under `src/lib/db/` to comply with file/function size constraints.
 - **Database Schema Migration**: Schema versions handle migrations, with v11 introducing `slotHistory` as a dedicated object store to hold previous inputs for slots.
+- **Modular Utility & Data Access Layers**: To strictly adhere to the 300-line file limit and 50-line function limit:
+  - `backup-validator.ts` is divided into a `src/lib/backup-validator/` subdirectory, splitting domain schema validations into clean, focused sub-modules.
+  - `google-drive.ts` is modularized into `src/lib/google-drive/` (auth, http-client, upload/download operations), with asynchronous XMLHttpRequests and progress trackers split into functions under 50 lines.
+  - `export-utils.ts` is modularized into `src/lib/export/`, dividing the card rendering canvas pipeline (`renderCardToCanvas`) into separate background, artwork layout, info text, and QR drawing steps.
 - **Feature Flags & Context Patterns**:
   - `SettingsContext` (`useSettings`): Manages "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`).
   - `LanguageContext` (`useLanguage`): Manages the active translation locale (English/Japanese, stored in `localStorage` under `style-atelier-language`) and exposes a compile-time typed dictionary (`t`) to components.
@@ -36,6 +40,14 @@ tags: []
 - **Asynchronous State & Caching**:
   - React Query (`@tanstack/react-query`) is configured with `chrome.storage.local` persistence (via `chromeAsyncStorage` and `@tanstack/query-async-storage-persister`).
   - Decouples IndexedDB query logic and remote synchronization from component lifecycle, providing automatic caching, cache invalidation, and a seamless fallback to `window.localStorage` when Chrome extension APIs are unavailable.
+- **State Management Separation of Concerns**:
+  - **UI Synchronous State (Local/Global UI)**: **Zustand** is used for synchronous UI state (e.g., active tabs, drag-and-drop actions, modal states) shared across components.
+  - **DB Reactive State (Local Persistent Data)**: **Dexie (`useLiveQuery`)** acts as the Single Source of Truth (SSOT) for IndexedDB collections (e.g., style cards, categories, slot history). To prevent cache inconsistency, React Query must NOT be used to cache or query local IndexedDB data. Real-time updates from background syncing must propagate to the UI via `useLiveQuery`.
+  - **Asynchronous & Remote Cache (Network/Async Boundary)**: **React Query** handles network-bound or heavy asynchronous processes (e.g., Google Drive metadata queries, token authorization, uploading/downloading backup files).
+- **Data Access Layer Boundaries**:
+  - UI components in `src/components/` must not import `src/lib/db.ts` or execute direct database queries.
+  - Query functions (`queryFn`) and mutations (`mutationFn`) must execute operations through the data access layer (encapsulated under `src/lib/`).
+  - Components access data exclusively via custom React hooks (`src/hooks/`) or state stores, avoiding direct dependencies on database instances or external API clients.
 - **Library Search & Performance Optimization**:
   - Utilizes `FlexSearch` client-side indexer to enable high-performance, real-time filtering across name, tags, and categories.
   - Implements memory-friendly client-side pagination ("Load More" pattern) in `useLibrary` to limit active DOM node counts in the style grid, preventing rendering-based UI freeze.

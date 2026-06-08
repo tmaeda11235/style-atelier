@@ -88,4 +88,50 @@ describe("SidePanelLayout", () => {
 
     expect(screen.queryByTitle("Show Guide")).not.toBeInTheDocument()
   })
+
+  it("should render file drag overlay when isDraggingFile is true", () => {
+    render(
+      <SidePanelLayout
+        activeTab="history"
+        onTabChange={vi.fn()}
+        isDragging={false}
+        isDraggingFile={true}
+        logs={[]}
+        onClearLogs={vi.fn()}
+        onResetDb={vi.fn()}
+        droppedItem={null}
+        onOpenGuide={vi.fn()}>
+        <div>Test Child Content</div>
+      </SidePanelLayout>
+    )
+
+    expect(screen.getByText("Drop QR Card Image to Import")).toBeInTheDocument()
+    expect(
+      screen.queryByText("Drop here to add to prompt history")
+    ).not.toBeInTheDocument()
+  })
+
+  it("should render history drag overlay when isDragging is true and isDraggingFile is false", () => {
+    render(
+      <SidePanelLayout
+        activeTab="history"
+        onTabChange={vi.fn()}
+        isDragging={true}
+        isDraggingFile={false}
+        logs={[]}
+        onClearLogs={vi.fn()}
+        onResetDb={vi.fn()}
+        droppedItem={null}
+        onOpenGuide={vi.fn()}>
+        <div>Test Child Content</div>
+      </SidePanelLayout>
+    )
+
+    expect(
+      screen.getByText("Drop here to add to prompt history")
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText("Drop QR Card Image to Import")
+    ).not.toBeInTheDocument()
+  })
 })
