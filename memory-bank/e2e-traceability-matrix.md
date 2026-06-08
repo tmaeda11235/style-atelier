@@ -28,9 +28,13 @@
 | **@J-WB-EXPERT-05**        | 手札バー（HandBar）の最小化・折りたたみ           | ✔️ `tests\e2e\handbar-collapse.spec.ts`                                                           |
 | **@J-TUTORIAL-01**         | インタラクティブチュートリアル                    | ✔️ `tests\e2e\interactive-tutorial.spec.ts`                                                       |
 | **@J-IO-MJ-DRAG-IN**       | Midjourney履歴ドラッグインポート & フィードバック | ✔️ `tests\e2e\drag-and-drop.spec.ts`                                                              |
+| **@J-MINT-COLOR-FALLBACK** | カラー抽出失敗時のフォールバック                  | ✔️ `tests\e2e\mint-color-fallback.spec.ts`                                                        |
+| **@J-ORG-VERSION-01**      | バージョン履歴管理                                | ✔️ `tests\e2e\card-management.spec.ts`                                                            |
+| **@J-IO-CSV**              | CSVエクスポート                                   | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
+| **@J-IO-MD**               | Markdown ZIPエクスポート                          | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
 
 ## サマリー
 
-- 全ジャーニー数: 24
-- カバー済み: 24
+- 全ジャーニー数: 28
+- カバー済み: 28
 - 未カバー: 0
