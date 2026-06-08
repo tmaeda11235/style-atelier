@@ -6,6 +6,7 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"
+import { buildPromptString } from "../../lib/prompt-utils"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
@@ -241,6 +242,14 @@ export function LibraryTab({
                     setSharingCard(card)
                   }}
                   category={cardCategory}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    const text = buildPromptString(
+                      card.promptSegments,
+                      card.parameters
+                    )
+                    e.dataTransfer.setData("text/plain", text)
+                  }}
                 />
                 <div
                   className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
