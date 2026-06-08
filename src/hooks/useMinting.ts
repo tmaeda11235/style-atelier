@@ -1,23 +1,26 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+
+import { analyzeImageColors } from "../lib/color-utils"
 import { db } from "../lib/db"
 import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
-import { parsePrompt } from "../lib/prompt-utils"
-import { extractKeywords } from "../lib/nlp-utils"
-import type { RarityTier } from "../lib/rarity-config"
-import { analyzeImageColors } from "../lib/color-utils"
 import { createThumbnailDataUrl } from "../lib/image-utils"
-
+import { extractKeywords } from "../lib/nlp-utils"
+import { parsePrompt } from "../lib/prompt-utils"
+import { RARITY_FALLBACK_COLORS, type RarityTier } from "../lib/rarity-config"
 
 export interface VariationBase {
-  promptSegments: PromptSegment[];
-  parameters: StyleCard["parameters"];
-  genealogy: StyleCard["genealogy"];
-  thumbnailData?: string;
-  images?: string[];
-  selectedThumbnails?: string[];
+  promptSegments: PromptSegment[]
+  parameters: StyleCard["parameters"]
+  genealogy: StyleCard["genealogy"]
+  thumbnailData?: string
+  images?: string[]
+  selectedThumbnails?: string[]
 }
 
-export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "history" | "library" | "workbench") => void) {
+export function useMinting(
+  addLog: (msg: string) => void,
+  setActiveTab: (tab: "history" | "library" | "workbench") => void
+) {
   const [mintingItem, setMintingItem] = useState<HistoryItem | null>(null)
   const [variationBase, setVariationBase] = useState<VariationBase | null>(null)
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
@@ -33,9 +36,31 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
   // Custom Category, Tags, and Colors state
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [customTags, setCustomTags] = useState<string[]>([])
-  const [detectedDominantColor, setDetectedDominantColor] = useState<string>("#ffffff")
-  const [detectedAccentColor, setDetectedAccentColor] = useState<string>("#ffffff")
+  const [detectedDominantColor, setDetectedDominantColor] =
+    useState<string>("#ffffff")
+  const [detectedAccentColor, setDetectedAccentColor] =
+    useState<string>("#ffffff")
   const [detectedColorTags, setDetectedColorTags] = useState<string[]>([])
+  const [isColorFallback, setIsColorFallback] = useState(false)
+
+  // Update colors when selected rarity changes if we are using fallback colors
+  useEffect(() => {
+    if (isColorFallback) {
+      const fallbackColors = RARITY_FALLBACK_COLORS[selectedRarity]
+      setDetectedDominantColor(fallbackColors.dominantHex)
+      setDetectedAccentColor(fallbackColors.accentHex)
+      const colorTags: string[] = []
+      if (fallbackColors.dominantName)
+        colorTags.push(fallbackColors.dominantName)
+      if (
+        fallbackColors.accentName &&
+        fallbackColors.accentName !== fallbackColors.dominantName
+      ) {
+        colorTags.push(fallbackColors.accentName)
+      }
+      setDetectedColorTags(colorTags)
+    }
+  }, [selectedRarity, isColorFallback])
 
   useEffect(() => {
     if (mintingItem) {
@@ -48,47 +73,96 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
 
       // Extract dominant and accent colors
       if (mintingItem.imageUrl) {
-        analyzeImageColors(mintingItem.imageUrl)
+        analyzeImageColors(mintingItem.imageUrl, selectedRarity)
           .then((colors) => {
             setDetectedDominantColor(colors.dominantHex)
             setDetectedAccentColor(colors.accentHex)
+            setIsColorFallback(!!colors.isFallback)
             const colorTags: string[] = []
             if (colors.dominantName) colorTags.push(colors.dominantName)
-            if (colors.accentName && colors.accentName !== colors.dominantName) {
+            if (
+              colors.accentName &&
+              colors.accentName !== colors.dominantName
+            ) {
               colorTags.push(colors.accentName)
             }
             setDetectedColorTags(colorTags)
           })
           .catch((err) => {
             console.error("Failed to analyze image colors:", err)
-            setDetectedDominantColor("#ffffff")
-            setDetectedAccentColor("#ffffff")
-            setDetectedColorTags([])
+            const fallbackColors = RARITY_FALLBACK_COLORS[selectedRarity]
+            setDetectedDominantColor(fallbackColors.dominantHex)
+            setDetectedAccentColor(fallbackColors.accentHex)
+            setIsColorFallback(true)
+            const colorTags: string[] = []
+            if (fallbackColors.dominantName)
+              colorTags.push(fallbackColors.dominantName)
+            if (
+              fallbackColors.accentName &&
+              fallbackColors.accentName !== fallbackColors.dominantName
+            ) {
+              colorTags.push(fallbackColors.accentName)
+            }
+            setDetectedColorTags(colorTags)
           })
       } else {
-        setDetectedDominantColor("#ffffff")
-        setDetectedAccentColor("#ffffff")
-        setDetectedColorTags([])
+        const fallbackColors = RARITY_FALLBACK_COLORS[selectedRarity]
+        setDetectedDominantColor(fallbackColors.dominantHex)
+        setDetectedAccentColor(fallbackColors.accentHex)
+        setIsColorFallback(true)
+        const colorTags: string[] = []
+        if (fallbackColors.dominantName)
+          colorTags.push(fallbackColors.dominantName)
+        if (
+          fallbackColors.accentName &&
+          fallbackColors.accentName !== fallbackColors.dominantName
+        ) {
+          colorTags.push(fallbackColors.accentName)
+        }
+        setDetectedColorTags(colorTags)
       }
     } else if (variationBase) {
       setEditedSegments(variationBase.promptSegments)
       setSuggestedKeywords([])
-      setDetectedDominantColor("#ffffff")
-      setDetectedAccentColor("#ffffff")
-      setDetectedColorTags([])
+      const fallbackColors = RARITY_FALLBACK_COLORS[selectedRarity]
+      setDetectedDominantColor(fallbackColors.dominantHex)
+      setDetectedAccentColor(fallbackColors.accentHex)
+      setIsColorFallback(true)
+      const colorTags: string[] = []
+      if (fallbackColors.dominantName)
+        colorTags.push(fallbackColors.dominantName)
+      if (
+        fallbackColors.accentName &&
+        fallbackColors.accentName !== fallbackColors.dominantName
+      ) {
+        colorTags.push(fallbackColors.accentName)
+      }
+      setDetectedColorTags(colorTags)
     } else {
       setEditedSegments([])
       setSuggestedKeywords([])
-      setDetectedDominantColor("#ffffff")
-      setDetectedAccentColor("#ffffff")
-      setDetectedColorTags([])
+      const fallbackColors = RARITY_FALLBACK_COLORS[selectedRarity]
+      setDetectedDominantColor(fallbackColors.dominantHex)
+      setDetectedAccentColor(fallbackColors.accentHex)
+      setIsColorFallback(true)
+      const colorTags: string[] = []
+      if (fallbackColors.dominantName)
+        colorTags.push(fallbackColors.dominantName)
+      if (
+        fallbackColors.accentName &&
+        fallbackColors.accentName !== fallbackColors.dominantName
+      ) {
+        colorTags.push(fallbackColors.accentName)
+      }
+      setDetectedColorTags(colorTags)
     }
-    
+
     setSelectedKeywords([])
     setCustomTags([])
     setCustomName("")
     setSelectedRarity("Common")
     setSelectedCategory("")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mintingItem, variationBase])
 
   const handleStartMinting = (historyItem: HistoryItem) => {
@@ -103,7 +177,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
 
   const handleSaveMintedCard = async () => {
     if (!mintingItem && !variationBase) return
-    
+
     let parameters: StyleCard["parameters"]
     let genealogy: StyleCard["genealogy"]
     let thumbnailData: string
@@ -112,15 +186,20 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       addLog(`Saving card from history item: ${mintingItem.id}`)
       const parsed = parsePrompt(mintingItem.fullCommand)
       parameters = parsed.parameters
-      
+
       try {
         if (mintingItem.localImageBlob) {
-          thumbnailData = await createThumbnailDataUrl(mintingItem.localImageBlob)
+          thumbnailData = await createThumbnailDataUrl(
+            mintingItem.localImageBlob
+          )
         } else {
           thumbnailData = await createThumbnailDataUrl(mintingItem.imageUrl)
         }
       } catch (err) {
-        console.error("Failed to generate thumbnail, using original URL as fallback", err)
+        console.error(
+          "Failed to generate thumbnail, using original URL as fallback",
+          err
+        )
         thumbnailData = mintingItem.imageUrl
       }
 
@@ -128,7 +207,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
         generation: 1,
         parentIds: [],
         originCreatorId: "user",
-        mutationNote: `Minted from history item ${mintingItem.id}`,
+        mutationNote: `Minted from history item ${mintingItem.id}`
       }
     } else {
       addLog(`Saving card variation`)
@@ -145,9 +224,9 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
     }
     if (!finalName) {
       finalName =
-          editedSegments.length > 0 && editedSegments[0].type === "text"
-            ? editedSegments[0].value.substring(0, 20)
-            : "New Card"
+        editedSegments.length > 0 && editedSegments[0].type === "text"
+          ? editedSegments[0].value.substring(0, 20)
+          : "New Card"
     }
 
     // Combine suggested keywords, custom tags, and color tags, making them unique and lowercase
@@ -155,7 +234,7 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       new Set([
         ...selectedKeywords.map((t) => t.toLowerCase()),
         ...customTags.map((t) => t.toLowerCase()),
-        ...detectedColorTags.map((t) => t.toLowerCase()),
+        ...detectedColorTags.map((t) => t.toLowerCase())
       ])
     )
 
@@ -179,8 +258,12 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
       genealogy,
       jobId: mintingItem ? mintingItem.id : undefined,
       associatedJobIds: mintingItem ? [mintingItem.id] : [],
-      images: mintingItem ? [mintingItem.imageUrl] : (variationBase?.images || []),
-      selectedThumbnails: mintingItem ? [mintingItem.imageUrl] : (variationBase?.selectedThumbnails || []),
+      images: mintingItem
+        ? [mintingItem.imageUrl]
+        : variationBase?.images || [],
+      selectedThumbnails: mintingItem
+        ? [mintingItem.imageUrl]
+        : variationBase?.selectedThumbnails || []
     }
 
     try {
@@ -224,5 +307,6 @@ export function useMinting(addLog: (msg: string) => void, setActiveTab: (tab: "h
     detectedDominantColor,
     detectedAccentColor,
     detectedColorTags,
+    isColorFallback
   }
 }
