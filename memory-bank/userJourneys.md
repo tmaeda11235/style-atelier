@@ -28,6 +28,7 @@ stateDiagram-v2
   _J_SET_01 : アプリ設定
   _J_WB_EXPERT_04 : スロット変数操作 (ポップオーバー & Dnd)
   _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
+  _J_TUTORIAL_01 : インタラクティブチュートリアル
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -59,6 +60,8 @@ stateDiagram-v2
   _J_WB_EXPERT_04 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_02
+  _J_TUTORIAL_01 --> _J_MINT_EXPERT_01
+  _J_TUTORIAL_01 --> _J_WB_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -94,10 +97,14 @@ flowchart TD
 ```mermaid
 flowchart TD
   S1["ライブラリを開く"]
-  S2["カード選択"]
+  S2["テキスト・フィルタ検索"]
   S1 --> S2
-  S3["編集・削除実行"]
+  S3["もっと見るによるカード読み込み"]
   S2 --> S3
+  S4["カード選択"]
+  S3 --> S4
+  S5["編集・削除実行"]
+  S4 --> S5
 ```
 
 ### @J-ORG-EXPERT-02: カテゴリ管理
@@ -120,8 +127,10 @@ flowchart TD
 ```mermaid
 flowchart TD
   S1["ライブラリを開く"]
-  S2["カードを見る"]
+  S2["もっと見るによるカード読み込み"]
   S1 --> S2
+  S3["カードを見る"]
+  S2 --> S3
 ```
 
 ### @J-WB-EXPERT-01: ワークベンチ（エキスパート）
@@ -317,4 +326,21 @@ flowchart TD
   S2 --> S3
   S4["手札バーが再展開される"]
   S3 --> S4
+```
+
+### @J-TUTORIAL-01: インタラクティブチュートリアル
+
+新規ユーザー向けのインタラクティブチュートリアル（オンボーディング）の実行
+
+```mermaid
+flowchart TD
+  S1["「チュートリアルを開始する」ボタン押下"]
+  S2["ステップ進行（ドラッグ＆ドロップ、Mintボタンクリック、保存など）"]
+  S1 --> S2
+  S3["チュートリアル完了"]
+  S2 --> S3
+```
+
+```
+
 ```
