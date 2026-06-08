@@ -1,11 +1,10 @@
-import { useLiveQuery } from "dexie-react-hooks"
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useTutorial } from "../../contexts/TutorialContext"
+import { useCategories } from "../../hooks/useCategories"
 import { useHand } from "../../hooks/useHand"
-import { db } from "../../lib/db"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import type { RarityTier } from "../../lib/rarity-config"
 import { Button } from "../atoms/Button"
@@ -75,7 +74,7 @@ export function MintingView({
   const { expertFeatures } = useSettings()
   const { t } = useLanguage()
 
-  const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
+  const { data: categoriesList = [] } = useCategories()
 
   const toggleKeyword = (keyword: string) => {
     if (selectedKeywords.includes(keyword)) {

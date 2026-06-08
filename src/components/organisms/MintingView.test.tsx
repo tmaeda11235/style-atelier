@@ -1,29 +1,35 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render as tlRender, screen, fireEvent } from "@testing-library/react"
-import { SettingsProvider } from "../../contexts/SettingsContext"
+import { fireEvent, screen, render as tlRender } from "@testing-library/react"
 import React from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { SettingsProvider } from "../../contexts/SettingsContext"
+import { TutorialProvider } from "../../contexts/TutorialContext"
+import { useCategories } from "../../hooks/useCategories"
+import { useHand } from "../../hooks/useHand"
+import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
+import { MintingView } from "./MintingView"
 
 const render = (ui: React.ReactElement, options?: any) => {
   return tlRender(ui, { wrapper: SettingsProvider, ...options })
 }
-import { MintingView } from "./MintingView"
-import { useHand } from "../../hooks/useHand"
-import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
-import { TutorialProvider } from "../../contexts/TutorialContext"
 
 vi.mock("../../hooks/useHand", () => ({
-  useHand: vi.fn(),
+  useHand: vi.fn()
+}))
+
+vi.mock("../../hooks/useCategories", () => ({
+  useCategories: vi.fn().mockReturnValue({ data: [] })
 }))
 
 const mockMintingItem: HistoryItem = {
   id: "test-job-id",
   fullCommand: "a beautiful mountain scenery --ar 16:9",
   imageUrl: "https://example.com/image.png",
-  timestamp: Date.now(),
+  timestamp: Date.now()
 }
 
 const mockSegments: PromptSegment[] = [
-  { type: "text", value: "a beautiful mountain scenery" },
+  { type: "text", value: "a beautiful mountain scenery" }
 ]
 
 describe("MintingView", () => {
@@ -43,7 +49,7 @@ describe("MintingView", () => {
     selectedKeywords: [],
     setSelectedKeywords: vi.fn(),
     customName: "",
-    setCustomName: vi.fn(),
+    setCustomName: vi.fn()
   }
 
   beforeEach(() => {
@@ -54,10 +60,14 @@ describe("MintingView", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn(),
+      clearHand: vi.fn()
     })
 
-    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <MintingView {...defaultProps} />
+      </TutorialProvider>
+    )
     expect(screen.getByText("Mint New Card")).toBeDefined()
     expect(screen.getByRole("img")).toBeDefined()
     expect(screen.getByText("mountain")).toBeDefined()
@@ -68,12 +78,18 @@ describe("MintingView", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn(),
+      clearHand: vi.fn()
     })
 
-    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <MintingView {...defaultProps} />
+      </TutorialProvider>
+    )
     const container = screen.getByTestId("minting-view-container")
-    expect(container.className).toContain("absolute inset-0 bg-slate-50 z-20 flex flex-col")
+    expect(container.className).toContain(
+      "absolute inset-0 bg-slate-50 z-20 flex flex-col"
+    )
     expect(container.className).not.toContain("pb-[110px]")
   })
 
@@ -96,14 +112,18 @@ describe("MintingView", () => {
           dominantColor: "#000000",
           thumbnailData: "data:image/png;base64,123",
           frameId: "default",
-          genealogy: { generation: 1, parentIds: [] },
-        },
+          genealogy: { generation: 1, parentIds: [] }
+        }
       ],
       unpinCard: vi.fn(),
-      clearHand: vi.fn(),
+      clearHand: vi.fn()
     })
 
-    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <MintingView {...defaultProps} />
+      </TutorialProvider>
+    )
     const container = screen.getByTestId("minting-view-container")
     expect(container.className).toContain("pb-[110px]")
   })
@@ -112,10 +132,14 @@ describe("MintingView", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn(),
+      clearHand: vi.fn()
     })
 
-    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <MintingView {...defaultProps} />
+      </TutorialProvider>
+    )
 
     // Keywords toggle interaction
     const keywordChip = screen.getByText("mountain")
@@ -136,17 +160,24 @@ describe("MintingView", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn(),
+      clearHand: vi.fn()
     })
 
     // To test with cardEditing disabled, we can temporarily modify localStorage
-    localStorage.setItem("style-atelier-expert-features", JSON.stringify({ cardEditing: false }))
+    localStorage.setItem(
+      "style-atelier-expert-features",
+      JSON.stringify({ cardEditing: false })
+    )
 
-    render(<TutorialProvider><MintingView {...defaultProps} /></TutorialProvider>)
+    render(
+      <TutorialProvider>
+        <MintingView {...defaultProps} />
+      </TutorialProvider>
+    )
 
     // Verify PromptBubble is rendered (which renders as a span/div containing segment value)
     expect(screen.getByText("a beautiful mountain scenery")).toBeDefined()
-    
+
     // Cleanup localStorage
     localStorage.removeItem("style-atelier-expert-features")
   })

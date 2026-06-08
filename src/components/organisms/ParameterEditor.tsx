@@ -1,9 +1,8 @@
-import { useLiveQuery } from "dexie-react-hooks"
 import { Image, Settings2, User } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import { db } from "../../lib/db"
+import { useStyleCards } from "../../hooks/useStyleCards"
 import { AspectRatioSelector } from "../molecules/AspectRatioSelector"
 import { ParameterArrayEditor } from "../molecules/ParameterArrayEditor"
 
@@ -29,7 +28,6 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
 }) => {
   const { t } = useLanguage()
   const [showAdvanced, setShowAdvanced] = useState(false)
-
   const updateParam = (key: string, value: any) => {
     onChange({ ...parameters, [key]: value })
   }
@@ -60,7 +58,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
     }
   }
 
-  const allCards = useLiveQuery(() => db.styleCards.toArray()) || []
+  const { data: allCards = [] } = useStyleCards()
 
   const allSrefs = useMemo(() => {
     const srefs = new Set<string>()
@@ -113,6 +111,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
             border: "border-purple-100",
             hover: "hover:text-purple-900"
           }}
+          styleCards={allCards}
         />
 
         <ParameterArrayEditor
@@ -128,6 +127,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
             hover: "hover:text-amber-900"
           }}
           options={allImagePrompts}
+          styleCards={allCards}
         />
 
         <ParameterArrayEditor
@@ -143,6 +143,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
             hover: "hover:text-blue-900"
           }}
           options={allSrefs}
+          styleCards={allCards}
         />
 
         <ParameterArrayEditor
@@ -158,6 +159,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
             hover: "hover:text-green-900"
           }}
           options={allCrefs}
+          styleCards={allCards}
         />
       </div>
 

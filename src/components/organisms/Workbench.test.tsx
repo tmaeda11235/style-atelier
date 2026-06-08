@@ -31,6 +31,15 @@ vi.mock("../../hooks/useEvolution", () => ({
   useEvolution: vi.fn()
 }))
 
+vi.mock("../../hooks/useStyleCards", () => ({
+  useStyleCards: vi.fn().mockReturnValue({ data: [] }),
+  useUpdateStyleCard: vi.fn().mockReturnValue({ mutateAsync: vi.fn() })
+}))
+
+vi.mock("../../hooks/useCategories", () => ({
+  useCategories: vi.fn().mockReturnValue({ data: [] })
+}))
+
 describe("Workbench", () => {
   const mockSetAlertType = vi.fn()
   const mockAddLog = vi.fn()

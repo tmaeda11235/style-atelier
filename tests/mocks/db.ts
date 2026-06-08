@@ -77,6 +77,31 @@ class MockTable<T extends { id: string } | any, Key = string> {
     this.items.clear()
   })
 
+  count = vi.fn().mockImplementation(async () => {
+    return this.items.size
+  })
+
+  orderBy = vi.fn().mockImplementation((index: string) => {
+    const sorted = Array.from(this.items.values()).sort((a: any, b: any) => {
+      const valA = a[index] || 0
+      const valB = b[index] || 0
+      return valA > valB ? 1 : valA < valB ? -1 : 0
+    })
+
+    const chain: any = {
+      reverse: () => {
+        sorted.reverse()
+        return chain
+      },
+      limit: (n: number) => {
+        sorted.splice(n)
+        return chain
+      },
+      toArray: async () => sorted
+    }
+    return chain
+  })
+
   bulkPut = vi.fn().mockImplementation(async (items: T[]) => {
     items.forEach((item) => {
       const key = item.id || item.userId || item.timestamp

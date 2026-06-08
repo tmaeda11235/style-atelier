@@ -7,10 +7,10 @@ import { ParameterEditor } from "./ParameterEditor"
 
 let mockStyleCards: any[] = []
 
-vi.mock("dexie-react-hooks", () => ({
-  useLiveQuery: (fn: any) => {
-    return mockStyleCards
-  }
+vi.mock("../../hooks/useStyleCards", () => ({
+  useStyleCards: () => ({
+    data: mockStyleCards
+  })
 }))
 
 describe("ParameterEditor", () => {
