@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   analyzeImageColors,
@@ -115,12 +115,64 @@ describe("Color Utilities", () => {
     })
 
     describe("with mock window APIs for memory leak and fallback validation", () => {
-      it("should revoke object URL on load success", async () => {
-        const originalVitest = process.env.VITEST
-        // Temporarily disable the fast-path isTest check
-        // @ts-ignore
-        delete process.env.VITEST
+      let originalImage: any
+      let originalCreateElement: any
+      let mockContext: any
+      let mockCanvas: any
 
+      beforeEach(() => {
+        vi.stubEnv("BYPASS_VITEST", "true")
+        originalImage = global.Image
+
+        // Mock canvas context
+        mockContext = {
+          drawImage: vi.fn(),
+          getImageData: vi.fn().mockReturnValue({
+            data: new Uint8ClampedArray([
+              255,
+              0,
+              0,
+              255, // Red pixel
+              0,
+              0,
+              0,
+              255, // Black pixel (Neutral dominant candidate)
+              0,
+              0,
+              255,
+              255, // Blue pixel (Chromatic accent candidate)
+              255,
+              255,
+              255,
+              0 // Transparent pixel (Should be ignored)
+            ])
+          })
+        }
+
+        mockCanvas = {
+          getContext: vi.fn().mockReturnValue(mockContext),
+          width: 0,
+          height: 0
+        }
+
+        originalCreateElement = document.createElement
+        document.createElement = vi.fn().mockImplementation((tagName) => {
+          if (tagName === "canvas") {
+            return mockCanvas
+          }
+          return originalCreateElement.call(document, tagName)
+        })
+      })
+
+      afterEach(() => {
+        vi.unstubAllEnvs()
+        document.createElement = originalCreateElement
+        if (originalImage) {
+          vi.stubGlobal("Image", originalImage)
+        }
+      })
+
+      it("should revoke object URL on load success", async () => {
         const createObjectURLMock = vi.fn().mockReturnValue("blob:mock-url")
         const revokeObjectURLMock = vi.fn()
 
@@ -137,7 +189,6 @@ describe("Color Utilities", () => {
         const originalFetch = global.fetch
         global.fetch = fetchMock
 
-        const originalImage = global.Image
         class MockImage {
           crossOrigin = ""
           _src = ""
@@ -158,23 +209,21 @@ describe("Color Utilities", () => {
         global.Image = MockImage as any
 
         try {
-          await analyzeImageColors("https://example.com/test-image.png")
+          const colors = await analyzeImageColors(
+            "https://example.com/test-image.png"
+          )
           expect(createObjectURLMock).toHaveBeenCalled()
           expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url")
+          expect(colors.isFallback).toBe(false)
+          expect(colors.dominantName).toBeDefined()
         } finally {
-          process.env.VITEST = originalVitest
           global.URL.createObjectURL = originalCreateObjectURL
           global.URL.revokeObjectURL = originalRevokeObjectURL
           global.fetch = originalFetch
-          global.Image = originalImage
         }
       })
 
       it("should revoke object URL on load error", async () => {
-        const originalVitest = process.env.VITEST
-        // @ts-ignore
-        delete process.env.VITEST
-
         const createObjectURLMock = vi.fn().mockReturnValue("blob:mock-url")
         const revokeObjectURLMock = vi.fn()
 
@@ -191,7 +240,6 @@ describe("Color Utilities", () => {
         const originalFetch = global.fetch
         global.fetch = fetchMock
 
-        const originalImage = global.Image
         class MockImage {
           crossOrigin = ""
           _src = ""
@@ -212,23 +260,20 @@ describe("Color Utilities", () => {
         global.Image = MockImage as any
 
         try {
-          await analyzeImageColors("https://example.com/test-image.png")
+          const colors = await analyzeImageColors(
+            "https://example.com/test-image.png"
+          )
           expect(createObjectURLMock).toHaveBeenCalled()
           expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url")
+          expect(colors.isFallback).toBe(true)
         } finally {
-          process.env.VITEST = originalVitest
           global.URL.createObjectURL = originalCreateObjectURL
           global.URL.revokeObjectURL = originalRevokeObjectURL
           global.fetch = originalFetch
-          global.Image = originalImage
         }
       })
 
       it("should fallback to direct URL without object URL on fetch error", async () => {
-        const originalVitest = process.env.VITEST
-        // @ts-ignore
-        delete process.env.VITEST
-
         const createObjectURLMock = vi.fn()
         const revokeObjectURLMock = vi.fn()
 
@@ -241,7 +286,6 @@ describe("Color Utilities", () => {
         const originalFetch = global.fetch
         global.fetch = fetchMock
 
-        const originalImage = global.Image
         let setSrcValue = ""
         class MockImage {
           crossOrigin = ""
@@ -258,19 +302,155 @@ describe("Color Utilities", () => {
         global.Image = MockImage as any
 
         try {
-          await analyzeImageColors("https://example.com/fallback.png")
+          const colors = await analyzeImageColors(
+            "https://example.com/fallback.png"
+          )
           expect(fetchMock).toHaveBeenCalled()
           expect(createObjectURLMock).not.toHaveBeenCalled()
           expect(revokeObjectURLMock).not.toHaveBeenCalled()
           expect(setSrcValue).toBe("https://example.com/fallback.png")
+          expect(colors.isFallback).toBe(false)
         } finally {
-          process.env.VITEST = originalVitest
           global.URL.createObjectURL = originalCreateObjectURL
           global.URL.revokeObjectURL = originalRevokeObjectURL
           global.fetch = originalFetch
-          global.Image = originalImage
         }
       })
+
+      it("handles canvas fallback sizing: width > height and width > maxWidth", async () => {
+        // Mock image details
+        class MockImage {
+          width = 300
+          height = 100
+          naturalWidth = 300
+          naturalHeight = 100
+          onload = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 0)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors("data:image/png;base64,mock")
+        expect(colors.isFallback).toBe(false)
+      })
+
+      it("handles context not available error gracefully", async () => {
+        mockCanvas.getContext = vi.fn().mockReturnValue(null)
+
+        class MockImage {
+          onload = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 0)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors("data:image/png;base64,mock")
+        expect(colors.isFallback).toBe(true)
+      })
+
+      it("handles empty sorted colors list by returning fallback", async () => {
+        // Return empty pixel array to simulate zero valid chromatic/non-transparent pixels
+        mockContext.getImageData = vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray([])
+        })
+
+        class MockImage {
+          onload = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 0)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors("data:image/png;base64,mock")
+        expect(colors.isFallback).toBe(true)
+      })
+
+      it("picks a chromatic accent color when dominant color is neutral", async () => {
+        // Return 95% black pixels (Neutral) and 5% red pixels (Chromatic)
+        const pixels: number[] = []
+        for (let i = 0; i < 95; i++) {
+          pixels.push(0, 0, 0, 255) // Black
+        }
+        for (let i = 0; i < 5; i++) {
+          pixels.push(255, 0, 0, 255) // Red
+        }
+        mockContext.getImageData = vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray(pixels)
+        })
+
+        class MockImage {
+          onload = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 0)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors("data:image/png;base64,mock")
+        expect(colors.isFallback).toBe(false)
+        expect(colors.dominantName).toBe("Black")
+        expect(colors.accentName).toBe("Red")
+      })
+
+      it("picks another neutral color as accent when dominant is neutral and no chromatic exists", async () => {
+        // Return 95% black pixels (Neutral) and 5% white pixels (Neutral)
+        const pixels: number[] = []
+        for (let i = 0; i < 95; i++) {
+          pixels.push(0, 0, 0, 255) // Black
+        }
+        for (let i = 0; i < 5; i++) {
+          pixels.push(255, 255, 255, 255) // White
+        }
+        mockContext.getImageData = vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray(pixels)
+        })
+
+        class MockImage {
+          onload = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 0)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors("data:image/png;base64,mock")
+        expect(colors.isFallback).toBe(false)
+        expect(colors.dominantName).toBe("Black")
+        expect(colors.accentName).toBe("White")
+      })
+
+      it("picks dominant as accent when only one neutral color exists", async () => {
+        // Return 100% black pixels
+        const pixels: number[] = []
+        for (let i = 0; i < 100; i++) {
+          pixels.push(0, 0, 0, 255) // Black
+        }
+        mockContext.getImageData = vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray(pixels)
+        })
+
+        class MockImage {
+          onload = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 0)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors("data:image/png;base64,mock")
+        expect(colors.isFallback).toBe(false)
+        expect(colors.dominantName).toBe("Black")
+        expect(colors.accentName).toBe("Black")
+      })
+    })
+  })
+
+  describe("getQuantizedColorName fallback", () => {
+    it("returns Gray for invalid or NaN hue", () => {
+      expect(getQuantizedColorName(NaN, 50, 50)).toBe("Gray")
     })
   })
 
@@ -279,6 +459,8 @@ describe("Color Utilities", () => {
       expect(hexToRgb("#ffffff")).toEqual([255, 255, 255])
       expect(hexToRgb("#000000")).toEqual([0, 0, 0])
       expect(hexToRgb("#ff0000")).toEqual([255, 0, 0])
+      expect(hexToRgb("invalid")).toEqual([0, 0, 0])
+      expect(hexToRgb("#f00")).toEqual([255, 0, 0])
     })
 
     it("converts hex to hsl", () => {

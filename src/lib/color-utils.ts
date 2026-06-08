@@ -103,7 +103,10 @@ export async function analyzeImageColors(
   fallbackRarity: RarityTier = "Common"
 ): Promise<ExtractedColors> {
   // Test/Node environment fallback or placeholder images
-  const isTest = typeof process !== "undefined" && process.env.VITEST
+  const isTest =
+    typeof process !== "undefined" &&
+    process.env.VITEST &&
+    process.env.BYPASS_VITEST !== "true"
   if (
     typeof window === "undefined" ||
     typeof document === "undefined" ||
