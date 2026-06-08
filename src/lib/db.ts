@@ -17,11 +17,11 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
     return card
   }
 
-  async getAllCards(): Promise<StyleCard[]> {
+  getAllCards(): Promise<StyleCard[]> {
     return this.styleCards.filter((card) => !card.isDeleted).toArray()
   }
 
-  async getPinnedCards(): Promise<StyleCard[]> {
+  getPinnedCards(): Promise<StyleCard[]> {
     return this.styleCards
       .filter((card) => !card.isDeleted && !!card.isPinned)
       .toArray()
@@ -57,7 +57,7 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
 
   // --- Category Operations ---
 
-  async getAllCategories(): Promise<CustomCategory[]> {
+  getAllCategories(): Promise<CustomCategory[]> {
     return this.categories.filter((cat) => !cat.isDeleted).toArray()
   }
 
