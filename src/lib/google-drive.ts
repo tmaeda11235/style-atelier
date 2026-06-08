@@ -183,7 +183,8 @@ async function fetchWithReauth(
     } catch (reauthErr: any) {
       console.error("Silent re-authorization failed:", reauthErr)
       throw new Error(
-        `Google Drive authentication expired: ${reauthErr.message || reauthErr}`
+        `Google Drive authentication expired: ${reauthErr.message || reauthErr}`,
+        { cause: reauthErr }
       )
     }
   }

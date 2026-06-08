@@ -98,8 +98,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({
       return
     }
 
-    let nextSegments: PromptSegment[] = []
-    let nextParams: any = {}
+    let nextSegments: PromptSegment[]
+    let nextParams: any
 
     if (workbenchCards.length === 1) {
       const target = workbenchCards[0]
