@@ -368,4 +368,94 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
     })
     console.log("Easy Mode Drag-and-drop E2E test passed successfully!")
   })
+
+  test("should display drag overlays when dragging files or items over sidepanel @J-IO-MJ-DRAG-IN", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for drag overlay visual verification..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    const dropZone = spFrame.locator(".h-full.relative.overflow-hidden")
+    await expect(dropZone).toBeVisible({ timeout: 10000 })
+
+    // 2. Dispatch dragover event with application/json (history item)
+    console.log("Simulating JSON item dragover to trigger history overlay...")
+    await dropZone.evaluate((element) => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.setData("application/json", JSON.stringify({ id: "test" }))
+      Object.defineProperty(dataTransfer, "types", {
+        value: ["application/json"],
+        configurable: true
+      })
+      const dragOverEvent = new DragEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      })
+      element.dispatchEvent(dragOverEvent)
+    })
+
+    // Verify history overlay is visible
+    const historyOverlay = spFrame.locator(
+      "text=Drop here to add to prompt history"
+    )
+    await expect(historyOverlay).toBeVisible({ timeout: 5000 })
+
+    // Take screenshot of history drag overlay
+    await page.screenshot({
+      path: path.join(screenshotsDir, "drag-history-overlay.png")
+    })
+
+    // 3. Dispatch dragover event with Files (image file)
+    console.log("Simulating file dragover to trigger file overlay...")
+    await dropZone.evaluate((element) => {
+      const dataTransfer = new DataTransfer()
+      Object.defineProperty(dataTransfer, "types", {
+        value: ["Files"],
+        configurable: true
+      })
+      const dragOverEvent = new DragEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      })
+      element.dispatchEvent(dragOverEvent)
+    })
+
+    // Verify file overlay is visible
+    const fileOverlay = spFrame.locator("text=Drop QR Card Image to Import")
+    await expect(fileOverlay).toBeVisible({ timeout: 5000 })
+
+    // Take screenshot of file drag overlay
+    await page.screenshot({
+      path: path.join(screenshotsDir, "drag-file-overlay.png")
+    })
+
+    // 4. Dispatch dragleave event to clear overlays
+    console.log("Simulating dragleave...")
+    await dropZone.evaluate((element) => {
+      const dragLeaveEvent = new DragEvent("dragleave", {
+        bubbles: true,
+        cancelable: true
+      })
+      element.dispatchEvent(dragLeaveEvent)
+    })
+
+    // Verify both overlays are hidden
+    await expect(historyOverlay).not.toBeVisible({ timeout: 5000 })
+    await expect(fileOverlay).not.toBeVisible({ timeout: 5000 })
+
+    console.log("Drag overlay E2E test passed successfully!")
+  })
 })

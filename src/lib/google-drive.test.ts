@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   authorize,
   clearCachedToken,
+  defaultGoogleDriveClient,
   downloadBackup,
   GDriveTimeoutError,
   getBackupMetadata,
@@ -16,6 +17,7 @@ class MockXMLHttpRequest {
   open = vi.fn()
   setRequestHeader = vi.fn()
   send = vi.fn()
+  abort = vi.fn()
   onload = null as any
   onerror = null as any
   onprogress = null as any
@@ -526,6 +528,698 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
       // cleanup
       ;(chrome.runtime as any).lastError = originalLastError
+    })
+  })
+
+  describe("defaultGoogleDriveClient", () => {
+    it("should authorize, clear token, and upload correctly using defaultGoogleDriveClient", async () => {
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback("default-token")
+        }
+      )
+      const token = await defaultGoogleDriveClient.authorize(true)
+      expect(token).toBe("default-token")
+
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback()
+        }
+      )
+      await defaultGoogleDriveClient.clearCachedToken("default-token")
+      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalledWith(
+        { token: "default-token" },
+        expect.any(Function)
+      )
+    })
+
+    it("should proxy getBackupMetadata and downloadBackup correctly", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [
+            {
+              id: "file-id-xyz",
+              name: "style-atelier-backup.json",
+              modifiedTime: "2026-06-08T12:00:00.000Z",
+              size: "500"
+            }
+          ]
+        })
+      })
+
+      const meta = await defaultGoogleDriveClient.getBackupMetadata("tok")
+      expect(meta).toEqual({
+        id: "file-id-xyz",
+        modifiedTime: "2026-06-08T12:00:00.000Z",
+        size: "500"
+      })
+
+      const promise = defaultGoogleDriveClient.downloadBackup("tok")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.status = 200
+      xhr.responseText = "downloaded-data"
+      xhr.onload()
+
+      const text = await promise
+      expect(text).toBe("downloaded-data")
+    })
+  })
+
+  describe("getBackupMetadata", () => {
+    it("should return null if file does not exist", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+      const meta = await getBackupMetadata("tok")
+      expect(meta).toBeNull()
+    })
+
+    it("should throw error if getBackupMetadata request fails", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error"
+      })
+      await expect(getBackupMetadata("tok")).rejects.toThrow(
+        "Failed to get backup metadata: 500 Internal Error"
+      )
+    })
+  })
+
+  describe("downloadBackup", () => {
+    it("should return null if no file found", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+      const res = await downloadBackup("tok")
+      expect(res).toBeNull()
+    })
+
+    it("should handle download progress", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "file-id" }]
+        })
+      })
+
+      const onProgress = vi.fn()
+      const promise = downloadBackup("tok", undefined, onProgress)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+
+      xhr.onprogress({
+        lengthComputable: true,
+        loaded: 50,
+        total: 100
+      })
+      expect(onProgress).toHaveBeenCalledWith(50)
+
+      xhr.status = 200
+      xhr.responseText = "data"
+      xhr.onload()
+      await promise
+    })
+
+    it("should throw timeout error when download times out", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "file-id" }]
+        })
+      })
+
+      const promise = downloadBackup("tok")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.ontimeout()
+
+      await expect(promise).rejects.toThrow(GDriveTimeoutError)
+    })
+
+    it("should throw error when download fails with network error", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "file-id" }]
+        })
+      })
+
+      const promise = downloadBackup("tok")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.onerror()
+
+      await expect(promise).rejects.toThrow("Network error during download.")
+    })
+
+    it("should handle 401 re-authorization and retry download successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "file-id" }]
+        })
+      })
+
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback("fresh-download-token")
+        }
+      )
+
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback()
+        }
+      )
+
+      const onTokenUpdated = vi.fn()
+      const downloadPromise = downloadBackup("stale-token", onTokenUpdated)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      let xhr = mockXhrInstances[0]
+      xhr.status = 401
+      xhr.onload()
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(2)
+      xhr = mockXhrInstances[1]
+      xhr.status = 200
+      xhr.responseText = "freshly-downloaded-data"
+      xhr.onload()
+
+      const text = await downloadPromise
+      expect(text).toBe("freshly-downloaded-data")
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-download-token")
+    })
+
+    it("should throw abort error when download is aborted by signal", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "file-id" }]
+        })
+      })
+
+      const controller = new AbortController()
+      const promise = downloadBackup("tok", undefined, undefined, undefined, {
+        signal: controller.signal
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      controller.abort()
+      await expect(promise).rejects.toThrow("Download aborted by user")
+    })
+
+    it("should throw error when download status is not 2xx", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "file-id" }]
+        })
+      })
+
+      const promise = downloadBackup("tok")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.status = 500
+      xhr.onload()
+
+      await expect(promise).rejects.toThrow(
+        "Failed to download backup file: status 500"
+      )
+    })
+  })
+
+  describe("uploadBackup (Simple and Resumable)", () => {
+    // 1. Simple upload PATCH (File exists)
+    it("should handle simple upload PATCH successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "existing-id" }]
+        })
+      })
+
+      const onProgress = vi.fn()
+      const promise = uploadBackup("tok", "small-json", undefined, onProgress)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.upload.onprogress({
+        lengthComputable: true,
+        loaded: 50,
+        total: 100
+      })
+      expect(onProgress).toHaveBeenCalledWith(50)
+
+      xhr.status = 200
+      xhr.onload()
+      await promise
+    })
+
+    it("should throw timeout error when simple upload PATCH times out", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "existing-id" }]
+        })
+      })
+
+      const promise = uploadBackup("tok", "small-json")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.ontimeout()
+
+      await expect(promise).rejects.toThrow(GDriveTimeoutError)
+    })
+
+    it("should handle 401 re-authorization and retry simple upload PATCH successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "existing-id" }]
+        })
+      })
+
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback("fresh-patch-token")
+        }
+      )
+
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback()
+        }
+      )
+
+      const onTokenUpdated = vi.fn()
+      const promise = uploadBackup("stale-token", "small-json", onTokenUpdated)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      let xhr = mockXhrInstances[0]
+      xhr.status = 401
+      xhr.onload()
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(2)
+      xhr = mockXhrInstances[1]
+      xhr.status = 200
+      xhr.onload()
+
+      await promise
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-patch-token")
+    })
+
+    it("should throw abort error when simple upload PATCH is aborted by signal", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "existing-id" }]
+        })
+      })
+
+      const controller = new AbortController()
+      const promise = uploadBackup("tok", "small-json", undefined, undefined, {
+        signal: controller.signal
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      controller.abort()
+      await expect(promise).rejects.toThrow("Upload aborted by user")
+    })
+
+    it("should throw error when simple upload PATCH fails with network error", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "existing-id" }]
+        })
+      })
+
+      const promise = uploadBackup("tok", "small-json")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.onerror()
+
+      await expect(promise).rejects.toThrow(
+        "Network error during simple update."
+      )
+    })
+
+    it("should throw error when simple upload PATCH status is not 2xx", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          files: [{ id: "existing-id" }]
+        })
+      })
+
+      const promise = uploadBackup("tok", "small-json")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.status = 500
+      xhr.onload()
+
+      await expect(promise).rejects.toThrow(
+        "Failed to update backup file: status 500"
+      )
+    })
+
+    // 2. Simple upload POST (File does not exist)
+    it("should handle simple upload POST successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+
+      const onProgress = vi.fn()
+      const promise = uploadBackup("tok", "small-json", undefined, onProgress)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.upload.onprogress({
+        lengthComputable: true,
+        loaded: 30,
+        total: 100
+      })
+      expect(onProgress).toHaveBeenCalledWith(30)
+
+      xhr.status = 200
+      xhr.onload()
+      await promise
+    })
+
+    it("should throw timeout error when simple upload POST times out", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+
+      const promise = uploadBackup("tok", "small-json")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.ontimeout()
+
+      await expect(promise).rejects.toThrow(GDriveTimeoutError)
+    })
+
+    it("should throw error when simple upload POST fails with network error", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+
+      const promise = uploadBackup("tok", "small-json")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.onerror()
+
+      await expect(promise).rejects.toThrow(
+        "Network error during simple creation."
+      )
+    })
+
+    it("should handle 401 re-authorization and retry simple upload POST successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback("fresh-post-token")
+        }
+      )
+
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback()
+        }
+      )
+
+      const onTokenUpdated = vi.fn()
+      const promise = uploadBackup("stale-token", "small-json", onTokenUpdated)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      let xhr = mockXhrInstances[0]
+      xhr.status = 401
+      xhr.onload()
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(2)
+      xhr = mockXhrInstances[1]
+      xhr.status = 200
+      xhr.onload()
+
+      await promise
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-post-token")
+    })
+
+    it("should throw abort error when simple upload POST is aborted by signal", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+
+      const controller = new AbortController()
+      const promise = uploadBackup("tok", "small-json", undefined, undefined, {
+        signal: controller.signal
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      controller.abort()
+      await expect(promise).rejects.toThrow("Upload aborted by user")
+    })
+
+    it("should throw error when simple upload POST status is not 2xx", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ files: [] })
+      })
+
+      const promise = uploadBackup("tok", "small-json")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.status = 500
+      xhr.onload()
+
+      await expect(promise).rejects.toThrow(
+        "Failed to create backup file: status 500"
+      )
+    })
+
+    // 3. Resumable upload (Large data payload >= 2MB)
+    it("should handle resumable upload POST successfully", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ files: [] }) // file does not exist
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: {
+            get: (name: string) =>
+              name === "Location" ? "https://resumable.upload.url" : null
+          }
+        })
+
+      const onProgress = vi.fn()
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      const promise = uploadBackup("tok", largeData, undefined, onProgress)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.upload.onprogress({
+        lengthComputable: true,
+        loaded: 75,
+        total: 100
+      })
+      expect(onProgress).toHaveBeenCalledWith(75)
+
+      xhr.status = 200
+      xhr.onload()
+      await promise
+    })
+
+    it("should throw error when resumable upload Location header is missing", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            files: [{ id: "existing-id" }]
+          })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: {
+            get: () => null
+          }
+        })
+
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      await expect(uploadBackup("tok", largeData)).rejects.toThrow(
+        "Failed to get resumable upload session URL (Location header missing)"
+      )
+    })
+
+    it("should handle 401 re-authorization on resumable upload PUT and retry successfully", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ files: [] })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: {
+            get: (name: string) =>
+              name === "Location" ? "https://resumable.upload.url" : null
+          }
+        })
+
+      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback("fresh-resumable-token")
+        }
+      )
+
+      vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
+        (opts, callback) => {
+          callback()
+        }
+      )
+
+      const onTokenUpdated = vi.fn()
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      const promise = uploadBackup("stale-token", largeData, onTokenUpdated)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      let xhr = mockXhrInstances[0]
+      xhr.status = 401
+      xhr.onload()
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(2)
+      xhr = mockXhrInstances[1]
+      xhr.status = 200
+      xhr.onload()
+
+      await promise
+      expect(onTokenUpdated).toHaveBeenCalledWith("fresh-resumable-token")
+    })
+
+    it("should throw timeout error when resumable upload times out", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ files: [] })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: {
+            get: (name: string) =>
+              name === "Location" ? "https://resumable.upload.url" : null
+          }
+        })
+
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      const promise = uploadBackup("tok", largeData)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.ontimeout()
+
+      await expect(promise).rejects.toThrow(GDriveTimeoutError)
+    })
+
+    it("should throw error when resumable upload fails with network error", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ files: [] })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: {
+            get: (name: string) =>
+              name === "Location" ? "https://resumable.upload.url" : null
+          }
+        })
+
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      const promise = uploadBackup("tok", largeData)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.onerror()
+
+      await expect(promise).rejects.toThrow(
+        "Network error during resumable upload."
+      )
+    })
+
+    it("should throw abort error when resumable upload is aborted by signal", async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ files: [] })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: {
+            get: (name: string) =>
+              name === "Location" ? "https://resumable.upload.url" : null
+          }
+        })
+
+      const controller = new AbortController()
+      const largeData = "a".repeat(2 * 1024 * 1024 + 10)
+      const promise = uploadBackup("tok", largeData, undefined, undefined, {
+        signal: controller.signal
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockXhrInstances).toHaveLength(1)
+      controller.abort()
+      await expect(promise).rejects.toThrow("Upload aborted by user")
     })
   })
 })
