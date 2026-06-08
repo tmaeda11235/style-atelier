@@ -9,10 +9,18 @@ let mockCategories: any[] = []
 
 // Mock dexie-react-hooks
 vi.mock("dexie-react-hooks", () => ({
-  useLiveQuery: (fn: any) => {
+  useLiveQuery: (fn: any, deps: any[] = []) => {
     const fnStr = fn.toString()
     if (fnStr.includes("categories")) {
       return mockCategories
+    }
+    if (fnStr.includes("bulkGet")) {
+      const visibleIds = deps[0]
+      if (!visibleIds || visibleIds.length === 0) return []
+      const idToCard = new Map(mockStyleCards.map((c) => [c.id, c]))
+      return visibleIds
+        .map((id: string) => idToCard.get(id))
+        .filter((c: any) => !!c && !c.isDeleted)
     }
     return mockStyleCards
   }
@@ -22,7 +30,11 @@ vi.mock("../lib/db", () => ({
   db: {
     styleCards: {
       update: vi.fn().mockResolvedValue(1),
-      toArray: vi.fn().mockImplementation(async () => mockStyleCards)
+      toArray: vi.fn().mockImplementation(async () => mockStyleCards),
+      bulkGet: vi.fn().mockImplementation(async (ids: string[]) => {
+        const idToCard = new Map(mockStyleCards.map((c) => [c.id, c]))
+        return ids.map((id) => idToCard.get(id))
+      })
     },
     categories: {
       toArray: vi.fn().mockImplementation(async () => mockCategories)
