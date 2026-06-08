@@ -1,5 +1,5 @@
 import { BookUp2, Search, Tag } from "lucide-react"
-import React, { useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
@@ -33,6 +33,55 @@ export function LibraryTab({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const { advanceIfStep } = useTutorial()
+
+  const colorScrollRef = useRef<HTMLDivElement>(null)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(false)
+
+  const checkScroll = useCallback(() => {
+    const el = colorScrollRef.current
+    if (el) {
+      const { scrollLeft, scrollWidth, clientWidth } = el
+      setShowLeftArrow(scrollLeft > 1)
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1)
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = colorScrollRef.current
+    if (el) {
+      checkScroll()
+      el.addEventListener("scroll", checkScroll)
+      window.addEventListener("resize", checkScroll)
+
+      const timer = setTimeout(checkScroll, 100)
+
+      let resizeObserver: ResizeObserver | null = null
+      if (typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(() => {
+          checkScroll()
+        })
+        resizeObserver.observe(el)
+      }
+
+      return () => {
+        el.removeEventListener("scroll", checkScroll)
+        window.removeEventListener("resize", checkScroll)
+        clearTimeout(timer)
+        if (resizeObserver) {
+          resizeObserver.disconnect()
+        }
+      }
+    }
+  }, [checkScroll])
+
+  const scrollColors = (direction: "left" | "right") => {
+    const el = colorScrollRef.current
+    if (el) {
+      const scrollAmount = direction === "left" ? -100 : 100
+      el.scrollBy({ left: scrollAmount, behavior: "smooth" })
+    }
+  }
   const { expertFeatures } = useSettings()
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
@@ -114,40 +163,77 @@ export function LibraryTab({
         </div>
 
         {/* Color Palette Filter */}
-        <div className="flex gap-1 items-center overflow-x-auto pb-1 mt-1.5 scrollbar-none">
-          <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">
-            {t.colorLabel || "Color:"}
-          </span>
-          {colorOptions.map((colorOpt) => {
-            const isSelected = colorFilter === colorOpt.value
-            return (
+        <div className="relative flex items-center w-full">
+          {showLeftArrow && (
+            <>
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10" />
               <button
-                key={colorOpt.value}
-                onClick={() => setColorFilter(colorOpt.value as any)}
-                className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
-                  isSelected
-                    ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5"
-                    : "hover:scale-105"
-                }`}
-                style={{
-                  background: colorOpt.bg,
-                  borderColor:
-                    colorOpt.value === "White" ? "#cbd5e1" : "transparent"
-                }}
-                title={colorOpt.label}>
-                {isSelected && (
-                  <span
-                    className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
-                      colorOpt.value === "White" || colorOpt.value === "Yellow"
-                        ? "text-slate-800"
-                        : "text-white"
-                    }`}>
-                    ✓
-                  </span>
-                )}
+                onClick={() => scrollColors("left")}
+                type="button"
+                className="absolute left-0.5 z-20 flex items-center justify-center w-4 h-4 rounded-full bg-white/90 shadow-sm border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                style={{ top: "calc(50% - 2px)" }}
+                title="Scroll Left"
+                aria-label="Scroll left">
+                <span className="text-[8px] font-bold leading-none">‹</span>
               </button>
-            )
-          })}
+            </>
+          )}
+
+          <div
+            ref={colorScrollRef}
+            data-testid="color-scroll-container"
+            className="flex gap-1 items-center overflow-x-auto pb-1 mt-1.5 scrollbar-none w-full px-1"
+            onScroll={checkScroll}>
+            <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">
+              {t.colorLabel || "Color:"}
+            </span>
+            {colorOptions.map((colorOpt) => {
+              const isSelected = colorFilter === colorOpt.value
+              return (
+                <button
+                  key={colorOpt.value}
+                  onClick={() => setColorFilter(colorOpt.value as any)}
+                  className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
+                    isSelected
+                      ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5"
+                      : "hover:scale-105"
+                  }`}
+                  style={{
+                    background: colorOpt.bg,
+                    borderColor:
+                      colorOpt.value === "White" ? "#cbd5e1" : "transparent"
+                  }}
+                  title={colorOpt.label}>
+                  {isSelected && (
+                    <span
+                      className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
+                        colorOpt.value === "White" ||
+                        colorOpt.value === "Yellow"
+                          ? "text-slate-800"
+                          : "text-white"
+                      }`}>
+                      ✓
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {showRightArrow && (
+            <>
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10" />
+              <button
+                onClick={() => scrollColors("right")}
+                type="button"
+                className="absolute right-0.5 z-20 flex items-center justify-center w-4 h-4 rounded-full bg-white/90 shadow-sm border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                style={{ top: "calc(50% - 2px)" }}
+                title="Scroll Right"
+                aria-label="Scroll right">
+                <span className="text-[8px] font-bold leading-none">›</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 

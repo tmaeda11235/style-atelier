@@ -19,7 +19,12 @@
       "name": "カード管理（エキスパート）",
       "description": "エキスパート向けカード管理（編集・削除）",
       "steps": ["ライブラリを開く", "カード選択", "編集・削除実行"],
-      "nextJourneys": ["@J-ORG-EXPERT-02", "@J-WB-EXPERT-01", "@J-IO-QR-OUT"]
+      "nextJourneys": [
+        "@J-ORG-EXPERT-02",
+        "@J-WB-EXPERT-01",
+        "@J-IO-QR-OUT",
+        "@J-ORG-COLOR-FILTER-01"
+      ]
     },
     {
       "id": "@J-ORG-EXPERT-02",
@@ -37,7 +42,19 @@
       "name": "かんたんライブラリ",
       "description": "かんたんモードのライブラリ（カード閲覧・選択）",
       "steps": ["ライブラリを開く", "カードを見る"],
-      "nextJourneys": ["@J-WB-EASY-01"]
+      "nextJourneys": ["@J-WB-EASY-01", "@J-ORG-COLOR-FILTER-01"]
+    },
+    {
+      "id": "@J-ORG-COLOR-FILTER-01",
+      "name": "カラーフィルター操作",
+      "description": "カラーパレットフィルターを横スクロール・選択してカードを絞り込む",
+      "steps": [
+        "ライブラリを開く",
+        "カラーフィルターを横スクロール",
+        "色を選択",
+        "絞り込まれたカードを確認"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"]
     },
     {
       "id": "@J-WB-EXPERT-01",

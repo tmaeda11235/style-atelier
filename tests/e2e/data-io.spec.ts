@@ -44,8 +44,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     const cardEl = spFrame.locator("text=cyberpunk style").first()
     await expect(cardEl).toBeVisible({ timeout: 10000 })
 
-    // Click edit/detail button
-    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    // Click edit/detail button specifically for the cyberpunk style card
+    const targetCard = spFrame
+      .locator("div.group")
+      .filter({ hasText: "cyberpunk style" })
+      .first()
+    const editBtn = targetCard.locator("[data-testid='edit-card-button']")
     await expect(editBtn).toBeVisible()
     await editBtn.click()
 
