@@ -118,7 +118,134 @@ export default ts.config(
       ]
     },
   },
+  // Overrides for pre-existing highly complex files to prevent build failures during migration
+  // 1. Files violating max-lines (300 lines limit)
+  {
+    files: [
+      "src/placeholder-non-existent-max-lines.ts",
+            "src/components/organisms/CardDetailView.tsx",
+      "src/components/organisms/CategoryManagerModal.tsx",
+      "src/components/organisms/EasyModeSection.tsx",
+      "src/components/organisms/HandBar.tsx",
+      "src/components/organisms/LibraryTab.tsx",
+      "src/components/organisms/MintingView.tsx",
+      "src/components/organisms/ParameterEditor.tsx",
+      "src/components/organisms/Workbench.tsx",
+      "src/hooks/useLibrary.ts",
+      "src/hooks/useSettingsGoogleDrive.ts",
+      "src/lib/backup-validator.ts",
+      "src/lib/db.ts",
+      "src/lib/export-utils.ts",
+      "src/lib/google-drive.ts",
+      
+    ],
+    rules: {
+      "max-lines": "warn"
+    }
+  },
+  // 2. Files violating sonarjs/cognitive-complexity (15 limit)
+  {
+    files: [
+      "src/placeholder-non-existent-complexity.ts",
+            "src/components/organisms/CategoryManagerModal.tsx",
+      "src/components/organisms/CloudSyncSection.tsx",
+      "src/components/organisms/EasyModeSection.tsx",
+      "src/components/templates/SidePanelLayout.tsx",
+      "src/contents/_domain/extractors/WebDataExtractor.ts",
+      "src/hooks/useDragAndDrop.ts",
+      "src/hooks/useLibrary.ts",
+      "src/hooks/useMinting.ts",
+      "src/hooks/usePromptInjector.ts",
+      "src/hooks/useSpotlight.ts",
+      "src/lib/backup-validator.ts",
+      "src/lib/color-utils.ts",
+      "src/lib/db-setup.ts",
+      "src/lib/db.ts",
+      "src/lib/export-utils.ts",
+      "src/lib/google-drive.ts",
+      "src/lib/nlp-utils.ts",
+      "src/lib/prompt-utils.ts",
+      
+    ],
+    rules: {
+      "sonarjs/cognitive-complexity": "warn"
+    }
+  },
+  // 3. Files violating max-lines-per-function (50 limit)
+  {
+    files: [
+      "src/placeholder-non-existent-func-lines.ts",
+            "src/components/molecules/AssociatedImageGallery.tsx",
+      "src/components/molecules/AutocompleteDropdown.tsx",
+      "src/components/molecules/CardThumbnail.tsx",
+      "src/components/molecules/ConfirmationDialog.tsx",
+      "src/components/molecules/ConnectionAlert.tsx",
+      "src/components/molecules/GenealogySection.tsx",
+      "src/components/molecules/HistoryCard.tsx",
+      "src/components/molecules/ParameterArrayEditor.tsx",
+      "src/components/molecules/PromptBubble.tsx",
+      "src/components/molecules/TagEditor.tsx",
+      "src/components/organisms/CardDetailView.tsx",
+      "src/components/organisms/CategoryManagerModal.tsx",
+      "src/components/organisms/CloudSyncSection.tsx",
+      "src/components/organisms/DangerZoneSection.tsx",
+      "src/components/organisms/EasyModeSection.tsx",
+      "src/components/organisms/EasyModeView.tsx",
+      "src/components/organisms/EvolutionSuccessModal.tsx",
+      "src/components/organisms/ExpertModeView.tsx",
+      "src/components/organisms/HandBar.tsx",
+      "src/components/organisms/HistoryTab.tsx",
+      "src/components/organisms/InteractiveTutorial.tsx",
+      "src/components/organisms/LibraryTab.tsx",
+      "src/components/organisms/LocalBackupSection.tsx",
+      "src/components/organisms/MergeStackModal.tsx",
+      "src/components/organisms/MintingView.tsx",
+      "src/components/organisms/OnboardingGuide.tsx",
+      "src/components/organisms/ParameterEditor.tsx",
+      "src/components/organisms/PromptBubbleEditor.tsx",
+      "src/components/organisms/SettingsTab.tsx",
+      "src/components/organisms/ShareCardModal.tsx",
+      "src/components/organisms/SimpleMintingView.tsx",
+      "src/components/organisms/SimpleWorkbenchModal.tsx",
+      "src/components/organisms/SlotVariablesSection.tsx",
+      "src/components/organisms/StorageManagerSection.tsx",
+      "src/components/organisms/Workbench.tsx",
+      "src/components/templates/SidePanelLayout.tsx",
+      "src/contents/_domain/extractors/WebDataExtractor.ts",
+      "src/contexts/SettingsContext.tsx",
+      "src/contexts/TutorialContext.tsx",
+      "src/hooks/useActiveTabUrl.ts",
+      "src/hooks/useCardDetailsForm.ts",
+      "src/hooks/useCategoryManager.ts",
+      "src/hooks/useChromeTabConnection.ts",
+      "src/hooks/useDragAndDrop.ts",
+      "src/hooks/useEasyModeView.ts",
+      "src/hooks/useEvolution.ts",
+      "src/hooks/useExpertModeView.ts",
+      "src/hooks/useLibrary.ts",
+      "src/hooks/useLocalBackup.ts",
+      "src/hooks/useMinting.ts",
+      "src/hooks/usePromptInjector.ts",
+      "src/hooks/useSettingsGoogleDrive.ts",
+      "src/hooks/useSpotlight.ts",
+      "src/hooks/useWorkbench.ts",
+      "src/lib/backup-validator.ts",
+      "src/lib/color-utils.ts",
+      "src/lib/db-setup.ts",
+      "src/lib/db.ts",
+      "src/lib/export-utils.ts",
+      "src/lib/google-drive.ts",
+      "src/lib/image-utils.ts",
+      "src/lib/nlp-utils.ts",
+      "src/lib/prompt-utils.ts",
+      
+    ],
+    rules: {
+      "max-lines-per-function": "warn"
+    }
+  },
   // Overrides for test files to ease complexity and architecture rules
+  // (Must be at the end to ensure it overrides any production file rules that matched test files)
   {
     files: ["**/*.test.{ts,tsx,js,jsx}", "**/*.spec.{ts,tsx,js,jsx}"],
     rules: {
@@ -126,70 +253,6 @@ export default ts.config(
       "max-lines": "off",
       "max-lines-per-function": "off",
       "boundaries/dependencies": "off",
-    }
-  },
-  // Overrides for pre-existing highly complex files to prevent build failures during migration
-  {
-    files: [
-      "src/lib/google-drive.ts",
-      "src/lib/db.ts",
-      "src/lib/color-utils.ts",
-      "src/lib/db-setup.ts",
-      "src/lib/export-utils.ts",
-      "src/lib/image-utils.ts",
-      "src/lib/nlp-utils.ts",
-      "src/lib/prompt-utils.ts",
-      "src/lib/backup-validator.ts"
-    ],
-    rules: {
-      "max-lines": "warn",
-      "max-lines-per-function": "warn",
-      "sonarjs/cognitive-complexity": "warn",
-    }
-  },
-  // Overrides for pre-existing UI files violating boundaries or complexity limits (migration baseline)
-  {
-    files: [
-      "src/components/molecules/AutocompleteDropdown.tsx",
-      "src/components/molecules/HistoryCard.tsx",
-      "src/components/organisms/CardDetailView.tsx",
-      "src/components/organisms/EasyModeView.tsx",
-      "src/components/organisms/ExpertModeView.tsx",
-      "src/components/organisms/HandBar.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx",
-      "src/components/organisms/MintingView.tsx",
-      "src/components/organisms/ParameterEditor.tsx",
-      "src/components/organisms/SettingsTab.tsx",
-      "src/components/organisms/SimpleMintingView.tsx",
-      "src/components/organisms/SimpleWorkbenchModal.tsx",
-      "src/components/organisms/Workbench.tsx"
-    ],
-    rules: {
-      "boundaries/dependencies": "warn",
-      "max-lines-per-function": "warn",
-      "sonarjs/cognitive-complexity": "warn"
-    }
-  },
-  // Overrides for hooks and contexts to ease complexity rules (baseline)
-  {
-    files: ["src/hooks/**/*.{ts,tsx}", "src/contexts/**/*.{ts,tsx}"],
-    rules: {
-      "max-lines": "warn",
-      "max-lines-per-function": "warn",
-      "sonarjs/cognitive-complexity": "warn"
-    }
-  },
-  // Overrides for components, pages, and content scripts to ease complexity rules (baseline)
-  {
-    files: [
-      "src/components/**/*.{ts,tsx}",
-      "src/pages/**/*.{ts,tsx}",
-      "src/contents/**/*.{ts,tsx,js,jsx}"
-    ],
-    rules: {
-      "max-lines": "warn",
-      "max-lines-per-function": "warn",
-      "sonarjs/cognitive-complexity": "warn"
     }
   }
 );
