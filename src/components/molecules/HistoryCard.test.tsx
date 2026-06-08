@@ -31,21 +31,29 @@ describe("HistoryCard", () => {
   })
 
   it("renders with CDN image and triggers fetch when localImageBlob is absent", async () => {
-    render(<HistoryCard item={mockItem} onMintClick={mockOnMintClick} />)
+    const mockOnImageCached = vi.fn()
+    render(
+      <HistoryCard
+        item={mockItem}
+        onMintClick={mockOnMintClick}
+        onImageCached={mockOnImageCached}
+      />
+    )
 
     // Verify initial render with CDN imageUrl
     const img = screen.getByRole("img")
     expect(img.getAttribute("src")).toBe("https://example.com/cdn/job-123.png")
     expect(screen.getByText("sunset over Tokyo cyberpunk style")).toBeDefined()
 
-    // Verify fetch and update have been called
+    // Verify fetch and callback have been called
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         "https://example.com/cdn/job-123.png"
       )
-      expect(db.historyItems.update).toHaveBeenCalledWith("job-123", {
-        localImageBlob: expect.any(Blob)
-      })
+      expect(mockOnImageCached).toHaveBeenCalledWith(
+        "job-123",
+        expect.any(Blob)
+      )
     })
   })
 

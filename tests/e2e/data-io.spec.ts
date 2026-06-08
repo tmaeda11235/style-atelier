@@ -16,7 +16,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     })
   })
 
-  test("should allow exporting style card as image (QR output) and importing from it (QR input) @J-IO-QR", async ({
+  test("should allow exporting style card as image (QR output) @J-IO-QR-OUT", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -24,7 +24,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
       fs.mkdirSync(screenshotsDir, { recursive: true })
     }
 
-    console.log("Navigating to sandbox page for QR Export/Import E2E test...")
+    console.log("Navigating to sandbox page for QR Export E2E test...")
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
@@ -44,8 +44,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     const cardEl = spFrame.locator("text=cyberpunk style").first()
     await expect(cardEl).toBeVisible({ timeout: 10000 })
 
-    // Click edit/detail button
-    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    // Click edit/detail button specifically for the cyberpunk style card
+    const targetCard = spFrame
+      .locator("div.group")
+      .filter({ hasText: "cyberpunk style" })
+      .first()
+    const editBtn = targetCard.locator("[data-testid='edit-card-button']")
     await expect(editBtn).toBeVisible()
     await editBtn.click()
 
@@ -68,16 +72,28 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     await page.screenshot({
       path: path.join(screenshotsDir, "qr-export-detail.png")
     })
+  })
 
-    // Close Detail View
-    const cancelBtn = spFrame.locator("button:has-text('Cancel')")
-    await cancelBtn.click()
-    await expect(
-      spFrame.locator("h2:has-text('Card Details')")
-    ).not.toBeVisible()
+  test("should allow importing from QR code image (QR input) @J-IO-QR-IN", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true })
+    }
 
-    // 5. Test QR Import (Drag and Drop QR Code Image)
-    // First, let's create a temporary QR image containing custom card data in Node.js
+    console.log("Navigating to sandbox page for QR Import E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Prepare a temporary QR image containing custom card data in Node.js
     const newCardData = {
       id: "qr-imported-card-111",
       name: "QR Imported Style",
@@ -100,7 +116,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     const qrPayload = `web+styleatelier://import?data=${compressed}`
     const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 200 })
 
-    // Extract the raw Base64 data to avoid using fetch() on data URLs inside evaluate (blocks by CSP)
+    // Extract the raw Base64 data
     const base64Data = qrDataUrl.split(",")[1]
 
     console.log("Simulating drag-and-drop of the generated QR Image...")
@@ -140,7 +156,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
       { base64Data }
     )
 
-    // Verify toast notification for import success (should contain card name regardless of language)
+    // Verify toast notification for import success
     const toastMessage = spFrame.locator("text=QR Imported Style").first()
     await expect(toastMessage).toBeVisible({ timeout: 10000 })
 
@@ -160,18 +176,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     expect(cardInDb).toBeDefined()
     expect(cardInDb.name).toBe("QR Imported Style")
     expect(cardInDb.tier).toBe("Epic")
-
-    console.log("QR Import E2E validation passed successfully!")
   })
 
-  test("should allow exporting local database backup and importing from it @J-IO-LOCAL", async ({
+  test("should allow exporting local database backup @J-IO-BACKUP", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true })
+    }
 
-    console.log(
-      "Navigating to sandbox page for Local Backup/Restore E2E test..."
-    )
+    console.log("Navigating to sandbox page for Local Backup E2E test...")
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
@@ -202,7 +217,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     // Save to temp path to read its content
     const backupPath = path.join(
       __dirname,
-      "../../tests/fixtures/temp-backup.json"
+      "../../tests/fixtures/temp-backup-1.json"
     )
     const fixturesDir = path.dirname(backupPath)
     if (!fs.existsSync(fixturesDir)) {
@@ -210,7 +225,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     }
 
     await download.saveAs(backupPath)
-    console.log(`Backup file saved to: ${backupPath}`)
 
     // Read and verify backup content
     const backupContent = JSON.parse(fs.readFileSync(backupPath, "utf-8"))
@@ -225,15 +239,43 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
       (c: any) => c.name === "cyberpunk style"
     )
     expect(cyberpunkCard).toBeDefined()
-    console.log("Local backup JSON contents verified successfully.")
+
+    // Take screenshot of settings screen
+    await page.screenshot({
+      path: path.join(screenshotsDir, "local-backup-settings.png")
+    })
 
     // Cleanup temp backup file
     if (fs.existsSync(backupPath)) {
       fs.unlinkSync(backupPath)
     }
+  })
 
-    // 4. Test Local Import (Restore JSON Backup)
-    // Prepare a mock database state to import (contains a new card)
+  test("should allow importing from local database backup @J-IO-RESTORE", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true })
+    }
+
+    console.log("Navigating to sandbox page for Local Restore E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+
+    // Prepare a mock database state to import
     const mockBackupPayload = {
       version: 1,
       exportedAt: Date.now(),
@@ -266,14 +308,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
 
     const importFilePath = path.join(
       __dirname,
-      "../../tests/fixtures/restore-test.json"
+      "../../tests/fixtures/restore-test-1.json"
     )
     fs.writeFileSync(importFilePath, JSON.stringify(mockBackupPayload))
 
     // Set file input files to trigger import
     const fileInput = spFrame.locator("input[type='file']")
-
-    console.log("Setting input file for local restore...")
 
     // Handle the confirmation dialog that will appear
     const dialogConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
@@ -282,10 +322,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     const importBtn = spFrame.locator("button:has-text('Import')")
     await expect(importBtn).toBeVisible()
 
-    // We can directly upload files via setInputFiles on the locator of the input element
     await fileInput.setInputFiles(importFilePath)
 
-    // Confirm dialog should appear, wait for it and click Confirm
+    // Confirm dialog should appear
     await expect(dialogConfirmBtn).toBeVisible({ timeout: 10000 })
 
     // Take screenshot of the confirm dialog
@@ -295,13 +334,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
 
     await dialogConfirmBtn.click()
 
-    // Verify Success notification (English: restored, Japanese: インポート)
+    // Verify Success notification
     const successToast = spFrame
       .locator("text=/restored|completed|インポート/i")
       .first()
     await expect(successToast).toBeVisible({ timeout: 10000 })
 
-    await page.waitForTimeout(1000) // Wait a second for Dexie import to be safe
+    await page.waitForTimeout(1000)
 
     const restoredCard = await spFrame
       .locator("body")
@@ -314,9 +353,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     expect(restoredCard.name).toBe("Backup Restored Card")
     expect(restoredCard.tier).toBe("Legendary")
 
-    console.log("Local Restore E2E validation passed successfully!")
-
-    // Cleanup restore-test.json
+    // Cleanup restore-test-1.json
     if (fs.existsSync(importFilePath)) {
       fs.unlinkSync(importFilePath)
     }

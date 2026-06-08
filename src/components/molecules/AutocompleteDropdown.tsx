@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
-import { useLiveQuery } from "dexie-react-hooks"
-import { db } from "../../lib/db"
+
+import type { StyleCard } from "../../lib/db-schema"
 
 interface AutocompleteDropdownProps {
   options: string[]
@@ -8,6 +8,7 @@ interface AutocompleteDropdownProps {
   isOpen: boolean
   onSelect: (option: string) => void
   onClose: () => void
+  styleCards?: StyleCard[]
 }
 
 function SafeAutocompleteImage({ src }: { src: string }) {
@@ -15,10 +16,10 @@ function SafeAutocompleteImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    const isTest = typeof process !== "undefined" && process.env.VITEST;
+    const isTest = typeof process !== "undefined" && process.env.VITEST
     if (isTest) {
-      setLocalUrl("data:image/png;base64,mock_image_data");
-      return;
+      setLocalUrl("data:image/png;base64,mock_image_data")
+      return
     }
 
     let active = true
@@ -79,19 +80,21 @@ export function AutocompleteDropdown({
   isOpen,
   onSelect,
   onClose,
+  styleCards = []
 }: AutocompleteDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const styleCards = useLiveQuery(() => db.getAllCards()) || []
-
   // Filter options based on input value
-  const filteredOptions = options.filter((opt) =>
-    opt.toLowerCase().includes(value.toLowerCase()) && opt !== value
+  const filteredOptions = options.filter(
+    (opt) => opt.toLowerCase().includes(value.toLowerCase()) && opt !== value
   )
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         onClose()
       }
     }
@@ -109,18 +112,18 @@ export function AutocompleteDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute left-0 right-0 z-30 mt-1 max-h-40 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg text-xs"
-    >
+      className="absolute left-0 right-0 z-30 mt-1 max-h-40 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg text-xs">
       {filteredOptions.map((opt) => {
         const isUrl = opt.startsWith("http://") || opt.startsWith("https://")
-        const matchingCard = styleCards.find((c) => c.parameters?.sref?.includes(opt))
+        const matchingCard = styleCards.find((c) =>
+          c.parameters?.sref?.includes(opt)
+        )
 
         return (
           <div
             key={opt}
             onClick={() => onSelect(opt)}
-            className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100 cursor-pointer text-slate-700 transition-colors select-none"
-          >
+            className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100 cursor-pointer text-slate-700 transition-colors select-none">
             {matchingCard && matchingCard.thumbnailData ? (
               <img
                 src={matchingCard.thumbnailData}

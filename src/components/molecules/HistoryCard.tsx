@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
+
 import type { HistoryItem } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
-import { db } from "../../lib/db"
 
 /**
  * プロンプトの実行履歴を表示するカードコンポーネント。
@@ -14,13 +14,15 @@ import { db } from "../../lib/db"
 interface HistoryCardProps {
   item: HistoryItem
   onMintClick: (item: HistoryItem) => void
+  onImageCached?: (id: string, blob: Blob) => Promise<any>
   className?: string
 }
 
 export function HistoryCard({
   item,
   onMintClick,
-  className = "",
+  onImageCached,
+  className = ""
 }: HistoryCardProps) {
   const [imgSrc, setImgSrc] = useState<string>(item.imageUrl)
 
@@ -38,7 +40,9 @@ export function HistoryCard({
           const response = await fetch(item.imageUrl)
           if (response.ok) {
             const blob = await response.blob()
-            await db.historyItems.update(item.id, { localImageBlob: blob })
+            if (onImageCached) {
+              await onImageCached(item.id, blob)
+            }
           }
         } catch (err) {
           console.error("Failed to dynamically cache history image:", err)
@@ -57,8 +61,7 @@ export function HistoryCard({
 
   return (
     <div
-      className={`bg-white border border-slate-200 rounded-lg shadow-sm flex gap-3 p-2 ${className}`}
-    >
+      className={`bg-white border border-slate-200 rounded-lg shadow-sm flex gap-3 p-2 ${className}`}>
       <img
         src={imgSrc}
         alt={item.id}
@@ -67,16 +70,14 @@ export function HistoryCard({
       <div className="flex-1 min-w-0">
         <p
           className="text-xs text-slate-600 line-clamp-3 my-1"
-          title={item.fullCommand}
-        >
+          title={item.fullCommand}>
           {item.fullCommand}
         </p>
         <Button
           variant="primary"
           size="xs"
           onClick={() => onMintClick(item)}
-          className="mt-2"
-        >
+          className="mt-2">
           Mint Card
         </Button>
       </div>

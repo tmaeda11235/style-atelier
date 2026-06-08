@@ -75,7 +75,10 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: mockCards
+      allCards: mockCards,
+      hasMore: false,
+      loadMore: vi.fn(),
+      totalMatchedCount: 1
     })
   })
 
@@ -156,7 +159,10 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: mockCards
+      allCards: mockCards,
+      hasMore: false,
+      loadMore: vi.fn(),
+      totalMatchedCount: 1
     })
 
     render(
@@ -190,7 +196,10 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: []
+      allCards: [],
+      hasMore: false,
+      loadMore: vi.fn(),
+      totalMatchedCount: 0
     })
 
     render(
@@ -225,7 +234,10 @@ describe("LibraryTab", () => {
       setSortBy: vi.fn(),
       allSrefs: [],
       categories: [],
-      allCards: mockCards
+      allCards: mockCards,
+      hasMore: false,
+      loadMore: vi.fn(),
+      totalMatchedCount: 0
     })
 
     render(
@@ -247,5 +259,43 @@ describe("LibraryTab", () => {
     expect(mockSetSearchTag).toHaveBeenCalledWith("")
     expect(mockSetRarityFilter).toHaveBeenCalledWith("All")
     expect(mockSetCategoryFilter).toHaveBeenCalledWith("All")
+  })
+
+  it("renders Show More button when hasMore is true and triggers loadMore on click", () => {
+    const mockLoadMore = vi.fn()
+    vi.mocked(useLibrary).mockReturnValue({
+      styleCards: mockCards,
+      handleCardClick: vi.fn(),
+      togglePin: mockTogglePin,
+      searchTag: "",
+      setSearchTag: vi.fn(),
+      rarityFilter: "All",
+      setRarityFilter: vi.fn(),
+      categoryFilter: "All",
+      setCategoryFilter: vi.fn(),
+      colorFilter: "All",
+      setColorFilter: vi.fn(),
+      sortBy: "newest",
+      setSortBy: vi.fn(),
+      allSrefs: [],
+      categories: [],
+      allCards: mockCards,
+      hasMore: true,
+      loadMore: mockLoadMore,
+      totalMatchedCount: 1
+    })
+
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
+
+    const showMoreBtn = screen.getByTestId("show-more-button")
+    expect(showMoreBtn).toBeDefined()
+    expect(showMoreBtn.textContent).toContain("もっと見る")
+
+    fireEvent.click(showMoreBtn)
+    expect(mockLoadMore).toHaveBeenCalled()
   })
 })

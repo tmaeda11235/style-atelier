@@ -178,12 +178,19 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     await expect(characterRefLabel).toBeVisible()
 
     // Verify slot variable labels in English
-    const fillFromWorkbenchLabel = spFrame.locator(
-      "span:has-text('Fill from Workbench:')"
-    )
-    const recentLabel = spFrame.locator("span:has-text('Recent:')")
+    const slotInput = spFrame.locator("[data-testid='slot-input-adjective']")
+    await slotInput.focus()
+
+    const popover = spFrame.locator(".absolute.left-0.right-0.top-full")
+    const fillFromWorkbenchLabel = popover.locator("div", {
+      hasText: /^Fill from Workbench:$/
+    })
+    const recentLabel = popover.locator("div", { hasText: /^Recent:$/ })
     await expect(fillFromWorkbenchLabel).toBeVisible()
     await expect(recentLabel).toBeVisible()
+
+    // Blur input
+    await slotInput.blur()
 
     // Take screenshot of English comprehensive layout
     await page.screenshot({
@@ -253,12 +260,19 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     await expect(characterRefLabelJa).toBeVisible()
 
     // Verify slot variable labels in Japanese
-    const fillFromWorkbenchLabelJa = spFrame.locator(
-      "span:has-text('ワークベンチから入力:')"
-    )
-    const recentLabelJa = spFrame.locator("span:has-text('履歴:')")
+    const slotInputJa = spFrame.locator("[data-testid='slot-input-adjective']")
+    await slotInputJa.focus()
+
+    const popoverJa = spFrame.locator(".absolute.left-0.right-0.top-full")
+    const fillFromWorkbenchLabelJa = popoverJa.locator("div", {
+      hasText: /^ワークベンチから入力:$/
+    })
+    const recentLabelJa = popoverJa.locator("div", { hasText: /^履歴:$/ })
     await expect(fillFromWorkbenchLabelJa).toBeVisible()
     await expect(recentLabelJa).toBeVisible()
+
+    // Blur input
+    await slotInputJa.blur()
 
     // Take screenshot of Japanese comprehensive layout
     await page.screenshot({

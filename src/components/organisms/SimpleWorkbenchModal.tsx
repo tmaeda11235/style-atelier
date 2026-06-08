@@ -2,7 +2,7 @@ import { Send, X } from "lucide-react"
 import React, { useEffect, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import { db } from "../../lib/db"
+import { useUpdateStyleCard } from "../../hooks/useStyleCards"
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
 import { buildPromptString } from "../../lib/prompt-utils"
 import { Button } from "../atoms/Button"
@@ -27,6 +27,7 @@ export function SimpleWorkbenchModal({
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
   const [editedParams, setEditedParams] = useState<any>({})
   const [isInjecting, setIsInjecting] = useState(false)
+  const updateCardMutation = useUpdateStyleCard()
 
   const { t: i18n } = useLanguage()
   const t = i18n.simpleWorkbench
@@ -137,7 +138,10 @@ export function SimpleWorkbenchModal({
         addLog?.(t.injectSuccess)
 
         // Increment usage count for the card
-        await db.updateCard(card.id, { usageCount: (card.usageCount || 0) + 1 })
+        await updateCardMutation.mutateAsync({
+          id: card.id,
+          changes: { usageCount: (card.usageCount || 0) + 1 }
+        })
       }
     } catch (err) {
       console.error("Injection failed:", err)

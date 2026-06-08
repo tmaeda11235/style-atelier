@@ -1,4 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks"
+
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 
@@ -23,7 +24,9 @@ export function useHand() {
     try {
       await Promise.all(
         pinnedCards.map((card) =>
-          card.isVariable ? db.deleteCard(card.id) : db.updateCard(card.id, { isPinned: false })
+          card.isVariable
+            ? db.deleteCard(card.id)
+            : db.updateCard(card.id, { isPinned: false })
         )
       )
     } catch (err) {
@@ -31,9 +34,18 @@ export function useHand() {
     }
   }
 
+  const mergeCards = async (
+    representativeId: string,
+    materials: StyleCard[],
+    consumeStates: Record<string, boolean>
+  ) => {
+    return await db.mergeStyleCards(representativeId, materials, consumeStates)
+  }
+
   return {
     pinnedCards: pinnedCards || [],
     unpinCard,
     clearHand,
+    mergeCards
   }
 }
