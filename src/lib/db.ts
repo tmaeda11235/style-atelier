@@ -5,6 +5,12 @@ import type {
   UserSettings
 } from "./db-schema"
 import { StyleAtelierDatabaseBase } from "./db-setup"
+import { importBackupData } from "./db/import-ops"
+import {
+  deleteCategory,
+  deleteStyleCardAndCleanup,
+  mergeStyleCards
+} from "./db/merge-ops"
 
 export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
 
@@ -85,25 +91,7 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   }
 
   async deleteCategory(id: string): Promise<void> {
-    return this.transaction(
-      "rw",
-      [this.styleCards, this.categories],
-      async () => {
-        // 1. カテゴリーを論理削除し、更新日時を設定
-        await this.categories.update(id, {
-          isDeleted: true,
-          updatedAt: Date.now()
-        })
-        // 2. このカテゴリーを参照しているカードの参照を解除し、カードの更新日時も設定
-        await this.styleCards
-          .where("category")
-          .equals(id)
-          .modify((card) => {
-            delete card.category
-            card.updatedAt = Date.now()
-          })
-      }
-    )
+    return deleteCategory(this, id)
   }
 
   // --- SlotHistory Operations ---
@@ -135,67 +123,7 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
     materials: StyleCard[],
     consumeStates: Record<string, boolean>
   ): Promise<void> {
-    return this.transaction(
-      "rw",
-      [this.styleCards, this.categories],
-      async () => {
-        const representative = await this.styleCards.get(representativeId)
-        if (!representative) throw new Error("Representative card not found")
-
-        const mergedImages = [...(representative.images || [])]
-        if (
-          representative.thumbnailData &&
-          !mergedImages.includes(representative.thumbnailData)
-        ) {
-          mergedImages.push(representative.thumbnailData)
-        }
-
-        const mergedJobIds = [...(representative.associatedJobIds || [])]
-        if (
-          representative.jobId &&
-          !mergedJobIds.includes(representative.jobId)
-        ) {
-          mergedJobIds.push(representative.jobId)
-        }
-
-        let extraUsageCount = 0
-
-        for (const mat of materials) {
-          if (mat.images && mat.images.length > 0) {
-            mat.images.forEach((img) => {
-              if (!mergedImages.includes(img)) mergedImages.push(img)
-            })
-          } else if (
-            mat.thumbnailData &&
-            !mergedImages.includes(mat.thumbnailData)
-          ) {
-            mergedImages.push(mat.thumbnailData)
-          }
-
-          if (mat.jobId && !mergedJobIds.includes(mat.jobId)) {
-            mergedJobIds.push(mat.jobId)
-          }
-          if (mat.associatedJobIds && mat.associatedJobIds.length > 0) {
-            mat.associatedJobIds.forEach((jid) => {
-              if (!mergedJobIds.includes(jid)) mergedJobIds.push(jid)
-            })
-          }
-
-          const isConsumed = consumeStates[mat.id]
-          if (isConsumed) {
-            extraUsageCount += mat.usageCount || 0
-            await this.deleteStyleCardAndCleanup(mat.id)
-          }
-        }
-
-        await this.styleCards.update(representativeId, {
-          images: mergedImages,
-          associatedJobIds: mergedJobIds,
-          usageCount: (representative.usageCount || 0) + extraUsageCount,
-          updatedAt: Date.now()
-        })
-      }
-    )
+    return mergeStyleCards(this, representativeId, materials, consumeStates)
   }
 
   async importBackupData(
@@ -208,172 +136,11 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
     },
     mode: "merge" | "replace" = "replace"
   ): Promise<void> {
-    return this.transaction(
-      "rw",
-      [
-        this.styleCards,
-        this.categories,
-        this.userSettings,
-        this.historyItems,
-        this.slotHistory
-      ],
-      async () => {
-        if (mode === "replace") {
-          await this.styleCards.clear()
-          await this.categories.clear()
-          await this.userSettings.clear()
-          await this.historyItems.clear()
-          await this.slotHistory.clear()
-
-          if (data.styleCards && data.styleCards.length > 0) {
-            await this.styleCards.bulkPut(data.styleCards)
-          }
-          if (data.categories && data.categories.length > 0) {
-            await this.categories.bulkPut(data.categories)
-          }
-          if (data.userSettings && data.userSettings.length > 0) {
-            await this.userSettings.bulkPut(data.userSettings)
-          }
-          if (data.historyItems && data.historyItems.length > 0) {
-            await this.historyItems.bulkPut(data.historyItems)
-          }
-          if (data.slotHistory) {
-            const items = Object.entries(data.slotHistory).map(
-              ([label, values]) => ({
-                label,
-                values,
-                updatedAt: Date.now()
-              })
-            )
-            if (items.length > 0) {
-              await this.slotHistory.bulkPut(items)
-            }
-          }
-        } else {
-          if (data.styleCards && data.styleCards.length > 0) {
-            const localCards = await this.styleCards.toArray()
-            const localCardMap = new Map(localCards.map((c) => [c.id, c]))
-            const toPut: StyleCard[] = []
-
-            for (const incoming of data.styleCards) {
-              const local = localCardMap.get(incoming.id)
-              if (!local) {
-                toPut.push(incoming)
-              } else {
-                const incomingTime =
-                  incoming.updatedAt || incoming.createdAt || 0
-                const localTime = local.updatedAt || local.createdAt || 0
-                if (incomingTime >= localTime) {
-                  toPut.push(incoming)
-                }
-              }
-            }
-            if (toPut.length > 0) {
-              await this.styleCards.bulkPut(toPut)
-            }
-          }
-
-          if (data.categories && data.categories.length > 0) {
-            const localCats = await this.categories.toArray()
-            const localCatMap = new Map(localCats.map((c) => [c.id, c]))
-            const toPut: CustomCategory[] = []
-
-            for (const incoming of data.categories) {
-              const local = localCatMap.get(incoming.id)
-              if (!local) {
-                toPut.push(incoming)
-              } else {
-                const incomingTime =
-                  incoming.updatedAt || incoming.createdAt || 0
-                const localTime = local.updatedAt || local.createdAt || 0
-                if (incomingTime >= localTime) {
-                  toPut.push(incoming)
-                }
-              }
-            }
-            if (toPut.length > 0) {
-              await this.categories.bulkPut(toPut)
-            }
-          }
-
-          if (data.userSettings && data.userSettings.length > 0) {
-            await this.userSettings.bulkPut(data.userSettings)
-          }
-
-          if (data.historyItems && data.historyItems.length > 0) {
-            const localHistory = await this.historyItems.toArray()
-            const localHistoryMap = new Map(localHistory.map((h) => [h.id, h]))
-            const toPut: HistoryItem[] = []
-
-            for (const incoming of data.historyItems) {
-              const local = localHistoryMap.get(incoming.id)
-              if (!local) {
-                toPut.push(incoming)
-              } else {
-                const incomingTime = incoming.timestamp || 0
-                const localTime = local.timestamp || 0
-                if (incomingTime >= localTime) {
-                  toPut.push(incoming)
-                }
-              }
-            }
-            if (toPut.length > 0) {
-              await this.historyItems.bulkPut(toPut)
-            }
-          }
-
-          if (data.slotHistory) {
-            for (const [label, incomingValues] of Object.entries(
-              data.slotHistory
-            )) {
-              if (Array.isArray(incomingValues)) {
-                const local = await this.slotHistory.get(label)
-                const localValues = local ? local.values : []
-                const merged = Array.from(
-                  new Set([...incomingValues, ...localValues])
-                ).slice(0, 10)
-                await this.slotHistory.put({
-                  label,
-                  values: merged,
-                  updatedAt: Date.now()
-                })
-              }
-            }
-          }
-        }
-      }
-    )
+    return importBackupData(this, data, mode)
   }
 
-  async deleteStyleCardAndCleanup(cardId: string) {
-    return this.transaction(
-      "rw",
-      [this.styleCards, this.categories],
-      async () => {
-        // 1. categories で iconCardId === cardId を持つものをクリーンアップ
-        const affectedCategories = await this.categories
-          .filter((cat) => cat.iconCardId === cardId)
-          .toArray()
-        for (const cat of affectedCategories) {
-          await this.categories.update(cat.id, {
-            iconCardId: undefined,
-            iconUrl: undefined,
-            updatedAt: Date.now()
-          })
-        }
-        // 2. styleCards から物理削除せず論理削除し、重い画像情報をクリア
-        const card = await this.styleCards.get(cardId)
-        if (card) {
-          await this.styleCards.update(cardId, {
-            isDeleted: true,
-            thumbnailData: "",
-            images: [],
-            selectedThumbnails: [],
-            updatedAt: Date.now()
-          })
-        }
-      }
-    )
+  async deleteStyleCardAndCleanup(cardId: string): Promise<void> {
+    return deleteStyleCardAndCleanup(this, cardId)
   }
 }
 
