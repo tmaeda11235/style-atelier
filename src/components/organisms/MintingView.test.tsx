@@ -18,7 +18,7 @@ vi.mock("../../hooks/useHand", () => ({
 }))
 
 vi.mock("../../hooks/useCategories", () => ({
-  useCategories: vi.fn().mockReturnValue({ data: [] })
+  useCategories: vi.fn().mockReturnValue([])
 }))
 
 const mockMintingItem: HistoryItem = {
