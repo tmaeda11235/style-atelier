@@ -23,10 +23,11 @@
 | **@J-SYS-04**         | 言語切り替え                            | ✔️ `tests\e2e\i18n-missing-translations.spec.ts`<br>✔️ `tests\e2e\i18n-new-comprehensive.spec.ts` |
 | **@J-SET-01**         | アプリ設定                              | ✔️ `tests\e2e\settings.spec.ts`                                                                   |
 | **@J-WB-EXPERT-04**   | スロット変数操作 (ポップオーバー & Dnd) | ✔️ `tests\e2e\slot-ux-dnd.spec.ts`                                                                |
+| **@J-WB-EXPERT-05**   | 手札バー（HandBar）の最小化・折りたたみ | ✔️ `tests\e2e\handbar-collapse.spec.ts`                                                           |
 | **@J-TUTORIAL-01**    | インタラクティブチュートリアル          | ✔️ `tests\e2e\interactive-tutorial.spec.ts`                                                       |
 
 ## サマリー
 
-- 全ジャーニー数: 20
-- カバー済み: 20
+- 全ジャーニー数: 21
+- カバー済み: 21
 - 未カバー: 0

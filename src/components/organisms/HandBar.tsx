@@ -1,4 +1,4 @@
-import { BookUp2, Layers, X } from "lucide-react"
+import { BookUp2, ChevronDown, ChevronUp, Layers, X } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import iconUrl from "url:../../../assets/icon.png"
@@ -33,6 +33,55 @@ export function HandBar({
   const [consumeStates, setConsumeStates] = useState<Record<string, boolean>>(
     {}
   )
+
+  // Collapsible state for HandBar
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("handbar_collapsed")
+      return saved === "true"
+    }
+    return false
+  })
+
+  // Watch pinned cards length to auto-expand
+  const [prevCount, setPrevCount] = useState(pinnedCards.length)
+  useEffect(() => {
+    if (pinnedCards.length > prevCount) {
+      setIsCollapsed(false)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("handbar_collapsed", "false")
+      }
+    }
+    setPrevCount(pinnedCards.length)
+  }, [pinnedCards.length, prevCount])
+
+  // Watch global drag start to auto-expand
+  useEffect(() => {
+    const handleDragStart = () => {
+      setIsCollapsed(false)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("handbar_collapsed", "false")
+      }
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("dragstart", handleDragStart)
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("dragstart", handleDragStart)
+      }
+    }
+  }, [])
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev
+      if (typeof window !== "undefined") {
+        localStorage.setItem("handbar_collapsed", String(next))
+      }
+      return next
+    })
+  }
 
   const pinnedCardsDependency = pinnedCards
     .map((c) => `${c.id}-${c.updatedAt || 0}`)
@@ -121,38 +170,75 @@ export function HandBar({
   return (
     <div
       id="handbar-root"
-      className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-50 transition-all">
+      onClick={
+        isCollapsed
+          ? () => {
+              setIsCollapsed(false)
+              if (typeof window !== "undefined") {
+                localStorage.setItem("handbar_collapsed", "false")
+              }
+            }
+          : undefined
+      }
+      className={`fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-50 transition-all duration-300 ease-in-out ${
+        isCollapsed ? "cursor-pointer hover:bg-slate-50/95" : "cursor-default"
+      }`}
+      style={{
+        transform: isCollapsed
+          ? "translateY(calc(100% - 38px))"
+          : "translateY(0)"
+      }}>
       <div className="max-w-md mx-auto p-2">
         <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            Workbench ({pinnedCards.length})
-          </span>
-          <div className="flex gap-2">
-            {pinnedCards.length >= 2 && expertFeatures.stack && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="secondary"
-                  size="xs"
-                  onClick={() => setIsMergeOpen(true)}
-                  className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold px-2 py-0.5"
-                  data-testid="handbar-merge-btn">
-                  <Layers className="w-3 h-3" />
-                  {t.mergeStack.merge}
-                </Button>
-                <HelpTooltip
-                  content={t.helpTooltips.stack}
-                  position="top-right"
-                />
-              </div>
-            )}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Workbench ({pinnedCards.length})
+            </span>
             <Button
               variant="ghost"
               size="xs"
-              onClick={clearHand}
-              className="text-slate-400 hover:text-red-500">
-              {t.workbench.clearAll}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleCollapse()
+              }}
+              className="text-slate-400 hover:text-blue-500 p-0.5 h-auto"
+              title={isCollapsed ? "展開" : "最小化"}
+              data-testid="handbar-toggle-collapse-btn">
+              {isCollapsed ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
             </Button>
           </div>
+          {!isCollapsed && (
+            <div className="flex gap-2">
+              {pinnedCards.length >= 2 && expertFeatures.stack && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="xs"
+                    onClick={() => setIsMergeOpen(true)}
+                    className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold px-2 py-0.5"
+                    data-testid="handbar-merge-btn">
+                    <Layers className="w-3 h-3" />
+                    {t.mergeStack.merge}
+                  </Button>
+                  <HelpTooltip
+                    content={t.helpTooltips.stack}
+                    position="top-right"
+                  />
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={clearHand}
+                className="text-slate-400 hover:text-red-500">
+                {t.workbench.clearAll}
+              </Button>
+            </div>
+          )}
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {pinnedCards.map((card) => {

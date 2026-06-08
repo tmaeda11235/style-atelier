@@ -27,6 +27,7 @@ stateDiagram-v2
   _J_SYS_04 : 言語切り替え
   _J_SET_01 : アプリ設定
   _J_WB_EXPERT_04 : スロット変数操作 (ポップオーバー & Dnd)
+  _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
   _J_TUTORIAL_01 : インタラクティブチュートリアル
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
@@ -40,7 +41,9 @@ stateDiagram-v2
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_02
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_03
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_04
+  _J_WB_EXPERT_01 --> _J_WB_EXPERT_05
   _J_WB_EXPERT_02 --> _J_WB_EXPERT_01
+  _J_WB_EXPERT_02 --> _J_WB_EXPERT_05
   _J_WB_EXPERT_03 --> _J_MINT_EXPERT_01
   _J_WB_EASY_01 --> _J_WB_EXPERT_01
   _J_IO_QR_IN --> _J_ORG_EXPERT_01
@@ -55,6 +58,8 @@ stateDiagram-v2
   _J_SET_01 --> _J_IO_RESTORE
   _J_SET_01 --> _J_SYS_04
   _J_WB_EXPERT_04 --> _J_WB_EXPERT_01
+  _J_WB_EXPERT_05 --> _J_WB_EXPERT_01
+  _J_WB_EXPERT_05 --> _J_WB_EXPERT_02
   _J_TUTORIAL_01 --> _J_MINT_EXPERT_01
   _J_TUTORIAL_01 --> _J_WB_EXPERT_01
 ```
@@ -308,6 +313,21 @@ flowchart TD
   S2 --> S3
 ```
 
+### @J-WB-EXPERT-05: 手札バー（HandBar）の最小化・折りたたみ
+
+画面の表示領域を確保するために手札バーを最小化し、必要に応じて展開する
+
+```mermaid
+flowchart TD
+  S1["最小化ボタン押下"]
+  S2["手札バーが折りたたまれる"]
+  S1 --> S2
+  S3["展開ボタン押下（または新規カード追加で自動展開）"]
+  S2 --> S3
+  S4["手札バーが再展開される"]
+  S3 --> S4
+```
+
 ### @J-TUTORIAL-01: インタラクティブチュートリアル
 
 新規ユーザー向けのインタラクティブチュートリアル（オンボーディング）の実行
@@ -319,4 +339,8 @@ flowchart TD
   S1 --> S2
   S3["チュートリアル完了"]
   S2 --> S3
+```
+
+```
+
 ```
