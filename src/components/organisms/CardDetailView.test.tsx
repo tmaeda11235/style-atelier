@@ -25,8 +25,7 @@ vi.mock("../../hooks/useCategories", () => ({
 }))
 
 vi.mock("../../hooks/useStyleCards", () => ({
-  useStyleCards: vi.fn().mockReturnValue({ data: [] }),
-  useUpdateStyleCard: vi.fn().mockReturnValue({ mutateAsync: vi.fn() })
+  useStyleCards: vi.fn().mockReturnValue([])
 }))
 
 vi.mock("../../lib/export-utils", () => ({
