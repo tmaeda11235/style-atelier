@@ -93,3 +93,7 @@ To maintain clean architecture and prevent technical debt, the following strict 
    - Component files should not exceed 300 lines of code (excluding comments and blank lines).
    - Functions should be kept under 50 lines.
    - Files exceeding these limits should be refactored by extracting state, hooks, or sub-components.
+4. **Automated Enforcement via ESLint**:
+   - `eslint.config.mjs` strictly enforces rules as `error` by default (including `max-lines: 300`, `max-lines-per-function: 50`, `sonarjs/cognitive-complexity: 15`, and `boundaries/dependencies` prohibiting direct DB imports from components).
+   - A whitelist of pre-existing violating files is explicitly maintained in the `eslint.config.mjs` overrides, treating them as `warn` only. Any new files are fully subject to errors.
+   - The helper script `scratch/auto-sync-eslint.js` dynamically compiles and synchronizes these whitelists. As developers refactor legacy files, executing this script automatically removes them from exceptions, permanently locking in the strict rules.
