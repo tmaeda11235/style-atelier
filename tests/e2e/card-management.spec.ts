@@ -361,4 +361,102 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await expect(cardEditingBtn).toBeVisible()
     await cardEditingBtn.click()
   })
+
+  test("should track card editing history and allow rollback @J-ORG-VERSION-01", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for version history E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed a test card
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.add({
+        id: "card-history-test",
+        name: "Initial Version",
+        promptSegments: [{ type: "text", value: "initial prompt" }],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        tags: ["history-test"],
+        createdAt: Date.now(),
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+      })
+    })
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await expect(libraryTabButton).toBeVisible()
+    await libraryTabButton.click()
+    await page.waitForTimeout(500)
+
+    // 4. Open Card Detail View
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.click()
+
+    // 5. Modify the name and prompt to trigger history snapshot
+    const nameInput = spFrame
+      .locator("input[placeholder='Enter card name...']")
+      .or(spFrame.locator("label:has-text('Card Name') + input"))
+      .or(
+        spFrame.locator("input").first() // fallback to first input
+      )
+    await expect(nameInput).toBeVisible()
+    await nameInput.fill("Modified Version")
+
+    // 6. Save changes
+    const saveBtn = spFrame.locator("button:has-text('Save')")
+    await saveBtn.click()
+    await page.waitForTimeout(500)
+
+    // 7. Re-open Card Detail View to view version history
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.click()
+
+    // 8. Verify Version History list contains "Initial Version"
+    const versionHistoryHeader = spFrame.locator(
+      "h3:has-text('Version History')"
+    )
+    await expect(versionHistoryHeader).toBeVisible()
+    const historyItemName = spFrame.locator("span:has-text('Initial Version')")
+    await expect(historyItemName).toBeVisible()
+
+    // 9. Click "Restore" to rollback
+    const rollbackBtn = spFrame.locator("button:has-text('Restore')")
+    await expect(rollbackBtn).toBeVisible()
+    await rollbackBtn.click()
+    await page.waitForTimeout(500)
+
+    // 10. Verify rollback notice banner is shown and name input went back to "Initial Version"
+    const rollbackNotice = spFrame.locator("text=Restored from history")
+    await expect(rollbackNotice).toBeVisible()
+
+    // Capture screenshot of the rollback state showing the notice banner
+    await page.waitForTimeout(500)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "card-detail-version-history.png")
+    })
+
+    // 11. Click Save to persist rollback
+    await saveBtn.click()
+    await page.waitForTimeout(500)
+
+    // 12. Verify DB state is back to "Initial Version"
+    const cardInDb = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      return await database.styleCards.get("card-history-test")
+    })
+    expect(cardInDb.name).toBe("Initial Version")
+  })
 })

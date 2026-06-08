@@ -36,7 +36,10 @@ export function validateStyleCard(card: any, index: number): ValidationResult {
   const geneRes = validateCardGenealogy(card, cardId)
   if (!geneRes.isValid) return geneRes
 
-  return validateCardVariables(card, cardId)
+  const varRes = validateCardVariables(card, cardId)
+  if (!varRes.isValid) return varRes
+
+  return validateCardVersionHistory(card, cardId)
 }
 
 function validateCardIdentity(
@@ -208,4 +211,60 @@ function validateCardVariables(card: any, cardId: string): ValidationResult {
     }
   }
   return { isValid: true }
+}
+
+function validateCardVersionHistory(
+  card: any,
+  cardId: string
+): ValidationResult {
+  if (card.versionHistory === undefined) return { isValid: true }
+  if (!Array.isArray(card.versionHistory)) {
+    return {
+      isValid: false,
+      error: `Card(${cardId}) 'versionHistory' must be an array.`
+    }
+  }
+  for (let i = 0; i < card.versionHistory.length; i++) {
+    const v = card.versionHistory[i]
+    const res = validateSingleVersion(v, cardId, i)
+    if (!res.isValid) return res
+  }
+  return { isValid: true }
+}
+
+function validateSingleVersion(
+  v: any,
+  cardId: string,
+  index: number
+): ValidationResult {
+  if (!v || typeof v !== "object") {
+    return {
+      isValid: false,
+      error: `Card(${cardId}) versionHistory[${index}] must be an object.`
+    }
+  }
+  if (!isString(v.id)) {
+    return {
+      isValid: false,
+      error: `Card(${cardId}) versionHistory[${index}].id must be a string.`
+    }
+  }
+  if (!isNumber(v.timestamp)) {
+    return {
+      isValid: false,
+      error: `Card(${cardId}) versionHistory[${index}].timestamp must be a number.`
+    }
+  }
+  if (!isString(v.name)) {
+    return {
+      isValid: false,
+      error: `Card(${cardId}) versionHistory[${index}].name must be a string.`
+    }
+  }
+
+  const label = `${cardId}-version[${index}]`
+  const segRes = validateCardPromptSegments(v, label)
+  if (!segRes.isValid) return segRes
+
+  return validateCardParameters(v, label)
 }

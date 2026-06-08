@@ -94,3 +94,92 @@ export async function fetchWithReauth(
 
   return res
 }
+
+export function sendResumableXhr(
+  uploadUrl: string,
+  blob: Blob,
+  token: string,
+  onProgress?: (progress: number) => void,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open("PUT", uploadUrl, true)
+    xhr.setRequestHeader("Content-Type", "application/json")
+
+    const cleanup = configureXhr(xhr, options, () => {
+      reject(new Error("Upload aborted by user"))
+    })
+
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100)
+          onProgress(percent)
+        }
+      }
+    }
+
+    xhr.onload = () => {
+      cleanup()
+      resolve(xhr.status)
+    }
+    xhr.ontimeout = () => {
+      cleanup()
+      reject(new GDriveTimeoutError())
+    }
+    xhr.onerror = () => {
+      cleanup()
+      reject(new Error("Network error during resumable upload."))
+    }
+    xhr.send(blob)
+  })
+}
+
+export function sendSimpleXhr(
+  method: string,
+  url: string,
+  contentType: string,
+  body: string,
+  token: string,
+  onProgress?: (progress: number) => void,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open(method, url, true)
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`)
+    xhr.setRequestHeader("Content-Type", contentType)
+
+    const cleanup = configureXhr(xhr, options, () => {
+      reject(new Error("Upload aborted by user"))
+    })
+
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100)
+          onProgress(percent)
+        }
+      }
+    }
+
+    xhr.onload = () => {
+      cleanup()
+      resolve(xhr.status)
+    }
+    xhr.ontimeout = () => {
+      cleanup()
+      reject(new GDriveTimeoutError())
+    }
+    xhr.onerror = () => {
+      cleanup()
+      reject(
+        new Error(
+          `Network error during simple ${method === "PATCH" ? "update" : "creation"}.`
+        )
+      )
+    }
+    xhr.send(body)
+  })
+}

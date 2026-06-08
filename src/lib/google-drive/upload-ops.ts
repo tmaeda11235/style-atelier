@@ -1,7 +1,7 @@
 import { authorize, clearCachedToken } from "./auth"
 import { searchBackupFile } from "./file-ops"
-import { configureXhr, fetchWithReauth } from "./http-client"
-import { GDriveTimeoutError, type ReauthContext } from "./types"
+import { fetchWithReauth, sendResumableXhr, sendSimpleXhr } from "./http-client"
+import { type ReauthContext } from "./types"
 
 export async function uploadBackup(
   accessToken: string,
@@ -153,47 +153,6 @@ async function executeResumableUpload(
   }
 }
 
-function sendResumableXhr(
-  uploadUrl: string,
-  blob: Blob,
-  token: string,
-  onProgress?: (progress: number) => void,
-  options?: { signal?: AbortSignal; timeoutMs?: number }
-): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open("PUT", uploadUrl, true)
-    xhr.setRequestHeader("Content-Type", "application/json")
-
-    const cleanup = configureXhr(xhr, options, () => {
-      reject(new Error("Upload aborted by user"))
-    })
-
-    if (onProgress) {
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100)
-          onProgress(percent)
-        }
-      }
-    }
-
-    xhr.onload = () => {
-      cleanup()
-      resolve(xhr.status)
-    }
-    xhr.ontimeout = () => {
-      cleanup()
-      reject(new GDriveTimeoutError())
-    }
-    xhr.onerror = () => {
-      cleanup()
-      reject(new Error("Network error during resumable upload."))
-    }
-    xhr.send(blob)
-  })
-}
-
 async function uploadBackupSimple(
   accessToken: string,
   fileId: string | null,
@@ -266,20 +225,11 @@ async function createBackupSimple(
   options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<void> {
   const boundary = "style_atelier_backup_boundary"
-  const delimiter = `\r\n--${boundary}\r\n`
-  const closeDelimiter = `\r\n--${boundary}--`
   const metadata = {
     name: "style-atelier-backup.json",
     mimeType: "application/json"
   }
-  const multipartBody =
-    delimiter +
-    "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-    JSON.stringify(metadata) +
-    delimiter +
-    "Content-Type: application/json\r\n\r\n" +
-    jsonData +
-    closeDelimiter
+  const multipartBody = buildMultipartBody(boundary, metadata, jsonData)
 
   const url =
     "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
@@ -315,50 +265,20 @@ async function createBackupSimple(
   }
 }
 
-function sendSimpleXhr(
-  method: string,
-  url: string,
-  contentType: string,
-  body: string,
-  token: string,
-  onProgress?: (progress: number) => void,
-  options?: { signal?: AbortSignal; timeoutMs?: number }
-): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open(method, url, true)
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`)
-    xhr.setRequestHeader("Content-Type", contentType)
-
-    const cleanup = configureXhr(xhr, options, () => {
-      reject(new Error("Upload aborted by user"))
-    })
-
-    if (onProgress) {
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100)
-          onProgress(percent)
-        }
-      }
-    }
-
-    xhr.onload = () => {
-      cleanup()
-      resolve(xhr.status)
-    }
-    xhr.ontimeout = () => {
-      cleanup()
-      reject(new GDriveTimeoutError())
-    }
-    xhr.onerror = () => {
-      cleanup()
-      reject(
-        new Error(
-          `Network error during simple ${method === "PATCH" ? "update" : "creation"}.`
-        )
-      )
-    }
-    xhr.send(body)
-  })
+function buildMultipartBody(
+  boundary: string,
+  metadata: any,
+  jsonData: string
+): string {
+  const delimiter = `\r\n--${boundary}\r\n`
+  const closeDelimiter = `\r\n--${boundary}--`
+  return (
+    delimiter +
+    "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+    JSON.stringify(metadata) +
+    delimiter +
+    "Content-Type: application/json\r\n\r\n" +
+    jsonData +
+    closeDelimiter
+  )
 }

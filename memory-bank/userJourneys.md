@@ -32,6 +32,8 @@ stateDiagram-v2
   _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
   _J_TUTORIAL_01 : インタラクティブチュートリアル
   _J_IO_MJ_DRAG_IN : Midjourney履歴ドラッグインポート & フィードバック
+  _J_MINT_COLOR_FALLBACK : カラー抽出失敗時のフォールバック
+  _J_ORG_VERSION_01 : バージョン履歴管理
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -41,6 +43,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_IO_QR_OUT
   _J_ORG_EXPERT_01 --> _J_ORG_COLOR_FILTER_01
   _J_ORG_EXPERT_01 --> _J_ORG_SEARCH_01
+  _J_ORG_EXPERT_01 --> _J_ORG_VERSION_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
   _J_ORG_EASY_01 --> _J_ORG_COLOR_FILTER_01
@@ -72,6 +75,8 @@ stateDiagram-v2
   _J_TUTORIAL_01 --> _J_WB_EXPERT_01
   _J_IO_MJ_DRAG_IN --> _J_SYS_01
   _J_IO_MJ_DRAG_IN --> _J_MINT_EASY_01
+  _J_MINT_COLOR_FALLBACK --> _J_ORG_EXPERT_01
+  _J_ORG_VERSION_01 --> _J_ORG_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -394,4 +399,36 @@ flowchart TD
   S1 --> S2
   S3["ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"]
   S2 --> S3
+```
+
+### @J-MINT-COLOR-FALLBACK: カラー抽出失敗時のフォールバック
+
+画像のカラー抽出が失敗した場合にレア度に応じたテーマカラーが自動設定され、レア度変更時に動的に切り替わることを確認してミントする
+
+```mermaid
+flowchart TD
+  S1["Mint画面を開く"]
+  S2["カラー抽出が失敗した状態でレア度Commonに対応するフォールバックカラーが適用されているのを確認"]
+  S1 --> S2
+  S3["レア度を切り替えて対応するテーマカラーに動的に変更されるのを確認"]
+  S2 --> S3
+  S4["カード保存"]
+  S3 --> S4
+```
+
+### @J-ORG-VERSION-01: バージョン履歴管理
+
+スタイルカード詳細画面で過去のプロンプト・パラメータ変更履歴を確認し、任意のバージョンにロールバックする
+
+```mermaid
+flowchart TD
+  S1["カード詳細を開く"]
+  S2["変更履歴リストを表示"]
+  S1 --> S2
+  S3["任意のバージョンで復元を選択"]
+  S2 --> S3
+  S4["フォーム上で復元された値を確認"]
+  S3 --> S4
+  S5["保存して確定"]
+  S4 --> S5
 ```

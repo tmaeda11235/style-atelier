@@ -459,7 +459,10 @@
     "export": "エクスポート",
     "exporting": "エクスポート中...",
     "inject": "適用",
-    "save": "保存"
+    "save": "保存",
+    "versionHistory": "バージョン履歴",
+    "rollback": "復元",
+    "rollbackNotice": "履歴から復元されました。保存して確定してください。"
   },
   "navigation": {
     "history": "History",
