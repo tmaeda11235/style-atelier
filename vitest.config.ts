@@ -38,7 +38,6 @@ export default defineConfig({
         "src/hooks/**",
         "src/lib/db.ts",
         "src/lib/image-utils.ts",
-        "src/lib/google-drive.ts",
         "src/lib/qr-utils.ts",
         "src/contents/**"
       ],
