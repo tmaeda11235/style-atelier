@@ -1,4 +1,3 @@
-import { useLiveQuery } from "dexie-react-hooks"
 import { AlertCircle, Download, Save, Send, Trash2, X } from "lucide-react"
 import React, { useState } from "react"
 import iconUrl from "url:../../../assets/icon.png"
@@ -7,8 +6,8 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useCardDetailsForm } from "../../hooks/useCardDetailsForm"
 import { useCardExporter } from "../../hooks/useCardExporter"
+import { useCategories } from "../../hooks/useCategories"
 import { useHand } from "../../hooks/useHand"
-import { db } from "../../lib/db"
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
 import { buildPromptString } from "../../lib/prompt-utils"
 import { Button } from "../atoms/Button"
@@ -63,7 +62,7 @@ export function CardDetailView({
   const { expertFeatures } = useSettings()
   const { t } = useLanguage()
 
-  const categoriesList = useLiveQuery(() => db.getAllCategories()) || []
+  const { data: categoriesList = [] } = useCategories()
 
   const {
     name,

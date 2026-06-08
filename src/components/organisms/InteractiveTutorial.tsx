@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useTutorial } from "../../contexts/TutorialContext"
-import { db } from "../../lib/db"
+import { useHistory } from "../../hooks/useHistory"
 
 interface SpotlightRect {
   top: number
@@ -35,6 +35,7 @@ export function InteractiveTutorial() {
     prevStep,
     stopTutorial
   } = useTutorial()
+  const { addHistoryItem } = useHistory()
   const { t: i18n } = useLanguage()
   const t = i18n.interactiveTutorial
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null)
@@ -244,7 +245,7 @@ export function InteractiveTutorial() {
         imageUrl: "https://picsum.photos/seed/tutorial/512/512",
         timestamp: Date.now()
       }
-      await db.historyItems.put(sampleItem)
+      await addHistoryItem(sampleItem)
       // Advance step after a short delay so the UI can update
       setTimeout(() => {
         nextStep()

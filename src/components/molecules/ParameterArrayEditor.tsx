@@ -1,8 +1,10 @@
-import React, { useState } from "react"
 import { Plus, X } from "lucide-react"
-import { Input } from "../atoms/Input"
+import React, { useState } from "react"
+
 import { useParameterArray } from "../../hooks/useParameterArray"
+import type { StyleCard } from "../../lib/db-schema"
 import { cn } from "../../lib/utils"
+import { Input } from "../atoms/Input"
 import { AutocompleteDropdown } from "./AutocompleteDropdown"
 
 interface ParameterArrayEditorProps {
@@ -18,6 +20,7 @@ interface ParameterArrayEditorProps {
     hover: string
   }
   options?: string[]
+  styleCards?: StyleCard[]
 }
 
 export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
@@ -30,15 +33,22 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
     bg: "bg-blue-50",
     text: "text-blue-700",
     border: "border-blue-100",
-    hover: "hover:text-blue-900",
+    hover: "hover:text-blue-900"
   },
   options = [],
+  styleCards = []
 }) => {
-  const { inputValue, setInputValue, currentValues, addValue, removeValue, handleKeyDown } =
-    useParameterArray({
-      values,
-      onChange,
-    })
+  const {
+    inputValue,
+    setInputValue,
+    currentValues,
+    addValue,
+    removeValue,
+    handleKeyDown
+  } = useParameterArray({
+    values,
+    onChange
+  })
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -56,10 +66,11 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
               colorClass.bg,
               colorClass.text,
               colorClass.border
-            )}
-          >
+            )}>
             <span className="max-w-[150px] truncate">{val}</span>
-            <button onClick={() => removeValue(idx)} className={colorClass.hover}>
+            <button
+              onClick={() => removeValue(idx)}
+              className={colorClass.hover}>
               <X className="w-3 h-3" />
             </button>
           </div>
@@ -85,13 +96,13 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
                 setIsOpen(false)
               }}
               onClose={() => setIsOpen(false)}
+              styleCards={styleCards}
             />
           )}
         </div>
         <button
           onClick={() => addValue(inputValue)}
-          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors h-8 flex items-center justify-center"
-        >
+          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors h-8 flex items-center justify-center">
           <Plus className="w-4 h-4 text-slate-400" />
         </button>
       </div>

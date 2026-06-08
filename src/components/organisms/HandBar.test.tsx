@@ -69,7 +69,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     const { container } = render(
@@ -88,7 +89,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     render(
@@ -109,7 +111,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     render(
@@ -129,7 +132,8 @@ describe("HandBar", () => {
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: vi.fn()
     })
 
     render(
@@ -146,10 +150,12 @@ describe("HandBar", () => {
   })
 
   it("shows 'Merge Stack' button when 2+ cards are pinned, opens modal, and executes merge", async () => {
+    const mockMergeCards = vi.fn().mockResolvedValue(undefined)
     vi.mocked(useHand).mockReturnValue({
       pinnedCards: [card1, card2],
       unpinCard: vi.fn(),
-      clearHand: vi.fn()
+      clearHand: vi.fn(),
+      mergeCards: mockMergeCards
     })
 
     render(
@@ -179,7 +185,7 @@ describe("HandBar", () => {
     fireEvent.click(executeBtn)
 
     await waitFor(() => {
-      expect(db.mergeStyleCards).toHaveBeenCalledWith(
+      expect(mockMergeCards).toHaveBeenCalledWith(
         "card-1",
         [card2],
         expect.objectContaining({ "card-2": true })

@@ -1,9 +1,9 @@
+import { Image, Settings2, User } from "lucide-react"
 import React, { useMemo } from "react"
-import { Settings2, Image, User } from "lucide-react"
+
+import { useStyleCards } from "../../hooks/useStyleCards"
 import { AspectRatioSelector } from "../molecules/AspectRatioSelector"
 import { ParameterArrayEditor } from "../molecules/ParameterArrayEditor"
-import { useLiveQuery } from "dexie-react-hooks"
-import { db } from "../../lib/db"
 
 interface ParameterEditorProps {
   parameters: {
@@ -21,12 +21,15 @@ interface ParameterEditorProps {
   onChange: (parameters: any) => void
 }
 
-export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, onChange }) => {
+export const ParameterEditor: React.FC<ParameterEditorProps> = ({
+  parameters,
+  onChange
+}) => {
   const updateParam = (key: string, value: any) => {
     onChange({ ...parameters, [key]: value })
   }
 
-  const allCards = useLiveQuery(() => db.styleCards.toArray()) || []
+  const { data: allCards = [] } = useStyleCards()
 
   const allSrefs = useMemo(() => {
     const srefs = new Set<string>()
@@ -56,10 +59,15 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
     <div className="space-y-4 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
       <div className="flex items-center gap-2 text-slate-700 mb-1">
         <Settings2 className="w-4 h-4" />
-        <span className="text-xs font-bold uppercase tracking-wider">Parameters</span>
+        <span className="text-xs font-bold uppercase tracking-wider">
+          Parameters
+        </span>
       </div>
 
-      <AspectRatioSelector value={parameters.ar} onChange={(value) => updateParam("ar", value)} />
+      <AspectRatioSelector
+        value={parameters.ar}
+        onChange={(value) => updateParam("ar", value)}
+      />
 
       <div className="grid grid-cols-1 gap-4">
         <ParameterArrayEditor
@@ -72,8 +80,9 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             bg: "bg-purple-50",
             text: "text-purple-700",
             border: "border-purple-100",
-            hover: "hover:text-purple-900",
+            hover: "hover:text-purple-900"
           }}
+          styleCards={allCards}
         />
 
         <ParameterArrayEditor
@@ -86,9 +95,10 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             bg: "bg-amber-50",
             text: "text-amber-700",
             border: "border-amber-100",
-            hover: "hover:text-amber-900",
+            hover: "hover:text-amber-900"
           }}
           options={allImagePrompts}
+          styleCards={allCards}
         />
 
         <ParameterArrayEditor
@@ -101,9 +111,10 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             bg: "bg-blue-50",
             text: "text-blue-700",
             border: "border-blue-100",
-            hover: "hover:text-blue-900",
+            hover: "hover:text-blue-900"
           }}
           options={allSrefs}
+          styleCards={allCards}
         />
 
         <ParameterArrayEditor
@@ -116,9 +127,10 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({ parameters, on
             bg: "bg-green-50",
             text: "text-green-700",
             border: "border-green-100",
-            hover: "hover:text-green-900",
+            hover: "hover:text-green-900"
           }}
           options={allCrefs}
+          styleCards={allCards}
         />
       </div>
     </div>
