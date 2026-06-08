@@ -20,6 +20,15 @@ vi.mock("../../hooks/useHand", () => ({
   useHand: vi.fn()
 }))
 
+vi.mock("../../hooks/useCategories", () => ({
+  useCategories: vi.fn().mockReturnValue({ data: [] })
+}))
+
+vi.mock("../../hooks/useStyleCards", () => ({
+  useStyleCards: vi.fn().mockReturnValue({ data: [] }),
+  useUpdateStyleCard: vi.fn().mockReturnValue({ mutateAsync: vi.fn() })
+}))
+
 vi.mock("../../lib/export-utils", () => ({
   exportCardAsImage: vi.fn().mockResolvedValue(undefined)
 }))
@@ -293,5 +302,41 @@ describe("CardDetailView", () => {
 
     expect(onDeleteMock).toHaveBeenCalledWith("card-uuid-1")
     expect(screen.queryByTestId("delete-confirm-modal")).toBeNull()
+  })
+
+  it("displays advanced parameters in read-only mode if defined", () => {
+    localStorage.setItem(
+      "style-atelier-expert-features",
+      JSON.stringify({ cardEditing: false })
+    )
+
+    const cardWithAdvancedParams: StyleCard = {
+      ...mockCard,
+      parameters: {
+        ar: "16:9",
+        stylize: 350,
+        chaos: 25,
+        weird: 1000,
+        tile: true,
+        raw: true
+      }
+    }
+
+    render(<CardDetailView {...defaultProps} card={cardWithAdvancedParams} />)
+
+    // Verify labels and values are displayed
+    expect(screen.getByText(/Stylize \(--stylize\):/)).toBeDefined()
+    expect(screen.getByText("350")).toBeDefined()
+
+    expect(screen.getByText(/Chaos \(--chaos\):/)).toBeDefined()
+    expect(screen.getByText("25")).toBeDefined()
+
+    expect(screen.getByText(/Weird \(--weird\):/)).toBeDefined()
+    expect(screen.getByText("1000")).toBeDefined()
+
+    expect(screen.getByText(/Tile \(--tile\):/)).toBeDefined()
+    expect(screen.getByText(/Style Raw \(--style raw\):/)).toBeDefined()
+
+    localStorage.removeItem("style-atelier-expert-features")
   })
 })

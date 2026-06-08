@@ -1,8 +1,7 @@
-import { useLiveQuery } from "dexie-react-hooks"
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import { db } from "../../lib/db"
+import { useCategories } from "../../hooks/useCategories"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
@@ -42,7 +41,7 @@ export function SimpleMintingView({
   selectedCategory = "",
   setSelectedCategory = () => {}
 }: SimpleMintingViewProps) {
-  const categoriesList = useLiveQuery(() => db.categories.toArray()) || []
+  const { data: categoriesList = [] } = useCategories()
   const { t } = useLanguage()
 
   // Ensure a category is always selected if categories exist
