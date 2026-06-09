@@ -17,8 +17,8 @@ export interface BackupPayload {
  * Serialize Dexie database tables to a JSON string
  */
 export async function exportDatabase(): Promise<string> {
-  const cards = await db.getAllCards()
-  const categories = await db.getAllCategories()
+  const cards = await db.styleCards.toArray()
+  const categories = await db.categories.toArray()
   const settings = await db.userSettings.toArray()
   const history = await db.historyItems.toArray()
 
