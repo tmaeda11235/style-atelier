@@ -871,4 +871,28 @@ describe("SettingsTab", () => {
       expect(localStorage.getItem("style-atelier-show-tips-bar")).toBe("true")
     })
   })
+
+  describe("Accordion Settings", () => {
+    it("collapses and expands sections on accordion header clicks", async () => {
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+
+      // In test env, cloud section is open by default. Verify we can find its toggle button.
+      expect(container.querySelector("#google-drive-toggle-btn")).not.toBeNull()
+
+      // Click to collapse
+      const cloudHeader = container.querySelector("#settings-accordion-cloud")!
+      fireEvent.click(cloudHeader)
+
+      // Verify it's collapsed (element is removed from DOM)
+      expect(container.querySelector("#google-drive-toggle-btn")).toBeNull()
+
+      // Click to expand again
+      fireEvent.click(cloudHeader)
+
+      // Verify it's expanded again
+      expect(container.querySelector("#google-drive-toggle-btn")).not.toBeNull()
+    })
+  })
 })

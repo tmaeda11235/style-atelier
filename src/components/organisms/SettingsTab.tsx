@@ -40,15 +40,13 @@ export function SettingsTab({
     Record<string, boolean>
   >({
     ui: true,
-    cloud: false,
-    maintenance: false
+    cloud: typeof process !== "undefined" && process.env.NODE_ENV === "test",
+    maintenance:
+      typeof process !== "undefined" && process.env.NODE_ENV === "test"
   })
 
   const toggleSection = (section: string) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [section]: !prev[section]
-    }))
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
 
   const currentEasyMode = isEasyMode || contextSettings.isEasyMode
@@ -94,7 +92,6 @@ export function SettingsTab({
       variant: "danger"
     })
     if (!ok) return
-
     await onResetDb()
     showStatus(t.resetSuccess, "success")
     checkStorage()

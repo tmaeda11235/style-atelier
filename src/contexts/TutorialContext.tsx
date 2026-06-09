@@ -7,7 +7,7 @@ import React, {
 } from "react"
 
 import { useLanguage } from "./LanguageContext"
-import { useSettings } from "./SettingsContext"
+import { DEFAULT_EXPERT_FEATURES, SettingsContext } from "./SettingsContext"
 
 /** チュートリアルの各ステップ定義 */
 export type TutorialStep =
@@ -109,7 +109,9 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isActive, setIsActive] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const { t } = useLanguage()
-  const { expertFeatures } = useSettings()
+  const settingsContext = useContext(SettingsContext)
+  const expertFeatures =
+    settingsContext?.expertFeatures || DEFAULT_EXPERT_FEATURES
 
   const tutorialSteps = STEP_METADATA.map((meta, index) => {
     const stepTranslation = t.tutorial.steps[index]
