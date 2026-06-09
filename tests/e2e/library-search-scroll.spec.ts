@@ -140,4 +140,133 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
       "All Library Search and Scroll E2E tests completed successfully!"
     )
   })
+
+  test("should support collapsible filters accordion and reset color filter", async ({
+    page
+  }) => {
+    test.setTimeout(60000)
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    console.log("Navigating to sandbox page...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip onboarding
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Switch to Library tab
+    console.log("Switching to Library tab...")
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await expect(libraryTabButton).toBeVisible()
+    await libraryTabButton.click()
+
+    // Accordion should be collapsed by default
+    const accordion = spFrame.locator("[data-testid='filters-accordion']")
+    await expect(accordion).toBeAttached() // locator is in DOM
+
+    // Check style of accordion (should have maxHeight 0px or opacity 0)
+    const initialStyle = await accordion.getAttribute("style")
+    expect(initialStyle).toContain("max-height: 0px")
+    expect(initialStyle).toContain("opacity: 0")
+
+    // Click toggle button to expand
+    console.log("Expanding filters accordion...")
+    const toggleButton = spFrame.locator("[data-testid='toggle-filters-btn']")
+    await expect(toggleButton).toBeVisible()
+    await toggleButton.click()
+
+    // Wait for transition
+    await page.waitForTimeout(500)
+
+    const expandedStyle = await accordion.getAttribute("style")
+    expect(expandedStyle).toContain("max-height: 500px")
+    expect(expandedStyle).toContain("opacity: 1")
+
+    // Take screenshot of expanded filters
+    await page.screenshot({
+      path: path.join(screenshotsDir, "library-filters-expanded.png")
+    })
+
+    // Click toggle button to collapse again
+    console.log("Collapsing filters accordion...")
+    await toggleButton.click()
+    await page.waitForTimeout(500)
+
+    const collapsedStyle = await accordion.getAttribute("style")
+    expect(collapsedStyle).toContain("max-height: 0px")
+    expect(collapsedStyle).toContain("opacity: 0")
+
+    // Test Clear Filters with Color resetting
+    // 1. Seed a mock card to search and make search result empty
+    console.log("Seeding a single mock card...")
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      if (!database) {
+        throw new Error("db is undefined")
+      }
+      await database.styleCards.clear()
+      await database.styleCards.add({
+        id: "mock-card-reset",
+        name: "Reset Test Card",
+        tags: ["blue-theme"],
+        tier: "Common",
+        category: "All",
+        dominantColor: "#3b82f6", // Blue
+        parameters: { sref: ["sref-url-reset"] },
+        promptSegments: [{ type: "text", value: "prompt reset" }],
+        createdAt: Date.now(),
+        isPinned: false,
+        usageCount: 0,
+        isVariable: false,
+        isDeleted: 0,
+        masking: {},
+        thumbnailData:
+          "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+      })
+    })
+
+    await page.waitForTimeout(1000)
+
+    // Expand accordion to access color filter
+    await toggleButton.click()
+    await page.waitForTimeout(300)
+
+    // Apply Red color filter (it won't match our Blue card)
+    const redColorButton = spFrame.locator("button[title='Red']")
+    await expect(redColorButton).toBeVisible()
+    await redColorButton.evaluate((el) => (el as HTMLButtonElement).click())
+    await page.waitForTimeout(500)
+
+    // Grid should be empty
+    const allCardsInGrid = spFrame.locator(
+      "[data-tutorial='library-card-grid'] > div"
+    )
+    await expect(allCardsInGrid).toHaveCount(0)
+
+    // "Clear Filters" button should be visible
+    const clearFiltersBtn = spFrame.locator("button:has-text('Clear Filters')")
+    await expect(clearFiltersBtn).toBeVisible()
+
+    // Take screenshot before resetting
+    await page.screenshot({
+      path: path.join(screenshotsDir, "library-before-clear-filters.png")
+    })
+
+    // Click Clear Filters
+    console.log("Clicking Clear Filters...")
+    await clearFiltersBtn.click()
+    await page.waitForTimeout(1000)
+
+    // Card should be visible again (means color filter is reset to All)
+    await expect(allCardsInGrid).toHaveCount(1)
+
+    // Take screenshot after resetting
+    await page.screenshot({
+      path: path.join(screenshotsDir, "library-after-clear-filters.png")
+    })
+  })
 })
