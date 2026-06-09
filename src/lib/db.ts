@@ -1,6 +1,8 @@
 import type {
   CustomCategory,
   HistoryItem,
+  ParameterAlias,
+  ParameterFolder,
   StyleCard,
   UserSettings
 } from "./db-schema"
@@ -13,6 +15,19 @@ import {
 } from "./db/merge-ops"
 
 export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
+
+function generateUUID(): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID()
+  }
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  )
+}
 
 export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   // --- StyleCard Operations ---
@@ -141,6 +156,105 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
 
   async deleteStyleCardAndCleanup(cardId: string): Promise<void> {
     return deleteStyleCardAndCleanup(this, cardId)
+  }
+
+  // --- ParameterAlias Operations ---
+
+  async getParameterAlias(id: string): Promise<ParameterAlias | undefined> {
+    return this.parameterAliases.get(id)
+  }
+
+  async getAliasByValue(
+    paramType: string,
+    value: string
+  ): Promise<ParameterAlias | undefined> {
+    return this.parameterAliases
+      .where("paramType")
+      .equals(paramType)
+      .filter((alias) => alias.value === value)
+      .first()
+  }
+
+  getAllParameterAliases(): Promise<ParameterAlias[]> {
+    return this.parameterAliases.toArray()
+  }
+
+  async saveParameterAlias(
+    alias: Omit<ParameterAlias, "id" | "createdAt" | "updatedAt"> & {
+      id?: string
+    }
+  ): Promise<string> {
+    const now = Date.now()
+    if (alias.id) {
+      await this.parameterAliases.update(alias.id, {
+        ...alias,
+        updatedAt: now
+      })
+      return alias.id
+    } else {
+      const existing = await this.getAliasByValue(alias.paramType, alias.value)
+      if (existing) {
+        await this.parameterAliases.update(existing.id, {
+          alias: alias.alias,
+          folderId: alias.folderId,
+          updatedAt: now
+        })
+        return existing.id
+      } else {
+        const id = generateUUID()
+        await this.parameterAliases.add({
+          ...alias,
+          id,
+          createdAt: now,
+          updatedAt: now
+        } as ParameterAlias)
+        return id
+      }
+    }
+  }
+
+  async deleteParameterAlias(id: string): Promise<void> {
+    await this.parameterAliases.delete(id)
+  }
+
+  // --- ParameterFolder Operations ---
+
+  getAllParameterFolders(): Promise<ParameterFolder[]> {
+    return this.parameterFolders.toArray()
+  }
+
+  async addParameterFolder(
+    folder: Omit<ParameterFolder, "id" | "createdAt"> & { id?: string }
+  ): Promise<string> {
+    const id = folder.id || generateUUID()
+    await this.parameterFolders.add({
+      ...folder,
+      id,
+      createdAt: Date.now()
+    } as ParameterFolder)
+    return id
+  }
+
+  async updateParameterFolder(
+    id: string,
+    name: string,
+    parentId?: string
+  ): Promise<number> {
+    return this.parameterFolders.update(id, { name, parentId })
+  }
+
+  async deleteParameterFolder(id: string): Promise<void> {
+    await this.parameterAliases
+      .where("folderId")
+      .equals(id)
+      .modify({ folderId: undefined })
+    const folder = await this.parameterFolders.get(id)
+    const newParentId = folder?.parentId
+    await this.parameterFolders
+      .where("parentId")
+      .equals(id)
+      .modify({ parentId: newParentId })
+    await this.parameterFolders.delete(id)
   }
 }
 

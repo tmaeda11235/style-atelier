@@ -2,6 +2,7 @@ import { Tag } from "lucide-react"
 import React from "react"
 
 import { ColorPaletteFilter } from "../molecules/ColorPaletteFilter"
+import { HueSliderFilter } from "../molecules/HueSliderFilter"
 import { ModelFiltersRow } from "../molecules/ModelFiltersRow"
 
 interface LibraryFilterAccordionProps {
@@ -26,6 +27,8 @@ interface LibraryFilterAccordionProps {
   setSortBy: (sort: any) => void
   colorFilter: string
   setColorFilter: (color: any) => void
+  colorHueFilter: number | null
+  setColorHueFilter: (hue: number | null) => void
   colorOptions: Array<{ value: string; label: string; bg: string }>
   colorLabel?: string
   styleCardsCount: number
@@ -224,11 +227,21 @@ function ColorAndCategoryFilters(props: LibraryFilterAccordionProps) {
     <>
       <ColorPaletteFilter
         colorFilter={props.colorFilter}
-        setColorFilter={props.setColorFilter}
+        setColorFilter={(color) => {
+          props.setColorFilter(color)
+          props.setColorHueFilter(null)
+        }}
         colorOptions={props.colorOptions}
         colorLabel={props.colorLabel}
         styleCardsCount={props.styleCardsCount}
       />
+
+      <HueSliderFilter
+        colorHueFilter={props.colorHueFilter}
+        setColorHueFilter={props.setColorHueFilter}
+        setColorFilter={props.setColorFilter}
+      />
+
       {expertFeatures.categories && (
         <CategoryFiltersRow
           categoryFilter={props.categoryFilter}

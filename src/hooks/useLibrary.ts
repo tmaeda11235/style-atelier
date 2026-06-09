@@ -3,7 +3,7 @@ import { Index } from "flexsearch"
 import { useMemo, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
-import { getColorNameFromHex, hexToHsl } from "../lib/color-utils"
+import { filterByHue, getColorNameFromHex, hexToHsl } from "../lib/color-utils"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
@@ -55,6 +55,7 @@ export function useLibrary(
   const [modelFilter, setModelFilter] = useState<ModelFilter>("All")
   const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
+  const [colorHueFilter, setColorHueFilter] = useState<number | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [visibleCount, setVisibleCount] = useState(12)
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
@@ -233,6 +234,12 @@ export function useLibrary(
       })
     }
 
+    if (colorHueFilter !== null) {
+      result = result.filter((card) =>
+        filterByHue(card.dominantColor, colorHueFilter)
+      )
+    }
+
     result.sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -301,6 +308,7 @@ export function useLibrary(
     modelFilter,
     categoryFilter,
     colorFilter,
+    colorHueFilter,
     sortBy
   ])
 
@@ -444,6 +452,8 @@ export function useLibrary(
     setCategoryFilter,
     colorFilter,
     setColorFilter,
+    colorHueFilter,
+    setColorHueFilter,
     sortBy,
     setSortBy,
     allSrefs,
