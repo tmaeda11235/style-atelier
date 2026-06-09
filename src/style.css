@@ -1,2 +1,61 @@
 @import "tailwindcss" source(none);
 @source "./**/*.{ts,tsx}";
+
+@keyframes cauldron-bubble {
+  0% {
+    transform: translateY(15px) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-60px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes cauldron-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes rarity-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 15px var(--glow-color, rgba(59, 130, 246, 0.4));
+  }
+  50% {
+    box-shadow: 0 0 30px var(--glow-color, rgba(59, 130, 246, 0.8));
+  }
+}
+
+.animate-cauldron-bubble {
+  animation: cauldron-bubble 2.5s infinite ease-in-out;
+}
+
+.animate-cauldron-spin {
+  animation: cauldron-spin 12s infinite linear;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s infinite ease-in-out;
+}
+
+.animate-rarity-glow {
+  animation: rarity-glow-pulse 3s infinite ease-in-out;
+}

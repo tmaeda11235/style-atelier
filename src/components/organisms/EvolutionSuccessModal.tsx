@@ -44,6 +44,21 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   translation
 }) => {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([])
+  const [tilt, setTilt] = useState({ x: 0, y: 0 })
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left - rect.width / 2
+    const y = e.clientY - rect.top - rect.height / 2
+    const tiltX = -(y / (rect.height / 2)) * 15
+    const tiltY = (x / (rect.width / 2)) * 15
+    setTilt({ x: tiltX, y: tiltY })
+  }
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 })
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -197,7 +212,14 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
         </p>
 
         {/* Card Display Area */}
-        <div className="relative group mb-6 z-10">
+        <div
+          className="relative group mb-6 z-10 cursor-grab active:cursor-grabbing"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+            transition: "transform 0.1s ease-out"
+          }}>
           {/* Card Border & Glow */}
           <div
             className={`p-1.5 rounded-xl transition-all duration-1000 ${config.glowClass}`}

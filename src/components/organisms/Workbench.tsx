@@ -50,7 +50,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     slotHistory,
     saveSlotHistory,
     addCard,
-    incrementCardUsage
+    incrementCardUsage,
+    updateCardWeight
   } = useWorkbench()
   const { canEvolve, evolveCard } = useEvolution()
   const { expertFeatures } = useSettings()
@@ -61,7 +62,6 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [editedParams, setEditedParams] = useState<any>({})
   const [slotValues, setSlotValues] = useState<Record<string, string>>({})
   const [isEvolutionSuccessOpen, setIsEvolutionSuccessOpen] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
   const [evolvedCardData, setEvolvedCardData] = useState<{
     name: string
     thumbnailData?: string
@@ -69,6 +69,10 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     oldTier: any
     newTier: any
   } | null>(null)
+
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  const [isBlending, setIsBlending] = useState(false)
 
   const hasParams = Object.values(editedParams).some((v) =>
     Array.isArray(v) ? v.length > 0 : !!v
@@ -200,6 +204,41 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     }
   }
 
+  const handleExtractPortion = async (
+    name: string,
+    segments: PromptSegment[],
+    params: any
+  ) => {
+    try {
+      const newCard = {
+        id: crypto.randomUUID(),
+        name: `[Portion] ${name}`,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        promptSegments: segments,
+        parameters: params,
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common" as const,
+        isFavorite: false,
+        isPinned: true,
+        usageCount: 0,
+        tags: ["extracted"],
+        dominantColor: "#cbd5e1",
+        thumbnailData: "",
+        frameId: "default",
+        genealogy: {
+          generation: 1,
+          parentIds: []
+        },
+        isVariable: true
+      }
+      await addCard(newCard)
+      addLog?.(`Extracted portion: "${name}" to Hand`)
+    } catch (err) {
+      console.error("Failed to extract portion:", err)
+    }
+  }
+
   const { isInjecting, injectPrompt } = usePromptInjector({
     workbenchCards,
     slotHistory,
@@ -216,39 +255,46 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const handleMintVariation = () => {
     if (!onStartVariationMinting) return
 
-    // Calculate max generation among parents
-    const maxParentGen = Math.max(
-      ...workbenchCards.map((c) => c.genealogy?.generation || 1),
-      0
-    )
-    const parentIds = workbenchCards.map((c) => c.id)
-    const parentNames = workbenchCards.map((c) => c.name).join(", ")
+    setIsBlending(true)
 
-    const genealogy = {
-      generation: maxParentGen + 1,
-      parentIds: parentIds,
-      originCreatorId: "user",
-      mutationNote: `Blended from: ${parentNames}`
-    }
+    setTimeout(() => {
+      setIsBlending(false)
 
-    // Gather images from parents
-    const parentImages = workbenchCards
-      .flatMap((c) => c.images || [])
-      .filter(Boolean)
-    const parentThumbnails = workbenchCards
-      .flatMap((c) => c.selectedThumbnails || [])
-      .filter(Boolean)
-    const thumbnailData = workbenchCards[0]?.thumbnailData || "assets/icon.png"
+      // Calculate max generation among parents
+      const maxParentGen = Math.max(
+        ...workbenchCards.map((c) => c.genealogy?.generation || 1),
+        0
+      )
+      const parentIds = workbenchCards.map((c) => c.id)
+      const parentNames = workbenchCards.map((c) => c.name).join(", ")
 
-    onStartVariationMinting({
-      promptSegments: editedSegments,
-      parameters: editedParams,
-      genealogy,
-      thumbnailData,
-      images: parentImages.length > 0 ? parentImages : undefined,
-      selectedThumbnails:
-        parentThumbnails.length > 0 ? parentThumbnails : undefined
-    })
+      const genealogy = {
+        generation: maxParentGen + 1,
+        parentIds: parentIds,
+        originCreatorId: "user",
+        mutationNote: `Blended from: ${parentNames}`
+      }
+
+      // Gather images from parents
+      const parentImages = workbenchCards
+        .flatMap((c) => c.images || [])
+        .filter(Boolean)
+      const parentThumbnails = workbenchCards
+        .flatMap((c) => c.selectedThumbnails || [])
+        .filter(Boolean)
+      const thumbnailData =
+        workbenchCards[0]?.thumbnailData || "assets/icon.png"
+
+      onStartVariationMinting({
+        promptSegments: editedSegments,
+        parameters: editedParams,
+        genealogy,
+        thumbnailData,
+        images: parentImages.length > 0 ? parentImages : undefined,
+        selectedThumbnails:
+          parentThumbnails.length > 0 ? parentThumbnails : undefined
+      })
+    }, 1200)
   }
 
   // Extract slots
@@ -277,41 +323,238 @@ export const Workbench: React.FC<WorkbenchProps> = ({
         </div>
       </div>
 
-      <div
-        onDragOver={(e) => {
-          e.preventDefault()
-          setIsDragOver(true)
-        }}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={() => setIsDragOver(false)}
-        className={`grid grid-cols-2 gap-4 p-4 rounded-xl border-2 border-dashed transition-all duration-200 min-h-[160px] ${
-          isDragOver
-            ? "bg-blue-50/80 border-blue-500 scale-[1.01] shadow-lg shadow-blue-500/10"
-            : "bg-slate-50 border-slate-200"
-        }`}>
-        {workbenchCards.map((card) => (
-          <div
-            key={card.id}
-            className="relative group animate-in zoom-in-95 duration-200">
-            <CardThumbnail
-              imageUrl={card.thumbnailData}
-              thumbnailImages={card.selectedThumbnails}
-              alt={card.name}
-              tier={card.tier}
-              className="w-full aspect-square"
-            />
-            <button
-              onClick={() => toggleCardSelection(card.id)}
-              className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <X className="w-3 h-3 text-white" />
-            </button>
-          </div>
-        ))}
-        {workbenchCards.length < 2 && (
-          <div className="border-2 border-dashed border-slate-700 rounded-lg flex items-center justify-center aspect-square text-slate-500 text-xs text-center p-2">
-            {t.addPromptDesc}
+      <div className="relative overflow-hidden bg-slate-950 p-6 rounded-2xl border-2 border-slate-800 min-h-[190px] flex items-center justify-center shadow-[inset_0_4px_20px_rgba(0,0,0,0.6)]">
+        {/* Cauldron background glowing circles */}
+        <div className="absolute inset-0 bg-radial-[circle_at_center,_var(--tw-gradient-stops)] from-indigo-950/40 via-slate-950 to-slate-950 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-blue-500/5 blur-3xl pointer-events-none animate-pulse" />
+
+        {/* Bubbling animation inside cauldron */}
+        <div className="absolute inset-x-0 bottom-2 flex justify-around pointer-events-none h-16 overflow-hidden">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-400/40 animate-cauldron-bubble [animation-delay:0.2s]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-purple-400/40 animate-cauldron-bubble [animation-delay:0.8s]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-purple-400/40 animate-cauldron-bubble [animation-delay:0.8s]" />
+          <div className="w-2 h-2 rounded-full bg-indigo-400/40 animate-cauldron-bubble [animation-delay:1.5s]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-teal-400/40 animate-cauldron-bubble [animation-delay:2.1s]" />
+        </div>
+
+        {/* Cauldron Center magic ring */}
+        {isMixingMode && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border border-dashed border-indigo-500/20 animate-cauldron-spin pointer-events-none" />
+        )}
+
+        {/* Blending overlay animation */}
+        {isBlending && (
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex flex-col items-center justify-center z-50 animate-in fade-in duration-300">
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <div className="absolute inset-0 border-4 border-dashed border-teal-400 rounded-full animate-spin [animation-duration:2s]" />
+              <div className="absolute inset-2 border border-purple-400 rounded-full animate-spin [animation-duration:4s] [animation-direction:reverse]" />
+              <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
+            </div>
+            <span className="text-[10px] font-bold text-teal-300 mt-3 animate-pulse tracking-widest font-mono">
+              ALCHEMY IN PROGRESS...
+            </span>
           </div>
         )}
+
+        <div className="flex items-center justify-center gap-6 z-10 w-full">
+          {workbenchCards.map((card, idx) => (
+            <div
+              key={card.id}
+              className="relative group animate-in zoom-in-95 duration-200 w-28 animate-float-gentle"
+              style={{ animationDelay: idx === 0 ? "0s" : "1.5s" }}>
+              {/* Thumbnail Container */}
+              <div
+                onClick={() =>
+                  setSelectedCardId(selectedCardId === card.id ? null : card.id)
+                }
+                className="relative cursor-pointer rounded-lg overflow-hidden border border-slate-800 shadow-lg group-hover:scale-105 transition-transform">
+                <CardThumbnail
+                  imageUrl={card.thumbnailData}
+                  thumbnailImages={card.selectedThumbnails}
+                  alt={card.name}
+                  tier={card.tier}
+                  className="w-full aspect-square"
+                />
+              </div>
+
+              {/* Remove button */}
+              <button
+                onClick={() => toggleCardSelection(card.id)}
+                className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 rounded-full p-1 shadow-md z-30 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <X className="w-3 h-3 text-white" />
+              </button>
+
+              {/* Hover Weight slider (Simple representation) */}
+              <div className="absolute bottom-2 left-2 right-2 bg-slate-900/90 border border-slate-700 rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center space-y-1 z-10">
+                <span className="text-[8px] text-slate-300 font-mono font-bold">
+                  Weight:{" "}
+                  {card.weight !== undefined ? card.weight.toFixed(1) : "1.0"}
+                </span>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="2.0"
+                  step="0.1"
+                  value={card.weight !== undefined ? card.weight : 1.0}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={async (e) => {
+                    e.stopPropagation()
+                    const val = parseFloat(e.target.value)
+                    await updateCardWeight(card.id, val)
+                  }}
+                  className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-blue-500"
+                />
+              </div>
+
+              {/* Portion Extraction Overlay (Opens when clicked) */}
+              {selectedCardId === card.id && (
+                <div className="absolute inset-0 bg-slate-900/95 border border-slate-700 rounded-lg text-white p-2 flex flex-col justify-between overflow-hidden z-20 transition-all text-[9px]">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-1 mb-1">
+                    <span className="font-bold text-slate-300">
+                      Extract Portions
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedCardId(null)
+                      }}
+                      className="text-slate-400 hover:text-white">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 space-y-1.5 overflow-y-auto scrollbar-thin">
+                    {/* Slider */}
+                    <div className="flex flex-col space-y-0.5 border-b border-slate-800 pb-1.5">
+                      <div className="flex justify-between font-mono font-bold">
+                        <span className="text-slate-400">Weight</span>
+                        <span className="text-blue-400">
+                          {card.weight !== undefined
+                            ? card.weight.toFixed(1)
+                            : "1.0"}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="2.0"
+                        step="0.1"
+                        value={card.weight !== undefined ? card.weight : 1.0}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={async (e) => {
+                          e.stopPropagation()
+                          const val = parseFloat(e.target.value)
+                          await updateCardWeight(card.id, val)
+                        }}
+                        className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-blue-500"
+                      />
+                    </div>
+
+                    {/* Prompt Segments Portion */}
+                    {card.promptSegments && card.promptSegments.length > 0 && (
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-slate-400 block text-[8px]">
+                          Prompt Segments
+                        </span>
+                        {card.promptSegments.map((seg, sIdx) => {
+                          const valText =
+                            seg.type === "text"
+                              ? seg.value
+                              : `[${seg.type}] ${seg.label}`
+                          return (
+                            <div
+                              key={sIdx}
+                              className="flex justify-between items-center bg-slate-800/80 px-1 py-0.5 rounded hover:bg-slate-800 transition-colors">
+                              <span className="truncate flex-1 pr-1">
+                                {valText}
+                              </span>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation()
+                                  await handleExtractPortion(valText, [seg], {})
+                                }}
+                                className="text-[8px] bg-blue-600 hover:bg-blue-500 px-1 py-0.2 rounded font-bold text-white transition-colors">
+                                Extract
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Parameters Portion */}
+                    {card.parameters &&
+                      Object.keys(card.parameters).length > 0 && (
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-slate-400 block text-[8px]">
+                            Parameters
+                          </span>
+                          {Object.entries(card.parameters).map(([key, val]) => {
+                            if (
+                              !val ||
+                              (Array.isArray(val) && val.length === 0)
+                            )
+                              return null
+                            const labelText = `--${key} ${Array.isArray(val) ? val.join(" ") : val}`
+                            return (
+                              <div
+                                key={key}
+                                className="flex justify-between items-center bg-slate-800/80 px-1 py-0.5 rounded hover:bg-slate-800 transition-colors">
+                                <span className="truncate flex-1 pr-1">
+                                  {labelText}
+                                </span>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    await handleExtractPortion(
+                                      key.toUpperCase(),
+                                      [],
+                                      { [key]: val }
+                                    )
+                                  }}
+                                  className="text-[8px] bg-indigo-600 hover:bg-indigo-500 px-1 py-0.2 rounded font-bold text-white transition-colors">
+                                  Extract
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Empty slot Drop Zones */}
+          {workbenchCards.length < 2 && (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDragOver(true)
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={async (e) => {
+                e.preventDefault()
+                setIsDragOver(false)
+                const cardId = e.dataTransfer.getData("cardId")
+                if (cardId) {
+                  const card = handCards.find((c) => c.id === cardId)
+                  if (!card) {
+                    await toggleCardSelection(cardId)
+                    addLog?.(`Card dragged and dropped to Workbench slot`)
+                  }
+                }
+              }}
+              className={`border-2 border-dashed rounded-lg flex items-center justify-center w-28 aspect-square text-[9px] text-center p-3 transition-all duration-300 ${
+                isDragOver
+                  ? "border-blue-400 bg-blue-950/40 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-105"
+                  : "border-slate-800 text-slate-600 bg-slate-900/20"
+              }`}>
+              {t.addPromptDesc}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">

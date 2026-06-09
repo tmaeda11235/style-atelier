@@ -57,7 +57,12 @@ export function useWorkbench() {
       const maskedKeys: (keyof StyleCard["parameters"])[] = []
       if (card.masking?.isSrefHidden) maskedKeys.push("sref")
       if (card.masking?.isPHidden) maskedKeys.push("p")
-      return buildPromptString(card.promptSegments, card.parameters, maskedKeys)
+      return buildPromptString(
+        card.promptSegments,
+        card.parameters,
+        maskedKeys,
+        card.weight
+      )
     })
 
     return promptParts.join(", ")
@@ -97,6 +102,14 @@ export function useWorkbench() {
     }
   }
 
+  const updateCardWeight = async (cardId: string, weight: number) => {
+    try {
+      await db.styleCards.update(cardId, { weight })
+    } catch (err) {
+      console.error("Failed to update card weight:", err)
+    }
+  }
+
   return {
     handCards: handCards || [],
     workbenchCards,
@@ -107,6 +120,7 @@ export function useWorkbench() {
     slotHistory,
     saveSlotHistory,
     addCard,
-    incrementCardUsage
+    incrementCardUsage,
+    updateCardWeight
   }
 }

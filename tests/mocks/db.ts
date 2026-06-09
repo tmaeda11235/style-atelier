@@ -271,106 +271,11 @@ export class MockStyleAtelierDatabase {
 
   deleteCategory = vi.fn().mockImplementation(async (id: string) => {
     await this.categories.update(id, { isDeleted: true, updatedAt: Date.now() })
-    const cards = await this.styleCards.toArray()
-    for (const card of cards) {
-      if (card.category === id) {
-        await this.styleCards.update(card.id, {
-          category: undefined,
-          updatedAt: Date.now()
-        })
-      }
-    }
   })
 
-  mergeStyleCards = vi
-    .fn()
-    .mockImplementation(
-      async (
-        representativeId: string,
-        materials: StyleCard[],
-        consumeStates: Record<string, boolean>
-      ) => {
-        const rep = await this.styleCards.get(representativeId)
-        if (!rep) throw new Error("Representative card not found")
+  mergeStyleCards = vi.fn()
 
-        const mergedImages = [...(rep.images || [])]
-        if (rep.thumbnailData && !mergedImages.includes(rep.thumbnailData)) {
-          mergedImages.push(rep.thumbnailData)
-        }
-
-        const mergedJobIds = [...(rep.associatedJobIds || [])]
-        if (rep.jobId && !mergedJobIds.includes(rep.jobId)) {
-          mergedJobIds.push(rep.jobId)
-        }
-
-        let extraUsageCount = 0
-
-        for (const mat of materials) {
-          if (mat.images && mat.images.length > 0) {
-            mat.images.forEach((img) => {
-              if (!mergedImages.includes(img)) mergedImages.push(img)
-            })
-          } else if (
-            mat.thumbnailData &&
-            !mergedImages.includes(mat.thumbnailData)
-          ) {
-            mergedImages.push(mat.thumbnailData)
-          }
-
-          if (mat.jobId && !mergedJobIds.includes(mat.jobId)) {
-            mergedJobIds.push(mat.jobId)
-          }
-          if (mat.associatedJobIds && mat.associatedJobIds.length > 0) {
-            mat.associatedJobIds.forEach((jid) => {
-              if (!mergedJobIds.includes(jid)) mergedJobIds.push(jid)
-            })
-          }
-
-          const isConsumed = consumeStates[mat.id]
-          if (isConsumed) {
-            extraUsageCount += mat.usageCount || 0
-            await this.deleteStyleCardAndCleanup(mat.id)
-          }
-        }
-
-        await this.styleCards.update(representativeId, {
-          images: mergedImages,
-          associatedJobIds: mergedJobIds,
-          usageCount: (rep.usageCount || 0) + extraUsageCount,
-          updatedAt: Date.now()
-        })
-      }
-    )
-
-  importBackupData = vi
-    .fn()
-    .mockImplementation(
-      async (data: any, mode: "merge" | "replace" = "replace") => {
-        if (mode === "replace") {
-          await this.styleCards.clear()
-          await this.categories.clear()
-          await this.userSettings.clear()
-          await this.historyItems.clear()
-          await this.slotHistory.clear()
-        }
-        if (data.styleCards) await this.styleCards.bulkPut(data.styleCards)
-        if (data.categories) await this.categories.bulkPut(data.categories)
-        if (data.userSettings)
-          await this.userSettings.bulkPut(data.userSettings)
-        if (data.historyItems)
-          await this.historyItems.bulkPut(data.historyItems)
-        if (data.slotHistory && mode === "replace") {
-          const items = Object.entries(data.slotHistory).map(
-            ([label, values]) => ({
-              label,
-              values,
-              updatedAt: Date.now()
-            })
-          )
-          await this.slotHistory.bulkPut(items)
-        }
-      }
-    )
+  importBackupData = vi.fn()
 
   getSlotHistory = vi.fn().mockImplementation(async (label: string) => {
     const item = await this.slotHistory.get(label)
@@ -395,26 +300,10 @@ export class MockStyleAtelierDatabase {
   deleteStyleCardAndCleanup = vi
     .fn()
     .mockImplementation(async (cardId: string) => {
-      const cats = await this.categories.toArray()
-      for (const cat of cats) {
-        if (cat.iconCardId === cardId) {
-          await this.categories.update(cat.id, {
-            iconCardId: undefined,
-            iconUrl: undefined,
-            updatedAt: Date.now()
-          })
-        }
-      }
-      const card = await this.styleCards.get(cardId)
-      if (card) {
-        await this.styleCards.update(cardId, {
-          isDeleted: true,
-          thumbnailData: "",
-          images: [],
-          selectedThumbnails: [],
-          updatedAt: Date.now()
-        })
-      }
+      await this.styleCards.update(cardId, {
+        isDeleted: true,
+        updatedAt: Date.now()
+      })
     })
 
   transaction = vi

@@ -116,7 +116,8 @@ describe("Workbench", () => {
       slotHistory: {},
       saveSlotHistory: vi.fn(),
       addCard: vi.fn(),
-      incrementCardUsage: vi.fn()
+      incrementCardUsage: vi.fn(),
+      updateCardWeight: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -134,7 +135,8 @@ describe("Workbench", () => {
       slotHistory: {},
       saveSlotHistory: vi.fn(),
       addCard: vi.fn(),
-      incrementCardUsage: vi.fn()
+      incrementCardUsage: vi.fn(),
+      updateCardWeight: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -170,7 +172,8 @@ describe("Workbench", () => {
       slotHistory: {},
       saveSlotHistory: mockSaveSlotHistory,
       addCard: vi.fn(),
-      incrementCardUsage: mockIncrementCardUsage
+      incrementCardUsage: mockIncrementCardUsage,
+      updateCardWeight: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -215,7 +218,8 @@ describe("Workbench", () => {
       slotHistory: {},
       saveSlotHistory: vi.fn(),
       addCard: mockAddCard,
-      incrementCardUsage: vi.fn()
+      incrementCardUsage: vi.fn(),
+      updateCardWeight: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -254,7 +258,8 @@ describe("Workbench", () => {
       slotHistory: {},
       saveSlotHistory: vi.fn(),
       addCard: vi.fn(),
-      incrementCardUsage: vi.fn()
+      incrementCardUsage: vi.fn(),
+      updateCardWeight: vi.fn()
     })
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
@@ -293,7 +298,8 @@ describe("Workbench", () => {
         slotHistory: {},
         saveSlotHistory: vi.fn(),
         addCard: vi.fn(),
-        incrementCardUsage: vi.fn()
+        incrementCardUsage: vi.fn(),
+        updateCardWeight: vi.fn()
       })
 
       // Simulate chrome tabs query failing to trigger a retry
@@ -325,6 +331,7 @@ describe("Workbench", () => {
   })
 
   it("renders 'Mint Blended Variation' button and triggers onStartVariationMinting when in mixing mode", async () => {
+    vi.useFakeTimers()
     const mockOnStartVariationMinting = vi.fn()
     const mockSecondCard: StyleCard = {
       ...mockTargetCard,
@@ -343,7 +350,8 @@ describe("Workbench", () => {
       slotHistory: {},
       saveSlotHistory: vi.fn(),
       addCard: vi.fn(),
-      incrementCardUsage: vi.fn()
+      incrementCardUsage: vi.fn(),
+      updateCardWeight: vi.fn()
     })
 
     render(
@@ -361,6 +369,9 @@ describe("Workbench", () => {
     // Click button
     fireEvent.click(mintButton)
 
+    // Advance timers by 1200ms for blending animation delay
+    vi.advanceTimersByTime(1200)
+
     expect(mockOnStartVariationMinting).toHaveBeenCalledWith(
       expect.objectContaining({
         promptSegments: expect.any(Array),
@@ -373,5 +384,6 @@ describe("Workbench", () => {
         thumbnailData: mockTargetCard.thumbnailData
       })
     )
+    vi.useRealTimers()
   })
 })
