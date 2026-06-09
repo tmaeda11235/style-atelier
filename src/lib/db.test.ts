@@ -368,4 +368,332 @@ describe("db utilities", () => {
       expect(artistPut.values).toEqual(["picasso"])
     })
   })
+
+  describe("StyleAtelierDatabase methods", () => {
+    it("getCard should return card if not deleted", async () => {
+      const card = { id: "1", isDeleted: false }
+      const mockDbInstance = {
+        styleCards: {
+          get: vi.fn().mockResolvedValue(card)
+        }
+      } as any
+      const result = await StyleAtelierDatabase.prototype.getCard.call(
+        mockDbInstance,
+        "1"
+      )
+      expect(result).toBe(card)
+    })
+
+    it("getCard should return undefined if card is deleted", async () => {
+      const card = { id: "1", isDeleted: true }
+      const mockDbInstance = {
+        styleCards: {
+          get: vi.fn().mockResolvedValue(card)
+        }
+      } as any
+      const result = await StyleAtelierDatabase.prototype.getCard.call(
+        mockDbInstance,
+        "1"
+      )
+      expect(result).toBeUndefined()
+    })
+
+    it("getCard should return undefined if card not found", async () => {
+      const mockDbInstance = {
+        styleCards: {
+          get: vi.fn().mockResolvedValue(undefined)
+        }
+      } as any
+      const result = await StyleAtelierDatabase.prototype.getCard.call(
+        mockDbInstance,
+        "1"
+      )
+      expect(result).toBeUndefined()
+    })
+
+    it("getAllCards should filter out deleted cards", async () => {
+      const mockFilter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(["card1", "card2"])
+      })
+      const mockDbInstance = {
+        styleCards: {
+          filter: mockFilter
+        }
+      } as any
+      const result =
+        await StyleAtelierDatabase.prototype.getAllCards.call(mockDbInstance)
+      expect(result).toEqual(["card1", "card2"])
+      expect(mockFilter).toHaveBeenCalled()
+      const filterFn = mockFilter.mock.calls[0][0]
+      expect(filterFn({ isDeleted: false })).toBe(true)
+      expect(filterFn({ isDeleted: true })).toBe(false)
+    })
+
+    it("getPinnedCards should filter out deleted cards and only return pinned ones", async () => {
+      const mockFilter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(["card1"])
+      })
+      const mockDbInstance = {
+        styleCards: {
+          filter: mockFilter
+        }
+      } as any
+      const result =
+        await StyleAtelierDatabase.prototype.getPinnedCards.call(mockDbInstance)
+      expect(result).toEqual(["card1"])
+      expect(mockFilter).toHaveBeenCalled()
+      const filterFn = mockFilter.mock.calls[0][0]
+      expect(filterFn({ isDeleted: false, isPinned: true })).toBe(true)
+      expect(filterFn({ isDeleted: true, isPinned: true })).toBe(false)
+      expect(filterFn({ isDeleted: false, isPinned: false })).toBe(false)
+    })
+
+    it("getCardByJobId should find card by jobId or associatedJobIds", async () => {
+      const mockFirst = vi
+        .fn()
+        .mockResolvedValue({ id: "card1", isDeleted: false })
+      const mockEquals = vi.fn().mockReturnValue({ first: mockFirst })
+      const mockWhere = vi.fn().mockReturnValue({ equals: mockEquals })
+      const mockDbInstance = {
+        styleCards: {
+          where: mockWhere
+        }
+      } as any
+
+      const result = await StyleAtelierDatabase.prototype.getCardByJobId.call(
+        mockDbInstance,
+        "job-1"
+      )
+      expect(result).toEqual({ id: "card1", isDeleted: false })
+      expect(mockWhere).toHaveBeenCalledWith("jobId")
+      expect(mockEquals).toHaveBeenCalledWith("job-1")
+    })
+
+    it("getCardByJobId fallback should query associatedJobIds", async () => {
+      const mockFirst = vi
+        .fn()
+        .mockResolvedValueOnce(undefined) // first call (jobId)
+        .mockResolvedValueOnce({ id: "card2", isDeleted: false }) // second call (associatedJobIds)
+      const mockEquals = vi.fn().mockReturnValue({ first: mockFirst })
+      const mockWhere = vi.fn().mockReturnValue({ equals: mockEquals })
+      const mockDbInstance = {
+        styleCards: {
+          where: mockWhere
+        }
+      } as any
+
+      const result = await StyleAtelierDatabase.prototype.getCardByJobId.call(
+        mockDbInstance,
+        "job-1"
+      )
+      expect(result).toEqual({ id: "card2", isDeleted: false })
+      expect(mockWhere).toHaveBeenCalledWith("jobId")
+      expect(mockWhere).toHaveBeenCalledWith("associatedJobIds")
+    })
+
+    it("getCardByJobId should return undefined if card is deleted", async () => {
+      const mockFirst = vi
+        .fn()
+        .mockResolvedValue({ id: "card1", isDeleted: true })
+      const mockEquals = vi.fn().mockReturnValue({ first: mockFirst })
+      const mockWhere = vi.fn().mockReturnValue({ equals: mockEquals })
+      const mockDbInstance = {
+        styleCards: {
+          where: mockWhere
+        }
+      } as any
+
+      const result = await StyleAtelierDatabase.prototype.getCardByJobId.call(
+        mockDbInstance,
+        "job-1"
+      )
+      expect(result).toBeUndefined()
+    })
+
+    it("addCard, updateCard, putCard, deleteCard wrappers should delegate to IndexedDB tables", async () => {
+      const mockAdd = vi.fn().mockResolvedValue("new-id")
+      const mockUpdate = vi.fn().mockResolvedValue(1)
+      const mockPut = vi.fn().mockResolvedValue("put-id")
+      const mockCleanup = vi.fn().mockResolvedValue(undefined)
+
+      const mockDbInstance = {
+        styleCards: {
+          add: mockAdd,
+          update: mockUpdate,
+          put: mockPut
+        },
+        deleteStyleCardAndCleanup: mockCleanup
+      } as any
+
+      const card = { id: "1" } as any
+      expect(
+        await StyleAtelierDatabase.prototype.addCard.call(mockDbInstance, card)
+      ).toBe("new-id")
+      expect(
+        await StyleAtelierDatabase.prototype.updateCard.call(
+          mockDbInstance,
+          "1",
+          { name: "New" }
+        )
+      ).toBe(1)
+      expect(
+        await StyleAtelierDatabase.prototype.putCard.call(mockDbInstance, card)
+      ).toBe("put-id")
+
+      await StyleAtelierDatabase.prototype.deleteCard.call(mockDbInstance, "1")
+      expect(mockCleanup).toHaveBeenCalledWith("1")
+    })
+
+    it("getAllCategories should filter deleted categories", async () => {
+      const mockFilter = vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(["cat1"])
+      })
+      const mockDbInstance = {
+        categories: {
+          filter: mockFilter
+        }
+      } as any
+      const result =
+        await StyleAtelierDatabase.prototype.getAllCategories.call(
+          mockDbInstance
+        )
+      expect(result).toEqual(["cat1"])
+      expect(mockFilter).toHaveBeenCalled()
+      const filterFn = mockFilter.mock.calls[0][0]
+      expect(filterFn({ isDeleted: false })).toBe(true)
+      expect(filterFn({ isDeleted: true })).toBe(false)
+    })
+
+    it("getCategory should return category if not deleted", async () => {
+      const cat = { id: "1", isDeleted: false }
+      const mockDbInstance = {
+        categories: {
+          get: vi.fn().mockResolvedValue(cat)
+        }
+      } as any
+      const result = await StyleAtelierDatabase.prototype.getCategory.call(
+        mockDbInstance,
+        "1"
+      )
+      expect(result).toBe(cat)
+    })
+
+    it("getCategory should return undefined if category is deleted or not found", async () => {
+      const cat = { id: "1", isDeleted: true }
+      const mockDbInstance = {
+        categories: {
+          get: vi.fn().mockResolvedValue(cat)
+        }
+      } as any
+      expect(
+        await StyleAtelierDatabase.prototype.getCategory.call(
+          mockDbInstance,
+          "1"
+        )
+      ).toBeUndefined()
+
+      const mockDbInstanceNull = {
+        categories: {
+          get: vi.fn().mockResolvedValue(undefined)
+        }
+      } as any
+      expect(
+        await StyleAtelierDatabase.prototype.getCategory.call(
+          mockDbInstanceNull,
+          "1"
+        )
+      ).toBeUndefined()
+    })
+
+    it("addCategory and updateCategory should add/update and set timestamp", async () => {
+      const mockAdd = vi.fn().mockResolvedValue("new-cat")
+      const mockUpdate = vi.fn().mockResolvedValue(1)
+      const mockDbInstance = {
+        categories: {
+          add: mockAdd,
+          update: mockUpdate
+        }
+      } as any
+
+      const cat = { id: "1", name: "Style", createdAt: 123 } as any
+      await StyleAtelierDatabase.prototype.addCategory.call(mockDbInstance, cat)
+      expect(mockAdd).toHaveBeenCalledWith({
+        id: "1",
+        name: "Style",
+        createdAt: 123,
+        updatedAt: 123
+      })
+
+      await StyleAtelierDatabase.prototype.updateCategory.call(
+        mockDbInstance,
+        "1",
+        { name: "Style2" }
+      )
+      expect(mockUpdate).toHaveBeenCalledWith("1", {
+        name: "Style2",
+        updatedAt: expect.any(Number)
+      })
+    })
+
+    it("getSlotHistory and saveSlotHistory should manage values correctly", async () => {
+      const mockGet = vi.fn().mockResolvedValue({ values: ["a", "b"] })
+      const mockPut = vi.fn().mockResolvedValue(undefined)
+      const mockDbInstance = {
+        slotHistory: {
+          get: mockGet,
+          put: mockPut
+        }
+      } as any
+
+      const result = await StyleAtelierDatabase.prototype.getSlotHistory.call(
+        mockDbInstance,
+        "subject"
+      )
+      expect(result).toEqual(["a", "b"])
+
+      await StyleAtelierDatabase.prototype.saveSlotHistory.call(
+        mockDbInstance,
+        "subject",
+        ["c"]
+      )
+      expect(mockPut).toHaveBeenCalledWith({
+        label: "subject",
+        values: ["c"],
+        updatedAt: expect.any(Number)
+      })
+    })
+
+    it("getSlotHistory should return empty array if not found", async () => {
+      const mockDbInstance = {
+        slotHistory: {
+          get: vi.fn().mockResolvedValue(undefined)
+        }
+      } as any
+      const result = await StyleAtelierDatabase.prototype.getSlotHistory.call(
+        mockDbInstance,
+        "subject"
+      )
+      expect(result).toEqual([])
+    })
+
+    it("getAllSlotHistory should return key-value map of histories", async () => {
+      const mockToArray = vi.fn().mockResolvedValue([
+        { label: "subject", values: ["a"] },
+        { label: "artist", values: ["b"] }
+      ])
+      const mockDbInstance = {
+        slotHistory: {
+          toArray: mockToArray
+        }
+      } as any
+      const result =
+        await StyleAtelierDatabase.prototype.getAllSlotHistory.call(
+          mockDbInstance
+        )
+      expect(result).toEqual({
+        subject: ["a"],
+        artist: ["b"]
+      })
+    })
+  })
 })

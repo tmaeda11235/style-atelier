@@ -38,9 +38,9 @@ tags: []
 
 - **Unit Tests**: [Vitest](https://vitest.dev/) with JSDOM environment.
 - **Coverage**: Measured via `@vitest/coverage-v8`. Thresholds are enforced to prevent regression:
-  - Statements: 65%
-  - Branches: 55%
-  - Functions: 60%
-  - Lines: 65%
+  - Statements: 80%
+  - Branches: 70%
+  - Functions: 75%
+  - Lines: 80%
 - **CI Pipeline**: Automated via GitHub Actions (`.github/workflows/ci.yml`). ESLint (`npm run lint`) and Unit Tests with Coverage (`npm test -- --coverage`) are run on every pull request to ensure high quality and prevent code decay.
 - **Linter Rule Testing**: A dedicated unit test `src/eslint-config.test.ts` validates that the ESLint configuration enforces the strict defaults, maintains specific whitelists for pre-existing files, and ensures that test files are properly exempted. This prevents configuration regressions that could weaken codebase constraints.
