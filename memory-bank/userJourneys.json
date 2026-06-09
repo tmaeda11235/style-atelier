@@ -284,16 +284,6 @@
       "nextJourneys": ["@J-WB-EXPERT-01"]
     },
     {
-      "id": "@J-WB-ATELIER-EFFECTS-01",
-      "name": "アトリエ釜と錬金演出",
-      "description": "カードマージ時や進化成功モーダル表示時に、レアリティ（Common/Rare/Epic/Legendary）に対応したエフェクトや3D傾き演出を再生する",
-      "steps": [
-        "マージまたは進化アクションを実行する",
-        "レアリティに対応した釜・錬金エフェクトまたはモーダルの3D傾きグロー効果を確認する"
-      ],
-      "nextJourneys": []
-    },
-    {
       "id": "@J-IO-CSV",
       "name": "CSVエクスポート",
       "description": "外部連携用のCSV形式でスタイルカードデータをエクスポートする",

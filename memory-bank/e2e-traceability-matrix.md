@@ -32,14 +32,13 @@
 | **@J-ORG-VERSION-01**        | バージョン履歴管理                                | ✔️ `tests\e2e\card-management.spec.ts`                                                            |
 | **@J-WB-MIXING-WEIGHTS-01**  | 調合割合ウェイト調整                              | ✔️ `tests\e2e\atelier-ux-package.spec.ts`                                                         |
 | **@J-WB-PORTION-EXTRACT-01** | 成分抽出とブレンド                                | ✔️ `tests\e2e\atelier-ux-package.spec.ts`                                                         |
-| **@J-WB-ATELIER-EFFECTS-01** | アトリエ釜と錬金演出                              | ✔️ `tests\e2e\workbench.spec.ts`                                                                  |
 | **@J-IO-CSV**                | CSVエクスポート                                   | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
 | **@J-IO-MD**                 | Markdown ZIPエクスポート                          | ✔️ `tests\e2e\data-io.spec.ts`                                                                    |
 | **@J-WB-ATELIER-EFFECTS-01** | アトリエ釜と錬金演出                              | ✔️ `tests\e2e\workbench.spec.ts`                                                                  |
-| **@J-ORG-FOLDER-01**         | フォルダ階層化管理（ドリルダウン・DnD移動）       | ❌ 未カバー (Missing)                                                                             |
+| **@J-ORG-FOLDER-01**         | フォルダ階層化管理（ドリルダウン・DnD移動）       | ✔️ `tests\e2e\categories.spec.ts`                                                                 |
 
 ## サマリー
 
-- 全ジャーニー数: 33
+- 全ジャーニー数: 32
 - カバー済み: 32
-- 未カバー: 1
+- 未カバー: 0

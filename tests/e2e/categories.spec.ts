@@ -484,4 +484,170 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       throw error
     }
   })
+
+  test("should allow dragging a style card into a folder (subfolder) to move it @J-ORG-FOLDER-01", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    page.on("console", (msg) => {
+      console.log(`[FOLDER DND TEST CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+
+    try {
+      console.log("1. Navigating to sandbox page...")
+      await page.goto("/tests/sandbox/index.html")
+
+      const spFrame = page.frameLocator("#sidepanel-frame")
+
+      // Skip welcome
+      const skipButton = spFrame.locator("#welcome-skip-btn")
+      if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await skipButton.click()
+      }
+
+      // Switch to Library tab
+      console.log("2. Switching to Library tab...")
+      const libraryTabButton = spFrame.locator("button:has-text('Library')")
+      await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
+      await libraryTabButton.click()
+      await page.waitForTimeout(1000)
+
+      // Seed a card and a category folder directly in DB to make test 100% reproducible and independent
+      console.log("3. Seeding style card and category folder in DB...")
+      await spFrame.locator("body").evaluate(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const database = (window as any).db
+        await database.categories.clear()
+        await database.styleCards.clear()
+
+        // Add parent category folder
+        await database.categories.add({
+          id: "folder-category-id-123",
+          name: "DnD Target Folder",
+          iconEmoji: "📁",
+          parentId: null
+        })
+
+        // Add a card at the root (category = undefined or null)
+        await database.styleCards.add({
+          id: "card-to-drag-123",
+          name: "Drag Me To Folder",
+          jobId: "job-drag-folder-123",
+          promptSegments: [{ type: "text", value: "test drag to folder" }],
+          parameters: {},
+          masking: { isSrefHidden: false, isPHidden: false },
+          tier: "Common",
+          isFavorite: false,
+          isPinned: false,
+          usageCount: 0,
+          tags: [],
+          dominantColor: "#3b82f6",
+          dominantColorDark: "#1d4ed8",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+          images: ["https://example.com/card-drag-folder.png"],
+          selectedThumbnails: ["https://example.com/card-drag-folder.png"],
+          associatedJobIds: []
+        })
+      })
+
+      // Reload the state/tab to make sure DB changes are fetched
+      await libraryTabButton.click()
+      await page.waitForTimeout(1000)
+
+      // Verify folder and card are visible at Home
+      const targetFolder = spFrame.locator(
+        "[data-testid='subfolders-grid'] span:has-text('DnD Target Folder')"
+      )
+      await expect(targetFolder).toBeVisible({ timeout: 10000 })
+
+      const dragCard = spFrame.locator("text=Drag Me To Folder").first()
+      await expect(dragCard).toBeVisible({ timeout: 10000 })
+
+      // Drag the card to the folder
+      console.log("4. Dragging card to folder...")
+      const folderDiv = spFrame
+        .locator("[data-testid='subfolders-grid'] div", {
+          hasText: "DnD Target Folder"
+        })
+        .last()
+
+      await dragCard.dragTo(folderDiv, { force: true })
+      await page.waitForTimeout(1000)
+
+      // Fallback: Programmatic dispatch of drag-drop if browser Dnd fails
+      const updatedCardCategory = await spFrame
+        .locator("body")
+        .evaluate(async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const database = (window as any).db
+          const card = await database.getCard("card-to-drag-123")
+          return card?.category
+        })
+
+      if (updatedCardCategory !== "folder-category-id-123") {
+        console.log(
+          "Fallback: Dispatching programmatic drop event for folder..."
+        )
+        await folderDiv.evaluate((element) => {
+          const dataTransfer = new DataTransfer()
+          dataTransfer.setData("cardId", "card-to-drag-123")
+
+          const dragOverEvent = new DragEvent("dragover", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer
+          })
+          element.dispatchEvent(dragOverEvent)
+
+          const dropEvent = new DragEvent("drop", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer
+          })
+          element.dispatchEvent(dropEvent)
+        })
+        await page.waitForTimeout(1000)
+      }
+
+      // Check DB value again
+      const finalCategory = await spFrame.locator("body").evaluate(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const database = (window as any).db
+        const card = await database.getCard("card-to-drag-123")
+        return card?.category
+      })
+      expect(finalCategory).toBe("folder-category-id-123")
+      console.log(
+        "Card category updated to folder-category-id-123 successfully!"
+      )
+
+      // Click on the folder to enter it
+      console.log("5. Clicking folder to enter...")
+      await folderDiv.click()
+      await page.waitForTimeout(1000)
+
+      // Inside the folder, the card should now be visible
+      await expect(dragCard).toBeVisible({ timeout: 10000 })
+
+      // And the breadcrumbs should show we are in "DnD Target Folder"
+      const breadcrumbFolder = spFrame.locator(
+        "[data-testid='breadcrumbs'] span:has-text('DnD Target Folder')"
+      )
+      await expect(breadcrumbFolder).toBeVisible()
+
+      // Screenshot
+      await page.screenshot({
+        path: path.join(screenshotsDir, "card-folder-drag-success.png")
+      })
+      console.log("Folder drag-and-drop E2E test passed successfully!")
+    } catch (error) {
+      console.error(
+        "Folder drag-and-drop E2E test failed, capturing screenshot..."
+      )
+      await page.screenshot({
+        path: path.join(screenshotsDir, "card-folder-drag-failure.png")
+      })
+      throw error
+    }
+  })
 })

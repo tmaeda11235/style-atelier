@@ -36,7 +36,6 @@ stateDiagram-v2
   _J_ORG_VERSION_01 : バージョン履歴管理
   _J_WB_MIXING_WEIGHTS_01 : 調合割合ウェイト調整
   _J_WB_PORTION_EXTRACT_01 : 成分抽出とブレンド
-  _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
   _J_IO_CSV : CSVエクスポート
   _J_IO_MD : Markdown ZIPエクスポート
   _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
@@ -470,17 +469,6 @@ flowchart TD
 flowchart TD
   S1["ワークベンチでスタイルカードをクリックして成分抽出メニューを開く"]
   S2["成分（スタイル/パラメータ/キーワード）を選択して抽出ボタンを押下する"]
-  S1 --> S2
-```
-
-### @J-WB-ATELIER-EFFECTS-01: アトリエ釜と錬金演出
-
-カードマージ時や進化成功モーダル表示時に、レアリティ（Common/Rare/Epic/Legendary）に対応したエフェクトや3D傾き演出を再生する
-
-```mermaid
-flowchart TD
-  S1["マージまたは進化アクションを実行する"]
-  S2["レアリティに対応した釜・錬金エフェクトまたはモーダルの3D傾きグロー効果を確認する"]
   S1 --> S2
 ```
 
