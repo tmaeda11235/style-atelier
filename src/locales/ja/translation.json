@@ -43,6 +43,10 @@
   },
   "settings": {
     "title": "設定",
+    "uiGroupTitle": "UI表示設定",
+    "cloudGroupTitle": "クラウド同期・バックアップ",
+    "maintenanceGroupTitle": "メンテナンスとローカル保存",
+    "backToLibrary": "Library（カード一覧）に戻る",
     "languageLabel": "表示言語",
     "languageDesc": "インターフェースの表示言語を切り替えます。",
     "easyModeLabel": "かんたんモード (Easy Mode)",

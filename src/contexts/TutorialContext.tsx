@@ -1,6 +1,13 @@
-import React, { createContext, useCallback, useContext, useState } from "react"
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState
+} from "react"
 
 import { useLanguage } from "./LanguageContext"
+import { useSettings } from "./SettingsContext"
 
 /** チュートリアルの各ステップ定義 */
 export type TutorialStep =
@@ -102,6 +109,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isActive, setIsActive] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const { t } = useLanguage()
+  const { expertFeatures } = useSettings()
 
   const tutorialSteps = STEP_METADATA.map((meta, index) => {
     const stepTranslation = t.tutorial.steps[index]
@@ -150,6 +158,12 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [isActive, currentStep, nextStep]
   )
+
+  useEffect(() => {
+    if (isActive && currentStep === "rarity-save" && !expertFeatures.rarity) {
+      nextStep()
+    }
+  }, [isActive, currentStep, expertFeatures.rarity, nextStep])
 
   return (
     <TutorialContext.Provider

@@ -199,6 +199,7 @@ export function ExpertModeView({
             onResetDb={handleResetDb}
             isEasyMode={isEasyMode}
             onToggleEasyMode={handleToggleEasyMode}
+            onNavigateToLibrary={() => setActiveTab("library")}
           />
         )}
 

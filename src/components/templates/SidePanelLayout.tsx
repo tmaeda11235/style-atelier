@@ -62,9 +62,18 @@ export function SidePanelLayout({
         <div className="mt-2">
           <div className="flex justify-between items-center border-b border-slate-200 pb-2">
             {isEasyMode ? (
-              <div className="flex items-center gap-2 py-2">
-                <span className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                  <span className="text-lg">🎴</span> {t.navigation.library}
+              <div className="flex items-center gap-2 py-1">
+                <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                  {activeTab === "settings" ? (
+                    <>
+                      <span className="text-sm">⚙️</span>{" "}
+                      {t.navigation.settings}
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm">🎴</span> {t.navigation.library}
+                    </>
+                  )}
                 </span>
               </div>
             ) : (

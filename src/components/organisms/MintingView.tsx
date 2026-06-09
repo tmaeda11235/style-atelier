@@ -82,6 +82,7 @@ export function MintingView({
     } else {
       setSelectedKeywords([...selectedKeywords, keyword])
     }
+    advanceIfStep("title-input")
   }
 
   const currentName =
@@ -140,7 +141,10 @@ export function MintingView({
                 <Input
                   type="text"
                   value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
+                  onChange={(e) => {
+                    setCustomName(e.target.value)
+                    advanceIfStep("title-input")
+                  }}
                   placeholder={t.minting.addDetailsPlaceholder}
                 />
               </div>

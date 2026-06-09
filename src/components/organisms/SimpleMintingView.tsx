@@ -1,6 +1,7 @@
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
+import { useTutorial } from "../../contexts/TutorialContext"
 import { useCategories } from "../../hooks/useCategories"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
@@ -43,6 +44,7 @@ export function SimpleMintingView({
 }: SimpleMintingViewProps) {
   const categoriesList = useCategories()
   const { t } = useLanguage()
+  const { advanceIfStep } = useTutorial()
 
   // Ensure a category is always selected if categories exist
   React.useEffect(() => {
@@ -57,6 +59,7 @@ export function SimpleMintingView({
     } else {
       setSelectedKeywords([...selectedKeywords, keyword])
     }
+    advanceIfStep("title-input")
   }
 
   const currentName =
@@ -135,13 +138,16 @@ export function SimpleMintingView({
                   <Input
                     type="text"
                     value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
+                    onChange={(e) => {
+                      setCustomName(e.target.value)
+                      advanceIfStep("title-input")
+                    }}
                     placeholder={t.minting.enterCustomName}
                     className="h-9 text-xs focus-visible:ring-blue-600 rounded-xl"
                   />
-                  <div className="mt-1 text-[9px] text-slate-400 font-medium">
+                  <div className="mt-1.5 text-xs text-slate-500 font-medium">
                     {t.minting.preview}:{" "}
-                    <span className="font-bold text-slate-700">
+                    <span className="font-bold text-slate-800 bg-slate-50 px-2 py-0.5 rounded border border-slate-100/80 inline-block mt-0.5">
                       {currentName}
                     </span>
                   </div>

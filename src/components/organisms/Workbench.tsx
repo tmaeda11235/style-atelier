@@ -61,6 +61,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [editedParams, setEditedParams] = useState<any>({})
   const [slotValues, setSlotValues] = useState<Record<string, string>>({})
   const [isEvolutionSuccessOpen, setIsEvolutionSuccessOpen] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [evolvedCardData, setEvolvedCardData] = useState<{
     name: string
     thumbnailData?: string
@@ -276,7 +277,18 @@ export const Workbench: React.FC<WorkbenchProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border-2 border-dashed border-slate-200 min-h-[160px]">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault()
+          setIsDragOver(true)
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={() => setIsDragOver(false)}
+        className={`grid grid-cols-2 gap-4 p-4 rounded-xl border-2 border-dashed transition-all duration-200 min-h-[160px] ${
+          isDragOver
+            ? "bg-blue-50/80 border-blue-500 scale-[1.01] shadow-lg shadow-blue-500/10"
+            : "bg-slate-50 border-slate-200"
+        }`}>
         {workbenchCards.map((card) => (
           <div
             key={card.id}

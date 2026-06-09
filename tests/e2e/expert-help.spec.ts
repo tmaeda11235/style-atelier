@@ -23,6 +23,23 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
+    // Clear database (especially userSettings) to ensure we start in expert mode (not easy mode)
+    console.log("Clearing database to reset to default settings...")
+    try {
+      await spFrame.locator("body").evaluate(async () => {
+        const database = (window as any).db
+        if (database) {
+          await database.userSettings.clear()
+          await database.styleCards.clear()
+          await database.historyItems.clear()
+        }
+      })
+      await page.reload()
+      await page.waitForTimeout(1000)
+    } catch (err) {
+      console.log("Failed to clear DB or reload, proceeding anyway:", err)
+    }
+
     // 1. Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -33,6 +50,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
+
+    // Ensure UI Preferences accordion is expanded
+    const uiAccordionHeader = spFrame.locator("#settings-accordion-ui")
+    await expect(uiAccordionHeader).toBeVisible()
+    const firstToggle = spFrame.locator("#expert-feature-stack-btn")
+    if (!(await firstToggle.isVisible().catch(() => false))) {
+      await uiAccordionHeader.click()
+      await page.waitForTimeout(300)
+    }
 
     // Ensure all expert toggles are checked
     const toggles = [

@@ -63,6 +63,19 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(settingsTabButton).toBeVisible()
     await settingsTabButton.click()
 
+    // Expand Cloud Backup & Sync and Maintenance sections to make sync and recovery buttons visible
+    const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
+    await expect(cloudAccordionHeader).toBeVisible()
+    await cloudAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    const maintenanceAccordionHeader = spFrame.locator(
+      "#settings-accordion-maintenance"
+    )
+    await expect(maintenanceAccordionHeader).toBeVisible()
+    await maintenanceAccordionHeader.click()
+    await page.waitForTimeout(300)
+
     // 3. Verify Sync and Force Recovery UI is visible
     const syncBtn = spFrame.locator("#google-drive-sync-btn")
     const forceRecoveryBtn = spFrame.locator("#force-recovery-btn")
@@ -352,6 +365,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsTabButton = spFrame.locator("#settings-nav-btn")
     await settingsTabButton.click()
 
+    // Expand Cloud Backup & Sync section to make sync buttons visible
+    const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
+    await expect(cloudAccordionHeader).toBeVisible()
+    await cloudAccordionHeader.click()
+    await page.waitForTimeout(300)
+
     // Enable Google Drive synchronization
     const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
     await toggleBtn.click()
@@ -586,6 +605,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(settingsTitleEn).toBeVisible({ timeout: 5000 })
 
     // Verify translated elements in English
+    const maintenanceAccordionHeaderEn = spFrame.locator(
+      "#settings-accordion-maintenance"
+    )
+    await expect(maintenanceAccordionHeaderEn).toBeVisible()
+    await maintenanceAccordionHeaderEn.click()
+    await page.waitForTimeout(300)
+
     const resetBtnEn = spFrame.locator("#reset-db-btn")
     await expect(resetBtnEn).toHaveText("Reset Database")
     const clearHistoryBtnEn = spFrame.locator(
@@ -636,6 +662,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(settingsTitleJa).toBeVisible({ timeout: 5000 })
 
     // Verify translated elements in Japanese
+    const maintenanceAccordionHeaderJa = spFrame.locator(
+      "#settings-accordion-maintenance"
+    )
+    await expect(maintenanceAccordionHeaderJa).toBeVisible()
+    await maintenanceAccordionHeaderJa.click()
+    await page.waitForTimeout(300)
+
     const resetBtnJa = spFrame.locator("#reset-db-btn")
     await expect(resetBtnJa).toHaveText("データベースをリセット")
     const clearHistoryBtnJa = spFrame.locator("button:has-text('履歴をクリア')")
@@ -798,6 +831,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await page.waitForTimeout(500)
 
     // 3. Locate Reset DB button (Danger Zone)
+    // Expand Maintenance section first
+    const maintenanceAccordionHeader = spFrame.locator(
+      "#settings-accordion-maintenance"
+    )
+    await expect(maintenanceAccordionHeader).toBeVisible()
+    await maintenanceAccordionHeader.click()
+    await page.waitForTimeout(300)
+
     const resetDbBtn = spFrame.locator("#reset-db-btn")
     await resetDbBtn.scrollIntoViewIfNeeded()
     await expect(resetDbBtn).toBeVisible()
@@ -839,5 +880,114 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // Verify reset success log or status
     await page.waitForTimeout(1000)
     console.log("Custom confirm dialog E2E test passed successfully!")
+  })
+
+  test("should toggle settings accordions and verify sections collapse/expand", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Settings Accordion E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 3. Verify UI Preferences is expanded by default (Language selection is visible)
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
+
+    // Verify Cloud Sync is collapsed by default (Google Drive Toggle is NOT visible)
+    const gdToggle = spFrame.locator("#google-drive-toggle-btn")
+    await expect(gdToggle).not.toBeVisible()
+
+    // 4. Click 'Cloud Backup & Sync' accordion header to expand it
+    console.log("Expanding Cloud Backup & Sync accordion...")
+    const cloudHeader = spFrame.locator("text=Cloud Backup & Sync")
+    await cloudHeader.click()
+    await page.waitForTimeout(300)
+
+    // Verify Google Drive Toggle is now visible
+    await expect(gdToggle).toBeVisible()
+
+    // 5. Click 'UI Preferences' accordion header to collapse it
+    console.log("Collapsing UI Preferences accordion...")
+    const uiHeader = spFrame.locator("text=UI Preferences")
+    await uiHeader.click()
+    await page.waitForTimeout(300)
+
+    // Verify Language selection is now hidden
+    await expect(langSelect).not.toBeVisible()
+
+    // 6. Capture screenshot of collapsed/expanded accordion states
+    await page.screenshot({
+      path: path.join(screenshotsDir, "settings-accordions.png")
+    })
+    console.log("Settings Accordion E2E test passed successfully!")
+  })
+
+  test("should navigate back to library from Easy Mode settings via direct link", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Easy Mode back link E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 3. Enable Easy Mode
+    const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
+    await easyModeToggle.click()
+    await page.waitForTimeout(500)
+
+    // Re-open settings tab in Easy Mode since switching mode redirects to library
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 4. Verify 'Back to Library' link is visible
+    const backToLibBtn = spFrame.locator("#back-to-library-btn")
+    await expect(backToLibBtn).toBeVisible()
+
+    // 5. Click 'Back to Library' link
+    console.log("Navigating back to library using direct link...")
+    await backToLibBtn.click()
+    await page.waitForTimeout(500)
+
+    // 6. Verify tab is switched to library (Check Search tag input or search placeholder)
+    const searchField = spFrame.locator("input[placeholder*='Search by']")
+    await expect(searchField).toBeVisible()
+
+    // Verify Settings tab contents are no longer visible
+    await expect(easyModeToggle).not.toBeVisible()
+
+    // 7. Capture screenshot of library tab after navigation
+    await page.screenshot({
+      path: path.join(screenshotsDir, "easy-mode-navigated-back.png")
+    })
+    console.log("Easy Mode back link navigation E2E test passed successfully!")
   })
 })
