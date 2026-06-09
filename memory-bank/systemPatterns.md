@@ -61,6 +61,11 @@ tags: []
 - **Chrome Extension API & Prompt Injection Decoupling**:
   - Chrome extension connection monitoring (ping/retry) and prompt injection logic (sending to Midjourney tab, updating usage stats, slot value persistence) are fully decoupled from `Workbench.tsx` and encapsulated into reusable hooks `useChromeTabConnection.ts` and `usePromptInjector.ts`.
   - The Workbench UI and form layouts are modularized into focused components (`WorkbenchView.tsx`, `Cauldron.tsx`, `RecipeEditor.tsx`, `RecipeForm.tsx`) and hooks (`useWorkbenchCore`), keeping each component file size under the 300-line limit and functions under the 50-line limit, and enabling straightforward unit testing without mocking heavy layout structures.
+- **Tombstone (Soft Delete) & Physical Purge Lifecycle**:
+  - When cards or categories are deleted, they are soft-deleted (`isDeleted: true` and `updatedAt` set to current time) to act as "Tombstones" that propagate deletion states to other devices during Google Drive synchronization.
+  - To prevent infinite database growth, a physical purge operation (`purgeDeletedRecords`) deletes records older than 60 days (the Sync Window) from IndexedDB.
+  - This purge is triggered asynchronously at startup (non-blocking) and before any Google Drive manual/auto synchronization starts.
+  - **Sync Window Limitation**: If a device remains offline for more than 60 days and attempts to sync after other devices have already purged those tombstones, deleted records may resurrect ("zombie records"). This is a documented technical constraint of the 60-day window.
 
 ## Data Flow
 
