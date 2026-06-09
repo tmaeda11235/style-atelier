@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Style Atelier",
+    "description": "The name of the extension"
+  },
+  "extDescription": {
+    "message": "Style AtelierはMidjourney向けのプロンプト管理ツールです。",
+    "description": "The description of the extension"
+  }
+}
