@@ -31,7 +31,10 @@ export async function createThumbnailDataUrl(
     return imageSource
   }
 
-  const isTest = typeof process !== "undefined" && process.env.VITEST
+  const isTest =
+    typeof process !== "undefined" &&
+    process.env.VITEST &&
+    process.env.BYPASS_VITEST !== "true"
   if (
     typeof window === "undefined" ||
     typeof document === "undefined" ||
