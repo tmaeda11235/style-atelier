@@ -43,4 +43,9 @@ tags: []
   - Functions: 75%
   - Lines: 80%
 - **CI Pipeline**: Automated via GitHub Actions (`.github/workflows/ci.yml`). ESLint (`npm run lint`) and Unit Tests with Coverage (`npm test -- --coverage`) are run on every pull request to ensure high quality and prevent code decay.
+- **Mutation Testing**: [StrykerJS](https://stryker-mutator.io/) is integrated (`npm run test:mutate`) to evaluate test suite robustness. To maintain high execution performance in local development and CI:
+  - Scope is strictly limited to key side-effect-free business logic files (`src/lib/mj-parser.ts`, `src/lib/prompt-utils.ts`, `src/lib/nlp-utils.ts`, `src/lib/color-utils.ts`).
+  - Incremental execution mode is enabled (`"incremental": true`), saving change states to `reports/stryker-incremental.json`.
+  - Static mutants are ignored (`"ignoreStatic": true`) to eliminate dry-run/initialization overhead.
+  - Concurrency is optimized (`"concurrency": 4`) to leverage multiple CPU cores without overloading memory.
 - **Linter Rule Testing**: A dedicated unit test `src/eslint-config.test.ts` validates that the ESLint configuration enforces the strict defaults, maintains specific whitelists for pre-existing files, and ensures that test files are properly exempted. This prevents configuration regressions that could weaken codebase constraints.

@@ -38,3 +38,7 @@ dist/
 /tests/screenshots/
 /scratch
 
+# stryker mutation testing
+/reports/
+/.stryker-tmp/
+
