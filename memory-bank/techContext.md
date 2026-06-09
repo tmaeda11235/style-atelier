@@ -20,6 +20,7 @@ tags: []
 - **QR Codes**: `jsQR` - For scanning/generating QR codes on cards.
 - **Search**: `FlexSearch.js` - High-performance client-side search.
 - **NLP/Parser**: `compromise` / `ja-compromise` - For prompt analysis and tagging.
+- **Local LLM**: `@mlc-ai/web-llm` (WebLLM) - For loading and executing the quantized Gemma-4 E2B model client-side using WebGPU/Wasm.
 - **Compression**: `fflate` - High-performance, lightweight ZIP compression for Markdown exports.
 
 ## Development Environment
@@ -34,6 +35,9 @@ tags: []
 - **Storage Limits**: IndexedDB limits vary by device, but generally sufficient for metadata + thumbnails. Full images should be external references or carefully cached.
 - **LocalStorage Settings**: UI Settings (Easy Mode & Expert Features) and Language locale preference are persisted locally in `localStorage`. Historical user inputs for slot variables (`slotHistory`) have been migrated from `localStorage` to `IndexedDB` (v11 schema) to ensure consistent data transactions, prevent size limitation issues, and support auto-sync/backups. Tests can inject mocked states by editing `localStorage` or wrapping component render functions in `SettingsProvider` (using testing-library's `wrapper` option).
 - **Sync Window & Zombie Records**: A technical constraint exists for devices offline for more than 60 days. Once Tombstone records are purged after 60 days on active devices, a long-offline device reconnecting will re-upload its local undeleted copy, causing deleted records to resurrect ("zombie records"). To mitigate this, background auto-sync is suspended when the last sync time exceeds 60 days, and manual synchronization is guarded by a warning dialog (`GDriveSyncStrategyDialog`) that offers three strategies: Safe Merge, Local Overwrite, or Cloud Overwrite.
+- **WebLLM & WebGPU Compatibility**: Running Gemma-4 E2B locally requires WebGPU support in the browser for optimal performance. While fallbacks (Wasm) exist, WebGPU is highly recommended to keep inference times practical.
+- **Model Storage & Download Overhead**: The quantized Gemma-4 E2B model (~1GB) must be downloaded over the network on the first run and cached in the browser's Cache API or Origin Private File System (OPFS). The application must handle bandwidth limits, incomplete downloads, and local storage limits gracefully.
+- **Worker Resource Constraints**: Web Workers executing heavy WebLLM operations are subject to Chrome's tab/extension throttling policies. If the extension side panel is closed or inactive, the worker context may be disposed. The extension state machine must handle worker lifecycles (initialization, execution, destruction) robustly.
 
 ## Testing & CI
 
