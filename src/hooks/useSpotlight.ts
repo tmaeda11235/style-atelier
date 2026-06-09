@@ -182,7 +182,8 @@ export function useSpotlight() {
   // Capture-phase event listener to block clicks outside target & tooltip, while allowing scroll
   useEffect(() => {
     if (!isActive) return
-    if (process.env.NODE_ENV === "test") return
+    if (process.env.NODE_ENV === "test" && process.env.BYPASS_VITEST !== "true")
+      return
 
     const handleCaptureClick = (e: MouseEvent) => {
       // 1. Allow any clicks inside the tooltip
