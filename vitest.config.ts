@@ -24,7 +24,7 @@ export default defineConfig({
       ".git",
       ".cache",
       "tests/e2e",
-      ".stryker-tmp"
+      ".stryker-tmp/**"
     ],
     coverage: {
       provider: "v8",

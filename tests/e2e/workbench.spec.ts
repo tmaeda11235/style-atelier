@@ -667,12 +667,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await expect(stylizeCheckbox).toBeVisible()
     await stylizeCheckbox.check()
 
-    // Locate the slider for Stylize and change its value
-    const stylizeSlider = spFrame
-      .locator("div.border-slate-200 input[type='range']")
-      .first()
-    await expect(stylizeSlider).toBeVisible()
-    await stylizeSlider.fill("450") // Slide to 450
+    // Locate the number input for Stylize and change its value
+    const stylizeInput = spFrame.locator("input[type='number']").first()
+    await expect(stylizeInput).toBeVisible()
+    await stylizeInput.fill("450") // Set to 450
 
     // Capture screenshot showing blending state & advanced parameters adjusted
     await page.screenshot({
