@@ -46,16 +46,28 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     const toggleBtn = spFrame.locator("[data-testid='parameter-editor-toggle']")
     await expect(toggleBtn).toBeVisible({ timeout: 10000 })
 
-    // Verify parameter inner fields are hidden initially (accordion collapsed)
+    // Verify parameter inner fields are VISIBLE initially (accordion expanded by default)
     const customArInput = spFrame.locator("input[placeholder='Custom']")
-    await expect(customArInput).not.toBeVisible()
+    await expect(customArInput).toBeVisible()
 
-    // 5. Click to expand ParameterEditor accordion
-    console.log("Expanding ParameterEditor accordion...")
+    // 5. Click to collapse ParameterEditor accordion
+    console.log("Collapsing ParameterEditor accordion...")
     await toggleBtn.click()
     await page.waitForTimeout(500)
 
-    // Now fields should be visible
+    // Now fields should not be visible
+    await expect(customArInput).not.toBeVisible()
+
+    // Capture screenshot of collapsed state
+    await page.screenshot({
+      path: path.join(screenshotsDir, "parameter-editor-collapsed.png")
+    })
+    console.log("ParameterEditor collapsed screenshot saved.")
+
+    // 6. Click to expand ParameterEditor accordion again
+    console.log("Expanding ParameterEditor accordion again...")
+    await toggleBtn.click()
+    await page.waitForTimeout(500)
     await expect(customArInput).toBeVisible()
 
     // Capture screenshot of expanded state
@@ -64,7 +76,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     })
     console.log("ParameterEditor expanded screenshot saved.")
 
-    // 6. Locate responsive buttons
+    // 7. Locate responsive buttons
     // The main Try on Midjourney button should be visible with text initially (width 380px)
     const tryOnMidjourneyBtn = spFrame.locator(
       "button:has-text('Try on Midjourney')"
@@ -73,7 +85,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     await expect(tryOnMidjourneyBtn).toBeVisible()
     await expect(btnText).toBeVisible()
 
-    // 7. Shrink side panel frame width to 250px to trigger container query
+    // 8. Shrink side panel frame width to 250px to trigger container query
     console.log("Shrinking sidepanel-frame to 250px...")
     await page.evaluate(() => {
       const iframe = document.getElementById("sidepanel-frame")
@@ -92,7 +104,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     })
     console.log("Narrow UI layout screenshot saved.")
 
-    // 8. Hover over the button wrapper to trigger tooltip
+    // 9. Hover over the button wrapper to trigger tooltip
     console.log("Hovering over button to test CSS tooltip...")
     const btnWrapper = spFrame.locator(".responsive-btn-wrapper").last()
     await btnWrapper.hover()

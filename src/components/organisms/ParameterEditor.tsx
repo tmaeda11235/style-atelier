@@ -26,7 +26,7 @@ interface ParameterEditorProps {
 export const ParameterEditor: React.FC<ParameterEditorProps> = ({
   parameters,
   onChange,
-  defaultOpen = false
+  defaultOpen = true
 }) => {
   const { t } = useLanguage()
   const [showAdvanced, setShowAdvanced] = useState(false)

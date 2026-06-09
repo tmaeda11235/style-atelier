@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { act, renderHook } from "@testing-library/react"
+import { useEffect, useState } from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
 import { useHistory } from "./useHistory"
-import { renderHook, act } from "@testing-library/react"
-import { useState, useEffect } from "react"
 
 // Mock dexie-react-hooks to simulate reactively running queries when dependencies change
 vi.mock("dexie-react-hooks", () => ({
@@ -25,12 +26,18 @@ const mockLimit = vi.fn().mockReturnValue({ toArray: mockToArray })
 const mockReverse = vi.fn().mockReturnValue({ limit: mockLimit })
 const mockOrderBy = vi.fn().mockReturnValue({ reverse: mockReverse })
 const mockCount = vi.fn().mockResolvedValue(0)
+const mockPut = vi.fn()
+const mockClear = vi.fn()
+const mockUpdate = vi.fn()
 
 vi.mock("../lib/db", () => ({
   db: {
     historyItems: {
       orderBy: (field: string) => mockOrderBy(field),
       count: () => mockCount(),
+      put: (item: any) => mockPut(item),
+      clear: () => mockClear(),
+      update: (id: string, changes: any) => mockUpdate(id, changes)
     }
   }
 }))
@@ -47,10 +54,10 @@ describe("useHistory hook", () => {
 
   it("should query history items with an initial limit of 50", async () => {
     const { result } = renderHook(() => useHistory())
-    
+
     // Wait for useEffect inside mocked useLiveQuery to run
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(mockOrderBy).toHaveBeenCalledWith("timestamp")
@@ -61,10 +68,10 @@ describe("useHistory hook", () => {
 
   it("should increase limit by 50 when loadMore is called", async () => {
     const { result } = renderHook(() => useHistory())
-    
+
     // Wait for initial render and queries
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(mockLimit).toHaveBeenCalledWith(50)
@@ -76,7 +83,7 @@ describe("useHistory hook", () => {
 
     // Wait for the dependencies to trigger query re-run
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(mockLimit).toHaveBeenLastCalledWith(100)
@@ -89,7 +96,7 @@ describe("useHistory hook", () => {
     const { result } = renderHook(() => useHistory())
 
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 10))
     })
 
     expect(result.current.hasMore).toBe(true)
@@ -100,10 +107,39 @@ describe("useHistory hook", () => {
     })
 
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 10))
     })
 
     // count (60) is now <= limit (100), so hasMore should be false
     expect(result.current.hasMore).toBe(false)
+  })
+
+  it("should call put on db when addHistoryItem is called", async () => {
+    mockPut.mockResolvedValue("new-id")
+    const { result } = renderHook(() => useHistory())
+
+    const item = { id: "1", timestamp: Date.now(), prompt: "test" } as any
+    const res = await result.current.addHistoryItem(item)
+
+    expect(res).toBe("new-id")
+    expect(mockPut).toHaveBeenCalledWith(item)
+  })
+
+  it("should call clear on db when clearHistory is called", async () => {
+    mockClear.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useHistory())
+
+    await result.current.clearHistory()
+
+    expect(mockClear).toHaveBeenCalled()
+  })
+
+  it("should call update on db when updateHistoryItem is called", async () => {
+    mockUpdate.mockResolvedValue(1)
+    const { result } = renderHook(() => useHistory())
+
+    await result.current.updateHistoryItem("1", { rating: 5 })
+
+    expect(mockUpdate).toHaveBeenCalledWith("1", { rating: 5 })
   })
 })

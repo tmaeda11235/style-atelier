@@ -9,6 +9,7 @@ let mockDbCards: Record<string, any> = {}
 
 vi.mock("dexie-react-hooks", () => ({
   useLiveQuery: (fn: any) => {
+    fn()
     return mockPinnedCards
   }
 }))
