@@ -110,28 +110,19 @@ async function handleMergeStrategy(
 export async function runSyncWorkflow(
   params: SyncWorkflowParams
 ): Promise<number> {
-  const {
-    token,
-    gdriveClient,
-    onTokenUpdated,
-    onDownloadProgress,
-    onUploadProgress,
-    signal,
-    addLog,
-    mergeStrategy = "merge"
-  } = params
+  const { mergeStrategy = "merge", addLog } = params
 
   if (mergeStrategy === "local-overwrite") {
     addLog(
       "Merge strategy: LOCAL OVERWRITE (Replacing local database with remote backup)."
     )
     await handleLocalOverwrite(
-      token,
-      gdriveClient,
-      onTokenUpdated,
-      onDownloadProgress,
-      onUploadProgress,
-      signal,
+      params.token,
+      params.gdriveClient,
+      params.onTokenUpdated,
+      params.onDownloadProgress,
+      params.onUploadProgress,
+      params.signal,
       addLog
     )
   } else if (mergeStrategy === "cloud-overwrite") {
@@ -139,22 +130,22 @@ export async function runSyncWorkflow(
       "Merge strategy: CLOUD OVERWRITE (Replacing remote backup with local database)."
     )
     await handleCloudOverwrite(
-      token,
-      gdriveClient,
-      onTokenUpdated,
-      onUploadProgress,
-      signal,
+      params.token,
+      params.gdriveClient,
+      params.onTokenUpdated,
+      params.onUploadProgress,
+      params.signal,
       addLog
     )
   } else {
     addLog("Merge strategy: MERGE (Merging remote backup into local database).")
     await handleMergeStrategy(
-      token,
-      gdriveClient,
-      onTokenUpdated,
-      onDownloadProgress,
-      onUploadProgress,
-      signal,
+      params.token,
+      params.gdriveClient,
+      params.onTokenUpdated,
+      params.onDownloadProgress,
+      params.onUploadProgress,
+      params.signal,
       addLog
     )
   }
