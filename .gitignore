@@ -41,4 +41,4 @@ dist/
 # stryker mutation testing
 /reports/
 /.stryker-tmp/
-
+.stryker-tmp/

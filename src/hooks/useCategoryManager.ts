@@ -25,6 +25,7 @@ export function useCategoryManager({
   )
 
   const [name, setName] = useState("")
+  const [parentId, setParentId] = useState("")
   const [emoji, setEmoji] = useState("")
   const [iconUrl, setIconUrl] = useState("")
   const [iconCardId, setIconCardId] = useState("")
@@ -72,6 +73,7 @@ export function useCategoryManager({
   const handleStartEdit = (cat: CustomCategory) => {
     setEditingCategory(cat)
     setName(cat.name)
+    setParentId(cat.parentId || "")
     setEmoji(cat.iconEmoji || "")
     setIconUrl(cat.iconUrl || "")
     setIconCardId(cat.iconCardId || "")
@@ -81,6 +83,7 @@ export function useCategoryManager({
   const handleCancelEdit = () => {
     setEditingCategory(null)
     setName("")
+    setParentId("")
     setEmoji("")
     setIconUrl("")
     setIconCardId("")
@@ -129,7 +132,8 @@ export function useCategoryManager({
           name: trimmedName,
           iconEmoji: emoji.trim() || undefined,
           iconUrl: iconUrl || undefined,
-          iconCardId: iconCardId || undefined
+          iconCardId: iconCardId || undefined,
+          parentId: parentId || undefined
         })
         addLog(t.logUpdated.replace("{name}", trimmedName))
         handleCancelEdit()
@@ -155,10 +159,12 @@ export function useCategoryManager({
         iconEmoji: emoji.trim() || undefined,
         iconUrl: iconUrl || undefined,
         iconCardId: iconCardId || undefined,
+        parentId: parentId || undefined,
         createdAt: Date.now()
       })
       addLog(t.logCreated.replace("{name}", trimmedName))
       setName("")
+      setParentId("")
       setEmoji("")
       setIconUrl("")
       setIconCardId("")
@@ -175,6 +181,8 @@ export function useCategoryManager({
     editingCategory,
     name,
     setName,
+    parentId,
+    setParentId,
     emoji,
     iconUrl,
     setIconUrl,

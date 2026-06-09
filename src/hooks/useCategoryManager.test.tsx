@@ -71,6 +71,7 @@ describe("useCategoryManager", () => {
     const { result } = renderHook(() => useCategoryManager({ onClose, addLog }))
     expect(result.current.activeTab).toBe("create")
     expect(result.current.name).toBe("")
+    expect(result.current.parentId).toBe("")
     expect(result.current.emoji).toBe("")
     expect(result.current.iconUrl).toBe("")
     expect(result.current.isSelectingCard).toBe(false)
@@ -142,12 +143,18 @@ describe("useCategoryManager", () => {
   it("should cancel editing and reset state", () => {
     const { result } = renderHook(() => useCategoryManager({ onClose, addLog }))
 
-    const mockCat = { id: "test", name: "Test Cat", iconEmoji: "🎮" }
+    const mockCat = {
+      id: "test",
+      name: "Test Cat",
+      iconEmoji: "🎮",
+      parentId: "parent-1"
+    }
     act(() => {
       result.current.handleStartEdit(mockCat)
     })
     expect(result.current.editingCategory).toEqual(mockCat)
     expect(result.current.name).toBe("Test Cat")
+    expect(result.current.parentId).toBe("parent-1")
     expect(result.current.emoji).toBe("🎮")
 
     act(() => {
@@ -155,6 +162,7 @@ describe("useCategoryManager", () => {
     })
     expect(result.current.editingCategory).toBeNull()
     expect(result.current.name).toBe("")
+    expect(result.current.parentId).toBe("")
     expect(result.current.emoji).toBe("")
   })
 
@@ -261,6 +269,7 @@ describe("useCategoryManager", () => {
 
         act(() => {
           result.current.setName("My Category")
+          result.current.setParentId("parent-1")
           result.current.handleEmojiChange("🎨")
         })
 
@@ -272,7 +281,8 @@ describe("useCategoryManager", () => {
           expect.objectContaining({
             id: "my-category",
             name: "My Category",
-            iconEmoji: "🎨"
+            iconEmoji: "🎨",
+            parentId: "parent-1"
           })
         )
         expect(addLog).toHaveBeenCalledWith("Created My Category")
@@ -341,8 +351,13 @@ describe("useCategoryManager", () => {
         )
 
         act(() => {
-          result.current.handleStartEdit({ id: "my-cat", name: "My Cat" })
+          result.current.handleStartEdit({
+            id: "my-cat",
+            name: "My Cat",
+            parentId: "parent-old"
+          })
           result.current.setName("Updated Cat")
+          result.current.setParentId("parent-new")
         })
 
         await act(async () => {
@@ -353,7 +368,8 @@ describe("useCategoryManager", () => {
           name: "Updated Cat",
           iconEmoji: undefined,
           iconUrl: undefined,
-          iconCardId: undefined
+          iconCardId: undefined,
+          parentId: "parent-new"
         })
         expect(addLog).toHaveBeenCalledWith("Updated Updated Cat")
         expect(result.current.editingCategory).toBeNull()
