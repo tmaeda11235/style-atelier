@@ -11,7 +11,9 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     })
   })
 
-  test("should show localized ConnectionAlerts and take screenshots", async ({ page }) => {
+  test("should show localized ConnectionAlerts and take screenshots", async ({
+    page
+  }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page...")
     await page.goto("/tests/sandbox/index.html")
@@ -50,16 +52,18 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
         thumbnailData:
           "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='purple'/></svg>",
         usageCount: 5,
-        category: "cat-1",
+        category: undefined,
         tags: ["cyberpunk", "nature"]
       })
     })
 
     // --- English Mode Verification ---
     console.log("Verifying English Alerts...")
-    
+
     // Switch to Library tab
-    let libraryNavBtn = spFrame.locator("button[title='Library'], button[title='ライブラリ']")
+    let libraryNavBtn = spFrame.locator(
+      "button[title='Library'], button[title='ライブラリ']"
+    )
     await expect(libraryNavBtn).toBeVisible()
     await libraryNavBtn.click()
     await page.waitForTimeout(500)
@@ -84,7 +88,7 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
       win.chrome.tabs.sendMessage = async () => {
         throw new Error("Could not establish connection")
       }
-      
+
       // Mock chrome.tabs.query for CardDetailView tab resolution
       win.chrome.tabs.query = async () => {
         return [{ id: 1 }]
@@ -101,9 +105,13 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     const disconnTitleEn = spFrame.locator("p:has-text('Connection Lost')")
     await expect(disconnTitleEn).toBeVisible()
     await expect(
-      spFrame.locator("p:has-text('The extension has lost connection to the page.')")
+      spFrame.locator(
+        "p:has-text('The extension has lost connection to the page.')"
+      )
     ).toBeVisible()
-    await expect(spFrame.locator("button:has-text('Reload Page')")).toBeVisible()
+    await expect(
+      spFrame.locator("button:has-text('Reload Page')")
+    ).toBeVisible()
 
     // Take screenshot
     await page.screenshot({
@@ -139,7 +147,9 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await expect(
       spFrame.locator("p:has-text('Could not find the chat input.')")
     ).toBeVisible()
-    await expect(spFrame.locator("button:has-text('Retry Connection')")).toBeVisible()
+    await expect(
+      spFrame.locator("button:has-text('Retry Connection')")
+    ).toBeVisible()
 
     // Take screenshot
     await page.screenshot({
@@ -166,7 +176,9 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await page.waitForTimeout(500)
 
     // Go back to Library
-    libraryNavBtn = spFrame.locator("button[title='Library'], button[title='ライブラリ']")
+    libraryNavBtn = spFrame.locator(
+      "button[title='Library'], button[title='ライブラリ']"
+    )
     await expect(libraryNavBtn).toBeVisible()
     await libraryNavBtn.click()
     await page.waitForTimeout(500)
@@ -199,7 +211,9 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await expect(
       spFrame.locator("p:has-text('ページとの接続が失われました。')")
     ).toBeVisible()
-    await expect(spFrame.locator("button:has-text('ページをリロード')")).toBeVisible()
+    await expect(
+      spFrame.locator("button:has-text('ページをリロード')")
+    ).toBeVisible()
 
     // Take screenshot
     await page.screenshot({
@@ -228,12 +242,18 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await page.waitForTimeout(500)
 
     // Verify No Input Alert in Japanese
-    const noInputTitleJa = spFrame.locator("p:has-text('入力エリアが見つかりません')").first()
+    const noInputTitleJa = spFrame
+      .locator("p:has-text('入力エリアが見つかりません')")
+      .first()
     await expect(noInputTitleJa).toBeVisible()
     await expect(
-      spFrame.locator("p:has-text('チャット入力エリアが見つかりませんでした。')")
+      spFrame.locator(
+        "p:has-text('チャット入力エリアが見つかりませんでした。')"
+      )
     ).toBeVisible()
-    await expect(spFrame.locator("button:has-text('接続を再試行')")).toBeVisible()
+    await expect(
+      spFrame.locator("button:has-text('接続を再試行')")
+    ).toBeVisible()
 
     // Take screenshot
     await page.screenshot({
