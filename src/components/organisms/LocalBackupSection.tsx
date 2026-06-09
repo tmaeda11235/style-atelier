@@ -1,4 +1,11 @@
-import { Download, FileJson, Lock, Upload } from "lucide-react"
+import {
+  Download,
+  FileJson,
+  FileSpreadsheet,
+  FileText,
+  Lock,
+  Upload
+} from "lucide-react"
 import React from "react"
 
 interface LocalBackupSectionProps {
@@ -7,6 +14,8 @@ interface LocalBackupSectionProps {
   isRestoring: boolean
   handleLocalExport: () => void
   handleLocalImport: (e: React.ChangeEvent<HTMLInputElement>) => void
+  handleExportCSV: () => void
+  handleExportMarkdown: () => void
   t: any
 }
 
@@ -16,6 +25,8 @@ export function LocalBackupSection({
   isRestoring,
   handleLocalExport,
   handleLocalImport,
+  handleExportCSV,
+  handleExportMarkdown,
   t
 }: LocalBackupSectionProps) {
   return (
@@ -61,6 +72,31 @@ export function LocalBackupSection({
             accept=".json"
             className="hidden"
           />
+        </div>
+
+        {/* Separator / Subheader for other tools export */}
+        <div className="border-t border-slate-100 pt-4 mt-2">
+          <div className="mb-2">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+              External Integration (Notion, Obsidian, etc.)
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={handleExportCSV}
+              disabled={isSyncing || isRestoring}
+              className="py-2 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-30 disabled:hover:bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              {t.exportCsvBtn}
+            </button>
+            <button
+              onClick={handleExportMarkdown}
+              disabled={isSyncing || isRestoring}
+              className="py-2 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-30 disabled:hover:bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              {t.exportMdBtn}
+            </button>
+          </div>
         </div>
 
         {/* Privacy Note */}

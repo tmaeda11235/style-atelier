@@ -20,6 +20,7 @@ tags: []
 - **QR Codes**: `jsQR` - For scanning/generating QR codes on cards.
 - **Search**: `FlexSearch.js` - High-performance client-side search.
 - **NLP/Parser**: `compromise` / `ja-compromise` - For prompt analysis and tagging.
+- **Compression**: `fflate` - High-performance, lightweight ZIP compression for Markdown exports.
 
 ## Development Environment
 
