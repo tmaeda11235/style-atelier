@@ -33,7 +33,7 @@ tags: []
 - **Manifest V3**: Strict security policies (no remote code execution).
 - **Storage Limits**: IndexedDB limits vary by device, but generally sufficient for metadata + thumbnails. Full images should be external references or carefully cached.
 - **LocalStorage Settings**: UI Settings (Easy Mode & Expert Features) and Language locale preference are persisted locally in `localStorage`. Historical user inputs for slot variables (`slotHistory`) have been migrated from `localStorage` to `IndexedDB` (v11 schema) to ensure consistent data transactions, prevent size limitation issues, and support auto-sync/backups. Tests can inject mocked states by editing `localStorage` or wrapping component render functions in `SettingsProvider` (using testing-library's `wrapper` option).
-- **Sync Window & Zombie Records**: A technical constraint exists for devices offline for more than 60 days. Once Tombstone records are purged after 60 days on active devices, a long-offline device reconnecting will re-upload its local undeleted copy (since the cloud backup no longer holds the tombstone), causing deleted records to resurrect ("zombie records").
+- **Sync Window & Zombie Records**: A technical constraint exists for devices offline for more than 60 days. Once Tombstone records are purged after 60 days on active devices, a long-offline device reconnecting will re-upload its local undeleted copy, causing deleted records to resurrect ("zombie records"). To mitigate this, background auto-sync is suspended when the last sync time exceeds 60 days, and manual synchronization is guarded by a warning dialog (`GDriveSyncStrategyDialog`) that offers three strategies: Safe Merge, Local Overwrite, or Cloud Overwrite.
 
 ## Testing & CI
 

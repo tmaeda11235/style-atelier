@@ -70,7 +70,12 @@ tags: []
   - When cards or categories are deleted, they are soft-deleted (`isDeleted: true` and `updatedAt` set to current time) to act as "Tombstones" that propagate deletion states to other devices during Google Drive synchronization.
   - To prevent infinite database growth, a physical purge operation (`purgeDeletedRecords`) deletes records older than 60 days (the Sync Window) from IndexedDB.
   - This purge is triggered asynchronously at startup (non-blocking) and before any Google Drive manual/auto synchronization starts.
-  - **Sync Window Limitation**: If a device remains offline for more than 60 days and attempts to sync after other devices have already purged those tombstones, deleted records may resurrect ("zombie records"). This is a documented technical constraint of the 60-day window.
+  - **Sync Window Limitation & Mitigation**: If a device remains offline for more than 60 days and attempts to sync after other devices have already purged those tombstones, deleted records may resurrect ("zombie records"). To mitigate this risk:
+    - **Auto-Sync Suspension**: Background auto-sync is suspended when the last sync time exceeds 60 days, requiring the user to initiate a manual sync.
+    - **GDriveSyncStrategyDialog**: Before manual synchronization starts, a warning dialog is displayed to the user offering three merge options:
+      - _Safe Merge_: Performs normal LWW merge while warning the user of potential zombie resurrection.
+      - _Local Overwrite_: Discards local changes and pulls clean data from the cloud backup (fully preventing resurrection).
+      - _Cloud Overwrite_: Replaces the cloud backup with the current local state.
 
 ## Data Flow
 
