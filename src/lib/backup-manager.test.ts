@@ -37,9 +37,15 @@ describe("Backup Manager Utilities", () => {
   })
 
   describe("exportDatabase", () => {
-    it("should serialize database tables and exclude localImageBlob from historyItems", async () => {
-      const mockCards = [{ id: "card1", name: "Card 1" }]
-      const mockCategories = [{ id: "cat1", name: "Category 1" }]
+    it("should serialize database tables, including logically deleted records, and exclude localImageBlob from historyItems", async () => {
+      const mockCards = [
+        { id: "card1", name: "Card 1" },
+        { id: "card2", name: "Card 2 (Deleted)", isDeleted: true }
+      ]
+      const mockCategories = [
+        { id: "cat1", name: "Category 1" },
+        { id: "cat2", name: "Category 2 (Deleted)", isDeleted: true }
+      ]
       const mockSettings = [{ userId: "user1", isPro: true }]
       const mockHistory = [
         {
@@ -51,8 +57,8 @@ describe("Backup Manager Utilities", () => {
         { id: "hist2", fullCommand: "prompt 2", imageUrl: "url2" }
       ]
 
-      vi.mocked(db.getAllCards).mockResolvedValue(mockCards as any)
-      vi.mocked(db.getAllCategories).mockResolvedValue(mockCategories as any)
+      vi.mocked(db.styleCards.toArray).mockResolvedValue(mockCards as any)
+      vi.mocked(db.categories.toArray).mockResolvedValue(mockCategories as any)
       vi.mocked(db.userSettings.toArray).mockResolvedValue(mockSettings)
       vi.mocked(db.historyItems.toArray).mockResolvedValue(mockHistory)
 

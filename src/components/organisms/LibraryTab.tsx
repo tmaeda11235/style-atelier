@@ -1,10 +1,4 @@
-import {
-  BookUp2,
-  ChevronDown,
-  Search,
-  SlidersHorizontal,
-  Tag
-} from "lucide-react"
+import { BookUp2, ChevronDown, Search, SlidersHorizontal } from "lucide-react"
 import React, { useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
@@ -12,12 +6,11 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"
-import { buildPromptString } from "../../lib/prompt-utils"
-import { RARITY_CONFIG } from "../../lib/rarity-config"
-import { CardThumbnail } from "../molecules/CardThumbnail"
-import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+import { type AlertType } from "../molecules/ConnectionAlert"
+import { LibraryCardItem } from "../molecules/LibraryCardItem"
 import { SearchField } from "../molecules/SearchField"
 import { CategoryManagerModal } from "./CategoryManagerModal"
+import { FolderExplorer } from "./FolderExplorer"
 import { LibraryFilterAccordion } from "./LibraryFilterAccordion"
 import { ShareCardModal } from "./ShareCardModal"
 
@@ -41,9 +34,6 @@ export function LibraryTab({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
-  const [dragOverFolderId, setDragOverFolderId] = useState<
-    string | null | undefined
-  >(undefined)
   const { advanceIfStep } = useTutorial()
 
   const { expertFeatures } = useSettings()
@@ -73,7 +63,6 @@ export function LibraryTab({
     allCards,
     hasMore,
     loadMore,
-    currentFolderId,
     setCurrentFolderId,
     breadcrumbs,
     currentSubfolders,
@@ -87,26 +76,6 @@ export function LibraryTab({
     colorFilter !== "All" || colorHueFilter !== null,
     sortBy !== "newest"
   ].filter(Boolean).length
-
-  const colorOptions = [
-    {
-      value: "All",
-      label: t.colors?.all || "All Colors",
-      bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)"
-    },
-    { value: "Red", label: t.colors?.red || "Red", bg: "#ef4444" },
-    { value: "Orange", label: t.colors?.orange || "Orange", bg: "#f97316" },
-    { value: "Yellow", label: t.colors?.yellow || "Yellow", bg: "#eab308" },
-    { value: "Green", label: t.colors?.green || "Green", bg: "#22c55e" },
-    { value: "Cyan", label: t.colors?.cyan || "Cyan", bg: "#06b6d4" },
-    { value: "Blue", label: t.colors?.blue || "Blue", bg: "#3b82f6" },
-    { value: "Purple", label: t.colors?.purple || "Purple", bg: "#a855f7" },
-    { value: "Pink", label: t.colors?.pink || "Pink", bg: "#ec4899" },
-    { value: "Brown", label: t.colors?.brown || "Brown", bg: "#78350f" },
-    { value: "White", label: t.colors?.white || "White", bg: "#ffffff" },
-    { value: "Gray", label: t.colors?.gray || "Gray", bg: "#6b7280" },
-    { value: "Black", label: t.colors?.black || "Black", bg: "#09090b" }
-  ]
 
   return (
     <div className="flex flex-col gap-4">
@@ -164,7 +133,6 @@ export function LibraryTab({
           setColorFilter={setColorFilter}
           colorHueFilter={colorHueFilter}
           setColorHueFilter={setColorHueFilter}
-          colorOptions={colorOptions}
           colorLabel={t.colorLabel}
           modelLabel={t.modelLabel}
           modelOptions={t.models}
@@ -184,97 +152,13 @@ export function LibraryTab({
         />
       </div>
 
-      {/* Explorer Breadcrumbs */}
-      <div
-        data-testid="breadcrumbs"
-        className="flex items-center flex-wrap gap-1 text-[11px] text-slate-500 bg-white p-2 rounded-lg border border-slate-200/60 shadow-sm">
-        {breadcrumbs.map((crumb, idx) => {
-          const isLast = idx === breadcrumbs.length - 1
-          const isOver = dragOverFolderId === crumb.id
-          return (
-            <React.Fragment key={crumb.id || "root"}>
-              {idx > 0 && <span className="text-slate-300">/</span>}
-              <span
-                onClick={() => setCurrentFolderId(crumb.id)}
-                onDragOver={(e) => e.preventDefault()}
-                onDragEnter={(e) => {
-                  e.preventDefault()
-                  setDragOverFolderId(crumb.id)
-                }}
-                onDragLeave={() => setDragOverFolderId(undefined)}
-                onDrop={async (e) => {
-                  e.preventDefault()
-                  setDragOverFolderId(undefined)
-                  const cardId = e.dataTransfer.getData("cardId")
-                  if (cardId) {
-                    await moveCardToCategory(cardId, crumb.id)
-                  }
-                }}
-                className={`cursor-pointer px-1.5 py-0.5 rounded transition-all font-semibold ${
-                  isLast
-                    ? "text-slate-800 font-bold bg-slate-100"
-                    : "text-blue-600 hover:bg-blue-50"
-                } ${isOver ? "bg-blue-100 ring-2 ring-blue-400 scale-105" : ""}`}>
-                {crumb.name}
-              </span>
-            </React.Fragment>
-          )
-        })}
-      </div>
-
-      {/* Explorer Folders (Subfolders) */}
-      {currentSubfolders.length > 0 && (
-        <div
-          data-testid="subfolders-grid"
-          className="grid grid-cols-3 gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-200 border-dashed">
-          {currentSubfolders.map((folder) => {
-            const isOver = dragOverFolderId === folder.id
-            return (
-              <div
-                key={folder.id}
-                onClick={() => setCurrentFolderId(folder.id)}
-                onDragOver={(e) => e.preventDefault()}
-                onDragEnter={(e) => {
-                  e.preventDefault()
-                  setDragOverFolderId(folder.id)
-                }}
-                onDragLeave={() => setDragOverFolderId(undefined)}
-                onDrop={async (e) => {
-                  e.preventDefault()
-                  setDragOverFolderId(undefined)
-                  const cardId = e.dataTransfer.getData("cardId")
-                  if (cardId) {
-                    await moveCardToCategory(cardId, folder.id)
-                  }
-                }}
-                className={`relative flex flex-col items-center justify-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:border-slate-300 active:scale-95 ${
-                  isOver
-                    ? "border-blue-500 ring-4 ring-blue-100 bg-blue-50/50 scale-105"
-                    : "border-slate-200"
-                }`}>
-                {/* Folder Icon / Image Preview */}
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-inner mb-1.5 flex-shrink-0">
-                  {folder.iconUrl ? (
-                    <img
-                      src={folder.iconUrl}
-                      className="w-full h-full object-cover"
-                      alt={folder.name}
-                    />
-                  ) : (
-                    <span className="text-lg leading-none">
-                      {folder.iconEmoji || "📁"}
-                    </span>
-                  )}
-                </div>
-                {/* Folder Name */}
-                <span className="text-[10px] font-bold text-slate-700 text-center truncate w-full px-1">
-                  {folder.name}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
+      {/* Folder Explorer */}
+      <FolderExplorer
+        breadcrumbs={breadcrumbs}
+        currentSubfolders={currentSubfolders}
+        setCurrentFolderId={setCurrentFolderId}
+        moveCardToCategory={moveCardToCategory}
+      />
 
       {(styleCards !== undefined && styleCards.length > 0) ||
       currentSubfolders.length > 0 ? (
@@ -282,68 +166,21 @@ export function LibraryTab({
           <div
             className="grid grid-cols-2 gap-3"
             data-tutorial="library-card-grid">
-            {styleCards.map((card, idx) => {
-              const config = RARITY_CONFIG[card.tier]
-              const cardCategory = categories.find(
-                (c) => c.id === card.category
-              )
-              return (
-                <div
-                  key={card.id}
-                  data-tutorial={idx === 0 ? "library-card" : undefined}
-                  onClick={(e) => {
-                    if (isEasyMode) {
-                      onOpenSimpleWorkbench?.(card)
-                    } else {
-                      togglePin(card, e)
-                      advanceIfStep("card-to-hand")
-                    }
-                  }}
-                  className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                    config?.borderClass || "border-slate-200"
-                  } ${config?.glowClass || ""}`}>
-                  <CardThumbnail
-                    imageUrl={card.thumbnailData}
-                    thumbnailImages={card.selectedThumbnails}
-                    alt={card.name}
-                    tier={card.tier}
-                    isPinned={card.isPinned}
-                    usageCount={card.usageCount}
-                    onPinClick={
-                      isEasyMode ? undefined : (e) => togglePin(card, e)
-                    }
-                    onEditClick={(e) => {
-                      e.stopPropagation()
-                      onOpenDetailCard(card)
-                    }}
-                    onInjectClick={(e) => {
-                      e.stopPropagation()
-                      handleCardClick(card)
-                    }}
-                    onShareClick={(e) => {
-                      e.stopPropagation()
-                      setSharingCard(card)
-                    }}
-                    category={cardCategory}
-                    draggable={true}
-                    onDragStart={(e) => {
-                      const text = buildPromptString(
-                        card.promptSegments,
-                        card.parameters
-                      )
-                      e.dataTransfer.setData("text/plain", text)
-                      e.dataTransfer.setData("cardId", card.id)
-                    }}
-                  />
-                  <div
-                    className={`p-2 border-t ${config.borderClass} bg-opacity-5 ${config.bgClass}`}>
-                    <p className="text-xs font-bold text-slate-800 truncate">
-                      {card.name}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
+            {styleCards.map((card, idx) => (
+              <LibraryCardItem
+                key={card.id}
+                card={card}
+                idx={idx}
+                isEasyMode={isEasyMode}
+                onOpenSimpleWorkbench={onOpenSimpleWorkbench}
+                togglePin={togglePin}
+                advanceIfStep={advanceIfStep}
+                onOpenDetailCard={onOpenDetailCard}
+                handleCardClick={handleCardClick}
+                setSharingCard={setSharingCard}
+                categories={categories}
+              />
+            ))}
           </div>
           {hasMore && (
             <button

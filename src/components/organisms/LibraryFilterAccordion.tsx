@@ -1,6 +1,7 @@
 import { Tag } from "lucide-react"
 import React from "react"
 
+import { useLanguage } from "../../contexts/LanguageContext"
 import { ColorPaletteFilter } from "../molecules/ColorPaletteFilter"
 import { HueSliderFilter } from "../molecules/HueSliderFilter"
 import { ModelFiltersRow } from "../molecules/ModelFiltersRow"
@@ -29,7 +30,6 @@ interface LibraryFilterAccordionProps {
   setColorFilter: (color: any) => void
   colorHueFilter: number | null
   setColorHueFilter: (hue: number | null) => void
-  colorOptions: Array<{ value: string; label: string; bg: string }>
   colorLabel?: string
   styleCardsCount: number
   categoryFilter: string
@@ -216,11 +216,16 @@ function RarityAndModelFilters(props: LibraryFilterAccordionProps) {
   )
 }
 
-function ColorAndCategoryFilters(props: LibraryFilterAccordionProps) {
+interface ColorAndCategoryFiltersProps extends LibraryFilterAccordionProps {
+  colorOptions: Array<{ value: string; label: string; bg: string }>
+}
+
+function ColorAndCategoryFilters(props: ColorAndCategoryFiltersProps) {
   const {
     expertFeatures,
     allCategoriesLabel = "All",
-    manageCategoriesTitle = "Manage Categories"
+    manageCategoriesTitle = "Manage Categories",
+    colorOptions
   } = props
 
   return (
@@ -231,7 +236,7 @@ function ColorAndCategoryFilters(props: LibraryFilterAccordionProps) {
           props.setColorFilter(color)
           props.setColorHueFilter(null)
         }}
-        colorOptions={props.colorOptions}
+        colorOptions={colorOptions}
         colorLabel={props.colorLabel}
         styleCardsCount={props.styleCardsCount}
       />
@@ -258,6 +263,29 @@ function ColorAndCategoryFilters(props: LibraryFilterAccordionProps) {
 
 export function LibraryFilterAccordion(props: LibraryFilterAccordionProps) {
   const { isFiltersExpanded } = props
+  const { t: i18n } = useLanguage()
+  const t = i18n.libraryTab
+
+  const colorOptions = [
+    {
+      value: "All",
+      label: t.colors?.all || "All Colors",
+      bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)"
+    },
+    { value: "Red", label: t.colors?.red || "Red", bg: "#ef4444" },
+    { value: "Orange", label: t.colors?.orange || "Orange", bg: "#f97316" },
+    { value: "Yellow", label: t.colors?.yellow || "Yellow", bg: "#eab308" },
+    { value: "Green", label: t.colors?.green || "Green", bg: "#22c55e" },
+    { value: "Cyan", label: t.colors?.cyan || "Cyan", bg: "#06b6d4" },
+    { value: "Blue", label: t.colors?.blue || "Blue", bg: "#3b82f6" },
+    { value: "Purple", label: t.colors?.purple || "Purple", bg: "#a855f7" },
+    { value: "Pink", label: t.colors?.pink || "Pink", bg: "#ec4899" },
+    { value: "Brown", label: t.colors?.brown || "Brown", bg: "#78350f" },
+    { value: "White", label: t.colors?.white || "White", bg: "#ffffff" },
+    { value: "Gray", label: t.colors?.gray || "Gray", bg: "#6b7280" },
+    { value: "Black", label: t.colors?.black || "Black", bg: "#09090b" }
+  ]
+
   return (
     <div
       className="transition-all duration-300 ease-in-out overflow-hidden flex flex-col gap-2.5"
@@ -269,7 +297,7 @@ export function LibraryFilterAccordion(props: LibraryFilterAccordionProps) {
       }}
       data-testid="filters-accordion">
       <RarityAndModelFilters {...props} />
-      <ColorAndCategoryFilters {...props} />
+      <ColorAndCategoryFilters {...props} colorOptions={colorOptions} />
     </div>
   )
 }

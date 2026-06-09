@@ -71,4 +71,21 @@ describe("ESLint Configuration", () => {
     expect(testConfig.rules["sonarjs/cognitive-complexity"]).toBe("off")
     expect(testConfig.rules["boundaries/dependencies"]).toBe("off")
   })
+
+  it("should enforce i18n literal checks for fully-translated files", () => {
+    const i18nConfig = eslintConfig.find(
+      (cfg: any) =>
+        cfg.files &&
+        cfg.files.includes("src/components/molecules/DeleteConfirmModal.tsx")
+    )
+    expect(i18nConfig).toBeDefined()
+    expect(i18nConfig.rules["i18next/no-literal-string"]).toBeDefined()
+
+    const [severity, options] = i18nConfig.rules["i18next/no-literal-string"]
+    expect(severity).toBe("error")
+    expect(options.mode).toBe("jsx-only")
+    expect(options["jsx-attributes"].exclude).toContain("className")
+    expect(options["jsx-attributes"].exclude).toContain("variant")
+    expect(options.words.exclude).toContain("[0-9!-/:-@[-`{-~]+")
+  })
 })

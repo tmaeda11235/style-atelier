@@ -6,7 +6,7 @@ export interface CustomCategory {
   iconCardId?: string // Reference to original source card
   createdAt: number
   updatedAt?: number // Timestamp for versioning/sync
-  isDeleted?: boolean // Soft delete flag
+  isDeleted?: boolean // Soft delete flag (Tombstone). Synchronizes deletions across devices. Subject to a 60-day sync window, after which it is purged.
   parentId?: string // Parent category ID for hierarchical folders
 }
 
@@ -24,7 +24,7 @@ export interface StyleCard {
   name: string // カード名 (e.g., "Neon Cyber Cat")
   createdAt: number // Timestamp
   updatedAt: number // Timestamp for versioning
-  isDeleted?: boolean // Soft delete flag
+  isDeleted?: boolean // Soft delete flag (Tombstone). Synchronizes deletions across devices. Subject to a 60-day sync window, after which it is purged.
 
   // --- The Recipe (Minting Result) ---
   // プロンプトを「トークン（バブル）」の配列として保持

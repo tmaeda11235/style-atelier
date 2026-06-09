@@ -1,6 +1,13 @@
 import type { StyleAtelierDatabase } from "../db"
 import type { StyleCard } from "../db-schema"
 
+/**
+ * Soft deletes a style card by marking it with `isDeleted: true` (creating a Tombstone)
+ * and updating the `updatedAt` timestamp. Heavy data assets are cleared to save space.
+ * The Tombstone is included in backup payloads to propagate deletions to other devices.
+ * Note: Tombstones are subject to a 60-day synchronization window, after which they are physically purged.
+ * Offline devices that sync after the 60-day window may resurrect this record.
+ */
 export async function deleteStyleCardAndCleanup(
   db: StyleAtelierDatabase,
   cardId: string
@@ -31,6 +38,13 @@ export async function deleteStyleCardAndCleanup(
   })
 }
 
+/**
+ * Soft deletes a category by marking it with `isDeleted: true` (creating a Tombstone)
+ * and updating the `updatedAt` timestamp. Associated cards are updated to remove the category reference.
+ * The Tombstone is included in backup payloads to propagate deletions to other devices.
+ * Note: Tombstones are subject to a 60-day synchronization window, after which they are physically purged.
+ * Offline devices that sync after the 60-day window may resurrect this record.
+ */
 export async function deleteCategory(
   db: StyleAtelierDatabase,
   id: string

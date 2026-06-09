@@ -14,7 +14,7 @@ tags: []
 
 ## Key Libraries
 
-- **Localization (i18n)**: `i18next` & `react-i18next` - Type-safe multi-language dictionaries (`en` / `ja`).
+- **Localization (i18n)**: `i18next` & `react-i18next` - Type-safe multi-language dictionaries (`en` / `ja`). `eslint-plugin-i18next` is used as a devDependency to enforce static i18n checks.
 - **Image Processing**: Canvas API (Native) / [satori](https://github.com/vercel/satori) (for card layout generation).
 - **Metadata/Exif**: `piexifjs` - For embedding/extracting JSON in images.
 - **QR Codes**: `jsQR` - For scanning/generating QR codes on cards.
@@ -33,6 +33,7 @@ tags: []
 - **Manifest V3**: Strict security policies (no remote code execution).
 - **Storage Limits**: IndexedDB limits vary by device, but generally sufficient for metadata + thumbnails. Full images should be external references or carefully cached.
 - **LocalStorage Settings**: UI Settings (Easy Mode & Expert Features) and Language locale preference are persisted locally in `localStorage`. Historical user inputs for slot variables (`slotHistory`) have been migrated from `localStorage` to `IndexedDB` (v11 schema) to ensure consistent data transactions, prevent size limitation issues, and support auto-sync/backups. Tests can inject mocked states by editing `localStorage` or wrapping component render functions in `SettingsProvider` (using testing-library's `wrapper` option).
+- **Sync Window & Zombie Records**: A technical constraint exists for devices offline for more than 60 days. Once Tombstone records are purged after 60 days on active devices, a long-offline device reconnecting will re-upload its local undeleted copy (since the cloud backup no longer holds the tombstone), causing deleted records to resurrect ("zombie records").
 
 ## Testing & CI
 
@@ -48,4 +49,4 @@ tags: []
   - Incremental execution mode is enabled (`"incremental": true`), saving change states to `reports/stryker-incremental.json`.
   - Static mutants are ignored (`"ignoreStatic": true`) to eliminate dry-run/initialization overhead.
   - Concurrency is optimized (`"concurrency": 4`) to leverage multiple CPU cores without overloading memory.
-- **Linter Rule Testing**: A dedicated unit test `src/eslint-config.test.ts` validates that the ESLint configuration enforces the strict defaults, maintains specific whitelists for pre-existing files, and ensures that test files are properly exempted. This prevents configuration regressions that could weaken codebase constraints.
+- **Linter Rule Testing**: A dedicated unit test `src/eslint-config.test.ts` validates that the ESLint configuration enforces the strict defaults, maintains specific whitelists for pre-existing files, verifies that i18n literal rules (`eslint-plugin-i18next`) are enforced on fully-translated files, and ensures that test files are properly exempted. This prevents configuration regressions that could weaken codebase constraints.

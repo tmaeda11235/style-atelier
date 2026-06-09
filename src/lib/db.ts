@@ -260,6 +260,20 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
 
 export const db = new StyleAtelierDatabase()
 
+// Register startup hook for purging deleted records older than 60 days
+db.on("ready", () => {
+  // Run asynchronously without blocking the database open operation (avoids deadlock in tests)
+  setTimeout(async () => {
+    try {
+      const { purgeDeletedRecords } = await import("./db/purge-ops")
+      const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+      await purgeDeletedRecords(db, thresholdMs)
+    } catch (error) {
+      console.error("Failed to purge deleted records on ready hook:", error)
+    }
+  }, 0)
+})
+
 export async function seedDefaultCategories(
   targetDb: StyleAtelierDatabase = db
 ) {

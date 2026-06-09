@@ -29,6 +29,11 @@ tags: []
 - **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
 - **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing. Heavy transactions (backup import, card merging) are modularized under `src/lib/db/` to comply with file/function size constraints.
 - **Database Schema Migration**: Schema versions handle migrations. v11 introduced `slotHistory` as a dedicated object store for slot history. v12 introduced hierarchical folder management by adding a `parentId` field (defaulting to `null`) to the `categories` table.
+- **Local-First Sync & Tombstone Lifecycle**:
+  - **Tombstone (Soft Delete)**: When a style card or category is deleted, it is soft-deleted by setting `isDeleted: true` and updating `updatedAt` to the current timestamp. This tombstone record is retained in the database.
+  - **Deletion Propagation**: During synchronization with Google Drive (auto-sync or manual backup), these tombstone records are bundled in the backup payload. Other devices download the backup and merge changes using the LWW (Last-Write-Wins) merge logic, which propagates the deletion by marking local copies as deleted.
+  - **Sync Window (60 Days)**: Tombstones are physically purged from the database after 60 days to prevent indefinite database growth.
+  - **Zombie Record Risk**: If a device is offline for more than 60 days, the tombstone records indicating deletion may have already been purged on other active devices and from the cloud backup. When this offline device reconnects and syncs, it will treat its local copy (which lacks the tombstone) as active/new data and re-upload it, causing deleted items to reappear ("zombie records").
 - **Modular Utility & Data Access Layers**: To strictly adhere to the 300-line file limit and 50-line function limit:
   - `backup-validator.ts` is divided into a `src/lib/backup-validator/` subdirectory, splitting domain schema validations into clean, focused sub-modules.
   - `google-drive.ts` is modularized into `src/lib/google-drive/` (auth, http-client, upload/download operations), with asynchronous XMLHttpRequests and progress trackers split into functions under 50 lines.
@@ -54,12 +59,18 @@ tags: []
   - Implements memory-friendly client-side pagination ("Load More" pattern) in `useLibrary` to limit active DOM node counts in the style grid, preventing rendering-based UI freeze.
   - Implements visual scroll affordance for horizontal color filters using CSS `mask-image` linear-gradients (for smooth edge-fade indications) coupled with dynamic scroll arrow overlays.
   - Implements a collapsible accordion UI (`LibraryFilterAccordion`) for advanced filters (rarity, category, color, sorting) to maximize screen space while keeping code modularized under 50-line function limits.
+  - Decouples Folder Explorer (`FolderExplorer.tsx`) and Card Items (`LibraryCardItem.tsx`) from `LibraryTab.tsx` to meet the 300-line file limit. The Folder Explorer splits breadcrumbs and subfolder grid into subcomponents (`Breadcrumbs`, `SubfolderGrid`, `SubfolderItem`) and Card Items use isolated thumbnail layout (`LibraryCardThumbnail`) to satisfy the 50-line function limit.
 - **Tutorial Spotlight & Position Synchronization**:
   - Tutorial spotlight positioning, window resize/scroll event listeners, click-blocking logic, and database mock insertions are fully encapsulated in the `useSpotlight` custom hook (`src/hooks/useSpotlight.ts`).
   - Decouples DOM calculations and window event handlers from the `InteractiveTutorial` overlay component (`src/components/organisms/InteractiveTutorial.tsx`), maintaining clean separation of concerns and keeping component file size well within constraints (under 300 lines).
 - **Chrome Extension API & Prompt Injection Decoupling**:
   - Chrome extension connection monitoring (ping/retry) and prompt injection logic (sending to Midjourney tab, updating usage stats, slot value persistence) are fully decoupled from `Workbench.tsx` and encapsulated into reusable hooks `useChromeTabConnection.ts` and `usePromptInjector.ts`.
   - The Workbench UI and form layouts are modularized into focused components (`WorkbenchView.tsx`, `Cauldron.tsx`, `RecipeEditor.tsx`, `RecipeForm.tsx`) and hooks (`useWorkbenchCore`), keeping each component file size under the 300-line limit and functions under the 50-line limit, and enabling straightforward unit testing without mocking heavy layout structures.
+- **Tombstone (Soft Delete) & Physical Purge Lifecycle**:
+  - When cards or categories are deleted, they are soft-deleted (`isDeleted: true` and `updatedAt` set to current time) to act as "Tombstones" that propagate deletion states to other devices during Google Drive synchronization.
+  - To prevent infinite database growth, a physical purge operation (`purgeDeletedRecords`) deletes records older than 60 days (the Sync Window) from IndexedDB.
+  - This purge is triggered asynchronously at startup (non-blocking) and before any Google Drive manual/auto synchronization starts.
+  - **Sync Window Limitation**: If a device remains offline for more than 60 days and attempts to sync after other devices have already purged those tombstones, deleted records may resurrect ("zombie records"). This is a documented technical constraint of the 60-day window.
 
 ## Data Flow
 
@@ -110,4 +121,5 @@ To maintain clean architecture and prevent technical debt, the following strict 
 4. **Automated Enforcement via ESLint**:
    - `eslint.config.mjs` strictly enforces rules as `error` by default (including `max-lines: 300`, `max-lines-per-function: 50`, `sonarjs/cognitive-complexity: 15`, and `boundaries/dependencies` prohibiting direct DB imports from components).
    - A whitelist of pre-existing violating files is explicitly maintained in the `eslint.config.mjs` overrides, treating them as `warn` only. Any new files are fully subject to errors.
+   - Progressive localization (i18n) checks are enforced via `eslint-plugin-i18next`'s `no-literal-string` rule, targeting fully-translated files (e.g. `DeleteConfirmModal.tsx`, `HistoryTab.tsx`) to prevent future raw text/translation leaks.
    - The helper script `scratch/auto-sync-eslint.js` dynamically compiles and synchronizes these whitelists. As developers refactor legacy files, executing this script automatically removes them from exceptions, permanently locking in the strict rules.

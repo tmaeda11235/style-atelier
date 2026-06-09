@@ -5,6 +5,8 @@ import reactHooks from "eslint-plugin-react-hooks";
 import sonarjs from "eslint-plugin-sonarjs";
 import boundaries from "eslint-plugin-boundaries";
 import importPlugin from "eslint-plugin-import";
+import i18next from "eslint-plugin-i18next";
+
 
 export default ts.config(
   {
@@ -21,6 +23,7 @@ export default ts.config(
       sonarjs,
       boundaries,
       import: importPlugin,
+      i18next,
     },
     languageOptions: {
       parserOptions: {
@@ -127,7 +130,6 @@ export default ts.config(
       "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/HandBar.tsx",
-      "src/components/organisms/LibraryTab.tsx",
       "src/components/organisms/MintingView.tsx",
       "src/components/organisms/ParameterEditor.tsx",
       "src/components/organisms/Workbench.tsx",
@@ -238,6 +240,48 @@ export default ts.config(
     ],
     rules: {
       "max-lines-per-function": "warn"
+    }
+  },
+  // 4. Enforce i18n literal checks for fully-translated files
+  {
+    files: [
+      "src/components/molecules/DeleteConfirmModal.tsx",
+      "src/components/organisms/HistoryTab.tsx"
+    ],
+    rules: {
+      "i18next/no-literal-string": [
+        "error",
+        {
+          mode: "jsx-only",
+          "jsx-attributes": {
+            exclude: [
+              "className",
+              "styleName",
+              "style",
+              "type",
+              "key",
+              "id",
+              "width",
+              "height",
+              "variant",
+              "size",
+              "target",
+              "rel",
+              "href",
+              "data-testid",
+              "data-tutorial"
+            ]
+          },
+          words: {
+            exclude: [
+              "[0-9!-/:-@[-`{-~]+",
+              "[A-Z_-]+",
+              "^[0-9]+(px|rem|em|%|ms|s|deg)$",
+              "^[\\p{Emoji}\\p{Extended_Pictographic}\\s]+$"
+            ]
+          }
+        }
+      ]
     }
   },
   // Overrides for test files to ease complexity and architecture rules

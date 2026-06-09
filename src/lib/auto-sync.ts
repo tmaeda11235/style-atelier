@@ -1,5 +1,6 @@
 import { exportDatabase, importDatabase } from "./backup-manager"
 import { db } from "./db"
+import { purgeDeletedRecords } from "./db/purge-ops"
 import {
   authorize,
   downloadBackup,
@@ -77,6 +78,16 @@ function triggerAutoBackup() {
 async function performAutoBackup() {
   if (!isAutoSyncEnabled()) return
   try {
+    try {
+      const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+      await purgeDeletedRecords(db, thresholdMs)
+    } catch (purgeErr) {
+      console.warn(
+        "Failed to purge aged deleted records during auto-backup:",
+        purgeErr
+      )
+    }
+
     const token = await authorize(false) // Silent authentication
     const jsonData = await exportDatabase()
     await uploadBackup(token, jsonData)
@@ -112,6 +123,16 @@ function stopPolling() {
 export async function checkAndMergeRemoteChanges() {
   if (!isAutoSyncEnabled()) return
   try {
+    try {
+      const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+      await purgeDeletedRecords(db, thresholdMs)
+    } catch (purgeErr) {
+      console.warn(
+        "Failed to purge aged deleted records during auto-merge check:",
+        purgeErr
+      )
+    }
+
     const token = await authorize(false) // Silent authentication
     const meta = await getBackupMetadata(token)
     if (!meta) return
