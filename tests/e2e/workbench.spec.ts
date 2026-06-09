@@ -594,4 +594,123 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       path: path.join(screenshotsDir, "hand-limit-warning.png")
     })
   })
+
+  test("should validate atelier effects, card blending, parameter adjustments, and evolution success modal @J-WB-ATELIER-EFFECTS-01", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Atelier Effects E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed a Common card that is ready to evolve (usageCount = 5) and a Rare card
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-atelier-1",
+          name: "Alchemist Card A",
+          promptSegments: [{ type: "text", value: "mystical potion" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#4f46e5",
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%234f46e5'/></svg>",
+          usageCount: 5
+        },
+        {
+          id: "card-atelier-2",
+          name: "Alchemist Card B",
+          promptSegments: [{ type: "text", value: "golden vapor" }],
+          parameters: {},
+          masking: {},
+          tier: "Rare",
+          isPinned: true,
+          dominantColor: "#fbbf24",
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23fbbd24'/></svg>",
+          usageCount: 2
+        }
+      ])
+    })
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB queries
+
+    // 4. Verify both cards are in the Workbench (blending state visual feedback)
+    const activeWorkbenchCards = spFrame.locator(
+      "#handbar-root .cursor-pointer"
+    )
+    await expect(activeWorkbenchCards).toHaveCount(2)
+
+    // 5. Expand Parameters Accordion and adjust parameter sliders
+    const advancedAccordionBtn = spFrame.locator(
+      "button:has-text('Advanced Parameters'), button:has-text('詳細パラメータ')"
+    )
+    await expect(advancedAccordionBtn).toBeVisible({ timeout: 10000 })
+    await advancedAccordionBtn.click()
+
+    // Enable Stylize parameter checkbox
+    const stylizeCheckbox = spFrame.locator("input[type='checkbox']").first()
+    await expect(stylizeCheckbox).toBeVisible()
+    await stylizeCheckbox.check()
+
+    // Locate the slider for Stylize and change its value
+    const stylizeSlider = spFrame.locator("input[type='range']").first()
+    await expect(stylizeSlider).toBeVisible()
+    await stylizeSlider.fill("450") // Slide to 450
+
+    // Capture screenshot showing blending state & advanced parameters adjusted
+    await page.screenshot({
+      path: path.join(screenshotsDir, "atelier-blending-parameters.png")
+    })
+
+    // 6. Unpin Card B to leave only Card A in the Workbench (triggering single card evolution mode)
+    console.log("Unpinning Alchemist Card B...")
+    const cardB = spFrame.locator("#handbar-root .cursor-pointer").nth(1)
+    await cardB.hover()
+    await cardB.locator("button").last().click()
+
+    await page.waitForTimeout(500)
+    await expect(activeWorkbenchCards).toHaveCount(1)
+
+    // 7. Click Evolve button and verify the Evolution Success Modal (alchemy effects validation)
+    const evolveBtn = spFrame.locator(
+      "button:has-text('Evolve to Next Tier'), button:has-text('次のランクへ進化')"
+    )
+    await expect(evolveBtn).toBeVisible({ timeout: 10000 })
+    await evolveBtn.click()
+
+    const modalTitle = spFrame.locator(
+      "h2:has-text('EVOLUTION COMPLETE!'), h2:has-text('進化完了！')"
+    )
+    await expect(modalTitle).toBeVisible({ timeout: 10000 })
+
+    // Capture screenshot of evolution success modal (with sparkles and visual highlights)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "atelier-evolution-success.png")
+    })
+
+    // Close modal
+    const closeBtn = spFrame.locator(
+      "button:has-text('Close'), button:has-text('閉じる')"
+    )
+    await expect(closeBtn).toBeVisible()
+    await closeBtn.click()
+
+    // Verify modal is closed
+    await expect(modalTitle).not.toBeVisible({ timeout: 5000 })
+  })
 })
