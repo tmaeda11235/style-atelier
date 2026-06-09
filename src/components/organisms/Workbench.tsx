@@ -257,7 +257,6 @@ function useWorkbenchCore({
   const base = useWorkbenchBase()
   const {
     workbenchCards,
-    targetCard,
     addCard,
     evolveCard,
     slotHistory,
@@ -287,6 +286,7 @@ function useWorkbenchCore({
 
   const isEvolutionMode = workbenchCards.length === 1
   const isMixingMode = workbenchCards.length >= 2
+  const targetCard = workbenchCards[0]
   const canEvolveTarget = targetCard && base.canEvolve(targetCard)
 
   const workbenchCardsDependency = useMemo(
@@ -333,6 +333,7 @@ function useWorkbenchCore({
 
   return {
     ...base,
+    targetCard,
     hasParams,
     isEvolutionMode,
     isMixingMode,
