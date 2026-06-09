@@ -621,21 +621,21 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // Verify Tab English translations:
     // A. History Tab empty title
-    const historyNavBtn = spFrame.locator("button[title='History']")
+    const historyNavBtn = spFrame.locator("nav button").nth(0)
     await historyNavBtn.click()
     await page.waitForTimeout(300)
     const historyEmptyEn = spFrame.locator("h3:has-text('No History')")
     await expect(historyEmptyEn).toBeVisible()
 
     // B. Library Tab empty title
-    const libraryNavBtn = spFrame.locator("button[title='Library']")
+    const libraryNavBtn = spFrame.locator("nav button").nth(1)
     await libraryNavBtn.click()
     await page.waitForTimeout(300)
     const libraryEmptyEn = spFrame.locator("h3:has-text('No Style Cards')")
     await expect(libraryEmptyEn).toBeVisible()
 
     // C. Workbench Tab empty title
-    const workbenchNavBtn = spFrame.locator("button[title='Workbench']")
+    const workbenchNavBtn = spFrame.locator("[data-tutorial='workbench-tab']")
     await workbenchNavBtn.click()
     await page.waitForTimeout(300)
     const workbenchEmptyEn = spFrame.locator(
