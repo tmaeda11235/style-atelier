@@ -4,6 +4,7 @@ import React, { useRef } from "react"
 import { useConfirm } from "../../contexts/ConfirmContext"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
+import { useCardExport } from "../../hooks/useCardExport"
 import { useHistory } from "../../hooks/useHistory"
 import { useLocalBackup } from "../../hooks/useLocalBackup"
 import { useSettingsGoogleDrive } from "../../hooks/useSettingsGoogleDrive"
@@ -81,6 +82,11 @@ export function SettingsTab({
     checkStorage,
     showStatus,
     fileInputRef
+  })
+
+  const { handleExportCSV, handleExportMarkdown } = useCardExport({
+    addLog,
+    showStatus
   })
 
   const handleResetDbClick = async () => {
@@ -234,6 +240,8 @@ export function SettingsTab({
               isRestoring={isRestoring}
               handleLocalExport={handleLocalExport}
               handleLocalImport={handleLocalImport}
+              handleExportCSV={handleExportCSV}
+              handleExportMarkdown={handleExportMarkdown}
               t={t}
             />
             <DangerZoneSection

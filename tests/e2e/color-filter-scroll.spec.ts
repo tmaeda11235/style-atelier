@@ -35,6 +35,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
     await libraryTabBtn.click()
     await page.waitForTimeout(500)
 
+    // Expand filters accordion
+    const filterToggleBtn = spFrame
+      .locator("[data-testid='toggle-filters-btn']")
+      .first()
+    await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
+    await filterToggleBtn.click()
+    await page.waitForTimeout(500)
+
     // 2. Clear database and seed custom test cards with different dominant colors
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db

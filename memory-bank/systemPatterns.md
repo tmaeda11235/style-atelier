@@ -33,6 +33,7 @@ tags: []
   - `backup-validator.ts` is divided into a `src/lib/backup-validator/` subdirectory, splitting domain schema validations into clean, focused sub-modules.
   - `google-drive.ts` is modularized into `src/lib/google-drive/` (auth, http-client, upload/download operations), with asynchronous XMLHttpRequests and progress trackers split into functions under 50 lines.
   - `export-utils.ts` is modularized into `src/lib/export/`, dividing the card rendering canvas pipeline (`renderCardToCanvas`) into separate background, artwork layout, info text, and QR drawing steps.
+  - `card-export.ts` (`src/lib/card-export.ts`) encapsulates export data structuring for CSV and Markdown ZIP (via `fflate`), separated from the React hook layer (`useCardExport.ts`) to comply with strict function size limits.
 - **Feature Flags & Context Patterns**:
   - `SettingsContext` (`useSettings`): Manages "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`).
   - `LanguageContext` (`useLanguage`): Manages the active translation locale (English/Japanese, stored in `localStorage` under `style-atelier-language`) and exposes a compile-time typed dictionary (`t`) to components.
@@ -52,6 +53,7 @@ tags: []
   - Utilizes `FlexSearch` client-side indexer to enable high-performance, real-time filtering across name, tags, and categories.
   - Implements memory-friendly client-side pagination ("Load More" pattern) in `useLibrary` to limit active DOM node counts in the style grid, preventing rendering-based UI freeze.
   - Implements visual scroll affordance for horizontal color filters using CSS `mask-image` linear-gradients (for smooth edge-fade indications) coupled with dynamic scroll arrow overlays.
+  - Implements a collapsible accordion UI (`LibraryFilterAccordion`) for advanced filters (rarity, category, color, sorting) to maximize screen space while keeping code modularized under 50-line function limits.
 - **Tutorial Spotlight & Position Synchronization**:
   - Tutorial spotlight positioning, window resize/scroll event listeners, click-blocking logic, and database mock insertions are fully encapsulated in the `useSpotlight` custom hook (`src/hooks/useSpotlight.ts`).
   - Decouples DOM calculations and window event handlers from the `InteractiveTutorial` overlay component (`src/components/organisms/InteractiveTutorial.tsx`), maintaining clean separation of concerns and keeping component file size well within constraints (under 300 lines).

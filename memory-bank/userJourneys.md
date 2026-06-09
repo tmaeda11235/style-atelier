@@ -34,6 +34,8 @@ stateDiagram-v2
   _J_IO_MJ_DRAG_IN : Midjourney履歴ドラッグインポート & フィードバック
   _J_MINT_COLOR_FALLBACK : カラー抽出失敗時のフォールバック
   _J_ORG_VERSION_01 : バージョン履歴管理
+  _J_IO_CSV : CSVエクスポート
+  _J_IO_MD : Markdown ZIPエクスポート
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -77,6 +79,8 @@ stateDiagram-v2
   _J_IO_MJ_DRAG_IN --> _J_MINT_EASY_01
   _J_MINT_COLOR_FALLBACK --> _J_ORG_EXPERT_01
   _J_ORG_VERSION_01 --> _J_ORG_EXPERT_01
+  _J_IO_CSV --> _J_SET_01
+  _J_IO_MD --> _J_SET_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -431,4 +435,30 @@ flowchart TD
   S3 --> S4
   S5["保存して確定"]
   S4 --> S5
+```
+
+### @J-IO-CSV: CSVエクスポート
+
+外部連携用のCSV形式でスタイルカードデータをエクスポートする
+
+```mermaid
+flowchart TD
+  S1["Settingsを開く"]
+  S2["Export CSVボタン押下"]
+  S1 --> S2
+  S3["CSVファイル保存"]
+  S2 --> S3
+```
+
+### @J-IO-MD: Markdown ZIPエクスポート
+
+外部連携用（Notion/Obsidian等）のMarkdownファイル群をZIP形式でエクスポートする
+
+```mermaid
+flowchart TD
+  S1["Settingsを開く"]
+  S2["Export Markdownボタン押下"]
+  S1 --> S2
+  S3["ZIPファイル保存"]
+  S2 --> S3
 ```

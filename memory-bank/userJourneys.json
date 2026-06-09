@@ -255,6 +255,24 @@
         "保存して確定"
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-IO-CSV",
+      "name": "CSVエクスポート",
+      "description": "外部連携用のCSV形式でスタイルカードデータをエクスポートする",
+      "steps": ["Settingsを開く", "Export CSVボタン押下", "CSVファイル保存"],
+      "nextJourneys": ["@J-SET-01"]
+    },
+    {
+      "id": "@J-IO-MD",
+      "name": "Markdown ZIPエクスポート",
+      "description": "外部連携用（Notion/Obsidian等）のMarkdownファイル群をZIP形式でエクスポートする",
+      "steps": [
+        "Settingsを開く",
+        "Export Markdownボタン押下",
+        "ZIPファイル保存"
+      ],
+      "nextJourneys": ["@J-SET-01"]
     }
   ]
 }

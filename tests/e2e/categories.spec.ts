@@ -55,6 +55,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       await libraryTabButton.click()
       await page.waitForTimeout(1000) // Wait for Dexie queries to load style cards and categories
 
+      // Expand filters accordion
+      const filterToggleBtn = spFrame
+        .locator("[data-testid='toggle-filters-btn']")
+        .first()
+      await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
+      await filterToggleBtn.click()
+      await page.waitForTimeout(500)
+
       // 3. タグボタン（Manage Categories）をクリックしてモーダルを開く
       console.log("4. Opening category modal...")
       const addCategoryBtn = spFrame.locator(
@@ -205,6 +213,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
       await libraryTabButton.click()
       await page.waitForTimeout(1000)
+
+      // Expand filters accordion
+      const filterToggleBtn = spFrame
+        .locator("[data-testid='toggle-filters-btn']")
+        .first()
+      await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
+      await filterToggleBtn.click()
+      await page.waitForTimeout(500)
 
       // Open Category Modal
       console.log("4. Opening category modal...")
