@@ -22,9 +22,18 @@ export async function performSyncWorkflow(params: {
   t: any
   signal: AbortSignal
   addLog: (log: string) => void
+  mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
 }) {
-  const { token, gdriveClient, onTokenUpdated, progress, t, signal, addLog } =
-    params
+  const {
+    token,
+    gdriveClient,
+    onTokenUpdated,
+    progress,
+    t,
+    signal,
+    addLog,
+    mergeStrategy
+  } = params
   return await runSyncWorkflow({
     token,
     gdriveClient,
@@ -44,7 +53,8 @@ export async function performSyncWorkflow(params: {
       })
     },
     signal,
-    addLog
+    addLog,
+    mergeStrategy
   })
 }
 
@@ -58,9 +68,11 @@ export async function executeSyncWorkflow(params: {
   addLog: (log: string) => void
   checkStorage: () => void
   queryClient: any
+  mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
 }) {
-  const { queryClient, addLog, progress, t, checkStorage } = params
-  const now = await performSyncWorkflow(params)
+  const { queryClient, addLog, progress, t, checkStorage, mergeStrategy } =
+    params
+  const now = await performSyncWorkflow({ ...params, mergeStrategy })
 
   localStorage.setItem("style-atelier-last-backup", now.toString())
   queryClient.setQueryData(

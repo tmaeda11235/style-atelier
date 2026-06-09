@@ -990,4 +990,92 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     })
     console.log("Easy Mode back link navigation E2E test passed successfully!")
   })
+
+  test("should show sync strategy warning dialog when last sync is over 60 days ago", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Sync Strategy Warning E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 3. Set last backup time to 61 days ago in localStorage
+    await spFrame.locator("body").evaluate(() => {
+      const sixtyOneDaysAgo = Date.now() - 61 * 24 * 60 * 60 * 1000
+      localStorage.setItem(
+        "style-atelier-last-backup",
+        sixtyOneDaysAgo.toString()
+      )
+    })
+
+    // 4. Expand Cloud Backup & Sync accordion
+    const cloudHeader = spFrame.locator("text=Cloud Backup & Sync")
+    await cloudHeader.click()
+    await page.waitForTimeout(300)
+
+    // 5. Enable Google Drive synchronization
+    const gdToggle = spFrame.locator("#google-drive-toggle-btn")
+    await expect(gdToggle).toBeVisible()
+    await gdToggle.click()
+    await page.waitForTimeout(500)
+
+    // 6. Click sync button
+    const syncBtn = spFrame.locator("#google-drive-sync-btn")
+    await expect(syncBtn).toBeVisible()
+    await syncBtn.click()
+    await page.waitForTimeout(500)
+
+    // 7. Verify warning dialog is visible
+    const warningDialog = spFrame.locator("#sync-strategy-dialog-container")
+    await expect(warningDialog).toBeVisible()
+
+    // 8. Capture screenshot of warning dialog
+    await page.screenshot({
+      path: path.join(screenshotsDir, "sync-strategy-warning-dialog.png")
+    })
+    console.log("Sync strategy warning dialog screenshot saved.")
+
+    // 9. Verify strategy options are present
+    const mergeOption = spFrame.locator("#strategy-merge")
+    const localOption = spFrame.locator("#strategy-local-overwrite")
+    const cloudOption = spFrame.locator("#strategy-cloud-overwrite")
+    await expect(mergeOption).toBeVisible()
+    await expect(localOption).toBeVisible()
+    await expect(cloudOption).toBeVisible()
+
+    // 10. Test Cancel button
+    const cancelBtn = spFrame.locator("#sync-strategy-dialog-cancel-btn")
+    await cancelBtn.click()
+    await page.waitForTimeout(300)
+    await expect(warningDialog).not.toBeVisible()
+
+    // 11. Click sync button again, select local overwrite and proceed
+    await syncBtn.click()
+    await page.waitForTimeout(500)
+    await expect(warningDialog).toBeVisible()
+
+    await localOption.click()
+    const confirmBtn = spFrame.locator("#sync-strategy-dialog-ok-btn")
+    await confirmBtn.click()
+    await page.waitForTimeout(500)
+
+    // Verify dialog closes after confirmation
+    await expect(warningDialog).not.toBeVisible()
+    console.log("Sync strategy warning E2E test passed successfully!")
+  })
 })

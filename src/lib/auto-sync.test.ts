@@ -155,12 +155,17 @@ describe("auto-sync", () => {
     it("merges remote backup if remote modifiedTime is newer than local backup time", async () => {
       localStorage.setItem("style-atelier-sync-enabled", "true")
       localStorage.setItem("style-atelier-auto-sync-enabled", "true")
-      localStorage.setItem("style-atelier-last-backup", "1000") // local backup time
+      const now = Date.now()
+      localStorage.setItem(
+        "style-atelier-last-backup",
+        (now - 60000).toString()
+      ) // 1 minute ago
 
       vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
+      const remoteTime = new Date(now - 30000) // 30 seconds ago
       vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
         id: "file-1",
-        modifiedTime: "1970-01-01T00:00:02.000Z", // 2000ms, newer than 1000ms
+        modifiedTime: remoteTime.toISOString(),
         size: "100"
       })
       vi.mocked(googleDrive.downloadBackup).mockResolvedValue(
@@ -174,18 +179,25 @@ describe("auto-sync", () => {
         '{"remote": true}',
         "merge"
       )
-      expect(localStorage.getItem("style-atelier-last-backup")).toBe("2000")
+      expect(localStorage.getItem("style-atelier-last-backup")).toBe(
+        remoteTime.getTime().toString()
+      )
     })
 
     it("does not merge if remote backup is not newer", async () => {
       localStorage.setItem("style-atelier-sync-enabled", "true")
       localStorage.setItem("style-atelier-auto-sync-enabled", "true")
-      localStorage.setItem("style-atelier-last-backup", "3000") // local backup time
+      const now = Date.now()
+      localStorage.setItem(
+        "style-atelier-last-backup",
+        (now - 30000).toString()
+      ) // 30 seconds ago
 
       vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
+      const remoteTime = new Date(now - 60000) // 1 minute ago
       vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
         id: "file-1",
-        modifiedTime: "1970-01-01T00:00:02.000Z", // 2000ms, older than 3000ms
+        modifiedTime: remoteTime.toISOString(),
         size: "100"
       })
 

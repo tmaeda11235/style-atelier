@@ -105,48 +105,53 @@ export interface SyncMutationParams {
   queryClient?: any
 }
 
-export async function executeSyncMutationFn(params: SyncMutationParams) {
-  const {
-    isSyncEnabled,
-    accessToken,
-    gdriveClient,
-    onTokenUpdated,
-    progress,
-    t,
-    abortControllerRef,
-    addLog,
-    checkStorage,
-    getOrRequestToken,
-    queryClient
-  } = params
+async function performSync(
+  params: SyncMutationParams & {
+    mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
+  },
+  controller: AbortController
+) {
+  const token = await params.getOrRequestToken()
+  params.progress.setStatusMessage({
+    text: params.t.syncingFetch,
+    type: "info"
+  })
+  await executeSyncWorkflow({
+    token,
+    gdriveClient: params.gdriveClient,
+    onTokenUpdated: params.onTokenUpdated,
+    progress: params.progress,
+    t: params.t,
+    signal: controller.signal,
+    addLog: params.addLog,
+    checkStorage: params.checkStorage,
+    queryClient: params.queryClient,
+    mergeStrategy: params.mergeStrategy
+  })
+}
+
+export async function executeSyncMutationFn(
+  params: SyncMutationParams & {
+    mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
+  }
+) {
+  const { isSyncEnabled, progress, t, abortControllerRef } = params
   if (!isSyncEnabled) return
   progress.setSyncProgress(0)
   progress.setStatusMessage({ text: t.syncingStart, type: "info" })
   const controller = new AbortController()
   abortControllerRef.current = controller
   try {
-    const token = await getOrRequestToken()
-    progress.setStatusMessage({ text: t.syncingFetch, type: "info" })
-    await executeSyncWorkflow({
-      token,
-      gdriveClient,
-      onTokenUpdated,
-      progress,
-      t,
-      signal: controller.signal,
-      addLog,
-      checkStorage,
-      queryClient
-    })
+    await performSync(params, controller)
   } catch (err: any) {
     await handleSyncError({
       err,
-      accessToken,
-      gdriveClient,
-      addLog,
+      accessToken: params.accessToken,
+      gdriveClient: params.gdriveClient,
+      addLog: params.addLog,
       progress,
       t,
-      queryClient
+      queryClient: params.queryClient
     })
     throw err
   } finally {
@@ -160,7 +165,9 @@ export function useSyncMutation(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => executeSyncMutationFn({ ...params, queryClient }),
+    mutationFn: (
+      mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
+    ) => executeSyncMutationFn({ ...params, queryClient, mergeStrategy }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["gdriveBackupMetadata", params.accessToken]

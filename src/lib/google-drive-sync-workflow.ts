@@ -11,6 +11,100 @@ export interface SyncWorkflowParams {
   onUploadProgress: (percent: number) => void
   signal?: AbortSignal
   addLog: (log: string) => void
+  mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
+}
+
+async function handleLocalOverwrite(
+  token: string,
+  gdriveClient: GoogleDriveClient,
+  onTokenUpdated: (newToken: string) => void,
+  onDownloadProgress: (percent: number) => void,
+  onUploadProgress: (percent: number) => void,
+  signal: AbortSignal | undefined,
+  addLog: (log: string) => void
+) {
+  addLog("Replacing local database with remote backup.")
+  const backupData = await gdriveClient.downloadBackup(
+    token,
+    onTokenUpdated,
+    onDownloadProgress,
+    { signal }
+  )
+  if (!backupData) {
+    throw new Error("Backup file not found on cloud")
+  }
+  await importDatabase(backupData, "replace")
+  const jsonData = await exportDatabase()
+  await gdriveClient.uploadBackup(
+    token,
+    jsonData,
+    onTokenUpdated,
+    onUploadProgress,
+    { signal }
+  )
+}
+
+async function handleCloudOverwrite(
+  token: string,
+  gdriveClient: GoogleDriveClient,
+  onTokenUpdated: (newToken: string) => void,
+  onUploadProgress: (percent: number) => void,
+  signal: AbortSignal | undefined,
+  addLog: (log: string) => void
+) {
+  addLog("Purging aged deleted records older than 60 days...")
+  try {
+    const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+    await purgeDeletedRecords(db, thresholdMs)
+  } catch (error) {
+    addLog(`Warning: Failed to purge aged deleted records: ${error}`)
+  }
+  const jsonData = await exportDatabase()
+  await gdriveClient.uploadBackup(
+    token,
+    jsonData,
+    onTokenUpdated,
+    onUploadProgress,
+    { signal }
+  )
+}
+
+async function handleMergeStrategy(
+  token: string,
+  gdriveClient: GoogleDriveClient,
+  onTokenUpdated: (newToken: string) => void,
+  onDownloadProgress: (percent: number) => void,
+  onUploadProgress: (percent: number) => void,
+  signal: AbortSignal | undefined,
+  addLog: (log: string) => void
+) {
+  addLog("Purging aged deleted records older than 60 days...")
+  try {
+    const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+    await purgeDeletedRecords(db, thresholdMs)
+  } catch (error) {
+    addLog(`Warning: Failed to purge aged deleted records: ${error}`)
+  }
+  const backupData = await gdriveClient.downloadBackup(
+    token,
+    onTokenUpdated,
+    onDownloadProgress,
+    { signal }
+  )
+  if (backupData) {
+    addLog("Merging remote backup data into local database.")
+    await importDatabase(backupData, "merge")
+  } else {
+    addLog("No existing backup found. Uploading local data as new backup.")
+  }
+  const jsonData = await exportDatabase()
+  await gdriveClient.uploadBackup(
+    token,
+    jsonData,
+    onTokenUpdated,
+    onUploadProgress,
+    { signal }
+  )
 }
 
 export async function runSyncWorkflow(
@@ -23,40 +117,47 @@ export async function runSyncWorkflow(
     onDownloadProgress,
     onUploadProgress,
     signal,
-    addLog
+    addLog,
+    mergeStrategy = "merge"
   } = params
 
-  addLog("Purging aged deleted records older than 60 days...")
-  try {
-    const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
-    await purgeDeletedRecords(db, thresholdMs)
-  } catch (error) {
-    addLog(`Warning: Failed to purge aged deleted records: ${error}`)
-  }
-
-  const backupData = await gdriveClient.downloadBackup(
-    token,
-    onTokenUpdated,
-    onDownloadProgress,
-    { signal }
-  )
-
-  if (backupData) {
-    addLog("Merging remote backup data into local database.")
-    await importDatabase(backupData, "merge")
+  if (mergeStrategy === "local-overwrite") {
+    addLog(
+      "Merge strategy: LOCAL OVERWRITE (Replacing local database with remote backup)."
+    )
+    await handleLocalOverwrite(
+      token,
+      gdriveClient,
+      onTokenUpdated,
+      onDownloadProgress,
+      onUploadProgress,
+      signal,
+      addLog
+    )
+  } else if (mergeStrategy === "cloud-overwrite") {
+    addLog(
+      "Merge strategy: CLOUD OVERWRITE (Replacing remote backup with local database)."
+    )
+    await handleCloudOverwrite(
+      token,
+      gdriveClient,
+      onTokenUpdated,
+      onUploadProgress,
+      signal,
+      addLog
+    )
   } else {
-    addLog("No existing backup found. Uploading local data as new backup.")
+    addLog("Merge strategy: MERGE (Merging remote backup into local database).")
+    await handleMergeStrategy(
+      token,
+      gdriveClient,
+      onTokenUpdated,
+      onDownloadProgress,
+      onUploadProgress,
+      signal,
+      addLog
+    )
   }
-
-  const jsonData = await exportDatabase()
-
-  await gdriveClient.uploadBackup(
-    token,
-    jsonData,
-    onTokenUpdated,
-    onUploadProgress,
-    { signal }
-  )
 
   return Date.now()
 }

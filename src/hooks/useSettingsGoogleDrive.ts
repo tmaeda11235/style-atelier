@@ -40,12 +40,22 @@ export function useGDriveProgress() {
   }
 }
 
+function useAbortController() {
+  const abortControllerRef = useRef<AbortController | null>(null)
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+    }
+  }, [])
+  return abortControllerRef
+}
+
 export function useSettingsGoogleDrive({
   addLog,
   checkStorage,
   gdriveClient = defaultGoogleDriveClient
 }: UseSettingsGoogleDriveProps) {
-  const abortControllerRef = useRef<AbortController | null>(null)
+  const abortControllerRef = useAbortController()
   const confirm = useConfirm()
   const t = useLanguage().t.settings
   const q = useSettingsGoogleDriveQueries(gdriveClient)
@@ -56,12 +66,6 @@ export function useSettingsGoogleDrive({
     q.onTokenUpdated
   )
   const progress = useGDriveProgress()
-  useEffect(() => {
-    const controller = abortControllerRef.current
-    return () => {
-      if (controller) controller.abort()
-    }
-  }, [])
   const mutations = useGDriveMutations({
     isSyncEnabled: q.isSyncEnabled,
     accessToken: q.accessToken,
@@ -86,7 +90,9 @@ export function useSettingsGoogleDrive({
       mutations.toggleSyncMutation.mutate(checked),
     handleToggleAutoSync: (checked: boolean) =>
       mutations.toggleAutoSyncMutation.mutate(checked),
-    handleSync: () => mutations.syncMutation.mutate(),
+    handleSync: (
+      mergeStrategy?: "merge" | "local-overwrite" | "cloud-overwrite"
+    ) => mutations.syncMutation.mutate(mergeStrategy),
     handleForceRecovery: () => mutations.restoreMutation.mutate()
   }
 }
