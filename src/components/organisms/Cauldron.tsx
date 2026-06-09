@@ -107,6 +107,47 @@ const handleCauldronDrop = async (
   }
 }
 
+interface CauldronDropZoneProps {
+  isDragOver: boolean
+  setIsDragOver: (drag: boolean) => void
+  handCards: StyleCard[]
+  toggleCardSelection: (id: string) => Promise<void> | void
+  addLog?: (msg: string) => void
+  t: any
+}
+
+const CauldronDropZone: React.FC<CauldronDropZoneProps> = ({
+  isDragOver,
+  setIsDragOver,
+  handCards,
+  toggleCardSelection,
+  addLog,
+  t
+}) => (
+  <div
+    onDragOver={(e) => {
+      e.preventDefault()
+      setIsDragOver(true)
+    }}
+    onDragLeave={() => setIsDragOver(false)}
+    onDrop={(e) =>
+      handleCauldronDrop(
+        e,
+        handCards,
+        toggleCardSelection,
+        setIsDragOver,
+        addLog
+      )
+    }
+    className={`border-2 border-dashed rounded-lg flex items-center justify-center w-28 aspect-square text-[9px] text-center p-3 transition-all duration-300 ${
+      isDragOver
+        ? "border-blue-400 bg-blue-950/40 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-105"
+        : "border-slate-800 text-slate-600 bg-slate-900/20"
+    }`}>
+    {t.addPromptDesc}
+  </div>
+)
+
 export const Cauldron: React.FC<CauldronProps> = ({
   workbenchCards,
   handCards,
@@ -142,28 +183,14 @@ export const Cauldron: React.FC<CauldronProps> = ({
         />
 
         {workbenchCards.length < 2 && (
-          <div
-            onDragOver={(e) => {
-              e.preventDefault()
-              setIsDragOver(true)
-            }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={(e) =>
-              handleCauldronDrop(
-                e,
-                handCards,
-                toggleCardSelection,
-                setIsDragOver,
-                addLog
-              )
-            }
-            className={`border-2 border-dashed rounded-lg flex items-center justify-center w-28 aspect-square text-[9px] text-center p-3 transition-all duration-300 ${
-              isDragOver
-                ? "border-blue-400 bg-blue-950/40 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-105"
-                : "border-slate-800 text-slate-600 bg-slate-900/20"
-            }`}>
-            {t.addPromptDesc}
-          </div>
+          <CauldronDropZone
+            isDragOver={isDragOver}
+            setIsDragOver={setIsDragOver}
+            handCards={handCards}
+            toggleCardSelection={toggleCardSelection}
+            addLog={addLog}
+            t={t}
+          />
         )}
       </div>
     </div>

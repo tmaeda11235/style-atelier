@@ -60,15 +60,10 @@ export const WorkbenchCard: React.FC<WorkbenchCardProps> = ({
   handleExtractPortion
 }) => {
   const isSelected = selectedCardId === card.id
-
-  const handleWeightRangeChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleWeightRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation()
-    const val = parseFloat(e.target.value)
-    await updateCardWeight(card.id, val)
+    updateCardWeight(card.id, parseFloat(e.target.value))
   }
-
   return (
     <div
       className="relative group animate-in zoom-in-95 duration-200 w-28 animate-float-gentle"
@@ -84,7 +79,6 @@ export const WorkbenchCard: React.FC<WorkbenchCardProps> = ({
           className="w-full aspect-square"
         />
       </div>
-
       <RemoveButton
         onClick={(e) => {
           e.stopPropagation()
@@ -92,7 +86,6 @@ export const WorkbenchCard: React.FC<WorkbenchCardProps> = ({
         }}
       />
       <WeightDisplay weight={card.weight} onChange={handleWeightRangeChange} />
-
       {isSelected && (
         <PortionExtractorOverlay
           card={card}
