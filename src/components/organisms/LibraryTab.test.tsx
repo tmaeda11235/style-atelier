@@ -43,6 +43,33 @@ const mockCards: StyleCard[] = [
   }
 ]
 
+const defaultMockReturnValue = {
+  styleCards: mockCards,
+  handleCardClick: vi.fn(),
+  togglePin: vi.fn(),
+  searchTag: "",
+  setSearchTag: vi.fn(),
+  rarityFilter: "All",
+  setRarityFilter: vi.fn(),
+  categoryFilter: "All",
+  setCategoryFilter: vi.fn(),
+  colorFilter: "All",
+  setColorFilter: vi.fn(),
+  sortBy: "newest",
+  setSortBy: vi.fn(),
+  allSrefs: [],
+  categories: [],
+  allCards: mockCards,
+  hasMore: false,
+  loadMore: vi.fn(),
+  totalMatchedCount: 1,
+  currentFolderId: null as string | null,
+  setCurrentFolderId: vi.fn(),
+  breadcrumbs: [{ id: null as string | null, name: "Home" }],
+  currentSubfolders: [] as any[],
+  moveCardToCategory: vi.fn()
+}
+
 describe("LibraryTab", () => {
   const mockOpenDetailCard = vi.fn()
   const mockAddLog = vi.fn()
@@ -60,25 +87,8 @@ describe("LibraryTab", () => {
     vi.clearAllMocks()
     localStorage.setItem("style-atelier-language", "ja")
     vi.mocked(useLibrary).mockReturnValue({
-      styleCards: mockCards,
-      handleCardClick: vi.fn(),
-      togglePin: mockTogglePin,
-      searchTag: "",
-      setSearchTag: vi.fn(),
-      rarityFilter: "All",
-      setRarityFilter: vi.fn(),
-      categoryFilter: "All",
-      setCategoryFilter: vi.fn(),
-      colorFilter: "All",
-      setColorFilter: vi.fn(),
-      sortBy: "newest",
-      setSortBy: vi.fn(),
-      allSrefs: [],
-      categories: [],
-      allCards: mockCards,
-      hasMore: false,
-      loadMore: vi.fn(),
-      totalMatchedCount: 1
+      ...defaultMockReturnValue,
+      togglePin: mockTogglePin
     })
   })
 
@@ -144,25 +154,9 @@ describe("LibraryTab", () => {
   it("renders color filters and handles color filter click", () => {
     const mockSetColorFilter = vi.fn()
     vi.mocked(useLibrary).mockReturnValue({
-      styleCards: mockCards,
-      handleCardClick: vi.fn(),
+      ...defaultMockReturnValue,
       togglePin: mockTogglePin,
-      searchTag: "",
-      setSearchTag: vi.fn(),
-      rarityFilter: "All",
-      setRarityFilter: vi.fn(),
-      categoryFilter: "All",
-      setCategoryFilter: vi.fn(),
-      colorFilter: "All",
-      setColorFilter: mockSetColorFilter,
-      sortBy: "newest",
-      setSortBy: vi.fn(),
-      allSrefs: [],
-      categories: [],
-      allCards: mockCards,
-      hasMore: false,
-      loadMore: vi.fn(),
-      totalMatchedCount: 1
+      setColorFilter: mockSetColorFilter
     })
 
     render(
@@ -181,24 +175,10 @@ describe("LibraryTab", () => {
 
   it("renders empty state when there are no cards in the library", () => {
     vi.mocked(useLibrary).mockReturnValue({
+      ...defaultMockReturnValue,
       styleCards: [],
-      handleCardClick: vi.fn(),
-      togglePin: mockTogglePin,
-      searchTag: "",
-      setSearchTag: vi.fn(),
-      rarityFilter: "All",
-      setRarityFilter: vi.fn(),
-      categoryFilter: "All",
-      setCategoryFilter: vi.fn(),
-      colorFilter: "All",
-      setColorFilter: vi.fn(),
-      sortBy: "newest",
-      setSortBy: vi.fn(),
-      allSrefs: [],
-      categories: [],
       allCards: [],
-      hasMore: false,
-      loadMore: vi.fn(),
+      togglePin: mockTogglePin,
       totalMatchedCount: 0
     })
 
@@ -219,24 +199,15 @@ describe("LibraryTab", () => {
     const mockSetCategoryFilter = vi.fn()
 
     vi.mocked(useLibrary).mockReturnValue({
+      ...defaultMockReturnValue,
       styleCards: [],
-      handleCardClick: vi.fn(),
-      togglePin: mockTogglePin,
       searchTag: "NonExistentTag",
       setSearchTag: mockSetSearchTag,
       rarityFilter: "All",
       setRarityFilter: mockSetRarityFilter,
       categoryFilter: "All",
       setCategoryFilter: mockSetCategoryFilter,
-      colorFilter: "All",
-      setColorFilter: vi.fn(),
-      sortBy: "newest",
-      setSortBy: vi.fn(),
-      allSrefs: [],
-      categories: [],
-      allCards: mockCards,
-      hasMore: false,
-      loadMore: vi.fn(),
+      togglePin: mockTogglePin,
       totalMatchedCount: 0
     })
 
@@ -264,25 +235,10 @@ describe("LibraryTab", () => {
   it("renders Show More button when hasMore is true and triggers loadMore on click", () => {
     const mockLoadMore = vi.fn()
     vi.mocked(useLibrary).mockReturnValue({
-      styleCards: mockCards,
-      handleCardClick: vi.fn(),
-      togglePin: mockTogglePin,
-      searchTag: "",
-      setSearchTag: vi.fn(),
-      rarityFilter: "All",
-      setRarityFilter: vi.fn(),
-      categoryFilter: "All",
-      setCategoryFilter: vi.fn(),
-      colorFilter: "All",
-      setColorFilter: vi.fn(),
-      sortBy: "newest",
-      setSortBy: vi.fn(),
-      allSrefs: [],
-      categories: [],
-      allCards: mockCards,
+      ...defaultMockReturnValue,
       hasMore: true,
       loadMore: mockLoadMore,
-      totalMatchedCount: 1
+      togglePin: mockTogglePin
     })
 
     render(

@@ -171,6 +171,8 @@
     "noCardsFound": "No cards found in Library.",
     "select": "Select",
     "categoryName": "Category Name",
+    "parentCategory": "Parent Category",
+    "rootCategory": "None (Root)",
     "placeholderName": "e.g. Cyberpunk, Retro",
     "emojiIcon": "Emoji Icon",
     "placeholderEmoji": "e.g. 🎨, 🛸",

@@ -7,6 +7,7 @@ export interface CustomCategory {
   createdAt: number
   updatedAt?: number // Timestamp for versioning/sync
   isDeleted?: boolean // Soft delete flag
+  parentId?: string // Parent category ID for hierarchical folders
 }
 
 export interface CardVersion {

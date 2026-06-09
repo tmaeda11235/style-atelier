@@ -316,4 +316,172 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       throw error
     }
   })
+
+  test("should support parent category selection and explorer drill-down navigation", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    page.on("console", (msg) => {
+      console.log(`[HIERARCHY TEST CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+
+    try {
+      console.log("1. Navigating to sandbox page...")
+      await page.goto("/tests/sandbox/index.html")
+
+      const spFrame = page.frameLocator("#sidepanel-frame")
+
+      // Skip welcome
+      const skipButton = spFrame.locator("#welcome-skip-btn")
+      if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await skipButton.click()
+      }
+
+      // Switch to Library tab
+      console.log("2. Switching to Library tab...")
+      const libraryTabButton = spFrame.locator("button:has-text('Library')")
+      await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
+      await libraryTabButton.click()
+      await page.waitForTimeout(1000)
+
+      // Expand filters accordion
+      const filterToggleBtn = spFrame
+        .locator("[data-testid='toggle-filters-btn']")
+        .first()
+      await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
+      await filterToggleBtn.click()
+      await page.waitForTimeout(500)
+
+      // Open Category Modal
+      console.log("3. Opening category modal...")
+      const addCategoryBtn = spFrame.locator(
+        "button[title='Manage Categories']"
+      )
+      await expect(addCategoryBtn).toBeVisible({ timeout: 15000 })
+      await addCategoryBtn.click()
+      await page.waitForTimeout(500)
+
+      // 1. Create Parent Category
+      console.log("4. Creating Parent Category...")
+      const nameInput = spFrame.locator(
+        "input[placeholder='e.g. Cyberpunk, Retro']"
+      )
+      await nameInput.fill("E2E Parent Dir")
+      const emojiInput = spFrame.locator("input[placeholder='e.g. 🎨, 🛸']")
+      await emojiInput.fill("📁")
+
+      const submitBtn = spFrame.locator("button:has-text('Create Category')")
+      await submitBtn.click()
+      await page.waitForTimeout(1000)
+
+      // Re-open modal to create Child Category
+      console.log("5. Re-opening modal for Child Category...")
+      await addCategoryBtn.click()
+      await page.waitForTimeout(500)
+
+      // 2. Create Child Category under Parent
+      console.log("6. Creating Child Category under Parent...")
+      await nameInput.fill("E2E Child Dir")
+      await emojiInput.fill("📂")
+
+      // Select parent
+      const parentSelect = spFrame.locator("form select")
+      await expect(parentSelect).toBeVisible()
+      await parentSelect.selectOption({ label: "E2E Parent Dir" })
+
+      await submitBtn.click()
+      await page.waitForTimeout(1000)
+
+      // 3. Verify in Library UI (explorer mode)
+      console.log("7. Verifying explorer structure...")
+      // Breadcrumbs should contain "Home"
+      const breadcrumbHome = spFrame.locator(
+        "[data-testid='breadcrumbs'] span:has-text('Home')"
+      )
+      await expect(breadcrumbHome).toBeVisible()
+
+      // Parent Dir should be listed as a subfolder in Home
+      const parentDirFolder = spFrame.locator(
+        "[data-testid='subfolders-grid'] span:has-text('E2E Parent Dir')"
+      )
+      await expect(parentDirFolder).toBeVisible()
+
+      // Click Parent Dir to enter it (drill-down)
+      console.log("8. Drilling down into E2E Parent Dir...")
+      await spFrame
+        .locator("[data-testid='subfolders-grid'] div", {
+          hasText: "E2E Parent Dir"
+        })
+        .last()
+        .click()
+      await page.waitForTimeout(1000)
+
+      // Breadcrumbs should now show "Home / E2E Parent Dir"
+      const breadcrumbParent = spFrame
+        .locator("[data-testid='breadcrumbs'] span:has-text('E2E Parent Dir')")
+        .first()
+      await expect(breadcrumbParent).toBeVisible()
+
+      // Inside Parent, Child Dir should be visible
+      const childDirFolder = spFrame.locator(
+        "[data-testid='subfolders-grid'] span:has-text('E2E Child Dir')"
+      )
+      await expect(childDirFolder).toBeVisible()
+
+      // Click Home in breadcrumbs to return to root
+      console.log("9. Clicking Home in breadcrumbs...")
+      await breadcrumbHome.first().click()
+      await page.waitForTimeout(1000)
+
+      // Verifying we are back to root (Parent Dir is visible, child is not)
+      await expect(parentDirFolder).toBeVisible()
+      await expect(childDirFolder).not.toBeVisible()
+
+      console.log("Hierarchy E2E test passed successfully!")
+
+      // Screenshot for PR
+      await page.screenshot({
+        path: path.join(screenshotsDir, "custom-category-hierarchy.png")
+      })
+
+      // Cleanup
+      console.log("10. Cleaning up categories...")
+      await addCategoryBtn.click()
+      await page.waitForTimeout(500)
+      const manageTabBtn = spFrame.locator(
+        "button:has-text('Manage Categories')"
+      )
+      await manageTabBtn.click()
+      await page.waitForTimeout(1000)
+
+      // Delete E2E Child Dir first
+      const deleteBtns = spFrame.getByRole("button", {
+        name: "Delete Category"
+      })
+      await deleteBtns.first().click()
+      await page.waitForTimeout(500)
+      await spFrame.locator("#confirm-dialog-ok-btn").click()
+      await page.waitForTimeout(1000)
+
+      // Delete E2E Parent Dir
+      await deleteBtns.first().click()
+      await page.waitForTimeout(500)
+      await spFrame.locator("#confirm-dialog-ok-btn").click()
+      await page.waitForTimeout(1000)
+
+      // Close modal
+      const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
+      await closeBtn.click()
+      await page.waitForTimeout(500)
+    } catch (error) {
+      console.error(
+        "Hierarchy E2E test failed, capturing failure screenshot..."
+      )
+      await page.screenshot({
+        path: path.join(screenshotsDir, "custom-category-hierarchy-failure.png")
+      })
+      throw error
+    }
+  })
 })

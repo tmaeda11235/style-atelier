@@ -10,11 +10,11 @@ let mockCategories: any[] = []
 // Mock dexie-react-hooks
 vi.mock("dexie-react-hooks", () => ({
   useLiveQuery: (fn: any, deps: any[] = []) => {
-    const fnStr = fn.toString()
+    const fnStr = fn.toString().toLowerCase()
     if (fnStr.includes("categories")) {
       return mockCategories
     }
-    if (fnStr.includes("bulkGet")) {
+    if (fnStr.includes("bulkget")) {
       const visibleIds = deps[0]
       if (!visibleIds || visibleIds.length === 0) return []
       const idToCard = new Map(mockStyleCards.map((c) => [c.id, c]))
@@ -404,6 +404,109 @@ describe("useLibrary hook", () => {
 
       expect(result.current.styleCards.length).toBeGreaterThan(0)
       expect(result.current.styleCards[0].id).toBe("card-5")
+    })
+  })
+
+  describe("Explorer drill-down and card movement", () => {
+    beforeEach(() => {
+      mockCategories = [
+        { id: "root-cat", name: "Root Cat" },
+        { id: "child-cat", name: "Child Cat", parentId: "root-cat" },
+        { id: "nested-cat", name: "Nested Cat", parentId: "child-cat" }
+      ]
+      mockStyleCards = [
+        {
+          id: "card-root",
+          name: "Root Card",
+          category: undefined,
+          isVariable: false,
+          parameters: {}
+        },
+        {
+          id: "card-in-root-cat",
+          name: "Card in Root Cat",
+          category: "root-cat",
+          isVariable: false,
+          parameters: {}
+        },
+        {
+          id: "card-in-child-cat",
+          name: "Card in Child Cat",
+          category: "child-cat",
+          isVariable: false,
+          parameters: {}
+        }
+      ]
+    })
+
+    it("should initialize at root with correct breadcrumbs and top-level categories", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      expect(result.current.currentFolderId).toBeNull()
+      expect(result.current.breadcrumbs).toEqual([{ id: null, name: "Home" }])
+      // only root-cat has parentId === undefined
+      expect(result.current.currentSubfolders).toHaveLength(1)
+      expect(result.current.currentSubfolders[0].id).toBe("root-cat")
+      // only card-root has no category
+      expect(result.current.styleCards).toHaveLength(1)
+      expect(result.current.styleCards[0].id).toBe("card-root")
+    })
+
+    it("should handle drill-down navigation and build multi-level breadcrumbs", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      act(() => {
+        result.current.setCurrentFolderId("child-cat")
+      })
+
+      expect(result.current.currentFolderId).toBe("child-cat")
+      expect(result.current.breadcrumbs).toEqual([
+        { id: null, name: "Home" },
+        { id: "root-cat", name: "Root Cat" },
+        { id: "child-cat", name: "Child Cat" }
+      ])
+      // subfolder of child-cat is nested-cat
+      expect(result.current.currentSubfolders).toHaveLength(1)
+      expect(result.current.currentSubfolders[0].id).toBe("nested-cat")
+      // cards in child-cat
+      expect(result.current.styleCards).toHaveLength(1)
+      expect(result.current.styleCards[0].id).toBe("card-in-child-cat")
+    })
+
+    it("should ignore directory level and search flatly across all categories when search query is active", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      // even when in child-cat, searching will return cards flatly
+      act(() => {
+        result.current.setCurrentFolderId("child-cat")
+        result.current.setSearchTag("Card")
+      })
+
+      // currentSubfolders is cleared during search
+      expect(result.current.currentSubfolders).toHaveLength(0)
+      // all matches are returned
+      expect(result.current.styleCards.length).toBeGreaterThan(1)
+    })
+
+    it("should invoke db update on moveCardToCategory", async () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      await act(async () => {
+        await result.current.moveCardToCategory("card-root", "child-cat")
+      })
+
+      expect(db.updateCard).toHaveBeenCalledWith("card-root", {
+        category: "child-cat"
+      })
+      expect(mockAddLog).toHaveBeenCalledWith('Moved card to "Child Cat".')
     })
   })
 })
