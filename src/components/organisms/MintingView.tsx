@@ -15,6 +15,12 @@ import { PromptBubble } from "../molecules/PromptBubble"
 import { RaritySelector } from "../molecules/RaritySelector"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
+const STEP_TITLE_INPUT = "title-input"
+const STEP_SAVE_CARD = "save-card"
+const DEFAULT_CATEGORY_ICON = "🖼️"
+const EMOJI_PALETTE = "🎨"
+const CHAR_CLOSE = "×"
+
 interface MintingViewProps {
   mintingItem: HistoryItem | null
   editedSegments: PromptSegment[]
@@ -82,7 +88,7 @@ export function MintingView({
     } else {
       setSelectedKeywords([...selectedKeywords, keyword])
     }
-    advanceIfStep("title-input")
+    advanceIfStep(STEP_TITLE_INPUT)
   }
 
   const currentName =
@@ -143,7 +149,7 @@ export function MintingView({
                   value={customName}
                   onChange={(e) => {
                     setCustomName(e.target.value)
-                    advanceIfStep("title-input")
+                    advanceIfStep(STEP_TITLE_INPUT)
                   }}
                   placeholder={t.minting.addDetailsPlaceholder}
                 />
@@ -166,7 +172,7 @@ export function MintingView({
                     <option value="">{t.minting.noCategory}</option>
                     {categoriesList.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.iconEmoji || "🖼️"} {cat.name}
+                        {cat.iconEmoji || DEFAULT_CATEGORY_ICON} {cat.name}
                       </option>
                     ))}
                   </select>
@@ -195,7 +201,7 @@ export function MintingView({
                             setCustomTags(customTags.filter((tag) => tag !== t))
                           }
                           className="text-blue-400 hover:text-red-500 text-[10px]">
-                          &times;
+                          {CHAR_CLOSE}
                         </button>
                       </span>
                     ))}
@@ -276,8 +282,9 @@ export function MintingView({
                       {detectedColorTags.map((colName, i) => (
                         <span
                           key={i}
-                          className="bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                          🎨 {colName}
+                          className="bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
+                          <span>{EMOJI_PALETTE}</span>
+                          <span>{colName}</span>
                         </span>
                       ))}
                     </div>
@@ -373,7 +380,7 @@ export function MintingView({
         <Button
           onClick={async () => {
             await onSaveMintedCard()
-            advanceIfStep("save-card")
+            advanceIfStep(STEP_SAVE_CARD)
           }}>
           {t.minting.saveCard}
         </Button>
