@@ -98,30 +98,133 @@ export function getQuantizedColorName(h: number, s: number, l: number): string {
   return "Gray"
 }
 
-export async function analyzeImageColors(
-  imageUrl: string,
-  fallbackRarity: RarityTier = "Common"
-): Promise<ExtractedColors> {
-  // Test/Node environment fallback or placeholder images
+function shouldUseFallback(imageUrl: string): boolean {
   const isTest =
     typeof process !== "undefined" &&
     process.env.VITEST &&
     process.env.BYPASS_VITEST !== "true"
-  if (
+  return (
     typeof window === "undefined" ||
     typeof document === "undefined" ||
     isTest ||
     imageUrl.includes("assets/icon.png") ||
     imageUrl.includes(iconUrl) ||
     imageUrl === ""
-  ) {
-    const fallback = RARITY_FALLBACK_COLORS[fallbackRarity]
-    return {
-      ...fallback,
-      isFallback: true
+  )
+}
+
+function getFallbackColors(fallbackRarity: RarityTier): ExtractedColors {
+  const fallback = RARITY_FALLBACK_COLORS[fallbackRarity]
+  return {
+    ...fallback,
+    isFallback: true
+  }
+}
+
+function samplePixels(
+  data: Uint8ClampedArray
+): Record<string, { count: number; rSum: number; gSum: number; bSum: number }> {
+  const nameCounts: Record<
+    string,
+    { count: number; rSum: number; gSum: number; bSum: number }
+  > = {}
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+
+    // Ignore transparent/highly semi-transparent pixels
+    if (a < 128) continue
+
+    const [h, s, l] = rgbToHsl(r, g, b)
+    const name = getQuantizedColorName(h, s, l)
+
+    if (!nameCounts[name]) {
+      nameCounts[name] = { count: 0, rSum: 0, gSum: 0, bSum: 0 }
     }
+    nameCounts[name].count++
+    nameCounts[name].rSum += r
+    nameCounts[name].gSum += g
+    nameCounts[name].bSum += b
   }
 
+  return nameCounts
+}
+
+function determineDominantAndAccent(
+  nameCounts: Record<
+    string,
+    { count: number; rSum: number; gSum: number; bSum: number }
+  >,
+  fallbackRarity: RarityTier
+): ExtractedColors {
+  const totalPixels = Object.values(nameCounts).reduce(
+    (acc, curr) => acc + curr.count,
+    0
+  )
+
+  const sortedColors = Object.entries(nameCounts)
+    .map(([name, stats]) => {
+      const isNeutral = name === "White" || name === "Black" || name === "Gray"
+      // Boost chromatic colors to prioritize vibrant shades over white/gray backgrounds
+      const weightedCount = stats.count * (isNeutral ? 1.0 : 2.5)
+      return {
+        name,
+        count: stats.count,
+        weightedCount,
+        hex: rgbToHex(
+          Math.round(stats.rSum / stats.count),
+          Math.round(stats.gSum / stats.count),
+          Math.round(stats.bSum / stats.count)
+        )
+      }
+    })
+    .sort((a, b) => b.weightedCount - a.weightedCount)
+
+  if (sortedColors.length === 0) {
+    return getFallbackColors(fallbackRarity)
+  }
+
+  const dominant = sortedColors[0]
+  const isDomNeutral =
+    dominant.name === "White" ||
+    dominant.name === "Black" ||
+    dominant.name === "Gray"
+
+  // Try to pick a vibrant chromatic color as accent if dominant is neutral
+  let accent = sortedColors[0]
+  if (isDomNeutral) {
+    const chromaticAccent = sortedColors.find((c) => {
+      const isNeut =
+        c.name === "White" || c.name === "Black" || c.name === "Gray"
+      return !isNeut && c.count >= totalPixels * 0.05 // Must have at least 5% coverage
+    })
+    if (chromaticAccent) {
+      accent = chromaticAccent
+    } else {
+      accent =
+        sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0]
+    }
+  } else {
+    accent =
+      sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0]
+  }
+
+  return {
+    dominantHex: dominant.hex,
+    dominantName: dominant.name,
+    accentHex: accent.hex,
+    accentName: accent.name,
+    isFallback: false
+  }
+}
+
+function loadImageAndProcess(
+  imageUrl: string,
+  fallbackRarity: RarityTier
+): Promise<ExtractedColors> {
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = "Anonymous"
@@ -149,108 +252,12 @@ export async function analyzeImageColors(
         ctx.drawImage(img, 0, 0, 50, 50)
 
         const imageData = ctx.getImageData(0, 0, 50, 50)
-        const data = imageData.data
-
-        const nameCounts: Record<
-          string,
-          { count: number; rSum: number; gSum: number; bSum: number }
-        > = {}
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i]
-          const g = data[i + 1]
-          const b = data[i + 2]
-          const a = data[i + 3]
-
-          // Ignore transparent/highly semi-transparent pixels
-          if (a < 128) continue
-
-          const [h, s, l] = rgbToHsl(r, g, b)
-          const name = getQuantizedColorName(h, s, l)
-
-          if (!nameCounts[name]) {
-            nameCounts[name] = { count: 0, rSum: 0, gSum: 0, bSum: 0 }
-          }
-          nameCounts[name].count++
-          nameCounts[name].rSum += r
-          nameCounts[name].gSum += g
-          nameCounts[name].bSum += b
-        }
-
-        const totalPixels = Object.values(nameCounts).reduce(
-          (acc, curr) => acc + curr.count,
-          0
-        )
-
-        const sortedColors = Object.entries(nameCounts)
-          .map(([name, stats]) => {
-            const isNeutral =
-              name === "White" || name === "Black" || name === "Gray"
-            // Boost chromatic colors to prioritize vibrant shades over white/gray backgrounds
-            const weightedCount = stats.count * (isNeutral ? 1.0 : 2.5)
-            return {
-              name,
-              count: stats.count,
-              weightedCount,
-              hex: rgbToHex(
-                Math.round(stats.rSum / stats.count),
-                Math.round(stats.gSum / stats.count),
-                Math.round(stats.bSum / stats.count)
-              )
-            }
-          })
-          .sort((a, b) => b.weightedCount - a.weightedCount)
-
-        if (sortedColors.length === 0) {
-          const fallback = RARITY_FALLBACK_COLORS[fallbackRarity]
-          resolve({
-            ...fallback,
-            isFallback: true
-          })
-          return
-        }
-
-        const dominant = sortedColors[0]
-        const isDomNeutral =
-          dominant.name === "White" ||
-          dominant.name === "Black" ||
-          dominant.name === "Gray"
-
-        // Try to pick a vibrant chromatic color as accent if dominant is neutral
-        let accent = sortedColors[0]
-        if (isDomNeutral) {
-          const chromaticAccent = sortedColors.find((c) => {
-            const isNeut =
-              c.name === "White" || c.name === "Black" || c.name === "Gray"
-            return !isNeut && c.count >= totalPixels * 0.05 // Must have at least 5% coverage
-          })
-          if (chromaticAccent) {
-            accent = chromaticAccent
-          } else {
-            accent =
-              sortedColors.find((c) => c.name !== dominant.name) ||
-              sortedColors[0]
-          }
-        } else {
-          accent =
-            sortedColors.find((c) => c.name !== dominant.name) ||
-            sortedColors[0]
-        }
-
-        resolve({
-          dominantHex: dominant.hex,
-          dominantName: dominant.name,
-          accentHex: accent.hex,
-          accentName: accent.name,
-          isFallback: false
-        })
+        const nameCounts = samplePixels(imageData.data)
+        const result = determineDominantAndAccent(nameCounts, fallbackRarity)
+        resolve(result)
       } catch (err) {
         console.error("Color analysis failed, using fallback:", err)
-        const fallback = RARITY_FALLBACK_COLORS[fallbackRarity]
-        resolve({
-          ...fallback,
-          isFallback: true
-        })
+        resolve(getFallbackColors(fallbackRarity))
       } finally {
         cleanup()
       }
@@ -260,11 +267,7 @@ export async function analyzeImageColors(
     img.onerror = () => {
       console.warn("Failed to load image for color analysis, using fallback")
       cleanup()
-      const fallback = RARITY_FALLBACK_COLORS[fallbackRarity]
-      resolve({
-        ...fallback,
-        isFallback: true
-      })
+      resolve(getFallbackColors(fallbackRarity))
     }
 
     // If it is a local data or blob URL, set directly
@@ -293,4 +296,14 @@ export async function analyzeImageColors(
         })
     }
   })
+}
+
+export async function analyzeImageColors(
+  imageUrl: string,
+  fallbackRarity: RarityTier = "Common"
+): Promise<ExtractedColors> {
+  if (shouldUseFallback(imageUrl)) {
+    return getFallbackColors(fallbackRarity)
+  }
+  return loadImageAndProcess(imageUrl, fallbackRarity)
 }

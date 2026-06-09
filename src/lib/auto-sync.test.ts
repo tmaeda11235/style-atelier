@@ -24,14 +24,14 @@ vi.mock("./backup-manager", () => ({
 }))
 
 // Mock db hooks
-const mockHooks: Record<string, Record<string, Function>> = {
+const mockHooks: Record<string, Record<string, (...args: any[]) => any>> = {
   styleCards: {},
   categories: {},
   slotHistory: {}
 }
 vi.mock("./db", () => {
   const createHookMock = (tableName: string) =>
-    vi.fn((event: string, callback: Function) => {
+    vi.fn((event: string, callback: (...args: any[]) => any) => {
       mockHooks[tableName][event] = callback
     })
   return {
@@ -123,9 +123,9 @@ describe("auto-sync", () => {
       })
 
       // Fire hook with mock transaction complete listener
-      let transactionCompleteCallback: Function = () => {}
+      let transactionCompleteCallback: () => void = () => {}
       const mockTransaction = {
-        on: vi.fn((event: string, callback: Function) => {
+        on: vi.fn((event: string, callback: () => void) => {
           if (event === "complete") transactionCompleteCallback = callback
         })
       }
@@ -219,9 +219,9 @@ describe("auto-sync", () => {
           const hookFn = mockHooks[table]?.[event]
           expect(hookFn).toBeDefined()
 
-          let transactionCompleteCallback: Function = () => {}
+          let transactionCompleteCallback: () => void = () => {}
           const mockTransaction = {
-            on: vi.fn((ev: string, callback: Function) => {
+            on: vi.fn((ev: string, callback: () => void) => {
               if (ev === "complete") transactionCompleteCallback = callback
             })
           }
