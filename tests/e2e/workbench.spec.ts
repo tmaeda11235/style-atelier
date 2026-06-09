@@ -668,7 +668,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await stylizeCheckbox.check()
 
     // Locate the slider for Stylize and change its value
-    const stylizeSlider = spFrame.locator("input[type='range']").first()
+    const stylizeSlider = spFrame
+      .locator("div.border-slate-200 input[type='range']")
+      .first()
     await expect(stylizeSlider).toBeVisible()
     await stylizeSlider.fill("450") // Slide to 450
 

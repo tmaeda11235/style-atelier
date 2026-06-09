@@ -30,6 +30,8 @@ export function CategoryManagerModal({
     editingCategory,
     name,
     setName,
+    parentId,
+    setParentId,
     emoji,
     iconUrl,
     setIconUrl,
@@ -46,6 +48,25 @@ export function CategoryManagerModal({
     handleSave,
     t
   } = useCategoryManager({ onClose, addLog })
+
+  // Helper to get all descendants of a category to prevent circular reference
+  const getDescendants = (
+    catId: string,
+    allCats: typeof categories
+  ): string[] => {
+    const children = allCats.filter((c) => c.parentId === catId)
+    const childIds = children.map((c) => c.id)
+    return [
+      ...childIds,
+      ...childIds.flatMap((id) => getDescendants(id, allCats))
+    ]
+  }
+
+  const excludedIds = editingCategory
+    ? [editingCategory.id, ...getDescendants(editingCategory.id, categories)]
+    : []
+
+  const parentOptions = categories.filter((c) => !excludedIds.includes(c.id))
 
   return (
     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end">
@@ -152,6 +173,23 @@ export function CategoryManagerModal({
                   placeholder={t.placeholderName}
                   className="text-xs"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  {t.parentCategory}
+                </label>
+                <select
+                  value={parentId}
+                  onChange={(e) => setParentId(e.target.value)}
+                  className="w-full text-xs border rounded-md p-2 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                  <option value="">{t.rootCategory}</option>
+                  {parentOptions.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

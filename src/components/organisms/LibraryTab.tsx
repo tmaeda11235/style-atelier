@@ -41,6 +41,9 @@ export function LibraryTab({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
+  const [dragOverFolderId, setDragOverFolderId] = useState<
+    string | null | undefined
+  >(undefined)
   const { advanceIfStep } = useTutorial()
 
   const { expertFeatures } = useSettings()
@@ -65,7 +68,12 @@ export function LibraryTab({
     categories,
     allCards,
     hasMore,
-    loadMore
+    loadMore,
+    currentFolderId,
+    setCurrentFolderId,
+    breadcrumbs,
+    currentSubfolders,
+    moveCardToCategory
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
   const activeFiltersCount = [
@@ -165,7 +173,100 @@ export function LibraryTab({
         />
       </div>
 
-      {styleCards !== undefined && styleCards.length > 0 ? (
+      {/* Explorer Breadcrumbs */}
+      <div
+        data-testid="breadcrumbs"
+        className="flex items-center flex-wrap gap-1 text-[11px] text-slate-500 bg-white p-2 rounded-lg border border-slate-200/60 shadow-sm">
+        {breadcrumbs.map((crumb, idx) => {
+          const isLast = idx === breadcrumbs.length - 1
+          const isOver = dragOverFolderId === crumb.id
+          return (
+            <React.Fragment key={crumb.id || "root"}>
+              {idx > 0 && <span className="text-slate-300">/</span>}
+              <span
+                onClick={() => setCurrentFolderId(crumb.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={(e) => {
+                  e.preventDefault()
+                  setDragOverFolderId(crumb.id)
+                }}
+                onDragLeave={() => setDragOverFolderId(undefined)}
+                onDrop={async (e) => {
+                  e.preventDefault()
+                  setDragOverFolderId(undefined)
+                  const cardId = e.dataTransfer.getData("cardId")
+                  if (cardId) {
+                    await moveCardToCategory(cardId, crumb.id)
+                  }
+                }}
+                className={`cursor-pointer px-1.5 py-0.5 rounded transition-all font-semibold ${
+                  isLast
+                    ? "text-slate-800 font-bold bg-slate-100"
+                    : "text-blue-600 hover:bg-blue-50"
+                } ${isOver ? "bg-blue-100 ring-2 ring-blue-400 scale-105" : ""}`}>
+                {crumb.name}
+              </span>
+            </React.Fragment>
+          )
+        })}
+      </div>
+
+      {/* Explorer Folders (Subfolders) */}
+      {currentSubfolders.length > 0 && (
+        <div
+          data-testid="subfolders-grid"
+          className="grid grid-cols-3 gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-200 border-dashed">
+          {currentSubfolders.map((folder) => {
+            const isOver = dragOverFolderId === folder.id
+            return (
+              <div
+                key={folder.id}
+                onClick={() => setCurrentFolderId(folder.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={(e) => {
+                  e.preventDefault()
+                  setDragOverFolderId(folder.id)
+                }}
+                onDragLeave={() => setDragOverFolderId(undefined)}
+                onDrop={async (e) => {
+                  e.preventDefault()
+                  setDragOverFolderId(undefined)
+                  const cardId = e.dataTransfer.getData("cardId")
+                  if (cardId) {
+                    await moveCardToCategory(cardId, folder.id)
+                  }
+                }}
+                className={`relative flex flex-col items-center justify-center p-3 rounded-lg border bg-white shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:border-slate-300 active:scale-95 ${
+                  isOver
+                    ? "border-blue-500 ring-4 ring-blue-100 bg-blue-50/50 scale-105"
+                    : "border-slate-200"
+                }`}>
+                {/* Folder Icon / Image Preview */}
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-inner mb-1.5 flex-shrink-0">
+                  {folder.iconUrl ? (
+                    <img
+                      src={folder.iconUrl}
+                      className="w-full h-full object-cover"
+                      alt={folder.name}
+                    />
+                  ) : (
+                    <span className="text-lg leading-none">
+                      {folder.iconEmoji || "📁"}
+                    </span>
+                  )}
+                </div>
+                {/* Folder Name */}
+                <span className="text-[10px] font-bold text-slate-700 text-center truncate w-full px-1">
+                  {folder.name}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {(styleCards !== undefined && styleCards.length > 0) ||
+      currentSubfolders.length > 0 ? (
         <>
           <div
             className="grid grid-cols-2 gap-3"
@@ -258,7 +359,10 @@ export function LibraryTab({
                 {t.emptyDesc}
               </p>
             </>
-          ) : (
+          ) : searchTag !== "" ||
+            rarityFilter !== "All" ||
+            colorFilter !== "All" ||
+            categoryFilter !== "All" ? (
             <>
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
                 <Search className="w-6 h-6 text-slate-500" />
@@ -279,6 +383,18 @@ export function LibraryTab({
                 className="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-sm">
                 {t.clearFilters}
               </button>
+            </>
+          ) : (
+            <>
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                <BookUp2 className="w-6 h-6 text-slate-500" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800 mb-1">
+                {t.emptyTitle || "Empty Folder"}
+              </h3>
+              <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed">
+                {t.emptyDesc || "No style cards in this folder."}
+              </p>
             </>
           )}
         </div>
