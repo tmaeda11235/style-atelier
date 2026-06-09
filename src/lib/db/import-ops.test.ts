@@ -201,5 +201,57 @@ describe("import-ops tests", () => {
       )
       expect(slot?.values.length).toBe(3)
     })
+
+    it("should propagate logical deletion state (isDeleted: true) in merge mode if incoming has newer timestamp", async () => {
+      // Local cards: card-1 is not deleted
+      await db.styleCards.bulkPut([
+        { ...mockStyleCard("card-1", "Local Card 1", 500), isDeleted: false },
+        { ...mockStyleCard("card-2", "Local Card 2", 2000), isDeleted: false }
+      ])
+      // Local categories: cat-1 is not deleted
+      await db.categories.bulkPut([
+        { ...mockCategory("cat-1", "Local Cat 1", 500), isDeleted: false },
+        { ...mockCategory("cat-2", "Local Cat 2", 2000), isDeleted: false }
+      ])
+
+      const incomingBackup: BackupData = {
+        styleCards: [
+          {
+            ...mockStyleCard("card-1", "Card 1 Deleted Backup", 1500),
+            isDeleted: true
+          }, // Newer -> overwrite to deleted
+          {
+            ...mockStyleCard("card-2", "Card 2 Deleted Backup", 1000),
+            isDeleted: true
+          } // Older -> skip (remains active)
+        ],
+        categories: [
+          {
+            ...mockCategory("cat-1", "Cat 1 Deleted Backup", 1500),
+            isDeleted: true
+          }, // Newer -> overwrite to deleted
+          {
+            ...mockCategory("cat-2", "Cat 2 Deleted Backup", 1000),
+            isDeleted: true
+          } // Older -> skip (remains active)
+        ],
+        userSettings: [],
+        historyItems: []
+      }
+
+      await importBackupData(db, incomingBackup, "merge")
+
+      // Verify Cards
+      const card1 = await db.styleCards.get("card-1")
+      expect(card1?.isDeleted).toBe(true)
+      const card2 = await db.styleCards.get("card-2")
+      expect(card2?.isDeleted).toBeFalsy() // should remain false (not deleted)
+
+      // Verify Categories
+      const cat1 = await db.categories.get("cat-1")
+      expect(cat1?.isDeleted).toBe(true)
+      const cat2 = await db.categories.get("cat-2")
+      expect(cat2?.isDeleted).toBeFalsy() // should remain false
+    })
   })
 })
