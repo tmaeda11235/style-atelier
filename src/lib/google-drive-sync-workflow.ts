@@ -1,4 +1,6 @@
 import { exportDatabase, importDatabase } from "./backup-manager"
+import { db } from "./db"
+import { purgeDeletedRecords } from "./db/purge-ops"
 import type { GoogleDriveClient } from "./google-drive"
 
 export interface SyncWorkflowParams {
@@ -23,6 +25,14 @@ export async function runSyncWorkflow(
     signal,
     addLog
   } = params
+
+  addLog("Purging aged deleted records older than 60 days...")
+  try {
+    const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+    await purgeDeletedRecords(db, thresholdMs)
+  } catch (error) {
+    addLog(`Warning: Failed to purge aged deleted records: ${error}`)
+  }
 
   const backupData = await gdriveClient.downloadBackup(
     token,
