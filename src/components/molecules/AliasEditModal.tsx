@@ -165,22 +165,16 @@ const ModalActions: React.FC<ModalActionsProps> = ({ onDelete, onSave }) => (
   </div>
 )
 
-const useAliasEdit = (
-  editingValue: string,
-  typeAliases: ParameterAlias[],
-  folders: ParameterFolder[],
-  addFolder: (
-    folder: Omit<ParameterFolder, "id" | "createdAt"> & { id?: string }
-  ) => Promise<string>,
-  saveAlias: (
-    alias: Omit<ParameterAlias, "id" | "createdAt" | "updatedAt"> & {
-      id?: string
-    }
-  ) => Promise<void>,
-  deleteAlias: (id: string) => Promise<void>,
-  onClose: () => void,
-  parameterType: "p" | "sref" | "cref" | "imagePrompts"
-) => {
+const useAliasEdit = (props: AliasEditModalProps) => {
+  const {
+    editingValue,
+    typeAliases,
+    addFolder,
+    saveAlias,
+    deleteAlias,
+    onClose,
+    parameterType
+  } = props
   const existing = typeAliases.find((a) => a.value === editingValue)
 
   const [aliasNameInput, setAliasNameInput] = useState(
@@ -224,16 +218,7 @@ const useAliasEdit = (
 }
 
 export const AliasEditModal: React.FC<AliasEditModalProps> = (props) => {
-  const {
-    editingValue,
-    onClose,
-    typeAliases,
-    parameterType,
-    folders,
-    addFolder,
-    saveAlias,
-    deleteAlias
-  } = props
+  const { editingValue, onClose, folders } = props
   const {
     aliasNameInput,
     setAliasNameInput,
@@ -243,16 +228,7 @@ export const AliasEditModal: React.FC<AliasEditModalProps> = (props) => {
     setNewFolderNameInput,
     handleDelete,
     handleSave
-  } = useAliasEdit(
-    editingValue,
-    typeAliases,
-    folders,
-    addFolder,
-    saveAlias,
-    deleteAlias,
-    onClose,
-    parameterType
-  )
+  } = useAliasEdit(props)
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200">
