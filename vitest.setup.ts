@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import "@testing-library/jest-dom"
 import "vitest-canvas-mock"
 import "fake-indexeddb/auto"
@@ -166,4 +167,21 @@ Object.defineProperty(global, "triggerChromeEvent", {
 vi.mock("./src/lib/db", async () => {
   const { db } = await import("./tests/mocks/db")
   return { db }
+})
+
+// ==========================================
+// 7. window.matchMedia Mock
+// ==========================================
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  }))
 })

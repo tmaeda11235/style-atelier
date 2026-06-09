@@ -131,6 +131,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
       const isDark =
         theme === "dark" ||
         (theme === "system" &&
+          window.matchMedia &&
           window.matchMedia("(prefers-color-scheme: dark)").matches)
 
       if (isDark) {
@@ -142,7 +143,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     applyTheme()
 
-    if (theme === "system") {
+    if (theme === "system" && window.matchMedia) {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
       const listener = () => applyTheme()
       mediaQuery.addEventListener("change", listener)
