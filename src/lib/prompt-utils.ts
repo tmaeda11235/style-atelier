@@ -5,78 +5,100 @@ export const PROMPT_DELIMITER_CHARS = [",", "、", "。", ":", ";"]
 
 const PARAM_REGEX = /--([a-z0-9-]+)\s*([^--]*)/g
 
+function extractImagePrompts(promptText: string): {
+  imagePrompts: string[]
+  cleanPromptText: string
+} {
+  const imagePrompts: string[] = []
+  let cleanPromptText = promptText.trim()
+  while (true) {
+    const match = cleanPromptText.match(/^(https?:\/\/[^\s]+)/)
+    if (!match) break
+    imagePrompts.push(match[1])
+    cleanPromptText = cleanPromptText.substring(match[1].length).trim()
+  }
+  return { imagePrompts, cleanPromptText }
+}
+
+function applyParameter(
+  key: string,
+  value: string,
+  parameters: StyleCard["parameters"]
+): void {
+  switch (key) {
+    case "ar":
+      parameters.ar = value
+      break
+    case "sref":
+      parameters.sref = value.split(/\s+/).filter((v) => v.length > 0)
+      break
+    case "cref":
+      parameters.cref = value.split(/\s+/).filter((v) => v.length > 0)
+      break
+    case "p":
+    case "profile":
+      parameters.p = value
+        .trim()
+        .split(/\s+/)
+        .filter((v) => v.length > 0)
+      break
+    case "stylize":
+    case "s":
+      parameters.stylize = parseInt(value, 10)
+      break
+    case "chaos":
+    case "c":
+      parameters.chaos = parseInt(value, 10)
+      break
+    case "weird":
+    case "w":
+      parameters.weird = parseInt(value, 10)
+      break
+    case "tile":
+      parameters.tile = true
+      break
+    case "style":
+      if (value === "raw") {
+        parameters.raw = true
+      }
+      break
+    case "v":
+    case "version":
+      parameters.version = value
+      break
+    case "niji":
+      parameters.niji = value
+      break
+  }
+}
+
+function parseParameters(
+  promptText: string,
+  parameters: StyleCard["parameters"]
+): string {
+  let cleanPromptText = promptText
+  const matches = [...cleanPromptText.matchAll(PARAM_REGEX)]
+  matches.forEach((match) => {
+    const key = match[1].trim()
+    const value = match[2] ? match[2].trim() : ""
+    cleanPromptText = cleanPromptText.replace(match[0], "")
+    applyParameter(key, value, parameters)
+  })
+  return cleanPromptText
+}
+
 export const parsePrompt = (
   fullCommand: string
 ): { promptSegments: PromptSegment[]; parameters: StyleCard["parameters"] } => {
   const parameters: StyleCard["parameters"] = {}
-  let promptText = fullCommand.trim()
-
-  // Extract URLs from the start of the prompt as Image Prompts
-  const imagePrompts: string[] = []
-  while (true) {
-    const match = promptText.match(/^(https?:\/\/[^\s]+)/)
-    if (!match) break
-    imagePrompts.push(match[1])
-    promptText = promptText.substring(match[1].length).trim()
-  }
+  const { imagePrompts, cleanPromptText: afterImage } =
+    extractImagePrompts(fullCommand)
 
   if (imagePrompts.length > 0) {
     parameters.imagePrompts = imagePrompts
   }
 
-  const matches = [...promptText.matchAll(PARAM_REGEX)]
-  matches.forEach((match) => {
-    const key = match[1].trim()
-    const value = match[2] ? match[2].trim() : ""
-    promptText = promptText.replace(match[0], "")
-
-    switch (key) {
-      case "ar":
-        parameters.ar = value
-        break
-      case "sref":
-        parameters.sref = value.split(/\s+/).filter((v) => v.length > 0)
-        break
-      case "cref":
-        parameters.cref = value.split(/\s+/).filter((v) => v.length > 0)
-        break
-      case "p":
-      case "profile":
-        // --p code1 code2 should be split into ["code1", "code2"]
-        parameters.p = value
-          .trim()
-          .split(/\s+/)
-          .filter((v) => v.length > 0)
-        break
-      case "stylize":
-      case "s":
-        parameters.stylize = parseInt(value, 10)
-        break
-      case "chaos":
-      case "c":
-        parameters.chaos = parseInt(value, 10)
-        break
-      case "weird":
-      case "w":
-        parameters.weird = parseInt(value, 10)
-        break
-      case "tile":
-        parameters.tile = true
-        break
-      case "style":
-        if (value === "raw") {
-          parameters.raw = true
-        }
-        break
-      case "v":
-      case "version":
-        parameters.version = value
-        break
-      case "niji":
-        parameters.niji = value
-        break
-    }
-  })
+  const promptText = parseParameters(afterImage, parameters)
 
   const promptSegments: PromptSegment[] = promptText
     .split(PROMPT_DELIMITER_REGEX)
@@ -87,13 +109,11 @@ export const parsePrompt = (
   return { promptSegments, parameters }
 }
 
-export const buildPromptString = (
+function buildSegmentString(
   segments: PromptSegment[],
-  params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[] = [],
   cardWeight?: number
-): string => {
-  const segmentString = segments
+): string {
+  return segments
     .map((seg) => {
       const w = seg.weight !== undefined ? seg.weight : cardWeight
       switch (seg.type) {
@@ -109,7 +129,12 @@ export const buildPromptString = (
     })
     .filter((val) => !!val && val.trim() !== "")
     .join(", ")
+}
 
+function buildParamParts(
+  params: StyleCard["parameters"],
+  maskedKeys: (keyof StyleCard["parameters"])[]
+): string[] {
   const paramParts: string[] = []
   if (params.ar && !maskedKeys.includes("ar"))
     paramParts.push(`--ar ${params.ar}`)
@@ -143,6 +168,18 @@ export const buildPromptString = (
     paramParts.push(`--v ${params.version}`)
   if (params.niji && !maskedKeys.includes("niji"))
     paramParts.push(`--niji ${params.niji}`)
+
+  return paramParts
+}
+
+export const buildPromptString = (
+  segments: PromptSegment[],
+  params: StyleCard["parameters"],
+  maskedKeys: (keyof StyleCard["parameters"])[] = [],
+  cardWeight?: number
+): string => {
+  const segmentString = buildSegmentString(segments, cardWeight)
+  const paramParts = buildParamParts(params, maskedKeys)
 
   const prefix =
     params.imagePrompts?.length && !maskedKeys.includes("imagePrompts")
