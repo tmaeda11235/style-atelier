@@ -110,4 +110,5 @@ To maintain clean architecture and prevent technical debt, the following strict 
 4. **Automated Enforcement via ESLint**:
    - `eslint.config.mjs` strictly enforces rules as `error` by default (including `max-lines: 300`, `max-lines-per-function: 50`, `sonarjs/cognitive-complexity: 15`, and `boundaries/dependencies` prohibiting direct DB imports from components).
    - A whitelist of pre-existing violating files is explicitly maintained in the `eslint.config.mjs` overrides, treating them as `warn` only. Any new files are fully subject to errors.
+   - Progressive localization (i18n) checks are enforced via `eslint-plugin-i18next`'s `no-literal-string` rule, targeting fully-translated files (e.g. `DeleteConfirmModal.tsx`, `HistoryTab.tsx`) to prevent future raw text/translation leaks.
    - The helper script `scratch/auto-sync-eslint.js` dynamically compiles and synchronizes these whitelists. As developers refactor legacy files, executing this script automatically removes them from exceptions, permanently locking in the strict rules.
