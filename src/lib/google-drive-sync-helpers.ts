@@ -109,7 +109,7 @@ export async function promptRestoreConfirmation(params: {
   token: string
   gdriveClient: GoogleDriveClient
   onTokenUpdated: (token: string) => void
-  cloudBackup: { modifiedTime: string; size: string } | null
+  _cloudBackup: { modifiedTime: string; size: string } | null
   progress: GDriveProgressTracker
   confirm: any
   t: any
@@ -119,7 +119,7 @@ export async function promptRestoreConfirmation(params: {
     token,
     gdriveClient,
     onTokenUpdated,
-    cloudBackup,
+    _cloudBackup,
     progress,
     confirm,
     t,
@@ -131,7 +131,7 @@ export async function promptRestoreConfirmation(params: {
   const meta = await gdriveClient.getBackupMetadata(token, onTokenUpdated, {
     signal
   })
-  let currentBackup = cloudBackup
+  let currentBackup: { modifiedTime: string; size: string } | null
   if (meta) {
     const dateStr = new Date(meta.modifiedTime).toLocaleString()
     const sizeKB = (parseInt(meta.size) / 1024).toFixed(1)
