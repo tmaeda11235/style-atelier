@@ -130,7 +130,6 @@ export default ts.config(
       "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/HandBar.tsx",
-      "src/components/organisms/LibraryTab.tsx",
       "src/components/organisms/MintingView.tsx",
       "src/components/organisms/ParameterEditor.tsx",
       "src/components/organisms/Workbench.tsx",
