@@ -89,7 +89,7 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
         thumbnailData:
           "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='purple'/></svg>",
         usageCount: 5,
-        category: "cat-1",
+        category: undefined,
         tags: ["cyberpunk", "nature"]
       })
     })

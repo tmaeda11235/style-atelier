@@ -68,6 +68,13 @@ export const parsePrompt = (
           parameters.raw = true
         }
         break
+      case "v":
+      case "version":
+        parameters.version = value
+        break
+      case "niji":
+        parameters.niji = value
+        break
     }
   })
 
@@ -132,6 +139,10 @@ export const buildPromptString = (
     paramParts.push(`--w ${params.weird}`)
   if (params.tile && !maskedKeys.includes("tile")) paramParts.push("--tile")
   if (params.raw && !maskedKeys.includes("raw")) paramParts.push("--style raw")
+  if (params.version && !maskedKeys.includes("version"))
+    paramParts.push(`--v ${params.version}`)
+  if (params.niji && !maskedKeys.includes("niji"))
+    paramParts.push(`--niji ${params.niji}`)
 
   const prefix =
     params.imagePrompts?.length && !maskedKeys.includes("imagePrompts")

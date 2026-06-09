@@ -280,6 +280,14 @@
     "showMore": "Show More",
     "allRarities": "All Rarities",
     "allCategories": "All",
+    "modelLabel": "Model:",
+    "models": {
+      "all": "All Models",
+      "v6": "V6",
+      "v5": "V5",
+      "niji6": "Niji 6",
+      "niji5": "Niji 5"
+    },
     "colorLabel": "Color:",
     "manageCategories": "Manage Categories",
     "loadMore": "Load More",

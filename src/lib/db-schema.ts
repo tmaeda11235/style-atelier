@@ -42,6 +42,8 @@ export interface StyleCard {
     weird?: number // --w 0-3000
     tile?: boolean // --tile
     raw?: boolean // --style raw
+    version?: string // --v or --version
+    niji?: string // --niji
   }
 
   // --- Security & Privacy (Sealing) ---

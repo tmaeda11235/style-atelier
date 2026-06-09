@@ -509,4 +509,87 @@ describe("useLibrary hook", () => {
       expect(mockAddLog).toHaveBeenCalledWith('Moved card to "Child Cat".')
     })
   })
+
+  describe("filtering by model version", () => {
+    beforeEach(() => {
+      mockStyleCards = [
+        {
+          id: "m1",
+          name: "V6 Card",
+          version: "6",
+          parameters: {},
+          tier: "Common",
+          createdAt: 100,
+          usageCount: 0,
+          isVariable: false
+        },
+        {
+          id: "m2",
+          name: "V5 Card",
+          version: "5.2",
+          parameters: {},
+          tier: "Common",
+          createdAt: 101,
+          usageCount: 0,
+          isVariable: false
+        },
+        {
+          id: "m3",
+          name: "Niji 6 Card",
+          niji: "6",
+          parameters: {},
+          tier: "Common",
+          createdAt: 102,
+          usageCount: 0,
+          isVariable: false
+        },
+        {
+          id: "m4",
+          name: "Niji 5 Card",
+          niji: "5",
+          parameters: {},
+          tier: "Common",
+          createdAt: 103,
+          usageCount: 0,
+          isVariable: false
+        },
+        {
+          id: "m5",
+          name: "Generic Card",
+          parameters: {},
+          tier: "Common",
+          createdAt: 104,
+          usageCount: 0,
+          isVariable: false
+        }
+      ]
+      mockCategories = []
+    })
+
+    it("filters cards by model version V6", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      expect(result.current.styleCards).toHaveLength(5)
+
+      act(() => {
+        result.current.setModelFilter("V6")
+      })
+      expect(result.current.styleCards).toHaveLength(1)
+      expect(result.current.styleCards[0].name).toBe("V6 Card")
+    })
+
+    it("filters cards by model version Niji 6", () => {
+      const { result } = renderHook(() =>
+        useLibrary(mockAddLog, mockSetAlertType)
+      )
+
+      act(() => {
+        result.current.setModelFilter("Niji 6")
+      })
+      expect(result.current.styleCards).toHaveLength(1)
+      expect(result.current.styleCards[0].name).toBe("Niji 6 Card")
+    })
+  })
 })

@@ -2,6 +2,7 @@ import { Tag } from "lucide-react"
 import React from "react"
 
 import { ColorPaletteFilter } from "../molecules/ColorPaletteFilter"
+import { ModelFiltersRow } from "../molecules/ModelFiltersRow"
 
 interface LibraryFilterAccordionProps {
   isFiltersExpanded: boolean
@@ -11,6 +12,16 @@ interface LibraryFilterAccordionProps {
   }
   rarityFilter: string
   setRarityFilter: (rarity: any) => void
+  modelFilter: string
+  setModelFilter: (model: string) => void
+  modelLabel?: string
+  modelOptions?: {
+    all: string
+    v6: string
+    v5: string
+    niji6: string
+    niji5: string
+  }
   sortBy: string
   setSortBy: (sort: any) => void
   colorFilter: string
@@ -36,7 +47,6 @@ interface LibraryFilterAccordionProps {
   sortByUsageLabel?: string
   sortByColorLabel?: string
 }
-
 interface RaritySortFiltersProps {
   expertFeatures: { rarity?: boolean }
   rarityFilter: string
@@ -50,7 +60,6 @@ interface RaritySortFiltersProps {
   sortByUsageLabel: string
   sortByColorLabel: string
 }
-
 export function RaritySortFilters({
   expertFeatures,
   rarityFilter,
@@ -93,13 +102,11 @@ export function RaritySortFilters({
     </div>
   )
 }
-
 interface CategoryFilterButtonProps {
   cat: { id: string; name: string; iconUrl?: string; iconEmoji?: string }
   isSelected: boolean
   onClick: () => void
 }
-
 export function CategoryFilterButton({
   cat,
   isSelected,
@@ -128,7 +135,6 @@ export function CategoryFilterButton({
     </button>
   )
 }
-
 interface CategoryFiltersRowProps {
   categoryFilter: string
   setCategoryFilter: (category: string) => void
@@ -142,7 +148,6 @@ interface CategoryFiltersRowProps {
   allCategoriesLabel: string
   manageCategoriesTitle: string
 }
-
 export function CategoryFiltersRow(props: CategoryFiltersRowProps) {
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mt-0.5 scrollbar-none">
@@ -172,9 +177,74 @@ export function CategoryFiltersRow(props: CategoryFiltersRowProps) {
     </div>
   )
 }
+function RarityAndModelFilters(props: LibraryFilterAccordionProps) {
+  const {
+    expertFeatures,
+    allRaritiesLabel = "All Rarities",
+    sortByNewestLabel = "Newest",
+    sortByOldestLabel = "Oldest",
+    sortByRarityLabel = "Rarity",
+    sortByUsageLabel = "Usage",
+    sortByColorLabel = "Color"
+  } = props
+
+  return (
+    <>
+      <RaritySortFilters
+        expertFeatures={expertFeatures}
+        rarityFilter={props.rarityFilter}
+        setRarityFilter={props.setRarityFilter}
+        sortBy={props.sortBy}
+        setSortBy={props.setSortBy}
+        allRaritiesLabel={allRaritiesLabel}
+        sortByNewestLabel={sortByNewestLabel}
+        sortByOldestLabel={sortByOldestLabel}
+        sortByRarityLabel={sortByRarityLabel}
+        sortByUsageLabel={sortByUsageLabel}
+        sortByColorLabel={sortByColorLabel}
+      />
+      <ModelFiltersRow
+        modelFilter={props.modelFilter}
+        setModelFilter={props.setModelFilter}
+        modelLabel={props.modelLabel}
+        modelOptions={props.modelOptions}
+      />
+    </>
+  )
+}
+
+function ColorAndCategoryFilters(props: LibraryFilterAccordionProps) {
+  const {
+    expertFeatures,
+    allCategoriesLabel = "All",
+    manageCategoriesTitle = "Manage Categories"
+  } = props
+
+  return (
+    <>
+      <ColorPaletteFilter
+        colorFilter={props.colorFilter}
+        setColorFilter={props.setColorFilter}
+        colorOptions={props.colorOptions}
+        colorLabel={props.colorLabel}
+        styleCardsCount={props.styleCardsCount}
+      />
+      {expertFeatures.categories && (
+        <CategoryFiltersRow
+          categoryFilter={props.categoryFilter}
+          setCategoryFilter={props.setCategoryFilter}
+          categories={props.categories}
+          setIsCategoryModalOpen={props.setIsCategoryModalOpen}
+          allCategoriesLabel={allCategoriesLabel}
+          manageCategoriesTitle={manageCategoriesTitle}
+        />
+      )}
+    </>
+  )
+}
 
 export function LibraryFilterAccordion(props: LibraryFilterAccordionProps) {
-  const { isFiltersExpanded, expertFeatures } = props
+  const { isFiltersExpanded } = props
   return (
     <div
       className="transition-all duration-300 ease-in-out overflow-hidden flex flex-col gap-2.5"
@@ -185,40 +255,8 @@ export function LibraryFilterAccordion(props: LibraryFilterAccordionProps) {
         marginTop: isFiltersExpanded ? "4px" : "0px"
       }}
       data-testid="filters-accordion">
-      <RaritySortFilters
-        expertFeatures={expertFeatures}
-        rarityFilter={props.rarityFilter}
-        setRarityFilter={props.setRarityFilter}
-        sortBy={props.sortBy}
-        setSortBy={props.setSortBy}
-        allRaritiesLabel={props.allRaritiesLabel || "All Rarities"}
-        sortByNewestLabel={props.sortByNewestLabel || "Newest"}
-        sortByOldestLabel={props.sortByOldestLabel || "Oldest"}
-        sortByRarityLabel={props.sortByRarityLabel || "Rarity"}
-        sortByUsageLabel={props.sortByUsageLabel || "Usage"}
-        sortByColorLabel={props.sortByColorLabel || "Color"}
-      />
-
-      <ColorPaletteFilter
-        colorFilter={props.colorFilter}
-        setColorFilter={props.setColorFilter}
-        colorOptions={props.colorOptions}
-        colorLabel={props.colorLabel}
-        styleCardsCount={props.styleCardsCount}
-      />
-
-      {expertFeatures.categories && (
-        <CategoryFiltersRow
-          categoryFilter={props.categoryFilter}
-          setCategoryFilter={props.setCategoryFilter}
-          categories={props.categories}
-          setIsCategoryModalOpen={props.setIsCategoryModalOpen}
-          allCategoriesLabel={props.allCategoriesLabel || "All"}
-          manageCategoriesTitle={
-            props.manageCategoriesTitle || "Manage Categories"
-          }
-        />
-      )}
+      <RarityAndModelFilters {...props} />
+      <ColorAndCategoryFilters {...props} />
     </div>
   )
 }

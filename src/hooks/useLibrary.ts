@@ -10,6 +10,7 @@ import { buildPromptString } from "../lib/prompt-utils"
 
 export type SortOption = "newest" | "oldest" | "rarity" | "usage" | "color"
 export type RarityFilter = "All" | StyleCard["tier"]
+export type ModelFilter = "All" | "V6" | "V5" | "Niji 6" | "Niji 5"
 export type ColorFilter =
   | "All"
   | "Red"
@@ -40,6 +41,8 @@ interface StyleCardMetadata {
   promptSegments: StyleCard["promptSegments"]
   parameters: StyleCard["parameters"]
   masking: StyleCard["masking"]
+  version?: string
+  niji?: string
 }
 
 export function useLibrary(
@@ -49,6 +52,7 @@ export function useLibrary(
 ) {
   const [searchTag, setSearchTag] = useState("")
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>("All")
+  const [modelFilter, setModelFilter] = useState<ModelFilter>("All")
   const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
@@ -74,7 +78,9 @@ export function useLibrary(
         sref: c.parameters?.sref || [],
         promptSegments: c.promptSegments,
         parameters: c.parameters,
-        masking: c.masking
+        masking: c.masking,
+        version: c.version || c.parameters?.version,
+        niji: c.niji || c.parameters?.niji
       })
     )
   })
@@ -177,8 +183,34 @@ export function useLibrary(
       result = result.filter((card) => card.tier === rarityFilter)
     }
 
+    if (modelFilter !== "All") {
+      result = result.filter((card) => {
+        const v = card.version
+        const n = card.niji
+        if (modelFilter === "V6") {
+          return v && (v.startsWith("6") || v === "6.0" || v === "6.1")
+        }
+        if (modelFilter === "V5") {
+          return (
+            v &&
+            (v.startsWith("5") || v === "5.0" || v === "5.1" || v === "5.2")
+          )
+        }
+        if (modelFilter === "Niji 6") {
+          return n && (n.startsWith("6") || n === "6")
+        }
+        if (modelFilter === "Niji 5") {
+          return n && (n.startsWith("5") || n === "5")
+        }
+        return false
+      })
+    }
+
     const isSearching =
-      searchTag !== "" || rarityFilter !== "All" || colorFilter !== "All"
+      searchTag !== "" ||
+      rarityFilter !== "All" ||
+      modelFilter !== "All" ||
+      colorFilter !== "All"
     if (categoryFilter !== "All") {
       result = result.filter((card) => card.category === categoryFilter)
     } else if (!isSearching) {
@@ -253,6 +285,7 @@ export function useLibrary(
     searchTag,
     flexsearchIndex,
     rarityFilter,
+    modelFilter,
     categoryFilter,
     colorFilter,
     sortBy,
@@ -262,7 +295,14 @@ export function useLibrary(
   // 検索条件やソート条件が変わったら、表示件数をリセットする
   useMemo(() => {
     setVisibleCount(pageSize)
-  }, [searchTag, rarityFilter, categoryFilter, colorFilter, sortBy])
+  }, [
+    searchTag,
+    rarityFilter,
+    modelFilter,
+    categoryFilter,
+    colorFilter,
+    sortBy
+  ])
 
   const visibleMeta = useMemo(() => {
     return filteredAndSortedMeta.slice(0, visibleCount)
@@ -398,6 +438,8 @@ export function useLibrary(
     setSearchTag,
     rarityFilter,
     setRarityFilter,
+    modelFilter,
+    setModelFilter,
     categoryFilter,
     setCategoryFilter,
     colorFilter,

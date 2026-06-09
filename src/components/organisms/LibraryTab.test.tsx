@@ -51,6 +51,8 @@ const defaultMockReturnValue = {
   setSearchTag: vi.fn(),
   rarityFilter: "All",
   setRarityFilter: vi.fn(),
+  modelFilter: "All",
+  setModelFilter: vi.fn(),
   categoryFilter: "All",
   setCategoryFilter: vi.fn(),
   colorFilter: "All",
@@ -196,6 +198,7 @@ describe("LibraryTab", () => {
   it("renders empty state when search filters return no cards and allows clearing filters", () => {
     const mockSetSearchTag = vi.fn()
     const mockSetRarityFilter = vi.fn()
+    const mockSetModelFilter = vi.fn()
     const mockSetCategoryFilter = vi.fn()
 
     vi.mocked(useLibrary).mockReturnValue({
@@ -205,6 +208,8 @@ describe("LibraryTab", () => {
       setSearchTag: mockSetSearchTag,
       rarityFilter: "All",
       setRarityFilter: mockSetRarityFilter,
+      modelFilter: "All",
+      setModelFilter: mockSetModelFilter,
       categoryFilter: "All",
       setCategoryFilter: mockSetCategoryFilter,
       togglePin: mockTogglePin,
@@ -229,6 +234,7 @@ describe("LibraryTab", () => {
 
     expect(mockSetSearchTag).toHaveBeenCalledWith("")
     expect(mockSetRarityFilter).toHaveBeenCalledWith("All")
+    expect(mockSetModelFilter).toHaveBeenCalledWith("All")
     expect(mockSetCategoryFilter).toHaveBeenCalledWith("All")
   })
 
@@ -253,5 +259,28 @@ describe("LibraryTab", () => {
 
     fireEvent.click(showMoreBtn)
     expect(mockLoadMore).toHaveBeenCalled()
+  })
+
+  it("renders model version filters and handles model filter click", () => {
+    const mockSetModelFilter = vi.fn()
+    vi.mocked(useLibrary).mockReturnValue({
+      ...defaultMockReturnValue,
+      togglePin: mockTogglePin,
+      modelFilter: "All",
+      setModelFilter: mockSetModelFilter
+    })
+
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
+
+    expect(screen.getByText("モデル:")).toBeDefined()
+
+    const v6Button = screen.getByTestId("model-filter-V6")
+    expect(v6Button).toBeDefined()
+    fireEvent.click(v6Button)
+    expect(mockSetModelFilter).toHaveBeenCalledWith("V6")
   })
 })

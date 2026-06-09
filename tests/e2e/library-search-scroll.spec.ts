@@ -44,7 +44,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
         name: `Fancy Card ${i}`,
         tags: i % 2 === 0 ? ["red-theme"] : ["blue-theme"],
         tier: "Common",
-        category: "All",
+        category: undefined,
         dominantColor:
           i % 3 === 0 ? "#ef4444" : i % 3 === 1 ? "#3b82f6" : "#6b7280", // Red, Blue, Gray
         parameters: { sref: [`sref-url-${i}`] },
@@ -214,7 +214,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
         name: "Reset Test Card",
         tags: ["blue-theme"],
         tier: "Common",
-        category: "All",
+        category: undefined,
         dominantColor: "#3b82f6", // Blue
         parameters: { sref: ["sref-url-reset"] },
         promptSegments: [{ type: "text", value: "prompt reset" }],
@@ -268,5 +268,179 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     await page.screenshot({
       path: path.join(screenshotsDir, "library-after-clear-filters.png")
     })
+  })
+
+  test("should support model version filtering", async ({ page }) => {
+    test.setTimeout(60000)
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    console.log("Navigating to sandbox page...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip onboarding
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Switch to Library tab
+    console.log("Switching to Library tab...")
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await expect(libraryTabButton).toBeVisible()
+    await libraryTabButton.click()
+
+    // Expand accordion to access model filters
+    const toggleButton = spFrame.locator("[data-testid='toggle-filters-btn']")
+    await expect(toggleButton).toBeVisible()
+    await toggleButton.click()
+    await page.waitForTimeout(500)
+
+    // Seed mock cards with model versions into IndexedDB
+    console.log("Seeding mock cards with model versions...")
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      if (!database) {
+        throw new Error("db is undefined")
+      }
+      await database.styleCards.clear()
+
+      const mockCards = [
+        // 3 cards with V6
+        ...Array.from({ length: 3 }, (_, i) => ({
+          id: `card-v6-${i}`,
+          name: `V6 Card ${i}`,
+          version: "6",
+          tier: "Common",
+          category: undefined,
+          createdAt: Date.now() - i * 1000,
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        })),
+        // 2 cards with V5
+        ...Array.from({ length: 2 }, (_, i) => ({
+          id: `card-v5-${i}`,
+          name: `V5 Card ${i}`,
+          version: "5.2",
+          tier: "Common",
+          category: undefined,
+          createdAt: Date.now() - 3000 - i * 1000,
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        })),
+        // 1 card with Niji 6
+        {
+          id: "card-niji6",
+          name: "Niji 6 Card",
+          niji: "6",
+          tier: "Common",
+          category: undefined,
+          createdAt: Date.now() - 5000,
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        },
+        // 1 card with Niji 5
+        {
+          id: "card-niji5",
+          name: "Niji 5 Card",
+          niji: "5",
+          tier: "Common",
+          category: undefined,
+          createdAt: Date.now() - 6000,
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        },
+        // 3 cards with no version
+        ...Array.from({ length: 3 }, (_, i) => ({
+          id: `card-none-${i}`,
+          name: `No Model Card ${i}`,
+          tier: "Common",
+          category: undefined,
+          createdAt: Date.now() - 7000 - i * 1000,
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        }))
+      ]
+      await database.styleCards.bulkAdd(mockCards)
+    })
+
+    await page.waitForTimeout(1000)
+
+    const allCardsInGrid = spFrame.locator(
+      "[data-tutorial='library-card-grid'] > div"
+    )
+
+    // Total should be 10 cards
+    await expect(allCardsInGrid).toHaveCount(10, { timeout: 10000 })
+
+    // Apply V6 model filter
+    console.log("Applying V6 model filter...")
+    const v6FilterBtn = spFrame.locator("[data-testid='model-filter-V6']")
+    await expect(v6FilterBtn).toBeVisible()
+    await v6FilterBtn.click()
+    await page.waitForTimeout(500)
+
+    // Grid should have 3 cards (V6 Card 0, 1, 2)
+    await expect(allCardsInGrid).toHaveCount(3)
+
+    // Take screenshot of V6 filter
+    await page.screenshot({
+      path: path.join(screenshotsDir, "library-model-filter-v6.png")
+    })
+
+    // Apply Niji 6 model filter
+    console.log("Applying Niji 6 model filter...")
+    const niji6FilterBtn = spFrame.locator(
+      "[data-testid='model-filter-Niji-6']"
+    )
+    await expect(niji6FilterBtn).toBeVisible()
+    await niji6FilterBtn.click()
+    await page.waitForTimeout(500)
+
+    // Grid should have 1 card (Niji 6 Card)
+    await expect(allCardsInGrid).toHaveCount(1)
+
+    // Take screenshot of Niji 6 filter
+    await page.screenshot({
+      path: path.join(screenshotsDir, "library-model-filter-niji6.png")
+    })
+
+    // Clear filters by selecting "All" model filter
+    console.log("Clearing filters...")
+    const allModelFilterBtn = spFrame.locator(
+      "[data-testid='model-filter-All']"
+    )
+    await expect(allModelFilterBtn).toBeVisible()
+    await allModelFilterBtn.click()
+    await page.waitForTimeout(500)
+
+    // Grid should show all 10 cards again
+    await expect(allCardsInGrid).toHaveCount(10)
   })
 })
