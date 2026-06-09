@@ -58,6 +58,8 @@ export function LibraryTab({
     setSearchTag,
     rarityFilter,
     setRarityFilter,
+    modelFilter,
+    setModelFilter,
     categoryFilter,
     setCategoryFilter,
     colorFilter,
@@ -78,6 +80,7 @@ export function LibraryTab({
 
   const activeFiltersCount = [
     rarityFilter !== "All",
+    modelFilter !== "All",
     categoryFilter !== "All",
     colorFilter !== "All",
     sortBy !== "newest"
@@ -151,12 +154,16 @@ export function LibraryTab({
           expertFeatures={expertFeatures}
           rarityFilter={rarityFilter}
           setRarityFilter={setRarityFilter}
+          modelFilter={modelFilter}
+          setModelFilter={setModelFilter}
           sortBy={sortBy}
           setSortBy={setSortBy}
           colorFilter={colorFilter}
           setColorFilter={setColorFilter}
           colorOptions={colorOptions}
           colorLabel={t.colorLabel}
+          modelLabel={t.modelLabel}
+          modelOptions={t.models}
           styleCardsCount={styleCards?.length || 0}
           categoryFilter={categoryFilter}
           setCategoryFilter={setCategoryFilter}
@@ -377,6 +384,7 @@ export function LibraryTab({
                 onClick={() => {
                   setSearchTag("")
                   setRarityFilter("All")
+                  setModelFilter("All")
                   setCategoryFilter("All")
                   setColorFilter("All")
                 }}
