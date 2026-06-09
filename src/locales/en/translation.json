@@ -222,7 +222,7 @@
   },
   "dragAndDrop": {
     "noValidImage": "No valid image file dropped.",
-    "noQrCode": "No QR code found in the image.",
+    "noQrCode": "Could not detect QR code. Please try using an uncompressed image, or crop the QR code area before uploading.",
     "invalidCardData": "Invalid card data in QR code or corrupted.",
     "importFailed": "Failed to import card: ",
     "dropOverlay": "Drop QR Card Image to Import",

@@ -32,6 +32,151 @@ function base64ToUint8Array(base64: string): Uint8Array {
   return bytes
 }
 
+// CRC-32 Utility
+let crcTable: number[] | null = null
+
+function getCRCTable(): number[] {
+  if (crcTable) return crcTable
+  const table: number[] = []
+  for (let n = 0; n < 256; n++) {
+    let c = n
+    for (let k = 0; k < 8; k++) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+    }
+    table[n] = c
+  }
+  crcTable = table
+  return table
+}
+
+export function crc32(bytes: Uint8Array): number {
+  const table = getCRCTable()
+  let crc = 0 ^ -1
+  for (let i = 0; i < bytes.length; i++) {
+    crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 0xff]
+  }
+  return (crc ^ -1) >>> 0
+}
+
+/**
+ * Inserts stylecard payload into PNG's tEXt chunk
+ */
+export function insertMetadataToPng(
+  pngBytes: Uint8Array,
+  key: string,
+  value: string
+): Uint8Array {
+  if (
+    pngBytes.length < 8 ||
+    pngBytes[0] !== 0x89 ||
+    pngBytes[1] !== 0x50 ||
+    pngBytes[2] !== 0x4e ||
+    pngBytes[3] !== 0x47
+  ) {
+    throw new Error("Invalid PNG signature")
+  }
+
+  const encoder = new TextEncoder()
+  const keyBytes = encoder.encode(key)
+  const valBytes = encoder.encode(value)
+
+  const chunkData = new Uint8Array(keyBytes.length + 1 + valBytes.length)
+  chunkData.set(keyBytes, 0)
+  chunkData[keyBytes.length] = 0 // null separator
+  chunkData.set(valBytes, keyBytes.length + 1)
+
+  const chunkType = encoder.encode("tEXt")
+  const length = chunkData.length
+
+  const newChunk = new Uint8Array(4 + 4 + length + 4)
+  const view = new DataView(newChunk.buffer)
+  view.setUint32(0, length, false)
+  newChunk.set(chunkType, 4)
+  newChunk.set(chunkData, 8)
+
+  const crcTarget = new Uint8Array(4 + length)
+  crcTarget.set(chunkType, 0)
+  crcTarget.set(chunkData, 4)
+  const crcVal = crc32(crcTarget)
+  view.setUint32(8 + length, crcVal, false)
+
+  // Find the end of the IHDR chunk to insert our new chunk
+  const ihdrLenView = new DataView(pngBytes.buffer, pngBytes.byteOffset + 8, 4)
+  const ihdrLen = ihdrLenView.getUint32(0, false)
+  const ihdrEndPos = 8 + 4 + 4 + ihdrLen + 4
+
+  const result = new Uint8Array(pngBytes.length + newChunk.length)
+  result.set(pngBytes.subarray(0, ihdrEndPos), 0)
+  result.set(newChunk, ihdrEndPos)
+  result.set(pngBytes.subarray(ihdrEndPos), ihdrEndPos + newChunk.length)
+
+  return result
+}
+
+function isPngSignatureValid(pngBytes: Uint8Array): boolean {
+  return (
+    pngBytes.length >= 8 &&
+    pngBytes[0] === 0x89 &&
+    pngBytes[1] === 0x50 &&
+    pngBytes[2] === 0x4e &&
+    pngBytes[3] === 0x47
+  )
+}
+
+function parseTextChunk(
+  data: Uint8Array,
+  key: string,
+  decoder: TextDecoder
+): string | null {
+  const nullIdx = data.indexOf(0)
+  if (nullIdx === -1) return null
+
+  const chunkKey = decoder.decode(data.subarray(0, nullIdx))
+  if (chunkKey === key) {
+    return decoder.decode(data.subarray(nullIdx + 1))
+  }
+  return null
+}
+
+/**
+ * Extracts stylecard payload from PNG's tEXt chunk
+ */
+export function extractMetadataFromPng(
+  pngBytes: Uint8Array,
+  key: string
+): string | null {
+  if (!isPngSignatureValid(pngBytes)) {
+    return null
+  }
+
+  let offset = 8
+  const decoder = new TextDecoder()
+
+  while (offset < pngBytes.length) {
+    if (offset + 8 > pngBytes.length) break
+    const view = new DataView(pngBytes.buffer, pngBytes.byteOffset + offset, 8)
+    const length = view.getUint32(0, false)
+    const typeBytes = pngBytes.subarray(offset + 4, offset + 8)
+    const type = String.fromCharCode(...typeBytes)
+
+    if (type === "IEND") {
+      break
+    }
+
+    if (type === "tEXt" && offset + 8 + length <= pngBytes.length) {
+      const data = pngBytes.subarray(offset + 8, offset + 8 + length)
+      const value = parseTextChunk(data, key, decoder)
+      if (value !== null) {
+        return value
+      }
+    }
+
+    offset += 8 + length + 4
+  }
+
+  return null
+}
+
 /**
  * Compresses essential StyleCard fields into a Base64 string payload.
  * Strips heavy visual data like thumbnailData.
@@ -122,30 +267,104 @@ export function generateQRCodeUrl(
 
 /**
  * Reads a QR code from a File object (Browser environment).
+ * Attempts to extract from PNG metadata first, then scans the image,
+ * and falls back to scanning a cropped/scaled bottom-right corner.
  */
 export function readQRCodeFromImage(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    // 1. Try reading PNG metadata first, if readAsArrayBuffer is supported
+    if (typeof FileReader.prototype.readAsArrayBuffer === "function") {
+      const binaryReader = new FileReader()
+      binaryReader.onload = (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer
+          const bytes = new Uint8Array(arrayBuffer)
+          const metadata = extractMetadataFromPng(bytes, "stylecard")
+          if (metadata) {
+            resolve(metadata)
+            return
+          }
+        } catch (err) {
+          console.warn("Failed to check PNG metadata:", err)
+        }
+
+        // If metadata not found or failed, proceed to QR code scanning
+        scanQRCodeImage(file).then(resolve)
+      }
+      binaryReader.onerror = () => {
+        // Fallback directly to image scanning if binary read fails
+        scanQRCodeImage(file).then(resolve)
+      }
+      binaryReader.readAsArrayBuffer(file)
+    } else {
+      // Direct fallback to scan image
+      scanQRCodeImage(file).then(resolve)
+    }
+  })
+}
+
+function tryFullScan(img: HTMLImageElement): string | null {
+  const canvas = document.createElement("canvas")
+  canvas.width = img.width
+  canvas.height = img.height
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return null
+  ctx.drawImage(img, 0, 0)
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const code = jsQR(imageData.data, imageData.width, imageData.height)
+  return code ? code.data : null
+}
+
+function tryCropScan(img: HTMLImageElement, scale: number): string | null {
+  const cropX = Math.floor(img.width * 0.5)
+  const cropY = Math.floor(img.height * 0.55)
+  const cropW = img.width - cropX
+  const cropH = img.height - cropY
+
+  const canvas = document.createElement("canvas")
+  canvas.width = cropW * scale
+  canvas.height = cropH * scale
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return null
+
+  if (scale > 1) {
+    ctx.imageSmoothingEnabled = false
+  }
+  ctx.drawImage(
+    img,
+    cropX,
+    cropY,
+    cropW,
+    cropH,
+    0,
+    0,
+    cropW * scale,
+    cropH * scale
+  )
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const code = jsQR(imageData.data, imageData.width, imageData.height)
+  return code ? code.data : null
+}
+
+function scanQRCodeImage(file: File): Promise<string | null> {
   return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       const img = new Image()
       img.onload = () => {
-        const canvas = document.createElement("canvas")
-        canvas.width = img.width
-        canvas.height = img.height
-        const ctx = canvas.getContext("2d")
-        if (!ctx) {
-          resolve(null)
-          return
-        }
-        ctx.drawImage(img, 0, 0)
         try {
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-          const code = jsQR(imageData.data, imageData.width, imageData.height)
-          if (code) {
-            resolve(code.data)
-          } else {
-            resolve(null)
+          const fullResult = tryFullScan(img)
+          if (fullResult) {
+            resolve(fullResult)
+            return
           }
+          const cropResult = tryCropScan(img, 1)
+          if (cropResult) {
+            resolve(cropResult)
+            return
+          }
+          const scaleResult = tryCropScan(img, 2)
+          resolve(scaleResult)
         } catch (err) {
           console.error("Error extracting image data for QR scanning:", err)
           resolve(null)

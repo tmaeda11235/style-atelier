@@ -8,7 +8,8 @@ vi.mock("./qr-utils", () => ({
   compressCardData: vi.fn().mockReturnValue("mocked-compressed-data"),
   generateQRCodeUrl: vi
     .fn()
-    .mockResolvedValue("data:image/png;base64,mockedqrcode")
+    .mockResolvedValue("data:image/png;base64,mockedqrcode"),
+  insertMetadataToPng: vi.fn().mockImplementation((pngBytes) => pngBytes)
 }))
 
 // Mock assets/icon.png
@@ -31,7 +32,7 @@ describe("export-utils", () => {
     createdObjectURLs = []
     mockImageInstances.length = 0
 
-    URL.createObjectURL = vi.fn((blob: Blob) => {
+    URL.createObjectURL = vi.fn((_blob: Blob) => {
       const url = `blob:mock-url-${createdObjectURLs.length}`
       createdObjectURLs.push(url)
       return url
@@ -300,7 +301,7 @@ describe("export-utils", () => {
         expect(mockAnchor.click).toHaveBeenCalled()
         expect(mockAnchor.download).toContain("Test_Card_")
         expect(mockAnchor.download).toContain(".png")
-        expect(mockAnchor.href).toBe("data:image/png;base64,mockedcanvaspng")
+        expect(mockAnchor.href).toContain("blob:mock-url-")
       } finally {
         spyCreateElement.mockRestore()
         HTMLCanvasElement.prototype.toDataURL = originalToDataURL

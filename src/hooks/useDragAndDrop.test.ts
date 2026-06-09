@@ -1,26 +1,27 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { useDragAndDrop } from "./useDragAndDrop"
-import { db } from "../lib/db"
-import { renderHook, act } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
 import iconUrl from "url:../../assets/icon.png"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "../lib/db"
+import { useDragAndDrop } from "./useDragAndDrop"
 
 vi.mock("../lib/db", () => {
   return {
     db: {
       historyItems: {
-        put: vi.fn(),
+        put: vi.fn()
       },
       styleCards: {
         where: vi.fn(),
         update: vi.fn(),
         get: vi.fn().mockResolvedValue(null),
-        put: vi.fn().mockResolvedValue("imported-card-id"),
+        put: vi.fn().mockResolvedValue("imported-card-id")
       },
       getCard: vi.fn().mockResolvedValue(null),
       putCard: vi.fn().mockResolvedValue("imported-card-id"),
       getCardByJobId: vi.fn(),
-      updateCard: vi.fn(),
-    },
+      updateCard: vi.fn()
+    }
   }
 })
 
@@ -31,13 +32,13 @@ vi.mock("../lib/qr-utils", () => ({
     name: "Imported Card",
     promptSegments: [{ type: "text", value: "imported cat" }],
     parameters: {},
-    images: ["https://example.com/cdn.png"],
-  }),
+    images: ["https://example.com/cdn.png"]
+  })
 }))
 
 global.fetch = vi.fn().mockResolvedValue({
   ok: true,
-  blob: vi.fn().mockResolvedValue(new Blob(["bytes"], { type: "image/png" })),
+  blob: vi.fn().mockResolvedValue(new Blob(["bytes"], { type: "image/png" }))
 })
 
 class MockFileReader {
@@ -85,14 +86,14 @@ describe("useDragAndDrop", () => {
       id: "test-job-id",
       fullCommand: "test prompt",
       imageUrl: "https://example.com/img.png",
-      timestamp: 1234567,
+      timestamp: 1234567
     }
 
     const dummyEvent = {
       preventDefault: vi.fn(),
       dataTransfer: {
-        getData: vi.fn().mockReturnValue(JSON.stringify(mockItem)),
-      },
+        getData: vi.fn().mockReturnValue(JSON.stringify(mockItem))
+      }
     } as any
 
     let returnedItem: any
@@ -104,14 +105,17 @@ describe("useDragAndDrop", () => {
     expect(db.historyItems.put).toHaveBeenCalledWith(
       expect.objectContaining({
         ...mockItem,
-        localImageBlob: expect.any(Blob),
+        localImageBlob: expect.any(Blob)
       })
     )
-    expect(result.current.droppedItem).toEqual({ id: "test-job-id", isMerged: false })
+    expect(result.current.droppedItem).toEqual({
+      id: "test-job-id",
+      isMerged: false
+    })
     expect(returnedItem).toEqual(
       expect.objectContaining({
         ...mockItem,
-        localImageBlob: expect.any(Blob),
+        localImageBlob: expect.any(Blob)
       })
     )
   })
@@ -124,7 +128,7 @@ describe("useDragAndDrop", () => {
       name: "Cool Card",
       jobId: "test-job-id",
       images: ["https://example.com/first.png"],
-      thumbnailData: "https://example.com/first.png",
+      thumbnailData: "https://example.com/first.png"
     }
 
     // Mock DB: style card found on first call
@@ -135,14 +139,14 @@ describe("useDragAndDrop", () => {
       id: "test-job-id",
       fullCommand: "test prompt",
       imageUrl: "https://example.com/second.png",
-      timestamp: 1234567,
+      timestamp: 1234567
     }
 
     const dummyEvent = {
       preventDefault: vi.fn(),
       dataTransfer: {
-        getData: vi.fn().mockReturnValue(JSON.stringify(mockItem)),
-      },
+        getData: vi.fn().mockReturnValue(JSON.stringify(mockItem))
+      }
     } as any
 
     let returnedItem: any
@@ -152,14 +156,17 @@ describe("useDragAndDrop", () => {
 
     expect(db.getCardByJobId).toHaveBeenCalledWith("test-job-id")
     expect(db.updateCard).toHaveBeenCalledWith("card-uuid-123", {
-      images: ["https://example.com/first.png", "https://example.com/second.png"],
-      updatedAt: expect.any(Number),
+      images: [
+        "https://example.com/first.png",
+        "https://example.com/second.png"
+      ],
+      updatedAt: expect.any(Number)
     })
     expect(db.historyItems.put).not.toHaveBeenCalled()
     expect(result.current.droppedItem).toEqual({
       id: "card-uuid-123",
       name: "Cool Card",
-      isMerged: true,
+      isMerged: true
     })
     expect(returnedItem).toEqual(mockItem)
   })
@@ -173,7 +180,7 @@ describe("useDragAndDrop", () => {
       jobId: "other-job-id",
       associatedJobIds: ["test-job-id"],
       images: ["https://example.com/first.png"],
-      thumbnailData: "https://example.com/first.png",
+      thumbnailData: "https://example.com/first.png"
     }
 
     // Mock DB: getCardByJobId returns card
@@ -184,14 +191,14 @@ describe("useDragAndDrop", () => {
       id: "test-job-id",
       fullCommand: "test prompt",
       imageUrl: "https://example.com/second.png",
-      timestamp: 1234567,
+      timestamp: 1234567
     }
 
     const dummyEvent = {
       preventDefault: vi.fn(),
       dataTransfer: {
-        getData: vi.fn().mockReturnValue(JSON.stringify(mockItem)),
-      },
+        getData: vi.fn().mockReturnValue(JSON.stringify(mockItem))
+      }
     } as any
 
     let returnedItem: any
@@ -201,14 +208,17 @@ describe("useDragAndDrop", () => {
 
     expect(db.getCardByJobId).toHaveBeenCalledWith("test-job-id")
     expect(db.updateCard).toHaveBeenCalledWith("card-uuid-456", {
-      images: ["https://example.com/first.png", "https://example.com/second.png"],
-      updatedAt: expect.any(Number),
+      images: [
+        "https://example.com/first.png",
+        "https://example.com/second.png"
+      ],
+      updatedAt: expect.any(Number)
     })
     expect(db.historyItems.put).not.toHaveBeenCalled()
     expect(result.current.droppedItem).toEqual({
       id: "card-uuid-456",
       name: "Associated Card",
-      isMerged: true,
+      isMerged: true
     })
     expect(returnedItem).toEqual(mockItem)
   })
@@ -222,8 +232,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          types: ["Files"],
-        },
+          types: ["Files"]
+        }
       } as any
       act(() => {
         result.current.handleDragOver(dummyEvent)
@@ -239,8 +249,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       let returnVal: any
@@ -254,10 +264,12 @@ describe("useDragAndDrop", () => {
           id: "imported-card-id",
           name: "Imported Card",
           thumbnailData: "data:image/png;base64,mockbase64",
-          associatedJobIds: [],
+          associatedJobIds: []
         })
       )
-      expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
+      expect(mockAddLog).toHaveBeenCalledWith(
+        'Imported card "Imported Card" successfully!'
+      )
       expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
     })
 
@@ -269,7 +281,7 @@ describe("useDragAndDrop", () => {
         name: "Cool Card",
         jobId: "test-job-id",
         images: ["https://example.com/first.png"],
-        thumbnailData: "https://example.com/first.png",
+        thumbnailData: "https://example.com/first.png"
       }
 
       vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
@@ -279,7 +291,7 @@ describe("useDragAndDrop", () => {
         id: "test-job-id",
         fullCommand: "test prompt",
         imageUrl: "https://example.com/second.png",
-        timestamp: 1234567,
+        timestamp: 1234567
       }
 
       const dummyFile = new File(["test"], "card.png", { type: "image/png" })
@@ -288,8 +300,8 @@ describe("useDragAndDrop", () => {
         dataTransfer: {
           types: ["Files", "application/json"],
           files: [dummyFile],
-          getData: vi.fn().mockReturnValue(JSON.stringify(mockItem)),
-        },
+          getData: vi.fn().mockReturnValue(JSON.stringify(mockItem))
+        }
       } as any
 
       let returnVal: any
@@ -304,7 +316,7 @@ describe("useDragAndDrop", () => {
     it("should use placeholder icon when artwork fetch fails", async () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
-        status: 404,
+        status: 404
       } as any)
 
       const { result } = renderHook(() => useDragAndDrop(mockAddLog))
@@ -313,8 +325,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       let returnVal: any
@@ -327,10 +339,12 @@ describe("useDragAndDrop", () => {
         expect.objectContaining({
           id: "imported-card-id",
           name: "Imported Card",
-          thumbnailData: iconUrl,
+          thumbnailData: iconUrl
         })
       )
-      expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
+      expect(mockAddLog).toHaveBeenCalledWith(
+        'Imported card "Imported Card" successfully!'
+      )
       expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
     })
 
@@ -341,7 +355,7 @@ describe("useDragAndDrop", () => {
         name: "Imported Card",
         promptSegments: [{ type: "text", value: "imported cat" }],
         parameters: {},
-        images: [],
+        images: []
       })
 
       const { result } = renderHook(() => useDragAndDrop(mockAddLog))
@@ -350,8 +364,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       let returnVal: any
@@ -364,10 +378,12 @@ describe("useDragAndDrop", () => {
         expect.objectContaining({
           id: "imported-card-id",
           name: "Imported Card",
-          thumbnailData: iconUrl,
+          thumbnailData: iconUrl
         })
       )
-      expect(mockAddLog).toHaveBeenCalledWith('Imported card "Imported Card" successfully!')
+      expect(mockAddLog).toHaveBeenCalledWith(
+        'Imported card "Imported Card" successfully!'
+      )
       expect(returnVal).toEqual({ id: "imported-card-id", isImport: true })
     })
 
@@ -381,8 +397,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       let returnVal: any
@@ -393,7 +409,8 @@ describe("useDragAndDrop", () => {
       expect(returnVal).toBeNull()
       expect(result.current.droppedItem).toEqual({
         isError: true,
-        errorMessage: "No QR code found in the image."
+        errorMessage:
+          "Could not detect QR code. Please try using an uncompressed image, or crop the QR code area before uploading."
       })
     })
 
@@ -402,7 +419,7 @@ describe("useDragAndDrop", () => {
       vi.mocked(decompressCardData).mockReturnValueOnce({
         id: "imported-card-id",
         name: "", // empty name makes it invalid
-        promptSegments: [],
+        promptSegments: []
       })
 
       const { result } = renderHook(() => useDragAndDrop(mockAddLog))
@@ -411,8 +428,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       let returnVal: any
@@ -441,8 +458,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       await act(async () => {
@@ -451,7 +468,8 @@ describe("useDragAndDrop", () => {
 
       expect(result.current.droppedItem).toEqual({
         isError: true,
-        errorMessage: "画像からQRコードが検出されませんでした。"
+        errorMessage:
+          "QRコードが検出できませんでした。圧縮されていない画像を試すか、QRコード部分をトリミングしてアップロードしてください。"
       })
 
       // Restore
@@ -466,8 +484,8 @@ describe("useDragAndDrop", () => {
       const dummyEvent = {
         preventDefault: vi.fn(),
         dataTransfer: {
-          files: [mockFile],
-        },
+          files: [mockFile]
+        }
       } as any
 
       await act(async () => {

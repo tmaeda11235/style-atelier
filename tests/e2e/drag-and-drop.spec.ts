@@ -458,4 +458,70 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
 
     console.log("Drag overlay E2E test passed successfully!")
   })
+
+  test("should show diagnostic error message when dropping a non-QR image file", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for invalid QR image drop E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    const dropZone = spFrame.locator(".h-full.relative.overflow-hidden")
+    await expect(dropZone).toBeVisible({ timeout: 10000 })
+
+    // 2. Dispatch a drop event with an invalid (non-QR) image file mock
+    console.log("Simulating drag-and-drop of an invalid QR image file...")
+    await dropZone.evaluate(async (element) => {
+      // Create a dummy transparent PNG 1x1 pixel as a File object
+      const base64Png =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+      const byteCharacters = atob(base64Png)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const file = new File([byteArray], "no-qr.png", { type: "image/png" })
+
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(file)
+
+      const dragOverEvent = new DragEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      })
+      element.dispatchEvent(dragOverEvent)
+
+      const dropEvent = new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      })
+      element.dispatchEvent(dropEvent)
+    })
+
+    // 3. Verify that the diagnostic error notification appears
+    console.log("Checking for diagnostic error message...")
+    const errorNotification = spFrame
+      .locator("text=/Could not detect QR code|QRコードが検出できませんでした/")
+      .first()
+    await expect(errorNotification).toBeVisible({ timeout: 15000 })
+
+    // 4. Capture screenshot of the error toast for PR evidence
+    await page.screenshot({
+      path: path.join(screenshotsDir, "drag-and-drop-no-qr-error.png")
+    })
+    console.log("Invalid QR image E2E test passed successfully!")
+  })
 })

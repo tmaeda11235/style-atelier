@@ -7,6 +7,7 @@ import {
   drawCardInfo,
   drawQRCode
 } from "./export/draw"
+import { compressCardData, insertMetadataToPng } from "./qr-utils"
 
 /**
  * Renders the card content onto a canvas.
@@ -52,10 +53,33 @@ export async function renderCardToCanvas(
 export async function exportCardAsImage(card: StyleCard): Promise<void> {
   const canvas = await renderCardToCanvas(card)
   const dataUrl = canvas.toDataURL("image/png")
+
+  // 1. Get the payload
+  const payload = compressCardData(card)
+
+  // 2. Convert DataURL to Uint8Array
+  const base64 = dataUrl.split(",")[1]
+  const binaryStr = atob(base64)
+  const len = binaryStr.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryStr.charCodeAt(i)
+  }
+
+  // 3. Insert metadata into PNG
+  const bytesWithMetadata = insertMetadataToPng(bytes, "stylecard", payload)
+
+  // 4. Create Blob and download
+  const blob = new Blob([bytesWithMetadata], { type: "image/png" })
+  const blobUrl = URL.createObjectURL(blob)
+
   const downloadLink = document.createElement("a")
   const safeName = card.name.replace(/[\s/\\?%*:|"<>]/g, "_") || "style_card"
   const timestamp = Date.now()
   downloadLink.download = `${safeName}_${timestamp}.png`
-  downloadLink.href = dataUrl
+  downloadLink.href = blobUrl
   downloadLink.click()
+
+  // Clean up object URL after a short delay
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
 }
