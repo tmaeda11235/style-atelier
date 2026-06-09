@@ -39,6 +39,8 @@ stateDiagram-v2
   _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
   _J_IO_CSV : CSVエクスポート
   _J_IO_MD : Markdown ZIPエクスポート
+  _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
+  _J_ORG_FOLDER_01 : フォルダ階層化管理（ドリルダウン・DnD移動）
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -49,7 +51,9 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_COLOR_FILTER_01
   _J_ORG_EXPERT_01 --> _J_ORG_SEARCH_01
   _J_ORG_EXPERT_01 --> _J_ORG_VERSION_01
+  _J_ORG_EXPERT_01 --> _J_ORG_FOLDER_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
+  _J_ORG_EXPERT_02 --> _J_ORG_FOLDER_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
   _J_ORG_EASY_01 --> _J_ORG_COLOR_FILTER_01
   _J_ORG_COLOR_FILTER_01 --> _J_ORG_EXPERT_01
@@ -89,6 +93,8 @@ stateDiagram-v2
   _J_WB_PORTION_EXTRACT_01 --> _J_WB_EXPERT_01
   _J_IO_CSV --> _J_SET_01
   _J_IO_MD --> _J_SET_01
+  _J_WB_ATELIER_EFFECTS_01 --> _J_WB_EXPERT_01
+  _J_ORG_FOLDER_01 --> _J_ORG_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -504,3 +510,34 @@ flowchart TD
   S2 --> S3
 ```
 
+### @J-WB-ATELIER-EFFECTS-01: アトリエ釜と錬金演出
+
+アトリエ釜（ワークベンチ）でのカードブレンド、パラメータ調整、進化実行時の視覚フィードバック検証
+
+```mermaid
+flowchart TD
+  S1["Workbenchを開く"]
+  S2["複数カードを選択して調合（ブレンド）状態にする"]
+  S1 --> S2
+  S3["パラメータ編集エリアを展開し、各種スライダーやトグルを操作する"]
+  S2 --> S3
+  S4["カードの進化をトリガーし、進化完了の錬金演出モーダルが表示されることを確認する"]
+  S3 --> S4
+```
+
+### @J-ORG-FOLDER-01: フォルダ階層化管理（ドリルダウン・DnD移動）
+
+カテゴリの親子関係（フォルダ）階層を移動し、ドラッグ＆ドロップでカードを移動する
+
+```mermaid
+flowchart TD
+  S1["ライブラリを開く"]
+  S2["サブフォルダを作成する"]
+  S1 --> S2
+  S3["フォルダをダブルクリックまたはクリックして中に入る"]
+  S2 --> S3
+  S4["パンくずリストで親フォルダに戻る"]
+  S3 --> S4
+  S5["スタイルカードをフォルダにドラッグ＆ドロップして移動する"]
+  S4 --> S5
+```
