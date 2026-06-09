@@ -85,7 +85,13 @@
       "name": "ドラッグ＆ドロップ操作",
       "description": "ドラッグ＆ドロップでカードを配置する",
       "steps": ["カードをドラッグ", "Handエリアにドロップ", "順序入れ替え"],
-      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-05"]
+      "nextJourneys": [
+        "@J-WB-EXPERT-01",
+        "@J-WB-EXPERT-05",
+        "@J-WB-MIXING-WEIGHTS-01",
+        "@J-WB-PORTION-EXTRACT-01",
+        "@J-WB-ATELIER-EFFECTS-01"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-03",
@@ -255,6 +261,36 @@
         "保存して確定"
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-MIXING-WEIGHTS-01",
+      "name": "調合割合ウェイト調整",
+      "description": "ワークベンチ上の各スタイルカードで調合割合スライダーを操作し、プロンプトプレビューにウェイト（例: ::1.5）をリアルタイムに反映させる",
+      "steps": [
+        "ワークベンチのスタイルカードのスライダーを操作する",
+        "調合プロンプトのプレビューにウェイト値がリアルタイム反映されるのを確認する"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-03"]
+    },
+    {
+      "id": "@J-WB-PORTION-EXTRACT-01",
+      "name": "成分抽出とブレンド",
+      "description": "スタイルカードから「スタイル」「パラメータ」「キーワード」などの部分要素を選択して、直接Handエリアへドラッグまたは抽出する",
+      "steps": [
+        "ワークベンチでスタイルカードをクリックして成分抽出メニューを開く",
+        "成分（スタイル/パラメータ/キーワード）を選択して抽出ボタンを押下する"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-ATELIER-EFFECTS-01",
+      "name": "アトリエ釜と錬金演出",
+      "description": "カードマージ時や進化成功モーダル表示時に、レアリティ（Common/Rare/Epic/Legendary）に対応したエフェクトや3D傾き演出を再生する",
+      "steps": [
+        "マージまたは進化アクションを実行する",
+        "レアリティに対応した釜・錬金エフェクトまたはモーダルの3D傾きグロー効果を確認する"
+      ],
+      "nextJourneys": []
     }
   ]
 }

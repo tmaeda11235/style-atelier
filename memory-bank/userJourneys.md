@@ -34,6 +34,9 @@ stateDiagram-v2
   _J_IO_MJ_DRAG_IN : Midjourney履歴ドラッグインポート & フィードバック
   _J_MINT_COLOR_FALLBACK : カラー抽出失敗時のフォールバック
   _J_ORG_VERSION_01 : バージョン履歴管理
+  _J_WB_MIXING_WEIGHTS_01 : 調合割合ウェイト調整
+  _J_WB_PORTION_EXTRACT_01 : 成分抽出とブレンド
+  _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -54,6 +57,9 @@ stateDiagram-v2
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_05
   _J_WB_EXPERT_02 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_02 --> _J_WB_EXPERT_05
+  _J_WB_EXPERT_02 --> _J_WB_MIXING_WEIGHTS_01
+  _J_WB_EXPERT_02 --> _J_WB_PORTION_EXTRACT_01
+  _J_WB_EXPERT_02 --> _J_WB_ATELIER_EFFECTS_01
   _J_WB_EXPERT_03 --> _J_MINT_EXPERT_01
   _J_WB_EASY_01 --> _J_WB_EXPERT_01
   _J_IO_QR_IN --> _J_ORG_EXPERT_01
@@ -77,6 +83,8 @@ stateDiagram-v2
   _J_IO_MJ_DRAG_IN --> _J_MINT_EASY_01
   _J_MINT_COLOR_FALLBACK --> _J_ORG_EXPERT_01
   _J_ORG_VERSION_01 --> _J_ORG_EXPERT_01
+  _J_WB_MIXING_WEIGHTS_01 --> _J_WB_EXPERT_03
+  _J_WB_PORTION_EXTRACT_01 --> _J_WB_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -431,4 +439,37 @@ flowchart TD
   S3 --> S4
   S5["保存して確定"]
   S4 --> S5
+```
+
+### @J-WB-MIXING-WEIGHTS-01: 調合割合ウェイト調整
+
+ワークベンチ上の各スタイルカードで調合割合スライダーを操作し、プロンプトプレビューにウェイト（例: ::1.5）をリアルタイムに反映させる
+
+```mermaid
+flowchart TD
+  S1["ワークベンチのスタイルカードのスライダーを操作する"]
+  S2["調合プロンプトのプレビューにウェイト値がリアルタイム反映されるのを確認する"]
+  S1 --> S2
+```
+
+### @J-WB-PORTION-EXTRACT-01: 成分抽出とブレンド
+
+スタイルカードから「スタイル」「パラメータ」「キーワード」などの部分要素を選択して、直接Handエリアへドラッグまたは抽出する
+
+```mermaid
+flowchart TD
+  S1["ワークベンチでスタイルカードをクリックして成分抽出メニューを開く"]
+  S2["成分（スタイル/パラメータ/キーワード）を選択して抽出ボタンを押下する"]
+  S1 --> S2
+```
+
+### @J-WB-ATELIER-EFFECTS-01: アトリエ釜と錬金演出
+
+カードマージ時や進化成功モーダル表示時に、レアリティ（Common/Rare/Epic/Legendary）に対応したエフェクトや3D傾き演出を再生する
+
+```mermaid
+flowchart TD
+  S1["マージまたは進化アクションを実行する"]
+  S2["レアリティに対応した釜・錬金エフェクトまたはモーダルの3D傾きグロー効果を確認する"]
+  S1 --> S2
 ```
