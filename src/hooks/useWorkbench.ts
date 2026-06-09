@@ -72,6 +72,31 @@ export async function updateCardWeight(cardId: string, weight: number) {
   }
 }
 
+export async function pickRandomCards(handCards: StyleCard[]) {
+  try {
+    await clearWorkbench(handCards)
+    const allCards = await db.getAllCards()
+    const validCards = allCards.filter((c) => !c.isDeleted && !c.isVariable)
+    if (validCards.length === 0) return
+
+    // Pick 1 to 3 random cards
+    const count = Math.min(validCards.length, Math.floor(Math.random() * 3) + 1)
+    const selected: StyleCard[] = []
+    const temp = [...validCards]
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(Math.random() * temp.length)
+      selected.push(temp[idx])
+      temp.splice(idx, 1)
+    }
+
+    await Promise.all(
+      selected.map((c) => db.styleCards.update(c.id, { isPinned: true }))
+    )
+  } catch (err) {
+    console.error("Failed to pick random cards:", err)
+  }
+}
+
 export function useWorkbench() {
   const handCardsList = useLiveQuery(() =>
     db.styleCards.filter((c) => !!c.isPinned).toArray()
@@ -109,6 +134,7 @@ export function useWorkbench() {
     selectedCardIds,
     toggleCardSelection,
     clearWorkbench: () => clearWorkbench(handCards),
+    pickRandomCards: () => pickRandomCards(handCards),
     mergedPrompt,
     slotHistory,
     saveSlotHistory,

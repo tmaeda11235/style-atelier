@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+/* eslint-disable */
 import { vi } from "vitest"
 
 import type {
@@ -155,6 +155,8 @@ export class MockStyleAtelierDatabase {
   historyItems = new MockTable<HistoryItem>()
   userSettings = new MockTable<UserSettings>()
   slotHistory = new MockTable<any>()
+  parameterAliases = new MockTable<any>()
+  parameterFolders = new MockTable<any>()
 
   constructor() {
     this.reset()
@@ -194,6 +196,8 @@ export class MockStyleAtelierDatabase {
     this.historyItems = new MockTable<HistoryItem>([])
     this.userSettings = new MockTable<UserSettings>([])
     this.slotHistory = new MockTable<any>([])
+    this.parameterAliases = new MockTable<any>([])
+    this.parameterFolders = new MockTable<any>([])
   }
 
   // StyleCard Operations
@@ -313,6 +317,89 @@ export class MockStyleAtelierDatabase {
         return callback()
       }
     )
+
+  // Parameter Alias & Folder Operations for Mock
+  getParameterAlias = vi.fn().mockImplementation(async (id: string) => {
+    return this.parameterAliases.get(id)
+  })
+
+  getAliasByValue = vi
+    .fn()
+    .mockImplementation(async (paramType: string, value: string) => {
+      const list = await this.parameterAliases.toArray()
+      return list.find(
+        (a: any) => a.paramType === paramType && a.value === value
+      )
+    })
+
+  getAllParameterAliases = vi.fn().mockImplementation(async () => {
+    return this.parameterAliases.toArray()
+  })
+
+  saveParameterAlias = vi.fn().mockImplementation(async (alias: any) => {
+    const now = Date.now()
+    if (alias.id) {
+      await this.parameterAliases.update(alias.id, { ...alias, updatedAt: now })
+      return alias.id
+    } else {
+      const existing = await this.getAliasByValue(alias.paramType, alias.value)
+      if (existing) {
+        await this.parameterAliases.update(existing.id, {
+          alias: alias.alias,
+          folderId: alias.folderId,
+          updatedAt: now
+        })
+        return existing.id
+      } else {
+        const id = Math.random().toString()
+        await this.parameterAliases.add({
+          id,
+          ...alias,
+          createdAt: now,
+          updatedAt: now
+        })
+        return id
+      }
+    }
+  })
+
+  deleteParameterAlias = vi.fn().mockImplementation(async (id: string) => {
+    await this.parameterAliases.delete(id)
+  })
+
+  getAllParameterFolders = vi.fn().mockImplementation(async () => {
+    return this.parameterFolders.toArray()
+  })
+
+  addParameterFolder = vi.fn().mockImplementation(async (folder: any) => {
+    const id = folder.id || Math.random().toString()
+    await this.parameterFolders.add({ id, ...folder, createdAt: Date.now() })
+    return id
+  })
+
+  updateParameterFolder = vi
+    .fn()
+    .mockImplementation(async (id: string, name: string, parentId?: string) => {
+      return this.parameterFolders.update(id, { name, parentId })
+    })
+
+  deleteParameterFolder = vi.fn().mockImplementation(async (id: string) => {
+    const aliases = await this.parameterAliases.toArray()
+    aliases.forEach(async (a: any) => {
+      if (a.folderId === id) {
+        await this.parameterAliases.update(a.id, { folderId: undefined })
+      }
+    })
+    const folders = await this.parameterFolders.toArray()
+    const folder = folders.find((f: any) => f.id === id)
+    const newParentId = folder?.parentId
+    folders.forEach(async (f: any) => {
+      if (f.parentId === id) {
+        await this.parameterFolders.update(f.id, { parentId: newParentId })
+      }
+    })
+    await this.parameterFolders.delete(id)
+  })
 }
 
 export const db = new MockStyleAtelierDatabase()

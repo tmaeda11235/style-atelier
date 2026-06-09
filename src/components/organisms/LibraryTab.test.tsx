@@ -57,6 +57,8 @@ const defaultMockReturnValue = {
   setCategoryFilter: vi.fn(),
   colorFilter: "All",
   setColorFilter: vi.fn(),
+  colorHueFilter: null as [number, number] | null,
+  setColorHueFilter: vi.fn(),
   sortBy: "newest",
   setSortBy: vi.fn(),
   allSrefs: [],

@@ -112,6 +112,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
             hover: "hover:text-purple-900"
           }}
           styleCards={allCards}
+          parameterType="p"
         />
 
         <ParameterArrayEditor
@@ -128,6 +129,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
           }}
           options={allImagePrompts}
           styleCards={allCards}
+          parameterType="imagePrompts"
         />
 
         <ParameterArrayEditor
@@ -144,6 +146,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
           }}
           options={allSrefs}
           styleCards={allCards}
+          parameterType="sref"
         />
 
         <ParameterArrayEditor
@@ -160,6 +163,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
           }}
           options={allCrefs}
           styleCards={allCards}
+          parameterType="cref"
         />
       </div>
 

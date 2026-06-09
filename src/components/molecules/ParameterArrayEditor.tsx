@@ -1,10 +1,13 @@
-import { Plus, X } from "lucide-react"
+import { Edit3, Plus, X } from "lucide-react"
 import React, { useState } from "react"
 
+import { useParameterAliases } from "../../hooks/useParameterAliases"
 import { useParameterArray } from "../../hooks/useParameterArray"
+import { useParameterFolders } from "../../hooks/useParameterFolders"
 import type { StyleCard } from "../../lib/db-schema"
 import { cn } from "../../lib/utils"
 import { Input } from "../atoms/Input"
+import { AliasEditModal } from "./AliasEditModal"
 import { AutocompleteDropdown } from "./AutocompleteDropdown"
 
 interface ParameterArrayEditorProps {
@@ -21,6 +24,7 @@ interface ParameterArrayEditorProps {
   }
   options?: string[]
   styleCards?: StyleCard[]
+  parameterType: "p" | "sref" | "cref" | "imagePrompts"
 }
 
 export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
@@ -36,7 +40,8 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
     hover: "hover:text-blue-900"
   },
   options = [],
-  styleCards = []
+  styleCards = [],
+  parameterType
 }) => {
   const {
     inputValue,
@@ -50,7 +55,19 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
     onChange
   })
 
+  const { aliases, saveAlias, deleteAlias } = useParameterAliases()
+  const { folders, addFolder } = useParameterFolders()
+
   const [isOpen, setIsOpen] = useState(false)
+  const [editingValue, setEditingValue] = useState<string | null>(null)
+
+  const typeAliases = aliases.filter(
+    (a) => (a.paramType || (a as any).type) === parameterType
+  )
+
+  const handleOpenEdit = (val: string) => {
+    setEditingValue(val)
+  }
 
   return (
     <div className="space-y-2">
@@ -58,23 +75,86 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
         {icon} {label}
       </label>
       <div className="flex flex-wrap gap-2 mb-2">
-        {currentValues.map((val, idx) => (
-          <div
-            key={`${val}-${idx}`}
-            className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border",
-              colorClass.bg,
-              colorClass.text,
-              colorClass.border
-            )}>
-            <span className="max-w-[150px] truncate">{val}</span>
-            <button
-              onClick={() => removeValue(idx)}
-              className={colorClass.hover}>
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        ))}
+        {currentValues.map((val, idx) => {
+          // Identify matching style cards for hover preview
+          const matchedCards = styleCards.filter((card) => {
+            if (parameterType === "sref")
+              return card.parameters?.sref?.includes(val)
+            if (parameterType === "p") return card.parameters?.p?.includes(val)
+            if (parameterType === "cref")
+              return card.parameters?.cref?.includes(val)
+            if (parameterType === "imagePrompts")
+              return card.parameters?.imagePrompts?.includes(val)
+            return false
+          })
+
+          const alias = typeAliases.find((a) => a.value === val)
+
+          return (
+            <div
+              key={`${val}-${idx}`}
+              className={cn(
+                "group/badge relative flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border cursor-default transition-all hover:shadow-sm",
+                colorClass.bg,
+                colorClass.text,
+                colorClass.border
+              )}>
+              <span className="max-w-[120px] truncate" title={val}>
+                {alias ? `${alias.alias || (alias as any).name} (${val})` : val}
+              </span>
+
+              {/* Alias edit button */}
+              <button
+                onClick={() => handleOpenEdit(val)}
+                className="opacity-40 hover:opacity-100 transition-opacity"
+                title="Edit alias"
+                type="button">
+                <Edit3 className="w-2.5 h-2.5" />
+              </button>
+
+              <button
+                onClick={() => removeValue(idx)}
+                className={cn(
+                  "opacity-40 hover:opacity-100 transition-opacity",
+                  colorClass.hover
+                )}
+                type="button">
+                <X className="w-3 h-3" />
+              </button>
+
+              {/* Hover preview tooltip */}
+              {matchedCards.length > 0 && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/badge:block z-[99] bg-slate-950/95 backdrop-blur text-white text-[10px] p-2.5 rounded-lg shadow-xl border border-slate-800 w-48 pointer-events-none animate-in fade-in duration-200">
+                  <div className="font-bold border-b border-slate-800 pb-1 mb-1.5 text-slate-400">
+                    Used in Styles:
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto scrollbar-none">
+                    {matchedCards.slice(0, 4).map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex flex-col gap-0.5 items-center bg-slate-900/60 p-1 rounded">
+                        {c.thumbnailData ? (
+                          <img
+                            src={c.thumbnailData}
+                            className="w-12 h-12 object-cover rounded border border-slate-800"
+                            alt={c.name}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded border border-slate-800 bg-slate-800 flex items-center justify-center text-[10px]">
+                            🖼️
+                          </div>
+                        )}
+                        <span className="truncate w-full text-center text-[8px] font-medium text-slate-300">
+                          {c.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
       <div className="flex gap-2 items-start">
         <div className="flex-1 relative">
@@ -97,15 +177,31 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
               }}
               onClose={() => setIsOpen(false)}
               styleCards={styleCards}
+              parameterType={parameterType}
             />
           )}
         </div>
         <button
           onClick={() => addValue(inputValue)}
-          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors h-8 flex items-center justify-center">
+          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors h-8 flex items-center justify-center"
+          type="button">
           <Plus className="w-4 h-4 text-slate-400" />
         </button>
       </div>
+
+      {/* Alias Edit Modal */}
+      {editingValue && (
+        <AliasEditModal
+          editingValue={editingValue}
+          onClose={() => setEditingValue(null)}
+          typeAliases={typeAliases}
+          parameterType={parameterType}
+          folders={folders}
+          addFolder={addFolder}
+          saveAlias={saveAlias}
+          deleteAlias={deleteAlias}
+        />
+      )}
     </div>
   )
 }

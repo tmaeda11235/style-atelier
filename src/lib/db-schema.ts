@@ -113,3 +113,20 @@ export interface SlotHistoryItem {
   values: string[] // Array of input values (up to 10)
   updatedAt: number // Timestamp for syncing
 }
+
+export interface ParameterAlias {
+  id: string
+  paramType: "p" | "sref" | "cref" | "imagePrompts"
+  value: string
+  alias: string
+  folderId?: string // null / undefined for root
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ParameterFolder {
+  id: string
+  name: string
+  parentId?: string // null / undefined for root
+  createdAt: number
+}

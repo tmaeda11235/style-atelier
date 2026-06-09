@@ -3,6 +3,8 @@ import Dexie, { type Table } from "dexie"
 import type {
   CustomCategory,
   HistoryItem,
+  ParameterAlias,
+  ParameterFolder,
   SlotHistoryItem,
   StyleCard,
   UserSettings
@@ -15,6 +17,8 @@ export class StyleAtelierDatabaseBase extends Dexie {
   userSettings!: Table<UserSettings, string>
   categories!: Table<CustomCategory, string>
   slotHistory!: Table<SlotHistoryItem, string>
+  parameterAliases!: Table<ParameterAlias, string>
+  parameterFolders!: Table<ParameterFolder, string>
 
   constructor() {
     super("StyleAtelierDatabase")
@@ -133,6 +137,18 @@ export class StyleAtelierDatabaseBase extends Dexie {
       userSettings: "userId",
       categories: "id, name, createdAt, isDeleted, parentId",
       slotHistory: "label"
+    })
+
+    // Version 13: Add parameterAliases and parameterFolders tables
+    this.version(13).stores({
+      styleCards:
+        "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+      historyItems: "id, timestamp",
+      userSettings: "userId",
+      categories: "id, name, createdAt, isDeleted, parentId",
+      slotHistory: "label",
+      parameterAliases: "id, paramType, value, alias, folderId",
+      parameterFolders: "id, name, parentId"
     })
   }
 }

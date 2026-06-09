@@ -11,12 +11,14 @@ import { WorkbenchEmptyState } from "./WorkbenchEmptyState"
 interface WorkbenchHeaderProps {
   workbenchCards: StyleCard[]
   clearWorkbench: () => void
+  pickRandomCards: () => void
   t: any
 }
 
 const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
   workbenchCards,
   clearWorkbench,
+  pickRandomCards,
   t
 }) => (
   <div className="flex items-center justify-between">
@@ -24,15 +26,27 @@ const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
       <BookUp2 className="w-5 h-5 text-blue-500" />
       Workbench
     </h2>
-    {workbenchCards.length > 0 && (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={clearWorkbench}
-        className="text-slate-400 hover:text-slate-600">
-        {t.clearAll}
-      </Button>
-    )}
+    <div className="flex items-center gap-2">
+      <button
+        onClick={pickRandomCards}
+        className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full text-[10px] font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer"
+        title="Pick 1-3 random styles from library"
+        id="workbench-gacha-btn"
+        data-testid="workbench-gacha-btn"
+        type="button">
+        <span>🔮</span>
+        <span>Gacha Pick</span>
+      </button>
+      {workbenchCards.length > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearWorkbench}
+          className="text-slate-400 hover:text-slate-600 text-[10px] h-6 px-2">
+          {t.clearAll || "Clear"}
+        </Button>
+      )}
+    </div>
   </div>
 )
 
@@ -79,6 +93,7 @@ interface WorkbenchViewProps {
   workbenchCards: StyleCard[]
   handCards: StyleCard[]
   clearWorkbench: () => void
+  pickRandomCards: () => void
   toggleCardSelection: (id: string) => Promise<void> | void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
   handleExtract: (
@@ -124,6 +139,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
       <WorkbenchHeader
         workbenchCards={props.workbenchCards}
         clearWorkbench={props.clearWorkbench}
+        pickRandomCards={props.pickRandomCards}
         t={props.t}
       />
       <Cauldron

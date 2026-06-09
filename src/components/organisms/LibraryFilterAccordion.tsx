@@ -3,6 +3,7 @@ import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { ColorPaletteFilter } from "../molecules/ColorPaletteFilter"
+import { HueSliderFilter } from "../molecules/HueSliderFilter"
 import { ModelFiltersRow } from "../molecules/ModelFiltersRow"
 
 interface LibraryFilterAccordionProps {
@@ -27,6 +28,8 @@ interface LibraryFilterAccordionProps {
   setSortBy: (sort: any) => void
   colorFilter: string
   setColorFilter: (color: any) => void
+  colorHueFilter: number | null
+  setColorHueFilter: (hue: number | null) => void
   colorLabel?: string
   styleCardsCount: number
   categoryFilter: string
@@ -213,10 +216,7 @@ function RarityAndModelFilters(props: LibraryFilterAccordionProps) {
   )
 }
 
-interface ColorAndCategoryFiltersProps extends Omit<
-  LibraryFilterAccordionProps,
-  "colorOptions"
-> {
+interface ColorAndCategoryFiltersProps extends LibraryFilterAccordionProps {
   colorOptions: Array<{ value: string; label: string; bg: string }>
 }
 
@@ -232,11 +232,21 @@ function ColorAndCategoryFilters(props: ColorAndCategoryFiltersProps) {
     <>
       <ColorPaletteFilter
         colorFilter={props.colorFilter}
-        setColorFilter={props.setColorFilter}
+        setColorFilter={(color) => {
+          props.setColorFilter(color)
+          props.setColorHueFilter(null)
+        }}
         colorOptions={colorOptions}
         colorLabel={props.colorLabel}
         styleCardsCount={props.styleCardsCount}
       />
+
+      <HueSliderFilter
+        colorHueFilter={props.colorHueFilter}
+        setColorHueFilter={props.setColorHueFilter}
+        setColorFilter={props.setColorFilter}
+      />
+
       {expertFeatures.categories && (
         <CategoryFiltersRow
           categoryFilter={props.categoryFilter}

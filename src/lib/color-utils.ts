@@ -307,3 +307,21 @@ export async function analyzeImageColors(
   }
   return loadImageAndProcess(imageUrl, fallbackRarity)
 }
+
+export function filterByHue(
+  cardColor: string | undefined,
+  targetHue: number
+): boolean {
+  if (!cardColor) return false
+  try {
+    const [h, s, l] = hexToHsl(cardColor)
+    if (s < 15 || l > 90 || l < 10) return false
+    const diff = Math.min(
+      Math.abs(h - targetHue),
+      360 - Math.abs(h - targetHue)
+    )
+    return diff <= 25
+  } catch {
+    return false
+  }
+}

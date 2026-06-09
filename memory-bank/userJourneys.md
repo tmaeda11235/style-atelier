@@ -40,6 +40,7 @@ stateDiagram-v2
   _J_IO_MD : Markdown ZIPエクスポート
   _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
   _J_ORG_FOLDER_01 : フォルダ階層化管理（ドリルダウン・DnD移動）
+  _J_ORGAN_UX_PARAM_01 : パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ）
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -94,6 +95,8 @@ stateDiagram-v2
   _J_IO_MD --> _J_SET_01
   _J_WB_ATELIER_EFFECTS_01 --> _J_WB_EXPERT_01
   _J_ORG_FOLDER_01 --> _J_ORG_EXPERT_01
+  _J_ORGAN_UX_PARAM_01 --> _J_WB_EXPERT_01
+  _J_ORGAN_UX_PARAM_01 --> _J_ORG_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -528,4 +531,19 @@ flowchart TD
   S3 --> S4
   S5["スタイルカードをフォルダにドラッグ＆ドロップして移動する"]
   S4 --> S5
+```
+
+### @J-ORGAN-UX-PARAM-01: パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ）
+
+パラメータ値にエイリアス（別名）を登録し、カテゴリフォルダで分類・管理する。またワークベンチでGacha Pick（ランダム調合）を実行する
+
+```mermaid
+flowchart TD
+  S1["Workbenchを開く"]
+  S2["Gacha Pickボタンを押下してランダムにカードがHandに追加されることを確認する"]
+  S1 --> S2
+  S3["パラメータ編集エリアを開き、パラメータ（sref等）のエイリアス新規登録・フォルダ分類を行う"]
+  S2 --> S3
+  S4["スタイルカードに適用されたパラメータエイリアスバッジが表示され、ホバー時にプレビュー（Tooltip）が表示されることを確認する"]
+  S3 --> S4
 ```

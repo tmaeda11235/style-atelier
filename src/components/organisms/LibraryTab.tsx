@@ -54,6 +54,8 @@ export function LibraryTab({
     setCategoryFilter,
     colorFilter,
     setColorFilter,
+    colorHueFilter,
+    setColorHueFilter,
     sortBy,
     setSortBy,
     allSrefs,
@@ -71,7 +73,7 @@ export function LibraryTab({
     rarityFilter !== "All",
     modelFilter !== "All",
     categoryFilter !== "All",
-    colorFilter !== "All",
+    colorFilter !== "All" || colorHueFilter !== null,
     sortBy !== "newest"
   ].filter(Boolean).length
 
@@ -129,6 +131,8 @@ export function LibraryTab({
           setSortBy={setSortBy}
           colorFilter={colorFilter}
           setColorFilter={setColorFilter}
+          colorHueFilter={colorHueFilter}
+          setColorHueFilter={setColorHueFilter}
           colorLabel={t.colorLabel}
           modelLabel={t.modelLabel}
           modelOptions={t.models}
