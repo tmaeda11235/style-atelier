@@ -28,7 +28,7 @@ tags: []
 - **Mixing Table**: Logic to merge two Style Cards (parents) into a new prompt generation.
 - **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
 - **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing. Heavy transactions (backup import, card merging) are modularized under `src/lib/db/` to comply with file/function size constraints.
-- **Database Schema Migration**: Schema versions handle migrations, with v11 introducing `slotHistory` as a dedicated object store to hold previous inputs for slots.
+- **Database Schema Migration**: Schema versions handle migrations. v11 introduced `slotHistory` as a dedicated object store for slot history. v12 introduced hierarchical folder management by adding a `parentId` field (defaulting to `null`) to the `categories` table.
 - **Modular Utility & Data Access Layers**: To strictly adhere to the 300-line file limit and 50-line function limit:
   - `backup-validator.ts` is divided into a `src/lib/backup-validator/` subdirectory, splitting domain schema validations into clean, focused sub-modules.
   - `google-drive.ts` is modularized into `src/lib/google-drive/` (auth, http-client, upload/download operations), with asynchronous XMLHttpRequests and progress trackers split into functions under 50 lines.
