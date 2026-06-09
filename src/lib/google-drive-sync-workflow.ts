@@ -1,0 +1,88 @@
+import { exportDatabase, importDatabase } from "./backup-manager"
+import type { GoogleDriveClient } from "./google-drive"
+
+export interface SyncWorkflowParams {
+  token: string
+  gdriveClient: GoogleDriveClient
+  onTokenUpdated: (newToken: string) => void
+  onDownloadProgress: (percent: number) => void
+  onUploadProgress: (percent: number) => void
+  signal?: AbortSignal
+  addLog: (log: string) => void
+}
+
+export async function runSyncWorkflow(
+  params: SyncWorkflowParams
+): Promise<number> {
+  const {
+    token,
+    gdriveClient,
+    onTokenUpdated,
+    onDownloadProgress,
+    onUploadProgress,
+    signal,
+    addLog
+  } = params
+
+  const backupData = await gdriveClient.downloadBackup(
+    token,
+    onTokenUpdated,
+    onDownloadProgress,
+    { signal }
+  )
+
+  if (backupData) {
+    addLog("Merging remote backup data into local database.")
+    await importDatabase(backupData, "merge")
+  } else {
+    addLog("No existing backup found. Uploading local data as new backup.")
+  }
+
+  const jsonData = await exportDatabase()
+
+  await gdriveClient.uploadBackup(
+    token,
+    jsonData,
+    onTokenUpdated,
+    onUploadProgress,
+    { signal }
+  )
+
+  return Date.now()
+}
+
+export interface RestoreWorkflowParams {
+  token: string
+  gdriveClient: GoogleDriveClient
+  onTokenUpdated: (newToken: string) => void
+  onDownloadProgress: (percent: number) => void
+  signal?: AbortSignal
+  addLog: (log: string) => void
+}
+
+export async function runRestoreWorkflow(
+  params: RestoreWorkflowParams
+): Promise<void> {
+  const {
+    token,
+    gdriveClient,
+    onTokenUpdated,
+    onDownloadProgress,
+    signal,
+    addLog
+  } = params
+
+  const backupData = await gdriveClient.downloadBackup(
+    token,
+    onTokenUpdated,
+    onDownloadProgress,
+    { signal }
+  )
+
+  if (!backupData) {
+    throw new Error("Backup file not found on cloud")
+  }
+
+  await importDatabase(backupData, "replace")
+  addLog("Database recovered from Google Drive successfully.")
+}

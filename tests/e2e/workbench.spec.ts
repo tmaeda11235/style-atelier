@@ -670,7 +670,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // Locate the slider for Stylize and change its value
     const stylizeSlider = spFrame.locator("input[type='range']").first()
     await expect(stylizeSlider).toBeVisible()
-    await stylizeSlider.fill("450") // Slide to 450
+    await stylizeSlider.fill("1.5") // Slide to 1.5
 
     // Capture screenshot showing blending state & advanced parameters adjusted
     await page.screenshot({
