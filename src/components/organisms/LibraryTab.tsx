@@ -1,5 +1,11 @@
-import { BookUp2, ChevronDown, Search, Tag } from "lucide-react"
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import {
+  BookUp2,
+  ChevronDown,
+  Search,
+  SlidersHorizontal,
+  Tag
+} from "lucide-react"
+import React, { useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
@@ -12,6 +18,7 @@ import { CardThumbnail } from "../molecules/CardThumbnail"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
 import { SearchField } from "../molecules/SearchField"
 import { CategoryManagerModal } from "./CategoryManagerModal"
+import { LibraryFilterAccordion } from "./LibraryFilterAccordion"
 import { ShareCardModal } from "./ShareCardModal"
 
 interface LibraryTabProps {
@@ -33,6 +40,7 @@ export function LibraryTab({
 }: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
   const { advanceIfStep } = useTutorial()
 
   const { expertFeatures } = useSettings()
@@ -60,54 +68,12 @@ export function LibraryTab({
     loadMore
   } = useLibrary(addLog, setAlertType, onNavigateToWorkbench)
 
-  const colorScrollRef = useRef<HTMLDivElement>(null)
-  const [showLeftArrow, setShowLeftArrow] = useState(false)
-  const [showRightArrow, setShowRightArrow] = useState(false)
-
-  const checkScroll = useCallback(() => {
-    const el = colorScrollRef.current
-    if (el) {
-      const { scrollLeft, scrollWidth, clientWidth } = el
-      setShowLeftArrow(scrollLeft > 1)
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1)
-    }
-  }, [])
-
-  useEffect(() => {
-    const el = colorScrollRef.current
-    if (el) {
-      checkScroll()
-      el.addEventListener("scroll", checkScroll)
-      window.addEventListener("resize", checkScroll)
-
-      const timer = setTimeout(checkScroll, 100)
-
-      let resizeObserver: ResizeObserver | null = null
-      if (typeof ResizeObserver !== "undefined") {
-        resizeObserver = new ResizeObserver(() => {
-          checkScroll()
-        })
-        resizeObserver.observe(el)
-      }
-
-      return () => {
-        el.removeEventListener("scroll", checkScroll)
-        window.removeEventListener("resize", checkScroll)
-        clearTimeout(timer)
-        if (resizeObserver) {
-          resizeObserver.disconnect()
-        }
-      }
-    }
-  }, [checkScroll, styleCards])
-
-  const scrollColors = (direction: "left" | "right") => {
-    const el = colorScrollRef.current
-    if (el) {
-      const scrollAmount = direction === "left" ? -100 : 100
-      el.scrollBy({ left: scrollAmount, behavior: "smooth" })
-    }
-  }
+  const activeFiltersCount = [
+    rarityFilter !== "All",
+    categoryFilter !== "All",
+    colorFilter !== "All",
+    sortBy !== "newest"
+  ].filter(Boolean).length
 
   const colorOptions = [
     {
@@ -132,158 +98,72 @@ export function LibraryTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
-        <SearchField
-          placeholder={t.searchPlaceholder || "Search by tag, name or sref..."}
-          options={allSrefs}
-          value={searchTag}
-          onChange={(e) => setSearchTag(e.target.value)}
-          className="text-xs"
-        />
-        <div className="flex gap-2">
-          {expertFeatures.rarity && (
-            <select
-              value={rarityFilter}
-              onChange={(e) => setRarityFilter(e.target.value as any)}
-              className="flex-1 px-1 py-1 text-[10px] border rounded bg-white">
-              <option value="All">{t.allRarities || "All Rarities"}</option>
-              <option value="Common">Common</option>
-              <option value="Rare">Rare</option>
-              <option value="Epic">Epic</option>
-              <option value="Legendary">Legendary</option>
-            </select>
-          )}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="flex-1 px-1 py-1 text-[10px] border rounded bg-white">
-            <option value="newest">{t.sortBy?.newest || "Newest"}</option>
-            <option value="oldest">{t.sortBy?.oldest || "Oldest"}</option>
-            {expertFeatures.rarity && (
-              <option value="rarity">{t.sortBy?.rarity || "Rarity"}</option>
-            )}
-            <option value="usage">{t.sortBy?.usage || "Usage"}</option>
-            <option value="color">{t.sortBy?.color || "Color"}</option>
-          </select>
-        </div>
-
-        {/* Color Palette Filter */}
-        <div className="flex gap-1 items-center mt-1.5 select-none w-full">
-          <span className="text-[9px] text-slate-400 font-bold mr-1 flex-shrink-0">
-            {t.colorLabel || "Color:"}
-          </span>
-          <div className="relative flex-1 flex items-center min-w-0">
-            {showLeftArrow && (
-              <button
-                onClick={() => scrollColors("left")}
-                className="absolute left-0 z-10 w-4 h-4 bg-white/95 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center border border-slate-200 shadow hover:bg-slate-50 transition-colors text-[9px] font-bold"
-                aria-label="Scroll left">
-                ‹
-              </button>
-            )}
-            <div
-              ref={colorScrollRef}
-              data-testid="color-scroll-container"
-              className="flex gap-1 items-center overflow-x-auto pb-1 scrollbar-none w-full"
-              style={{
-                maskImage: `linear-gradient(to right, ${
-                  showLeftArrow ? "transparent" : "white"
-                } 0%, white 12px, white calc(100% - 12px), ${
-                  showRightArrow ? "transparent" : "white"
-                } 100%)`,
-                WebkitMaskImage: `linear-gradient(to right, ${
-                  showLeftArrow ? "transparent" : "white"
-                } 0%, white 12px, white calc(100% - 12px), ${
-                  showRightArrow ? "transparent" : "white"
-                } 100%)`
-              }}>
-              {colorOptions.map((colorOpt) => {
-                const isSelected = colorFilter === colorOpt.value
-                return (
-                  <button
-                    key={colorOpt.value}
-                    onClick={() => setColorFilter(colorOpt.value as any)}
-                    className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-all border relative ${
-                      isSelected
-                        ? "scale-110 ring-1.5 ring-blue-500 ring-offset-0.5"
-                        : "hover:scale-105"
-                    }`}
-                    style={{
-                      background: colorOpt.bg,
-                      borderColor:
-                        colorOpt.value === "White" ? "#cbd5e1" : "transparent"
-                    }}
-                    title={colorOpt.label}>
-                    {isSelected && (
-                      <span
-                        className={`absolute inset-0 flex items-center justify-center text-[7px] font-black ${
-                          colorOpt.value === "White" ||
-                          colorOpt.value === "Yellow"
-                            ? "text-slate-800"
-                            : "text-white"
-                        }`}>
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-            {showRightArrow && (
-              <button
-                onClick={() => scrollColors("right")}
-                className="absolute right-0 z-10 w-4 h-4 bg-white/95 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center border border-slate-200 shadow hover:bg-slate-50 transition-colors text-[9px] font-bold"
-                aria-label="Scroll right">
-                ›
-              </button>
-            )}
+        <div className="flex gap-2 items-center">
+          <div className="flex-1 min-w-0">
+            <SearchField
+              placeholder={
+                t.searchPlaceholder || "Search by tag, name or sref..."
+              }
+              options={allSrefs}
+              value={searchTag}
+              onChange={(e) => setSearchTag(e.target.value)}
+              className="text-xs"
+            />
           </div>
+          <button
+            onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+            className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all duration-200 cursor-pointer ${
+              isFiltersExpanded || activeFiltersCount > 0
+                ? "bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
+            title="Toggle filters"
+            id="toggle-filters-btn"
+            data-testid="toggle-filters-btn">
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">
+              {t.filtersToggleLabel || "Filters"}
+            </span>
+            {activeFiltersCount > 0 && (
+              <span className="flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-extrabold text-white bg-indigo-600 rounded-full">
+                {activeFiltersCount}
+              </span>
+            )}
+            <ChevronDown
+              className={`w-3 h-3 transition-transform duration-200 ${
+                isFiltersExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
         </div>
-      </div>
 
-      {/* Category Horizontal Filter Row */}
-      {expertFeatures.categories && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          <button
-            onClick={() => setCategoryFilter("All")}
-            className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
-              categoryFilter === "All"
-                ? "bg-slate-800 border-slate-800 text-white shadow-sm"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-            }`}>
-            {t.allCategories || "All"}
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setCategoryFilter(cat.id)}
-              className={`flex items-center gap-1 flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
-                categoryFilter === cat.id
-                  ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-              }`}>
-              {cat.iconUrl ? (
-                <img
-                  src={cat.iconUrl}
-                  className="w-3.5 h-3.5 rounded-full object-cover border border-white/20"
-                  alt={cat.name}
-                />
-              ) : (
-                <span className="text-[11px] leading-none">
-                  {cat.iconEmoji || "🖼️"}
-                </span>
-              )}
-              <span>{cat.name}</span>
-            </button>
-          ))}
-          {/* Manage categories button */}
-          <button
-            onClick={() => setIsCategoryModalOpen(true)}
-            className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
-            title={t.manageCategories || "Manage Categories"}>
-            <Tag className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+        {/* Collapsible Accordion Container */}
+        <LibraryFilterAccordion
+          isFiltersExpanded={isFiltersExpanded}
+          expertFeatures={expertFeatures}
+          rarityFilter={rarityFilter}
+          setRarityFilter={setRarityFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          colorFilter={colorFilter}
+          setColorFilter={setColorFilter}
+          colorOptions={colorOptions}
+          colorLabel={t.colorLabel}
+          styleCardsCount={styleCards?.length || 0}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          categories={categories}
+          setIsCategoryModalOpen={setIsCategoryModalOpen}
+          allCategoriesLabel={t.allCategories}
+          manageCategoriesTitle={t.manageCategories}
+          allRaritiesLabel={t.allRarities}
+          sortByNewestLabel={t.sortBy?.newest}
+          sortByOldestLabel={t.sortBy?.oldest}
+          sortByRarityLabel={t.sortBy?.rarity}
+          sortByUsageLabel={t.sortBy?.usage}
+          sortByColorLabel={t.sortBy?.color}
+        />
+      </div>
 
       {styleCards !== undefined && styleCards.length > 0 ? (
         <>
@@ -394,6 +274,7 @@ export function LibraryTab({
                   setSearchTag("")
                   setRarityFilter("All")
                   setCategoryFilter("All")
+                  setColorFilter("All")
                 }}
                 className="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-sm">
                 {t.clearFilters}

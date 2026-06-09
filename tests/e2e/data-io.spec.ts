@@ -203,7 +203,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     await settingsNavBtn.click()
 
     // 3. Test Local Export (Download JSON Backup)
-    const exportBackupBtn = spFrame.locator("button:has-text('Export')")
+    const exportBackupBtn = spFrame.locator("button:has-text('Export JSON')")
     await expect(exportBackupBtn).toBeVisible()
 
     console.log("Triggering Local Database Export...")
@@ -248,6 +248,132 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     // Cleanup temp backup file
     if (fs.existsSync(backupPath)) {
       fs.unlinkSync(backupPath)
+    }
+  })
+
+  test("should allow exporting style cards as CSV @J-IO-CSV", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true })
+    }
+
+    console.log("Navigating to sandbox page for CSV Export E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+
+    // 3. Test CSV Export (Download CSV)
+    const exportCsvBtn = spFrame.locator("button:has-text('CSV')")
+    await expect(exportCsvBtn).toBeVisible()
+
+    console.log("Triggering CSV Export...")
+    const downloadPromise = page.waitForEvent("download")
+    await exportCsvBtn.click()
+    const download = await downloadPromise
+
+    // Verify CSV filename
+    expect(download.suggestedFilename()).toContain("style-atelier-cards-")
+    expect(download.suggestedFilename()).toContain(".csv")
+
+    // Save to temp path
+    const csvPath = path.join(__dirname, "../../tests/fixtures/temp-export.csv")
+    const fixturesDir = path.dirname(csvPath)
+    if (!fs.existsSync(fixturesDir)) {
+      fs.mkdirSync(fixturesDir, { recursive: true })
+    }
+
+    await download.saveAs(csvPath)
+
+    // Read and verify CSV content
+    const csvContent = fs.readFileSync(csvPath, "utf-8")
+    // Expect header row
+    expect(csvContent).toContain("Full Prompt")
+    expect(csvContent).toContain("cyberpunk style")
+
+    // Take screenshot of settings screen with new buttons
+    await page.screenshot({
+      path: path.join(screenshotsDir, "csv-export-settings.png")
+    })
+
+    // Cleanup temp CSV file
+    if (fs.existsSync(csvPath)) {
+      fs.unlinkSync(csvPath)
+    }
+  })
+
+  test("should allow exporting style cards as Markdown ZIP @J-IO-MD", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true })
+    }
+
+    console.log(
+      "Navigating to sandbox page for Markdown ZIP Export E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if exists
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+
+    // 3. Test Markdown Export (Download ZIP)
+    const exportMdBtn = spFrame.locator("button:has-text('Markdown')")
+    await expect(exportMdBtn).toBeVisible()
+
+    console.log("Triggering Markdown ZIP Export...")
+    const downloadPromise = page.waitForEvent("download")
+    await exportMdBtn.click()
+    const download = await downloadPromise
+
+    // Verify ZIP filename
+    expect(download.suggestedFilename()).toContain("style-atelier-markdown-")
+    expect(download.suggestedFilename()).toContain(".zip")
+
+    // Save to temp path
+    const zipPath = path.join(__dirname, "../../tests/fixtures/temp-export.zip")
+    const fixturesDir = path.dirname(zipPath)
+    if (!fs.existsSync(fixturesDir)) {
+      fs.mkdirSync(fixturesDir, { recursive: true })
+    }
+
+    await download.saveAs(zipPath)
+
+    // Verify file size is greater than zero
+    const stats = fs.statSync(zipPath)
+    expect(stats.size).toBeGreaterThan(0)
+
+    // Take screenshot of settings screen with new buttons
+    await page.screenshot({
+      path: path.join(screenshotsDir, "md-export-settings.png")
+    })
+
+    // Cleanup temp ZIP file
+    if (fs.existsSync(zipPath)) {
+      fs.unlinkSync(zipPath)
     }
   })
 
@@ -319,7 +445,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     const dialogConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
 
     // Trigger the file selection on hidden file input
-    const importBtn = spFrame.locator("button:has-text('Import')")
+    const importBtn = spFrame.locator("button:has-text('Import JSON')")
     await expect(importBtn).toBeVisible()
 
     await fileInput.setInputFiles(importFilePath)
