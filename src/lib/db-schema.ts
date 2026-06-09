@@ -76,13 +76,14 @@ export interface StyleCard {
   images?: string[] // Associated image URLs
   selectedThumbnails?: string[] // Selected image URLs for thumbnail display (up to 2)
   versionHistory?: CardVersion[] // 過去のプロンプト・パラメータ変更履歴（最大10件）
+  weight?: number // 調合割合の重み (0.1 - 2.0)
 }
 
 // プロンプトの構成要素（バブル）
 export type PromptSegment =
-  | { type: "text"; value: string } // 通常テキスト
-  | { type: "slot"; label: string; default: string } // 変数（穴あけ箇所）
-  | { type: "chip"; kind: "sref" | "cref"; value: string } // 参照画像チップ
+  | { type: "text"; value: string; weight?: number } // 通常テキスト
+  | { type: "slot"; label: string; default: string; weight?: number } // 変数（穴あけ箇所）
+  | { type: "chip"; kind: "sref" | "cref"; value: string; weight?: number } // 参照画像チップ
 
 export interface HistoryItem {
   id: string // Job ID from MJ

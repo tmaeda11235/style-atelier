@@ -220,6 +220,7 @@ export function LibraryTab({
                         card.parameters
                       )
                       e.dataTransfer.setData("text/plain", text)
+                      e.dataTransfer.setData("cardId", card.id)
                     }}
                   />
                   <div
