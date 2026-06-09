@@ -10,6 +10,7 @@ import { useLocalBackup } from "../../hooks/useLocalBackup"
 import { useSettingsGoogleDrive } from "../../hooks/useSettingsGoogleDrive"
 import { useStorageEstimate } from "../../hooks/useStorageEstimate"
 import type { Language } from "../../lib/i18n"
+import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { CloudSyncSection } from "./CloudSyncSection"
 import { DangerZoneSection } from "./DangerZoneSection"
 import { LocalBackupSection } from "./LocalBackupSection"
@@ -76,6 +77,27 @@ export function SettingsTab({
     handleSync,
     handleForceRecovery
   } = useSettingsGoogleDrive({ addLog, checkStorage })
+
+  const [isWarningOpen, setIsWarningOpen] = React.useState(false)
+
+  const handleSyncWithWarning = () => {
+    const lastSyncStr = localStorage.getItem("style-atelier-last-backup")
+    const lastSyncTime = lastSyncStr ? parseInt(lastSyncStr, 10) : null
+    const threshold = 60 * 24 * 60 * 60 * 1000 // 60 days
+
+    if (lastSyncTime && Date.now() - lastSyncTime > threshold) {
+      setIsWarningOpen(true)
+    } else {
+      handleSync("merge")
+    }
+  }
+
+  const handleConfirmSyncStrategy = (
+    strategy: "merge" | "local-overwrite" | "cloud-overwrite"
+  ) => {
+    setIsWarningOpen(false)
+    handleSync(strategy)
+  }
 
   const { handleLocalExport, handleLocalImport } = useLocalBackup({
     addLog,
@@ -204,7 +226,7 @@ export function SettingsTab({
               handleCancelSync={handleCancelSync}
               handleToggleSync={handleToggleSync}
               handleToggleAutoSync={handleToggleAutoSync}
-              handleSync={handleSync}
+              handleSync={handleSyncWithWarning}
               t={t}
             />
           </div>
@@ -257,6 +279,12 @@ export function SettingsTab({
           </div>
         )}
       </div>
+      <GDriveSyncStrategyDialog
+        isOpen={isWarningOpen}
+        onConfirm={handleConfirmSyncStrategy}
+        onCancel={() => setIsWarningOpen(false)}
+        t={t}
+      />
     </div>
   )
 }

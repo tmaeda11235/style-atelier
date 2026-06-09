@@ -77,6 +77,19 @@ function triggerAutoBackup() {
 // Perform the backup upload silently
 async function performAutoBackup() {
   if (!isAutoSyncEnabled()) return
+
+  const lastBackupStr = localStorage.getItem("style-atelier-last-backup")
+  const lastBackupTime = lastBackupStr ? parseInt(lastBackupStr, 10) : 0
+  const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+
+  if (lastBackupTime && Date.now() - lastBackupTime > thresholdMs) {
+    console.warn(
+      "Auto-sync suspended: last sync was more than 60 days ago. Manual sync required."
+    )
+    setAutoSyncEnabled(false)
+    return
+  }
+
   try {
     try {
       const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
@@ -120,8 +133,43 @@ function stopPolling() {
   }
 }
 
+function isLastSyncAged(): boolean {
+  const lastBackupStr = localStorage.getItem("style-atelier-last-backup")
+  const lastBackupTime = lastBackupStr ? parseInt(lastBackupStr, 10) : 0
+  const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+  return !!(lastBackupTime && Date.now() - lastBackupTime > thresholdMs)
+}
+
+async function performDatabaseMerge(
+  token: string,
+  remoteModifiedTime: number,
+  modifiedTime: string
+) {
+  const backupData = await downloadBackup(token)
+  if (!backupData) return
+  isInternalChange = true
+  try {
+    await importDatabase(backupData, "merge")
+    console.log("Auto-merge completed successfully.")
+    localStorage.setItem(
+      "style-atelier-last-backup",
+      remoteModifiedTime.toString()
+    )
+    lastCheckedRemoteTime = modifiedTime
+  } finally {
+    isInternalChange = false
+  }
+}
+
 export async function checkAndMergeRemoteChanges() {
   if (!isAutoSyncEnabled()) return
+  if (isLastSyncAged()) {
+    console.warn(
+      "Auto-sync suspended: last sync was more than 60 days ago. Manual sync required."
+    )
+    setAutoSyncEnabled(false)
+    return
+  }
   try {
     try {
       const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
@@ -132,7 +180,6 @@ export async function checkAndMergeRemoteChanges() {
         purgeErr
       )
     }
-
     const token = await authorize(false) // Silent authentication
     const meta = await getBackupMetadata(token)
     if (!meta) return
@@ -141,7 +188,6 @@ export async function checkAndMergeRemoteChanges() {
     const lastBackupStr = localStorage.getItem("style-atelier-last-backup")
     const lastBackupTime = lastBackupStr ? parseInt(lastBackupStr) : 0
 
-    // If Google Drive has a newer backup, and we haven't processed this specific modifiedTime yet
     if (
       remoteModifiedTime > lastBackupTime &&
       meta.modifiedTime !== lastCheckedRemoteTime
@@ -149,21 +195,7 @@ export async function checkAndMergeRemoteChanges() {
       console.log(
         `Newer remote backup detected: ${meta.modifiedTime}. Starting auto-merge.`
       )
-      const backupData = await downloadBackup(token)
-      if (backupData) {
-        isInternalChange = true
-        try {
-          await importDatabase(backupData, "merge")
-          console.log("Auto-merge completed successfully.")
-          localStorage.setItem(
-            "style-atelier-last-backup",
-            remoteModifiedTime.toString()
-          )
-          lastCheckedRemoteTime = meta.modifiedTime
-        } finally {
-          isInternalChange = false
-        }
-      }
+      await performDatabaseMerge(token, remoteModifiedTime, meta.modifiedTime)
     } else {
       lastCheckedRemoteTime = meta.modifiedTime
     }
