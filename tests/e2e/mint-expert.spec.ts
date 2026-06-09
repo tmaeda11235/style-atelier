@@ -82,7 +82,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
     await rarityBtn.click()
 
     // 8. Select category "Cyberpunk Tech"
-    const categorySelect = spFrame.locator("select").first()
+    const categorySelect = spFrame
+      .locator("[data-testid='minting-view-container'] select")
+      .first()
     await expect(categorySelect).toBeVisible()
     await categorySelect.selectOption({ value: "category-expert-1" })
 
@@ -106,15 +108,27 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
     // 11. Verify minting view is closed
     await expect(mintingView).not.toBeVisible({ timeout: 10000 })
 
-    // 12. Switch to Library tab and verify the card is there
+    // 12. Switch to Library tab
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
     await page.waitForTimeout(1000) // wait for DB query
-    const cardTitle = spFrame.locator("text=Expert Warrior Note").first()
-    await expect(cardTitle).toBeVisible({ timeout: 10000 })
 
-    // 13. Click "Edit Card" to open CardDetailView and verify Rarity, Category, and Tags
-    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    // Navigate into the "Cyberpunk Tech" folder where the card is saved
+    const folder = spFrame
+      .locator("[data-testid='subfolders-grid'] :text('Cyberpunk Tech')")
+      .first()
+    await expect(folder).toBeVisible({ timeout: 5000 })
+    await folder.click()
+    await page.waitForTimeout(1000)
+
+    // Verify the card is visible in the folder
+    const cardContainer = spFrame
+      .locator(".group", { hasText: "Expert Warrior Note" })
+      .first()
+    await expect(cardContainer).toBeVisible({ timeout: 10000 })
+
+    // 13. Click "Edit Card" on our newly minted card to open CardDetailView and verify Rarity, Category, and Tags
+    const editBtn = cardContainer.locator("[data-testid='edit-card-button']")
     await expect(editBtn).toBeVisible()
     await editBtn.click()
 

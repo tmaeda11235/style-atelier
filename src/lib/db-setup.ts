@@ -124,6 +124,16 @@ export class StyleAtelierDatabaseBase extends Dexie {
         slotHistory: "label"
       })
       .upgrade(upgradeToVersion11)
+
+    // Version 12: Add parentId index to categories for folder hierarchy support
+    this.version(12).stores({
+      styleCards:
+        "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+      historyItems: "id, timestamp",
+      userSettings: "userId",
+      categories: "id, name, createdAt, isDeleted, parentId",
+      slotHistory: "label"
+    })
   }
 }
 

@@ -53,6 +53,7 @@ export function useLibrary(
   const [colorFilter, setColorFilter] = useState<ColorFilter>("All")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [visibleCount, setVisibleCount] = useState(12)
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const pageSize = 12
 
   // 1. メタデータのみを抽出して取得（重いthumbnailDataなどをReact Stateに全件保持しない）
@@ -79,6 +80,52 @@ export function useLibrary(
   })
 
   const categories = useLiveQuery(() => db.getAllCategories()) || []
+
+  // Breadcrumbs calculation for explorer path
+  const breadcrumbs = useMemo(() => {
+    const list: { id: string | null; name: string }[] = [
+      { id: null, name: "Home" }
+    ]
+    if (!currentFolderId) return list
+    const path: { id: string; name: string }[] = []
+    let curr = categories.find((c) => c.id === currentFolderId)
+    while (curr) {
+      path.unshift({ id: curr.id, name: curr.name })
+      curr = curr.parentId
+        ? categories.find((c) => c.id === curr.parentId)
+        : undefined
+    }
+    return [...list, ...path]
+  }, [currentFolderId, categories])
+
+  // Get folders (subcategories) of the current directory level
+  const currentSubfolders = useMemo(() => {
+    const isSearching =
+      searchTag !== "" || rarityFilter !== "All" || colorFilter !== "All"
+    if (isSearching) return []
+    return categories.filter((c) => {
+      if (!currentFolderId) {
+        return !c.parentId
+      }
+      return c.parentId === currentFolderId
+    })
+  }, [categories, currentFolderId, searchTag, rarityFilter, colorFilter])
+
+  // Move card to a folder
+  const moveCardToCategory = async (
+    cardId: string,
+    categoryId: string | null
+  ) => {
+    try {
+      await db.updateCard(cardId, { category: categoryId || undefined })
+      const catName = categoryId
+        ? categories.find((c) => c.id === categoryId)?.name || "Folder"
+        : "Root"
+      addLog(`Moved card to "${catName}".`)
+    } catch (err) {
+      console.error("Failed to move card:", err)
+    }
+  }
 
   // 2. 検索用の FlexSearch インデックス構築
   const flexsearchIndex = useMemo(() => {
@@ -130,8 +177,17 @@ export function useLibrary(
       result = result.filter((card) => card.tier === rarityFilter)
     }
 
+    const isSearching =
+      searchTag !== "" || rarityFilter !== "All" || colorFilter !== "All"
     if (categoryFilter !== "All") {
       result = result.filter((card) => card.category === categoryFilter)
+    } else if (!isSearching) {
+      result = result.filter((card) => {
+        if (!currentFolderId) {
+          return !card.category
+        }
+        return card.category === currentFolderId
+      })
     }
 
     if (colorFilter !== "All") {
@@ -199,7 +255,8 @@ export function useLibrary(
     rarityFilter,
     categoryFilter,
     colorFilter,
-    sortBy
+    sortBy,
+    currentFolderId
   ])
 
   // 検索条件やソート条件が変わったら、表示件数をリセットする
@@ -352,6 +409,11 @@ export function useLibrary(
     allCards: allCardsMeta,
     hasMore,
     loadMore,
-    totalMatchedCount: filteredAndSortedMeta.length
+    totalMatchedCount: filteredAndSortedMeta.length,
+    currentFolderId,
+    setCurrentFolderId,
+    breadcrumbs,
+    currentSubfolders,
+    moveCardToCategory
   }
 }

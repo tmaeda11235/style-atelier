@@ -171,6 +171,8 @@
     "noCardsFound": "ライブラリにカードが見つかりません。",
     "select": "選択",
     "categoryName": "カテゴリ名",
+    "parentCategory": "親カテゴリー",
+    "rootCategory": "なし (ルート)",
     "placeholderName": "例: サイバーパンク、レトロ",
     "emojiIcon": "絵文字アイコン",
     "placeholderEmoji": "例: 🎨, 🛸",

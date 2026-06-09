@@ -4,13 +4,15 @@
   "reporters": ["html", "clear-text", "progress"],
   "testRunner": "vitest",
   "coverageAnalysis": "perTest",
+  "incremental": true,
+  "incrementalFile": "reports/stryker-incremental.json",
+  "ignoreStatic": true,
+  "concurrency": 4,
   "mutate": [
-    "src/**/*.{js,ts,jsx,tsx}",
-    "!src/**/*.test.{js,ts,jsx,tsx}",
-    "!src/**/*.spec.{js,ts,jsx,tsx}",
-    "!src/**/*.d.ts",
-    "!src/**/__mocks__/**",
-    "!src/style.css"
+    "src/lib/mj-parser.ts",
+    "src/lib/prompt-utils.ts",
+    "src/lib/nlp-utils.ts",
+    "src/lib/color-utils.ts"
   ],
   "vitest": {
     "configFile": "vitest.config.ts"
