@@ -1078,4 +1078,88 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(warningDialog).not.toBeVisible()
     console.log("Sync strategy warning E2E test passed successfully!")
   })
+
+  test("should allow changing display theme (Light/Dark/System) and verify dark mode stylesheet/class changes", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Theme Selection E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // 3. Locate Theme selector
+    const themeSelect = spFrame.locator("#theme-select")
+    await expect(themeSelect).toBeVisible()
+    await expect(themeSelect).toHaveValue("system")
+
+    // 4. Switch to dark mode
+    console.log("Switching theme to dark mode...")
+    await themeSelect.selectOption("dark")
+    await page.waitForTimeout(500)
+
+    // Verify dark class is applied to html element inside the frame
+    const isDarkClassApplied = await spFrame
+      .locator("html")
+      .evaluate((el) => el.classList.contains("dark"))
+    expect(isDarkClassApplied).toBe(true)
+
+    // Verify localStorage has dark
+    const localStorageThemeDark = await spFrame
+      .locator("body")
+      .evaluate(() => localStorage.getItem("style-atelier-theme"))
+    expect(localStorageThemeDark).toBe("dark")
+
+    // Take Dark theme screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "theme-dark.png")
+    })
+
+    // 5. Switch to light mode
+    console.log("Switching theme to light mode...")
+    await themeSelect.selectOption("light")
+    await page.waitForTimeout(500)
+
+    // Verify dark class is removed from html element inside the frame
+    const isDarkClassAppliedAfterLight = await spFrame
+      .locator("html")
+      .evaluate((el) => el.classList.contains("dark"))
+    expect(isDarkClassAppliedAfterLight).toBe(false)
+
+    // Verify localStorage has light
+    const localStorageThemeLight = await spFrame
+      .locator("body")
+      .evaluate(() => localStorage.getItem("style-atelier-theme"))
+    expect(localStorageThemeLight).toBe("light")
+
+    // Take Light theme screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "theme-light.png")
+    })
+
+    // 6. Switch back to system mode
+    console.log("Switching theme back to system mode...")
+    await themeSelect.selectOption("system")
+    await page.waitForTimeout(500)
+
+    // Verify localStorage has system
+    const localStorageThemeSystem = await spFrame
+      .locator("body")
+      .evaluate(() => localStorage.getItem("style-atelier-theme"))
+    expect(localStorageThemeSystem).toBe("system")
+
+    console.log("Theme selection E2E test passed successfully!")
+  })
 })

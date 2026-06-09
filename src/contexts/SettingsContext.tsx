@@ -28,6 +28,8 @@ export const DEFAULT_EXPERT_FEATURES: ExpertFeatures = {
   multiImage: true
 }
 
+export type Theme = "light" | "dark" | "system"
+
 interface SettingsContextType {
   isEasyMode: boolean
   toggleEasyMode: (enabled: boolean) => void
@@ -35,6 +37,8 @@ interface SettingsContextType {
   updateExpertFeature: (key: keyof ExpertFeatures, enabled: boolean) => void
   showTipsBar: boolean
   toggleTipsBar: (enabled: boolean) => void
+  theme: Theme
+  changeTheme: (theme: Theme) => void
 }
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -49,6 +53,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     DEFAULT_EXPERT_FEATURES
   )
   const [showTipsBar, setShowTipsBar] = useState<boolean>(true)
+  const [theme, setTheme] = useState<Theme>("system")
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -57,6 +62,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const savedTipsBar = localStorage.getItem("style-atelier-show-tips-bar")
     setShowTipsBar(savedTipsBar !== "false")
+
+    const savedTheme = localStorage.getItem("style-atelier-theme") as Theme
+    if (
+      savedTheme === "light" ||
+      savedTheme === "dark" ||
+      savedTheme === "system"
+    ) {
+      setTheme(savedTheme)
+    } else {
+      setTheme("system")
+    }
 
     const savedFeatures = localStorage.getItem("style-atelier-expert-features")
     if (savedFeatures) {
@@ -88,6 +104,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     )
   }, [])
 
+  const changeTheme = useCallback((newTheme: Theme) => {
+    setTheme(newTheme)
+    localStorage.setItem("style-atelier-theme", newTheme)
+  }, [])
+
   const updateExpertFeature = useCallback(
     (key: keyof ExpertFeatures, enabled: boolean) => {
       setExpertFeatures((prev) => {
@@ -102,6 +123,35 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     []
   )
 
+  // Effect to apply theme CSS class to document root
+  useEffect(() => {
+    const root = window.document.documentElement
+
+    const applyTheme = () => {
+      const isDark =
+        theme === "dark" ||
+        (theme === "system" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+
+      if (isDark) {
+        root.classList.add("dark")
+      } else {
+        root.classList.remove("dark")
+      }
+    }
+
+    applyTheme()
+
+    if (theme === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+      const listener = () => applyTheme()
+      mediaQuery.addEventListener("change", listener)
+      return () => {
+        mediaQuery.removeEventListener("change", listener)
+      }
+    }
+  }, [theme])
+
   return (
     <SettingsContext.Provider
       value={{
@@ -110,7 +160,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         expertFeatures,
         updateExpertFeature,
         showTipsBar,
-        toggleTipsBar
+        toggleTipsBar,
+        theme,
+        changeTheme
       }}>
       {children}
     </SettingsContext.Provider>
