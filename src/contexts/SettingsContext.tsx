@@ -37,7 +37,7 @@ interface SettingsContextType {
   toggleTipsBar: (enabled: boolean) => void
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(
+export const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined
 )
 

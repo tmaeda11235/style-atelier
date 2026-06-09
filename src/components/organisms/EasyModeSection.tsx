@@ -7,6 +7,7 @@ interface EasyModeSectionProps {
   expertFeatures: any
   updateExpertFeature: (featureName: string, value: boolean) => void
   t: any
+  onNavigateToLibrary?: () => void
 }
 
 export function EasyModeSection({
@@ -14,7 +15,8 @@ export function EasyModeSection({
   currentToggleEasyMode,
   expertFeatures,
   updateExpertFeature,
-  t
+  t,
+  onNavigateToLibrary
 }: EasyModeSectionProps) {
   return (
     <>
@@ -64,6 +66,20 @@ export function EasyModeSection({
             />
           </button>
         </div>
+
+        {/* Navigation Link to Library (Only in Easy Mode) */}
+        {currentEasyMode && onNavigateToLibrary && (
+          <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+            <button
+              type="button"
+              onClick={onNavigateToLibrary}
+              id="back-to-library-btn"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer py-1 px-2 hover:bg-blue-50/50 rounded-lg">
+              <span>🎴 {t.backToLibrary || "Back to Library"}</span>
+              <span>&rarr;</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Expert Mode Features Toggle Config */}

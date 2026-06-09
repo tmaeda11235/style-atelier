@@ -140,6 +140,7 @@ export function EasyModeView({
             onResetDb={handleResetDb}
             isEasyMode={isEasyMode}
             onToggleEasyMode={handleToggleEasyMode}
+            onNavigateToLibrary={() => setActiveTab("library")}
           />
         )}
       </SidePanelLayout>

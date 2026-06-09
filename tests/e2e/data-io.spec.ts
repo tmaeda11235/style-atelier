@@ -202,6 +202,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
 
+    // Expand Maintenance & Backup accordion
+    const maintenanceHeader = spFrame.locator("#settings-accordion-maintenance")
+    await expect(maintenanceHeader).toBeVisible()
+    await maintenanceHeader.click()
+
     // 3. Test Local Export (Download JSON Backup)
     const exportBackupBtn = spFrame.locator("button:has-text('Export JSON')")
     await expect(exportBackupBtn).toBeVisible()
@@ -275,6 +280,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
 
+    // Expand Maintenance & Backup accordion
+    const maintenanceHeader = spFrame.locator("#settings-accordion-maintenance")
+    await expect(maintenanceHeader).toBeVisible()
+    await maintenanceHeader.click()
+
     // 3. Test CSV Export (Download CSV)
     const exportCsvBtn = spFrame.locator("button:has-text('CSV')")
     await expect(exportCsvBtn).toBeVisible()
@@ -340,6 +350,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
 
+    // Expand Maintenance & Backup accordion
+    const maintenanceHeader = spFrame.locator("#settings-accordion-maintenance")
+    await expect(maintenanceHeader).toBeVisible()
+    await maintenanceHeader.click()
+
     // 3. Test Markdown Export (Download ZIP)
     const exportMdBtn = spFrame.locator("button:has-text('Markdown')")
     await expect(exportMdBtn).toBeVisible()
@@ -400,6 +415,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
+
+    // Expand Maintenance & Backup accordion
+    const maintenanceHeader = spFrame.locator("#settings-accordion-maintenance")
+    await expect(maintenanceHeader).toBeVisible()
+    await maintenanceHeader.click()
 
     // Prepare a mock database state to import
     const mockBackupPayload = {

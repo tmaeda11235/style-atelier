@@ -125,4 +125,136 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
       "Interactive Onboarding Tutorial E2E test completed successfully!"
     )
   })
+
+  test("should auto-advance step 3 when user edits custom name or selects keyword", async ({
+    page
+  }) => {
+    console.log(
+      "Navigating to sandbox page for Tutorial Auto-Advance E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Click Guide button in header to trigger tutorial
+    const guideBtn = spFrame.locator(
+      "button[title='Show Guide'], button[title='ガイドを表示']"
+    )
+    await expect(guideBtn).toBeVisible()
+    await guideBtn.click()
+    await page.waitForTimeout(500)
+
+    // Step 1: Add sample and proceed
+    const sampleBtn = spFrame.locator(
+      "button:has-text('サンプルを追加して進む'), button:has-text('Add Sample and Proceed')"
+    )
+    await sampleBtn.click()
+
+    // Wait for tutorial to advance to Step 2
+    await expect(spFrame.locator("text=Step 2 / 8")).toBeVisible({
+      timeout: 5000
+    })
+
+    // Wait for the first history item to appear
+    const mintCardBlock = spFrame.locator("[data-tutorial='mint-button']")
+    await expect(mintCardBlock).toBeVisible({ timeout: 10000 })
+
+    // Step 2: Mint card (Clicking Mint button inside the first history card)
+    const mintBtn = mintCardBlock.locator("button")
+    await expect(mintBtn).toBeVisible()
+    await mintBtn.click()
+    await page.waitForTimeout(500)
+
+    // Step 3: Title input (We are on MintingView or SimpleMintingView)
+    await expect(spFrame.locator("text=Step 3 / 8")).toBeVisible()
+
+    // Focus input and type a custom card name
+    const nameInput = spFrame.locator("[data-tutorial='title-input'] input")
+    await nameInput.fill("E2E Auto Advance Test Card")
+    await page.waitForTimeout(500)
+
+    // Check if tutorial automatically advanced to Step 4
+    await expect(spFrame.locator("text=Step 4 / 8")).toBeVisible()
+    console.log("Tutorial auto-advanced to Step 4 after typing custom name!")
+  })
+
+  test("should auto-skip step 5 when rarity feature is disabled in expert settings", async ({
+    page
+  }) => {
+    console.log("Navigating to sandbox page for Tutorial Skip E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings and disable Rarity feature
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const rarityToggle = spFrame.locator("#expert-feature-rarity-btn")
+    await rarityToggle.click()
+    await page.waitForTimeout(300)
+
+    // 3. Click Guide button to start tutorial
+    const guideBtn = spFrame.locator(
+      "button[title='Show Guide'], button[title='ガイドを表示']"
+    )
+    await guideBtn.click()
+    await page.waitForTimeout(500)
+
+    // Step 1: Proceed
+    const sampleBtn = spFrame.locator(
+      "button:has-text('サンプルを追加して進む'), button:has-text('Add Sample and Proceed')"
+    )
+    await sampleBtn.click()
+
+    // Wait for tutorial to advance to Step 2
+    await expect(spFrame.locator("text=Step 2 / 8")).toBeVisible({
+      timeout: 5000
+    })
+
+    // Wait for the first history item to appear
+    const mintCardBlock = spFrame.locator("[data-tutorial='mint-button']")
+    await expect(mintCardBlock).toBeVisible({ timeout: 10000 })
+
+    // Step 2: Mint
+    const mintBtn = mintCardBlock.locator("button")
+    await expect(mintBtn).toBeVisible()
+    await mintBtn.click()
+    await page.waitForTimeout(500)
+
+    // Step 3: Title Input
+    const nameInput = spFrame.locator("[data-tutorial='title-input'] input")
+    await nameInput.fill("Skip Test Card")
+    await page.waitForTimeout(500)
+
+    // Now we are at Step 4: Slot Variables
+    await expect(spFrame.locator("text=Step 4 / 8")).toBeVisible()
+
+    // Click next to advance from Step 4
+    const nextBtn = spFrame.locator(
+      "[data-testid='interactive-tutorial'] button:has-text('次へ'), [data-testid='interactive-tutorial'] button:has-text('Next')"
+    )
+    await nextBtn.click()
+    await page.waitForTimeout(500)
+
+    // Since Rarity is disabled, Step 5 (Rarity choice) should be automatically skipped!
+    // So it should advance directly to Step 6 / 8 (Save card to library).
+    await expect(spFrame.locator("text=Step 6 / 8")).toBeVisible()
+    console.log(
+      "Tutorial successfully skipped Step 5 due to disabled Rarity feature!"
+    )
+  })
 })
