@@ -102,7 +102,6 @@ if (typeof window !== "undefined") {
       }
     }
   })
-
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
@@ -134,8 +133,81 @@ if (typeof window !== "undefined") {
     },
     runtime: {
       onMessage: {
-        addListener: () => {},
-        removeListener: () => {}
+        addListener: (fn: any) => {
+          ;(window as any).chromeMessageListeners =
+            (window as any).chromeMessageListeners || []
+          ;(window as any).chromeMessageListeners.push(fn)
+        },
+        removeListener: (fn: any) => {
+          if ((window as any).chromeMessageListeners) {
+            ;(window as any).chromeMessageListeners = (
+              window as any
+            ).chromeMessageListeners.filter((l: any) => l !== fn)
+          }
+        }
+      },
+      connect: () => {
+        return {
+          onDisconnect: {
+            addListener: () => {},
+            removeListener: () => {}
+          },
+          disconnect: () => {}
+        }
+      },
+      sendMessage: (message: any, callback: any) => {
+        if (message && message.target === "offscreen") {
+          if (message.action === "verify-integrity") {
+            const isDownloaded =
+              localStorage.getItem("mock-webllm-downloaded") === "true"
+            setTimeout(() => {
+              if (callback)
+                callback({ status: "success", integrityPassed: isDownloaded })
+            }, 50)
+          } else if (message.action === "check-quota") {
+            setTimeout(() => {
+              if (callback) callback({ status: "success", isSufficient: true })
+            }, 50)
+          } else if (message.action === "init-worker") {
+            setTimeout(() => {
+              if (callback) callback({ status: "success" })
+            }, 50)
+          } else if (message.action === "start-download") {
+            setTimeout(() => {
+              if (callback) callback({ status: "success" })
+
+              let progress = 0
+              const interval = setInterval(() => {
+                progress += 25
+                const listeners = (window as any).chromeMessageListeners || []
+                if (progress > 100) {
+                  clearInterval(interval)
+                  localStorage.setItem("mock-webllm-downloaded", "true")
+                  listeners.forEach((l: any) =>
+                    l({
+                      source: "offscreen-worker",
+                      payload: { status: "ready" }
+                    })
+                  )
+                } else {
+                  listeners.forEach((l: any) =>
+                    l({
+                      source: "offscreen-worker",
+                      payload: { status: "downloading", progress }
+                    })
+                  )
+                }
+              }, 100)
+            }, 50)
+          } else if (message.action === "purge-cache") {
+            localStorage.removeItem("mock-webllm-downloaded")
+            setTimeout(() => {
+              if (callback) callback({ status: "success" })
+            }, 50)
+          }
+        } else if (message && message.target === "background") {
+          if (callback) callback({ status: "success" })
+        }
       }
     },
     identity: {
