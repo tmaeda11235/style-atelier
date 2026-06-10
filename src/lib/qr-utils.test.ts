@@ -1,10 +1,14 @@
+import jsQR from "jsqr"
 import { describe, expect, it, vi } from "vitest"
 
 import type { StyleCard } from "./db-schema"
 import {
   compressCardData,
+  crc32,
   decompressCardData,
+  extractMetadataFromPng,
   generateQRCodeUrl,
+  insertMetadataToPng,
   readQRCodeFromImage
 } from "./qr-utils"
 
@@ -160,13 +164,11 @@ describe("qr-utils", () => {
       const originalGetContext = HTMLCanvasElement.prototype.getContext
       HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
         drawImage: vi.fn(),
-        getImageData: vi
-          .fn()
-          .mockReturnValue({
-            data: new Uint8ClampedArray([1, 2, 3]),
-            width: 100,
-            height: 100
-          })
+        getImageData: vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray([1, 2, 3]),
+          width: 100,
+          height: 100
+        })
       })
 
       const mockFile = new File([""], "test.png", { type: "image/png" })
@@ -262,13 +264,11 @@ describe("qr-utils", () => {
       const originalGetContext = HTMLCanvasElement.prototype.getContext
       HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
         drawImage: vi.fn(),
-        getImageData: vi
-          .fn()
-          .mockReturnValue({
-            data: new Uint8ClampedArray([1, 2, 3]),
-            width: 100,
-            height: 100
-          })
+        getImageData: vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray([1, 2, 3]),
+          width: 100,
+          height: 100
+        })
       })
 
       const mockFile = new File([""], "test.png", { type: "image/png" })
@@ -276,6 +276,118 @@ describe("qr-utils", () => {
       expect(result).toBeNull()
 
       HTMLCanvasElement.prototype.getContext = originalGetContext
+    })
+  })
+
+  describe("PNG Metadata Embedding and Extraction", () => {
+    it("should calculate correct CRC32 values", () => {
+      const testBytes = new TextEncoder().encode("Hello World")
+      expect(crc32(testBytes)).toBe(0x4a17b156)
+    })
+
+    it("should insert and extract metadata from PNG successfully", () => {
+      const dummyPng = new Uint8Array([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+        0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00,
+        0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82
+      ])
+
+      const key = "stylecard"
+      const value = "test-payload-data"
+
+      const pngWithMeta = insertMetadataToPng(dummyPng, key, value)
+      expect(pngWithMeta.length).toBeGreaterThan(dummyPng.length)
+
+      const extracted = extractMetadataFromPng(pngWithMeta, key)
+      expect(extracted).toBe(value)
+
+      expect(extractMetadataFromPng(pngWithMeta, "non-existent")).toBeNull()
+    })
+  })
+
+  describe("readQRCodeFromImage Advanced", () => {
+    it("should successfully extract card data directly from PNG metadata without scanning", async () => {
+      const dummyPng = new Uint8Array([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+        0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00,
+        0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82
+      ])
+      const pngWithMeta = insertMetadataToPng(
+        dummyPng,
+        "stylecard",
+        "metadata-payload"
+      )
+
+      class MockFileReader {
+        onload: any
+        readAsArrayBuffer() {
+          this.onload({ target: { result: pngWithMeta.buffer } })
+        }
+        readAsDataURL() {}
+      }
+      vi.stubGlobal("FileReader", MockFileReader)
+
+      const mockFile = new File([pngWithMeta], "test.png", {
+        type: "image/png"
+      })
+      const result = await readQRCodeFromImage(mockFile)
+      expect(result).toBe("metadata-payload")
+    })
+
+    it("should fallback to cropped bottom-right corner scan when full image scan fails", async () => {
+      mockJsQrResult = null
+
+      class MockFileReader {
+        onload: any
+        readAsArrayBuffer() {
+          this.onload({ target: { result: new ArrayBuffer(0) } })
+        }
+        readAsDataURL() {
+          this.onload({ target: { result: "data:image/png;base64,mock" } })
+        }
+      }
+      vi.stubGlobal("FileReader", MockFileReader)
+
+      class MockImage {
+        width = 100
+        height = 100
+        onload: any
+        set src(val: string) {
+          this.onload()
+        }
+      }
+      vi.stubGlobal("Image", MockImage)
+
+      const originalGetContext = HTMLCanvasElement.prototype.getContext
+      const mockDrawImage = vi.fn()
+      HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+        drawImage: mockDrawImage,
+        getImageData: vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray([1, 2, 3]),
+          width: 50,
+          height: 50
+        })
+      })
+
+      let callCount = 0
+      vi.mocked(jsQR).mockImplementation(() => {
+        callCount++
+        if (callCount === 1) return null
+        return { data: "cropped-qr-payload" }
+      })
+
+      const mockFile = new File([""], "test.png", { type: "image/png" })
+      const result = await readQRCodeFromImage(mockFile)
+
+      expect(result).toBe("cropped-qr-payload")
+      expect(mockDrawImage).toHaveBeenCalledTimes(2)
+
+      HTMLCanvasElement.prototype.getContext = originalGetContext
+
+      mockJsQrResult = { data: "mocked-qr-payload" }
+      vi.mocked(jsQR).mockImplementation(() => mockJsQrResult)
     })
   })
 })

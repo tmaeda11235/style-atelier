@@ -16,8 +16,8 @@ tags: []
 
 - **Localization (i18n)**: `i18next` & `react-i18next` - Type-safe multi-language dictionaries (`en` / `ja`). `eslint-plugin-i18next` is used as a devDependency to enforce static i18n checks.
 - **Image Processing**: Canvas API (Native) / [satori](https://github.com/vercel/satori) (for card layout generation).
-- **Metadata/Exif**: `piexifjs` - For embedding/extracting JSON in images.
-- **QR Codes**: `jsQR` - For scanning/generating QR codes on cards.
+- **Metadata/Exif**: Custom PNG Chunk Parser (Native) - For embedding/extracting JSON payloads in PNG `tEXt` chunks with custom CRC32 integrity verification.
+- **QR Codes**: `jsQR` - For scanning/generating QR codes on cards. Implements multi-stage canvas cropping and 2x scaling fallback for low-resolution/compressed images.
 - **Search**: `FlexSearch.js` - High-performance client-side search.
 - **NLP/Parser**: `compromise` / `ja-compromise` - For prompt analysis and tagging.
 - **Local LLM**: `@mlc-ai/web-llm` (WebLLM) - For loading and executing the quantized Gemma-4 E2B model client-side using WebGPU/Wasm.

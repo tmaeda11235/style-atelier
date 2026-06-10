@@ -14,7 +14,7 @@ tags: []
 - **Backend**: None (Serverless Architecture).
 - **Local AI Engine**: Client-side execution of Gemma-4 E2B via WebLLM inside Web Workers.
 - **Database**: Client-side IndexedDB (via Dexie.js).
-- **Data Transport**: "Memento Pattern" via Image Files (QR Code / Metadata).
+- **Data Transport**: "Memento Pattern" via Image Files (QR Code / PNG tEXt Metadata fallback).
 
 ## Core Components
 
@@ -27,7 +27,7 @@ tags: []
 - **Tokenized Editor**: Treating prompt segments as draggable objects (Bubbles).
 - **Bubble Slotting UI**: Breaking prompts into "Text" (Fixed) and "Slot" (Variable) components.
 - **Mixing Table**: Logic to merge two Style Cards (parents) into a new prompt generation.
-- **Image-as-Database**: Using the generated image itself as the portable data container (Steganography/Metadata).
+- **Image-as-Database (PNG Metadata & QR Fallback)**: Using the exported image itself as a portable data container. During export, card data is injected as a compressed payload into a custom PNG `tEXt` metadata chunk. During import, the raw file is parsed directly via a custom CRC32 checker to retrieve the metadata, completely bypassing canvas rendering and QR scan overhead. If metadata is missing or stripped (e.g. converted or hosted on platforms that strip metadata), a canvas-based multi-stage QR scan fallback is executed (first full image, then cropped bottom-right corner, then 2x scaled crop).
 - **Repository Pattern for IndexedDB**: Encapsulating Dexie database query and transaction logic within `StyleAtelierDatabase` (`src/lib/db.ts`) to avoid query duplication, ensure data consistency across multiple tables, and simplify unit testing. Heavy transactions (backup import, card merging) are modularized under `src/lib/db/` to comply with file/function size constraints.
 - **Database Schema Migration**: Schema versions handle migrations. v11 introduced `slotHistory` as a dedicated object store for slot history. v12 introduced hierarchical folder management by adding a `parentId` field (defaulting to `null`) to the `categories` table.
 - **Local-First Sync & Tombstone Lifecycle**:
