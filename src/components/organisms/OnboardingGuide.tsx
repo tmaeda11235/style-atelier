@@ -195,7 +195,7 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-slate-950/80 backdrop-blur-sm p-4 font-sans select-none animate-in fade-in duration-200"
       data-testid="onboarding-modal"
     >
       <div className="w-full max-w-sm max-h-[calc(100vh-2rem)] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200">

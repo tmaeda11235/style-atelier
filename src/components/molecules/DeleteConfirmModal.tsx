@@ -24,7 +24,7 @@ export function DeleteConfirmModal({
   return (
     <div
       data-testid="delete-confirm-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">

@@ -95,7 +95,7 @@ export const MergeStackModal: React.FC<MergeStackModalProps> = ({
   const previewUsageCount = (baseCard?.usageCount || 0) + additionalUses
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 dark:bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden text-slate-800 animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
         <div className="p-4 bg-slate-50 border-b flex items-center justify-between">
           <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
