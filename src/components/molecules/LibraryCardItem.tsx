@@ -106,7 +106,7 @@ export function LibraryCardItem(props: LibraryCardItemProps) {
     <div
       data-tutorial={props.idx === 0 ? "library-card" : undefined}
       onClick={handleClick}
-      className={`group bg-white border-2 rounded-lg shadow-sm cursor-pointer overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
+      className={`group bg-white border-2 rounded-lg shadow-sm cursor-grab active:cursor-grabbing overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 hover:shadow-md active:scale-[0.98] ${
         config?.borderClass || "border-slate-200"
       } ${config?.glowClass || ""}`}>
       <LibraryCardThumbnail
