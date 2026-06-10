@@ -1,4 +1,11 @@
-import { BookUp2, ChevronDown, ChevronUp, Layers, X } from "lucide-react"
+import {
+  BookUp2,
+  ChevronDown,
+  ChevronUp,
+  Layers,
+  Trash2,
+  X
+} from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import iconUrl from "url:../../../assets/icon.png"
@@ -179,8 +186,10 @@ export function HandBar({
             }
           : undefined
       }
-      className={`fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-lg z-50 transition-all duration-300 ease-in-out ${
-        isCollapsed ? "cursor-pointer hover:bg-slate-50/95" : "cursor-default"
+      className={`fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 shadow-lg z-50 transition-all duration-300 ease-in-out ${
+        isCollapsed
+          ? "cursor-pointer hover:bg-slate-50/95 dark:hover:bg-slate-800/95"
+          : "cursor-default"
       }`}
       style={{
         transform: isCollapsed
@@ -190,7 +199,7 @@ export function HandBar({
       <div className="max-w-md mx-auto p-2">
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Workbench ({pinnedCards.length})
             </span>
             <Button
@@ -200,7 +209,7 @@ export function HandBar({
                 e.stopPropagation()
                 toggleCollapse()
               }}
-              className="text-slate-400 hover:text-blue-500 p-0.5 h-auto"
+              className="text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 p-0.5 h-auto"
               title={isCollapsed ? "展開" : "最小化"}
               data-testid="handbar-toggle-collapse-btn">
               {isCollapsed ? (
@@ -218,10 +227,10 @@ export function HandBar({
                     variant="secondary"
                     size="xs"
                     onClick={() => setIsMergeOpen(true)}
-                    className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold px-2 py-0.5"
-                    data-testid="handbar-merge-btn">
-                    <Layers className="w-3 h-3" />
-                    {t.mergeStack.merge}
+                    className="flex items-center justify-center bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 font-bold p-1"
+                    data-testid="handbar-merge-btn"
+                    title={t.mergeStack.merge}>
+                    <Layers className="w-3.5 h-3.5" />
                   </Button>
                   <HelpTooltip
                     content={t.helpTooltips.stack}
@@ -233,8 +242,10 @@ export function HandBar({
                 variant="ghost"
                 size="xs"
                 onClick={clearHand}
-                className="text-slate-400 hover:text-red-500">
-                {t.workbench.clearAll}
+                className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 p-1 flex items-center justify-center"
+                data-testid="handbar-clear-all-btn"
+                title={t.workbench.clearAll}>
+                <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
           )}
@@ -273,7 +284,7 @@ export function HandBar({
           {/* Action Button: To Workbench */}
           <button
             onClick={onNavigateToWorkbench}
-            className="flex-shrink-0 w-12 h-12 rounded-md border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50"
+            className="flex-shrink-0 w-12 h-12 rounded-md border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-all bg-slate-50 dark:bg-slate-800/50"
             title="Workbenchを開く"
             data-testid="navigate-to-workbench-btn">
             <BookUp2 className="w-5 h-5" />
@@ -284,9 +295,9 @@ export function HandBar({
       {isMergeOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200">
-            <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden text-slate-800 animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
-              <div className="p-4 bg-slate-50 border-b flex items-center justify-between">
-                <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+            <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-800 dark:text-slate-200 animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800 flex items-center justify-between">
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-blue-500" />
                   {t.mergeStack.title}
                 </h3>
@@ -317,10 +328,10 @@ export function HandBar({
                           onClick={() => handleSelectBaseCard(c.id)}
                           className={`flex items-center gap-3 p-2 rounded-xl border-2 transition-all cursor-pointer ${
                             isBase
-                              ? "border-blue-500 bg-blue-50/50 shadow-sm"
-                              : "border-slate-100 hover:border-slate-200 bg-slate-50/30"
+                              ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/30 shadow-sm"
+                              : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30"
                           }`}>
-                          <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border bg-white">
+                          <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border dark:border-slate-700 bg-white dark:bg-slate-800">
                             <img
                               src={
                                 !c.thumbnailData ||
@@ -332,7 +343,7 @@ export function HandBar({
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-slate-700 truncate">
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                               {c.name}
                             </p>
                             <p className="text-[10px] text-slate-400">
@@ -343,7 +354,7 @@ export function HandBar({
                             </p>
                           </div>
                           <div
-                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${isBase ? "border-blue-500 bg-blue-500" : "border-slate-300 bg-white"}`}>
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${isBase ? "border-blue-500 bg-blue-500" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"}`}>
                             {isBase && (
                               <div className="w-1.5 h-1.5 rounded-full bg-white" />
                             )}
@@ -368,7 +379,7 @@ export function HandBar({
                             <div
                               key={c.id}
                               data-testid={`material-row-${c.id}`}
-                              className="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/20 gap-3">
+                              className="flex items-center justify-between p-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-800/20 gap-3">
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 border bg-white">
                                   <img
@@ -382,7 +393,7 @@ export function HandBar({
                                   />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-slate-600 truncate">
+                                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 truncate">
                                     {c.name}
                                   </p>
                                   <p className="text-[9px] text-slate-400">
@@ -405,8 +416,8 @@ export function HandBar({
                                   }
                                   className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border ${
                                     isConsumed
-                                      ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                                      : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+                                      ? "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-900/50"
+                                      : "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
                                   }`}>
                                   {isConsumed
                                     ? t.mergeStack.consume
@@ -421,7 +432,7 @@ export function HandBar({
                 )}
 
                 {baseCard && (
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 space-y-1.5">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <div className="flex justify-between text-[11px] text-slate-600">
                       <span>{t.mergeStack.baseCard}</span>
                       <span className="font-semibold truncate max-w-[150px]">
@@ -444,7 +455,7 @@ export function HandBar({
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-xs pt-1.5 border-t border-slate-200 text-slate-700">
+                    <div className="flex justify-between items-center text-xs pt-1.5 border-t border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                       <span className="font-medium">
                         {t.mergeStack.previewUsage}
                       </span>
@@ -464,7 +475,7 @@ export function HandBar({
                 )}
               </div>
 
-              <div className="p-4 bg-slate-50 border-t flex justify-end gap-2">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-800 flex justify-end gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -473,7 +484,8 @@ export function HandBar({
                 </Button>
                 <Button
                   onClick={handleExecuteMerge}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1.5 shadow-sm shadow-blue-200">
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1.5 shadow-sm shadow-blue-200"
+                  data-testid="handbar-execute-merge-btn">
                   {t.mergeStack.merge}
                 </Button>
               </div>
