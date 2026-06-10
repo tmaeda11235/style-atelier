@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacy Policy - Style Atelier</title>
+    <title>Style Atelier</title>
     <meta
       name="description"
-      content="Privacy Policy for Style Atelier (Midjourney Style Manager) - A privacy-focused, local-first prompt management Chrome Extension." />
+      content="Style Atelier - Midjourney Style Manager. A privacy-focused, local-first prompt management Chrome Extension." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -124,17 +124,9 @@
       }
 
       .logo-icon {
-        font-size: 1.75rem;
-        animation: spin-slow 12s linear infinite;
-      }
-
-      @keyframes spin-slow {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
       }
 
       .logo-text {
@@ -144,34 +136,6 @@
         background: linear-gradient(135deg, #3b82f6, #6366f1);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-      }
-
-      /* Toggle Switch Component */
-      .lang-switcher {
-        display: flex;
-        background: var(--card-border);
-        padding: 0.25rem;
-        border-radius: 9999px;
-        gap: 0.25rem;
-        position: relative;
-      }
-
-      .lang-btn {
-        border: none;
-        background: transparent;
-        color: var(--text-muted);
-        font-weight: 600;
-        font-size: 0.85rem;
-        padding: 0.5rem 1.25rem;
-        border-radius: 9999px;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .lang-btn.active {
-        background: var(--card-bg);
-        color: var(--badge-text);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       }
 
       /* main card */
@@ -241,28 +205,6 @@
         font-size: 0.95rem;
       }
 
-      ul {
-        list-style-type: none;
-        margin-bottom: 1.25rem;
-        padding-left: 0.25rem;
-      }
-
-      li {
-        color: var(--text-muted);
-        position: relative;
-        padding-left: 1.5rem;
-        margin-bottom: 0.75rem;
-        font-size: 0.95rem;
-      }
-
-      li::before {
-        content: "✦";
-        position: absolute;
-        left: 0;
-        color: var(--primary);
-        font-weight: bold;
-      }
-
       /* Highlight box for key messages */
       .callout {
         background: linear-gradient(
@@ -304,12 +246,6 @@
         width: 100%;
       }
 
-      /* Language-specific content display toggle */
-      [lang="en"] .lang-ja,
-      [lang="ja"] .lang-en {
-        display: none;
-      }
-
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -340,302 +276,93 @@
         h2 {
           font-size: 1.2rem;
         }
-        p,
-        li {
+        p {
           font-size: 0.9rem;
         }
       }
+
+      .hero {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .hero-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+      }
+
+      .links {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+
+      .links a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
     </style>
   </head>
-  <body lang="ja">
+  <body>
     <div class="container">
       <header>
         <div class="logo">
-          <span class="logo-icon">🌌</span>
+          <img src="icon.png" alt="Style Atelier Logo" class="logo-icon" />
           <span class="logo-text">Style Atelier</span>
-        </div>
-        <div class="lang-switcher">
-          <button id="btn-ja" class="lang-btn active" onclick="setLang('ja')">
-            日本語
-          </button>
-          <button id="btn-en" class="lang-btn" onclick="setLang('en')">
-            English
-          </button>
         </div>
       </header>
 
       <main>
-        <!-- ==================== JAPANESE CONTENT ==================== -->
-        <div class="lang-ja">
-          <h1>プライバシーポリシー</h1>
-          <p class="subtitle">最終更新日: 2026年6月7日</p>
-
-          <section>
-            <div class="section-badge">Concept</div>
-            <h2>1. プライバシーに関する基本理念</h2>
-            <p>
-              Style
-              Atelier（以下「本拡張機能」）は、ユーザーが作成するクリエイティブなプロンプトやスタイル情報はユーザー自身の貴重な資産であると考えています。そのため、本拡張機能は設計段階から<strong>「ローカルファースト」かつ「プライバシー重視」</strong>のサーバーレス・アプリケーションとして構築されています。
-            </p>
-          </section>
-
-          <section>
-            <div class="section-badge">Data Collection</div>
-            <h2>2. 個人情報の収集・送信について</h2>
-            <div class="callout">
-              <p>
-                本拡張機能は、ユーザーを特定できる個人情報（PII）や作成されたプロンプトデータを収集・保存・外部サーバーへ送信することは一切ありません。
-              </p>
-            </div>
-            <p>
-              すべてのデータはユーザーの管理下に置かれ、外部のデータベースや開発者サーバーに蓄積されることはありません。以下のような情報はすべてローカルに完結します：
-            </p>
-            <ul>
-              <li>作成・保存したスタイルカードのメタデータおよび画像</li>
-              <li>プロンプトの履歴およびお気に入り設定</li>
-              <li>バインダー、デッキ、カテゴリの設定情報</li>
-            </ul>
-          </section>
-
-          <section>
-            <div class="section-badge">Security</div>
-            <h2>3. Google Drive同期と認証情報の取り扱い</h2>
-            <p>
-              ユーザーがデータバックアップのための「Google
-              Drive連携」を有効化した場合のみ、Google Drive API（<code
-                >drive.file</code
-              >
-              スコープ）への通信が発生します。この際の認証情報は以下のように厳格に処理されます：
-            </p>
-            <ul>
-              <li>
-                <strong>一時的なメモリ内処理</strong>：認証には Chrome
-                のネイティブ Identity API を使用した安全な Google OAuth2
-                フローが利用されます。
-              </li>
-              <li>
-                <strong>即時破棄</strong
-                >：処理中に一時的に発生するアクセス権限やトークンなどの認証情報は、同期・復元処理が終わった後に直ちに破棄され、アプリ内に残ることはありません。
-              </li>
-              <li>
-                <strong>外部保存の排除</strong
-                >：これらの認証情報は本拡張機能のローカルストレージに永続化されることも、開発者サーバーや第三者に送信されることもありません。
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <div class="section-badge">Permissions</div>
-            <h2>4. 権限（パーミッション）の使用目的</h2>
-            <p>
-              本拡張機能が正常に機能するために要求する各権限の目的は以下の通りです：
-            </p>
-            <ul>
-              <li>
-                <strong>activeTab</strong
-                >：現在表示しているMidjourneyまたはDiscordのタブから、プロンプトデータを読み込んでカードを作成（ミント）するために使用されます。このデータ処理も完全にブラウザ内で完結します。
-              </li>
-              <li>
-                <strong>identity</strong>：Google Drive
-                バックアップ機能での一時的な認証処理にのみ使用されます。
-              </li>
-              <li>
-                <strong>ホスト権限（midjourney.com / discord.com等）</strong
-                >：Midjourneyの生成画面やDiscord上のテキストを検出するためのもので、通信はユーザーのローカルマシン内のみで行われます。
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <div class="section-badge">Storage</div>
-            <h2>5. データの削除とオフライン動作</h2>
-            <p>
-              本拡張機能はオフラインでも完全に動作します。本拡張機能をアンインストールするか、ブラウザのストレージデータをクリアすると、ローカル（IndexedDB）に保存されているすべてのスタイルデータおよび履歴は完全に削除されます。
-            </p>
-          </section>
-
-          <section>
-            <div class="section-badge">Contact</div>
-            <h2>6. お問い合わせ</h2>
-            <p>
-              本ポリシーやプライバシーに関するご質問、不具合報告、フィードバックは、GitHubのリポジトリのIssueにて受け付けております。<br /><a
-                href="https://github.com/tmaeda11235/style-atelier"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Style Atelier GitHub Repository</a
-              >
-            </p>
-          </section>
+        <div class="hero">
+          <img src="icon.png" alt="Style Atelier Logo" class="hero-logo" />
+          <div>
+            <h1>Style Atelier</h1>
+            <p class="subtitle">ローカルファーストなプロンプト管理拡張機能</p>
+          </div>
         </div>
 
-        <!-- ==================== ENGLISH CONTENT ==================== -->
-        <div class="lang-en">
-          <h1>Privacy Policy</h1>
-          <p class="subtitle">Last Updated: June 7, 2026</p>
-
-          <section>
-            <div class="section-badge">Concept</div>
-            <h2>1. Core Privacy Philosophy</h2>
+        <section>
+          <div class="section-badge">Overview</div>
+          <h2>アプリケーションの概要</h2>
+          <div class="callout">
             <p>
-              We believe that your creative prompts and style designs are your
-              valuable intellectual assets. Therefore,
-              <strong>Style Atelier</strong> (the "Extension") is designed from
-              the ground up as a
-              <strong>"Local-First" and "Privacy-Focused"</strong> serverless
-              application.
+              本拡張機能は、Google Drive APIを利用してプロンプトやスタイルのデータの保存・同期を行うChrome拡張機能です。
             </p>
-          </section>
+          </div>
+          <p>
+            Style Atelierは、Midjourneyなどで使用するクリエイティブなプロンプトを整理・管理するためのローカルファーストなツールです。ユーザーは自身のGoogle Driveアカウントを連携することで、複数のデバイス間でプロンプトデータを安全に同期およびバックアップすることができます。
+          </p>
+        </section>
 
-          <section>
-            <div class="section-badge">Data Collection</div>
-            <h2>2. No Personal Data Collection</h2>
-            <div class="callout">
-              <p>
-                This extension does NOT collect, store, or transmit any
-                personally identifiable information (PII) or your prompt designs
-                to any external servers.
-              </p>
-            </div>
-            <p>
-              All data remains fully under your control and is stored locally in
-              your browser. The following data is processed and saved offline
-              inside your local environment:
-            </p>
-            <ul>
-              <li>Metadata and images of minted Style Cards</li>
-              <li>Prompt generation history and favorites</li>
-              <li>Binder, deck, and custom category configurations</li>
-            </ul>
-          </section>
+        <section>
+          <div class="section-badge">Links</div>
+          <h2>リンク</h2>
+          <div class="links">
+            <a href="privacy.html">📄 プライバシーポリシー</a>
+            <a href="https://github.com/tmaeda11235/style-atelier" target="_blank" rel="noopener noreferrer">💻 GitHub リポジトリ</a>
+          </div>
+        </section>
 
-          <section>
-            <div class="section-badge">Security</div>
-            <h2>3. Google Drive Sync & Transient Credentials</h2>
-            <p>
-              Communication with the Google Drive API (<code>drive.file</code>
-              scope) only occurs when you explicitly enable the "Google Drive
-              Sync" feature to backup or restore your library. Authentication
-              credentials are handled under strict security guidelines:
-            </p>
-            <ul>
-              <li>
-                <strong>In-Memory Processing</strong>: Authentication is
-                performed via Chrome's native Identity API using a secure Google
-                OAuth2 flow.
-              </li>
-              <li>
-                <strong>Immediate Destruction</strong>: Any access tokens or
-                authentication credentials generated during the sync or recovery
-                process are transient. They are processed entirely in memory and
-                are **discarded/destroyed immediately** after the task is
-                completed.
-              </li>
-              <li>
-                <strong>No Persistent Storage</strong>: Credentials are never
-                saved to local persistent storage (localStorage/IndexedDB)
-                within the extension, nor are they sent to developer-managed
-                servers or any third parties.
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <div class="section-badge">Permissions</div>
-            <h2>4. Use of Extension Permissions</h2>
-            <p>
-              The Extension requests the following permissions for specific
-              functionality:
-            </p>
-            <ul>
-              <li>
-                <strong>activeTab</strong>: Used exclusively to parse prompt
-                strings from the active Midjourney or Discord tab when you click
-                to mint a card. This parsing happens entirely locally.
-              </li>
-              <li>
-                <strong>identity</strong>: Used only for temporary
-                authentication with Google Drive for backup operations.
-              </li>
-              <li>
-                <strong>Host Permissions (midjourney.com / discord.com)</strong
-                >: Used to detect Midjourney grid images and prompts within the
-                specified websites locally. No remote tracking occurs.
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <div class="section-badge">Storage</div>
-            <h2>5. Data Deletion & Offline Operation</h2>
-            <p>
-              The Extension works completely offline. Uninstalling the Extension
-              or clearing browser data will permanently remove all style cards,
-              prompts, and settings saved in your IndexedDB.
-            </p>
-          </section>
-
-          <section>
-            <div class="section-badge">Contact</div>
-            <h2>6. Contact & Feedback</h2>
-            <p>
-              For inquiries, issue reporting, or feedback regarding our privacy
-              practices, please visit our GitHub repository:<br /><a
-                href="https://github.com/tmaeda11235/style-atelier"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Style Atelier GitHub Repository</a
-              >
-            </p>
-          </section>
-        </div>
+        <section>
+          <div class="section-badge">Contact</div>
+          <h2>開発者・お問い合わせ</h2>
+          <p>
+            本アプリケーションに関するご質問、フィードバック、または不具合の報告は、以下のGitHubリポジトリのIssueにて受け付けております。
+          </p>
+          <p>
+            <a href="https://github.com/tmaeda11235/style-atelier/issues" target="_blank" rel="noopener noreferrer">Style Atelier Issues (GitHub)</a>
+          </p>
+        </section>
       </main>
 
       <footer>
         <p>&copy; 2026 Style Atelier. All Rights Reserved.</p>
       </footer>
     </div>
-
-    <script>
-      function setLang(lang) {
-        document.body.setAttribute("lang", lang)
-
-        const btnJa = document.getElementById("btn-ja")
-        const btnEn = document.getElementById("btn-en")
-
-        if (lang === "ja") {
-          btnJa.classList.add("active")
-          btnEn.classList.remove("active")
-          document.title = "プライバシーポリシー - Style Atelier"
-        } else {
-          btnJa.classList.remove("active")
-          btnEn.classList.add("active")
-          document.title = "Privacy Policy - Style Atelier"
-        }
-
-        // Save user preference
-        try {
-          localStorage.setItem("pref-lang", lang)
-        } catch (e) {}
-      }
-
-      // Auto-detect language or use saved preference
-      window.addEventListener("DOMContentLoaded", () => {
-        let lang = "ja" // Default to Japanese
-
-        try {
-          const savedLang = localStorage.getItem("pref-lang")
-          if (savedLang) {
-            lang = savedLang
-          } else {
-            const browserLang = navigator.language || navigator.userLanguage
-            if (browserLang && !browserLang.startsWith("ja")) {
-              lang = "en"
-            }
-          }
-        } catch (e) {}
-
-        setLang(lang)
-      })
-    </script>
   </body>
 </html>
