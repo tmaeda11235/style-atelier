@@ -1,0 +1,106 @@
+import {
+  checkAvailableStorage,
+  verifyCacheIntegrity,
+  verifyOpfsIntegrity
+} from "./lib/storage-utils"
+
+// WebLLM Worker instance
+let webLlmWorker: Worker | null = null
+
+// Expected models and sizes for Gemma-4 E2B
+const GEMMA_MODEL_FILES = [
+  { name: "gemma-4-e2b-q4f16_1.bin", size: 1024 * 1024 * 1024 } // Example ~1GB file
+]
+
+console.log("Offscreen Document loaded.")
+
+// Listen for messages from background service worker or sidepanel
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.target !== "offscreen") return
+
+  switch (message.action) {
+    case "check-quota":
+      handleCheckQuota(
+        message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024,
+        sendResponse
+      )
+      return true // Async response
+
+    case "verify-integrity":
+      handleVerifyIntegrity(sendResponse)
+      return true
+
+    case "init-worker":
+      handleInitWorker(sendResponse)
+      return true
+
+    default:
+      sendResponse({
+        status: "error",
+        error: `Unknown action: ${message.action}`
+      })
+  }
+})
+
+async function handleCheckQuota(
+  requiredBytes: number,
+  sendResponse: (res: any) => void
+) {
+  try {
+    const isSufficient = await checkAvailableStorage(requiredBytes)
+    sendResponse({ status: "success", isSufficient })
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}
+
+async function handleVerifyIntegrity(sendResponse: (res: any) => void) {
+  try {
+    // Check both Cache API and OPFS (we support both)
+    const opfsValid = await verifyOpfsIntegrity(
+      "webllm_models",
+      GEMMA_MODEL_FILES
+    )
+    // Cache storage verify (example cache name 'webllm/model_cache')
+    const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
+      url: `https://webllm/model/${f.name}`,
+      size: f.size
+    }))
+    const cacheValid = await verifyCacheIntegrity(
+      "webllm/model_cache",
+      cacheExpected
+    )
+
+    sendResponse({
+      status: "success",
+      integrityPassed: opfsValid || cacheValid
+    })
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}
+
+function handleInitWorker(sendResponse: (res: any) => void) {
+  try {
+    if (!webLlmWorker) {
+      // In Plasmo, workers can be initialized using new URL with import.meta.url
+      webLlmWorker = new Worker(
+        new URL("./webllm.worker.ts", import.meta.url),
+        {
+          type: "module"
+        }
+      )
+
+      webLlmWorker.onmessage = (event) => {
+        // Forward message from Worker to Background / Side Panel
+        chrome.runtime.sendMessage({
+          source: "offscreen-worker",
+          payload: event.data
+        })
+      }
+    }
+    sendResponse({ status: "success", message: "Worker initialized" })
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}

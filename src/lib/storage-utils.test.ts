@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { formatBytes, getStorageEstimate } from "./storage-utils"
+import {
+  checkAvailableStorage,
+  formatBytes,
+  getStorageEstimate,
+  verifyCacheIntegrity,
+  verifyOpfsIntegrity
+} from "./storage-utils"
 
 describe("storage-utils", () => {
   describe("formatBytes", () => {
@@ -127,6 +133,188 @@ describe("storage-utils", () => {
         expect.any(Error)
       )
       consoleErrorSpy.mockRestore()
+    })
+  })
+
+  describe("checkAvailableStorage", () => {
+    it("should return true if getStorageEstimate returns null", async () => {
+      const mockEstimate = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {})
+      Object.defineProperty(global, "navigator", {
+        value: undefined,
+        writable: true,
+        configurable: true
+      })
+      const res = await checkAvailableStorage(1024)
+      expect(res).toBe(true)
+      mockEstimate.mockRestore()
+    })
+
+    it("should return true if available storage is sufficient", async () => {
+      const mockEstimate = vi
+        .fn()
+        .mockResolvedValue({ usage: 1000, quota: 5000 })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { estimate: mockEstimate } },
+        writable: true,
+        configurable: true
+      })
+      const res = await checkAvailableStorage(3000)
+      expect(res).toBe(true)
+    })
+
+    it("should return false if available storage is insufficient", async () => {
+      const mockEstimate = vi
+        .fn()
+        .mockResolvedValue({ usage: 4000, quota: 5000 })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { estimate: mockEstimate } },
+        writable: true,
+        configurable: true
+      })
+      const res = await checkAvailableStorage(2000)
+      expect(res).toBe(false)
+    })
+  })
+
+  describe("verifyCacheIntegrity", () => {
+    it("should return true if caches is not in window", async () => {
+      vi.stubGlobal("window", {})
+      const res = await verifyCacheIntegrity("test-cache", [])
+      expect(res).toBe(true)
+    })
+
+    it("should return true if all expected files match sizes", async () => {
+      const mockBlob = { size: 100 }
+      const mockResponse = { blob: vi.fn().mockResolvedValue(mockBlob) }
+      const mockCache = {
+        match: vi.fn().mockResolvedValue(mockResponse),
+        delete: vi.fn()
+      }
+      const mockCaches = {
+        open: vi.fn().mockResolvedValue(mockCache)
+      }
+      vi.stubGlobal("window", { caches: mockCaches })
+
+      const res = await verifyCacheIntegrity("test-cache", [
+        { url: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(true)
+      expect(mockCache.match).toHaveBeenCalledWith("file1.bin")
+      expect(mockCache.delete).not.toHaveBeenCalled()
+    })
+
+    it("should return false and delete mismatch files if size does not match", async () => {
+      const mockBlob = { size: 50 }
+      const mockResponse = { blob: vi.fn().mockResolvedValue(mockBlob) }
+      const mockCache = {
+        match: vi.fn().mockResolvedValue(mockResponse),
+        delete: vi.fn().mockResolvedValue(true)
+      }
+      const mockCaches = {
+        open: vi.fn().mockResolvedValue(mockCache)
+      }
+      vi.stubGlobal("window", { caches: mockCaches })
+
+      const res = await verifyCacheIntegrity("test-cache", [
+        { url: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(false)
+      expect(mockCache.delete).toHaveBeenCalledWith("file1.bin")
+    })
+
+    it("should return false if response is missing", async () => {
+      const mockCache = {
+        match: vi.fn().mockResolvedValue(null),
+        delete: vi.fn()
+      }
+      const mockCaches = {
+        open: vi.fn().mockResolvedValue(mockCache)
+      }
+      vi.stubGlobal("window", { caches: mockCaches })
+
+      const res = await verifyCacheIntegrity("test-cache", [
+        { url: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(false)
+    })
+  })
+
+  describe("verifyOpfsIntegrity", () => {
+    it("should return true if navigator.storage.getDirectory is missing", async () => {
+      Object.defineProperty(global, "navigator", {
+        value: undefined,
+        writable: true,
+        configurable: true
+      })
+      const res = await verifyOpfsIntegrity("test-dir", [])
+      expect(res).toBe(true)
+    })
+
+    it("should return false if directory handle fails to open", async () => {
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockRejectedValue(new Error("Not found"))
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+      const res = await verifyOpfsIntegrity("test-dir", [
+        { name: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(false)
+    })
+
+    it("should return true if all files match size in OPFS", async () => {
+      const mockFile = { size: 100 }
+      const mockFileHandle = {
+        getFile: vi.fn().mockResolvedValue(mockFile)
+      }
+      const mockDirHandle = {
+        getFileHandle: vi.fn().mockResolvedValue(mockFileHandle),
+        removeEntry: vi.fn()
+      }
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockResolvedValue(mockDirHandle)
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const res = await verifyOpfsIntegrity("test-dir", [
+        { name: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(true)
+      expect(mockDirHandle.removeEntry).not.toHaveBeenCalled()
+    })
+
+    it("should return false and delete file if sizes do not match in OPFS", async () => {
+      const mockFile = { size: 50 }
+      const mockFileHandle = {
+        getFile: vi.fn().mockResolvedValue(mockFile)
+      }
+      const mockDirHandle = {
+        getFileHandle: vi.fn().mockResolvedValue(mockFileHandle),
+        removeEntry: vi.fn().mockResolvedValue(undefined)
+      }
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockResolvedValue(mockDirHandle)
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const res = await verifyOpfsIntegrity("test-dir", [
+        { name: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(false)
+      expect(mockDirHandle.removeEntry).toHaveBeenCalledWith("file1.bin")
     })
   })
 })
