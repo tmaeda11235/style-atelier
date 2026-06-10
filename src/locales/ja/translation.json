@@ -43,9 +43,9 @@
   },
   "settings": {
     "title": "設定",
-    "uiGroupTitle": "UI表示設定",
-    "cloudGroupTitle": "クラウド同期・バックアップ",
-    "maintenanceGroupTitle": "メンテナンスとローカル保存",
+    "uiGroupTitle": "🎨 UI表示設定",
+    "cloudGroupTitle": "☁️ クラウド同期・バックアップ",
+    "maintenanceGroupTitle": "📊 メンテナンスとローカル保存",
     "backToLibrary": "Library（カード一覧）に戻る",
     "themeLabel": "テーマ設定",
     "themeDesc": "アプリの表示モードを選択します。",

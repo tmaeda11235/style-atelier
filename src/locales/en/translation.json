@@ -43,9 +43,9 @@
   },
   "settings": {
     "title": "Settings",
-    "uiGroupTitle": "UI Preferences",
-    "cloudGroupTitle": "Cloud Backup & Sync",
-    "maintenanceGroupTitle": "Maintenance & Backup",
+    "uiGroupTitle": "🎨 UI Preferences",
+    "cloudGroupTitle": "☁️ Cloud Backup & Sync",
+    "maintenanceGroupTitle": "📊 Maintenance & Backup",
     "backToLibrary": "Back to Library",
     "themeLabel": "Theme Setting",
     "themeDesc": "Choose the appearance mode of the application.",
