@@ -19,7 +19,9 @@ describe("ParameterEditor", () => {
   })
 
   it("should render successfully with empty/default parameters", () => {
-    render(<ParameterEditor parameters={{}} onChange={() => {}} />)
+    render(
+      <ParameterEditor parameters={{}} onChange={() => {}} defaultOpen={true} />
+    )
 
     // Check header
     expect(screen.getByText("Parameters")).toBeDefined()
@@ -37,7 +39,13 @@ describe("ParameterEditor", () => {
   })
 
   it("should select the active aspect ratio", () => {
-    render(<ParameterEditor parameters={{ ar: "16:9" }} onChange={() => {}} />)
+    render(
+      <ParameterEditor
+        parameters={{ ar: "16:9" }}
+        onChange={() => {}}
+        defaultOpen={true}
+      />
+    )
 
     const button16_9 = screen.getByRole("button", { name: "16:9" })
     const button1_1 = screen.getByRole("button", { name: "1:1" })
@@ -49,7 +57,13 @@ describe("ParameterEditor", () => {
 
   it("should propagate ar changes when an aspect ratio button is clicked", () => {
     const mockOnChange = vi.fn()
-    render(<ParameterEditor parameters={{}} onChange={mockOnChange} />)
+    render(
+      <ParameterEditor
+        parameters={{}}
+        onChange={mockOnChange}
+        defaultOpen={true}
+      />
+    )
 
     const button16_9 = screen.getByRole("button", { name: "16:9" })
     fireEvent.click(button16_9)
@@ -59,7 +73,13 @@ describe("ParameterEditor", () => {
 
   it("should propagate ar changes when custom aspect ratio is input", () => {
     const mockOnChange = vi.fn()
-    render(<ParameterEditor parameters={{}} onChange={mockOnChange} />)
+    render(
+      <ParameterEditor
+        parameters={{}}
+        onChange={mockOnChange}
+        defaultOpen={true}
+      />
+    )
 
     const customInput = screen.getByPlaceholderText("Custom")
     fireEvent.change(customInput, { target: { value: "21:9" } })
@@ -77,6 +97,7 @@ describe("ParameterEditor", () => {
           cref: ["https://example.com/cref.png"]
         }}
         onChange={() => {}}
+        defaultOpen={true}
       />
     )
 
@@ -90,7 +111,11 @@ describe("ParameterEditor", () => {
   it("should add a parameter value when clicking the Add button", () => {
     const mockOnChange = vi.fn()
     render(
-      <ParameterEditor parameters={{ p: ["yes"] }} onChange={mockOnChange} />
+      <ParameterEditor
+        parameters={{ p: ["yes"] }}
+        onChange={mockOnChange}
+        defaultOpen={true}
+      />
     )
 
     const input = screen.getByPlaceholderText("Add code or 'yes'")
@@ -113,6 +138,7 @@ describe("ParameterEditor", () => {
       <ParameterEditor
         parameters={{ p: ["yes", "code1"] }}
         onChange={mockOnChange}
+        defaultOpen={true}
       />
     )
 
@@ -139,7 +165,9 @@ describe("ParameterEditor", () => {
     ]
     ;(db.styleCards as any).__setItems(mockStyleCards)
 
-    render(<ParameterEditor parameters={{}} onChange={() => {}} />)
+    render(
+      <ParameterEditor parameters={{}} onChange={() => {}} defaultOpen={true} />
+    )
 
     // Verify useLiveQuery returns correct lists and options are passed
     // We can check if autocomplete inputs have options or check if they are rendered correctly.
@@ -167,7 +195,13 @@ describe("ParameterEditor", () => {
 
   it("should render advanced parameters accordion and toggle display of inputs", () => {
     const mockOnChange = vi.fn()
-    render(<ParameterEditor parameters={{}} onChange={mockOnChange} />)
+    render(
+      <ParameterEditor
+        parameters={{}}
+        onChange={mockOnChange}
+        defaultOpen={true}
+      />
+    )
 
     // Check accordion button renders
     const accordionBtn = screen.getByRole("button", {
@@ -189,7 +223,11 @@ describe("ParameterEditor", () => {
   it("should propagate changes for advanced parameters", () => {
     const mockOnChange = vi.fn()
     const { rerender } = render(
-      <ParameterEditor parameters={{}} onChange={mockOnChange} />
+      <ParameterEditor
+        parameters={{}}
+        onChange={mockOnChange}
+        defaultOpen={true}
+      />
     )
 
     const accordionBtn = screen.getByRole("button", {
@@ -208,7 +246,11 @@ describe("ParameterEditor", () => {
 
     // Rerender with stylize value to test slider/input change
     rerender(
-      <ParameterEditor parameters={{ stylize: 100 }} onChange={mockOnChange} />
+      <ParameterEditor
+        parameters={{ stylize: 100 }}
+        onChange={mockOnChange}
+        defaultOpen={true}
+      />
     )
 
     // Find the number input for Stylize (it has value 100)
@@ -231,5 +273,29 @@ describe("ParameterEditor", () => {
     ) as HTMLInputElement
     fireEvent.click(rawCheckbox)
     expect(mockOnChange).toHaveBeenCalledWith({ stylize: 100, raw: true })
+  })
+
+  it("should be collapsed by default when defaultOpen is false, and expand when toggled", () => {
+    render(
+      <ParameterEditor
+        parameters={{}}
+        onChange={() => {}}
+        defaultOpen={false}
+      />
+    )
+
+    // Elements inside should NOT be visible/defined
+    expect(screen.queryByText("Personalization (--p)")).toBeNull()
+
+    // Find the toggle button and click it
+    const toggleBtn = screen.getByTestId("parameter-editor-toggle")
+    fireEvent.click(toggleBtn)
+
+    // Now elements inside should be defined
+    expect(screen.getByText("Personalization (--p)")).toBeDefined()
+
+    // Click again to close
+    fireEvent.click(toggleBtn)
+    expect(screen.queryByText("Personalization (--p)")).toBeNull()
   })
 })
