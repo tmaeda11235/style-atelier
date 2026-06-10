@@ -24,14 +24,19 @@ export function Button({
   className = "",
   ...props
 }: ButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center font-medium transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+  const baseStyles =
+    "inline-flex items-center justify-center font-medium transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
 
   const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
-    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-500",
-    ghost: "bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-500",
+    primary:
+      "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
+    secondary:
+      "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-500 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
+    ghost:
+      "bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-500 dark:text-slate-300 dark:hover:bg-slate-800",
     danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
-    outline: "bg-transparent border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-slate-500",
+    outline:
+      "bg-transparent border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-slate-500 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
   }
 
   const sizes = {
@@ -39,7 +44,7 @@ export function Button({
     sm: "px-3 py-1.5 text-xs",
     md: "px-4 py-2 text-sm",
     lg: "px-6 py-3 text-base",
-    icon: "p-2",
+    icon: "p-2"
   }
 
   const widthStyle = fullWidth ? "w-full" : ""
@@ -47,8 +52,7 @@ export function Button({
   return (
     <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${widthStyle} ${className}`}
-      {...props}
-    >
+      {...props}>
       {children}
     </button>
   )

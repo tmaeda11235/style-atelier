@@ -88,26 +88,26 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
   }, [allCards])
 
   return (
-    <div className="space-y-4 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+    <div className="space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
       {/* Parameters Accordion Header */}
       <button
         type="button"
         data-testid="parameter-editor-toggle"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between text-slate-700 hover:text-slate-900 transition-colors cursor-pointer">
+        className="w-full flex items-center justify-between text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer">
         <div className="flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-blue-500" />
           <span className="text-xs font-bold uppercase tracking-wider">
             Parameters
           </span>
         </div>
-        <span className="text-slate-500 text-xs font-bold">
+        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold">
           {isOpen ? "▲" : "▼"}
         </span>
       </button>
 
       {isOpen && (
-        <div className="space-y-4 pt-2 border-t border-slate-200">
+        <div className="space-y-4 pt-2 border-t border-slate-200 dark:border-slate-800">
           <AspectRatioSelector
             value={parameters.ar}
             onChange={(value) => updateParam("ar", value)}
@@ -183,21 +183,23 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
           </div>
 
           {/* Advanced Parameters Accordion */}
-          <div className="border border-slate-200 rounded-lg overflow-hidden">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between p-2 bg-slate-100/80 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors">
+              className="w-full flex items-center justify-between p-2 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors">
               <span>{t.cardDetail.advancedParams}</span>
-              <span className="text-slate-500">{showAdvanced ? "▲" : "▼"}</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                {showAdvanced ? "▲" : "▼"}
+              </span>
             </button>
 
             {showAdvanced && (
-              <div className="p-3 space-y-4 bg-white border-t border-slate-200 text-xs">
+              <div className="p-3 space-y-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs">
                 {/* Stylize */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 font-medium text-slate-700 font-semibold cursor-pointer">
+                    <label className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300 font-semibold cursor-pointer">
                       <input
                         type="checkbox"
                         checked={parameters.stylize !== undefined}
@@ -207,7 +209,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                       {t.cardDetail.stylize}
                     </label>
                     {parameters.stylize !== undefined && (
-                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded">
                         {parameters.stylize}
                       </span>
                     )}
@@ -225,7 +227,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                             parseInt(e.target.value, 10)
                           )
                         }
-                        className="flex-1 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        className="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                       />
                       <input
                         type="number"
@@ -235,7 +237,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                         onChange={(e) =>
                           handleInputChange("stylize", e.target.value, 0, 1000)
                         }
-                        className="w-16 border rounded p-1 text-center font-semibold text-slate-700"
+                        className="w-16 border border-slate-200 dark:border-slate-800 rounded p-1 text-center font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
                       />
                     </div>
                   )}
@@ -244,7 +246,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                 {/* Chaos */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 font-medium text-slate-700 font-semibold cursor-pointer">
+                    <label className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300 font-semibold cursor-pointer">
                       <input
                         type="checkbox"
                         checked={parameters.chaos !== undefined}
@@ -254,7 +256,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                       {t.cardDetail.chaos}
                     </label>
                     {parameters.chaos !== undefined && (
-                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded">
                         {parameters.chaos}
                       </span>
                     )}
@@ -272,7 +274,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                             parseInt(e.target.value, 10)
                           )
                         }
-                        className="flex-1 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        className="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                       />
                       <input
                         type="number"
@@ -282,7 +284,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                         onChange={(e) =>
                           handleInputChange("chaos", e.target.value, 0, 100)
                         }
-                        className="w-16 border rounded p-1 text-center font-semibold text-slate-700"
+                        className="w-16 border border-slate-200 dark:border-slate-800 rounded p-1 text-center font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
                       />
                     </div>
                   )}
@@ -291,7 +293,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                 {/* Weird */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 font-medium text-slate-700 font-semibold cursor-pointer">
+                    <label className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300 font-semibold cursor-pointer">
                       <input
                         type="checkbox"
                         checked={parameters.weird !== undefined}
@@ -301,7 +303,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                       {t.cardDetail.weird}
                     </label>
                     {parameters.weird !== undefined && (
-                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded">
                         {parameters.weird}
                       </span>
                     )}
@@ -319,7 +321,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                             parseInt(e.target.value, 10)
                           )
                         }
-                        className="flex-1 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        className="flex-1 h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                       />
                       <input
                         type="number"
@@ -329,7 +331,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                         onChange={(e) =>
                           handleInputChange("weird", e.target.value, 0, 3000)
                         }
-                        className="w-16 border rounded p-1 text-center font-semibold text-slate-700"
+                        className="w-16 border border-slate-200 dark:border-slate-800 rounded p-1 text-center font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
                       />
                     </div>
                   )}
@@ -337,7 +339,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
 
                 {/* Tile & Raw Flags */}
                 <div className="flex gap-6 pl-1 pt-1">
-                  <label className="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+                  <label className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!parameters.tile}
@@ -349,7 +351,7 @@ export const ParameterEditor: React.FC<ParameterEditorProps> = ({
                     {t.cardDetail.tile}
                   </label>
 
-                  <label className="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+                  <label className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!parameters.raw}
