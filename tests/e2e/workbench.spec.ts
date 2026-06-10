@@ -757,4 +757,95 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       path: path.join(screenshotsDir, "workbench-empty-state-success.png")
     })
   })
+
+  test("should render empty state when no history items are present", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for History empty state E2E test..."
+    )
+
+    // Set theme to dark in localStorage before loading the page
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-theme", "dark")
+    })
+
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Clear database to ensure no history items
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.historyItems.clear()
+    })
+
+    // 3. Switch to History tab (index 0)
+    const historyTabButton = spFrame.locator("nav button").nth(0)
+    await historyTabButton.click()
+    await page.waitForTimeout(1000)
+
+    // 4. Verify the Empty State container is visible
+    const emptyTitle = spFrame.locator("text=/No History|履歴がありません/")
+    await expect(emptyTitle).toBeVisible({ timeout: 10000 })
+
+    // 5. Capture screenshot of the empty state (UX verification)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "history-empty-state-success.png")
+    })
+  })
+
+  test("should render empty state when no cards are in Library", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Library empty state E2E test..."
+    )
+
+    // Set theme to dark in localStorage before loading the page
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-theme", "dark")
+    })
+
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Clear database to ensure no cards and no categories in library
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.categories.clear()
+    })
+
+    // 3. Switch to Library tab (index 1)
+    const libraryTabButton = spFrame.locator("nav button").nth(1)
+    await libraryTabButton.click()
+    await page.waitForTimeout(1000)
+
+    // 4. Verify the Empty State container is visible
+    const emptyTitle = spFrame.locator(
+      "text=/No Style Cards|スタイルカードがありません/"
+    )
+    await expect(emptyTitle).toBeVisible({ timeout: 10000 })
+
+    // 5. Capture screenshot of the empty state (UX verification)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "library-empty-state-success.png")
+    })
+  })
 })
