@@ -79,7 +79,7 @@ export function LibraryTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
+      <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
         <div className="flex gap-2 items-center">
           <div className="flex-1 min-w-0">
             <SearchField
@@ -96,8 +96,8 @@ export function LibraryTab({
             onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
             className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all duration-200 cursor-pointer ${
               isFiltersExpanded || activeFiltersCount > 0
-                ? "bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                ? "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900/60 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950/60"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
             title="Toggle filters"
             id="toggle-filters-btn"
@@ -107,7 +107,7 @@ export function LibraryTab({
               {t.filtersToggleLabel || "Filters"}
             </span>
             {activeFiltersCount > 0 && (
-              <span className="flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-extrabold text-white bg-indigo-600 rounded-full">
+              <span className="flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-extrabold text-white bg-indigo-600 dark:bg-indigo-500 rounded-full">
                 {activeFiltersCount}
               </span>
             )}
@@ -193,17 +193,17 @@ export function LibraryTab({
           )}
         </>
       ) : styleCards !== undefined ? (
-        <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 rounded-xl border border-slate-200 border-dashed backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 border-dashed backdrop-blur-sm animate-in fade-in duration-300">
           {allCards !== undefined &&
           allCards.filter((c) => !c.isVariable).length === 0 ? (
             <>
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                <BookUp2 className="w-6 h-6 text-slate-500" />
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500">
+                <BookUp2 className="w-6 h-6 text-slate-500 dark:text-slate-400" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800 mb-1">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
                 {t.emptyTitle}
               </h3>
-              <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed">
                 {t.emptyDesc}
               </p>
             </>
@@ -212,13 +212,13 @@ export function LibraryTab({
             colorFilter !== "All" ||
             categoryFilter !== "All" ? (
             <>
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                <Search className="w-6 h-6 text-slate-500" />
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500">
+                <Search className="w-6 h-6 text-slate-500 dark:text-slate-400" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800 mb-1">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
                 {t.notFoundTitle}
               </h3>
-              <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed mb-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed mb-4">
                 {t.notFoundDesc}
               </p>
               <button
@@ -229,19 +229,19 @@ export function LibraryTab({
                   setCategoryFilter("All")
                   setColorFilter("All")
                 }}
-                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-sm">
+                className="px-3 py-1.5 text-xs font-bold bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 text-white rounded-md transition-colors shadow-sm">
                 {t.clearFilters}
               </button>
             </>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                <BookUp2 className="w-6 h-6 text-slate-500" />
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500">
+                <BookUp2 className="w-6 h-6 text-slate-500 dark:text-slate-400" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800 mb-1">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
                 {t.emptyTitle || "Empty Folder"}
               </h3>
-              <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed">
                 {t.emptyDesc || "No style cards in this folder."}
               </p>
             </>

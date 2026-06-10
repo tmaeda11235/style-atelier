@@ -1,7 +1,49 @@
 import React from "react"
 
+import type { Theme } from "../../contexts/SettingsContext"
 import type { Language } from "../../lib/i18n"
 import { EasyModeSection } from "./EasyModeSection"
+
+interface ThemeSettingsProps {
+  theme: Theme
+  changeTheme: (theme: Theme) => void
+  t: any
+}
+
+function ThemeSettings({ theme, changeTheme, t }: ThemeSettingsProps) {
+  return (
+    <div className="relative overflow-hidden" id="settings-theme-section">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+      <div className="flex items-start gap-4 mb-4">
+        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+          <span className="text-xl">🌓</span>
+        </div>
+        <div className="space-y-1 flex-1">
+          <h3 className="text-sm font-bold text-slate-800">
+            {t.themeLabel || "Theme Setting"}
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {t.themeDesc || "Choose the appearance mode of the application."}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
+        <span className="text-xs font-bold text-slate-700">
+          {t.themeLabel || "Theme"}
+        </span>
+        <select
+          value={theme}
+          onChange={(e) => changeTheme(e.target.value as Theme)}
+          className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          id="theme-select">
+          <option value="system">{t.themeSystem || "System"}</option>
+          <option value="light">{t.themeLight || "Light"}</option>
+          <option value="dark">{t.themeDark || "Dark"}</option>
+        </select>
+      </div>
+    </div>
+  )
+}
 
 interface LanguageSettingsProps {
   lang: Language
@@ -104,6 +146,8 @@ interface UiPreferencesSectionProps {
   updateExpertFeature: (key: string, enabled: boolean) => void
   onNavigateToLibrary?: () => void
   t: any
+  theme: Theme
+  changeTheme: (theme: Theme) => void
 }
 
 export function UiPreferencesSection({
@@ -116,10 +160,14 @@ export function UiPreferencesSection({
   expertFeatures,
   updateExpertFeature,
   onNavigateToLibrary,
-  t
+  t,
+  theme,
+  changeTheme
 }: UiPreferencesSectionProps) {
   return (
     <div className="p-5 space-y-6 animate-in slide-in-from-top-2 duration-250">
+      <ThemeSettings theme={theme} changeTheme={changeTheme} t={t} />
+
       <LanguageSettings lang={lang} changeLanguage={changeLanguage} t={t} />
 
       <TipsBarSettings

@@ -61,7 +61,7 @@ export function HistoryCard({
 
   return (
     <div
-      className={`bg-white border border-slate-200 rounded-lg shadow-sm flex gap-3 p-2 ${className}`}>
+      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm flex gap-3 p-2 ${className}`}>
       <img
         src={imgSrc}
         alt={item.id}
@@ -69,7 +69,7 @@ export function HistoryCard({
       />
       <div className="flex-1 min-w-0">
         <p
-          className="text-xs text-slate-600 line-clamp-3 my-1"
+          className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 my-1"
           title={item.fullCommand}>
           {item.fullCommand}
         </p>
