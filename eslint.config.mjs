@@ -228,7 +228,6 @@ export default ts.config(
       "src/lib/db.ts",
       "src/lib/export-utils.ts",
       "src/lib/google-drive.ts",
-      "src/lib/image-utils.ts",
       "src/lib/nlp-utils.ts",
       "src/lib/prompt-utils.ts",
       
