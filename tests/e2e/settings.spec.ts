@@ -1146,6 +1146,49 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await settingsNavBtn.click()
     await page.waitForTimeout(500)
 
+    // Verify dark mode hover background behavior on Settings Tab buttons (Issue #570)
+    console.log(
+      "Verifying dark mode hover background color and sticky prevention..."
+    )
+    const uiAccordionBtn = spFrame.locator("#settings-accordion-ui")
+    await expect(uiAccordionBtn).toBeVisible()
+
+    // Get initial background color in dark mode (should be slate-800/40 equivalent)
+    const initialBgColor = await uiAccordionBtn.evaluate((el) => {
+      return window.getComputedStyle(el).backgroundColor
+    })
+    console.log(
+      `Accordion button initial background in dark mode: ${initialBgColor}`
+    )
+
+    // Hover the button
+    await uiAccordionBtn.hover()
+    await page.waitForTimeout(200) // wait for transition
+
+    const hoverBgColor = await uiAccordionBtn.evaluate((el) => {
+      return window.getComputedStyle(el).backgroundColor
+    })
+    console.log(
+      `Accordion button hover background in dark mode: ${hoverBgColor}`
+    )
+
+    // The background should change on hover
+    expect(hoverBgColor).not.toBe(initialBgColor)
+
+    // Unhover the button by moving mouse away
+    await page.mouse.move(0, 0)
+    await page.waitForTimeout(200) // wait for transition
+
+    const postHoverBgColor = await uiAccordionBtn.evaluate((el) => {
+      return window.getComputedStyle(el).backgroundColor
+    })
+    console.log(
+      `Accordion button post-hover background in dark mode: ${postHoverBgColor}`
+    )
+
+    // Background color should return to initial (no sticky behavior)
+    expect(postHoverBgColor).toBe(initialBgColor)
+
     // Take Dark theme screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "theme-dark.png")
