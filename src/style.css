@@ -59,3 +59,26 @@
 .animate-rarity-glow {
   animation: rarity-glow-pulse 3s infinite ease-in-out;
 }
+
+.editor-container {
+  container-type: inline-size;
+}
+
+@container (max-width: 280px) {
+  .responsive-btn-text {
+    display: none !important;
+  }
+  .responsive-btn {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    justify-content: center !important;
+  }
+  /* Show tooltips only when hovering wrapper in collapsed state */
+  .responsive-btn-wrapper:hover .responsive-btn-tooltip {
+    display: block !important;
+  }
+}
+
+.responsive-btn-tooltip::after {
+  content: attr(data-tooltip);
+}

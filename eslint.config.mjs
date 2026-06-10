@@ -246,7 +246,11 @@ export default ts.config(
   {
     files: [
       "src/components/molecules/DeleteConfirmModal.tsx",
-      "src/components/organisms/HistoryTab.tsx"
+      "src/components/organisms/HistoryTab.tsx",
+      "src/components/organisms/SettingsTab.tsx",
+      "src/components/organisms/MintingView.tsx",
+      "src/components/organisms/CardDetailView.tsx",
+      "src/components/organisms/Workbench.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [
@@ -269,7 +273,10 @@ export default ts.config(
               "rel",
               "href",
               "data-testid",
-              "data-tutorial"
+              "data-tutorial",
+              "position",
+              "advanceIfStep",
+              "title"
             ]
           },
           words: {

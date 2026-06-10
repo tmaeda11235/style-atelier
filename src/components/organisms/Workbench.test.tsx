@@ -185,7 +185,9 @@ describe("Workbench", () => {
     fireEvent.change(subjectInput, { target: { value: "neon tiger" } })
     fireEvent.change(styleInput, { target: { value: "neon rain" } })
 
-    const injectButton = screen.getByText("Try on Midjourney")
+    const injectButton = screen.getByRole("button", {
+      name: /Try on Midjourney/
+    })
     fireEvent.click(injectButton)
 
     await waitFor(() => {
@@ -363,7 +365,9 @@ describe("Workbench", () => {
     )
 
     // Verify button is rendered
-    const mintButton = screen.getByText("調合したカードを作成する")
+    const mintButton = screen.getByRole("button", {
+      name: /調合したカードを作成する/
+    })
     expect(mintButton).toBeDefined()
 
     // Click button
