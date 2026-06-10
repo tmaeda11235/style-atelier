@@ -21,6 +21,7 @@ tags: []
 1.  **Side Panel ("The Factory")**: The main UI for managing cards, building decks, and mixing prompts.
 2.  **Content Script**: Interacts with the Midjourney Web DOM to capture generated images and inject prompts.
 3.  **Background Service Worker**: Handles browser events and coordination.
+4.  **Offscreen Document ("The Engine Room")**: Hosts the WebLLM Worker to run GPU-accelerated model downloads and inference in a persistent background context.
 
 ## Key Technical Patterns
 
@@ -77,11 +78,13 @@ tags: []
       - _Safe Merge_: Performs normal LWW merge while warning the user of potential zombie resurrection.
       - _Local Overwrite_: Discards local changes and pulls clean data from the cloud backup (fully preventing resurrection).
       - _Cloud Overwrite_: Replaces the cloud backup with the current local state.
-- **Local AI Inference Pattern (WebLLM & Worker Isolation)**:
-  - **Non-blocking Thread Model**: WebLLM runs inside a dedicated Web Worker to prevent blocking the main UI thread during model initialization and token generation.
+- **Local AI Inference Pattern (WebLLM, Offscreen & Cache Resilience)**:
+  - **Offscreen Orchestration**: WebLLM runs inside a Web Worker hosted in an Offscreen Document rather than the Side Panel. This prevents execution contexts from suddenly terminating when the Side Panel is closed, ensuring long-running downloads and token generations finish safely.
+  - **Pre-download Quota Check**: Evaluates storage using `navigator.storage.estimate()` before downloading the model, preventing failures from `QuotaExceededError`.
+  - **Cache Integrity Guardrails**: Validates cached files in OPFS or Cache Storage. If corruption or incomplete downloads are detected, it automatically purges and restarts the download.
+  - **Non-blocking Execution**: The model is executed off the main thread, communicating with the Side Panel and Background Service Worker via Chrome extension runtime messaging.
   - **Lightweight Model Optimization**: Since Gemma-4 E2B is a <1GB model, it has limited complex reasoning capability. The system handles this via structured prompt templates (Few-shot prompting) and RAG (retrieving relevant style keywords or historical combinations from IndexedDB) before running inference.
   - **Zero-cost, High-frequency Orchestration**: Because client-side execution incurs zero API costs, the agent can trigger background tasks (e.g., parsing, tagging, style synthesis, user action predictions) frequently without budgeting concerns.
-  - **Model Lifecycle (Download & Cache)**: The model weight files are downloaded on demand, cached locally in the browser cache (OPFS or Cache Storage API), and loaded into memory only when needed, minimizing memory footprints.
 
 ## Data Flow
 
@@ -89,7 +92,7 @@ tags: []
 2.  **Minting**: Image + Prompt Metadata saved to IndexedDB as "Style Card".
 3.  **Usage**: User selects Card from Side Panel -> Content Script injects prompt into Midjourney input.
 4.  **Export**: Card data encoded into image (QR/Metadata) for sharing.
-5.  **Local AI Inference**: User requests prompt analysis/tagging or triggers background optimization -> Side Panel forwards task to Web Worker -> Web Worker runs inference via WebLLM (Gemma-4 E2B) -> Results updated in state stores / database.
+5.  **Local AI Inference**: User requests prompt analysis/tagging -> Side Panel / Background requests Offscreen Document -> Offscreen Document communicates with WebLLM Worker -> Worker runs inference via WebLLM (Gemma-4 E2B) -> Results updated in state stores / database.
 
 ## Component Development Rules (Sustainability)
 

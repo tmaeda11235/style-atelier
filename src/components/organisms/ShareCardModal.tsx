@@ -93,7 +93,7 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
   return (
     <div
       data-testid="share-card-modal-overlay"
-      className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end"
+      className="absolute inset-0 bg-black/20 dark:bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end"
       onClick={onClose}>
       {/* Drawer Container */}
       <div

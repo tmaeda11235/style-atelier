@@ -92,7 +92,8 @@
     "permissions": [
       "activeTab",
       "identity",
-      "storage"
+      "storage",
+      "offscreen"
     ],
     "host_permissions": [
       "https://midjourney.com/*",

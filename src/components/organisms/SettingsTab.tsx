@@ -9,13 +9,13 @@ import { useHistory } from "../../hooks/useHistory"
 import { useLocalBackup } from "../../hooks/useLocalBackup"
 import { useSettingsGoogleDrive } from "../../hooks/useSettingsGoogleDrive"
 import { useStorageEstimate } from "../../hooks/useStorageEstimate"
-import type { Language } from "../../lib/i18n"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { CloudSyncSection } from "./CloudSyncSection"
 import { DangerZoneSection } from "./DangerZoneSection"
 import { LocalBackupSection } from "./LocalBackupSection"
 import { StorageManagerSection } from "./StorageManagerSection"
 import { UiPreferencesSection } from "./UiPreferencesSection"
+import { WebLlmSettingsSection } from "./WebLlmSettingsSection"
 
 interface SettingsTabProps {
   addLog: (log: string) => void
@@ -44,7 +44,8 @@ export function SettingsTab({
     ui: true,
     cloud: typeof process !== "undefined" && process.env.NODE_ENV === "test",
     maintenance:
-      typeof process !== "undefined" && process.env.NODE_ENV === "test"
+      typeof process !== "undefined" && process.env.NODE_ENV === "test",
+    webllm: typeof process !== "undefined" && process.env.NODE_ENV === "test"
   })
 
   const toggleSection = (section: string) => {
@@ -283,6 +284,26 @@ export function SettingsTab({
           </div>
         )}
       </div>
+
+      {/* Group 4: Local AI Model (WebLLM) */}
+      <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-all">
+        <button
+          type="button"
+          id="settings-accordion-webllm"
+          onClick={() => toggleSection("webllm")}
+          className="flex items-center justify-between w-full p-4 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors font-bold text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100/60 dark:border-slate-800/60 select-none cursor-pointer">
+          <span className="flex items-center gap-1.5 uppercase tracking-wider">
+            {t.webLlmGroupTitle}
+          </span>
+          {openSections.webllm ? (
+            <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+          )}
+        </button>
+        {openSections.webllm && <WebLlmSettingsSection />}
+      </div>
+
       <GDriveSyncStrategyDialog
         isOpen={isWarningOpen}
         onConfirm={handleConfirmSyncStrategy}

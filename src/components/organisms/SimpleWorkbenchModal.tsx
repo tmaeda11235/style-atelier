@@ -150,7 +150,7 @@ export function SimpleWorkbenchModal({
   }
 
   return (
-    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end">
+    <div className="absolute inset-0 bg-black/20 dark:bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end">
       {/* Drawer Container */}
       <div className="bg-white rounded-t-xl max-h-[90%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0">
         {/* Header */}

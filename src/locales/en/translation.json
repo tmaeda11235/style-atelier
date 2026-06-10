@@ -165,7 +165,22 @@
     "cleanupHistoryDesc": "* Removing unused Style Cards from the library can also free up significant storage, especially for cards with high-resolution images.",
     "deleteCardTitle": "Delete Card?",
     "deleteCardMessage": "This action cannot be undone. \"{{cardName}}\" will be permanently deleted from the library.",
-    "deleteBtn": "Delete"
+    "deleteBtn": "Delete",
+    "webLlmGroupTitle": "🤖 Local AI Model (WebLLM)",
+    "webLlmDesc": "Manage the local AI model (Gemma-4 E2B). The model is cached in browser storage (OPFS) for in-browser offline inference.",
+    "webLlmStatusLabel": "Status",
+    "webLlmStatusIdle": "Not Downloaded",
+    "webLlmStatusChecking": "Checking...",
+    "webLlmStatusDownloading": "Downloading ({{progress}}%)",
+    "webLlmStatusVerifying": "Verifying...",
+    "webLlmStatusReady": "Loaded (Ready to Use)",
+    "webLlmStatusError": "Error occurred",
+    "webLlmStatusInsufficientQuota": "Insufficient Space",
+    "webLlmDownloadBtn": "Download Model",
+    "webLlmPurgeBtn": "Delete Cache",
+    "webLlmPurgeConfirm": "Are you sure you want to delete the local AI model cache? This will free up storage but you will need to re-download the model to use local AI functions again.",
+    "webLlmQuotaWarningTitle": "Insufficient Space Warning",
+    "webLlmQuotaWarningDesc": "Insufficient storage space on your device. WebLLM requires at least 1.5 GB of free space (1.0 GB for model file + 500 MB workspace) to operate."
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
@@ -516,5 +531,17 @@
     "noInputTitle": "Input Not Found",
     "noInputDesc": "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view.",
     "noInputBtn": "Retry Connection"
+  },
+  "aliasEdit": {
+    "editTitle": "Edit Parameter Alias",
+    "folderCategory": "Folder / Category",
+    "parameterValue": "Parameter Value",
+    "aliasName": "Alias Name",
+    "delete": "Delete",
+    "save": "Save",
+    "noFolder": "(No Folder)",
+    "createNewFolder": "+ Create New Folder...",
+    "enterFolderName": "Enter new folder name",
+    "enterAliasNamePlaceholder": "My Custom Style"
   }
 }

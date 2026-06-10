@@ -97,7 +97,7 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   const oldConfig = RARITY_CONFIG[oldTier]
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-black/20 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
       {/* Dynamic Confetti */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
         {confetti.map((piece) => (
