@@ -64,7 +64,7 @@ export function ScrollButton({ direction, onClick }: ScrollButtonProps) {
       onClick={onClick}
       className={`absolute ${
         isLeft ? "left-0" : "right-0"
-      } z-10 w-4 h-4 bg-white/95 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center border border-slate-200 shadow hover:bg-slate-50 transition-colors text-[9px] font-bold`}
+      } z-10 w-4 h-4 bg-white/95 dark:bg-slate-800/95 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 rounded-full flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-[9px] font-bold`}
       aria-label={`Scroll ${direction}`}>
       {isLeft ? "‹" : "›"}
     </button>

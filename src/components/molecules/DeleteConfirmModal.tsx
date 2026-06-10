@@ -25,15 +25,15 @@ export function DeleteConfirmModal({
     <div
       data-testid="delete-confirm-modal"
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 animate-in zoom-in-95 duration-200">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-600 dark:text-red-400">
             <Trash2 className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 text-center">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 text-center">
             {t("settings.deleteCardTitle", "Cardを削除しますか？")}
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed text-center">
             {t("settings.deleteCardMessage", {
               cardName,
               defaultValue: `この操作は取り消せません。"${cardName}" をライブラリから完全に削除します。`

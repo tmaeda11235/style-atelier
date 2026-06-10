@@ -22,8 +22,8 @@ const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
   t
 }) => (
   <div className="flex items-center justify-between">
-    <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
-      <BookUp2 className="w-5 h-5 text-blue-500" />
+    <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
+      <BookUp2 className="w-5 h-5 text-blue-500 dark:text-blue-400" />
       Workbench
     </h2>
     <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ interface WorkbenchViewProps {
 
 export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
   return (
-    <div className="flex flex-col h-full bg-white text-slate-900 p-4 space-y-4">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 space-y-4">
       <WorkbenchHeader
         workbenchCards={props.workbenchCards}
         clearWorkbench={props.clearWorkbench}

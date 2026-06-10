@@ -1122,6 +1122,30 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
       .evaluate(() => localStorage.getItem("style-atelier-theme"))
     expect(localStorageThemeDark).toBe("dark")
 
+    // Verify dark mode text color on Workbench
+    console.log("Navigating to Workbench to verify dark mode styling...")
+    const workbenchNavBtn = spFrame.locator("[data-tutorial='workbench-tab']")
+    await workbenchNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // Check Workbench container text color / background color in dark mode
+    const workbenchContainer = spFrame.locator(
+      "div.flex.flex-col.h-full.bg-white"
+    )
+    await expect(workbenchContainer).toBeVisible()
+    const containerTextColor = await workbenchContainer.evaluate((el) => {
+      return window.getComputedStyle(el).color
+    })
+    console.log(
+      `Workbench container text color in dark mode: ${containerTextColor}`
+    )
+    // Slate-100 is rgb(241, 245, 249). We expect it to be light, definitely not rgb(15, 23, 42) (slate-900)
+    expect(containerTextColor).not.toBe("rgb(15, 23, 42)")
+
+    // Switch back to Settings tab to continue the test
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
     // Take Dark theme screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "theme-dark.png")
