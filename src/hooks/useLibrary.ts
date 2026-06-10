@@ -1,7 +1,11 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
-import { useHandleCardClick, useTogglePin } from "./useLibraryActions"
+import {
+  useHandleCardClick,
+  useMoveCardToCategory,
+  useTogglePin
+} from "./useLibraryActions"
 import { useLibraryData } from "./useLibraryData"
 import {
   useLibraryBreadcrumbs,
@@ -58,20 +62,7 @@ export function useLibrary(
     onNavigateToWorkbench
   )
 
-  const moveCardToCategory = async (
-    cardId: string,
-    categoryId: string | null
-  ) => {
-    try {
-      await db.updateCard(cardId, { category: categoryId || undefined })
-      const catName = categoryId
-        ? categories.find((c) => c.id === categoryId)?.name || "Folder"
-        : "Root"
-      addLog(`Moved card to "${catName}".`)
-    } catch (err) {
-      console.error("Failed to move card:", err)
-    }
-  }
+  const moveCardToCategory = useMoveCardToCategory(categories, addLog)
 
   return {
     ...filterStates,

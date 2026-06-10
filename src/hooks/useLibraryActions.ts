@@ -146,3 +146,20 @@ export function useHandleCardClick(
     }
   }
 }
+
+export function useMoveCardToCategory(
+  categories: { id: string; name: string }[],
+  addLog: (msg: string) => void
+) {
+  return async (cardId: string, categoryId: string | null) => {
+    try {
+      await db.updateCard(cardId, { category: categoryId || undefined })
+      const catName = categoryId
+        ? categories.find((c) => c.id === categoryId)?.name || "Folder"
+        : "Root"
+      addLog(`Moved card to "${catName}".`)
+    } catch (err) {
+      console.error("Failed to move card:", err)
+    }
+  }
+}
