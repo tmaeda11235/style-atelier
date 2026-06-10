@@ -12,6 +12,7 @@ tags: []
 - **Platform**: Chrome Extension (Manifest V3).
 - **Framework**: Plasmo.
 - **Backend**: None (Serverless Architecture).
+- **Local AI Engine**: Client-side execution of Gemma-4 E2B via WebLLM inside Web Workers.
 - **Database**: Client-side IndexedDB (via Dexie.js).
 - **Data Transport**: "Memento Pattern" via Image Files (QR Code / Metadata).
 
@@ -76,6 +77,11 @@ tags: []
       - _Safe Merge_: Performs normal LWW merge while warning the user of potential zombie resurrection.
       - _Local Overwrite_: Discards local changes and pulls clean data from the cloud backup (fully preventing resurrection).
       - _Cloud Overwrite_: Replaces the cloud backup with the current local state.
+- **Local AI Inference Pattern (WebLLM & Worker Isolation)**:
+  - **Non-blocking Thread Model**: WebLLM runs inside a dedicated Web Worker to prevent blocking the main UI thread during model initialization and token generation.
+  - **Lightweight Model Optimization**: Since Gemma-4 E2B is a <1GB model, it has limited complex reasoning capability. The system handles this via structured prompt templates (Few-shot prompting) and RAG (retrieving relevant style keywords or historical combinations from IndexedDB) before running inference.
+  - **Zero-cost, High-frequency Orchestration**: Because client-side execution incurs zero API costs, the agent can trigger background tasks (e.g., parsing, tagging, style synthesis, user action predictions) frequently without budgeting concerns.
+  - **Model Lifecycle (Download & Cache)**: The model weight files are downloaded on demand, cached locally in the browser cache (OPFS or Cache Storage API), and loaded into memory only when needed, minimizing memory footprints.
 
 ## Data Flow
 
@@ -83,6 +89,7 @@ tags: []
 2.  **Minting**: Image + Prompt Metadata saved to IndexedDB as "Style Card".
 3.  **Usage**: User selects Card from Side Panel -> Content Script injects prompt into Midjourney input.
 4.  **Export**: Card data encoded into image (QR/Metadata) for sharing.
+5.  **Local AI Inference**: User requests prompt analysis/tagging or triggers background optimization -> Side Panel forwards task to Web Worker -> Web Worker runs inference via WebLLM (Gemma-4 E2B) -> Results updated in state stores / database.
 
 ## Component Development Rules (Sustainability)
 
