@@ -207,6 +207,31 @@ function calculateEmptyPositionsResult(
   }
 }
 
+function createSpotlightRect(
+  rect: DOMRect,
+  parentRect: DOMRect
+): SpotlightRect {
+  return {
+    top: rect.top - parentRect.top - PADDING,
+    left: rect.left - parentRect.left - PADDING,
+    width: rect.width + PADDING * 2,
+    height: rect.height + PADDING * 2
+  }
+}
+
+function clampCoordinates(
+  coords: { left: number; top: number },
+  viewportWidth: number,
+  viewportHeight: number,
+  tipWidth: number,
+  tipHeight: number
+) {
+  return {
+    left: Math.max(8, Math.min(coords.left, viewportWidth - tipWidth - 8)),
+    top: Math.max(8, Math.min(coords.top, viewportHeight - tipHeight - 8))
+  }
+}
+
 export function calculatePositionsResult(
   currentConfig: any,
   el: HTMLElement | null,
@@ -229,13 +254,7 @@ export function calculatePositionsResult(
 
   const rect = el.getBoundingClientRect()
   const parentRect = document.body.getBoundingClientRect()
-
-  const spotlightRect: SpotlightRect = {
-    top: rect.top - parentRect.top - PADDING,
-    left: rect.left - parentRect.left - PADDING,
-    width: rect.width + PADDING * 2,
-    height: rect.height + PADDING * 2
-  }
+  const spotlightRect = createSpotlightRect(rect, parentRect)
 
   const side = resolvePlacement(
     currentConfig.position as PositionSide,
@@ -254,8 +273,13 @@ export function calculatePositionsResult(
     tipHeight,
     tooltipGap
   )
-  const left = Math.max(8, Math.min(coords.left, viewportWidth - tipWidth - 8))
-  const top = Math.max(8, Math.min(coords.top, viewportHeight - tipHeight - 8))
+  const { left, top } = clampCoordinates(
+    coords,
+    viewportWidth,
+    viewportHeight,
+    tipWidth,
+    tipHeight
+  )
 
   return {
     spotlightRect,
