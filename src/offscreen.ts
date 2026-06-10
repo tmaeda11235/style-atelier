@@ -34,6 +34,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleInitWorker(sendResponse)
       return true
 
+    case "start-download":
+      handleStartDownload(sendResponse)
+      return true
+
+    case "purge-cache":
+      handlePurgeCache(sendResponse)
+      return true
+
     default:
       sendResponse({
         status: "error",
@@ -100,6 +108,47 @@ function handleInitWorker(sendResponse: (res: any) => void) {
       }
     }
     sendResponse({ status: "success", message: "Worker initialized" })
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}
+
+function handleStartDownload(sendResponse: (res: any) => void) {
+  try {
+    if (!webLlmWorker) {
+      handleInitWorker(() => {})
+    }
+    if (webLlmWorker) {
+      webLlmWorker.postMessage({ action: "start-download" })
+      sendResponse({ status: "success", message: "Download started" })
+    } else {
+      sendResponse({ status: "error", error: "Failed to initialize worker" })
+    }
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}
+
+async function handlePurgeCache(sendResponse: (res: any) => void) {
+  try {
+    // 1. Clear OPFS
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.storage &&
+      navigator.storage.getDirectory
+    ) {
+      const root = await navigator.storage.getDirectory()
+      try {
+        await root.removeEntry("webllm_models", { recursive: true })
+      } catch {
+        // Ignored if directory doesn't exist
+      }
+    }
+    // 2. Clear Cache Storage
+    if (typeof caches !== "undefined") {
+      await caches.delete("webllm/model_cache")
+    }
+    sendResponse({ status: "success" })
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })
   }

@@ -165,7 +165,22 @@
     "cleanupHistoryDesc": "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。",
     "deleteCardTitle": "Cardを削除しますか？",
     "deleteCardMessage": "この操作は取り消せません。\"{{cardName}}\" をライブラリから完全に削除します。",
-    "deleteBtn": "削除する"
+    "deleteBtn": "削除する",
+    "webLlmGroupTitle": "🤖 ローカルAIモデル (WebLLM)",
+    "webLlmDesc": "ローカルAI機能（Gemma-4 E2Bモデル）の管理を行います。モデルをローカルストレージ（OPFS）に保存し、ブラウザ内で推論を実行できます。",
+    "webLlmStatusLabel": "ステータス",
+    "webLlmStatusIdle": "未ダウンロード",
+    "webLlmStatusChecking": "確認中...",
+    "webLlmStatusDownloading": "ダウンロード中 ({{progress}}%)",
+    "webLlmStatusVerifying": "整合性検証中...",
+    "webLlmStatusReady": "ロード完了 (利用可能)",
+    "webLlmStatusError": "エラーが発生しました",
+    "webLlmStatusInsufficientQuota": "容量不足 (1.5GB以上の空き容量が必要です)",
+    "webLlmDownloadBtn": "モデルをダウンロード",
+    "webLlmPurgeBtn": "キャッシュを削除",
+    "webLlmPurgeConfirm": "ローカルAIモデルのキャッシュを削除しますか？これにより空き容量は増えますが、ローカルAI機能を使用する際は再度モデルをダウンロードする必要があります。",
+    "webLlmQuotaWarningTitle": "容量不足警告",
+    "webLlmQuotaWarningDesc": "端末の空き容量が不足しています。WebLLMを動作させるには1.5GB（モデルデータ1.0GB + 実行キャッシュ500MB）の空き領域が必要です。"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",

@@ -1186,4 +1186,79 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     console.log("Theme selection E2E test passed successfully!")
   })
+
+  test("should allow downloading and purging WebLLM local AI model cache and verify UI transitions", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for WebLLM E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // Expand Local AI Model (WebLLM) accordion
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    // 3. Verify initial status (Not Downloaded / 未ダウンロード)
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-status-idle.png")
+    })
+
+    // 4. Click Download Model button
+    console.log("Clicking Download Model button...")
+    await downloadBtn.click()
+
+    // 5. Verify downloading progress and transition to Loaded
+    const purgeBtn = spFrame.locator(
+      "button:has-text('Delete Cache'), button:has-text('キャッシュを削除')"
+    )
+    await expect(purgeBtn).toBeVisible({ timeout: 10000 })
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-status-loaded.png")
+    })
+
+    // 6. Click Delete Cache button
+    console.log("Clicking Delete Cache button...")
+    await purgeBtn.click()
+    await page.waitForTimeout(500)
+
+    // 7. Verify confirmation dialog is visible
+    const dialogContainer = spFrame.locator("#confirmation-dialog-container")
+    await expect(dialogContainer).toBeVisible()
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-purge-confirm.png")
+    })
+
+    // 8. Confirm deletion
+    const confirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(confirmBtn).toBeVisible()
+    await confirmBtn.click()
+    await page.waitForTimeout(500)
+
+    // 9. Verify state goes back to Not Downloaded
+    await expect(downloadBtn).toBeVisible()
+    console.log("WebLLM E2E test passed successfully!")
+  })
 })
