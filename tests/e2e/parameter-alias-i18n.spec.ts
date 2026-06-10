@@ -1,0 +1,147 @@
+import path from "path"
+import { expect, test } from "@playwright/test"
+
+test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
+  test.beforeEach(async ({ page }) => {
+    page.on("console", (msg) => {
+      console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+    page.on("pageerror", (err) => {
+      console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`)
+    })
+  })
+
+  test("should show localized Parameter Alias edit modal and take screenshots", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if visible
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed database
+    await spFrame.locator("body").evaluate(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const database = (window as any).db
+      for (let i = 0; i < 50; i++) {
+        const count = await database.categories.count()
+        if (count > 0) break
+        await new Promise((r) => setTimeout(r, 100))
+      }
+
+      await database.styleCards.clear()
+      await database.parameterAliases.clear()
+      await database.parameterFolders.clear()
+
+      await database.styleCards.add({
+        id: "style-i18n-1",
+        name: "Neon Forest",
+        promptSegments: [{ type: "text", value: "mystic neon forest" }],
+        parameters: {
+          sref: ["https://example.com/forest.png"]
+        },
+        masking: {},
+        tier: "Rare",
+        dominantColor: "#a855f7",
+        accentColor: "#ec4899",
+        thumbnailData:
+          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='purple'/></svg>",
+        isPinned: false
+      })
+    })
+
+    await page.waitForTimeout(1000)
+
+    // 3. Switch to Settings and set language to English first (just in case)
+    console.log("Setting language to English...")
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible()
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
+    await langSelect.selectOption("en")
+    await page.waitForTimeout(500)
+
+    // 4. Navigate to Workbench tab
+    const workbenchTab = spFrame.locator("[data-tutorial='workbench-tab']").first()
+    await expect(workbenchTab).toBeVisible()
+    await workbenchTab.click()
+    await page.waitForTimeout(500)
+
+    // 5. Pin the card (since it was not pinned, we need to Gacha or pin it. Let's Gacha Pick to quickly show it in Workbench)
+    const gachaBtn = spFrame.locator("#workbench-gacha-btn").first()
+    await expect(gachaBtn).toBeVisible()
+    await gachaBtn.click()
+    await page.waitForTimeout(1000)
+
+    // 6. Open alias editing modal (English)
+    const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
+    await expect(srefEditBtn).toBeVisible()
+    await srefEditBtn.click()
+    await page.waitForTimeout(500)
+
+    // 7. Verify modal headers and labels are in English
+    const modalHeaderEn = spFrame.locator("h4:has-text('Edit Parameter Alias')")
+    await expect(modalHeaderEn).toBeVisible()
+    await expect(spFrame.locator("label:has-text('Folder / Category')")).toBeVisible()
+    await expect(spFrame.locator("label:has-text('Parameter Value')")).toBeVisible()
+    await expect(spFrame.locator("label:has-text('Alias Name')")).toBeVisible()
+    await expect(spFrame.locator("button:has-text('Delete')")).toBeVisible()
+    await expect(spFrame.locator("button:has-text('Save')")).toBeVisible()
+
+    // Take English screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "parameter-alias-modal-en.png")
+    })
+    console.log("English Alias Modal screenshot saved.")
+
+    // Cancel modal via X button
+    const closeBtn = spFrame.locator(".w-80.shadow-2xl button").first()
+    await closeBtn.click()
+    await page.waitForTimeout(1000)
+
+    // 8. Switch to Settings and set language to Japanese (ja)
+    console.log("Setting language to Japanese...")
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+    await langSelect.selectOption("ja")
+    await page.waitForTimeout(500)
+
+    // 9. Go back to Workbench
+    await workbenchTab.click()
+    await page.waitForTimeout(500)
+
+    // 10. Open alias editing modal again (Japanese)
+    await expect(srefEditBtn).toBeVisible()
+    await srefEditBtn.click()
+    await page.waitForTimeout(500)
+
+    // 11. Verify modal headers and labels are in Japanese
+    const modalHeaderJa = spFrame.locator("h4:has-text('パラメータエイリアスの編集')")
+    await expect(modalHeaderJa).toBeVisible()
+    await expect(spFrame.locator("label:has-text('フォルダ / カテゴリ')")).toBeVisible()
+    await expect(spFrame.locator("label:has-text('パラメータ値')")).toBeVisible()
+    await expect(spFrame.locator("label:has-text('エイリアス名')")).toBeVisible()
+    await expect(spFrame.locator("button:has-text('削除')")).toBeVisible()
+    await expect(spFrame.locator("button:has-text('保存')")).toBeVisible()
+
+    // Take Japanese screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "parameter-alias-modal-ja.png")
+    })
+    console.log("Japanese Alias Modal screenshot saved.")
+
+    // Close modal via X button
+    await closeBtn.click()
+    await page.waitForTimeout(1000)
+  })
+})

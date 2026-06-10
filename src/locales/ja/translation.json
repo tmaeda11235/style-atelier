@@ -516,5 +516,17 @@
     "noInputTitle": "入力エリアが見つかりません",
     "noInputDesc": "チャット入力エリアが見つかりませんでした。現在「Create」ページ、またはMidjourneyギャラリーの詳細表示画面を開いていることを確認してください。",
     "noInputBtn": "接続を再試行"
+  },
+  "aliasEdit": {
+    "editTitle": "パラメータエイリアスの編集",
+    "folderCategory": "フォルダ / カテゴリ",
+    "parameterValue": "パラメータ値",
+    "aliasName": "エイリアス名",
+    "delete": "削除",
+    "save": "保存",
+    "noFolder": "(フォルダなし)",
+    "createNewFolder": "+ 新しいフォルダを作成...",
+    "enterFolderName": "新しいフォルダ名を入力",
+    "enterAliasNamePlaceholder": "マイカスタムスタイル"
   }
 }

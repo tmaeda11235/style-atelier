@@ -516,5 +516,17 @@
     "noInputTitle": "Input Not Found",
     "noInputDesc": "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view.",
     "noInputBtn": "Retry Connection"
+  },
+  "aliasEdit": {
+    "editTitle": "Edit Parameter Alias",
+    "folderCategory": "Folder / Category",
+    "parameterValue": "Parameter Value",
+    "aliasName": "Alias Name",
+    "delete": "Delete",
+    "save": "Save",
+    "noFolder": "(No Folder)",
+    "createNewFolder": "+ Create New Folder...",
+    "enterFolderName": "Enter new folder name",
+    "enterAliasNamePlaceholder": "My Custom Style"
   }
 }
