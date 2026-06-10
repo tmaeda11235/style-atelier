@@ -14,7 +14,7 @@ tags: []
 
 ## Key Libraries
 
-- **Localization (i18n)**: `i18next` & `react-i18next` - Type-safe multi-language dictionaries (`en` / `ja`). `eslint-plugin-i18next` is used as a devDependency to enforce static i18n checks.
+- **Localization (i18n)**: `i18next` & `react-i18next` for UI components - Type-safe multi-language dictionaries (`en` / `ja`). `eslint-plugin-i18next` is used as a devDependency to enforce static i18n checks. Additionally, Chrome extension store metadata (manifest name and description) is localized via Plasmo's native `_locales` directory support (`locales/ja/messages.json` and `locales/en/messages.json` at the project root).
 - **Image Processing**: Canvas API (Native) / [satori](https://github.com/vercel/satori) (for card layout generation).
 - **Metadata/Exif**: Custom PNG Chunk Parser (Native) - For embedding/extracting JSON payloads in PNG `tEXt` chunks with custom CRC32 integrity verification.
 - **QR Codes**: `jsQR` - For scanning/generating QR codes on cards. Implements multi-stage canvas cropping and 2x scaling fallback for low-resolution/compressed images.
