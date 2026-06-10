@@ -55,7 +55,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     await expect(spFrame.locator("text=Step 1 / 8")).toBeVisible()
 
     await page.screenshot({
-      path: path.join(screenshotsDir, "tutorial-step-1.png")
+      path: path.join(screenshotsDir, "tutorial-lang-en.png")
     })
 
     // Click "Add Sample and Proceed" or "Next"
@@ -256,5 +256,63 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     console.log(
       "Tutorial successfully skipped Step 5 due to disabled Rarity feature!"
     )
+  })
+
+  test("should display localized step count in Japanese when language is switched", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    console.log(
+      "Navigating to sandbox page for Japanese Interactive Tutorial E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog if it appears
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings and Switch to Japanese (ja)
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
+    await langSelect.selectOption("ja")
+    await page.waitForTimeout(500)
+
+    // 3. Click Guide button in header to trigger tutorial
+    const guideBtn = spFrame.locator("button[title='ガイドを表示']")
+    await expect(guideBtn).toBeVisible()
+    await guideBtn.click()
+    await page.waitForTimeout(500)
+
+    // 4. Verify step 1 displays Japanese "ステップ 1 / 8"
+    const tutorialContainer = spFrame.locator(
+      "[data-testid='interactive-tutorial']"
+    )
+    await expect(tutorialContainer).toBeVisible()
+    await expect(spFrame.locator("text=ステップ 1 / 8")).toBeVisible()
+
+    // Take screenshot of Japanese tutorial step 1
+    await page.screenshot({
+      path: path.join(screenshotsDir, "tutorial-lang-ja.png")
+    })
+    console.log("Japanese tutorial step 1 screenshot saved.")
+
+    // 5. Close the tutorial
+    const closeBtn = spFrame.locator(
+      "[data-testid='interactive-tutorial'] button[aria-label='Close tutorial']"
+    )
+    await expect(closeBtn).toBeVisible()
+    await closeBtn.click()
+    await page.waitForTimeout(500)
+    await expect(tutorialContainer).not.toBeVisible()
   })
 })
