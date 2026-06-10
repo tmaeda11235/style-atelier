@@ -137,4 +137,151 @@ describe("useExpertModeView hook", () => {
 
     expect(result.current.activeTab).toBe("history")
   })
+
+  it("should handle saving card details", async () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+    const mockCard = { id: "card-123", name: "Test Card" } as any
+
+    await act(async () => {
+      await result.current.handleSaveCardDetails(mockCard)
+    })
+
+    expect(db.styleCards.put).toHaveBeenCalledWith(mockCard)
+    expect(result.current.logs[0]).toContain("updated successfully")
+  })
+
+  it("should handle deleting a card", async () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+
+    await act(async () => {
+      await result.current.handleDeleteCard("card-123")
+    })
+
+    expect(db.deleteStyleCardAndCleanup).toHaveBeenCalledWith("card-123")
+    expect(result.current.logs[0]).toContain("deleted successfully")
+  })
+
+  it("should clear logs", () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+
+    act(() => {
+      result.current.addLog("test log")
+    })
+    expect(result.current.logs).toHaveLength(1)
+
+    act(() => {
+      result.current.handleClearLogs()
+    })
+    expect(result.current.logs).toEqual([])
+  })
+
+  it("should handle Reset DB when confirmed", async () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+    confirmSpy.mockReturnValue(true)
+
+    await act(async () => {
+      await result.current.handleResetDb()
+    })
+
+    expect(db.styleCards.clear).toHaveBeenCalled()
+    expect(result.current.logs[0]).toContain("All data cleared")
+  })
+
+  it("should handle retry connection", () => {
+    vi.mocked(chrome.tabs.reload).mockImplementation(() => undefined)
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+    act(() => {
+      result.current.setAlertType("disconnected")
+    })
+    act(() => {
+      result.current.handleRetryConnection()
+    })
+    expect(chrome.tabs.reload).toHaveBeenCalled()
+    expect(result.current.alertType).toBeNull()
+  })
+
+  it("should dismiss alert", () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+    act(() => {
+      result.current.setAlertType("disconnected")
+    })
+    act(() => {
+      result.current.handleDismissAlert()
+    })
+    expect(result.current.alertType).toBeNull()
+  })
+
+  it("should handle inject prompt successfully", async () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+    await act(async () => {
+      await result.current.handleInjectPrompt("sunset")
+    })
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
+      type: "INJECT_PROMPT",
+      prompt: "sunset"
+    })
+  })
+
+  it("should handle handleDrop with import", async () => {
+    const { result } = renderHook(
+      () =>
+        useExpertModeView({
+          isEasyMode: false,
+          onToggleEasyMode: mockOnToggleEasyMode
+        }),
+      { wrapper }
+    )
+    await act(async () => {
+      const e = { preventDefault: vi.fn(), dataTransfer: { files: [] } } as any
+    })
+  })
 })
