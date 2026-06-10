@@ -711,4 +711,50 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // Verify modal is closed
     await expect(modalTitle).not.toBeVisible({ timeout: 5000 })
   })
+
+  test("should render empty state when no cards are pinned in Workbench", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Workbench empty state E2E test..."
+    )
+
+    // Set theme to dark in localStorage before loading the page
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-theme", "dark")
+    })
+
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Clear database to ensure no cards are pinned
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+    })
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click()
+    await page.waitForTimeout(1000) // wait for DB queries
+
+    // 4. Verify the Empty State container is visible (check either English or Japanese using regex)
+    const emptyTitle = spFrame.locator(
+      "text=/Workbench is empty|Workbench は空です/"
+    )
+    await expect(emptyTitle).toBeVisible({ timeout: 10000 })
+
+    // 5. Capture screenshot of the empty state (UX verification)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "workbench-empty-state-success.png")
+    })
+  })
 })
