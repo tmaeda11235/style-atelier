@@ -232,6 +232,34 @@ function clampCoordinates(
   }
 }
 
+function resolveSideAndCoords(
+  config: any,
+  rect: DOMRect,
+  tipWidth: number,
+  tipHeight: number,
+  tooltipGap: number,
+  vWidth: number,
+  vHeight: number
+) {
+  const side = resolvePlacement(
+    config.position as PositionSide,
+    rect,
+    tipWidth,
+    tipHeight,
+    tooltipGap,
+    vWidth,
+    vHeight
+  )
+  const coords = calculateCoordinates(
+    side,
+    rect,
+    tipWidth,
+    tipHeight,
+    tooltipGap
+  )
+  return { side, coords }
+}
+
 export function calculatePositionsResult(
   currentConfig: any,
   el: HTMLElement | null,
@@ -256,8 +284,8 @@ export function calculatePositionsResult(
   const parentRect = document.body.getBoundingClientRect()
   const spotlightRect = createSpotlightRect(rect, parentRect)
 
-  const side = resolvePlacement(
-    currentConfig.position as PositionSide,
+  const { side, coords } = resolveSideAndCoords(
+    currentConfig,
     rect,
     tipWidth,
     tipHeight,
@@ -266,13 +294,6 @@ export function calculatePositionsResult(
     viewportHeight
   )
 
-  const coords = calculateCoordinates(
-    side,
-    rect,
-    tipWidth,
-    tipHeight,
-    tooltipGap
-  )
   const { left, top } = clampCoordinates(
     coords,
     viewportWidth,
