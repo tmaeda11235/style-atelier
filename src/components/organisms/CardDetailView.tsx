@@ -32,6 +32,10 @@ import { TagEditor } from "../molecules/TagEditor"
 import { ParameterEditor } from "./ParameterEditor"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
+const CHAR_CLOSE = "✕"
+const DEFAULT_CATEGORY_ICON = "🖼️"
+const TEXT_TRUE = "true"
+
 /**
  * Props for the CardDetailView component.
  */
@@ -167,7 +171,7 @@ export function CardDetailView({
             <button
               onClick={() => setShowRollbackNotice(false)}
               className="text-amber-500 hover:text-amber-700 font-bold ml-1">
-              ✕
+              {CHAR_CLOSE}
             </button>
           </div>
         )}
@@ -220,7 +224,7 @@ export function CardDetailView({
                 <option value="">{t.cardDetail.noCategory}</option>
                 {categoriesList.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.iconEmoji || "🖼️"} {cat.name}
+                    {cat.iconEmoji || DEFAULT_CATEGORY_ICON} {cat.name}
                   </option>
                 ))}
               </select>
@@ -415,7 +419,7 @@ export function CardDetailView({
                   <span className="font-bold text-slate-500">
                     {t.cardDetail.tile}:
                   </span>{" "}
-                  true
+                  {TEXT_TRUE}
                 </div>
               )}
               {parameters.raw && (
@@ -423,7 +427,7 @@ export function CardDetailView({
                   <span className="font-bold text-slate-500">
                     {t.cardDetail.raw}:
                   </span>{" "}
-                  true
+                  {TEXT_TRUE}
                 </div>
               )}
               {!hasParams && (

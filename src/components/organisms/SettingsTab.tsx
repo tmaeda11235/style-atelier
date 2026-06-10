@@ -170,7 +170,7 @@ export function SettingsTab({
           onClick={() => toggleSection("ui")}
           className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100/60 transition-colors font-bold text-xs text-slate-700 border-b border-slate-100/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
-            🎨 {t.uiGroupTitle || "UI Preferences"}
+            {t.uiGroupTitle}
           </span>
           {openSections.ui ? (
             <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -202,7 +202,7 @@ export function SettingsTab({
           onClick={() => toggleSection("cloud")}
           className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100/60 transition-colors font-bold text-xs text-slate-700 border-b border-slate-100/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
-            ☁️ {t.cloudGroupTitle || "Cloud Backup & Sync"}
+            {t.cloudGroupTitle}
           </span>
           {openSections.cloud ? (
             <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -241,7 +241,7 @@ export function SettingsTab({
           onClick={() => toggleSection("maintenance")}
           className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100/60 transition-colors font-bold text-xs text-slate-700 border-b border-slate-100/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
-            📊 {t.maintenanceGroupTitle || "Maintenance & Backup"}
+            {t.maintenanceGroupTitle}
           </span>
           {openSections.maintenance ? (
             <ChevronUp className="w-4 h-4 text-slate-400" />

@@ -87,5 +87,23 @@ describe("ESLint Configuration", () => {
     expect(options["jsx-attributes"].exclude).toContain("className")
     expect(options["jsx-attributes"].exclude).toContain("variant")
     expect(options.words.exclude).toContain("[0-9!-/:-@[-`{-~]+")
+
+    // Verify newly added components in this task are covered
+    const newComponents = [
+      "src/components/organisms/SettingsTab.tsx",
+      "src/components/organisms/MintingView.tsx",
+      "src/components/organisms/CardDetailView.tsx",
+      "src/components/organisms/Workbench.tsx"
+    ]
+    for (const comp of newComponents) {
+      const compConfig = eslintConfig.find(
+        (cfg: any) =>
+          cfg.files &&
+          cfg.files.includes(comp) &&
+          cfg.rules &&
+          cfg.rules["i18next/no-literal-string"]
+      )
+      expect(compConfig).toBeDefined()
+    }
   })
 })
