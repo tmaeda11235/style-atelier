@@ -1,6 +1,8 @@
 @import "tailwindcss" source(none);
 @source "./**/*.{ts,tsx}";
 
+@custom-variant dark (&:is(.dark *));
+
 @keyframes cauldron-bubble {
   0% {
     transform: translateY(15px) scale(0.8);
