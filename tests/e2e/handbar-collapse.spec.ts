@@ -62,8 +62,9 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     const handbar = spFrame.locator("#handbar-root")
     await expect(handbar).toBeVisible({ timeout: 10000 })
 
-    const clearAllBtn = spFrame.locator("button:has-text('Clear All')")
+    const clearAllBtn = spFrame.locator("[data-testid='handbar-clear-all-btn']")
     await expect(clearAllBtn).toBeVisible()
+    await expect(clearAllBtn).toHaveAttribute("title", "Clear All")
 
     // Save expanded state screenshot
     await page.screenshot({

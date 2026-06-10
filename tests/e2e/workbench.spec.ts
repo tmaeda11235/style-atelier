@@ -93,9 +93,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await workbenchTabButton.click()
 
     // 4. Merge Stackボタンをクリックしてモーダルを開く
-    const mergeStackBtn = spFrame
-      .locator("button:has-text('Merge Stack')")
-      .first()
+    const mergeStackBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
     await expect(mergeStackBtn).toBeVisible()
     await mergeStackBtn.click()
 
@@ -104,9 +102,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await expect(modalTitle).toBeVisible()
 
     // 6. モーダル内のMerge Stackを実行
-    const executeMergeBtn = spFrame
-      .locator("button:has-text('Merge Stack')")
-      .nth(1)
+    const executeMergeBtn = spFrame.locator(
+      "[data-testid='handbar-execute-merge-btn']"
+    )
     await expect(executeMergeBtn).toBeVisible()
     await executeMergeBtn.click()
 
@@ -414,9 +412,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await expect(cardW3Row.locator("button:has-text('Keep')")).toBeVisible()
 
     // 7. Click "Merge Stack" button inside the modal to execute merge
-    const modalExecuteBtn = spFrame
-      .locator("button:has-text('Merge Stack')")
-      .nth(1)
+    const modalExecuteBtn = spFrame.locator(
+      "[data-testid='handbar-execute-merge-btn']"
+    )
     await modalExecuteBtn.click()
 
     // 8. Verify modal is closed

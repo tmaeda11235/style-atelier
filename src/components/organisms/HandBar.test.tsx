@@ -213,19 +213,19 @@ describe("HandBar", () => {
     expect(toggleBtn).toBeDefined()
 
     // Initially not collapsed, so clear all button should be visible
-    expect(screen.queryByText("Clear All")).not.toBeNull()
+    expect(screen.queryByTestId("handbar-clear-all-btn")).not.toBeNull()
 
     // Click to collapse
     fireEvent.click(toggleBtn)
     expect(setItemSpy).toHaveBeenCalledWith("handbar_collapsed", "true")
 
     // Clear all button should be hidden when collapsed
-    expect(screen.queryByText("Clear All")).toBeNull()
+    expect(screen.queryByTestId("handbar-clear-all-btn")).toBeNull()
 
     // Click to expand again
     fireEvent.click(toggleBtn)
     expect(setItemSpy).toHaveBeenCalledWith("handbar_collapsed", "false")
-    expect(screen.queryByText("Clear All")).not.toBeNull()
+    expect(screen.queryByTestId("handbar-clear-all-btn")).not.toBeNull()
   })
 
   it("expands when collapsed and container is clicked", () => {
@@ -247,14 +247,14 @@ describe("HandBar", () => {
       />
     )
 
-    expect(screen.queryByText("Clear All")).toBeNull()
+    expect(screen.queryByTestId("handbar-clear-all-btn")).toBeNull()
 
     // Click container to expand
     const root = container.querySelector("#handbar-root")
     expect(root).toBeDefined()
     fireEvent.click(root!)
 
-    expect(screen.queryByText("Clear All")).not.toBeNull()
+    expect(screen.queryByTestId("handbar-clear-all-btn")).not.toBeNull()
 
     getItemSpy.mockRestore()
   })

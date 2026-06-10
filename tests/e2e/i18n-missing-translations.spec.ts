@@ -88,7 +88,12 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     // In Japanese, it should be "スタックを統合"
     const mergeBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
     await expect(mergeBtn).toBeVisible({ timeout: 10000 })
-    await expect(mergeBtn).toHaveText("スタックを統合")
+    await expect(mergeBtn).toHaveAttribute("title", "スタックを統合")
+
+    const clearAllBtn = spFrame.locator("[data-testid='handbar-clear-all-btn']")
+    await expect(clearAllBtn).toBeVisible()
+    await expect(clearAllBtn).toHaveAttribute("title", "すべてクリア")
+
     await mergeBtn.click()
 
     // Verify Modal Texts in Japanese
