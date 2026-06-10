@@ -44,7 +44,7 @@ export function ConfirmationDialog({
   return (
     <div
       id="confirmation-dialog-backdrop"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 dark:bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200"
       onClick={onCancel}>
       <div
         id="confirmation-dialog-container"
