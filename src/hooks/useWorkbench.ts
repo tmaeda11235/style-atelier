@@ -3,7 +3,7 @@ import { useMemo } from "react"
 
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
-import { buildPromptString } from "../lib/prompt-utils"
+import { buildMergedPromptString } from "../lib/prompt-utils"
 
 export async function toggleCardSelection(cardId: string) {
   try {
@@ -110,19 +110,7 @@ export function useWorkbench() {
   }, [workbenchCards])
 
   const mergedPrompt = useMemo(() => {
-    if (workbenchCards.length === 0) return ""
-    const promptParts = workbenchCards.map((card) => {
-      const maskedKeys: (keyof StyleCard["parameters"])[] = []
-      if (card.masking?.isSrefHidden) maskedKeys.push("sref")
-      if (card.masking?.isPHidden) maskedKeys.push("p")
-      return buildPromptString(
-        card.promptSegments,
-        card.parameters,
-        maskedKeys,
-        card.weight
-      )
-    })
-    return promptParts.join(", ")
+    return buildMergedPromptString(workbenchCards)
   }, [workbenchCards])
 
   const rawSlotHistory = useLiveQuery(() => db.getAllSlotHistory())

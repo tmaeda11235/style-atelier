@@ -299,7 +299,7 @@ describe("useWorkbench hook", () => {
 
       const { result } = renderHook(() => useWorkbench())
       expect(result.current.mergedPrompt).toBe(
-        "cyberpunk city --ar 16:9, neon light"
+        "cyberpunk city, neon light --ar 16:9"
       )
     })
 
@@ -328,7 +328,7 @@ describe("useWorkbench hook", () => {
       const { result } = renderHook(() => useWorkbench())
 
       expect(result.current.mergedPrompt).toBe(
-        "synthwave style --ar 4:3 --p p-code, retro future --ar 16:9 --sref sref-456, vaporwave aesthetic --ar 1:1"
+        "synthwave style, retro future, vaporwave aesthetic --ar 4:3 --sref sref-456 --p p-code"
       )
     })
   })
