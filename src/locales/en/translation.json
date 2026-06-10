@@ -43,9 +43,9 @@
   },
   "settings": {
     "title": "Settings",
-    "uiGroupTitle": "UI Preferences",
-    "cloudGroupTitle": "Cloud Backup & Sync",
-    "maintenanceGroupTitle": "Maintenance & Backup",
+    "uiGroupTitle": "🎨 UI Preferences",
+    "cloudGroupTitle": "☁️ Cloud Backup & Sync",
+    "maintenanceGroupTitle": "📊 Maintenance & Backup",
     "backToLibrary": "Back to Library",
     "languageLabel": "Language",
     "languageDesc": "Switch the interface display language.",

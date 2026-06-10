@@ -32,7 +32,7 @@ interface RecipeEditorProps {
 export const RecipeEditor: React.FC<RecipeEditorProps> = (props) => {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-      <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
+      <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3 editor-container">
         <RecipeForm {...props} />
         {props.expertFeatures.slot && (
           <SlotVariablesSection

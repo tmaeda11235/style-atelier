@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { renderHook, act } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import { useActiveTabUrl } from "./useActiveTabUrl"
 
 describe("useActiveTabUrl hook", () => {
@@ -119,5 +120,40 @@ describe("useActiveTabUrl hook", () => {
     })
 
     expect(result.current.isTargetSite).toBe(true)
+  })
+
+  it("should update isTargetSite when window focus changes", async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([
+      { url: "https://google.com" }
+    ] as any)
+
+    const { result } = renderHook(() => useActiveTabUrl())
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    expect(result.current.isTargetSite).toBe(false)
+
+    vi.mocked(chrome.tabs.query).mockResolvedValue([
+      { url: "https://discord.com/channels/123" }
+    ] as any)
+
+    await act(async () => {
+      mockFocusListener()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    expect(result.current.isTargetSite).toBe(true)
+  })
+
+  it("should clean up listeners on unmount", () => {
+    const { unmount } = renderHook(() => useActiveTabUrl())
+
+    unmount()
+
+    expect(chrome.tabs.onActivated.removeListener).toHaveBeenCalled()
+    expect(chrome.tabs.onUpdated.removeListener).toHaveBeenCalled()
+    expect(chrome.windows.onFocusChanged.removeListener).toHaveBeenCalled()
   })
 })
