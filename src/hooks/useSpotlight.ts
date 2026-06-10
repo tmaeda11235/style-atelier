@@ -3,13 +3,12 @@ import React, { useCallback, useRef, useState } from "react"
 import { useTutorial } from "../contexts/TutorialContext"
 import {
   calculatePositionsResult,
-  PositionSide,
-  SpotlightRect,
   useClickBlocker,
   useMockDrop,
   useResizeScrollListener,
   useRetryTargetSelector
 } from "./useSpotlightHelpers"
+import type { PositionSide, SpotlightRect } from "./useSpotlightHelpers"
 
 export function useSpotlight() {
   const { isActive, currentStep, currentConfig, nextStep } = useTutorial()
