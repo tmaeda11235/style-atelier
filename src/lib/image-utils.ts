@@ -3,6 +3,108 @@
  */
 import imageCompression from "browser-image-compression"
 
+interface ResolvedImageUrl {
+  url: string
+  shouldRevoke: boolean
+}
+
+/**
+ * Helper to fetch a Blob from the given image source.
+ */
+async function getBlobFromSource(imageSource: Blob | string): Promise<Blob> {
+  if (imageSource instanceof Blob) {
+    return imageSource
+  }
+  const response = await fetch(imageSource)
+  if (!imageSource.startsWith("data:") && !response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`)
+  }
+  return response.blob()
+}
+
+/**
+ * Helper to convert a Blob to a Base64 Data URL.
+ */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result)
+      } else {
+        reject(new Error("Failed to convert compressed blob to base64"))
+      }
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
+ * Helper to resolve the image source to a local URL, handling CORS bypass for http/https.
+ */
+async function resolveImageUrl(
+  imageSource: Blob | string
+): Promise<ResolvedImageUrl> {
+  if (imageSource instanceof Blob) {
+    return { url: URL.createObjectURL(imageSource), shouldRevoke: true }
+  }
+
+  if (imageSource.startsWith("http://") || imageSource.startsWith("https://")) {
+    try {
+      const res = await fetch(imageSource)
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`)
+      const blob = await res.blob()
+      return { url: URL.createObjectURL(blob), shouldRevoke: true }
+    } catch (err) {
+      console.warn(
+        "Failed to fetch image with CORS bypass, setting direct URL",
+        err
+      )
+      return { url: imageSource, shouldRevoke: false }
+    }
+  }
+
+  return { url: imageSource, shouldRevoke: false }
+}
+
+/**
+ * Helper to draw image on canvas with aspect ratio maintained.
+ */
+function drawResizedImageToCanvas(
+  img: HTMLImageElement,
+  maxWidth: number,
+  maxHeight: number,
+  quality: number
+): string {
+  const canvas = document.createElement("canvas")
+  const ctx = canvas.getContext("2d")
+  if (!ctx) {
+    throw new Error("Canvas 2D context not available")
+  }
+
+  let width = img.naturalWidth || img.width
+  let height = img.naturalHeight || img.height
+
+  if (width > height) {
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width)
+      width = maxWidth
+    }
+  } else {
+    if (height > maxHeight) {
+      width = Math.round((width * maxHeight) / height)
+      height = maxHeight
+    }
+  }
+
+  canvas.width = width
+  canvas.height = height
+  ctx.drawImage(img, 0, 0, width, height)
+
+  return canvas.toDataURL("image/jpeg", quality)
+}
+
 /**
  * Resizes an image (Blob or URL) to the specified maximum dimensions and converts it to a Base64 JPEG Data URL.
  * Falls back to a dummy 1x1 PNG in test or non-browser environments.
@@ -45,22 +147,7 @@ export async function createThumbnailDataUrl(
   }
 
   try {
-    let blob: Blob
-
-    if (imageSource instanceof Blob) {
-      blob = imageSource
-    } else {
-      if (imageSource.startsWith("data:")) {
-        const response = await fetch(imageSource)
-        blob = await response.blob()
-      } else {
-        const response = await fetch(imageSource)
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`)
-        blob = await response.blob()
-      }
-    }
-
+    const blob = await getBlobFromSource(imageSource)
     const options = {
       maxSizeMB: 0.05, // Target thumbnail size under 50KB
       maxWidthOrHeight: Math.max(maxWidth, maxHeight),
@@ -70,19 +157,7 @@ export async function createThumbnailDataUrl(
     }
 
     const compressedBlob = await imageCompression(blob, options)
-
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (typeof reader.result === "string") {
-          resolve(reader.result)
-        } else {
-          reject(new Error("Failed to convert compressed blob to base64"))
-        }
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(compressedBlob)
-    })
+    return await blobToBase64(compressedBlob)
   } catch (err) {
     console.warn(
       "Failed to compress image with browser-image-compression, using canvas fallback:",
@@ -106,58 +181,30 @@ async function fallbackCreateThumbnailDataUrl(
   maxHeight = 200,
   quality = 0.8
 ): Promise<string> {
-  let url: string
-  let shouldRevoke = false
-
-  if (imageSource instanceof Blob) {
-    url = URL.createObjectURL(imageSource)
-    shouldRevoke = true
-  } else {
-    url = imageSource
-  }
+  const resolved = await resolveImageUrl(imageSource)
 
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = "Anonymous"
 
     const cleanup = () => {
-      if (shouldRevoke) {
+      if (resolved.shouldRevoke) {
         try {
-          URL.revokeObjectURL(url)
+          URL.revokeObjectURL(resolved.url)
         } catch (e) {
           console.warn("Failed to revoke object URL:", e)
         }
       }
     }
 
-    const processImage = () => {
+    img.onload = () => {
       try {
-        const canvas = document.createElement("canvas")
-        const ctx = canvas.getContext("2d")
-        if (!ctx) {
-          throw new Error("Canvas 2D context not available")
-        }
-
-        let width = img.naturalWidth || img.width
-        let height = img.naturalHeight || img.height
-
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width)
-            width = maxWidth
-          }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height)
-            height = maxHeight
-          }
-        }
-
-        canvas.width = width
-        canvas.height = height
-        ctx.drawImage(img, 0, 0, width, height)
-
-        const dataUrl = canvas.toDataURL("image/jpeg", quality)
+        const dataUrl = drawResizedImageToCanvas(
+          img,
+          maxWidth,
+          maxHeight,
+          quality
+        )
         cleanup()
         resolve(dataUrl)
       } catch (err) {
@@ -169,7 +216,6 @@ async function fallbackCreateThumbnailDataUrl(
       }
     }
 
-    img.onload = processImage
     img.onerror = () => {
       console.warn(
         "Failed to load image for thumbnail creation, using fallback"
@@ -178,29 +224,6 @@ async function fallbackCreateThumbnailDataUrl(
       resolve(typeof imageSource === "string" ? imageSource : "assets/icon.png")
     }
 
-    if (url.startsWith("data:") || url.startsWith("blob:")) {
-      img.src = url
-    } else if (url.startsWith("http://") || url.startsWith("https://")) {
-      fetch(url)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`)
-          return res.blob()
-        })
-        .then((blob) => {
-          const localUrl = URL.createObjectURL(blob)
-          url = localUrl
-          shouldRevoke = true
-          img.src = localUrl
-        })
-        .catch((err) => {
-          console.warn(
-            "Failed to fetch image with CORS bypass, setting direct URL",
-            err
-          )
-          img.src = url
-        })
-    } else {
-      img.src = url
-    }
+    img.src = resolved.url
   })
 }
