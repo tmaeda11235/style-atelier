@@ -277,7 +277,8 @@
     "back": "Back",
     "done": "Done!",
     "next": "Next",
-    "autoAdvanceHint": "Perform the action or click 'Next' to proceed"
+    "autoAdvanceHint": "Perform the action or click 'Next' to proceed",
+    "step": "Step {{current}} / {{total}}"
   },
   "historyTab": {
     "emptyTitle": "No History",

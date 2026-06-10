@@ -15,6 +15,15 @@ import { useSpotlight } from "../../hooks/useSpotlight"
  * インタラクティブなチュートリアルオーバーレイ。
  * ターゲット要素をスポットライトで強調し、ツールチップで説明を表示する。
  */
+const ARROW_CLASSES: Record<string, string> = {
+  bottom:
+    "bottom-full left-1/2 -translate-x-1/2 mb-0.5 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800",
+  top: "top-full left-1/2 -translate-x-1/2 mt-0.5 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800",
+  left: "left-full top-1/2 -translate-y-1/2 ml-0.5 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800",
+  right:
+    "right-full top-1/2 -translate-y-1/2 mr-0.5 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800"
+}
+
 export function InteractiveTutorial() {
   const {
     isActive,
@@ -27,6 +36,10 @@ export function InteractiveTutorial() {
   } = useTutorial()
   const { t: i18n } = useLanguage()
   const t = i18n.interactiveTutorial
+
+  const stepText = t.step
+    .replace("{{current}}", String(currentStepIndex + 1))
+    .replace("{{total}}", String(totalSteps))
 
   const {
     spotlightRect,
@@ -111,7 +124,7 @@ export function InteractiveTutorial() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
               <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                Step {currentStepIndex + 1} / {totalSteps}
+                {stepText}
               </span>
             </div>
             <button
@@ -201,23 +214,12 @@ export function InteractiveTutorial() {
         </div>
 
         {/* Arrow pointing toward the spotlight */}
-        {spotlightRect &&
-          (() => {
-            const arrowClass: Record<string, string> = {
-              bottom:
-                "bottom-full left-1/2 -translate-x-1/2 mb-0.5 border-l-transparent border-r-transparent border-b-transparent border-t-slate-800",
-              top: "top-full left-1/2 -translate-x-1/2 mt-0.5 border-l-transparent border-r-transparent border-t-transparent border-b-slate-800",
-              left: "left-full top-1/2 -translate-y-1/2 ml-0.5 border-t-transparent border-b-transparent border-l-transparent border-r-slate-800",
-              right:
-                "right-full top-1/2 -translate-y-1/2 mr-0.5 border-t-transparent border-b-transparent border-r-transparent border-l-slate-800"
-            }
-            return (
-              <div
-                className={`absolute w-0 h-0 border-8 ${arrowClass[arrowSide] || arrowClass.bottom}`}
-                style={{ pointerEvents: "none" }}
-              />
-            )
-          })()}
+        {spotlightRect && (
+          <div
+            className={`absolute w-0 h-0 border-8 ${ARROW_CLASSES[arrowSide] || ARROW_CLASSES.bottom}`}
+            style={{ pointerEvents: "none" }}
+          />
+        )}
       </div>
     </div>
   )

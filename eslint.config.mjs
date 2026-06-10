@@ -245,7 +245,8 @@ export default ts.config(
       "src/components/organisms/SettingsTab.tsx",
       "src/components/organisms/MintingView.tsx",
       "src/components/organisms/CardDetailView.tsx",
-      "src/components/organisms/Workbench.tsx"
+      "src/components/organisms/Workbench.tsx",
+      "src/components/organisms/InteractiveTutorial.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [
@@ -271,7 +272,8 @@ export default ts.config(
               "data-tutorial",
               "position",
               "advanceIfStep",
-              "title"
+              "title",
+              "aria-label"
             ]
           },
           words: {

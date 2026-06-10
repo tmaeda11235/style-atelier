@@ -77,7 +77,7 @@ describe("InteractiveTutorial", () => {
     })
 
     expect(screen.getByTestId("interactive-tutorial")).toBeDefined()
-    expect(screen.getByText(/Step 1 \/ 8/)).toBeDefined()
+    expect(screen.getByText(/ステップ 1 \/ 8/)).toBeDefined()
     expect(screen.getByText("① HistoryにD&Dする")).toBeDefined()
   })
 
@@ -113,12 +113,12 @@ describe("InteractiveTutorial", () => {
     await act(async () => {
       fireEvent.click(screen.getByText("Start"))
     })
-    expect(screen.getByText(/Step 1 \/ 8/)).toBeDefined()
+    expect(screen.getByText(/ステップ 1 \/ 8/)).toBeDefined()
 
     await act(async () => {
       fireEvent.click(screen.getByText("Next"))
     })
-    expect(screen.getByText(/Step 2 \/ 8/)).toBeDefined()
+    expect(screen.getByText(/ステップ 2 \/ 8/)).toBeDefined()
     expect(screen.getByText("② Mintボタンを押す")).toBeDefined()
   })
 
@@ -167,7 +167,7 @@ describe("InteractiveTutorial", () => {
     })
 
     expect(screen.getByTestId("interactive-tutorial")).toBeDefined()
-    expect(screen.getByText(/Step 1 \/ 8/)).toBeDefined()
+    expect(screen.getByText(/ステップ 1 \/ 8/)).toBeDefined()
 
     // The tooltip should still be visible even though querySelector returned null
     const tooltip = screen.getByText("① HistoryにD&Dする")

@@ -277,7 +277,8 @@
     "back": "戻る",
     "done": "完了！",
     "next": "次へ",
-    "autoAdvanceHint": "操作を行うか、「次へ」を押すと進みます"
+    "autoAdvanceHint": "操作を行うか、「次へ」を押すと進みます",
+    "step": "ステップ {{current}} / {{total}}"
   },
   "historyTab": {
     "emptyTitle": "履歴がありません",
