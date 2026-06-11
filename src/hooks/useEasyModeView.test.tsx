@@ -576,4 +576,18 @@ describe("useEasyModeView hook", () => {
     })
     expect(result.current.alertType).toBeNull()
   })
+
+  it("should set alertType to disconnected when active tab query returns empty list", async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([] as any)
+    const { result } = renderHook(() =>
+      useEasyModeView({
+        isEasyMode: true,
+        onToggleEasyMode: mockOnToggleEasyMode
+      })
+    )
+    await act(async () => {
+      await result.current.handleInjectPrompt("sunset")
+    })
+    expect(result.current.alertType).toBe("disconnected")
+  })
 })

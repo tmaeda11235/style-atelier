@@ -1,4 +1,4 @@
-import { runInferenceHelper } from "../hooks/useWebLlm"
+import { runInferenceHelper } from "../hooks/webLlmUtils"
 
 export interface SemanticFilterResult {
   rarity: string // "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "All"
