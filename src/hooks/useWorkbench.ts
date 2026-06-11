@@ -3,7 +3,7 @@ import { useMemo } from "react"
 
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
-import { buildMergedPromptString } from "../lib/prompt-utils"
+import { buildMergedPromptString } from "../lib/prompt-reference-utils"
 
 export async function toggleCardSelection(cardId: string) {
   try {

@@ -1,6 +1,7 @@
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
-import { mergePromptSegments, mergeReferences } from "../lib/prompt-utils"
+import { mergePromptSegments } from "../lib/prompt-utils"
+import { mergeReferences } from "../lib/prompt-reference-utils"
 import { UPGRADE_THRESHOLDS, type RarityTier } from "../lib/rarity-config"
 
 export function useEvolution() {
