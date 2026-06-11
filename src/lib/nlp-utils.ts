@@ -177,12 +177,7 @@ function processEnglishSegment(
     }
   } else {
     const trimmed = cleanWord(sub)
-    if (
-      trimmed &&
-      trimmed.length > 1 &&
-      !ENGLISH_STOPWORDS.has(trimmed.toLowerCase()) &&
-      !seen.has(trimmed.toLowerCase())
-    ) {
+    if (trimmed && trimmed.length > 1 && !seen.has(trimmed.toLowerCase())) {
       keywords.push(trimmed)
       seen.add(trimmed.toLowerCase())
     }
