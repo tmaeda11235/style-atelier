@@ -97,7 +97,8 @@
         "@J-WB-MIXING-WEIGHTS-01",
         "@J-WB-PORTION-EXTRACT-01",
         "@J-WB-ATELIER-EFFECTS-01",
-        "@J-WB-MIXING-INTELLIGENT-01"
+        "@J-WB-MIXING-INTELLIGENT-01",
+        "@J-WB-AI-ADVICE-01"
       ]
     },
     {
@@ -373,6 +374,18 @@
         "ワークベンチに登録され自動遷移されるのを確認"
       ],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EASY-01"]
+    },
+    {
+      "id": "@J-WB-AI-ADVICE-01",
+      "name": "AI調合アドバイス表示",
+      "description": "ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する",
+      "steps": [
+        "Workbench（Cauldron）に複数カードを追加",
+        "AI Recipe Advice エリアを展開",
+        "AIによる調合アドバイス（日本語・英語）が生成・表示されるのを確認",
+        "アドバイス内の推奨事項やキーワードを確認する"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-03"]
     }
   ]
 }

@@ -104,7 +104,7 @@ if (typeof window !== "undefined") {
     downloadErrorMsg: "Network connection lost",
     offlineMode: false,
     onDownloadStart: null as (() => void) | null,
-    inferenceResult: ""
+    inferenceResult: null as string | null
   }
   ;(window as any).mockWebLlmConfig = mockWebLlmConfig
 
@@ -273,16 +273,29 @@ if (typeof window !== "undefined") {
               if (callback) callback({ status: "success" })
             }, 50)
           } else if (message.action === "run-inference") {
-            setTimeout(() => {
-              if (callback) {
-                callback({
-                  status: "success",
-                  result:
-                    mockWebLlmConfig.inferenceResult ||
-                    "Mocked inference result"
+            const result =
+              (mockWebLlmConfig as any).inferenceResult ||
+              (() => {
+                const promptStr = message.prompt || ""
+                const parts = promptStr.split(/\s*,\s*/).filter(Boolean)
+                const resultList = parts.map((part: string, idx: number) => {
+                  let cat = "other"
+                  if (idx === 0) cat = "subject"
+                  else if (part.includes("style")) cat = "style"
+                  else if (part.includes("shot") || part.includes("lens"))
+                    cat = "camera"
+                  else if (
+                    part.includes("lighting") ||
+                    part.includes("sunlight")
+                  )
+                    cat = "lighting"
+                  return { value: part, category: cat }
                 })
-              }
-            }, 50)
+                return JSON.stringify(resultList)
+              })()
+            setTimeout(() => {
+              if (callback) callback({ status: "success", result })
+            }, 100)
           }
         } else if (message && message.target === "background") {
           if (callback) callback({ status: "success" })

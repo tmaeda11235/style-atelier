@@ -380,7 +380,16 @@
     "characterReference": "Character Reference (--cref):",
     "noParameters": "No parameters defined.",
     "fillFromWorkbench": "Fill from Workbench:",
-    "recent": "Recent:"
+    "recent": "Recent:",
+    "aiAdviceTitle": "🔮 AI Recipe Advice",
+    "aiAdviceLoading": "Consulting the local AI cauldron...",
+    "aiAdviceError": "Failed to concoct AI advice.",
+    "aiAdviceEmpty": "Add 2 or more cards to receive blend recipe advice.",
+    "aiAdviceModelNotReady": "Local AI model is not loaded. Download it in Settings first.",
+    "aiAdviceLoadingModel": "Loading local AI model...",
+    "webllmQuotaWarningTitle": "Storage Quota Exceeded",
+    "webllmQuotaWarningDesc": "Not enough storage to cache the AI model. Please free up some disk space.",
+    "aiAdviceDownloadBtn": "Download Model"
   },
   "mergeStack": {
     "title": "Merge Card Stack",

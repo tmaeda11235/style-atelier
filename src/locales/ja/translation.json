@@ -380,7 +380,16 @@
     "characterReference": "キャラクター参照 (--cref):",
     "noParameters": "パラメータが設定されていません。",
     "fillFromWorkbench": "ワークベンチから入力:",
-    "recent": "履歴:"
+    "recent": "履歴:",
+    "aiAdviceTitle": "🔮 AI調合アドバイス",
+    "aiAdviceLoading": "ローカルAI大釜で調合方法を分析中...",
+    "aiAdviceError": "AIアドバイスの生成に失敗しました。",
+    "aiAdviceEmpty": "調合アドバイスを受けるには、カードを2枚以上追加してください。",
+    "aiAdviceModelNotReady": "ローカルAIモデルがロードされていません。設定画面からダウンロードしてください。",
+    "aiAdviceLoadingModel": "ローカルAIモデルをロード中...",
+    "webllmQuotaWarningTitle": "ストレージ容量不足",
+    "webllmQuotaWarningDesc": "AIモデルのキャッシュに必要なストレージ容量が不足しています。ディスク空き容量を増やしてください。",
+    "aiAdviceDownloadBtn": "モデルをダウンロード"
   },
   "mergeStack": {
     "title": "カードスタックの統合",

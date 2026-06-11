@@ -88,6 +88,11 @@ tags: []
   - **Cache Integrity Guardrails**: Validates cached files in OPFS or Cache Storage. If corruption or incomplete downloads are detected, it automatically purges and restarts the download.
   - **Non-blocking Execution**: The model is executed off the main thread, communicating with the Side Panel and Background Service Worker via Chrome extension runtime messaging.
   - **Lightweight Model Optimization**: Since Gemma-4 E2B is a <1GB model, it has limited complex reasoning capability. The system handles this via structured prompt templates (Few-shot prompting) and RAG (retrieving relevant style keywords or historical combinations from IndexedDB) before running inference.
+  - **AI-Powered Cauldron Recipe Advice**:
+    - Generates mixing advice automatically when 2 or more cards are in the Cauldron.
+    - Utilizes a 500ms debounce inside the `useAiRecipeAdvice` hook to prevent redundant inference during active editing.
+    - Employs an in-memory combination cache based on sorted card IDs and weights to instantly retrieve past blend advice.
+    - Complies with strict ESLint line limits (50 lines per function) by modularizing the section UI into lightweight sub-components (`ModelStatusOverlay`, `AdviceViewer`, `AdviceSectionContent`).
   - **Zero-cost, High-frequency Orchestration**: Because client-side execution incurs zero API costs, the agent can trigger background tasks (e.g., parsing, tagging, style synthesis, user action predictions) frequently without budgeting concerns.
 
 ## Data Flow
