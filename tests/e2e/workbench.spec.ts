@@ -43,7 +43,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       .locator("#handbar-root .cursor-pointer")
       .nth(1) // anime slot template
     await expect(mockCardInHand).toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(1000)
     await mockCardInHand.click({ force: true })
 
     // 3. Workbenchタブへ切り替え
@@ -179,7 +178,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // Unpin Card W2 and Card W3 using the X button on their thumbnails in the HandBar
     console.log("Unpinning Card W2 and Card W3...")
@@ -284,7 +282,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // Workbench-Double: select two cards (W1 and W2). So unpin Card W3 (index 2).
     console.log("Unpinning Card W3...")
@@ -384,7 +381,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Click "Merge Stack" button in the HandBar
     const mergeStackBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
@@ -419,7 +415,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
 
     // 8. Verify modal is closed
     await expect(modalTitle).not.toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(1000) // wait for DB transaction
 
     // 9. Verify in DB that W1 usage count is combined (5 + 3 = 8), W2 is soft-deleted, and W3 remains.
     const results = await spFrame.locator("body").evaluate(async () => {
@@ -485,7 +480,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Verify the Evolve button is visible and click it
     const evolveBtn = spFrame.locator(
@@ -505,9 +499,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await expect(modalCardName).toBeVisible()
 
     // Wait for the 3D flip animation and particle explosion to complete
-    await page.waitForTimeout(2000)
-
-    // 6. Capture screenshot of the modal
     await page.screenshot({
       path: path.join(screenshotsDir, "evolution-success-modal.png")
     })
@@ -579,7 +570,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       .locator("button:has-text('Library')")
       .first()
     await libraryTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Click the unpinned card to pin it (it should trigger the 7-card limit warning)
     const unpinnedCard = spFrame.locator("div:has-text('Unpinned Card')").last()
@@ -648,7 +638,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Verify both cards are in the Workbench (blending state visual feedback)
     const activeWorkbenchCards = spFrame.locator(
@@ -683,8 +672,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     const cardB = spFrame.locator("#handbar-root .cursor-pointer").nth(1)
     await cardB.hover()
     await cardB.locator("button").last().click()
-
-    await page.waitForTimeout(500)
     await expect(activeWorkbenchCards).toHaveCount(1)
 
     // 7. Click Evolve button and verify the Evolution Success Modal (alchemy effects validation)
@@ -700,9 +687,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     await expect(modalTitle).toBeVisible({ timeout: 10000 })
 
     // Wait for the 3D flip animation and particle explosion to complete
-    await page.waitForTimeout(2000)
-
-    // Capture screenshot of evolution success modal (with sparkles and visual highlights)
     await page.screenshot({
       path: path.join(screenshotsDir, "atelier-evolution-success.png")
     })
@@ -755,7 +739,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Verify the Empty State container is visible (check either English or Japanese using regex)
     const emptyTitle = spFrame.locator(
@@ -806,9 +789,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to History tab (index 0)
     const historyTabButton = spFrame.locator("nav button").nth(0)
     await historyTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // 4. Verify the Empty State container is visible
     const emptyTitle = spFrame.locator("text=/No History|履歴がありません/")
     await expect(emptyTitle).toBeVisible({ timeout: 10000 })
 
@@ -856,9 +836,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 3. Switch to Library tab (index 1)
     const libraryTabButton = spFrame.locator("nav button").nth(1)
     await libraryTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // 4. Verify the Empty State container is visible
     const emptyTitle = spFrame.locator(
       "text=/No Style Cards|スタイルカードがありません/"
     )

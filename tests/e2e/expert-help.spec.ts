@@ -35,7 +35,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
         }
       })
       await page.reload()
-      await page.waitForTimeout(1000)
     } catch (err) {
       console.log("Failed to clear DB or reload, proceeding anyway:", err)
     }
@@ -57,7 +56,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
     const firstToggle = spFrame.locator("#expert-feature-stack-btn")
     if (!(await firstToggle.isVisible().catch(() => false))) {
       await uiAccordionHeader.click()
-      await page.waitForTimeout(300)
     }
 
     // Ensure all expert toggles are checked
@@ -77,13 +75,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
       const className = (await btn.getAttribute("class")) || ""
       if (!className.includes("bg-blue-600")) {
         await btn.click()
-        await page.waitForTimeout(100)
       }
     }
-
-    await page.waitForTimeout(500)
-
-    // 3. Inject dummy cards into database so we can use HandBar, Workbench, CardDetailView
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
@@ -130,10 +123,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
         ]
       })
     })
-
-    await page.waitForTimeout(1000)
-
-    // 4. Go to Workbench tab to test Multi-card and Prompt Slotting help tooltips
     const workbenchNavBtn = spFrame
       .locator(
         "button[title='Workbench'], nav button:has-text('Workbench'), nav button:has-text('ワークベンチ')"
@@ -292,7 +281,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
         timestamp: Date.now()
       })
     })
-    await page.waitForTimeout(500)
 
     const mintCardBtn = spFrame
       .locator("button:has-text('Mint Card'), button:has-text('カード化')")

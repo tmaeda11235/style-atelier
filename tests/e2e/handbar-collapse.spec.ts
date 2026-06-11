@@ -56,7 +56,6 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
         }
       ])
     })
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 3. Verify HandBar is visible and expanded initially
     const handbar = spFrame.locator("#handbar-root")
@@ -78,9 +77,6 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     )
     await expect(collapseBtn).toBeVisible()
     await collapseBtn.click()
-    await page.waitForTimeout(500)
-
-    // Clear All button should be hidden when collapsed
     await expect(clearAllBtn).not.toBeVisible()
 
     // Save collapsed state screenshot
@@ -92,14 +88,10 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     // 5. Click HandBar container to expand it again
     // We click near the top of the collapsed bar (which should be clickable)
     await handbar.click({ position: { x: 50, y: 15 } })
-    await page.waitForTimeout(500)
-
-    // Clear All button should be visible again
     await expect(clearAllBtn).toBeVisible()
 
     // 6. Click collapse button again to minimize
     await collapseBtn.click()
-    await page.waitForTimeout(500)
     await expect(clearAllBtn).not.toBeVisible()
 
     // 7. Auto-expand when a new card is added/pinned
@@ -112,15 +104,11 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
         await database.styleCards.put(card)
       }
     })
-    await page.waitForTimeout(1000)
-
-    // HandBar should auto-expand, so Clear All button is visible
     await expect(clearAllBtn).toBeVisible()
     console.log("HandBar auto-expanded on new card pin.")
 
     // 8. Collapse again
     await collapseBtn.click()
-    await page.waitForTimeout(500)
     await expect(clearAllBtn).not.toBeVisible()
 
     // 9. Auto-expand on global drag start
@@ -128,9 +116,6 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     await spFrame.locator("body").evaluate(() => {
       window.dispatchEvent(new Event("dragstart"))
     })
-    await page.waitForTimeout(500)
-
-    // HandBar should auto-expand, so Clear All button is visible
     await expect(clearAllBtn).toBeVisible()
 
     // Save auto-expanded on drag screenshot
@@ -173,7 +158,6 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
       }))
       await database.styleCards.bulkAdd(cards)
     })
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 3. Verify HandBar is visible
     const handbar = spFrame.locator("#handbar-root")
@@ -183,9 +167,6 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     const scrollContainer = spFrame.locator(".custom-scrollbar")
     await expect(scrollContainer).toBeVisible()
     await scrollContainer.hover()
-    await page.waitForTimeout(300)
-
-    // 4. Verify right scroll button is visible (since 7 cards overflow the container)
     const rightScrollBtn = spFrame.locator(
       "[data-testid='handbar-scroll-right-btn']"
     )
@@ -198,7 +179,6 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
 
     // 5. Click right scroll button to scroll horizontally
     await rightScrollBtn.click()
-    await page.waitForTimeout(800) // wait for smooth scroll
 
     // 6. Verify left scroll button is visible now
     const leftScrollBtn = spFrame.locator(

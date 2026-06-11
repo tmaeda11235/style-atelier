@@ -486,8 +486,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
       .first()
     await expect(successToast).toBeVisible({ timeout: 10000 })
 
-    await page.waitForTimeout(1000)
-
     const restoredCard = await spFrame
       .locator("body")
       .evaluate(async (el, cardId) => {

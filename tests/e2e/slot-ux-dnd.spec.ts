@@ -66,7 +66,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Slot Variables UX @J-WB-EXPERT-
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Verify Slot Variables section is shown
     const slotInput = spFrame.locator("[data-testid='slot-input-Subject']")

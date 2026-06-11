@@ -79,18 +79,12 @@ test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORG
       ])
     })
 
-    await page.waitForTimeout(1000)
-
-    // 3. Navigate to Workbench tab
     const workbenchTab = spFrame
       .locator("[data-tutorial='workbench-tab']")
       .first()
     await expect(workbenchTab).toBeVisible({ timeout: 5000 })
     await workbenchTab.click()
 
-    await page.waitForTimeout(1000)
-
-    // Take screenshot of initial state (empty Workbench)
     await page.screenshot({
       path: path.join(screenshotsDir, "parameter-gacha-empty-workbench.png")
     })
@@ -99,14 +93,8 @@ test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORG
     const gachaBtn = spFrame.locator("#workbench-gacha-btn").first()
     await expect(gachaBtn).toBeVisible({ timeout: 5000 })
     await gachaBtn.click()
-
-    await page.waitForTimeout(1000)
-
-    // Workbench should now have at least one card selected (Cauldron should display card details)
     const cauldronCards = spFrame.locator(".animate-float-gentle")
-    // Gacha selects 1 to 3 random cards, so at least 1 card should be selected
-    const cauldronCount = await cauldronCards.count()
-    expect(cauldronCount).toBeGreaterThan(0)
+    await expect(cauldronCards.first()).toBeVisible({ timeout: 5000 })
 
     // Take screenshot after Gacha Pick has seeded cards in Cauldron
     await page.screenshot({
@@ -138,17 +126,12 @@ test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORG
     // Save alias
     const saveBtn = spFrame.locator("button:has-text('Save')").first()
     await saveBtn.click()
-
-    await page.waitForTimeout(1000)
-
-    // The badge label should now display the alias "Mega Cyber Style" instead of just the URL/code
     const updatedBadge = spFrame.locator("text=Mega Cyber Style").first()
     await expect(updatedBadge).toBeVisible({ timeout: 5000 })
 
     // Hover tooltip (Used in Styles) preview validation
     const badgeContainer = spFrame.locator("div.group\\/badge").first()
     await badgeContainer.hover()
-    await page.waitForTimeout(500)
 
     const tooltipHeader = spFrame.locator("text=Used in Styles:").first()
     await expect(tooltipHeader).toBeVisible()
