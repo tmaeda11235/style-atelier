@@ -86,8 +86,10 @@ export function useExpertModeView({
   const handleSendToWorkbench = async (card: StyleCard) => {
     try {
       if (!card.isPinned) {
-        const pinnedCount = await db.styleCards.filter((c) => !!c.isPinned).count()
-        if (pinnedCount >= 7) {
+        const pinnedCount = await db.styleCards
+          .filter((c) => !!c.isPinned)
+          .count()
+        if (pinnedCount >= 5) {
           setAlertType("hand_full")
           return
         }

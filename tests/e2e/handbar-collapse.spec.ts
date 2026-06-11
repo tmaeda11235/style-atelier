@@ -140,11 +140,16 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
       await skipButton.click()
     }
 
-    // 2. Seed 7 pinned cards (maximum allowed) to cause overflow in the narrow side panel
+    // Resize sidepanel-frame to 200px to force overflow and trigger scroll buttons with 5 pinned cards
+    await page.locator("#sidepanel-frame").evaluate((el) => {
+      ;(el as HTMLElement).style.width = "200px"
+    })
+
+    // 2. Seed 5 pinned cards (maximum allowed) to cause overflow in the narrow side panel
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
-      const cards = Array.from({ length: 7 }).map((_, i) => ({
+      const cards = Array.from({ length: 5 }).map((_, i) => ({
         id: `card-scroll-${i}`,
         name: `Card Scroll ${i}`,
         promptSegments: [{ type: "text", value: `prompt segment ${i}` }],

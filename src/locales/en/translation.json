@@ -537,7 +537,7 @@
   },
   "alerts": {
     "handFullTitle": "Hand is Full",
-    "handFullDesc": "You can only pin up to 7 cards. Please unpin another card first.",
+    "handFullDesc": "You can only pin up to 5 cards. Please unpin another card first.",
     "disconnectedTitle": "Connection Lost",
     "disconnectedDesc": "The extension has lost connection to the page. This usually happens after an update or prolonged inactivity.",
     "disconnectedBtn": "Reload Page",
