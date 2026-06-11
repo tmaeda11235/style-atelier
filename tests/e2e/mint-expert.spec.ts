@@ -45,7 +45,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
         id: "mock-history-item-to-mint-expert",
         fullCommand:
           "a beautiful cyberpunk warrior --ar 16:9 --sref https://example.com/sref1 --p p-code",
-        imageUrl: "./index_files/0_0_640_N.webp",
+        imageUrl: "/tests/fixtures/midjourney/index_files/0_0_640_N.webp",
         timestamp: Date.now()
       })
       await database.categories.clear()

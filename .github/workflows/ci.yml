@@ -13,9 +13,9 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------
-  # Job 1: ユニットテストとビルド（CPU・メモリ重視）
+  # Job 1: セットアップとキャッシュ作成
   # ---------------------------------------------------
-  unit-and-build:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -30,6 +30,24 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+  # ---------------------------------------------------
+  # Job 2: ユニットテストとビルド（CPU・メモリ重視）
+  # ---------------------------------------------------
+  unit-and-build:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
       - name: Run lint
         run: npm run lint
 
@@ -40,9 +58,10 @@ jobs:
         run: npm run build
 
   # ---------------------------------------------------
-  # Job 2: E2Eテスト（ネットワーク・プロセッサ分離）
+  # Job 3: E2Eテスト（ネットワーク・プロセッサ分離）
   # ---------------------------------------------------
   e2e-test:
+    needs: unit-and-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
