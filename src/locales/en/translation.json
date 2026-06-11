@@ -387,7 +387,16 @@
     "characterReference": "Character Reference (--cref):",
     "noParameters": "No parameters defined.",
     "fillFromWorkbench": "Fill from Workbench:",
-    "recent": "Recent:"
+    "recent": "Recent:",
+    "aiAdviceTitle": "🔮 AI Recipe Advice",
+    "aiAdviceLoading": "Consulting the local AI cauldron...",
+    "aiAdviceError": "Failed to concoct AI advice.",
+    "aiAdviceEmpty": "Add 2 or more cards to receive blend recipe advice.",
+    "aiAdviceModelNotReady": "Local AI model is not loaded. Download it in Settings first.",
+    "aiAdviceLoadingModel": "Loading local AI model...",
+    "webllmQuotaWarningTitle": "Storage Quota Exceeded",
+    "webllmQuotaWarningDesc": "Not enough storage to cache the AI model. Please free up some disk space.",
+    "aiAdviceDownloadBtn": "Download Model"
   },
   "mergeStack": {
     "title": "Merge Card Stack",
@@ -482,7 +491,22 @@
     "saveToLibrary": "Save to Library",
     "newCardDefault": "New Card",
     "quickKeywords": "Quick Keywords",
-    "cardName": "Card Name"
+    "cardName": "Card Name",
+    "aiDeclutter": "De-clutter with AI",
+    "aiDecluttering": "De-cluttering...",
+    "aiDeclutterDesc": "Modularize prompt with local AI",
+    "aiDeclutterDownload": "Download Model (1.5GB) to enable AI De-cluttering",
+    "aiDeclutterDownloading": "Downloading Model... {{progress}}%",
+    "aiDeclutterError": "Model loading error. Click to retry.",
+    "aiAnalysis": "AI Style Analysis",
+    "aiAnalysisBtn": "Analyze Style with AI",
+    "aiAnalysisLoading": "Analyzing style...",
+    "aiAnalysisError": "Inference failed: {{error}}",
+    "aiRecommendTags": "AI Recommended Tags",
+    "aiSummary": "AI Summary Description",
+    "aiSummaryPlaceholder": "AI summary will appear here...",
+    "aiUseSummary": "Use as Card Note/Description",
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
   },
   "cardDetail": {
     "title": "Card Details",
@@ -535,7 +559,7 @@
   },
   "alerts": {
     "handFullTitle": "Hand is Full",
-    "handFullDesc": "You can only pin up to 7 cards. Please unpin another card first.",
+    "handFullDesc": "You can only pin up to 5 cards. Please unpin another card first.",
     "disconnectedTitle": "Connection Lost",
     "disconnectedDesc": "The extension has lost connection to the page. This usually happens after an update or prolonged inactivity.",
     "disconnectedBtn": "Reload Page",

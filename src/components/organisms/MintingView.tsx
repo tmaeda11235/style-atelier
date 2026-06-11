@@ -13,6 +13,7 @@ import { Input } from "../atoms/Input"
 import { KeywordChip } from "../molecules/KeywordChip"
 import { PromptBubble } from "../molecules/PromptBubble"
 import { RaritySelector } from "../molecules/RaritySelector"
+import { AiStyleAnalysisSection } from "./AiStyleAnalysisSection"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
 const STEP_TITLE_INPUT = "title-input"
@@ -47,6 +48,8 @@ interface MintingViewProps {
   detectedDominantColor?: string
   detectedAccentColor?: string
   detectedColorTags?: string[]
+  mutationNote?: string
+  setMutationNote?: (note: string) => void
 }
 
 export function MintingView({
@@ -72,7 +75,9 @@ export function MintingView({
   setCustomTags = () => {},
   detectedDominantColor = "#ffffff",
   detectedAccentColor = "#ffffff",
-  detectedColorTags = []
+  detectedColorTags = [],
+  mutationNote = "",
+  setMutationNote = () => {}
 }: MintingViewProps) {
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
@@ -152,6 +157,19 @@ export function MintingView({
                     advanceIfStep(STEP_TITLE_INPUT)
                   }}
                   placeholder={t.minting.addDetailsPlaceholder}
+                />
+              </div>
+
+              {/* AI Style Analysis Section */}
+              <div className="mb-4">
+                <AiStyleAnalysisSection
+                  promptText={editedSegments
+                    .map((s) => (s.type === "slot" ? s.default : s.value))
+                    .join(" ")}
+                  customTags={customTags}
+                  setCustomTags={setCustomTags}
+                  setCustomName={setCustomName}
+                  setMutationNote={setMutationNote}
                 />
               </div>
 

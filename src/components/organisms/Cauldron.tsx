@@ -2,6 +2,7 @@ import { ArrowDown, Sparkles } from "lucide-react"
 import React, { useEffect, useState } from "react"
 
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import { AiRecipeAdviceSection } from "./AiRecipeAdviceSection"
 import { WorkbenchCard } from "./WorkbenchCard"
 
 interface CauldronProps {
@@ -288,17 +289,22 @@ export const Cauldron: React.FC<CauldronProps> = (props) => {
   }`
 
   return (
-    <div className={containerClass}>
-      <CauldronBackground
-        isGlobalDragging={isGlobalDragging}
-        isDragOver={props.isDragOver}
-      />
-      <CauldronBubbles />
-      {props.isMixingMode && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border border-dashed border-indigo-500/20 animate-cauldron-spin pointer-events-none" />
+    <div className="flex flex-col gap-3 w-full">
+      <div className={containerClass}>
+        <CauldronBackground
+          isGlobalDragging={isGlobalDragging}
+          isDragOver={props.isDragOver}
+        />
+        <CauldronBubbles />
+        {props.isMixingMode && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border border-dashed border-indigo-500/20 animate-cauldron-spin pointer-events-none" />
+        )}
+        {props.isBlending && <BlendingOverlay />}
+        <CauldronContent {...props} isGlobalDragging={isGlobalDragging} />
+      </div>
+      {props.workbenchCards.length >= 2 && (
+        <AiRecipeAdviceSection cards={props.workbenchCards} t={props.t} />
       )}
-      {props.isBlending && <BlendingOverlay />}
-      <CauldronContent {...props} isGlobalDragging={isGlobalDragging} />
     </div>
   )
 }

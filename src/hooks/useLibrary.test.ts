@@ -291,7 +291,7 @@ describe("useLibrary hook", () => {
 
   describe("pinning limit", () => {
     beforeEach(() => {
-      mockStyleCards = Array.from({ length: 7 }, (_, i) => ({
+      mockStyleCards = Array.from({ length: 5 }, (_, i) => ({
         id: `card-pinned-${i}`,
         name: `Pinned Card ${i}`,
         isPinned: true,

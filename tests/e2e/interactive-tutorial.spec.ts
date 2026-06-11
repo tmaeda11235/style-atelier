@@ -45,9 +45,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     )
     await expect(guideBtn).toBeVisible()
     await guideBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Verify step 1 and take screenshot
     const tutorialContainer = spFrame.locator(
       "[data-testid='interactive-tutorial']"
     )
@@ -70,42 +67,21 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
       )
       await nextBtn.click()
     }
-    await page.waitForTimeout(500)
-
-    // Step 2
     await expect(spFrame.locator("text=Step 2 / 8")).toBeVisible()
     const nextBtn = spFrame.locator(
       "[data-testid='interactive-tutorial'] button:has-text('次へ'), [data-testid='interactive-tutorial'] button:has-text('Next')"
     )
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 3
     await expect(spFrame.locator("text=Step 3 / 8")).toBeVisible()
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 4
     await expect(spFrame.locator("text=Step 4 / 8")).toBeVisible()
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 5
     await expect(spFrame.locator("text=Step 5 / 8")).toBeVisible()
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 6
     await expect(spFrame.locator("text=Step 6 / 8")).toBeVisible()
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 7
     await expect(spFrame.locator("text=Step 7 / 8")).toBeVisible()
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 8
     await expect(spFrame.locator("text=Step 8 / 8")).toBeVisible()
 
     await page.screenshot({
@@ -117,9 +93,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
       "[data-testid='interactive-tutorial'] button:has-text('完了'), [data-testid='interactive-tutorial'] button:has-text('Done')"
     )
     await doneBtn.click()
-    await page.waitForTimeout(500)
-
-    // 4. Verify InteractiveTutorial is closed
     await expect(tutorialContainer).not.toBeVisible()
     console.log(
       "Interactive Onboarding Tutorial E2E test completed successfully!"
@@ -148,9 +121,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     )
     await expect(guideBtn).toBeVisible()
     await guideBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 1: Add sample and proceed
     const sampleBtn = spFrame.locator(
       "button:has-text('サンプルを追加して進む'), button:has-text('Add Sample and Proceed')"
     )
@@ -169,17 +139,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     const mintBtn = mintCardBlock.locator("button")
     await expect(mintBtn).toBeVisible()
     await mintBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 3: Title input (We are on MintingView or SimpleMintingView)
     await expect(spFrame.locator("text=Step 3 / 8")).toBeVisible()
 
     // Focus input and type a custom card name
     const nameInput = spFrame.locator("[data-tutorial='title-input'] input")
     await nameInput.fill("E2E Auto Advance Test Card")
-    await page.waitForTimeout(500)
-
-    // Check if tutorial automatically advanced to Step 4
     await expect(spFrame.locator("text=Step 4 / 8")).toBeVisible()
     console.log("Tutorial auto-advanced to Step 4 after typing custom name!")
   })
@@ -201,20 +165,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     // 2. Open Settings and disable Rarity feature
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const rarityToggle = spFrame.locator("#expert-feature-rarity-btn")
     await rarityToggle.click()
-    await page.waitForTimeout(300)
-
-    // 3. Click Guide button to start tutorial
     const guideBtn = spFrame.locator(
       "button[title='Show Guide'], button[title='ガイドを表示']"
     )
     await guideBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 1: Proceed
     const sampleBtn = spFrame.locator(
       "button:has-text('サンプルを追加して進む'), button:has-text('Add Sample and Proceed')"
     )
@@ -233,14 +190,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     const mintBtn = mintCardBlock.locator("button")
     await expect(mintBtn).toBeVisible()
     await mintBtn.click()
-    await page.waitForTimeout(500)
-
-    // Step 3: Title Input
     const nameInput = spFrame.locator("[data-tutorial='title-input'] input")
     await nameInput.fill("Skip Test Card")
-    await page.waitForTimeout(500)
-
-    // Now we are at Step 4: Slot Variables
     await expect(spFrame.locator("text=Step 4 / 8")).toBeVisible()
 
     // Click next to advance from Step 4
@@ -248,9 +199,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
       "[data-testid='interactive-tutorial'] button:has-text('次へ'), [data-testid='interactive-tutorial'] button:has-text('Next')"
     )
     await nextBtn.click()
-    await page.waitForTimeout(500)
-
-    // Since Rarity is disabled, Step 5 (Rarity choice) should be automatically skipped!
     // So it should advance directly to Step 6 / 8 (Save card to library).
     await expect(spFrame.locator("text=Step 6 / 8")).toBeVisible()
     console.log(
@@ -280,20 +228,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // 3. Click Guide button in header to trigger tutorial
     const guideBtn = spFrame.locator("button[title='ガイドを表示']")
     await expect(guideBtn).toBeVisible()
     await guideBtn.click()
-    await page.waitForTimeout(500)
-
-    // 4. Verify step 1 displays Japanese "ステップ 1 / 8"
     const tutorialContainer = spFrame.locator(
       "[data-testid='interactive-tutorial']"
     )
@@ -312,7 +253,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Interactive Tutorial @J-TUTORIA
     )
     await expect(closeBtn).toBeVisible()
     await closeBtn.click()
-    await page.waitForTimeout(500)
     await expect(tutorialContainer).not.toBeVisible()
   })
 })

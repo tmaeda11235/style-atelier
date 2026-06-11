@@ -1,150 +1,307 @@
-import React, { useState, useEffect, useRef } from "react"
-import { PromptBubble } from "../molecules/PromptBubble"
+import { AlertCircle, Download, RefreshCw, Sparkles } from "lucide-react"
+import React from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import { useAiPromptDeclutter } from "../../hooks/useAiPromptDeclutter"
+import { usePromptBubbleEditorState } from "../../hooks/usePromptBubbleEditorState"
 import type { PromptSegment } from "../../lib/db-schema"
 import type { RarityTier } from "../../lib/rarity-config"
-import { cn } from "../../lib/utils"
-import { PROMPT_DELIMITER_REGEX, PROMPT_DELIMITER_CHARS } from "../../lib/prompt-utils"
-import { useSettings } from "../../contexts/SettingsContext"
+import { PromptBubble } from "../molecules/PromptBubble"
 
-/**
- * プロンプトのセグメントをチップ形式で表示し、自由なテキスト入力でトークンを追加できるエディタ。
- *
- * @param {Object} props
- * @param {PromptSegment[]} props.initialSegments - 初期セグメントデータ
- * @param {(segments: PromptSegment[]) => void} [props.onChange] - データ変更時の通知ハンドラ
- * @param {RarityTier} [props.tier] - 適用するレアリティスタイル
- */
 interface PromptBubbleEditorProps {
   initialSegments: PromptSegment[]
   onChange?: (segments: PromptSegment[]) => void
   tier?: RarityTier
 }
 
-export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
-  initialSegments = [],
-  onChange,
-  tier,
-}) => {
-  const { expertFeatures } = useSettings()
-  const [segments, setSegments] = useState<PromptSegment[]>(
-    () => initialSegments.length > 0 ? [...initialSegments] : initialSegments
+interface AiDeclutterProps {
+  segments: PromptSegment[]
+  setSegments: (segs: PromptSegment[]) => void
+  inputValue: string
+  setInputValue: (val: string) => void
+  onChange?: (segments: PromptSegment[]) => void
+}
+
+interface ActionAreaProps {
+  status: string
+  progress: number
+  loading: boolean
+  onDeclutter: () => void
+  onDownload: () => void
+  t: Record<string, any>
+}
+
+function DeclutterStatusLabel() {
+  return (
+    <div className="text-slate-400 flex items-center gap-1 font-medium">
+      <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+      <span>AI Prompt Organizer</span>
+    </div>
   )
-  const [inputValue, setInputValue] = useState("")
-  const inputRef = useRef<HTMLInputElement>(null)
+}
 
-  useEffect(() => {
-    // 外部（Workbench 等）からの変更を反映
-    // ただし、自身での変更ループを避けるため、内容が異なる場合のみ更新
-    if (JSON.stringify(initialSegments) !== JSON.stringify(segments)) {
-      setSegments(initialSegments)
-    }
-  }, [initialSegments])
+function ActionProgress({
+  progress,
+  label
+}: {
+  progress: number
+  label: string
+}) {
+  return (
+    <div className="flex flex-col items-end gap-1 w-[140px]">
+      <span className="text-[9px] text-slate-500 font-bold">
+        {label.replace("{{progress}}", String(Math.round(progress)))}
+      </span>
+      <div className="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
+        <div
+          className="bg-indigo-600 h-1 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  )
+}
 
-  const addToken = (text: string) => {
-    const trimmed = text.trim()
-    if (!trimmed) return
+function ActionDownloadButton({
+  onClick,
+  label
+}: {
+  onClick: () => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold transition-all duration-150 flex items-center gap-1 cursor-pointer">
+      <Download className="w-3 h-3 text-slate-500" />
+      {label}
+    </button>
+  )
+}
 
-    const newTokens: PromptSegment[] = trimmed
-      .split(PROMPT_DELIMITER_REGEX)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .map((value) => {
-        // Direct slot typing detection
-        const slotMatch = value.match(/^(?:\{\{|\[|<)(.+?)(?:\}\}|\]|>)$/)
-        if (slotMatch && expertFeatures.slot) {
-          const label = slotMatch[1].trim()
-          return { type: "slot" as const, label, default: label }
-        }
-        return { type: "text" as const, value }
-      })
+function ActionErrorButton({
+  onClick,
+  label
+}: {
+  onClick: () => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold transition-all duration-150 flex items-center gap-1 cursor-pointer">
+      <AlertCircle className="w-3 h-3 text-red-500" />
+      {label}
+    </button>
+  )
+}
 
-    const nextSegments = [...segments, ...newTokens]
-    setSegments(nextSegments)
-    if (onChange) {
-      onChange(nextSegments)
-    }
-    setInputValue("")
+function DeclutterActionArea({
+  status,
+  progress,
+  loading,
+  onDeclutter,
+  onDownload,
+  t
+}: ActionAreaProps) {
+  if (status === "ready") {
+    return (
+      <button
+        type="button"
+        disabled={loading}
+        onClick={onDeclutter}
+        className="px-2.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm font-bold transition-all duration-150 flex items-center gap-1 cursor-pointer disabled:opacity-50">
+        {loading ? (
+          <>
+            <RefreshCw className="w-3 h-3 animate-spin" />
+            {t.minting.aiDecluttering}
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-3 h-3" />
+            {t.minting.aiDeclutter}
+          </>
+        )}
+      </button>
+    )
   }
 
-  const removeSegment = (index: number) => {
-    const nextSegments = segments.filter((_, i) => i !== index)
-    setSegments(nextSegments)
-    if (onChange) {
-      onChange(nextSegments)
-    }
+  if (status === "idle") {
+    return (
+      <ActionDownloadButton
+        onClick={onDownload}
+        label={t.minting.aiDeclutterDownload}
+      />
+    )
   }
 
-  const toggleSegmentType = (index: number) => {
-    const newSegments = [...segments]
-    const segment = newSegments[index]
-
-    if (segment.type === "text") {
-      if (!expertFeatures.slot) return
-      newSegments[index] = {
-        type: "slot",
-        label: segment.value,
-        default: segment.value,
-      }
-    } else if (segment.type === "slot") {
-      newSegments[index] = {
-        type: "text",
-        value: segment.label,
-      }
-    }
-
-    setSegments(newSegments)
-    if (onChange) {
-      onChange(newSegments)
-    }
+  if (
+    status === "checking" ||
+    status === "downloading" ||
+    status === "verifying"
+  ) {
+    return (
+      <ActionProgress
+        progress={progress}
+        label={t.minting.aiDeclutterDownloading}
+      />
+    )
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      addToken(inputValue)
-    } else if (e.key === "Backspace" && inputValue === "" && segments.length > 0) {
-      removeSegment(segments.length - 1)
-    } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
-      e.preventDefault()
-      addToken(inputValue)
+  if (status === "error") {
+    return (
+      <ActionErrorButton
+        onClick={onDownload}
+        label={t.minting.aiDeclutterError}
+      />
+    )
+  }
+
+  if (status === "insufficient-quota") {
+    return (
+      <span className="text-red-500 font-bold flex items-center gap-1">
+        <AlertCircle className="w-3.5 h-3.5" />
+        Insufficient Space (1.5GB required)
+      </span>
+    )
+  }
+
+  return null
+}
+
+function getCombinedText(
+  segments: PromptSegment[],
+  inputValue: string
+): string {
+  const textVals = segments
+    .map((s) =>
+      s.type === "text" ? s.value : s.type === "slot" ? s.label : ""
+    )
+    .filter(Boolean)
+  if (inputValue.trim()) {
+    textVals.push(inputValue.trim())
+  }
+  return textVals.join(", ")
+}
+
+function AiDeclutterControl({
+  segments,
+  setSegments,
+  inputValue,
+  setInputValue,
+  onChange
+}: AiDeclutterProps) {
+  const { t } = useLanguage()
+  const { status, progress, startDownload, loading, error, declutterPrompt } =
+    useAiPromptDeclutter()
+
+  const handleDeclutter = async () => {
+    const combinedText = getCombinedText(segments, inputValue)
+    if (!combinedText) return
+
+    const decluttered = await declutterPrompt(combinedText)
+    if (decluttered) {
+      setSegments(decluttered)
+      setInputValue("")
+      if (onChange) onChange(decluttered)
     }
-  }
-
-  const handleBlur = () => {
-    addToken(inputValue)
-  }
-
-  const focusInput = () => {
-    inputRef.current?.focus()
   }
 
   return (
+    <div className="mt-2.5 flex flex-col gap-1 text-[11px] border-t border-slate-100 pt-2 font-sans select-none">
+      <div className="flex items-center justify-between min-h-[28px]">
+        <DeclutterStatusLabel />
+        <DeclutterActionArea
+          status={status}
+          progress={progress}
+          loading={loading}
+          onDeclutter={handleDeclutter}
+          onDownload={startDownload}
+          t={t}
+        />
+      </div>
+      {error && (
+        <span className="text-[10px] text-red-500 font-semibold mt-1">
+          Error: {error}
+        </span>
+      )}
+    </div>
+  )
+}
+
+interface EditorContainerProps {
+  children: React.ReactNode
+  onClick: () => void
+}
+
+function EditorContainer({ children, onClick }: EditorContainerProps) {
+  return (
     <div
       className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[100px] cursor-text items-start content-start transition-colors focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400"
-      onClick={focusInput}
-    >
-      {segments.map((segment, index) => (
-        <PromptBubble
-          key={`${index}-${segment.type === "text" ? segment.value : segment.type === "slot" ? segment.label : segment.kind}`}
-          segment={segment}
-          onRemove={() => removeSegment(index)}
-          onClick={
-            segment.type !== "chip" && (segment.type !== "text" || expertFeatures.slot)
-              ? () => toggleSegmentType(index)
-              : undefined
+      onClick={onClick}>
+      {children}
+    </div>
+  )
+}
+
+export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
+  initialSegments = [],
+  onChange,
+  tier
+}) => {
+  const {
+    segments,
+    setSegments,
+    inputValue,
+    setInputValue,
+    inputRef,
+    addToken,
+    removeSegment,
+    toggleSegmentType,
+    handleKeyDown,
+    expertFeatures
+  } = usePromptBubbleEditorState({ initialSegments, onChange })
+
+  return (
+    <div className="flex flex-col w-full font-sans">
+      <EditorContainer onClick={() => inputRef.current?.focus()}>
+        {segments.map((segment, index) => (
+          <PromptBubble
+            key={`${index}-${segment.type === "text" ? segment.value : segment.type === "slot" ? segment.label : segment.kind}`}
+            segment={segment}
+            onRemove={() => removeSegment(index)}
+            onClick={
+              segment.type !== "chip" &&
+              (segment.type !== "text" || expertFeatures.slot)
+                ? () => toggleSegmentType(index)
+                : undefined
+            }
+            tier={segment.type === "text" ? undefined : tier}
+          />
+        ))}
+        <input
+          ref={inputRef}
+          type="text"
+          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm py-1 text-slate-800 placeholder:text-slate-400"
+          placeholder={
+            initialSegments.length === 0
+              ? "Type something or select cards..."
+              : ""
           }
-          tier={segment.type === "text" ? undefined : tier} // テキスト以外はカード由来として色を付ける
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={() => addToken(inputValue)}
         />
-      ))}
-      <input
-        ref={inputRef}
-        type="text"
-        className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm py-1 text-slate-800 placeholder:text-slate-400"
-        placeholder={initialSegments.length === 0 ? "Type something or select cards..." : ""}
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
+      </EditorContainer>
+      <AiDeclutterControl
+        segments={segments}
+        setSegments={setSegments}
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        onChange={onChange}
       />
     </div>
   )

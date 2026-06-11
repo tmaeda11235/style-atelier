@@ -113,13 +113,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     // 3. Switch to Library tab
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Fill search field with "cyberpunk"
     const searchInput = spFrame.locator("input[placeholder*='Search']").first()
     await expect(searchInput).toBeVisible()
     await searchInput.fill("cyberpunk")
-    await page.waitForTimeout(500) // wait for search filtering
 
     // 5. Verify "Futuristic Card" is visible, "Vintage Card" is NOT visible
     await expect(spFrame.locator("text=Futuristic Card")).toBeVisible()
@@ -127,7 +125,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
 
     // 6. Clear search, type "vintage"
     await searchInput.fill("vintage")
-    await page.waitForTimeout(500) // wait for search filtering
 
     // 7. Verify "Vintage Card" is visible, "Futuristic Card" is NOT visible
     await expect(spFrame.locator("text=Vintage Card")).toBeVisible()
@@ -177,9 +174,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await expect(saveBtn).toBeVisible()
 
     // 描画待ち
-    await page.waitForTimeout(1000)
-
-    // フッターのスクリーンショットを撮影（UX変更点の検証）
     const footerContainer = spFrame
       .locator("[data-testid='card-detail-view-container']")
       .locator("div.shadow-t-sm")
@@ -226,7 +220,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     // 3. Switch to Library tab
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Verify exactly 12 cards are loaded on the first page
     // (Card 00 to Card 11)
@@ -245,7 +238,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
 
     // 6. Click Show More button
     await showMoreBtn.click()
-    await page.waitForTimeout(500) // Wait for lazy loading
 
     // 7. Verify Card 12 is now visible, and we have 24 cards total
     await expect(spFrame.locator("text=Card 12")).toBeVisible()
@@ -318,7 +310,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await tileCheckbox.check()
 
     // Take screenshot of the parameter editor in detail panel
-    await page.waitForTimeout(500)
     await page.screenshot({
       path: path.join(screenshotsDir, "advanced-parameters-editor.png")
     })
@@ -351,7 +342,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await expect(readOnlyTile).toBeVisible()
 
     // Take screenshot of read-only mode showing the new params
-    await page.waitForTimeout(500)
     await page.screenshot({
       path: path.join(screenshotsDir, "advanced-parameters-readonly.png")
     })
@@ -398,9 +388,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await expect(libraryTabButton).toBeVisible()
     await libraryTabButton.click()
-    await page.waitForTimeout(500)
-
-    // 4. Open Card Detail View
     const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
     await expect(editBtn).toBeVisible({ timeout: 10000 })
     await editBtn.click()
@@ -418,9 +405,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     // 6. Save changes
     const saveBtn = spFrame.locator("button:has-text('Save')")
     await saveBtn.click()
-    await page.waitForTimeout(500)
-
-    // 7. Re-open Card Detail View to view version history
     await expect(editBtn).toBeVisible({ timeout: 10000 })
     await editBtn.click()
 
@@ -436,23 +420,16 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     const rollbackBtn = spFrame.locator("button:has-text('Restore')")
     await expect(rollbackBtn).toBeVisible()
     await rollbackBtn.click()
-    await page.waitForTimeout(500)
-
-    // 10. Verify rollback notice banner is shown and name input went back to "Initial Version"
     const rollbackNotice = spFrame.locator("text=Restored from history")
     await expect(rollbackNotice).toBeVisible()
 
     // Capture screenshot of the rollback state showing the notice banner
-    await page.waitForTimeout(500)
     await page.screenshot({
       path: path.join(screenshotsDir, "card-detail-version-history.png")
     })
 
     // 11. Click Save to persist rollback
     await saveBtn.click()
-    await page.waitForTimeout(500)
-
-    // 12. Verify DB state is back to "Initial Version"
     const cardInDb = await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       return await database.styleCards.get("card-history-test")
