@@ -24,7 +24,7 @@ function parseResponse(response: string): GeneratedMetadata {
       tags: Array.isArray(parsed.tags) ? parsed.tags.map(String) : [],
       summary: parsed.summary || ""
     }
-  } catch (parseErr) {
+  } catch {
     const genreMatch = response.match(/"genre"\s*:\s*"([^"]+)"/)
     const summaryMatch = response.match(/"summary"\s*:\s*"([^"]+)"/)
     const tagsMatch = response.match(/"tags"\s*:\s*\[([^\]]+)\]/)
