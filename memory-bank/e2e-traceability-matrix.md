@@ -37,11 +37,11 @@
 | **@J-WB-ATELIER-EFFECTS-01**    | アトリエ釜と錬金演出                                                             | ✔️ `tests\e2e\workbench.spec.ts`                                                                                                          |
 | **@J-ORG-FOLDER-01**            | フォルダ階層化管理（ドリルダウン・DnD移動）                                      | ✔️ `tests\e2e\categories.spec.ts`                                                                                                         |
 | **@J-ORGAN-UX-PARAM-01**        | パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ） | ✔️ `tests\e2e\parameter-alias-gacha.spec.ts`<br>✔️ `tests\e2e\parameter-alias-i18n.spec.ts`                                               |
-| **@J-WB-MIXING-INTELLIGENT-01** | Midjourney sref/cref インテリジェントブレンド                                    | ❌ 未カバー (Missing)                                                                                                                     |
+| **@J-WB-MIXING-INTELLIGENT-01** | Midjourney sref/cref インテリジェントブレンド                                    | ✔️ `tests\e2e\sref-cref-blend.spec.ts`                                                                                                    |
 | **@J-ORG-QUICK-SEND-01**        | クイックワークベンチ送信                                                         | ✔️ `tests\e2e\quick-send.spec.ts`                                                                                                         |
 
 ## サマリー
 
 - 全ジャーニー数: 35
-- カバー済み: 34
-- 未カバー: 1
+- カバー済み: 35
+- 未カバー: 0

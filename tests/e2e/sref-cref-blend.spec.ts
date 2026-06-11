@@ -2,7 +2,7 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier Sandbox E2E Tests - Midjourney Sref/Cref Intelligent Blend", () => {
+test.describe("Style Atelier Sandbox E2E Tests - Midjourney Sref/Cref Intelligent Blend @J-WB-MIXING-INTELLIGENT-01", () => {
   test.beforeEach(async ({ page }) => {
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
