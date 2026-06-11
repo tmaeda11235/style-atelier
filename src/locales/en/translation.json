@@ -182,7 +182,10 @@
     "webLlmPurgeBtn": "Delete Cache",
     "webLlmPurgeConfirm": "Are you sure you want to delete the local AI model cache? This will free up storage but you will need to re-download the model to use local AI functions again.",
     "webLlmQuotaWarningTitle": "Insufficient Space Warning",
-    "webLlmQuotaWarningDesc": "Insufficient storage space on your device. WebLLM requires at least 1.5 GB of free space (1.0 GB for model file + 500 MB workspace) to operate."
+    "webLlmQuotaWarningDesc": "Insufficient storage space on your device. WebLLM requires at least 1.5 GB of free space (1.0 GB for model file + 500 MB workspace) to operate.",
+    "webLlmStatusRetrying": "Reconnecting...",
+    "webLlmRemaining": "Remaining",
+    "webLlmRetryingTitle": "Reconnecting... ({{count}}/{{max}})"
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",

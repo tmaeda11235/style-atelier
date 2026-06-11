@@ -430,6 +430,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
 
     // 11. Click Save to persist rollback
     await saveBtn.click()
+    const detailTitle = spFrame.locator("h2:has-text('Card Details')")
+    await expect(detailTitle).not.toBeVisible({ timeout: 5000 })
+
     const cardInDb = await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       return await database.styleCards.get("card-history-test")

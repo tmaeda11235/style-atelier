@@ -182,7 +182,10 @@
     "webLlmPurgeBtn": "キャッシュを削除",
     "webLlmPurgeConfirm": "ローカルAIモデルのキャッシュを削除しますか？これにより空き容量は増えますが、ローカルAI機能を使用する際は再度モデルをダウンロードする必要があります。",
     "webLlmQuotaWarningTitle": "容量不足警告",
-    "webLlmQuotaWarningDesc": "端末の空き容量が不足しています。WebLLMを動作させるには1.5GB（モデルデータ1.0GB + 実行キャッシュ500MB）の空き領域が必要です。"
+    "webLlmQuotaWarningDesc": "端末の空き容量が不足しています。WebLLMを動作させるには1.5GB（モデルデータ1.0GB + 実行キャッシュ500MB）の空き領域が必要です。",
+    "webLlmStatusRetrying": "接続再試行中...",
+    "webLlmRemaining": "残り時間",
+    "webLlmRetryingTitle": "接続を再試行中... ({{count}}/{{max}})"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
