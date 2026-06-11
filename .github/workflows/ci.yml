@@ -95,8 +95,20 @@ jobs:
       - name: Build extension for manifest tests
         run: npm run build
 
+      - name: Monitor System Resources
+        run: |
+          bash -c 'while true; do date; echo "=== RAM ==="; free -m; echo "=== CPU ==="; top -b -n 1 | head -n 15; echo "-------------------"; sleep 5; done' > system_metrics.log &
+
       - name: Run E2E tests
         run: npm run test:e2e -- --reporter=html
+
+      - name: Upload System Metrics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: system-metrics
+          path: system_metrics.log
+          retention-days: 7
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v7
