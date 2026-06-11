@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -15,7 +16,9 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    console.log("Navigating to sandbox page for Quick Send via Thumbnail test...")
+    console.log(
+      "Navigating to sandbox page for Quick Send via Thumbnail test..."
+    )
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
@@ -39,28 +42,32 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
         tier: "Common",
         isPinned: false,
         dominantColor: "#10b981",
-        thumbnailData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%2310b981'/></svg>"
+        thumbnailData:
+          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%2310b981'/></svg>"
       })
     })
 
     // 3. Switch to Library tab if not already there
-    const libraryTabButton = spFrame.locator("button:has-text('Library')").first()
+    const libraryTabButton = spFrame
+      .locator("button:has-text('Library')")
+      .first()
     await libraryTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // 4. Locate the style card item in the grid and hover to trigger actions visibility
     const cardItem = spFrame.locator("div:has-text('Quick Card A')").last()
     await expect(cardItem).toBeVisible({ timeout: 10000 })
     await cardItem.hover()
 
     // 5. Click the Quick Send (Beaker) button on the thumbnail
-    const quickSendBtn = spFrame.locator("[data-testid='quick-send-button']").first()
+    const quickSendBtn = spFrame
+      .locator("[data-testid='quick-send-button']")
+      .first()
     await expect(quickSendBtn).toBeVisible()
     await quickSendBtn.click()
 
     // 6. Verify automatic transition to Workbench tab (check active state border color)
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await expect(workbenchTabButton).toHaveClass(/border-blue-500/, { timeout: 5000 })
+    await expect(workbenchTabButton).toHaveClass(/border-blue-500/, {
+      timeout: 5000
+    })
 
     // 7. Verify the card is visible in the HandBar
     const handbarCard = spFrame.locator("#handbar-root img[alt='Quick Card A']")
@@ -76,7 +83,9 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    console.log("Navigating to sandbox page for Quick Send via Detail View test...")
+    console.log(
+      "Navigating to sandbox page for Quick Send via Detail View test..."
+    )
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
@@ -100,16 +109,16 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
         tier: "Rare",
         isPinned: false,
         dominantColor: "#f59e0b",
-        thumbnailData: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23f59e0b'/></svg>"
+        thumbnailData:
+          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23f59e0b'/></svg>"
       })
     })
 
     // 3. Switch to Library tab
-    const libraryTabButton = spFrame.locator("button:has-text('Library')").first()
+    const libraryTabButton = spFrame
+      .locator("button:has-text('Library')")
+      .first()
     await libraryTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // 4. Locate the card and hover/click the Edit (pencil) button to open Detail view
     const cardItem = spFrame.locator("div:has-text('Quick Card B')").last()
     await expect(cardItem).toBeVisible({ timeout: 10000 })
     await cardItem.hover()
@@ -119,17 +128,23 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
     await editBtn.click()
 
     // 5. Verify Detail view is open
-    const detailContainer = spFrame.locator("[data-testid='card-detail-view-container']")
+    const detailContainer = spFrame.locator(
+      "[data-testid='card-detail-view-container']"
+    )
     await expect(detailContainer).toBeVisible({ timeout: 5000 })
 
     // 6. Click the Send to Workbench (Beaker) button in the detail view
-    const detailQuickSendBtn = spFrame.locator("[data-testid='detail-quick-send-button']")
+    const detailQuickSendBtn = spFrame.locator(
+      "[data-testid='detail-quick-send-button']"
+    )
     await expect(detailQuickSendBtn).toBeVisible()
     await detailQuickSendBtn.click()
 
     // 7. Verify automatic transition to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await expect(workbenchTabButton).toHaveClass(/border-blue-500/, { timeout: 5000 })
+    await expect(workbenchTabButton).toHaveClass(/border-blue-500/, {
+      timeout: 5000
+    })
 
     // 8. Verify the card is visible in the HandBar
     const handbarCard = spFrame.locator("#handbar-root img[alt='Quick Card B']")

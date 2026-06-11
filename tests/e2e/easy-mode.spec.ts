@@ -42,9 +42,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
     await expect(easyModeToggle).toBeVisible({ timeout: 10000 })
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // Verify Guide button is hidden in Easy Mode
     await expect(guideBtn).not.toBeVisible({ timeout: 10000 })
 
     // Save screenshot of Easy Mode layout showing the guide button is hidden
@@ -73,9 +70,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     })
 
     // Wait for the view to update and card to render
-    await page.waitForTimeout(1000)
-
-    // 4. Locate and click on the newly seeded card in LibraryTab
     const cardElement = spFrame.locator("text=Easy Mode test card").first()
     await expect(cardElement).toBeVisible({ timeout: 10000 })
 
@@ -153,9 +147,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
     await expect(easyModeToggle).toBeVisible({ timeout: 10000 })
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // 3. Clear database and seed custom test cards
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
@@ -182,9 +173,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
         }
       ])
     })
-    await page.waitForTimeout(1000)
-
-    // 4. Verify both cards are rendered (toggling Easy Mode automatically redirected to Library Tab)
     const cardA = spFrame.locator("text=Easy Card A").first()
     const cardB = spFrame.locator("text=Easy Card B").first()
     await expect(cardA).toBeVisible({ timeout: 10000 })
@@ -241,9 +229,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
     await expect(easyModeToggle).toBeVisible({ timeout: 10000 })
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // 3. Clear database and seed mock category
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.historyItems.clear()
@@ -255,18 +240,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
         iconEmoji: "🍥"
       })
     })
-    await page.waitForTimeout(1000)
-
-    // 4. Perform Drag & Drop from Midjourney Mock to Sidepanel
     const dragSource = mjFrame.locator("img[src*='0_0_640_N.webp']").first()
     await expect(dragSource).toBeVisible({ timeout: 10000 })
 
     const dropTarget = spFrame.locator("body")
     console.log("Performing drag and drop simulation...")
     await dragSource.dragTo(dropTarget)
-    await page.waitForTimeout(1000)
-
-    // 5. Verify Simple Minting View is now visible
     const simpleMintingView = spFrame.locator(
       "[data-testid='simple-minting-view-container']"
     )

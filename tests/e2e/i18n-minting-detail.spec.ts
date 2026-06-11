@@ -31,14 +31,10 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // Seed initial data
     await spFrame.locator("body").evaluate(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
@@ -101,17 +97,11 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     )
     await expect(historyTabBtn).toBeVisible()
     await historyTabBtn.click()
-    await page.waitForTimeout(500)
-
-    // Click Mint button
     const mintBtn = spFrame
       .locator("button:has-text('Mint'), button:has-text('ミント')")
       .first()
     await expect(mintBtn).toBeVisible()
     await mintBtn.click()
-    await page.waitForTimeout(500)
-
-    // Check Japanese texts in MintingView
     const mintTitle = spFrame.locator("h2:has-text('新規カード作成')")
     await expect(mintTitle).toBeVisible()
     await expect(spFrame.locator("h3:has-text('カード情報')")).toBeVisible()
@@ -158,12 +148,8 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     // Cancel and go back
     const cancelMintBtn = spFrame.locator("button:has-text('キャンセル')")
     await cancelMintBtn.click()
-    await page.waitForTimeout(500)
-
-    // --- B. SimpleMintingView Test (Easy Mode) ---
     console.log("Switching to Easy Mode...")
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
     await expect(easyModeToggle).toBeVisible()
@@ -244,9 +230,6 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
 
         cardEl.dispatchEvent(dropEvent)
       })
-    await page.waitForTimeout(1000)
-
-    // Verify SimpleMintingView localized labels
     await expect(
       spFrame.locator("h2:has-text('クイックカード作成')")
     ).toBeVisible()
@@ -280,9 +263,6 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     // Cancel Simple Minting
     const cancelSimpleMintBtn = spFrame.locator("button:has-text('キャンセル')")
     await cancelSimpleMintBtn.click()
-    await page.waitForTimeout(500)
-
-    // --- C. CardDetailView Test ---
     console.log("Testing CardDetailView localization...")
     // Click on the seeded card "ネオンフォレスト" in Library (since we canceled minting, we should be in LibraryTab)
     const cardEl = spFrame.locator("text=ネオンフォレスト").first()
@@ -294,9 +274,6 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     await cardEl.hover()
     await expect(editBtn).toBeVisible()
     await editBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify CardDetailView labels in Japanese
     await expect(spFrame.locator("h2:has-text('カード詳細')")).toBeVisible()
     await expect(
       spFrame.locator("h3:has-text('アイデンティティ')").first()
@@ -349,6 +326,5 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
 
     // Close detail view
     await spFrame.locator("button:has-text('キャンセル')").click()
-    await page.waitForTimeout(500)
   })
 })

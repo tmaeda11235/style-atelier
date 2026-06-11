@@ -33,17 +33,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
       .first()
     await expect(libraryTabBtn).toBeVisible({ timeout: 10000 })
     await libraryTabBtn.click()
-    await page.waitForTimeout(500)
-
-    // Expand filters accordion
     const filterToggleBtn = spFrame
       .locator("[data-testid='toggle-filters-btn']")
       .first()
     await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
     await filterToggleBtn.click()
-    await page.waitForTimeout(500)
-
-    // 2. Clear database and seed custom test cards with different dominant colors
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
@@ -88,9 +82,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
     })
 
     // Wait for UI to update
-    await page.waitForTimeout(1000)
-
-    // 3. Check for color filter container
     const colorLabel = spFrame.locator("text=Color:").first()
     await expect(colorLabel).toBeVisible({ timeout: 10000 })
 
@@ -101,7 +92,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
       el.style.width = "100px"
       el.style.flexGrow = "0"
     })
-    await page.waitForTimeout(500) // wait for ResizeObserver to run checkScroll
 
     // Verify right scroll arrow button is visible because the container is now narrow and scrollable
     const rightArrow = spFrame
@@ -120,9 +110,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
 
     // 4. Click right arrow to scroll right
     await rightArrow.click()
-    await page.waitForTimeout(500)
-
-    // Verify left scroll arrow button is now visible after scrolling
     const leftArrow = spFrame
       .locator("button[aria-label='Scroll left']")
       .first()
@@ -139,17 +126,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
 
     // 5. Scroll back left
     await leftArrow.click()
-    await page.waitForTimeout(500)
-
-    // 6. Test filtering: click the Red filter color button
     const redFilterBtn = spFrame
       .locator("button[title='レッド'], button[title='Red']")
       .first()
     await expect(redFilterBtn).toBeVisible()
     await redFilterBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify only the Red Card is visible, and Blue/Green Cards are filtered out
     const redCard = spFrame.locator("text=Red Card").first()
     const blueCard = spFrame.locator("text=Blue Card").first()
     const greenCard = spFrame.locator("text=Green Card").first()
@@ -170,9 +151,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Color Filter Scroll Affordance 
       .first()
     await expect(allColorsBtn).toBeVisible()
     await allColorsBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify all cards are visible again
     await expect(redCard).toBeVisible({ timeout: 5000 })
     await expect(blueCard).toBeVisible({ timeout: 5000 })
     await expect(greenCard).toBeVisible({ timeout: 5000 })

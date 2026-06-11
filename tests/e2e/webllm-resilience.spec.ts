@@ -33,15 +33,9 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Expand Local AI Model (WebLLM) accordion
     const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
     await expect(webLlmAccordionHeader).toBeVisible()
     await webLlmAccordionHeader.click()
-    await page.waitForTimeout(300)
-
-    // 3. Configure mock to return insufficient quota
     await spFrame.locator("body").evaluate(() => {
       const config = (window as any).mockWebLlmConfig
       if (config) {
@@ -55,9 +49,6 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
-    await page.waitForTimeout(500)
-
-    // 5. Verify Insufficient Space / UI warning is displayed
     const warningText = spFrame
       .locator("text=/Insufficient Space Warning|容量不足警告/")
       .first()
@@ -223,15 +214,9 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Expand Local AI Model (WebLLM) accordion
     const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
     await expect(webLlmAccordionHeader).toBeVisible()
     await webLlmAccordionHeader.click()
-    await page.waitForTimeout(300)
-
-    // 3. Configure mock to trigger download failure
     await spFrame.locator("body").evaluate(() => {
       const config = (window as any).mockWebLlmConfig
       if (config) {
@@ -247,9 +232,6 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
-    await page.waitForTimeout(500)
-
-    // 5. Verify error notification is displayed with the failure message
     const errorText = spFrame.locator(
       "text=Failed to fetch model weights: Connection lost"
     )

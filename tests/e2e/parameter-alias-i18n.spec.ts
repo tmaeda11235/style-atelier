@@ -56,44 +56,33 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
         isPinned: false
       })
     })
-
-    await page.waitForTimeout(1000)
-
-    // 3. Switch to Settings and set language to English first (just in case)
     console.log("Setting language to English...")
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible()
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("en")
-    await page.waitForTimeout(500)
-
-    // 4. Navigate to Workbench tab
-    const workbenchTab = spFrame.locator("[data-tutorial='workbench-tab']").first()
+    const workbenchTab = spFrame
+      .locator("[data-tutorial='workbench-tab']")
+      .first()
     await expect(workbenchTab).toBeVisible()
     await workbenchTab.click()
-    await page.waitForTimeout(500)
-
-    // 5. Pin the card (since it was not pinned, we need to Gacha or pin it. Let's Gacha Pick to quickly show it in Workbench)
     const gachaBtn = spFrame.locator("#workbench-gacha-btn").first()
     await expect(gachaBtn).toBeVisible()
     await gachaBtn.click()
-    await page.waitForTimeout(1000)
-
-    // 6. Open alias editing modal (English)
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
     await expect(srefEditBtn).toBeVisible()
     await srefEditBtn.click()
-    await page.waitForTimeout(500)
-
-    // 7. Verify modal headers and labels are in English
     const modalHeaderEn = spFrame.locator("h4:has-text('Edit Parameter Alias')")
     await expect(modalHeaderEn).toBeVisible()
-    await expect(spFrame.locator("label:has-text('Folder / Category')")).toBeVisible()
-    await expect(spFrame.locator("label:has-text('Parameter Value')")).toBeVisible()
+    await expect(
+      spFrame.locator("label:has-text('Folder / Category')")
+    ).toBeVisible()
+    await expect(
+      spFrame.locator("label:has-text('Parameter Value')")
+    ).toBeVisible()
     await expect(spFrame.locator("label:has-text('Alias Name')")).toBeVisible()
     await expect(spFrame.locator("button:has-text('Delete')")).toBeVisible()
     await expect(spFrame.locator("button:has-text('Save')")).toBeVisible()
@@ -107,30 +96,25 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     // Cancel modal via X button
     const closeBtn = spFrame.locator(".w-80.shadow-2xl button").first()
     await closeBtn.click()
-    await page.waitForTimeout(1000)
-
-    // 8. Switch to Settings and set language to Japanese (ja)
     console.log("Setting language to Japanese...")
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // 9. Go back to Workbench
     await workbenchTab.click()
-    await page.waitForTimeout(500)
-
-    // 10. Open alias editing modal again (Japanese)
     await expect(srefEditBtn).toBeVisible()
     await srefEditBtn.click()
-    await page.waitForTimeout(500)
-
-    // 11. Verify modal headers and labels are in Japanese
-    const modalHeaderJa = spFrame.locator("h4:has-text('パラメータエイリアスの編集')")
+    const modalHeaderJa = spFrame.locator(
+      "h4:has-text('パラメータエイリアスの編集')"
+    )
     await expect(modalHeaderJa).toBeVisible()
-    await expect(spFrame.locator("label:has-text('フォルダ / カテゴリ')")).toBeVisible()
-    await expect(spFrame.locator("label:has-text('パラメータ値')")).toBeVisible()
-    await expect(spFrame.locator("label:has-text('エイリアス名')")).toBeVisible()
+    await expect(
+      spFrame.locator("label:has-text('フォルダ / カテゴリ')")
+    ).toBeVisible()
+    await expect(
+      spFrame.locator("label:has-text('パラメータ値')")
+    ).toBeVisible()
+    await expect(
+      spFrame.locator("label:has-text('エイリアス名')")
+    ).toBeVisible()
     await expect(spFrame.locator("button:has-text('削除')")).toBeVisible()
     await expect(spFrame.locator("button:has-text('保存')")).toBeVisible()
 
@@ -142,6 +126,5 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     // Close modal via X button
     await closeBtn.click()
-    await page.waitForTimeout(1000)
   })
 })
