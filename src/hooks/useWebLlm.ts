@@ -142,6 +142,44 @@ export function purgeCacheHelper(
   )
 }
 
+export function runInferenceHelper(
+  prompt: string,
+  systemPrompt?: string,
+  temperature?: number
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (
+      typeof chrome === "undefined" ||
+      !chrome.runtime ||
+      !chrome.runtime.sendMessage
+    ) {
+      reject(new Error("Extension environment not available"))
+      return
+    }
+
+    const requestId = Math.random().toString(36).substring(7)
+    chrome.runtime.sendMessage(
+      {
+        target: "offscreen",
+        action: "run-inference",
+        requestId,
+        prompt,
+        systemPrompt,
+        temperature
+      },
+      (res) => {
+        if (!res) {
+          reject(new Error("No response from background"))
+        } else if (res.status === "error") {
+          reject(new Error(res.error || "Inference failed"))
+        } else {
+          resolve(res.result || "")
+        }
+      }
+    )
+  })
+}
+
 export function useWebLlm() {
   const [status, setStatus] = useState<DownloadStatus>("idle")
   const [progress, setProgress] = useState<number>(0)
@@ -185,6 +223,11 @@ export function useWebLlm() {
     error,
     startDownload: () => startDownloadHelper(setStatus, setProgress, setError),
     purgeCache: () => purgeCacheHelper(setStatus, setProgress, setError),
-    checkCurrentState: () => checkCurrentStateHelper(setStatus, setProgress)
+    checkCurrentState: () => checkCurrentStateHelper(setStatus, setProgress),
+    runInference: (
+      prompt: string,
+      systemPrompt?: string,
+      temperature?: number
+    ) => runInferenceHelper(prompt, systemPrompt, temperature)
   }
 }

@@ -58,8 +58,7 @@ export function useImageColorAnalysis(
     } else {
       applyFallback()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mintingItem, variationBase])
+  }, [mintingItem, variationBase, selectedRarity])
 }
 
 export function useMintingColors(

@@ -386,7 +386,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
                 ok: true,
                 json: vi.fn().mockResolvedValue({ files: [] })
               } as any)
-            }, 100)
+            }, 5000)
 
             if (signal) {
               signal.addEventListener("abort", () => {
