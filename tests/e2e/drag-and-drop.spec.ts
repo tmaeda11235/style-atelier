@@ -209,7 +209,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
     // 5. Switch to Library tab
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB query
 
     // 6. Click edit button on the card
     const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
@@ -285,9 +284,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
     const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
     await expect(easyModeToggle).toBeVisible({ timeout: 10000 })
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // 3. Verify Easy Mode active (History tab is hidden)
     const historyTabBtn = spFrame.locator("nav button:has-text('History')")
     await expect(historyTabBtn).not.toBeVisible()
 

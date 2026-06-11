@@ -484,7 +484,22 @@
     "saveToLibrary": "Save to Library",
     "newCardDefault": "New Card",
     "quickKeywords": "Quick Keywords",
-    "cardName": "Card Name"
+    "cardName": "Card Name",
+    "aiDeclutter": "De-clutter with AI",
+    "aiDecluttering": "De-cluttering...",
+    "aiDeclutterDesc": "Modularize prompt with local AI",
+    "aiDeclutterDownload": "Download Model (1.5GB) to enable AI De-cluttering",
+    "aiDeclutterDownloading": "Downloading Model... {{progress}}%",
+    "aiDeclutterError": "Model loading error. Click to retry.",
+    "aiAnalysis": "AI Style Analysis",
+    "aiAnalysisBtn": "Analyze Style with AI",
+    "aiAnalysisLoading": "Analyzing style...",
+    "aiAnalysisError": "Inference failed: {{error}}",
+    "aiRecommendTags": "AI Recommended Tags",
+    "aiSummary": "AI Summary Description",
+    "aiSummaryPlaceholder": "AI summary will appear here...",
+    "aiUseSummary": "Use as Card Note/Description",
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
   },
   "cardDetail": {
     "title": "Card Details",
@@ -537,7 +552,7 @@
   },
   "alerts": {
     "handFullTitle": "Hand is Full",
-    "handFullDesc": "You can only pin up to 7 cards. Please unpin another card first.",
+    "handFullDesc": "You can only pin up to 5 cards. Please unpin another card first.",
     "disconnectedTitle": "Connection Lost",
     "disconnectedDesc": "The extension has lost connection to the page. This usually happens after an update or prolonged inactivity.",
     "disconnectedBtn": "Reload Page",

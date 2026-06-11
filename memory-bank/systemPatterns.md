@@ -25,7 +25,8 @@ tags: []
 
 ## Key Technical Patterns
 
-- **Tokenized Editor**: Treating prompt segments as draggable objects (Bubbles).
+- **Tokenized Editor**: Treating prompt segments as draggable objects (Bubbles). Managed by `usePromptBubbleEditorState` (`src/hooks/usePromptBubbleEditorState.ts`) to handle bubble splitting, active/inactive states, custom token additions, and serialization, keeping the component lightweight and meeting ESLint constraints.
+- **Local AI Prompt De-cluttering**: Integrates local LLM-driven cleaning of prompt bubbles. Managed by the `useAiPromptDeclutter` hook (`src/hooks/useAiPromptDeclutter.ts`), which interfaces with WebLLM via Offscreen Worker messaging, handles model download progress, and falls back to regex-based segmentation in case of initialization failure.
 - **Bubble Slotting UI**: Breaking prompts into "Text" (Fixed) and "Slot" (Variable) components.
 - **Mixing Table & Intelligent Weighted Blend**: Logic to merge multiple Style Cards (parents) into a new prompt generation or Workbench environment. When merging, it aggregates sref/cref URLs with their corresponding weights (calculated by multiplying the card weight with the parameter weight, summing up occurrences, and outputting with suffix weights e.g. `::weight`). It also propagates weights to prompt text segments.
 - **Image-as-Database (PNG Metadata & QR Fallback)**: Using the exported image itself as a portable data container. During export, card data is injected as a compressed payload into a custom PNG `tEXt` metadata chunk. During import, the raw file is parsed directly via a custom CRC32 checker to retrieve the metadata, completely bypassing canvas rendering and QR scan overhead. If metadata is missing or stripped (e.g. converted or hosted on platforms that strip metadata), a canvas-based multi-stage QR scan fallback is executed (first full image, then cropped bottom-right corner, then 2x scaled crop).

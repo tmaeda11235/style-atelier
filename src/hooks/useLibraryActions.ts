@@ -47,7 +47,7 @@ function handleSlotCard(
   onNavigateToWorkbench?: () => void
 ) {
   if (!card.isPinned) {
-    if (pinnedCount >= 7) {
+    if (pinnedCount >= 5) {
       setAlertType("hand_full")
       return
     }
@@ -106,7 +106,7 @@ export function useTogglePin(
       const updateData: Partial<StyleCard> = { isPinned: newPinnedStatus }
       if (newPinnedStatus) {
         const pinnedCount = allCardsMeta?.filter((c) => c.isPinned).length || 0
-        if (pinnedCount >= 7) {
+        if (pinnedCount >= 5) {
           setAlertType("hand_full")
           return
         }
