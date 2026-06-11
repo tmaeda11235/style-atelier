@@ -3,6 +3,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* Semantic Design Tokens */
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border-primary: var(--color-border-primary);
+  --color-muted: var(--color-muted);
+}
+
+:root {
+  --color-surface: #ffffff;
+  --color-surface-hover: var(--color-slate-50);
+  --color-text-primary: var(--color-slate-800);
+  --color-text-secondary: var(--color-slate-500);
+  --color-border-primary: var(--color-slate-200);
+  --color-muted: var(--color-slate-100);
+}
+
+.dark {
+  --color-surface: var(--color-slate-900);
+  --color-surface-hover: var(--color-slate-800);
+  --color-text-primary: var(--color-slate-200);
+  --color-text-secondary: var(--color-slate-400);
+  --color-border-primary: var(--color-slate-800);
+  --color-muted: var(--color-slate-800);
+}
+
 @keyframes cauldron-bubble {
   0% {
     transform: translateY(15px) scale(0.8);
