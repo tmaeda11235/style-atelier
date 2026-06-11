@@ -8,6 +8,10 @@ import SidePanelPage from "../../src/pages/SidePanel"
 import "../../src/style.css" // スタイルの読み込み
 
 import { db } from "../../src/lib/db"
+import {
+  verifyCacheIntegrity,
+  verifyOpfsIntegrity
+} from "../../src/lib/storage-utils"
 
 const queryClient = new QueryClient()
 
@@ -89,6 +93,20 @@ seedSandboxData()
 // chrome API モックの定義
 if (typeof window !== "undefined") {
   ;(window as any).db = db
+  ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
+  ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
+
+  const mockWebLlmConfig = {
+    quotaSufficient: true,
+    integrityPassed: null as boolean | null,
+    downloadSpeed: 100,
+    failDownload: false,
+    downloadErrorMsg: "Network connection lost",
+    offlineMode: false,
+    onDownloadStart: null as (() => void) | null
+  }
+  ;(window as any).mockWebLlmConfig = mockWebLlmConfig
+
   const pendingRequests = new Map<string, (value: any) => void>()
 
   // 親ウィンドウからのレスポンスを待受
@@ -160,13 +178,21 @@ if (typeof window !== "undefined") {
           if (message.action === "verify-integrity") {
             const isDownloaded =
               localStorage.getItem("mock-webllm-downloaded") === "true"
+            const passed =
+              mockWebLlmConfig.integrityPassed !== null
+                ? mockWebLlmConfig.integrityPassed
+                : isDownloaded
             setTimeout(() => {
               if (callback)
-                callback({ status: "success", integrityPassed: isDownloaded })
+                callback({ status: "success", integrityPassed: passed })
             }, 50)
           } else if (message.action === "check-quota") {
             setTimeout(() => {
-              if (callback) callback({ status: "success", isSufficient: true })
+              if (callback)
+                callback({
+                  status: "success",
+                  isSufficient: mockWebLlmConfig.quotaSufficient
+                })
             }, 50)
           } else if (message.action === "init-worker") {
             setTimeout(() => {
@@ -176,12 +202,48 @@ if (typeof window !== "undefined") {
             setTimeout(() => {
               if (callback) callback({ status: "success" })
 
+              if (mockWebLlmConfig.onDownloadStart) {
+                mockWebLlmConfig.onDownloadStart()
+              }
+
+              if (mockWebLlmConfig.failDownload) {
+                setTimeout(() => {
+                  const listeners = (window as any).chromeMessageListeners || []
+                  listeners.forEach((l: any) =>
+                    l({
+                      source: "offscreen-worker",
+                      payload: {
+                        status: "error",
+                        error: mockWebLlmConfig.downloadErrorMsg
+                      }
+                    })
+                  )
+                }, 100)
+                return
+              }
+
               let progress = 0
-              const interval = setInterval(() => {
+              let intervalId: any = null
+
+              const runProgressStep = () => {
+                if (mockWebLlmConfig.offlineMode) {
+                  const listeners = (window as any).chromeMessageListeners || []
+                  listeners.forEach((l: any) =>
+                    l({
+                      source: "offscreen-worker",
+                      payload: {
+                        status: "error",
+                        error: "Network connection offline"
+                      }
+                    })
+                  )
+                  return
+                }
+
                 progress += 25
                 const listeners = (window as any).chromeMessageListeners || []
                 if (progress > 100) {
-                  clearInterval(interval)
+                  clearInterval(intervalId)
                   localStorage.setItem("mock-webllm-downloaded", "true")
                   listeners.forEach((l: any) =>
                     l({
@@ -197,7 +259,12 @@ if (typeof window !== "undefined") {
                     })
                   )
                 }
-              }, 100)
+              }
+
+              intervalId = setInterval(
+                runProgressStep,
+                mockWebLlmConfig.downloadSpeed
+              )
             }, 50)
           } else if (message.action === "purge-cache") {
             localStorage.removeItem("mock-webllm-downloaded")

@@ -50,7 +50,7 @@ test.describe("Style Atelier Sandbox E2E Tests - History Scroll @J-SYS-01", () =
       const mockItems = Array.from({ length: 70 }, (_, i) => ({
         id: `mock-history-${i}`,
         fullCommand: `Cyberpunk prompt number ${i} --ar 16:9`,
-        imageUrl: `./index_files/0_0_640_N.webp`,
+        imageUrl: `/tests/fixtures/midjourney/index_files/0_0_640_N.webp`,
         timestamp: Date.now() - i * 1000
       }))
       await database.historyItems.bulkAdd(mockItems)

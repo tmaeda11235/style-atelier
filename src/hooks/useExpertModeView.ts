@@ -83,6 +83,28 @@ export function useExpertModeView({
     }
   }
 
+  const handleSendToWorkbench = async (card: StyleCard) => {
+    try {
+      if (!card.isPinned) {
+        const pinnedCount = await db.styleCards.filter((c) => !!c.isPinned).count()
+        if (pinnedCount >= 7) {
+          setAlertType("hand_full")
+          return
+        }
+        await db.updateCard(card.id, {
+          isPinned: true,
+          usageCount: (card.usageCount || 0) + 1
+        })
+        addLog(`Added ${card.name} to Workbench.`)
+      }
+      setActiveDetailCard(null)
+      setActiveTab("workbench")
+    } catch (err) {
+      console.error("Failed to send card to workbench:", err)
+      addLog("Error: Failed to send card to workbench.")
+    }
+  }
+
   const handleInjectPrompt = async (prompt: string) => {
     setAlertType(null)
     try {
@@ -241,6 +263,7 @@ export function useExpertModeView({
     handleOpenGuide,
     handleStartTutorial,
     handleSkipTutorial,
+    handleSendToWorkbench,
     handleToggleEasyMode: handleToggleEasyModeInternal
   }
 }
