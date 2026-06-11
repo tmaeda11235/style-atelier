@@ -155,6 +155,8 @@ export function ExpertModeView({
             detectedDominantColor={minting.detectedDominantColor}
             detectedAccentColor={minting.detectedAccentColor}
             detectedColorTags={minting.detectedColorTags}
+            mutationNote={minting.mutationNote}
+            setMutationNote={minting.setMutationNote}
           />
         )}
         {activeDetailCard && (

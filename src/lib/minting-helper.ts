@@ -24,6 +24,7 @@ export interface BuildCardParams {
   thumbnailData: string
   isSrefHidden: boolean
   isPHidden: boolean
+  mutationNote?: string
 }
 
 export function resolveCardName(
@@ -83,7 +84,8 @@ export async function getThumbnailData(
 
 export function resolveGenealogyAndParams(
   mintingItem: HistoryItem | null,
-  variationBase: BuildCardParams["variationBase"]
+  variationBase: BuildCardParams["variationBase"],
+  mutationNote?: string
 ) {
   const parameters = mintingItem
     ? parsePrompt(mintingItem.fullCommand).parameters
@@ -94,9 +96,13 @@ export function resolveGenealogyAndParams(
         generation: 1,
         parentIds: [],
         originCreatorId: "user",
-        mutationNote: `Minted from history item ${mintingItem.id}`
+        mutationNote:
+          mutationNote || `Minted from history item ${mintingItem.id}`
       }
-    : variationBase!.genealogy
+    : {
+        ...variationBase!.genealogy,
+        mutationNote: mutationNote || variationBase!.genealogy.mutationNote
+      }
 
   const images = mintingItem
     ? [mintingItem.imageUrl]
@@ -122,6 +128,7 @@ export function createBuildCardParams(
     selectedKeywords: string[]
     customTags: string[]
     selectedCategory: string
+    mutationNote?: string
   },
   colors: {
     detectedColorTags: string[]
@@ -143,7 +150,8 @@ export function createBuildCardParams(
     detectedAccentColor: colors.detectedAccentColor,
     thumbnailData,
     isSrefHidden,
-    isPHidden
+    isPHidden,
+    mutationNote: meta.mutationNote
   }
 }
 
@@ -162,11 +170,12 @@ export function buildMintedCard(params: BuildCardParams): StyleCard {
     detectedAccentColor,
     thumbnailData,
     isSrefHidden,
-    isPHidden
+    isPHidden,
+    mutationNote
   } = params
 
   const { parameters, genealogy, images, selectedThumbnails } =
-    resolveGenealogyAndParams(mintingItem, variationBase)
+    resolveGenealogyAndParams(mintingItem, variationBase, mutationNote)
   const name = resolveCardName(customName, selectedKeywords, editedSegments)
   const tags = resolveCardTags(selectedKeywords, customTags, detectedColorTags)
 

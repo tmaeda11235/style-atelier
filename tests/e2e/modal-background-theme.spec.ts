@@ -2,7 +2,9 @@ import path from "path"
 import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier - Modal Background Theme Verification @J-MODAL-01", () => {
-  test("should have light/dark responsive overlay backgrounds in modals", async ({ page }) => {
+  test("should have light/dark responsive overlay backgrounds in modals", async ({
+    page
+  }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
 
     // Go to sandbox page
@@ -37,12 +39,11 @@ test.describe("Style Atelier - Modal Background Theme Verification @J-MODAL-01",
     await settingsNavBtn.click()
 
     // Expand Maintenance section
-    const maintenanceAccordionHeader = spFrame.locator("#settings-accordion-maintenance")
+    const maintenanceAccordionHeader = spFrame.locator(
+      "#settings-accordion-maintenance"
+    )
     await expect(maintenanceAccordionHeader).toBeVisible()
     await maintenanceAccordionHeader.click()
-    await page.waitForTimeout(300)
-
-    // Click Reset Database button to trigger ConfirmationDialog
     const resetBtn = spFrame.locator("#reset-db-btn")
     await expect(resetBtn).toBeVisible()
     await resetBtn.click()
@@ -68,9 +69,6 @@ test.describe("Style Atelier - Modal Background Theme Verification @J-MODAL-01",
     })
 
     // Wait for the UI to apply dark theme
-    await page.waitForTimeout(500)
-
-    // Trigger the ConfirmationDialog again in Dark mode
     await resetBtn.click()
     await expect(dialogOverlay).toBeVisible()
 
