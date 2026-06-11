@@ -79,33 +79,49 @@ function LibraryCardThumbnail({
   )
 }
 
+export function setupDragStart(e: React.DragEvent, card: StyleCard) {
+  e.dataTransfer.setData(
+    "text/plain",
+    buildPromptString(card.promptSegments, card.parameters)
+  )
+  e.dataTransfer.setData("cardId", card.id)
+}
+
+export function handleCardClickHelper(
+  e: React.MouseEvent,
+  card: StyleCard,
+  isEasyMode: boolean,
+  togglePin: (card: StyleCard, e: React.MouseEvent) => void,
+  advanceIfStep: (step: string) => void,
+  onOpenSimpleWorkbench?: (card: StyleCard) => void
+) {
+  if (isEasyMode) {
+    onOpenSimpleWorkbench?.(card)
+  } else {
+    togglePin(card, e)
+    advanceIfStep("card-to-hand")
+  }
+}
+
 export function LibraryCardItem(props: LibraryCardItemProps) {
   const config = RARITY_CONFIG[props.card.tier]
   const cardCategory = props.categories.find(
     (c) => c.id === props.card.category
   )
 
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData(
-      "text/plain",
-      buildPromptString(props.card.promptSegments, props.card.parameters)
-    )
-    e.dataTransfer.setData("cardId", props.card.id)
-  }
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (props.isEasyMode) {
-      props.onOpenSimpleWorkbench?.(props.card)
-    } else {
-      props.togglePin(props.card, e)
-      props.advanceIfStep("card-to-hand")
-    }
-  }
-
   return (
     <div
       data-tutorial={props.idx === 0 ? "library-card" : undefined}
-      onClick={handleClick}
+      onClick={(e) =>
+        handleCardClickHelper(
+          e,
+          props.card,
+          props.isEasyMode,
+          props.togglePin,
+          props.advanceIfStep,
+          props.onOpenSimpleWorkbench
+        )
+      }
       className={`group bg-white border-2 rounded-lg shadow-sm cursor-grab active:cursor-grabbing overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 hover:shadow-md active:scale-[0.98] ${
         config?.borderClass || "border-slate-200"
       } ${config?.glowClass || ""}`}>
@@ -118,7 +134,7 @@ export function LibraryCardItem(props: LibraryCardItemProps) {
         onEditClick={props.onOpenDetailCard}
         onInjectClick={props.handleCardClick}
         onShareClick={props.setSharingCard}
-        onDragStart={handleDragStart}
+        onDragStart={(e) => setupDragStart(e, props.card)}
       />
       <CardFooter
         name={props.card.name}
