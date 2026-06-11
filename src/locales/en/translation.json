@@ -475,7 +475,13 @@
     "saveToLibrary": "Save to Library",
     "newCardDefault": "New Card",
     "quickKeywords": "Quick Keywords",
-    "cardName": "Card Name"
+    "cardName": "Card Name",
+    "aiDeclutter": "De-clutter with AI",
+    "aiDecluttering": "De-cluttering...",
+    "aiDeclutterDesc": "Modularize prompt with local AI",
+    "aiDeclutterDownload": "Download Model (1.5GB) to enable AI De-cluttering",
+    "aiDeclutterDownloading": "Downloading Model... {{progress}}%",
+    "aiDeclutterError": "Model loading error. Click to retry."
   },
   "cardDetail": {
     "title": "Card Details",
