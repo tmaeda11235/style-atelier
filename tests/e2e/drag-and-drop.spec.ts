@@ -78,7 +78,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
           id: "340ae0f9-c2f0-459c-ad45-95f7249049e8",
           fullCommand:
             "超高層ビルを見上げた景色, 観葉植物, noon, skyscraper --ar 16:9 --sref 2496378872 3886212479 --stylize 200 --profile buibsja",
-          imageUrl: "./index_files/0_0_640_N.webp",
+          imageUrl: "/tests/fixtures/midjourney/index_files/0_0_640_N.webp",
           timestamp: Date.now()
         }
 
@@ -298,7 +298,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
       id: "easy-mode-drop-job-123",
       fullCommand:
         "A peaceful forest with rays of sunlight --ar 16:9 --sref 123456789",
-      imageUrl: "./index_files/0_0_640_N.webp",
+      imageUrl: "/tests/fixtures/midjourney/index_files/0_0_640_N.webp",
       timestamp: Date.now()
     }
 

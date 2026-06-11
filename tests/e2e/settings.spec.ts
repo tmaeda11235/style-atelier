@@ -4,6 +4,15 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
   test.beforeEach(async ({ page }) => {
+    // Mock all Google APIs globally for settings tests to prevent 401 retries
+    await page.route("https://www.googleapis.com/**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({})
+      })
+    })
+
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
