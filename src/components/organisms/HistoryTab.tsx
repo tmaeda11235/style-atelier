@@ -1,5 +1,5 @@
 import { ExternalLink, History } from "lucide-react"
-import React, { useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { useHistory } from "../../hooks/useHistory"
@@ -14,6 +14,13 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
   const { historyItems, loadMore, hasMore, updateHistoryItem } = useHistory()
   const sentinelRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
+
+  const handleImageCached = useCallback(
+    async (id: string, blob: Blob) => {
+      await updateHistoryItem(id, { localImageBlob: blob })
+    },
+    [updateHistoryItem]
+  )
 
   useEffect(() => {
     if (!hasMore || !historyItems || historyItems.length < 50) return
@@ -77,9 +84,7 @@ export function HistoryTab({ onStartMinting }: HistoryTabProps) {
           <HistoryCard
             item={item}
             onMintClick={onStartMinting}
-            onImageCached={(id, blob) =>
-              updateHistoryItem(id, { localImageBlob: blob })
-            }
+            onImageCached={handleImageCached}
           />
         </div>
       ))}

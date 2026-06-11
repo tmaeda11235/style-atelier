@@ -29,7 +29,7 @@ stateDiagram-v2
   _J_SET_01 : アプリ設定
   _J_WB_EXPERT_04 : スロット変数操作 (ポップオーバー & Dnd)
   _J_ORG_SEARCH_01 : ライブラリ検索・フィルタ・スクロール
-  _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみ
+  _J_WB_EXPERT_05 : 手札バー（HandBar）の最小化・折りたたみとスクロール
   _J_TUTORIAL_01 : インタラクティブチュートリアル
   _J_IO_MJ_DRAG_IN : Midjourney履歴ドラッグインポート & フィードバック
   _J_MINT_COLOR_FALLBACK : カラー抽出失敗時のフォールバック
@@ -41,6 +41,7 @@ stateDiagram-v2
   _J_WB_ATELIER_EFFECTS_01 : アトリエ釜と錬金演出
   _J_ORG_FOLDER_01 : フォルダ階層化管理（ドリルダウン・DnD移動）
   _J_ORGAN_UX_PARAM_01 : パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ）
+  _J_WB_MIXING_INTELLIGENT_01 : Midjourney sref/cref インテリジェントブレンド
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -66,6 +67,7 @@ stateDiagram-v2
   _J_WB_EXPERT_02 --> _J_WB_MIXING_WEIGHTS_01
   _J_WB_EXPERT_02 --> _J_WB_PORTION_EXTRACT_01
   _J_WB_EXPERT_02 --> _J_WB_ATELIER_EFFECTS_01
+  _J_WB_EXPERT_02 --> _J_WB_MIXING_INTELLIGENT_01
   _J_WB_EXPERT_03 --> _J_MINT_EXPERT_01
   _J_WB_EASY_01 --> _J_WB_EXPERT_01
   _J_IO_QR_IN --> _J_ORG_EXPERT_01
@@ -97,6 +99,7 @@ stateDiagram-v2
   _J_ORG_FOLDER_01 --> _J_ORG_EXPERT_01
   _J_ORGAN_UX_PARAM_01 --> _J_WB_EXPERT_01
   _J_ORGAN_UX_PARAM_01 --> _J_ORG_EXPERT_01
+  _J_WB_MIXING_INTELLIGENT_01 --> _J_WB_EXPERT_03
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -382,9 +385,9 @@ flowchart TD
   S4 --> S5
 ```
 
-### @J-WB-EXPERT-05: 手札バー（HandBar）の最小化・折りたたみ
+### @J-WB-EXPERT-05: 手札バー（HandBar）の最小化・折りたたみとスクロール
 
-画面の表示領域を確保するために手札バーを最小化し、必要に応じて展開する
+手札バーを最小化して表示領域を確保し、多数のカードがピン留めされた場合は縮小させずにスクロールバーと左右ボタンでスクロール操作する
 
 ```mermaid
 flowchart TD
@@ -395,6 +398,12 @@ flowchart TD
   S2 --> S3
   S4["手札バーが再展開される"]
   S3 --> S4
+  S5["多数のカードをピン留めする"]
+  S4 --> S5
+  S6["カードが縮小されずに横スクロール可能になることを確認する"]
+  S5 --> S6
+  S7["左右のスクロールボタンまたはスクロールバーでカードリストをスクロールする"]
+  S6 --> S7
 ```
 
 ### @J-TUTORIAL-01: インタラクティブチュートリアル
@@ -548,4 +557,15 @@ flowchart TD
   S2 --> S3
   S4["スタイルカードに適用されたパラメータエイリアスバッジが表示され、ホバー時にプレビュー（Tooltip）が表示されることを確認する"]
   S3 --> S4
+```
+
+### @J-WB-MIXING-INTELLIGENT-01: Midjourney sref/cref インテリジェントブレンド
+
+ワークベンチ上で複数カードの sref/cref URL とウェイトを統合的に加算・乗算マージする
+
+```mermaid
+flowchart TD
+  S1["異なる sref / cref とウェイトを持つ複数カードを Workbench に追加する"]
+  S2["インジェクションまたはプレビュー時に URL が統合され、ウェイトが加算マージされていることを確認する"]
+  S1 --> S2
 ```

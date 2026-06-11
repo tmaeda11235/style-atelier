@@ -1,6 +1,8 @@
 import {
   BookUp2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Layers,
   Trash2,
@@ -32,6 +34,10 @@ export function HandBar({
   const { pinnedCards, unpinCard, clearHand, mergeCards } = useHand()
   const { expertFeatures } = useSettings()
   const { t } = useLanguage()
+
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(false)
 
   // States for merging stack/cards
   const [isMergeOpen, setIsMergeOpen] = useState(false)
@@ -92,6 +98,35 @@ export function HandBar({
   const pinnedCardsDependency = pinnedCards
     .map((c) => `${c.id}-${c.updatedAt || 0}`)
     .join(",")
+
+  const checkScroll = () => {
+    const el = scrollRef.current
+    if (el) {
+      const { scrollLeft, scrollWidth, clientWidth } = el
+      setShowLeftArrow(scrollLeft > 1)
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1)
+    }
+  }
+
+  // Watch pinned cards and scroll positions to update arrow visibility
+  useEffect(() => {
+    checkScroll()
+  }, [pinnedCardsDependency])
+
+  // Watch scroll event and window resize
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) {
+      el.addEventListener("scroll", checkScroll)
+      window.addEventListener("resize", checkScroll)
+      const timer = setTimeout(checkScroll, 100)
+      return () => {
+        el.removeEventListener("scroll", checkScroll)
+        window.removeEventListener("resize", checkScroll)
+        clearTimeout(timer)
+      }
+    }
+  }, [pinnedCards.length])
 
   // Clamp pinned cards to maximum 1 if multiCard feature is disabled
   useEffect(() => {
@@ -250,45 +285,80 @@ export function HandBar({
             </div>
           )}
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {pinnedCards.map((card) => {
-            const config = RARITY_CONFIG[card.tier]
-            return (
-              <div
-                key={card.id}
-                onClick={() => onOpenDetailCard?.(card)}
-                className="cursor-pointer">
-                <CardThumbnail
-                  imageUrl={card.thumbnailData}
-                  thumbnailImages={card.selectedThumbnails}
-                  alt={card.name}
-                  tier={card.tier}
-                  size="sm"
-                  onDeleteClick={(e) => {
-                    e.stopPropagation()
-                    unpinCard(card.id)
-                  }}
-                  className={`flex-shrink-0 border-2 transition-all ${config.borderClass}`}
-                  draggable={true}
-                  onDragStart={(e) => {
-                    const text = buildPromptString(
-                      card.promptSegments,
-                      card.parameters
-                    )
-                    e.dataTransfer.setData("text/plain", text)
-                  }}
-                />
-              </div>
-            )
-          })}
-          {/* Action Button: To Workbench */}
-          <button
-            onClick={onNavigateToWorkbench}
-            className="flex-shrink-0 w-12 h-12 rounded-md border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-all bg-slate-50 dark:bg-slate-800/50"
-            title="Workbenchを開く"
-            data-testid="navigate-to-workbench-btn">
-            <BookUp2 className="w-5 h-5" />
-          </button>
+        <div className="relative group/scroll px-4">
+          {/* Left scroll button */}
+          {showLeftArrow && (
+            <button
+              onClick={() =>
+                scrollRef.current?.scrollBy({ left: -80, behavior: "smooth" })
+              }
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover/scroll:opacity-100 focus:opacity-100"
+              style={{ width: "20px", height: "20px" }}
+              title="左へスクロール"
+              data-testid="handbar-scroll-left-btn"
+              type="button">
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+          )}
+
+          <div
+            ref={scrollRef}
+            className="flex gap-2 overflow-x-auto pb-1.5 custom-scrollbar scroll-smooth"
+            onScroll={checkScroll}>
+            {pinnedCards.map((card) => {
+              const config = RARITY_CONFIG[card.tier]
+              return (
+                <div
+                  key={card.id}
+                  onClick={() => onOpenDetailCard?.(card)}
+                  className="cursor-pointer flex-shrink-0">
+                  <CardThumbnail
+                    imageUrl={card.thumbnailData}
+                    thumbnailImages={card.selectedThumbnails}
+                    alt={card.name}
+                    tier={card.tier}
+                    size="sm"
+                    onDeleteClick={(e) => {
+                      e.stopPropagation()
+                      unpinCard(card.id)
+                    }}
+                    className={`flex-shrink-0 border-2 transition-all ${config.borderClass}`}
+                    draggable={true}
+                    onDragStart={(e) => {
+                      const text = buildPromptString(
+                        card.promptSegments,
+                        card.parameters
+                      )
+                      e.dataTransfer.setData("text/plain", text)
+                    }}
+                  />
+                </div>
+              )
+            })}
+            {/* Action Button: To Workbench */}
+            <button
+              onClick={onNavigateToWorkbench}
+              className="flex-shrink-0 w-12 h-12 rounded-md border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-all bg-slate-50 dark:bg-slate-800/50"
+              title="Workbenchを開く"
+              data-testid="navigate-to-workbench-btn">
+              <BookUp2 className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Right scroll button */}
+          {showRightArrow && (
+            <button
+              onClick={() =>
+                scrollRef.current?.scrollBy({ left: 80, behavior: "smooth" })
+              }
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover/scroll:opacity-100 focus:opacity-100"
+              style={{ width: "20px", height: "20px" }}
+              title="右へスクロール"
+              data-testid="handbar-scroll-right-btn"
+              type="button">
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 

@@ -57,7 +57,7 @@ export function HistoryCard({
         URL.revokeObjectURL(objectUrl)
       }
     }
-  }, [item.localImageBlob, item.imageUrl, item.id])
+  }, [item.localImageBlob, item.imageUrl, item.id, onImageCached])
 
   return (
     <div

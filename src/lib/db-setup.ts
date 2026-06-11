@@ -22,7 +22,15 @@ export class StyleAtelierDatabaseBase extends Dexie {
 
   constructor() {
     super("StyleAtelierDatabase")
+    this.initializeVersions()
+  }
 
+  private initializeVersions() {
+    this.initializeVersions5To9()
+    this.initializeVersions10To13()
+  }
+
+  private initializeVersions5To9() {
     // Previous version
     this.version(5).stores({
       styleCards: "id, name, createdAt, tier, isFavorite, isPinned, jobId",
@@ -39,43 +47,7 @@ export class StyleAtelierDatabaseBase extends Dexie {
         userSettings: "userId",
         categories: "id, name, createdAt"
       })
-      .upgrade((tx) => {
-        const now = Date.now()
-        return tx
-          .table("categories")
-          .bulkAdd([
-            { id: "style", name: "Style", iconEmoji: "🎨", createdAt: now },
-            {
-              id: "character",
-              name: "Character",
-              iconEmoji: "👤",
-              createdAt: now
-            },
-            {
-              id: "landscape",
-              name: "Landscape",
-              iconEmoji: "🌲",
-              createdAt: now
-            },
-            {
-              id: "lighting",
-              name: "Lighting",
-              iconEmoji: "💡",
-              createdAt: now
-            },
-            { id: "camera", name: "Camera", iconEmoji: "📷", createdAt: now },
-            {
-              id: "abstract",
-              name: "Abstract",
-              iconEmoji: "🌀",
-              createdAt: now
-            },
-            { id: "other", name: "Other", iconEmoji: "📁", createdAt: now }
-          ])
-          .catch((err) => {
-            console.warn("Failed to seed default categories:", err)
-          })
-      })
+      .upgrade(upgradeToVersion6)
 
     // Version 7: Add associatedJobIds multiEntry index to styleCards
     this.version(7).stores({
@@ -105,7 +77,9 @@ export class StyleAtelierDatabaseBase extends Dexie {
       userSettings: "userId",
       categories: "id, name, createdAt, isDeleted"
     })
+  }
 
+  private initializeVersions10To13() {
     // Version 10: Compress existing large thumbnailData and category iconUrls using browser-image-compression
     this.version(10)
       .stores({
@@ -153,6 +127,44 @@ export class StyleAtelierDatabaseBase extends Dexie {
   }
 }
 
+export function upgradeToVersion6(tx: any) {
+  const now = Date.now()
+  return tx
+    .table("categories")
+    .bulkAdd([
+      { id: "style", name: "Style", iconEmoji: "🎨", createdAt: now },
+      {
+        id: "character",
+        name: "Character",
+        iconEmoji: "👤",
+        createdAt: now
+      },
+      {
+        id: "landscape",
+        name: "Landscape",
+        iconEmoji: "🌲",
+        createdAt: now
+      },
+      {
+        id: "lighting",
+        name: "Lighting",
+        iconEmoji: "💡",
+        createdAt: now
+      },
+      { id: "camera", name: "Camera", iconEmoji: "📷", createdAt: now },
+      {
+        id: "abstract",
+        name: "Abstract",
+        iconEmoji: "🌀",
+        createdAt: now
+      },
+      { id: "other", name: "Other", iconEmoji: "📁", createdAt: now }
+    ])
+    .catch((err: any) => {
+      console.warn("Failed to seed default categories:", err)
+    })
+}
+
 export function upgradeToVersion11(tx: any) {
   if (typeof window !== "undefined" && window.localStorage) {
     try {
@@ -196,45 +208,53 @@ export function upgradeToVersion8(tx: any) {
     })
 }
 
+async function compressCardThumbnail(card: any, cardsTable: any) {
+  if (card.thumbnailData && card.thumbnailData.startsWith("data:image/")) {
+    try {
+      const compressed = await createThumbnailDataUrl(card.thumbnailData)
+      if (compressed && compressed !== card.thumbnailData) {
+        card.thumbnailData = compressed
+        card.updatedAt = Date.now()
+        await cardsTable.put(card)
+      }
+    } catch (err) {
+      console.warn(
+        `Failed to compress card thumbnail in migration for card ${card.id}:`,
+        err
+      )
+    }
+  }
+}
+
+async function compressCategoryIcon(category: any, categoriesTable: any) {
+  if (category.iconUrl && category.iconUrl.startsWith("data:image/")) {
+    try {
+      const compressed = await createThumbnailDataUrl(category.iconUrl)
+      if (compressed && compressed !== category.iconUrl) {
+        category.iconUrl = compressed
+        category.updatedAt = Date.now()
+        await categoriesTable.put(category)
+      }
+    } catch (err) {
+      console.warn(
+        `Failed to compress category icon in migration for category ${category.id}:`,
+        err
+      )
+    }
+  }
+}
+
 export async function upgradeToVersion10(tx: any) {
   const cardsTable = tx.table("styleCards")
   const categoriesTable = tx.table("categories")
 
   const cards = await cardsTable.toArray()
   for (const card of cards) {
-    if (card.thumbnailData && card.thumbnailData.startsWith("data:image/")) {
-      try {
-        const compressed = await createThumbnailDataUrl(card.thumbnailData)
-        if (compressed && compressed !== card.thumbnailData) {
-          card.thumbnailData = compressed
-          card.updatedAt = Date.now()
-          await cardsTable.put(card)
-        }
-      } catch (err) {
-        console.warn(
-          `Failed to compress card thumbnail in migration for card ${card.id}:`,
-          err
-        )
-      }
-    }
+    await compressCardThumbnail(card, cardsTable)
   }
 
   const categories = await categoriesTable.toArray()
   for (const category of categories) {
-    if (category.iconUrl && category.iconUrl.startsWith("data:image/")) {
-      try {
-        const compressed = await createThumbnailDataUrl(category.iconUrl)
-        if (compressed && compressed !== category.iconUrl) {
-          category.iconUrl = compressed
-          category.updatedAt = Date.now()
-          await categoriesTable.put(category)
-        }
-      } catch (err) {
-        console.warn(
-          `Failed to compress category icon in migration for category ${category.id}:`,
-          err
-        )
-      }
-    }
+    await compressCategoryIcon(category, categoriesTable)
   }
 }
