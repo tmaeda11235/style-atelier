@@ -257,7 +257,7 @@ describe("LibraryTab", () => {
 
     const showMoreBtn = screen.getByTestId("show-more-button")
     expect(showMoreBtn).toBeDefined()
-    expect(showMoreBtn.textContent).toContain("もっと見る")
+    expect(showMoreBtn.textContent).toContain("さらに読み込む")
 
     fireEvent.click(showMoreBtn)
     expect(mockLoadMore).toHaveBeenCalled()
