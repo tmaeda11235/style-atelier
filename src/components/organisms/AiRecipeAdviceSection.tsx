@@ -22,6 +22,60 @@ interface ModelStatusOverlayProps {
   t: any
 }
 
+interface ModelDownloadingOverlayProps {
+  status: string
+  progress: number
+  t: any
+}
+
+const ModelDownloadingOverlay: React.FC<ModelDownloadingOverlayProps> = ({
+  status,
+  progress,
+  t
+}) => {
+  const pText =
+    status === "downloading"
+      ? `${t.webLlmStatusDownloading?.replace("{{progress}}", progress.toString()) || `Downloading ${progress}%`}`
+      : `${t.webLlmStatusVerifying || "Verifying model..."}`
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
+      <p className="font-semibold text-slate-600 dark:text-slate-400">
+        {pText}
+      </p>
+      {status === "downloading" && (
+        <div className="w-32 bg-slate-200 dark:bg-slate-800 rounded-full h-1 overflow-hidden mt-1">
+          <div
+            className="bg-indigo-500 h-1 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface ModelQuotaWarningOverlayProps {
+  t: any
+}
+
+const ModelQuotaWarningOverlay: React.FC<ModelQuotaWarningOverlayProps> = ({
+  t
+}) => {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <AlertTriangle className="w-5 h-5 text-amber-500" />
+      <p className="font-bold text-amber-600 dark:text-amber-500">
+        {t.webLlmQuotaWarningTitle || "Insufficient Space"}
+      </p>
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs text-center">
+        {t.webLlmQuotaWarningDesc ||
+          "At least 1.5 GB of free space is required."}
+      </p>
+    </div>
+  )
+}
+
 const ModelStatusOverlay: React.FC<ModelStatusOverlayProps> = ({
   status,
   progress,
@@ -32,41 +86,11 @@ const ModelStatusOverlay: React.FC<ModelStatusOverlayProps> = ({
     status === "checking" || status === "downloading" || status === "verifying"
 
   if (isDownloading) {
-    const pText =
-      status === "downloading"
-        ? `${t.webLlmStatusDownloading?.replace("{{progress}}", progress.toString()) || `Downloading ${progress}%`}`
-        : `${t.webLlmStatusVerifying || "Verifying model..."}`
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
-        <p className="font-semibold text-slate-600 dark:text-slate-400">
-          {pText}
-        </p>
-        {status === "downloading" && (
-          <div className="w-32 bg-slate-200 dark:bg-slate-800 rounded-full h-1 overflow-hidden mt-1">
-            <div
-              className="bg-indigo-500 h-1 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-      </div>
-    )
+    return <ModelDownloadingOverlay status={status} progress={progress} t={t} />
   }
 
   if (status === "insufficient-quota") {
-    return (
-      <div className="flex flex-col items-center gap-1.5">
-        <AlertTriangle className="w-5 h-5 text-amber-500" />
-        <p className="font-bold text-amber-600 dark:text-amber-500">
-          {t.webLlmQuotaWarningTitle || "Insufficient Space"}
-        </p>
-        <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs text-center">
-          {t.webLlmQuotaWarningDesc ||
-            "At least 1.5 GB of free space is required."}
-        </p>
-      </div>
-    )
+    return <ModelQuotaWarningOverlay t={t} />
   }
 
   return (
