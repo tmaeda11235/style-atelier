@@ -245,7 +245,8 @@ export default ts.config(
       "src/components/organisms/MintingView.tsx",
       "src/components/organisms/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx"
+      "src/components/organisms/InteractiveTutorial.tsx",
+      "src/components/organisms/WebLlmSettingsSection.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [

@@ -102,7 +102,7 @@ function WebLlmSettingsContent({
         status={status}
         statusColorClass={disp.colorClass}
         statusText={disp.text}
-        label={t.webLlmStatusLabel || "Status"}
+        label={t.webLlmStatusLabel}
       />
 
       {status === "downloading" && (
