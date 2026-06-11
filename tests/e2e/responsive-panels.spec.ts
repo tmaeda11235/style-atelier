@@ -33,16 +33,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
       .nth(1)
     await expect(mockCardInHand).toBeVisible({ timeout: 10000 })
     await mockCardInHand.click({ force: true })
-    await page.waitForTimeout(500)
-
-    // 3. Switch to Workbench tab
     console.log("Switching to Workbench tab...")
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await expect(workbenchTabButton).toBeVisible({ timeout: 10000 })
     await workbenchTabButton.click()
-    await page.waitForTimeout(500)
-
-    // 4. Locate the parameter editor toggle
     const toggleBtn = spFrame.locator("[data-testid='parameter-editor-toggle']")
     await expect(toggleBtn).toBeVisible({ timeout: 10000 })
 
@@ -53,9 +47,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     // 5. Click to collapse ParameterEditor accordion
     console.log("Collapsing ParameterEditor accordion...")
     await toggleBtn.click()
-    await page.waitForTimeout(500)
-
-    // Now fields should not be visible
     await expect(customArInput).not.toBeVisible()
 
     // Capture screenshot of collapsed state
@@ -67,7 +58,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     // 6. Click to expand ParameterEditor accordion again
     console.log("Expanding ParameterEditor accordion again...")
     await toggleBtn.click()
-    await page.waitForTimeout(500)
     await expect(customArInput).toBeVisible()
 
     // Capture screenshot of expanded state
@@ -93,7 +83,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
         iframe.style.width = "250px"
       }
     })
-    await page.waitForTimeout(1000) // wait for CSS transitions/rendering
 
     // Verify text is now hidden (display: none via container query)
     await expect(btnText).not.toBeVisible()
@@ -108,9 +97,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     console.log("Hovering over button to test CSS tooltip...")
     const btnWrapper = spFrame.locator(".responsive-btn-wrapper").last()
     await btnWrapper.hover()
-    await page.waitForTimeout(500)
-
-    // Capture tooltip screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "parameter-editor-narrow-tooltip.png")
     })

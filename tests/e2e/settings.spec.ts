@@ -76,16 +76,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
     await expect(cloudAccordionHeader).toBeVisible()
     await cloudAccordionHeader.click()
-    await page.waitForTimeout(300)
 
     const maintenanceAccordionHeader = spFrame.locator(
       "#settings-accordion-maintenance"
     )
     await expect(maintenanceAccordionHeader).toBeVisible()
     await maintenanceAccordionHeader.click()
-    await page.waitForTimeout(300)
-
-    // 3. Verify Sync and Force Recovery UI is visible
     const syncBtn = spFrame.locator("#google-drive-sync-btn")
     const forceRecoveryBtn = spFrame.locator("#force-recovery-btn")
     await expect(syncBtn).toBeVisible({ timeout: 10000 })
@@ -378,9 +374,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
     await expect(cloudAccordionHeader).toBeVisible()
     await cloudAccordionHeader.click()
-    await page.waitForTimeout(300)
-
-    // Enable Google Drive synchronization
     const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
     await toggleBtn.click()
 
@@ -421,12 +414,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
         thumbnailData: ""
       })
     })
-
     // Wait for the debounced upload call to happen (100ms debounce + some network overhead)
-    await page.waitForTimeout(500)
-
-    // Verify upload was triggered automatically
-    expect(uploadCallCount).toBeGreaterThan(0)
+    await expect(async () => {
+      expect(uploadCallCount).toBeGreaterThan(0)
+    }).toPass({ timeout: 5000 })
     console.log("Auto-backup triggered successfully upon DB changes!")
   })
 
@@ -461,9 +452,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 5. Toggle Easy Mode to ON
     console.log("Enabling Easy Mode...")
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // 6. Verify tabs are hidden and Library title is displayed
     const libraryTitle = spFrame.locator("span:has-text('Library')")
     await expect(libraryTitle).toBeVisible({ timeout: 10000 })
     await expect(historyTabBtn).not.toBeVisible()
@@ -476,14 +464,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // 8. Re-open settings via header settings button
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 9. Toggle Easy Mode to OFF
     console.log("Disabling Easy Mode...")
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // 10. Verify typical tabs are restored (e.g. History tab visible)
     await expect(historyTabBtn).toBeVisible({ timeout: 10000 })
 
     // 11. Save screenshot of restored standard mode
@@ -541,12 +523,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const categoriesToggle = spFrame.locator("#expert-feature-categories-btn")
     await slotToggle.click()
     await categoriesToggle.click()
-    await page.waitForTimeout(500)
-
-    // 6. Navigate to Library tab and verify Category bar is hidden
     const libraryTabBtn = spFrame.locator("nav button:has-text('Library')")
     await libraryTabBtn.click()
-    await page.waitForTimeout(500)
 
     const categoryRow = spFrame.locator("text=Manage Categories")
     await expect(categoryRow).not.toBeVisible()
@@ -554,7 +532,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 7. Verify SlotVariablesSection (e.g. text 'Slot Variables') is not visible on Workbench tab
     const workbenchTabBtn = spFrame.locator("nav button:has-text('Workbench')")
     await workbenchTabBtn.click()
-    await page.waitForTimeout(500)
 
     const slotVariablesTitle = spFrame.locator("text=Slot Variables")
     await expect(slotVariablesTitle).not.toBeVisible()
@@ -598,18 +575,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Locate Language selector
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
 
     // 4. Switch to English
     console.log("Switching language to English...")
     await langSelect.selectOption("en")
-    await page.waitForTimeout(500)
-
-    // Verify UI has changed to English (Settings title should be "Settings")
     const settingsTitleEn = spFrame.locator("h2:has-text('Settings')")
     await expect(settingsTitleEn).toBeVisible({ timeout: 5000 })
 
@@ -619,7 +590,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     )
     await expect(maintenanceAccordionHeaderEn).toBeVisible()
     await maintenanceAccordionHeaderEn.click()
-    await page.waitForTimeout(300)
 
     const resetBtnEn = spFrame.locator("#reset-db-btn")
     await expect(resetBtnEn).toHaveText("Reset Database")
@@ -632,21 +602,18 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // A. History Tab empty title
     const historyNavBtn = spFrame.locator("nav button").nth(0)
     await historyNavBtn.click()
-    await page.waitForTimeout(300)
     const historyEmptyEn = spFrame.locator("h3:has-text('No History')")
     await expect(historyEmptyEn).toBeVisible()
 
     // B. Library Tab empty title
     const libraryNavBtn = spFrame.locator("nav button").nth(1)
     await libraryNavBtn.click()
-    await page.waitForTimeout(300)
     const libraryEmptyEn = spFrame.locator("h3:has-text('No Style Cards')")
     await expect(libraryEmptyEn).toBeVisible()
 
     // C. Workbench Tab empty title
     const workbenchNavBtn = spFrame.locator("[data-tutorial='workbench-tab']")
     await workbenchNavBtn.click()
-    await page.waitForTimeout(300)
     const workbenchEmptyEn = spFrame.locator(
       "h3:has-text('Workbench is Empty')"
     )
@@ -654,9 +621,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // Go back to Settings
     await settingsNavBtn.click()
-    await page.waitForTimeout(300)
-
-    // Capture English Settings screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "settings-lang-en.png")
     })
@@ -664,9 +628,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 5. Switch to Japanese
     console.log("Switching language to Japanese...")
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // Verify UI has changed to Japanese (Settings title should be "設定")
     const settingsTitleJa = spFrame.locator("h2:has-text('設定')")
     await expect(settingsTitleJa).toBeVisible({ timeout: 5000 })
 
@@ -676,7 +637,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     )
     await expect(maintenanceAccordionHeaderJa).toBeVisible()
     await maintenanceAccordionHeaderJa.click()
-    await page.waitForTimeout(300)
 
     const resetBtnJa = spFrame.locator("#reset-db-btn")
     await expect(resetBtnJa).toHaveText("データベースをリセット")
@@ -686,13 +646,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // Verify Tab Japanese translations:
     // A. History Tab empty title
     await historyNavBtn.click()
-    await page.waitForTimeout(300)
     const historyEmptyJa = spFrame.locator("h3:has-text('履歴がありません')")
     await expect(historyEmptyJa).toBeVisible()
 
     // B. Library Tab empty title
     await libraryNavBtn.click()
-    await page.waitForTimeout(300)
     const libraryEmptyJa = spFrame.locator(
       "h3:has-text('スタイルカードがありません')"
     )
@@ -700,7 +658,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // C. Workbench Tab empty title
     await workbenchNavBtn.click()
-    await page.waitForTimeout(300)
     const workbenchEmptyJa = spFrame.locator(
       "h3:has-text('Workbench は空です')"
     )
@@ -708,9 +665,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // Go back to Settings
     await settingsNavBtn.click()
-    await page.waitForTimeout(300)
-
-    // Capture Japanese Settings screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "settings-lang-ja.png")
     })
@@ -739,24 +693,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
 
     console.log("Switching language to English...")
     await langSelect.selectOption("en")
-    await page.waitForTimeout(500)
-
-    // 3. Click Guide button in header to trigger tutorial
     const guideBtn = spFrame.locator(
       "button[title='Show Guide'], button[title='ガイドを表示']"
     )
     await expect(guideBtn).toBeVisible()
     await guideBtn.click()
-    await page.waitForTimeout(500)
-
-    // 4. Verify InteractiveTutorial displays English texts
     const tutorialHeader = spFrame.locator("text=Step 1 / 8")
     await expect(tutorialHeader).toBeVisible({ timeout: 5000 })
     const tutorialTitleEn = spFrame.locator("text=1. Drag & Drop into History")
@@ -781,22 +728,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     )
     await expect(closeTutorialBtn).toBeVisible()
     await closeTutorialBtn.click()
-    await page.waitForTimeout(500)
-
-    // Reopen Settings tab to show language selector again
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 6. Switch language to Japanese in Settings Tab
     console.log("Switching language to Japanese...")
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // 7. Click Guide button again
     await guideBtn.click()
-    await page.waitForTimeout(500)
-
-    // 8. Verify InteractiveTutorial displays Japanese texts
     const tutorialTitleJa = spFrame.locator("text=① HistoryにD&Dする")
     await expect(tutorialTitleJa).toBeVisible({ timeout: 5000 })
     const nextBtnJa = spFrame.locator(
@@ -837,16 +772,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Locate Reset DB button (Danger Zone)
     // Expand Maintenance section first
     const maintenanceAccordionHeader = spFrame.locator(
       "#settings-accordion-maintenance"
     )
     await expect(maintenanceAccordionHeader).toBeVisible()
     await maintenanceAccordionHeader.click()
-    await page.waitForTimeout(300)
 
     const resetDbBtn = spFrame.locator("#reset-db-btn")
     await resetDbBtn.scrollIntoViewIfNeeded()
@@ -855,9 +786,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 4. Click Reset DB button to open the custom confirm dialog
     console.log("Clicking Reset DB button...")
     await resetDbBtn.click()
-    await page.waitForTimeout(500)
-
-    // 5. Verify custom confirm dialog is visible
     const dialogContainer = spFrame.locator("#confirmation-dialog-container")
     await expect(dialogContainer).toBeVisible()
 
@@ -871,14 +799,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const cancelBtn = spFrame.locator("#confirm-dialog-cancel-btn")
     await expect(cancelBtn).toBeVisible()
     await cancelBtn.click()
-    await page.waitForTimeout(300)
-
-    // Verify dialog is closed
     await expect(dialogContainer).not.toBeVisible()
 
     // 7. Click Reset DB button again
     await resetDbBtn.click()
-    await page.waitForTimeout(500)
     await expect(dialogContainer).toBeVisible()
 
     // 8. Click Confirm on the custom confirm dialog
@@ -887,7 +811,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await confirmBtn.click()
 
     // Verify reset success log or status
-    await page.waitForTimeout(1000)
     console.log("Custom confirm dialog E2E test passed successfully!")
   })
 
@@ -910,9 +833,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Verify UI Preferences is expanded by default (Language selection is visible)
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
 
@@ -924,18 +844,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     console.log("Expanding Cloud Backup & Sync accordion...")
     const cloudHeader = spFrame.locator("text=Cloud Backup & Sync")
     await cloudHeader.click()
-    await page.waitForTimeout(300)
-
-    // Verify Google Drive Toggle is now visible
     await expect(gdToggle).toBeVisible()
 
     // 5. Click 'UI Preferences' accordion header to collapse it
     console.log("Collapsing UI Preferences accordion...")
     const uiHeader = spFrame.locator("text=UI Preferences")
     await uiHeader.click()
-    await page.waitForTimeout(300)
-
-    // Verify Language selection is now hidden
     await expect(langSelect).not.toBeVisible()
 
     // 6. Capture screenshot of collapsed/expanded accordion states
@@ -966,27 +880,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Enable Easy Mode
     const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
     await easyModeToggle.click()
-    await page.waitForTimeout(500)
-
-    // Re-open settings tab in Easy Mode since switching mode redirects to library
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 4. Verify 'Back to Library' link is visible
     const backToLibBtn = spFrame.locator("#back-to-library-btn")
     await expect(backToLibBtn).toBeVisible()
 
     // 5. Click 'Back to Library' link
     console.log("Navigating back to library using direct link...")
     await backToLibBtn.click()
-    await page.waitForTimeout(500)
-
-    // 6. Verify tab is switched to library (Check Search tag input or search placeholder)
     const searchField = spFrame.locator("input[placeholder*='Search by']")
     await expect(searchField).toBeVisible()
 
@@ -1021,9 +923,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Set last backup time to 61 days ago in localStorage
     await spFrame.locator("body").evaluate(() => {
       const sixtyOneDaysAgo = Date.now() - 61 * 24 * 60 * 60 * 1000
       localStorage.setItem(
@@ -1035,21 +934,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 4. Expand Cloud Backup & Sync accordion
     const cloudHeader = spFrame.locator("text=Cloud Backup & Sync")
     await cloudHeader.click()
-    await page.waitForTimeout(300)
-
-    // 5. Enable Google Drive synchronization
     const gdToggle = spFrame.locator("#google-drive-toggle-btn")
     await expect(gdToggle).toBeVisible()
     await gdToggle.click()
-    await page.waitForTimeout(500)
-
-    // 6. Click sync button
     const syncBtn = spFrame.locator("#google-drive-sync-btn")
     await expect(syncBtn).toBeVisible()
     await syncBtn.click()
-    await page.waitForTimeout(500)
-
-    // 7. Verify warning dialog is visible
     const warningDialog = spFrame.locator("#sync-strategy-dialog-container")
     await expect(warningDialog).toBeVisible()
 
@@ -1070,20 +960,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 10. Test Cancel button
     const cancelBtn = spFrame.locator("#sync-strategy-dialog-cancel-btn")
     await cancelBtn.click()
-    await page.waitForTimeout(300)
     await expect(warningDialog).not.toBeVisible()
 
     // 11. Click sync button again, select local overwrite and proceed
     await syncBtn.click()
-    await page.waitForTimeout(500)
     await expect(warningDialog).toBeVisible()
 
     await localOption.click()
     const confirmBtn = spFrame.locator("#sync-strategy-dialog-ok-btn")
     await confirmBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify dialog closes after confirmation
     await expect(warningDialog).not.toBeVisible()
     console.log("Sync strategy warning E2E test passed successfully!")
   })
@@ -1107,9 +992,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // 3. Locate Theme selector
     const themeSelect = spFrame.locator("#theme-select")
     await expect(themeSelect).toBeVisible()
     await expect(themeSelect).toHaveValue("system")
@@ -1117,9 +999,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 4. Switch to dark mode
     console.log("Switching theme to dark mode...")
     await themeSelect.selectOption("dark")
-    await page.waitForTimeout(500)
-
-    // Verify dark class is applied to html element inside the frame
     const isDarkClassApplied = await spFrame
       .locator("html")
       .evaluate((el) => el.classList.contains("dark"))
@@ -1135,9 +1014,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     console.log("Navigating to Workbench to verify dark mode styling...")
     const workbenchNavBtn = spFrame.locator("[data-tutorial='workbench-tab']")
     await workbenchNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Check Workbench container text color / background color in dark mode
     const workbenchContainer = spFrame.locator(
       "div.flex.flex-col.h-full.bg-white"
     )
@@ -1153,9 +1029,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // Switch back to Settings tab to continue the test
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify dark mode hover background behavior on Settings Tab buttons (Issue #570)
     console.log(
       "Verifying dark mode hover background color and sticky prevention..."
     )
@@ -1166,37 +1039,24 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const initialBgColor = await uiAccordionBtn.evaluate((el) => {
       return window.getComputedStyle(el).backgroundColor
     })
-    console.log(
-      `Accordion button initial background in dark mode: ${initialBgColor}`
-    )
 
     // Hover the button
     await uiAccordionBtn.hover()
-    await page.waitForTimeout(200) // wait for transition
-
-    const hoverBgColor = await uiAccordionBtn.evaluate((el) => {
-      return window.getComputedStyle(el).backgroundColor
-    })
-    console.log(
-      `Accordion button hover background in dark mode: ${hoverBgColor}`
-    )
-
-    // The background should change on hover
-    expect(hoverBgColor).not.toBe(initialBgColor)
+    await expect(async () => {
+      const currentBg = await uiAccordionBtn.evaluate((el) => {
+        return window.getComputedStyle(el).backgroundColor
+      })
+      expect(currentBg).not.toBe(initialBgColor)
+    }).toPass({ timeout: 5000 })
 
     // Unhover the button by moving mouse away
     await page.mouse.move(0, 0)
-    await page.waitForTimeout(200) // wait for transition
-
-    const postHoverBgColor = await uiAccordionBtn.evaluate((el) => {
-      return window.getComputedStyle(el).backgroundColor
-    })
-    console.log(
-      `Accordion button post-hover background in dark mode: ${postHoverBgColor}`
-    )
-
-    // Background color should return to initial (no sticky behavior)
-    expect(postHoverBgColor).toBe(initialBgColor)
+    await expect(async () => {
+      const currentBg = await uiAccordionBtn.evaluate((el) => {
+        return window.getComputedStyle(el).backgroundColor
+      })
+      expect(currentBg).toBe(initialBgColor)
+    }).toPass({ timeout: 5000 })
 
     // Take Dark theme screenshot
     await page.screenshot({
@@ -1206,9 +1066,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 5. Switch to light mode
     console.log("Switching theme to light mode...")
     await themeSelect.selectOption("light")
-    await page.waitForTimeout(500)
-
-    // Verify dark class is removed from html element inside the frame
     const isDarkClassAppliedAfterLight = await spFrame
       .locator("html")
       .evaluate((el) => el.classList.contains("dark"))
@@ -1228,9 +1085,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 6. Switch back to system mode
     console.log("Switching theme back to system mode...")
     await themeSelect.selectOption("system")
-    await page.waitForTimeout(500)
-
-    // Verify localStorage has system
     const localStorageThemeSystem = await spFrame
       .locator("body")
       .evaluate(() => localStorage.getItem("style-atelier-theme"))
@@ -1258,15 +1112,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Expand Local AI Model (WebLLM) accordion
     const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
     await expect(webLlmAccordionHeader).toBeVisible()
     await webLlmAccordionHeader.click()
-    await page.waitForTimeout(300)
-
-    // 3. Verify initial status (Not Downloaded / 未ダウンロード)
     const downloadBtn = spFrame.locator(
       "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
     )
@@ -1293,9 +1141,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 6. Click Delete Cache button
     console.log("Clicking Delete Cache button...")
     await purgeBtn.click()
-    await page.waitForTimeout(500)
-
-    // 7. Verify confirmation dialog is visible
     const dialogContainer = spFrame.locator("#confirmation-dialog-container")
     await expect(dialogContainer).toBeVisible()
 
@@ -1307,9 +1152,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const confirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
     await expect(confirmBtn).toBeVisible()
     await confirmBtn.click()
-    await page.waitForTimeout(500)
-
-    // 9. Verify state goes back to Not Downloaded
     await expect(downloadBtn).toBeVisible()
     console.log("WebLLM E2E test passed successfully!")
   })
@@ -1333,9 +1175,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify Easy Mode section header tooltip is visible
     const easyModeTooltipTrigger = spFrame
       .locator("[data-testid='help-tooltip-trigger']")
       .first()
@@ -1343,9 +1182,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
 
     // Hover to trigger tooltip content
     await easyModeTooltipTrigger.hover()
-    await page.waitForTimeout(300)
-
-    // Capture screenshot of settings tab showing the tooltip
     await page.screenshot({
       path: path.join(screenshotsDir, "settings-tooltip-hover.png")
     })

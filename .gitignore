@@ -42,3 +42,6 @@ dist/
 /reports/
 /.stryker-tmp/
 .stryker-tmp/
+
+# general artifacts
+/artifacts/

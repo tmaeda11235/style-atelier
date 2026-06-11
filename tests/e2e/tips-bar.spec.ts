@@ -45,7 +45,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Tips Bar @J-SYS-03", () => {
     const nextBtn = spFrame.locator("#next-tip-btn")
     await expect(nextBtn).toBeVisible()
     await nextBtn.click()
-    await page.waitForTimeout(500)
 
     const newText = await tipText.innerText()
     console.log(`New tip text after click: "${newText}"`)
@@ -55,9 +54,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Tips Bar @J-SYS-03", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Capture screenshot of settings tab showing Tips Bar section
     await page.screenshot({
       path: path.join(screenshotsDir, "tips-bar-settings-toggle.png")
     })
@@ -67,24 +63,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Tips Bar @J-SYS-03", () => {
     const tipsToggleBtn = spFrame.locator("#tips-bar-toggle-btn")
     await expect(tipsToggleBtn).toBeVisible()
     await tipsToggleBtn.click()
-    await page.waitForTimeout(500)
-
-    // 5. Verify Tips Bar is hidden
     await expect(tipsBar).not.toBeVisible()
 
     // Toggle on again
     await tipsToggleBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify Tips Bar is back
     await expect(tipsBar).toBeVisible()
 
     // 6. Resize viewport to narrow width (e.g., 320px) to verify responsive wrap
     console.log("Resizing viewport to narrow width (320px)...")
     await page.setViewportSize({ width: 320, height: 600 })
-    await page.waitForTimeout(500)
-
-    // Verify Tips Bar is still visible
     await expect(tipsBar).toBeVisible()
     await expect(tipText).toBeVisible()
 

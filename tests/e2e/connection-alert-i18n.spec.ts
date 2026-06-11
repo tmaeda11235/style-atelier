@@ -66,9 +66,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     )
     await expect(libraryNavBtn).toBeVisible()
     await libraryNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // Wait for the seeded card to appear in the Library list
     const cardEl = spFrame.locator("text=Neon Forest").first()
     await expect(cardEl).toBeVisible()
 
@@ -77,9 +74,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await cardEl.hover()
     await expect(editBtn).toBeVisible()
     await editBtn.click()
-    await page.waitForTimeout(500)
-
-    // Mock chrome.tabs.sendMessage to throw "Could not establish connection"
     await spFrame.locator("body").evaluate(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
@@ -99,9 +93,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     const applyBtn = spFrame.locator("button:has-text('Inject')")
     await expect(applyBtn).toBeVisible()
     await applyBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify Disconnected Alert in English
     const disconnTitleEn = spFrame.locator("p:has-text('Connection Lost')")
     await expect(disconnTitleEn).toBeVisible()
     await expect(
@@ -123,9 +114,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     const dismissBtn = spFrame.locator("button[title='Dismiss']")
     await expect(dismissBtn).toBeVisible()
     await dismissBtn.click()
-    await page.waitForTimeout(500)
-
-    // Mock chrome.tabs.sendMessage to return a "Could not find chat input" error response
     await spFrame.locator("body").evaluate(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
@@ -139,9 +127,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
 
     // Click Apply button again
     await applyBtn.click()
-    await page.waitForTimeout(500)
-
-    // Verify No Input Alert in English
     const noInputTitleEn = spFrame.locator("p:has-text('Input Not Found')")
     await expect(noInputTitleEn).toBeVisible()
     await expect(
@@ -159,38 +144,24 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
 
     // Dismiss Alert and close detail view
     await dismissBtn.click()
-    await page.waitForTimeout(500)
     await spFrame.locator("button:has-text('Cancel')").click()
-    await page.waitForTimeout(500)
-
-    // --- Switch to Japanese (ja) ---
     console.log("Switching language to Japanese...")
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible()
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // Go back to Library
     libraryNavBtn = spFrame.locator(
       "button[title='Library'], button[title='ライブラリ']"
     )
     await expect(libraryNavBtn).toBeVisible()
     await libraryNavBtn.click()
-    await page.waitForTimeout(500)
-
-    // --- Japanese Mode Verification ---
     console.log("Verifying Japanese Alerts...")
     await cardEl.hover()
     await expect(editBtn).toBeVisible()
     await editBtn.click()
-    await page.waitForTimeout(500)
-
-    // Mock chrome.tabs.sendMessage to throw "Could not establish connection"
     await spFrame.locator("body").evaluate(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
@@ -203,9 +174,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     const applyBtnJa = spFrame.locator("button:has-text('適用')")
     await expect(applyBtnJa).toBeVisible()
     await applyBtnJa.click()
-    await page.waitForTimeout(500)
-
-    // Verify Disconnected Alert in Japanese
     const disconnTitleJa = spFrame.locator("p:has-text('接続が切断されました')")
     await expect(disconnTitleJa).toBeVisible()
     await expect(
@@ -223,9 +191,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
 
     // Dismiss Alert
     await dismissBtn.click()
-    await page.waitForTimeout(500)
-
-    // Mock chrome.tabs.sendMessage to return a "Could not find chat input" error response
     await spFrame.locator("body").evaluate(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
@@ -239,9 +204,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
 
     // Click Apply (適用) button again
     await applyBtnJa.click()
-    await page.waitForTimeout(500)
-
-    // Verify No Input Alert in Japanese
     const noInputTitleJa = spFrame
       .locator("p:has-text('入力エリアが見つかりません')")
       .first()
@@ -263,8 +225,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
 
     // Dismiss Alert and close detail view
     await dismissBtn.click()
-    await page.waitForTimeout(500)
     await spFrame.locator("button:has-text('キャンセル')").click()
-    await page.waitForTimeout(500)
   })
 })

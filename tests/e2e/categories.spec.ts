@@ -45,7 +45,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         console.log("Clicking skip button...")
         await skipButton.click()
-        await page.waitForTimeout(500)
       }
 
       // 2. Libraryタブに切り替え
@@ -53,7 +52,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       const libraryTabButton = spFrame.locator("button:has-text('Library')")
       await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
       await libraryTabButton.click()
-      await page.waitForTimeout(1000) // Wait for Dexie queries to load style cards and categories
 
       // Expand filters accordion
       const filterToggleBtn = spFrame
@@ -61,18 +59,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
         .first()
       await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
       await filterToggleBtn.click()
-      await page.waitForTimeout(500)
-
-      // 3. タグボタン（Manage Categories）をクリックしてモーダルを開く
       console.log("4. Opening category modal...")
       const addCategoryBtn = spFrame.locator(
         "button[title='Manage Categories']"
       )
       await expect(addCategoryBtn).toBeVisible({ timeout: 15000 })
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
-
-      // 4. モーダルの入力フィールドに入力してカスタムカテゴリを作成
       console.log("5. Creating new category...")
       const nameInput = spFrame.locator(
         "input[placeholder='e.g. Cyberpunk, Retro']"
@@ -85,7 +77,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
 
       const submitBtn = spFrame.locator("button:has-text('Create Category')")
       await submitBtn.click()
-      await page.waitForTimeout(1000) // Wait for category to be added to IndexedDB and UI to update
 
       // 5. 新しいカテゴリフィルターボタンがLibraryタブに追加されたか確認
       console.log("6. Verifying category filter button added...")
@@ -97,16 +88,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       // 6. 再び "+" ボタンをクリックして管理モーダルを開く
       console.log("7. Re-opening category modal...")
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
-
-      // 7. 「Manage Categories」タブに切り替え
       console.log("8. Switching to Manage Categories tab...")
       const manageTabBtn = spFrame.locator(
         "button:has-text('Manage Categories')"
       )
       await expect(manageTabBtn).toBeVisible({ timeout: 10000 })
       await manageTabBtn.click()
-      await page.waitForTimeout(1000) // Wait for categories list to load
 
       // 8. 作成したカスタムカテゴリが表示されているか確認
       console.log("9. Verifying category row exists...")
@@ -122,14 +109,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
         .first()
       await expect(editBtn).toBeVisible({ timeout: 10000 })
       await editBtn.click()
-      await page.waitForTimeout(500)
-
-      // 10. 名前の変更と保存
       console.log("11. Changing name and saving...")
       await nameInput.fill("E2E Category Edited")
       const saveBtn = spFrame.locator("button:has-text('Save Changes')")
       await saveBtn.click()
-      await page.waitForTimeout(1000) // Wait for DB write and UI update
 
       // 11. 変更したカテゴリ名がフィルター行に表示されているか確認
       console.log("12. Verifying edited category filter button...")
@@ -145,23 +128,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
         .first()
       await expect(deleteBtn).toBeVisible({ timeout: 10000 })
       await deleteBtn.click()
-      await page.waitForTimeout(500)
-
-      // 13. カスタム確認ダイアログの操作
       console.log("14. Handling custom confirmation dialog...")
       const confirmOkBtn = spFrame.locator("#confirm-dialog-ok-btn")
       await expect(confirmOkBtn).toBeVisible({ timeout: 10000 })
       await confirmOkBtn.click()
-      await page.waitForTimeout(1000)
-
-      // 14. モーダルを閉じる
       console.log("15. Closing category modal...")
       const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
       await expect(closeBtn).toBeVisible({ timeout: 10000 })
       await closeBtn.click()
-      await page.waitForTimeout(500)
-
-      // 14. フィルター行からカテゴリが消えたことを確認
       console.log("16. Verifying category filter is deleted...")
       await expect(editedCategoryFilterBtn).not.toBeVisible({ timeout: 15000 })
 
@@ -204,7 +178,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       const skipButton = spFrame.locator("#welcome-skip-btn")
       if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         await skipButton.click()
-        await page.waitForTimeout(500)
       }
 
       // Switch to Library tab
@@ -212,26 +185,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       const libraryTabButton = spFrame.locator("button:has-text('Library')")
       await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
       await libraryTabButton.click()
-      await page.waitForTimeout(1000)
-
-      // Expand filters accordion
       const filterToggleBtn = spFrame
         .locator("[data-testid='toggle-filters-btn']")
         .first()
       await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
       await filterToggleBtn.click()
-      await page.waitForTimeout(500)
-
-      // Open Category Modal
       console.log("4. Opening category modal...")
       const addCategoryBtn = spFrame.locator(
         "button[title='Manage Categories']"
       )
       await expect(addCategoryBtn).toBeVisible({ timeout: 15000 })
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
-
-      // Fill Name
       console.log("5. Filling category name...")
       const nameInput = spFrame.locator(
         "input[placeholder='e.g. Cyberpunk, Retro']"
@@ -253,9 +217,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       console.log("7. Creating category...")
       const submitBtn = spFrame.locator("button:has-text('Create Category')")
       await submitBtn.click()
-      await page.waitForTimeout(1000)
-
-      // Verify category filter button added with the complex emoji
       console.log("8. Verifying category filter button with emoji...")
       const newCategoryFilterBtn = spFrame.locator(
         "button:has-text('Mage Category')"
@@ -277,14 +238,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       // Cleanup: delete the category
       console.log("9. Re-opening category modal to delete...")
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
 
       const manageTabBtn = spFrame.locator(
         "button:has-text('Manage Categories')"
       )
       await expect(manageTabBtn).toBeVisible({ timeout: 10000 })
       await manageTabBtn.click()
-      await page.waitForTimeout(1000)
 
       console.log("10. Clicking Delete Category button...")
       const deleteBtn = spFrame
@@ -292,20 +251,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
         .first()
       await expect(deleteBtn).toBeVisible({ timeout: 10000 })
       await deleteBtn.click()
-      await page.waitForTimeout(500)
-
-      // Handling custom confirmation dialog
       console.log("11. Handling custom confirmation dialog...")
       const confirmOkBtn = spFrame.locator("#confirm-dialog-ok-btn")
       await expect(confirmOkBtn).toBeVisible({ timeout: 10000 })
       await confirmOkBtn.click()
-      await page.waitForTimeout(1000)
-
-      // Close modal
       const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
       await expect(closeBtn).toBeVisible({ timeout: 10000 })
       await closeBtn.click()
-      await page.waitForTimeout(500)
     } catch (error) {
       console.error(
         "Emoji category E2E test failed, capturing failure screenshot..."
@@ -343,26 +295,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       const libraryTabButton = spFrame.locator("button:has-text('Library')")
       await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
       await libraryTabButton.click()
-      await page.waitForTimeout(1000)
-
-      // Expand filters accordion
       const filterToggleBtn = spFrame
         .locator("[data-testid='toggle-filters-btn']")
         .first()
       await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
       await filterToggleBtn.click()
-      await page.waitForTimeout(500)
-
-      // Open Category Modal
       console.log("3. Opening category modal...")
       const addCategoryBtn = spFrame.locator(
         "button[title='Manage Categories']"
       )
       await expect(addCategoryBtn).toBeVisible({ timeout: 15000 })
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
-
-      // 1. Create Parent Category
       console.log("4. Creating Parent Category...")
       const nameInput = spFrame.locator(
         "input[placeholder='e.g. Cyberpunk, Retro']"
@@ -373,14 +316,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
 
       const submitBtn = spFrame.locator("button:has-text('Create Category')")
       await submitBtn.click()
-      await page.waitForTimeout(1000)
-
-      // Re-open modal to create Child Category
       console.log("5. Re-opening modal for Child Category...")
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
-
-      // 2. Create Child Category under Parent
       console.log("6. Creating Child Category under Parent...")
       await nameInput.fill("E2E Child Dir")
       await emojiInput.fill("📂")
@@ -391,9 +328,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       await parentSelect.selectOption({ label: "E2E Parent Dir" })
 
       await submitBtn.click()
-      await page.waitForTimeout(1000)
-
-      // 3. Verify in Library UI (explorer mode)
       console.log("7. Verifying explorer structure...")
       // Breadcrumbs should contain "Home"
       const breadcrumbHome = spFrame.locator(
@@ -415,9 +349,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
         })
         .last()
         .click()
-      await page.waitForTimeout(1000)
-
-      // Breadcrumbs should now show "Home / E2E Parent Dir"
       const breadcrumbParent = spFrame
         .locator("[data-testid='breadcrumbs'] span:has-text('E2E Parent Dir')")
         .first()
@@ -432,9 +363,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       // Click Home in breadcrumbs to return to root
       console.log("9. Clicking Home in breadcrumbs...")
       await breadcrumbHome.first().click()
-      await page.waitForTimeout(1000)
-
-      // Verifying we are back to root (Parent Dir is visible, child is not)
       await expect(parentDirFolder).toBeVisible()
       await expect(childDirFolder).not.toBeVisible()
 
@@ -448,32 +376,19 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       // Cleanup
       console.log("10. Cleaning up categories...")
       await addCategoryBtn.click()
-      await page.waitForTimeout(500)
       const manageTabBtn = spFrame.locator(
         "button:has-text('Manage Categories')"
       )
       await manageTabBtn.click()
-      await page.waitForTimeout(1000)
-
-      // Delete E2E Child Dir first
       const deleteBtns = spFrame.getByRole("button", {
         name: "Delete Category"
       })
       await deleteBtns.first().click()
-      await page.waitForTimeout(500)
       await spFrame.locator("#confirm-dialog-ok-btn").click()
-      await page.waitForTimeout(1000)
-
-      // Delete E2E Parent Dir
       await deleteBtns.first().click()
-      await page.waitForTimeout(500)
       await spFrame.locator("#confirm-dialog-ok-btn").click()
-      await page.waitForTimeout(1000)
-
-      // Close modal
       const closeBtn = spFrame.locator("button[aria-label='Cancel']").first()
       await closeBtn.click()
-      await page.waitForTimeout(500)
     } catch (error) {
       console.error(
         "Hierarchy E2E test failed, capturing failure screenshot..."
@@ -510,9 +425,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       const libraryTabButton = spFrame.locator("button:has-text('Library')")
       await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
       await libraryTabButton.click()
-      await page.waitForTimeout(1000)
-
-      // Seed a card and a category folder directly in DB to make test 100% reproducible and independent
       console.log("3. Seeding style card and category folder in DB...")
       await spFrame.locator("body").evaluate(async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -552,9 +464,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
 
       // Reload the state/tab to make sure DB changes are fetched
       await libraryTabButton.click()
-      await page.waitForTimeout(1000)
-
-      // Verify folder and card are visible at Home
       const targetFolder = spFrame.locator(
         "[data-testid='subfolders-grid'] span:has-text('DnD Target Folder')"
       )
@@ -572,9 +481,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
         .last()
 
       await dragCard.dragTo(folderDiv, { force: true })
-      await page.waitForTimeout(1000)
-
-      // Fallback: Programmatic dispatch of drag-drop if browser Dnd fails
       const updatedCardCategory = await spFrame
         .locator("body")
         .evaluate(async () => {
@@ -606,7 +512,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
           })
           element.dispatchEvent(dropEvent)
         })
-        await page.waitForTimeout(1000)
       }
 
       // Check DB value again
@@ -624,9 +529,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       // Click on the folder to enter it
       console.log("5. Clicking folder to enter...")
       await folderDiv.click()
-      await page.waitForTimeout(1000)
-
-      // Inside the folder, the card should now be visible
       await expect(dragCard).toBeVisible({ timeout: 10000 })
 
       // And the breadcrumbs should show we are in "DnD Target Folder"
