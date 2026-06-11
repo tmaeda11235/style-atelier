@@ -8,6 +8,8 @@ import {
 } from "lucide-react"
 import React from "react"
 
+import { HelpTooltip } from "../atoms/HelpTooltip"
+
 interface LocalBackupSectionProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>
   isSyncing: boolean
@@ -41,10 +43,8 @@ export function LocalBackupSection({
         <div className="space-y-1 flex-1">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             {t.localBackupTitle}
+            <HelpTooltip content={t.localBackupDesc} position="top-left" />
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {t.localBackupDesc}
-          </p>
         </div>
       </div>
 
@@ -100,11 +100,14 @@ export function LocalBackupSection({
         </div>
 
         {/* Privacy Note */}
-        <div className="flex items-start gap-1.5 bg-indigo-50/40 rounded-xl p-3 border border-indigo-100/50">
-          <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
-          <p className="text-[10px] text-indigo-700 leading-relaxed font-medium">
-            {t.privacyNote}
-          </p>
+        <div className="flex items-center gap-1.5 bg-indigo-50/40 rounded-xl px-3 py-2 border border-indigo-100/50 justify-between">
+          <div className="flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span className="text-[10px] text-indigo-700 font-bold">
+              {t.privacyNoteTitle || "Privacy Info"}
+            </span>
+          </div>
+          <HelpTooltip content={t.privacyNote} position="top-left" />
         </div>
       </div>
     </div>

@@ -42,7 +42,7 @@ tags: []
   - `export-utils.ts` is modularized into `src/lib/export/`, dividing the card rendering canvas pipeline (`renderCardToCanvas`) into separate background, artwork layout, info text, and QR drawing steps.
   - `card-export.ts` (`src/lib/card-export.ts`) encapsulates export data structuring for CSV and Markdown ZIP (via `fflate`), separated from the React hook layer (`useCardExport.ts`) to comply with strict function size limits.
 - **Feature Flags & Context Patterns**:
-  - `SettingsContext` (`useSettings`): Manages theme ("system" | "light" | "dark"), "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`).
+  - `SettingsContext` (`useSettings`): Manages theme ("system" | "light" | "dark"), "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`). To ensure responsive design (down to 320px) and clean visual hierarchy, long text descriptions and toggles in Settings Tab utilize `HelpTooltip` elements next to headers instead of occupying vertical list space.
   - `LanguageContext` (`useLanguage`): Manages the active translation locale (English/Japanese, stored in `localStorage` under `style-atelier-language`) and exposes a compile-time typed dictionary (`t`) to components.
   - Components subscribe to these contexts to handle feature toggling and language localization dynamically.
 - **Asynchronous State & Caching**:
@@ -118,6 +118,12 @@ To ensure maintainability and scalability, the project follows a strict director
   - `src/background.ts`: Extension background script.
   - `src/sidepanel.tsx`: Main entry point for the side panel UI.
   - `src/content.ts`: Content scripts (if applicable).
+
+## Semantic Design Tokens & Dark Mode Theme Management:
+
+- CSS variables (e.g., `--color-surface`, `--color-text-primary`, `--color-border-primary`, `--color-muted`) are defined under `:root` and `.dark` blocks in `src/style.css`.
+- Registered in Tailwind CSS v4 `@theme` block, mapping them to Tailwind utility classes (e.g., `bg-surface`, `text-text-primary`, `border-border-primary`, `bg-muted`).
+- Allows components to dynamically adapt to Light/Dark themes without hardcoded `dark:` prefixes, standardizing color hierarchies and reducing visual debt.
 
 ## AI-Driven Development & Layer Boundaries
 

@@ -26,6 +26,7 @@ export function SimpleWorkbenchModal({
 }: SimpleWorkbenchModalProps) {
   const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
   const [editedParams, setEditedParams] = useState<any>({})
+  const [slotValues, setSlotValues] = useState<Record<string, string>>({})
   const [isInjecting, setIsInjecting] = useState(false)
 
   const { t: i18n } = useLanguage()
@@ -33,8 +34,18 @@ export function SimpleWorkbenchModal({
 
   // Load segments and parameters on mount or when card changes
   useEffect(() => {
-    setEditedSegments(card.promptSegments || [])
+    const segments = card.promptSegments || []
+    setEditedSegments(segments)
     setEditedParams(card.parameters || {})
+
+    // Initialize slot values
+    const initialSlots: Record<string, string> = {}
+    segments.forEach((seg) => {
+      if (seg.type === "slot") {
+        initialSlots[seg.label] = seg.default || ""
+      }
+    })
+    setSlotValues(initialSlots)
   }, [card])
 
   // Connection check on mount
@@ -94,13 +105,15 @@ export function SimpleWorkbenchModal({
     setIsInjecting(true)
     setAlertType(null)
 
-    // In Easy Mode, slot variables are not filled via a UI section.
-    // Instead, if there are slot segments, we fallback to their default or label values.
+    // In Easy Mode, replace slot segments with filled values or fallback to default/label
     const resolvedSegments = editedSegments.map((seg) => {
       if (seg.type === "slot") {
         return {
           type: "text" as const,
-          value: seg.default || seg.label
+          value:
+            slotValues[seg.label] !== undefined && slotValues[seg.label] !== ""
+              ? slotValues[seg.label]
+              : seg.default || seg.label
         }
       }
       return seg
@@ -212,6 +225,46 @@ export function SimpleWorkbenchModal({
               tier={card.tier}
             />
           </div>
+
+          {editedSegments.some((seg) => seg.type === "slot") && (
+            <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <label className="block text-xs font-semibold text-slate-500">
+                {t.slotVariables || "Slot Variables"}
+              </label>
+              <div className="space-y-2">
+                {editedSegments
+                  .reduce<{ label: string; default: string }[]>((acc, seg) => {
+                    if (
+                      seg.type === "slot" &&
+                      !acc.some((s) => s.label === seg.label)
+                    ) {
+                      acc.push({ label: seg.label, default: seg.default })
+                    }
+                    return acc
+                  }, [])
+                  .map((slot) => (
+                    <div key={slot.label} className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase">
+                        {slot.label}
+                      </span>
+                      <input
+                        type="text"
+                        value={slotValues[slot.label] ?? ""}
+                        onChange={(e) =>
+                          setSlotValues((prev) => ({
+                            ...prev,
+                            [slot.label]: e.target.value
+                          }))
+                        }
+                        placeholder={slot.default || `Enter ${slot.label}...`}
+                        className="bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                        data-testid={`simple-slot-input-${slot.label}`}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
           <ParameterEditor
             parameters={editedParams}

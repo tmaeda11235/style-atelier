@@ -159,26 +159,24 @@ export function SettingsTab({
           <div className="p-1.5 bg-blue-500/10 rounded-lg">
             <Settings2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-            {t.title}
-          </h2>
+          <h2 className="text-base font-bold text-text-primary">{t.title}</h2>
         </div>
       )}
 
       {/* Group 1: UI Preferences */}
-      <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-all">
+      <div className="border border-border-primary rounded-2xl bg-surface overflow-hidden shadow-sm hover:shadow-md transition-all">
         <button
           type="button"
           id="settings-accordion-ui"
           onClick={() => toggleSection("ui")}
-          className="flex items-center justify-between w-full p-4 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors font-bold text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100/60 dark:border-slate-800/60 select-none cursor-pointer">
+          className="flex items-center justify-between w-full p-4 bg-muted hover:bg-surface-hover transition-colors font-bold text-xs text-text-primary border-b border-border-primary/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
             {t.uiGroupTitle}
           </span>
           {openSections.ui ? (
-            <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronUp className="w-4 h-4 text-text-secondary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronDown className="w-4 h-4 text-text-secondary" />
           )}
         </button>
         {openSections.ui && (
@@ -200,19 +198,19 @@ export function SettingsTab({
       </div>
 
       {/* Group 2: Cloud Backup & Sync */}
-      <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-all">
+      <div className="border border-border-primary rounded-2xl bg-surface overflow-hidden shadow-sm hover:shadow-md transition-all">
         <button
           type="button"
           id="settings-accordion-cloud"
           onClick={() => toggleSection("cloud")}
-          className="flex items-center justify-between w-full p-4 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors font-bold text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100/60 dark:border-slate-800/60 select-none cursor-pointer">
+          className="flex items-center justify-between w-full p-4 bg-muted hover:bg-surface-hover transition-colors font-bold text-xs text-text-primary border-b border-border-primary/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
             {t.cloudGroupTitle}
           </span>
           {openSections.cloud ? (
-            <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronUp className="w-4 h-4 text-text-secondary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronDown className="w-4 h-4 text-text-secondary" />
           )}
         </button>
         {openSections.cloud && (
@@ -239,19 +237,19 @@ export function SettingsTab({
       </div>
 
       {/* Group 3: Maintenance & Local Backup */}
-      <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-all">
+      <div className="border border-border-primary rounded-2xl bg-surface overflow-hidden shadow-sm hover:shadow-md transition-all">
         <button
           type="button"
           id="settings-accordion-maintenance"
           onClick={() => toggleSection("maintenance")}
-          className="flex items-center justify-between w-full p-4 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors font-bold text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100/60 dark:border-slate-800/60 select-none cursor-pointer">
+          className="flex items-center justify-between w-full p-4 bg-muted hover:bg-surface-hover transition-colors font-bold text-xs text-text-primary border-b border-border-primary/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
             {t.maintenanceGroupTitle}
           </span>
           {openSections.maintenance ? (
-            <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronUp className="w-4 h-4 text-text-secondary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronDown className="w-4 h-4 text-text-secondary" />
           )}
         </button>
         {openSections.maintenance && (
@@ -286,19 +284,19 @@ export function SettingsTab({
       </div>
 
       {/* Group 4: Local AI Model (WebLLM) */}
-      <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-all">
+      <div className="border border-border-primary rounded-2xl bg-surface overflow-hidden shadow-sm hover:shadow-md transition-all">
         <button
           type="button"
           id="settings-accordion-webllm"
           onClick={() => toggleSection("webllm")}
-          className="flex items-center justify-between w-full p-4 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors font-bold text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100/60 dark:border-slate-800/60 select-none cursor-pointer">
+          className="flex items-center justify-between w-full p-4 bg-muted hover:bg-surface-hover transition-colors font-bold text-xs text-text-primary border-b border-border-primary/60 select-none cursor-pointer">
           <span className="flex items-center gap-1.5 uppercase tracking-wider">
             {t.webLlmGroupTitle}
           </span>
           {openSections.webllm ? (
-            <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronUp className="w-4 h-4 text-text-secondary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronDown className="w-4 h-4 text-text-secondary" />
           )}
         </button>
         {openSections.webllm && <WebLlmSettingsSection />}

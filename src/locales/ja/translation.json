@@ -99,6 +99,7 @@
     "googleDriveToggleLabel": "Google Drive同期を有効にする",
     "googleDriveToggleSub": "バックアップ・復元用のボタンが活性化します",
     "securityNote": "認証情報は拡張機能には一切保存されません。バックアップ・復元操作時の一時的なアクセス（Google Drive内の自身が作成したバックアップファイル）にのみ使用されます。",
+    "securityNoteTitle": "セキュリティとプライバシーについて",
     "storageTitle": "ストレージ管理",
     "storageDesc": "ブラウザに保存されているデータの使用状況と上限を確認します。",
     "storageUsage": "使用量",
@@ -129,6 +130,7 @@
     "exportFailed": "エクスポートに失敗しました",
     "exportingText": "エクスポート中...",
     "privacyNote": "データは完全にブラウザとローカル環境のみで処理されます。外部サーバーに送信されることはなく、完全なオフライン環境でも動作します。",
+    "privacyNoteTitle": "プライバシーとオフライン動作について",
     "dangerZoneTitle": "危険ゾーン",
     "dangerZoneDesc": "データベースを初期状態にリセットするか、Google Driveからバックアップデータを読み込んでローカルの変更を上書きします。",
     "resetSuccess": "データベースのリセットが完了しました。",
@@ -236,6 +238,7 @@
     "close": "閉じる",
     "cancel": "キャンセル",
     "promptPreview": "プロンプト調整",
+    "slotVariables": "スロット変数（可変領域）",
     "injectSuccess": "プロンプトを挿入しました！",
     "checkConnectionFailed": "接続確認に失敗しました",
     "noActiveTab": "アクティブなタブが見つかりません"

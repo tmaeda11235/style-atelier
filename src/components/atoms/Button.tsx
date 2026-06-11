@@ -31,12 +31,12 @@ export function Button({
     primary:
       "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
     secondary:
-      "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-500 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
+      "bg-muted text-text-primary hover:bg-surface-hover focus:ring-slate-500",
     ghost:
-      "bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-500 dark:text-slate-300 dark:hover:bg-slate-800",
+      "bg-transparent text-text-secondary hover:bg-surface-hover focus:ring-slate-500",
     danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
     outline:
-      "bg-transparent border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-slate-500 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+      "bg-transparent border border-border-primary text-text-primary hover:bg-surface-hover focus:ring-slate-500"
   }
 
   const sizes = {

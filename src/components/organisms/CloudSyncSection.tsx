@@ -9,6 +9,8 @@ import {
 } from "lucide-react"
 import React from "react"
 
+import { HelpTooltip } from "../atoms/HelpTooltip"
+
 interface CloudSyncSectionProps {
   isSyncEnabled: boolean
   isAutoSyncEnabled: boolean
@@ -63,25 +65,23 @@ export function CloudSyncSection({
         <div className="space-y-1 flex-1">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             {t.gdriveSyncLabel}
+            <HelpTooltip content={t.gdriveSyncDesc} position="top-left" />
             {isSyncEnabled && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
                 <ShieldCheck className="w-3 h-3 mr-0.5" /> {t.activeStatus}
               </span>
             )}
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {t.gdriveSyncDesc}
-          </p>
         </div>
       </div>
 
       {/* Sync Toggle Switch */}
       <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
-        <div className="space-y-0.5">
+        <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-slate-700">
             {t.googleDriveToggleLabel}
           </span>
-          <p className="text-[10px] text-slate-400">{t.googleDriveToggleSub}</p>
+          <HelpTooltip content={t.googleDriveToggleSub} position="top-left" />
         </div>
         <button
           type="button"
@@ -101,11 +101,11 @@ export function CloudSyncSection({
       {/* Auto-Sync Toggle Switch */}
       {isSyncEnabled && (
         <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 mb-4 transition-all hover:bg-slate-50">
-          <div className="space-y-0.5">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold text-slate-700">
               {t.autoBackupLabel}
             </span>
-            <p className="text-[10px] text-slate-400">{t.autoBackupDesc}</p>
+            <HelpTooltip content={t.autoBackupDesc} position="top-left" />
           </div>
           <button
             type="button"
@@ -226,11 +226,14 @@ export function CloudSyncSection({
           </div>
         )}
         {/* Security note */}
-        <div className="flex items-start gap-1.5 bg-blue-50/40 rounded-xl p-3 border border-blue-100/50">
-          <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
-          <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
-            {t.securityNote}
-          </p>
+        <div className="flex items-center gap-1.5 bg-blue-50/40 rounded-xl px-3 py-2 border border-blue-100/50 justify-between">
+          <div className="flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span className="text-[10px] text-blue-700 font-bold">
+              {t.securityNoteTitle || "Security & Privacy"}
+            </span>
+          </div>
+          <HelpTooltip content={t.securityNote} position="top-left" />
         </div>
       </div>
     </div>

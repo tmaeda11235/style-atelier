@@ -2,6 +2,7 @@ import React from "react"
 
 import type { Theme } from "../../contexts/SettingsContext"
 import type { Language } from "../../lib/i18n"
+import { HelpTooltip } from "../atoms/HelpTooltip"
 import { EasyModeSection } from "./EasyModeSection"
 
 interface ThemeSettingsProps {
@@ -19,12 +20,15 @@ function ThemeSettings({ theme, changeTheme, t }: ThemeSettingsProps) {
           <span className="text-xl">🌓</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             {t.themeLabel || "Theme Setting"}
+            <HelpTooltip
+              content={
+                t.themeDesc || "Choose the appearance mode of the application."
+              }
+              position="top-left"
+            />
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {t.themeDesc || "Choose the appearance mode of the application."}
-          </p>
         </div>
       </div>
       <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
@@ -60,12 +64,10 @@ function LanguageSettings({ lang, changeLanguage, t }: LanguageSettingsProps) {
           <span className="text-xl">🌐</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             {t.languageLabel}
+            <HelpTooltip content={t.languageDesc} position="top-left" />
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {t.languageDesc}
-          </p>
         </div>
       </div>
       <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
@@ -104,13 +106,16 @@ function TipsBarSettings({
           <span className="text-xl">💡</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             {t.tipsBarToggleLabel || "Enable Tips Bar"}
+            <HelpTooltip
+              content={
+                t.tipsBarToggleSub ||
+                "Show a cycling tips bar at the bottom of the screen"
+              }
+              position="top-left"
+            />
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {t.tipsBarToggleSub ||
-              "Show a cycling tips bar at the bottom of the screen"}
-          </p>
         </div>
       </div>
       <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">

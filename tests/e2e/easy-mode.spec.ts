@@ -91,7 +91,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     )
     await expect(modalTitle).toBeVisible({ timeout: 10000 })
 
-    // Capture screenshot of the opened Simple Workbench modal
+    // Verify slot variable input field is visible
+    const slotInput = spFrame.locator("[data-testid='simple-slot-input-Color']")
+    await expect(slotInput).toBeVisible({ timeout: 10000 })
+    await expect(slotInput).toHaveValue("blue")
+
+    // Edit the slot variable value
+    await slotInput.fill("red")
+
+    // Capture screenshot of the opened Simple Workbench modal with slot input
     await page.screenshot({
       path: path.join(screenshotsDir, "easy-mode-workbench-modal.png")
     })
@@ -102,12 +110,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Easy Mode Workbench Modal @J-WB
     await expect(injectBtn).toBeVisible()
     await injectBtn.click()
 
-    // 7. Verify prompt is injected into Midjourney text area (resolving the slot to its default value 'blue')
+    // 7. Verify prompt is injected into Midjourney text area (resolving the slot to the edited value 'red')
     const mjTextarea = mjFrame
       .locator('textarea, [role="textbox"], [data-testid="prompt-input"]')
       .first()
     await expect(mjTextarea).toHaveValue(
-      "cute cat illustration, blue --ar 16:9",
+      "cute cat illustration, red --ar 16:9",
       { timeout: 10000 }
     )
 
