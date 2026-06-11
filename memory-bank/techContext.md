@@ -20,7 +20,7 @@ tags: []
 - **QR Codes**: `jsQR` - For scanning/generating QR codes on cards. Implements multi-stage canvas cropping and 2x scaling fallback for low-resolution/compressed images.
 - **Search**: `FlexSearch.js` - High-performance client-side search.
 - **NLP/Parser**: `compromise` / `ja-compromise` - For prompt analysis and tagging.
-- **Local LLM**: `@mlc-ai/web-llm` (WebLLM) - For loading and executing the quantized Gemma-4 E2B model client-side using WebGPU/Wasm.
+- **Local LLM**: `@mlc-ai/web-llm` (WebLLM) - For loading and executing the quantized Gemma-4 E2B model client-side using WebGPU/Wasm. Currently used to parse natural language search queries into structured filters (rarity, category, color, keyword).
 - **Compression**: `fflate` - High-performance, lightweight ZIP compression for Markdown exports.
 
 ## Development Environment
