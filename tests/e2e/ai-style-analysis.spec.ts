@@ -84,7 +84,10 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     })
 
     // 7. Click "Download Model" to trigger transition to ready state
-    const downloadBtn = spFrame.locator("button:has-text('Download Model')")
+    const downloadBtn = spFrame.getByRole("button", {
+      name: "Download Model",
+      exact: true
+    })
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
