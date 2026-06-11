@@ -56,7 +56,11 @@
         "もっと見るによるカード読み込み",
         "カードを見る"
       ],
-      "nextJourneys": ["@J-WB-EASY-01", "@J-ORG-COLOR-FILTER-01", "@J-ORG-QUICK-SEND-01"]
+      "nextJourneys": [
+        "@J-WB-EASY-01",
+        "@J-ORG-COLOR-FILTER-01",
+        "@J-ORG-QUICK-SEND-01"
+      ]
     },
     {
       "id": "@J-ORG-COLOR-FILTER-01",
@@ -209,7 +213,7 @@
         "カラーフィルタをクリックして絞り込み",
         "「もっと読み込む」ボタンをクリックして追加表示"
       ],
-      "nextJourneys": ["@J-ORG-EXPERT-01"]
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-SEMANTIC-SEARCH-01"]
     },
     {
       "id": "@J-WB-EXPERT-05",
@@ -367,10 +371,19 @@
         "カード上のクイック送信ボタンを押下",
         "ワークベンチに登録され自動遷移されるのを確認"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01",
-        "@J-WB-EASY-01"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EASY-01"]
+    },
+    {
+      "id": "@J-ORG-SEMANTIC-SEARCH-01",
+      "name": "セマンティック検索による自然言語フィルタリング",
+      "description": "自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換、または類似カードを抽出する",
+      "steps": [
+        "ライブラリを開く",
+        "検索バーのAIアシスタントボタンをONにする",
+        "自然言語クエリを入力する",
+        "AIによるフィルタ自動抽出とカード絞り込み結果を確認する"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-SEARCH-01"]
     }
   ]
 }

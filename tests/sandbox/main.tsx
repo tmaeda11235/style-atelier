@@ -266,6 +266,57 @@ if (typeof window !== "undefined") {
                 mockWebLlmConfig.downloadSpeed
               )
             }, 50)
+          } else if (message.action === "run-inference") {
+            const promptLower = (message.prompt || "").toLowerCase()
+            let rarity = "All"
+            let color = "All"
+            let category = "All"
+            let query = message.prompt || ""
+
+            if (
+              promptLower.includes("legendary") ||
+              promptLower.includes("伝説")
+            ) {
+              rarity = "Legendary"
+            } else if (
+              promptLower.includes("rare") ||
+              promptLower.includes("レア")
+            ) {
+              rarity = "Rare"
+            }
+
+            if (promptLower.includes("blue") || promptLower.includes("青")) {
+              color = "Blue"
+            } else if (
+              promptLower.includes("red") ||
+              promptLower.includes("赤")
+            ) {
+              color = "Red"
+            }
+
+            if (promptLower.includes("style")) {
+              category = "Style"
+            }
+
+            // Clean up query mock keywords
+            query = query
+              .replace(/legendary|伝説|rare|レア|blue|青|red|赤|style/gi, "")
+              .replace(/\s+/g, " ")
+              .trim()
+
+            setTimeout(() => {
+              if (callback) {
+                callback({
+                  status: "success",
+                  result: JSON.stringify({
+                    rarity,
+                    color,
+                    category,
+                    query
+                  })
+                })
+              }
+            }, 100)
           } else if (message.action === "purge-cache") {
             localStorage.removeItem("mock-webllm-downloaded")
             setTimeout(() => {
