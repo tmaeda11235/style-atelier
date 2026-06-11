@@ -64,6 +64,24 @@ export function usePromptSegmentsState(
   return { segments, setSegments, removeSegment }
 }
 
+function handleKeyDownHelper(
+  e: React.KeyboardEvent<HTMLInputElement>,
+  inputValue: string,
+  segmentsCount: number,
+  addToken: (text: string) => void,
+  removeSegment: (index: number) => void
+) {
+  if (e.key === "Enter") {
+    e.preventDefault()
+    addToken(inputValue)
+  } else if (e.key === "Backspace" && inputValue === "" && segmentsCount > 0) {
+    removeSegment(segmentsCount - 1)
+  } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
+    e.preventDefault()
+    addToken(inputValue)
+  }
+}
+
 export function usePromptBubbleEditorState({
   initialSegments = [],
   onChange
@@ -94,19 +112,7 @@ export function usePromptBubbleEditorState({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      addToken(inputValue)
-    } else if (
-      e.key === "Backspace" &&
-      inputValue === "" &&
-      segments.length > 0
-    ) {
-      removeSegment(segments.length - 1)
-    } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
-      e.preventDefault()
-      addToken(inputValue)
-    }
+    handleKeyDownHelper(e, inputValue, segments.length, addToken, removeSegment)
   }
 
   return {
