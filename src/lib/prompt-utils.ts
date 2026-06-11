@@ -109,7 +109,7 @@ export const parsePrompt = (
   return { promptSegments, parameters }
 }
 
-function buildSegmentString(
+export function buildSegmentString(
   segments: PromptSegment[],
   cardWeight?: number
 ): string {
@@ -131,7 +131,7 @@ function buildSegmentString(
     .join(", ")
 }
 
-function buildParamParts(
+export function buildParamParts(
   params: StyleCard["parameters"],
   maskedKeys: (keyof StyleCard["parameters"])[]
 ): string[] {
@@ -212,3 +212,5 @@ export const mergePromptSegments = (
 
   return merged
 }
+
+

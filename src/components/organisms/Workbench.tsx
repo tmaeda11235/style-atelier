@@ -8,6 +8,7 @@ import { usePromptInjector } from "../../hooks/usePromptInjector"
 import { useWorkbench } from "../../hooks/useWorkbench"
 import type { PromptSegment } from "../../lib/db-schema"
 import { mergePromptSegments } from "../../lib/prompt-utils"
+import { mergeReferences } from "../../lib/prompt-reference-utils"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import {
   evolveTargetCard,
@@ -43,27 +44,37 @@ function usePromptSegmentsSync(
       nextSegments = target.promptSegments || []
       nextParams = target.parameters || {}
     } else {
-      nextSegments = mergePromptSegments(
-        workbenchCards.flatMap((p) => p.promptSegments || [])
-      )
+      // Apply weights to segments
+      const segmentsWithWeights = workbenchCards.flatMap((card) => {
+        const segs = card.promptSegments || []
+        const cardWeight = card.weight !== undefined ? card.weight : 1.0
+        return segs.map((seg: any) => {
+          const segWeight = seg.weight !== undefined ? seg.weight : 1.0
+          const finalWeight = parseFloat((segWeight * cardWeight).toFixed(2))
+          return {
+            ...seg,
+            weight: finalWeight !== 1.0 ? finalWeight : undefined
+          }
+        })
+      })
+
+      nextSegments = mergePromptSegments(segmentsWithWeights)
+
+      // Merge sref / cref parameters with weights
       nextParams = { ...workbenchCards[0].parameters }
+
+      const srefList = workbenchCards
+        .filter((p) => p.parameters?.sref)
+        .map((p) => ({ items: p.parameters.sref!, cardWeight: p.weight }))
+      nextParams.sref = mergeReferences(srefList).slice(0, 5)
+
+      const crefList = workbenchCards
+        .filter((p) => p.parameters?.cref)
+        .map((p) => ({ items: p.parameters.cref!, cardWeight: p.weight }))
+      nextParams.cref = mergeReferences(crefList).slice(0, 5)
+
+      // Other parameters are merged with latest priority
       workbenchCards.slice(1).forEach((parent) => {
-        if (parent.parameters?.sref) {
-          nextParams.sref = Array.from(
-            new Set([
-              ...(parent.parameters.sref || []),
-              ...(nextParams.sref || [])
-            ])
-          ).slice(0, 5)
-        }
-        if (parent.parameters?.cref) {
-          nextParams.cref = Array.from(
-            new Set([
-              ...(parent.parameters.cref || []),
-              ...(nextParams.cref || [])
-            ])
-          ).slice(0, 5)
-        }
         if (parent.parameters?.imagePrompts) {
           nextParams.imagePrompts = Array.from(
             new Set([

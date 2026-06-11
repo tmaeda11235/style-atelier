@@ -1,6 +1,7 @@
 import { db } from "../lib/db"
-import type { PromptSegment, StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../lib/db-schema"
 import { mergePromptSegments } from "../lib/prompt-utils"
+import { mergeReferences } from "../lib/prompt-reference-utils"
 import { UPGRADE_THRESHOLDS, type RarityTier } from "../lib/rarity-config"
 
 export function useEvolution() {
@@ -67,23 +68,19 @@ export function useEvolution() {
 
     // パラメータの統合
     const mergedParams: StyleCard["parameters"] = { ...mainParent.parameters }
+
+    // sref / cref のマージ (親カードの weight を加味)
+    const srefList = parentCards
+      .filter((p) => p.parameters.sref)
+      .map((p) => ({ items: p.parameters.sref!, cardWeight: p.weight }))
+    mergedParams.sref = mergeReferences(srefList).slice(0, 5)
+
+    const crefList = parentCards
+      .filter((p) => p.parameters.cref)
+      .map((p) => ({ items: p.parameters.cref!, cardWeight: p.weight }))
+    mergedParams.cref = mergeReferences(crefList).slice(0, 5)
+
     parentCards.slice(1).forEach((parent) => {
-      // srefのマージ (最大5枚、最新優先)
-      if (parent.parameters.sref) {
-        const combinedSref = [
-          ...(parent.parameters.sref || []),
-          ...(mergedParams.sref || [])
-        ]
-        mergedParams.sref = Array.from(new Set(combinedSref)).slice(0, 5)
-      }
-      // crefのマージ (最新優先)
-      if (parent.parameters.cref) {
-        const combinedCref = [
-          ...(parent.parameters.cref || []),
-          ...(mergedParams.cref || [])
-        ]
-        mergedParams.cref = Array.from(new Set(combinedCref)).slice(0, 5)
-      }
       // imagePromptsのマージ (最大5枚、最新優先)
       if (parent.parameters.imagePrompts) {
         const combinedIP = [

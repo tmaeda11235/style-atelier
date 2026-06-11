@@ -198,8 +198,8 @@ describe("useEvolution hook", () => {
             { type: "text", value: "synthwave" }
           ],
           parameters: expect.objectContaining({
-            sref: ["sref-2", "sref-3", "sref-1"], // merges and keeps unique
-            cref: ["cref-2", "cref-1"],
+            sref: ["sref-1", "sref-2::2", "sref-3"],
+            cref: ["cref-1", "cref-2"],
             imagePrompts: ["ip-2", "ip-1"],
             ar: "16:9"
           }),
@@ -246,7 +246,7 @@ describe("useEvolution hook", () => {
       expect(db.addCard).toHaveBeenCalledWith(
         expect.objectContaining({
           parameters: expect.objectContaining({
-            sref: ["5", "6", "7", "1", "2"] // merged and capped at 5
+            sref: ["1", "2", "3", "4", "5"] // merged and capped at 5
           })
         })
       )

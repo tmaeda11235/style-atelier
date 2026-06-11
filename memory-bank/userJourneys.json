@@ -91,7 +91,8 @@
         "@J-WB-EXPERT-05",
         "@J-WB-MIXING-WEIGHTS-01",
         "@J-WB-PORTION-EXTRACT-01",
-        "@J-WB-ATELIER-EFFECTS-01"
+        "@J-WB-ATELIER-EFFECTS-01",
+        "@J-WB-MIXING-INTELLIGENT-01"
       ]
     },
     {
@@ -342,6 +343,16 @@
         "スタイルカードに適用されたパラメータエイリアスバッジが表示され、ホバー時にプレビュー（Tooltip）が表示されることを確認する"
       ],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"]
+    },
+    {
+      "id": "@J-WB-MIXING-INTELLIGENT-01",
+      "name": "Midjourney sref/cref インテリジェントブレンド",
+      "description": "ワークベンチ上で複数カードの sref/cref URL とウェイトを統合的に加算・乗算マージする",
+      "steps": [
+        "異なる sref / cref とウェイトを持つ複数カードを Workbench に追加する",
+        "インジェクションまたはプレビュー時に URL が統合され、ウェイトが加算マージされていることを確認する"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-03"]
     }
   ]
 }
