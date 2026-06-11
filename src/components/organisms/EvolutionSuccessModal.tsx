@@ -1,15 +1,14 @@
 import { Sparkles, X } from "lucide-react"
 import React from "react"
 
+import { useEvolutionAnimation } from "../../hooks/useEvolutionAnimation"
 import { RARITY_CONFIG, type RarityTier } from "../../lib/rarity-config"
 import { Button } from "../atoms/Button"
 import { RarityBadge } from "../atoms/RarityBadge"
-import {
-  EvolutionCardDisplay,
-  EvolutionConfetti,
-  MODAL_CSS,
-  useEvolutionAnimation
-} from "./EvolutionModalHelper"
+import { EvolutionCardDisplay } from "./EvolutionCardDisplay"
+import { EvolutionConfetti } from "./EvolutionConfetti"
+
+import "./EvolutionSuccessModal.css"
 
 interface EvolutionSuccessModalProps {
   isOpen: boolean
@@ -47,7 +46,6 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black/20 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
       <EvolutionConfetti confetti={confetti} />
-      <style dangerouslySetInnerHTML={{ __html: MODAL_CSS }} />
 
       <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center overflow-hidden animate-in zoom-in-95 duration-500 z-20">
         <div
