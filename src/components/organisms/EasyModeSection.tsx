@@ -1,6 +1,8 @@
 import { Settings2 } from "lucide-react"
 import React from "react"
 
+import { HelpTooltip } from "../atoms/HelpTooltip"
+
 interface EasyModeSectionProps {
   currentEasyMode: boolean
   currentToggleEasyMode: (checked: boolean) => void
@@ -32,27 +34,23 @@ export function EasyModeSection({
           <div className="space-y-1 flex-1">
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
               {t.easyModeLabel}
+              <HelpTooltip content={t.easyModeDesc} position="top-left" />
               {currentEasyMode && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300">
                   Active
                 </span>
               )}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {t.easyModeDesc}
-            </p>
           </div>
         </div>
 
         {/* Easy Mode Toggle Switch */}
         <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-3 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-          <div className="space-y-0.5">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
               {t.easyModeToggleLabel}
             </span>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">
-              {t.easyModeToggleSub}
-            </p>
+            <HelpTooltip content={t.easyModeToggleSub} position="top-left" />
           </div>
           <button
             type="button"
@@ -98,12 +96,13 @@ export function EasyModeSection({
               <Settings2 className="w-6 h-6" />
             </div>
             <div className="space-y-1 flex-1">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 {t.expertFeaturesTitle}
+                <HelpTooltip
+                  content={t.expertFeaturesDesc}
+                  position="top-left"
+                />
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                {t.expertFeaturesDesc}
-              </p>
             </div>
           </div>
 
@@ -116,13 +115,14 @@ export function EasyModeSection({
               <div className="space-y-3">
                 {/* Rarity */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureRarityLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureRaritySub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureRaritySub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -146,13 +146,14 @@ export function EasyModeSection({
                 </div>
                 {/* Tags */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureTagsLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureTagsSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureTagsSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -174,13 +175,14 @@ export function EasyModeSection({
                 </div>
                 {/* Card Editing */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureCardEditingLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureCardEditingSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureCardEditingSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -216,13 +218,14 @@ export function EasyModeSection({
               <div className="space-y-3">
                 {/* Categories */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureCategoriesLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureCategoriesSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureCategoriesSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -249,13 +252,14 @@ export function EasyModeSection({
                 </div>
                 {/* Stack */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureStackLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureStackSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureStackSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -286,13 +290,14 @@ export function EasyModeSection({
               <div className="space-y-3">
                 {/* Slot */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureSlotLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureSlotSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureSlotSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -314,13 +319,14 @@ export function EasyModeSection({
                 </div>
                 {/* Multi-card */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureMultiCardLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureMultiCardSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureMultiCardSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"
@@ -347,13 +353,14 @@ export function EasyModeSection({
                 </div>
                 {/* Multi-image */}
                 <div className="flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800 rounded-xl px-4 py-2.5 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {t.featureMultiImageLabel}
                     </span>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                      {t.featureMultiImageSub}
-                    </p>
+                    <HelpTooltip
+                      content={t.featureMultiImageSub}
+                      position="top-left"
+                    />
                   </div>
                   <button
                     type="button"

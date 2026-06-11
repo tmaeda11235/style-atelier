@@ -1,6 +1,8 @@
 import { AlertTriangle, Database, Trash2 } from "lucide-react"
 import React from "react"
 
+import { HelpTooltip } from "../atoms/HelpTooltip"
+
 interface StorageManagerSectionProps {
   estimate: any
   handleClearHistory: () => void
@@ -24,10 +26,8 @@ export function StorageManagerSection({
         <div className="space-y-1 flex-1">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             {t.storageTitle}
+            <HelpTooltip content={t.storageDesc} position="top-left" />
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            {t.storageDesc}
-          </p>
         </div>
       </div>
 
@@ -87,19 +87,18 @@ export function StorageManagerSection({
       {/* Action button & Optimization description */}
       <div className="mt-4 pt-3 border-t border-slate-100 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-700">
-            {t.cleanupHistoryLabel}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-700">
+              {t.cleanupHistoryLabel}
+            </span>
+            <HelpTooltip content={t.cleanupHistoryDesc} position="top-left" />
+          </div>
           <button
             onClick={handleClearHistory}
             className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5">
             <Trash2 className="w-3.5 h-3.5" />
             {t.clearHistoryBtn}
           </button>
-        </div>
-
-        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[10px] text-slate-500 leading-relaxed font-medium">
-          <p>{t.cleanupHistoryDesc}</p>
         </div>
       </div>
     </div>

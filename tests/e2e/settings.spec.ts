@@ -1261,4 +1261,48 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(downloadBtn).toBeVisible()
     console.log("WebLLM E2E test passed successfully!")
   })
+
+  test("should render help tooltips in settings and display descriptions on hover", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for HelpTooltip E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // Verify Easy Mode section header tooltip is visible
+    const easyModeTooltipTrigger = spFrame
+      .locator("[data-testid='help-tooltip-trigger']")
+      .first()
+    await expect(easyModeTooltipTrigger).toBeVisible()
+
+    // Hover to trigger tooltip content
+    await easyModeTooltipTrigger.hover()
+    await page.waitForTimeout(300)
+
+    // Capture screenshot of settings tab showing the tooltip
+    await page.screenshot({
+      path: path.join(screenshotsDir, "settings-tooltip-hover.png")
+    })
+    console.log("Settings tooltip hover screenshot saved.")
+
+    // Verify tooltip content is now visible
+    const tooltipContent = spFrame
+      .locator("[data-testid='help-tooltip-content']")
+      .first()
+    await expect(tooltipContent).toBeVisible()
+  })
 })

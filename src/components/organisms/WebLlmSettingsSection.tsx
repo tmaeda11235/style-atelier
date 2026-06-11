@@ -11,6 +11,7 @@ import React from "react"
 import { useConfirm } from "../../contexts/ConfirmContext"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useWebLlm } from "../../hooks/useWebLlm"
+import { HelpTooltip } from "../atoms/HelpTooltip"
 
 interface StatusDisplay {
   colorClass: string
@@ -177,12 +178,10 @@ function WebLlmHeader({ title, desc }: { title: string; desc: string }) {
         <Cpu className="w-5 h-5" />
       </div>
       <div className="space-y-1">
-        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           {title}
+          <HelpTooltip content={desc} position="top-left" />
         </h4>
-        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          {desc}
-        </p>
       </div>
     </div>
   )
