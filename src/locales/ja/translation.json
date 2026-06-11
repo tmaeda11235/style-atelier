@@ -236,6 +236,7 @@
     "close": "閉じる",
     "cancel": "キャンセル",
     "promptPreview": "プロンプト調整",
+    "slotVariables": "スロット変数（可変領域）",
     "injectSuccess": "プロンプトを挿入しました！",
     "checkConnectionFailed": "接続確認に失敗しました",
     "noActiveTab": "アクティブなタブが見つかりません"

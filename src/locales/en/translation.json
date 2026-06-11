@@ -235,7 +235,8 @@
     "injecting": "Injecting...",
     "close": "Close",
     "cancel": "Cancel",
-    "promptPreview": "Adjust Prompt",
+    "promptPreview": "Prompt Adjustment",
+    "slotVariables": "Slot Variables",
     "injectSuccess": "Prompt injected successfully!",
     "checkConnectionFailed": "Connection check failed",
     "noActiveTab": "No active tab found"
