@@ -1,6 +1,8 @@
 import { Database, DownloadCloud, RefreshCw, Trash2 } from "lucide-react"
 import React from "react"
 
+import { HelpTooltip } from "../atoms/HelpTooltip"
+
 interface DangerZoneSectionProps {
   isSyncEnabled: boolean
   isSyncing: boolean
@@ -32,12 +34,10 @@ export function DangerZoneSection({
           <Trash2 className="w-5 h-5" />
         </div>
         <div className="space-y-1.5 flex-1">
-          <h3 className="text-xs font-bold text-red-900">
+          <h3 className="text-xs font-bold text-red-900 flex items-center gap-1.5">
             {t.dangerZoneTitle}
+            <HelpTooltip content={t.dangerZoneDesc} position="top-left" />
           </h3>
-          <p className="text-[10px] text-red-600/80 leading-relaxed">
-            {t.dangerZoneDesc}
-          </p>
           <div className="flex flex-col gap-2 mt-2">
             {isSyncEnabled && (
               <div className="text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
