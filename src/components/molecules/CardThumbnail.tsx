@@ -25,6 +25,7 @@ interface CardThumbnailProps {
   tier: RarityTier
   isPinned?: boolean
   onPinClick?: (e: React.MouseEvent) => void
+  onQuickSendClick?: (e: React.MouseEvent) => void
   onDeleteClick?: (e: React.MouseEvent) => void
   onInjectClick?: (e: React.MouseEvent) => void
   onEditClick?: (e: React.MouseEvent) => void
@@ -45,6 +46,7 @@ export function CardThumbnail({
   tier,
   isPinned,
   onPinClick,
+  onQuickSendClick,
   onDeleteClick,
   onInjectClick,
   onEditClick,
@@ -244,6 +246,31 @@ export function CardThumbnail({
               strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </IconButton>
+        )}
+
+        {onQuickSendClick && (
+          <IconButton
+            variant="blue"
+            size="sm"
+            onClick={onQuickSendClick}
+            className="shadow-md"
+            title="Workbenchに送って遷移"
+            data-testid="quick-send-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round">
+              <path d="M4.5 3h15"></path>
+              <path d="M6 3v6a6 6 0 0 0 12 0V3"></path>
+              <path d="M6 14h12"></path>
             </svg>
           </IconButton>
         )}

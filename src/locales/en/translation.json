@@ -513,6 +513,7 @@
     "exporting": "Exporting...",
     "inject": "Inject",
     "save": "Save",
+    "sendToWorkbench": "Send to Workbench",
     "versionHistory": "Version History",
     "rollback": "Restore",
     "rollbackNotice": "Restored from history. Click Save to apply changes."

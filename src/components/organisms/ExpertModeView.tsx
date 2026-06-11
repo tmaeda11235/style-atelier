@@ -97,6 +97,7 @@ export function ExpertModeView({
     handleOpenGuide,
     handleStartTutorial,
     handleSkipTutorial,
+    handleSendToWorkbench,
     handleToggleEasyMode
   } = useExpertModeView({ isEasyMode, onToggleEasyMode })
 
@@ -172,6 +173,7 @@ export function ExpertModeView({
               }
             }}
             onDelete={handleDeleteCard}
+            onSendToWorkbench={handleSendToWorkbench}
           />
         )}
 

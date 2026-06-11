@@ -32,7 +32,8 @@
         "@J-ORG-COLOR-FILTER-01",
         "@J-ORG-SEARCH-01",
         "@J-ORG-VERSION-01",
-        "@J-ORG-FOLDER-01"
+        "@J-ORG-FOLDER-01",
+        "@J-ORG-QUICK-SEND-01"
       ]
     },
     {
@@ -55,7 +56,7 @@
         "もっと見るによるカード読み込み",
         "カードを見る"
       ],
-      "nextJourneys": ["@J-WB-EASY-01", "@J-ORG-COLOR-FILTER-01"]
+      "nextJourneys": ["@J-WB-EASY-01", "@J-ORG-COLOR-FILTER-01", "@J-ORG-QUICK-SEND-01"]
     },
     {
       "id": "@J-ORG-COLOR-FILTER-01",
@@ -356,6 +357,20 @@
         "インジェクションまたはプレビュー時に URL が統合され、ウェイトが加算マージされていることを確認する"
       ],
       "nextJourneys": ["@J-WB-EXPERT-03"]
+    },
+    {
+      "id": "@J-ORG-QUICK-SEND-01",
+      "name": "クイックワークベンチ送信",
+      "description": "ライブラリからドラッグせずにカードを直接ワークベンチへ送る",
+      "steps": [
+        "ライブラリを開く",
+        "カード上のクイック送信ボタンを押下",
+        "ワークベンチに登録され自動遷移されるのを確認"
+      ],
+      "nextJourneys": [
+        "@J-WB-EXPERT-01",
+        "@J-WB-EASY-01"
+      ]
     }
   ]
 }

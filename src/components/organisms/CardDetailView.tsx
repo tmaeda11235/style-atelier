@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  Beaker,
   Download,
   History,
   RotateCcw,
@@ -54,6 +55,8 @@ interface CardDetailViewProps {
   onCardSelect?: (cardId: string) => void
   /** Callback to delete the StyleCard */
   onDelete?: (cardId: string) => Promise<void>
+  /** Callback to send the StyleCard to the Workbench and switch tab */
+  onSendToWorkbench?: (card: StyleCard) => Promise<void>
 }
 
 /**
@@ -68,7 +71,8 @@ export function CardDetailView({
   onSave,
   setAlertType,
   onCardSelect,
-  onDelete
+  onDelete,
+  onSendToWorkbench
 }: CardDetailViewProps) {
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
@@ -556,6 +560,16 @@ export function CardDetailView({
 
         {/* Row 2: Primary Actions (Inject, Save) */}
         <div className="flex gap-2 mt-1">
+          {onSendToWorkbench && (
+            <Button
+              variant="outline"
+              onClick={() => onSendToWorkbench(card)}
+              className="px-3 border-slate-300 hover:bg-slate-50 text-slate-700"
+              title={t.cardDetail.sendToWorkbench}
+              data-testid="detail-quick-send-button">
+              <Beaker className="w-4.5 h-4.5" />
+            </Button>
+          )}
           <Button
             variant="secondary"
             onClick={handleTryOnMidjourney}

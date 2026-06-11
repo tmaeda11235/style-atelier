@@ -42,6 +42,7 @@ stateDiagram-v2
   _J_ORG_FOLDER_01 : フォルダ階層化管理（ドリルダウン・DnD移動）
   _J_ORGAN_UX_PARAM_01 : パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ）
   _J_WB_MIXING_INTELLIGENT_01 : Midjourney sref/cref インテリジェントブレンド
+  _J_ORG_QUICK_SEND_01 : クイックワークベンチ送信
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -53,10 +54,12 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_SEARCH_01
   _J_ORG_EXPERT_01 --> _J_ORG_VERSION_01
   _J_ORG_EXPERT_01 --> _J_ORG_FOLDER_01
+  _J_ORG_EXPERT_01 --> _J_ORG_QUICK_SEND_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EXPERT_02 --> _J_ORG_FOLDER_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
   _J_ORG_EASY_01 --> _J_ORG_COLOR_FILTER_01
+  _J_ORG_EASY_01 --> _J_ORG_QUICK_SEND_01
   _J_ORG_COLOR_FILTER_01 --> _J_ORG_EXPERT_01
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_02
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_03
@@ -100,6 +103,8 @@ stateDiagram-v2
   _J_ORGAN_UX_PARAM_01 --> _J_WB_EXPERT_01
   _J_ORGAN_UX_PARAM_01 --> _J_ORG_EXPERT_01
   _J_WB_MIXING_INTELLIGENT_01 --> _J_WB_EXPERT_03
+  _J_ORG_QUICK_SEND_01 --> _J_WB_EXPERT_01
+  _J_ORG_QUICK_SEND_01 --> _J_WB_EASY_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -569,3 +574,17 @@ flowchart TD
   S2["インジェクションまたはプレビュー時に URL が統合され、ウェイトが加算マージされていることを確認する"]
   S1 --> S2
 ```
+
+### @J-ORG-QUICK-SEND-01: クイックワークベンチ送信
+
+ライブラリからドラッグせずにカードを直接ワークベンチへ送る
+
+```mermaid
+flowchart TD
+  S1["ライブラリを開く"]
+  S2["カード上のクイック送信ボタンを押下"]
+  S1 --> S2
+  S3["ワークベンチに登録され自動遷移されるのを確認"]
+  S2 --> S3
+```
+
