@@ -18,18 +18,11 @@ export interface WeightedColor {
 }
 
 export function hexToRgb(hex: string): [number, number, number] {
-  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i
-  const fullHex = hex.replace(
-    shorthandRegex,
-    (_, r, g, b) => r + r + g + g + b + b
-  )
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex)
-  return result
-    ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16)
-      ]
+  const shorthand = /^#?([a-f\d])([a-f\d])([a-f\d])$/i
+  const fullHex = hex.replace(shorthand, (_, r, g, b) => r + r + g + g + b + b)
+  const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex)
+  return res
+    ? [parseInt(res[1], 16), parseInt(res[2], 16), parseInt(res[3], 16)]
     : [0, 0, 0]
 }
 
@@ -51,37 +44,24 @@ export function rgbToHsl(
   r /= 255
   g /= 255
   b /= 255
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  let h = 0
-  let s = 0
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b)
+  let h = 0,
+    s = 0
   const l = (max + min) / 2
-
   if (max !== min) {
     const d = max - min
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0)
-        break
-      case g:
-        h = (b - r) / d + 2
-        break
-      case b:
-        h = (r - g) / d + 4
-        break
-    }
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0)
+    else if (max === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
     h /= 6
   }
-
   return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)]
 }
 
 export function rgbToHex(r: number, g: number, b: number): string {
-  const toHex = (c: number) => {
-    const hex = c.toString(16)
-    return hex.length === 1 ? "0" + hex : hex
-  }
+  const toHex = (c: number) => c.toString(16).padStart(2, "0")
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
@@ -89,20 +69,20 @@ export function getQuantizedColorName(h: number, s: number, l: number): string {
   if (l > 85) return "White"
   if (l < 15) return "Black"
   if (s < 15) return "Gray"
-
-  // Brown check: Hue in red/orange range, low-mid saturation, dark-mid lightness
   if (h >= 15 && h < 45 && s < 50 && l < 50) return "Brown"
-
   if (h >= 345 || h < 15) return "Red"
-  if (h >= 15 && h < 45) return "Orange"
-  if (h >= 45 && h < 70) return "Yellow"
-  if (h >= 70 && h < 160) return "Green"
-  if (h >= 160 && h < 195) return "Cyan"
-  if (h >= 195 && h < 250) return "Blue"
-  if (h >= 250 && h < 290) return "Purple"
-  if (h >= 290 && h < 345) return "Pink"
 
-  return "Gray"
+  const hueRanges: [number, string][] = [
+    [45, "Orange"],
+    [70, "Yellow"],
+    [160, "Green"],
+    [195, "Cyan"],
+    [250, "Blue"],
+    [290, "Purple"],
+    [345, "Pink"]
+  ]
+  const matched = hueRanges.find(([limit]) => h < limit)
+  return matched ? matched[1] : "Gray"
 }
 
 export function shouldUseFallback(imageUrl: string): boolean {
@@ -125,10 +105,7 @@ export function getFallbackColors(
 ): ExtractedColors {
   const fallback =
     RARITY_FALLBACK_COLORS[fallbackRarity] || RARITY_FALLBACK_COLORS.Common
-  return {
-    ...fallback,
-    isFallback: true
-  }
+  return { ...fallback, isFallback: true }
 }
 
 export function samplePixels(
@@ -140,11 +117,10 @@ export function samplePixels(
   > = {}
 
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i]
-    const g = data[i + 1]
-    const b = data[i + 2]
-    const a = data[i + 3]
-
+    const r = data[i],
+      g = data[i + 1],
+      b = data[i + 2],
+      a = data[i + 3]
     if (a < 128) continue
 
     const [h, s, l] = rgbToHsl(r, g, b)
@@ -171,11 +147,10 @@ export function getSortedWeightedColors(
   return Object.entries(nameCounts)
     .map(([name, stats]) => {
       const isNeutral = name === "White" || name === "Black" || name === "Gray"
-      const weightedCount = stats.count * (isNeutral ? 1.0 : 2.5)
       return {
         name,
         count: stats.count,
-        weightedCount,
+        weightedCount: stats.count * (isNeutral ? 1.0 : 2.5),
         hex: rgbToHex(
           Math.round(stats.rSum / stats.count),
           Math.round(stats.gSum / stats.count),
@@ -191,20 +166,14 @@ export function selectAccentColor(
   dominant: WeightedColor,
   totalPixels: number
 ): WeightedColor {
-  const isDomNeutral =
-    dominant.name === "White" ||
-    dominant.name === "Black" ||
-    dominant.name === "Gray"
-
-  if (isDomNeutral) {
-    const chromaticAccent = sortedColors.find((c) => {
-      const isNeut =
-        c.name === "White" || c.name === "Black" || c.name === "Gray"
-      return !isNeut && c.count >= totalPixels * 0.05
-    })
+  const isNeutral = (n: string) =>
+    n === "White" || n === "Black" || n === "Gray"
+  if (isNeutral(dominant.name)) {
+    const chromaticAccent = sortedColors.find(
+      (c) => !isNeutral(c.name) && c.count >= totalPixels * 0.05
+    )
     if (chromaticAccent) return chromaticAccent
   }
-
   return sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0]
 }
 
@@ -216,9 +185,7 @@ export function determineDominantAndAccent(
   fallbackRarity: RarityTier
 ): ExtractedColors {
   const sortedColors = getSortedWeightedColors(nameCounts)
-  if (sortedColors.length === 0) {
-    return getFallbackColors(fallbackRarity)
-  }
+  if (sortedColors.length === 0) return getFallbackColors(fallbackRarity)
 
   const totalPixels = Object.values(nameCounts).reduce(
     (acc, curr) => acc + curr.count,
@@ -242,17 +209,15 @@ export function extractColorsFromImage(
 ): ExtractedColors {
   const canvas = document.createElement("canvas")
   const ctx = canvas.getContext("2d")
-  if (!ctx) {
-    throw new Error("Canvas context not available")
-  }
+  if (!ctx) throw new Error("Canvas context not available")
 
   canvas.width = 50
   canvas.height = 50
   ctx.drawImage(img, 0, 0, 50, 50)
-
-  const imageData = ctx.getImageData(0, 0, 50, 50)
-  const nameCounts = samplePixels(imageData.data)
-  return determineDominantAndAccent(nameCounts, fallbackRarity)
+  return determineDominantAndAccent(
+    samplePixels(ctx.getImageData(0, 0, 50, 50).data),
+    fallbackRarity
+  )
 }
 
 export async function setupImageSrc(
@@ -265,11 +230,8 @@ export async function setupImageSrc(
   }
   try {
     const res = await fetch(imageUrl)
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`)
-    }
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+    const url = URL.createObjectURL(await res.blob())
     img.src = url
     return url
   } catch (err) {
@@ -300,8 +262,7 @@ export function loadImageAndProcess(
 
     img.onload = () => {
       try {
-        const result = extractColorsFromImage(img, fallbackRarity)
-        resolve(result)
+        resolve(extractColorsFromImage(img, fallbackRarity))
       } catch (err) {
         console.error("Color analysis failed, using fallback:", err)
         resolve(getFallbackColors(fallbackRarity))
@@ -326,10 +287,9 @@ export async function analyzeImageColors(
   imageUrl: string,
   fallbackRarity: RarityTier = "Common"
 ): Promise<ExtractedColors> {
-  if (shouldUseFallback(imageUrl)) {
-    return getFallbackColors(fallbackRarity)
-  }
-  return loadImageAndProcess(imageUrl, fallbackRarity)
+  return shouldUseFallback(imageUrl)
+    ? getFallbackColors(fallbackRarity)
+    : loadImageAndProcess(imageUrl, fallbackRarity)
 }
 
 export function filterByHue(

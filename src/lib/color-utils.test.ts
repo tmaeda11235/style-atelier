@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   analyzeImageColors,
   determineDominantAndAccent,
-  extractColorsFromImage,
   filterByHue,
   getColorNameFromHex,
   getFallbackColors,
@@ -11,11 +10,9 @@ import {
   getSortedWeightedColors,
   hexToHsl,
   hexToRgb,
-  loadImageAndProcess,
   rgbToHex,
   rgbToHsl,
   samplePixels,
-  selectAccentColor,
   setupImageSrc,
   shouldUseFallback
 } from "./color-utils"
