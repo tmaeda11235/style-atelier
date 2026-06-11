@@ -47,7 +47,7 @@ export default defineConfig({
   /* Run local dev server before starting the tests */
   webServer: {
     command:
-      "npx vite --config tests/sandbox/vite.config.ts --port 5173 --strictPort",
+      `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port 5173 --strictPort`,
     port: 5173,
     reuseExistingServer: !process.env.CI,
     timeout: 15 * 1000

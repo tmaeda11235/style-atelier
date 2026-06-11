@@ -16,6 +16,7 @@ interface LibraryCardItemProps {
   handleCardClick: (card: StyleCard) => void
   setSharingCard: (card: StyleCard | null) => void
   categories: Array<{ id: string; name: string }>
+  onQuickSend?: (card: StyleCard, e: React.MouseEvent) => void
 }
 
 const CardFooter = ({
@@ -36,6 +37,7 @@ interface LibraryCardThumbnailProps {
   card: StyleCard
   cardCategory?: { id: string; name: string }
   onPinClick: ((e: React.MouseEvent) => void) | undefined
+  onQuickSendClick: ((e: React.MouseEvent) => void) | undefined
   onEditClick: (card: StyleCard) => void
   onInjectClick: (card: StyleCard) => void
   onShareClick: (card: StyleCard) => void
@@ -46,6 +48,7 @@ function LibraryCardThumbnail({
   card,
   cardCategory,
   onPinClick,
+  onQuickSendClick,
   onEditClick,
   onInjectClick,
   onShareClick,
@@ -60,6 +63,7 @@ function LibraryCardThumbnail({
       isPinned={card.isPinned}
       usageCount={card.usageCount}
       onPinClick={onPinClick}
+      onQuickSendClick={onQuickSendClick}
       onEditClick={(e) => {
         e.stopPropagation()
         onEditClick(card)
@@ -114,6 +118,14 @@ export function LibraryCardItem(props: LibraryCardItemProps) {
         cardCategory={cardCategory}
         onPinClick={
           props.isEasyMode ? undefined : (e) => props.togglePin(props.card, e)
+        }
+        onQuickSendClick={
+          props.isEasyMode || !props.onQuickSend
+            ? undefined
+            : (e) => {
+                e.stopPropagation()
+                props.onQuickSend?.(props.card, e)
+              }
         }
         onEditClick={props.onOpenDetailCard}
         onInjectClick={props.handleCardClick}

@@ -35,10 +35,16 @@ export function LibraryTab({
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
   const { advanceIfStep } = useTutorial()
-
   const { expertFeatures } = useSettings()
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
+
+  const handleQuickSend = async (card: StyleCard, e: React.MouseEvent) => {
+    if (!card.isPinned) {
+      await togglePin(card, e)
+    }
+    onNavigateToWorkbench?.()
+  }
 
   const {
     styleCards,
@@ -179,6 +185,7 @@ export function LibraryTab({
                 handleCardClick={handleCardClick}
                 setSharingCard={setSharingCard}
                 categories={categories}
+                onQuickSend={handleQuickSend}
               />
             ))}
           </div>
