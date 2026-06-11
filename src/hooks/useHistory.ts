@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
 import { db } from "../lib/db"
 import type { HistoryItem } from "../lib/db-schema"
@@ -17,24 +17,24 @@ export function useHistory() {
     return count > limit
   }, [limit])
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     setLimit((prev) => prev + 50)
-  }
+  }, [])
 
-  const addHistoryItem = async (item: HistoryItem) => {
+  const addHistoryItem = useCallback(async (item: HistoryItem) => {
     return await db.historyItems.put(item)
-  }
+  }, [])
 
-  const clearHistory = async () => {
+  const clearHistory = useCallback(async () => {
     return await db.historyItems.clear()
-  }
+  }, [])
 
-  const updateHistoryItem = async (
-    id: string,
-    changes: Partial<HistoryItem>
-  ) => {
-    return await db.historyItems.update(id, changes)
-  }
+  const updateHistoryItem = useCallback(
+    async (id: string, changes: Partial<HistoryItem>) => {
+      return await db.historyItems.update(id, changes)
+    },
+    []
+  )
 
   return {
     historyItems: historyItems || [],
