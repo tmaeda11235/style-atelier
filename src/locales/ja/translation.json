@@ -475,7 +475,19 @@
     "saveToLibrary": "ライブラリに保存",
     "newCardDefault": "新しいカード",
     "quickKeywords": "クイックキーワード",
-    "cardName": "カード名"
+    "cardName": "カード名",
+    "aiDeClutterBtn": "AIプロンプト整理",
+    "aiDeClutterLoading": "整理中...",
+    "aiDeClutterNotReady": "Gemmaモデルがロードされていません。設定でダウンロードしてください。",
+    "aiAnalysis": "AIスタイル分析",
+    "aiAnalysisBtn": "AIでスタイルを分析",
+    "aiAnalysisLoading": "スタイル分析中...",
+    "aiAnalysisError": "推論に失敗しました: {{error}}",
+    "aiRecommendTags": "AIおすすめタグ",
+    "aiSummary": "AI要約説明",
+    "aiSummaryPlaceholder": "ここにAIの要約が表示されます...",
+    "aiUseSummary": "カードメモ/説明として使用",
+    "aiModelNotDownloaded": "おすすめ機能を有効にするためにAIモデルをダウンロード"
   },
   "cardDetail": {
     "title": "カード詳細",

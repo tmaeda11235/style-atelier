@@ -21,6 +21,20 @@ vi.mock("../../hooks/useCategories", () => ({
   useCategories: vi.fn().mockReturnValue([])
 }))
 
+vi.mock("../../hooks/useAiMetadataGenerator", () => ({
+  useAiMetadataGenerator: vi.fn().mockReturnValue({
+    status: "idle",
+    progress: 0,
+    startDownload: vi.fn(),
+    loading: false,
+    error: null,
+    result: null,
+    setResult: vi.fn(),
+    generateMetadata: vi.fn(),
+    isModelReady: false
+  })
+}))
+
 const mockMintingItem: HistoryItem = {
   id: "test-job-id",
   fullCommand: "a beautiful mountain scenery --ar 16:9",

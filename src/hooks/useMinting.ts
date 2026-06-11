@@ -30,6 +30,7 @@ export function useMintingMetadata(
   const [customName, setCustomName] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [customTags, setCustomTags] = useState<string[]>([])
+  const [mutationNote, setMutationNote] = useState("")
 
   useEffect(() => {
     if (mintingItem) {
@@ -41,6 +42,7 @@ export function useMintingMetadata(
     setCustomTags([])
     setCustomName("")
     setSelectedCategory("")
+    setMutationNote("")
   }, [mintingItem, variationBase])
 
   return {
@@ -52,7 +54,9 @@ export function useMintingMetadata(
     selectedCategory,
     setSelectedCategory,
     customTags,
-    setCustomTags
+    setCustomTags,
+    mutationNote,
+    setMutationNote
   }
 }
 

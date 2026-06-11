@@ -475,7 +475,16 @@
     "saveToLibrary": "Save to Library",
     "newCardDefault": "New Card",
     "quickKeywords": "Quick Keywords",
-    "cardName": "Card Name"
+    "cardName": "Card Name",
+    "aiAnalysis": "AI Style Analysis",
+    "aiAnalysisBtn": "Analyze Style with AI",
+    "aiAnalysisLoading": "Analyzing style...",
+    "aiAnalysisError": "Inference failed: {{error}}",
+    "aiRecommendTags": "AI Recommended Tags",
+    "aiSummary": "AI Summary Description",
+    "aiSummaryPlaceholder": "AI summary will appear here...",
+    "aiUseSummary": "Use as Card Note/Description",
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
   },
   "cardDetail": {
     "title": "Card Details",
