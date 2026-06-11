@@ -75,7 +75,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Midjourney Sref/Cref Intelligen
     // 3. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB queries
 
     // 4. Try on Midjourney (Inject)
     const injectBtn = spFrame.locator("button:has-text('Try on Midjourney')")

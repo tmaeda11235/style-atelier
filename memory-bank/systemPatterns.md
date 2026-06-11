@@ -25,7 +25,8 @@ tags: []
 
 ## Key Technical Patterns
 
-- **Tokenized Editor**: Treating prompt segments as draggable objects (Bubbles).
+- **Tokenized Editor**: Treating prompt segments as draggable objects (Bubbles). Managed by `usePromptBubbleEditorState` (`src/hooks/usePromptBubbleEditorState.ts`) to handle bubble splitting, active/inactive states, custom token additions, and serialization, keeping the component lightweight and meeting ESLint constraints.
+- **Local AI Prompt De-cluttering**: Integrates local LLM-driven cleaning of prompt bubbles. Managed by the `useAiPromptDeclutter` hook (`src/hooks/useAiPromptDeclutter.ts`), which interfaces with WebLLM via Offscreen Worker messaging, handles model download progress, and falls back to regex-based segmentation in case of initialization failure.
 - **Bubble Slotting UI**: Breaking prompts into "Text" (Fixed) and "Slot" (Variable) components.
 - **Mixing Table & Intelligent Weighted Blend**: Logic to merge multiple Style Cards (parents) into a new prompt generation or Workbench environment. When merging, it aggregates sref/cref URLs with their corresponding weights (calculated by multiplying the card weight with the parameter weight, summing up occurrences, and outputting with suffix weights e.g. `::weight`). It also propagates weights to prompt text segments.
 - **Image-as-Database (PNG Metadata & QR Fallback)**: Using the exported image itself as a portable data container. During export, card data is injected as a compressed payload into a custom PNG `tEXt` metadata chunk. During import, the raw file is parsed directly via a custom CRC32 checker to retrieve the metadata, completely bypassing canvas rendering and QR scan overhead. If metadata is missing or stripped (e.g. converted or hosted on platforms that strip metadata), a canvas-based multi-stage QR scan fallback is executed (first full image, then cropped bottom-right corner, then 2x scaled crop).
@@ -65,6 +66,7 @@ tags: []
   - Implements visual scroll affordance for horizontal color filters using CSS `mask-image` linear-gradients (for smooth edge-fade indications) coupled with dynamic scroll arrow overlays.
   - Implements a collapsible accordion UI (`LibraryFilterAccordion`) for advanced filters (rarity, category, color, sorting) to maximize screen space while keeping code modularized under 50-line function limits.
   - Decouples Folder Explorer (`FolderExplorer.tsx`) and Card Items (`LibraryCardItem.tsx`) from `LibraryTab.tsx` to meet the 300-line file limit. The Folder Explorer splits breadcrumbs and subfolder grid into subcomponents (`Breadcrumbs`, `SubfolderGrid`, `SubfolderItem`) and Card Items use isolated thumbnail layout (`LibraryCardThumbnail`) to satisfy the 50-line function limit.
+  - Implements Natural Language Semantic Filtering (`useAiSearch` and `useDebouncedSemanticSearch` hooks) that uses local WebLLM Gemma model to parse user's query into structured database filters (rarity, category, color, keyword). The implementation is fully modularized by extracting components (`CardsGrid.tsx`, `EmptyState.tsx`, `ExtractedFiltersDisplay.tsx`, `AiWarningModal.tsx`) to comply with strict ESLint line count rules.
 - **Tutorial Spotlight & Position Synchronization**:
   - Tutorial spotlight positioning, window resize/scroll event listeners, click-blocking logic, and database mock insertions are fully encapsulated in the `useSpotlight` custom hook (`src/hooks/useSpotlight.ts`).
   - Decouples DOM calculations and window event handlers from the `InteractiveTutorial` overlay component (`src/components/organisms/InteractiveTutorial.tsx`), maintaining clean separation of concerns and keeping component file size well within constraints (under 300 lines).
@@ -87,6 +89,11 @@ tags: []
   - **Cache Integrity Guardrails**: Validates cached files in OPFS or Cache Storage. If corruption or incomplete downloads are detected, it automatically purges and restarts the download.
   - **Non-blocking Execution**: The model is executed off the main thread, communicating with the Side Panel and Background Service Worker via Chrome extension runtime messaging.
   - **Lightweight Model Optimization**: Since Gemma-4 E2B is a <1GB model, it has limited complex reasoning capability. The system handles this via structured prompt templates (Few-shot prompting) and RAG (retrieving relevant style keywords or historical combinations from IndexedDB) before running inference.
+  - **AI-Powered Cauldron Recipe Advice**:
+    - Generates mixing advice automatically when 2 or more cards are in the Cauldron.
+    - Utilizes a 500ms debounce inside the `useAiRecipeAdvice` hook to prevent redundant inference during active editing.
+    - Employs an in-memory combination cache based on sorted card IDs and weights to instantly retrieve past blend advice.
+    - Complies with strict ESLint line limits (50 lines per function) by modularizing the section UI into lightweight sub-components (`ModelStatusOverlay`, `AdviceViewer`, `AdviceSectionContent`).
   - **Zero-cost, High-frequency Orchestration**: Because client-side execution incurs zero API costs, the agent can trigger background tasks (e.g., parsing, tagging, style synthesis, user action predictions) frequently without budgeting concerns.
 
 ## Data Flow

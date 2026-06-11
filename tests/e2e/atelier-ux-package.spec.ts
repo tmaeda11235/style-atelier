@@ -54,9 +54,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Atelier UX Package @J-WB-MIXING
     // 3. Switch to Library tab to see the card first
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // Capture initial state screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, "atelier-workbench-empty.png")
     })
@@ -64,9 +61,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Atelier UX Package @J-WB-MIXING
     // 4. Switch to Workbench tab
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // 5. Verify card in workbench (already pinned via seed)
     console.log("Verifying card is added to workbench...")
 
     // Verify card is added to Workbench cauldron slot
@@ -111,7 +105,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Atelier UX Package @J-WB-MIXING
     await extractBtn.click({ force: true })
 
     // Verify portion card added to DB by checking Hand area
-    await page.waitForTimeout(1000)
 
     const portionCard = spFrame
       .locator("img[alt='[Portion] golden hour portrait']")
