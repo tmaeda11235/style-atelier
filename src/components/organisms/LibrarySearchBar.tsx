@@ -62,6 +62,72 @@ function FilterToggleBtn({
   )
 }
 
+function AiSearchToggleBtn({
+  isAiSearch,
+  onClick,
+  title
+}: {
+  isAiSearch: boolean
+  onClick: () => void
+  title: string
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center justify-center p-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${
+        isAiSearch
+          ? "bg-gradient-to-r from-purple-500 to-indigo-500 border-indigo-400 text-white shadow-md shadow-indigo-500/20 scale-105"
+          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 hover:text-indigo-500 hover:border-indigo-200"
+      }`}
+      title={title}
+      id="ai-search-toggle-btn"
+      data-testid="ai-search-toggle-btn">
+      <Sparkles className={`w-4 h-4 ${isAiSearch ? "animate-pulse" : ""}`} />
+    </button>
+  )
+}
+
+interface SearchInputWrapperProps {
+  isAiSearch: boolean
+  aiSearchQuery: string
+  searchTag: string
+  allSrefs: string[]
+  setAiSearchQuery: (val: string) => void
+  setSearchTag: (val: string) => void
+  t: any
+}
+
+function SearchInputWrapper({
+  isAiSearch,
+  aiSearchQuery,
+  searchTag,
+  allSrefs,
+  setAiSearchQuery,
+  setSearchTag,
+  t
+}: SearchInputWrapperProps) {
+  return (
+    <div className="flex-1 min-w-0">
+      <SearchField
+        placeholder={
+          isAiSearch
+            ? t.aiSearchPlaceholder || "Ask AI: 'legendary cyberpunk'..."
+            : t.searchPlaceholder || "Search by tag, name or sref..."
+        }
+        options={isAiSearch ? [] : allSrefs}
+        value={isAiSearch ? aiSearchQuery : searchTag}
+        onChange={(e) =>
+          isAiSearch
+            ? setAiSearchQuery(e.target.value)
+            : setSearchTag(e.target.value)
+        }
+        className="text-xs"
+        id="library-search-input"
+      />
+    </div>
+  )
+}
+
 export function LibrarySearchBar(props: LibrarySearchBarProps) {
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
@@ -89,34 +155,20 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
   return (
     <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
       <div className="flex gap-2 items-center">
-        <button
+        <AiSearchToggleBtn
+          isAiSearch={isAiSearch}
           onClick={handleToggleAiSearch}
-          className={`flex items-center justify-center p-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${isAiSearch ? "bg-gradient-to-r from-purple-500 to-indigo-500 border-indigo-400 text-white shadow-md shadow-indigo-500/20 scale-105" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 hover:text-indigo-500 hover:border-indigo-200"}`}
           title={t.aiSearchToggle || "AI Semantic Search"}
-          id="ai-search-toggle-btn"
-          data-testid="ai-search-toggle-btn">
-          <Sparkles
-            className={`w-4 h-4 ${isAiSearch ? "animate-pulse" : ""}`}
-          />
-        </button>
-        <div className="flex-1 min-w-0">
-          <SearchField
-            placeholder={
-              isAiSearch
-                ? t.aiSearchPlaceholder || "Ask AI: 'legendary cyberpunk'..."
-                : t.searchPlaceholder || "Search by tag, name or sref..."
-            }
-            options={isAiSearch ? [] : props.allSrefs}
-            value={isAiSearch ? aiSearchQuery : props.searchTag}
-            onChange={(e) =>
-              isAiSearch
-                ? setAiSearchQuery(e.target.value)
-                : props.setSearchTag(e.target.value)
-            }
-            className="text-xs"
-            id="library-search-input"
-          />
-        </div>
+        />
+        <SearchInputWrapper
+          isAiSearch={isAiSearch}
+          aiSearchQuery={aiSearchQuery}
+          searchTag={props.searchTag}
+          allSrefs={props.allSrefs}
+          setAiSearchQuery={setAiSearchQuery}
+          setSearchTag={props.setSearchTag}
+          t={t}
+        />
         <FilterToggleBtn
           isFiltersExpanded={props.isFiltersExpanded}
           activeFiltersCount={props.activeFiltersCount}
