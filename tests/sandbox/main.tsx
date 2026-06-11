@@ -103,7 +103,8 @@ if (typeof window !== "undefined") {
     failDownload: false,
     downloadErrorMsg: "Network connection lost",
     offlineMode: false,
-    onDownloadStart: null as (() => void) | null
+    onDownloadStart: null as (() => void) | null,
+    inferenceResult: ""
   }
   ;(window as any).mockWebLlmConfig = mockWebLlmConfig
 
@@ -270,6 +271,17 @@ if (typeof window !== "undefined") {
             localStorage.removeItem("mock-webllm-downloaded")
             setTimeout(() => {
               if (callback) callback({ status: "success" })
+            }, 50)
+          } else if (message.action === "run-inference") {
+            setTimeout(() => {
+              if (callback) {
+                callback({
+                  status: "success",
+                  result:
+                    mockWebLlmConfig.inferenceResult ||
+                    "Mocked inference result"
+                })
+              }
             }, 50)
           }
         } else if (message && message.target === "background") {
