@@ -286,13 +286,18 @@ export function HandBar({
           )}
         </div>
         <div className="relative group/scroll px-4">
+          {/* Left fade overlay */}
+          {showLeftArrow && (
+            <div className="absolute left-4 top-0 bottom-0 w-8 bg-gradient-to-r from-white/95 dark:from-slate-900/95 to-transparent pointer-events-none z-10" />
+          )}
+
           {/* Left scroll button */}
           {showLeftArrow && (
             <button
               onClick={() =>
                 scrollRef.current?.scrollBy({ left: -80, behavior: "smooth" })
               }
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover/scroll:opacity-100 focus:opacity-100"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-40 hover:opacity-100 group-hover/scroll:opacity-100 focus:opacity-100"
               style={{ width: "20px", height: "20px" }}
               title="左へスクロール"
               data-testid="handbar-scroll-left-btn"
@@ -303,15 +308,20 @@ export function HandBar({
 
           <div
             ref={scrollRef}
-            className="flex gap-2 overflow-x-auto pb-1.5 custom-scrollbar scroll-smooth"
+            className={`flex overflow-x-auto pb-1.5 custom-scrollbar scroll-smooth ${
+              pinnedCards.length >= 4 ? "gap-1" : "gap-2"
+            }`}
             onScroll={checkScroll}>
-            {pinnedCards.map((card) => {
+            {pinnedCards.map((card, index) => {
               const config = RARITY_CONFIG[card.tier]
+              const shouldStack = pinnedCards.length >= 4
+              const stackClass = shouldStack && index > 0 ? "ml-[-16px]" : ""
               return (
                 <div
                   key={card.id}
                   onClick={() => onOpenDetailCard?.(card)}
-                  className="cursor-pointer flex-shrink-0">
+                  style={{ zIndex: index, position: "relative" }}
+                  className={`cursor-pointer flex-shrink-0 transition-all duration-200 hover:-translate-y-1 hover:scale-105 hover:z-30 ${stackClass}`}>
                   <CardThumbnail
                     imageUrl={card.thumbnailData}
                     thumbnailImages={card.selectedThumbnails}
@@ -345,13 +355,18 @@ export function HandBar({
             </button>
           </div>
 
+          {/* Right fade overlay */}
+          {showRightArrow && (
+            <div className="absolute right-4 top-0 bottom-0 w-8 bg-gradient-to-l from-white/95 dark:from-slate-900/95 to-transparent pointer-events-none z-10" />
+          )}
+
           {/* Right scroll button */}
           {showRightArrow && (
             <button
               onClick={() =>
                 scrollRef.current?.scrollBy({ left: 80, behavior: "smooth" })
               }
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover/scroll:opacity-100 focus:opacity-100"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-40 hover:opacity-100 group-hover/scroll:opacity-100 focus:opacity-100"
               style={{ width: "20px", height: "20px" }}
               title="右へスクロール"
               data-testid="handbar-scroll-right-btn"

@@ -111,7 +111,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
     // 12. Switch to Library tab
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB query
 
     // Navigate into the "Cyberpunk Tech" folder where the card is saved
     const folder = spFrame
@@ -119,9 +118,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
       .first()
     await expect(folder).toBeVisible({ timeout: 5000 })
     await folder.click()
-    await page.waitForTimeout(1000)
-
-    // Verify the card is visible in the folder
     const cardContainer = spFrame
       .locator(".group", { hasText: "Expert Warrior Note" })
       .first()

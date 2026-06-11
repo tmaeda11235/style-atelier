@@ -65,9 +65,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     })
 
     // Wait for DB queries to complete and state to settle
-    await page.waitForTimeout(1000)
-
-    // Check count from test context
     const dbCount = await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       return await database.styleCards.count()
@@ -81,9 +78,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     await libraryTabButton.click()
 
     // Wait another second for React rendering
-    await page.waitForTimeout(1000)
-
-    // 1. Pagination Check (Should display 12 cards first)
     console.log("Checking pagination limit...")
     const allCardsInGrid = spFrame.locator(
       "[data-tutorial='library-card-grid'] > div"
@@ -109,7 +103,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     console.log("Verifying FlexSearch matches...")
     const searchField = spFrame.locator("input[placeholder*='Search by tag']")
     await searchField.fill("Fancy Card 5")
-    await page.waitForTimeout(500) // Debounce delay
 
     // Only card 5 should match
     await expect(allCardsInGrid).toHaveCount(1, { timeout: 10000 })
@@ -117,7 +110,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
 
     // Clear search (should reset visibleCount back to 12)
     await searchField.fill("")
-    await page.waitForTimeout(1000)
     await expect(allCardsInGrid).toHaveCount(12, { timeout: 10000 })
 
     // 4. Color Filter Check
@@ -126,9 +118,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     const redColorButton = spFrame.locator("button[title='Red']")
     await expect(redColorButton).toBeVisible()
     await redColorButton.evaluate((el) => (el as HTMLButtonElement).click())
-    await page.waitForTimeout(1000)
-
-    // Cards with index 0, 3, 6, 9, 12 should match (5 cards)
     await expect(allCardsInGrid).toHaveCount(5, { timeout: 10000 })
 
     // Take screenshot of filtered color cards
@@ -180,7 +169,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     await toggleButton.click()
 
     // Wait for transition
-    await page.waitForTimeout(500)
 
     const expandedStyle = await accordion.getAttribute("style")
     expect(expandedStyle).toContain("max-height: 500px")
@@ -194,7 +182,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     // Click toggle button to collapse again
     console.log("Collapsing filters accordion...")
     await toggleButton.click()
-    await page.waitForTimeout(500)
 
     const collapsedStyle = await accordion.getAttribute("style")
     expect(collapsedStyle).toContain("max-height: 0px")
@@ -228,20 +215,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
           "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
       })
     })
-
-    await page.waitForTimeout(1000)
-
-    // Expand accordion to access color filter
     await toggleButton.click()
-    await page.waitForTimeout(300)
-
-    // Apply Red color filter (it won't match our Blue card)
     const redColorButton = spFrame.locator("button[title='Red']")
     await expect(redColorButton).toBeVisible()
     await redColorButton.evaluate((el) => (el as HTMLButtonElement).click())
-    await page.waitForTimeout(500)
-
-    // Grid should be empty
     const allCardsInGrid = spFrame.locator(
       "[data-tutorial='library-card-grid'] > div"
     )
@@ -259,9 +236,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     // Click Clear Filters
     console.log("Clicking Clear Filters...")
     await clearFiltersBtn.click()
-    await page.waitForTimeout(1000)
-
-    // Card should be visible again (means color filter is reset to All)
     await expect(allCardsInGrid).toHaveCount(1)
 
     // Take screenshot after resetting
@@ -295,9 +269,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     const toggleButton = spFrame.locator("[data-testid='toggle-filters-btn']")
     await expect(toggleButton).toBeVisible()
     await toggleButton.click()
-    await page.waitForTimeout(500)
-
-    // Seed mock cards with model versions into IndexedDB
     console.log("Seeding mock cards with model versions...")
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
@@ -390,8 +361,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
       await database.styleCards.bulkAdd(mockCards)
     })
 
-    await page.waitForTimeout(1000)
-
     const allCardsInGrid = spFrame.locator(
       "[data-tutorial='library-card-grid'] > div"
     )
@@ -404,9 +373,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     const v6FilterBtn = spFrame.locator("[data-testid='model-filter-V6']")
     await expect(v6FilterBtn).toBeVisible()
     await v6FilterBtn.click()
-    await page.waitForTimeout(500)
-
-    // Grid should have 3 cards (V6 Card 0, 1, 2)
     await expect(allCardsInGrid).toHaveCount(3)
 
     // Take screenshot of V6 filter
@@ -421,9 +387,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     )
     await expect(niji6FilterBtn).toBeVisible()
     await niji6FilterBtn.click()
-    await page.waitForTimeout(500)
-
-    // Grid should have 1 card (Niji 6 Card)
     await expect(allCardsInGrid).toHaveCount(1)
 
     // Take screenshot of Niji 6 filter
@@ -438,9 +401,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
     )
     await expect(allModelFilterBtn).toBeVisible()
     await allModelFilterBtn.click()
-    await page.waitForTimeout(500)
-
-    // Grid should show all 10 cards again
     await expect(allCardsInGrid).toHaveCount(10)
   })
 })

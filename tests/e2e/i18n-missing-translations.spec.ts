@@ -32,14 +32,10 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // Verify Settings Title is "設定"
     const settingsTitleJa = spFrame.locator("h2:has-text('設定')")
     await expect(settingsTitleJa).toBeVisible({ timeout: 5000 })
 
@@ -82,9 +78,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
       "button[title='Library'], button[title='ライブラリ']"
     )
     await libraryTabBtn.click()
-    await page.waitForTimeout(500)
-
-    // Click Merge Stack button in HandBar
     // In Japanese, it should be "スタックを統合"
     const mergeBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
     await expect(mergeBtn).toBeVisible({ timeout: 10000 })
@@ -119,9 +112,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     console.log("Testing Share Card Modal localization...")
     // Go to Library
     await libraryTabBtn.click()
-    await page.waitForTimeout(500)
-
-    // Hover card and click share button
     const shareCardBtn = spFrame
       .locator("[data-testid='share-card-button']")
       .first()
@@ -233,17 +223,12 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
     // 3. Switch to Settings tab and set language to English
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("en")
-    await page.waitForTimeout(500)
-
-    // 4. Switch to Library tab
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
-    await page.waitForTimeout(1000) // wait for DB query
 
     // 5. Open card details
     const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
@@ -287,15 +272,8 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Missing Translations @J-SY
 
     // 9. Go back to Settings and switch language to Japanese
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // 10. Switch back to Library
     await libraryTabButton.click()
-    await page.waitForTimeout(1000)
-
-    // 11. Open card details again
     await editBtn.click()
 
     // 12. Click Delete Card button to show Japanese delete confirmation modal

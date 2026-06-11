@@ -34,9 +34,6 @@ test.describe("Cauldron Drag and Drop Affordance E2E Tests @J-WB-EXPERT-03", () 
       const database = (window as any).db
       await database.styleCards.clear()
     })
-    await page.waitForTimeout(500)
-
-    // 3. Switch to Workbench tab
     console.log("Switching to Workbench tab...")
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await expect(workbenchTabButton).toBeVisible({ timeout: 10000 })

@@ -47,9 +47,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       )
     })
     await page.reload()
-    await page.waitForTimeout(1000)
-
-    // Skip welcome dialog again after reload
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click()
     }
@@ -59,14 +56,10 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
 
     const langSelect = spFrame.locator("#language-select")
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("en")
-    await page.waitForTimeout(500)
-
-    // 3. Verify English UI texts
     console.log("Verifying English UI texts...")
     // Tabs
     const historyTab = spFrame.locator("button[title='History']")
@@ -83,9 +76,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Move to Library Tab
     await libraryTab.click()
-    await page.waitForTimeout(500)
-
-    // Search placeholder
     const searchField = spFrame.locator(
       "input[placeholder='Search by tag, name or sref...']"
     )
@@ -150,13 +140,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     const cardElement = spFrame.locator("p:has-text('Test Parameter Card')")
     await expect(cardElement).toBeVisible()
     await cardElement.click()
-    await page.waitForTimeout(500)
-
-    // Go to Workbench Tab
     await workbenchTab.click()
-    await page.waitForTimeout(500)
-
-    // Verify parameter labels in English
     const promptSegmentsHeader = spFrame.locator(
       "span:has-text('Prompt Segments')"
     )
@@ -200,11 +184,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // 4. Switch to Settings and change to Japanese (ja)
     await settingsNavBtn.click()
-    await page.waitForTimeout(500)
     await langSelect.selectOption("ja")
-    await page.waitForTimeout(500)
-
-    // 5. Verify Japanese UI texts
     console.log("Verifying Japanese UI texts...")
     // Tabs and buttons
     const guideBtnJa = spFrame.locator("button[title='ガイドを表示']")
@@ -212,9 +192,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Move to Library Tab
     await libraryTab.click()
-    await page.waitForTimeout(500)
-
-    // Search placeholder
     const searchFieldJa = spFrame.locator(
       "input[placeholder='タグ、名前、srefで検索...']"
     )
@@ -236,9 +213,6 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Go to Workbench Tab
     await workbenchTab.click()
-    await page.waitForTimeout(500)
-
-    // Verify parameter labels in Japanese
     const promptSegmentsHeaderJa = spFrame.locator(
       "span:has-text('プロンプト要素')"
     )
