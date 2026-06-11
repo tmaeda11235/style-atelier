@@ -100,7 +100,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     })
 
     // Click "Download Model" button to trigger transition to ready state
-    const downloadBtn = spFrame.locator(
+    const downloadBtn = adviceSection.locator(
       "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
     )
     await expect(downloadBtn).toBeVisible()
