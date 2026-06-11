@@ -6,6 +6,10 @@ import {
 
 // WebLLM Worker instance
 let webLlmWorker: Worker | null = null
+const pendingInferences = new Map<
+  string,
+  { resolve: (res: any) => void; reject: (err: any) => void }
+>()
 
 // Expected models and sizes for Gemma-4 E2B
 const GEMMA_MODEL_FILES = [
@@ -41,6 +45,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "purge-cache":
       handlePurgeCache(sendResponse)
       return true
+
+    case "run-inference":
+      handleRunInference(
+        message.requestId ?? Math.random().toString(36).substring(7),
+        message.prompt,
+        message.systemPrompt,
+        message.temperature,
+        sendResponse
+      )
+      return true // Async response
 
     default:
       sendResponse({
@@ -100,6 +114,24 @@ function handleInitWorker(sendResponse: (res: any) => void) {
       )
 
       webLlmWorker.onmessage = (event) => {
+        const data = event.data
+        if (
+          data &&
+          (data.status === "inference-result" ||
+            data.status === "inference-error")
+        ) {
+          const { requestId, result, error } = data
+          const pending = pendingInferences.get(requestId)
+          if (pending) {
+            pendingInferences.delete(requestId)
+            if (data.status === "inference-result") {
+              pending.resolve(result)
+            } else {
+              pending.reject(error || "Inference failed")
+            }
+          }
+        }
+
         // Forward message from Worker to Background / Side Panel
         chrome.runtime.sendMessage({
           source: "offscreen-worker",
@@ -108,6 +140,43 @@ function handleInitWorker(sendResponse: (res: any) => void) {
       }
     }
     sendResponse({ status: "success", message: "Worker initialized" })
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}
+
+function handleRunInference(
+  requestId: string,
+  prompt: string,
+  systemPrompt: string | undefined,
+  temperature: number | undefined,
+  sendResponse: (res: any) => void
+) {
+  try {
+    if (!webLlmWorker) {
+      handleInitWorker(() => {})
+    }
+
+    if (webLlmWorker) {
+      pendingInferences.set(requestId, {
+        resolve: (result) => {
+          sendResponse({ status: "success", result })
+        },
+        reject: (error) => {
+          sendResponse({ status: "error", error })
+        }
+      })
+
+      webLlmWorker.postMessage({
+        action: "run-inference",
+        requestId,
+        prompt,
+        systemPrompt,
+        temperature
+      })
+    } else {
+      sendResponse({ status: "error", error: "Failed to initialize worker" })
+    }
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })
   }

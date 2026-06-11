@@ -228,4 +228,64 @@ describe("useWebLlm", () => {
     expect(result.current.status).toBe("idle")
     expect(result.current.progress).toBe(0)
   })
+
+  it("should execute runInference and resolve on success", async () => {
+    const { result } = renderHook(() => useWebLlm())
+
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "run-inference") {
+          setTimeout(() => {
+            if (callback) {
+              callback({ status: "success", result: "Inferred text content" })
+            }
+          }, 10)
+        }
+      }
+    )
+
+    let inferenceResult = ""
+    await act(async () => {
+      inferenceResult = await result.current.runInference(
+        "Generate a style",
+        "You are an artist",
+        0.5
+      )
+    })
+
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+      {
+        target: "offscreen",
+        action: "run-inference",
+        requestId: expect.any(String),
+        prompt: "Generate a style",
+        systemPrompt: "You are an artist",
+        temperature: 0.5
+      },
+      expect.any(Function)
+    )
+    expect(inferenceResult).toBe("Inferred text content")
+  })
+
+  it("should reject runInference on failure response", async () => {
+    const { result } = renderHook(() => useWebLlm())
+
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "run-inference") {
+          setTimeout(() => {
+            if (callback) {
+              callback({ status: "error", error: "Inference failed error" })
+            }
+          }, 10)
+        }
+      }
+    )
+
+    await expect(
+      act(async () => {
+        await result.current.runInference("Generate a style")
+      })
+    ).rejects.toThrow("Inference failed error")
+  })
 })
