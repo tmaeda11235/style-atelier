@@ -119,6 +119,12 @@ To ensure maintainability and scalability, the project follows a strict director
   - `src/sidepanel.tsx`: Main entry point for the side panel UI.
   - `src/content.ts`: Content scripts (if applicable).
 
+## Semantic Design Tokens & Dark Mode Theme Management:
+
+- CSS variables (e.g., `--color-surface`, `--color-text-primary`, `--color-border-primary`, `--color-muted`) are defined under `:root` and `.dark` blocks in `src/style.css`.
+- Registered in Tailwind CSS v4 `@theme` block, mapping them to Tailwind utility classes (e.g., `bg-surface`, `text-text-primary`, `border-border-primary`, `bg-muted`).
+- Allows components to dynamically adapt to Light/Dark themes without hardcoded `dark:` prefixes, standardizing color hierarchies and reducing visual debt.
+
 ## AI-Driven Development & Layer Boundaries
 
 To maintain clean architecture and prevent technical debt, the following strict boundaries are enforced:
