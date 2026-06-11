@@ -125,7 +125,6 @@ export class StyleAtelierDatabaseBase extends Dexie {
       parameterFolders: "id, name, parentId"
     })
   }
-
 }
 
 export function upgradeToVersion6(tx: any) {

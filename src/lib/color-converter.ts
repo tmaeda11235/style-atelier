@@ -87,7 +87,6 @@ function getChromaticColorName(h: number, s: number, l: number): string {
   return matched ? matched.name : "Gray"
 }
 
-
 export function getQuantizedColorName(h: number, s: number, l: number): string {
   if (l > 85) return "White"
   if (l < 15) return "Black"

@@ -289,7 +289,9 @@ export function HandBar({
           {/* Left scroll button */}
           {showLeftArrow && (
             <button
-              onClick={() => scrollRef.current?.scrollBy({ left: -80, behavior: "smooth" })}
+              onClick={() =>
+                scrollRef.current?.scrollBy({ left: -80, behavior: "smooth" })
+              }
               className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover/scroll:opacity-100 focus:opacity-100"
               style={{ width: "20px", height: "20px" }}
               title="左へスクロール"
@@ -346,7 +348,9 @@ export function HandBar({
           {/* Right scroll button */}
           {showRightArrow && (
             <button
-              onClick={() => scrollRef.current?.scrollBy({ left: 80, behavior: "smooth" })}
+              onClick={() =>
+                scrollRef.current?.scrollBy({ left: 80, behavior: "smooth" })
+              }
               className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-0 group-hover/scroll:opacity-100 focus:opacity-100"
               style={{ width: "20px", height: "20px" }}
               title="右へスクロール"

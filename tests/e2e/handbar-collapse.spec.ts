@@ -140,7 +140,9 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     console.log("HandBar auto-expanded on drag screenshot saved.")
   })
 
-  test("should support scrolling when many cards are pinned", async ({ page }) => {
+  test("should support scrolling when many cards are pinned", async ({
+    page
+  }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page for HandBar Scroll E2E test...")
     await page.goto("/tests/sandbox/index.html")
@@ -166,7 +168,8 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
         tier: "Common",
         isPinned: true,
         dominantColor: "#3b82f6",
-        thumbnailData: "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%233b82f6'/></svg>"
+        thumbnailData:
+          "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%233b82f6'/></svg>"
       }))
       await database.styleCards.bulkAdd(cards)
     })
@@ -183,7 +186,9 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     await page.waitForTimeout(300)
 
     // 4. Verify right scroll button is visible (since 7 cards overflow the container)
-    const rightScrollBtn = spFrame.locator("[data-testid='handbar-scroll-right-btn']")
+    const rightScrollBtn = spFrame.locator(
+      "[data-testid='handbar-scroll-right-btn']"
+    )
     await expect(rightScrollBtn).toBeVisible()
 
     // Save initial scroll state screenshot
@@ -196,7 +201,9 @@ test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-0
     await page.waitForTimeout(800) // wait for smooth scroll
 
     // 6. Verify left scroll button is visible now
-    const leftScrollBtn = spFrame.locator("[data-testid='handbar-scroll-left-btn']")
+    const leftScrollBtn = spFrame.locator(
+      "[data-testid='handbar-scroll-left-btn']"
+    )
     await expect(leftScrollBtn).toBeVisible()
 
     // Save scrolled state screenshot
