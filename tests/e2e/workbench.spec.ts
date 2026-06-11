@@ -504,6 +504,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     const modalCardName = spFrame.locator("h3:has-text('Evolve Test Card')")
     await expect(modalCardName).toBeVisible()
 
+    // Wait for the 3D flip animation and particle explosion to complete
+    await page.waitForTimeout(2000)
+
     // 6. Capture screenshot of the modal
     await page.screenshot({
       path: path.join(screenshotsDir, "evolution-success-modal.png")
@@ -695,6 +698,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       "h2:has-text('EVOLUTION COMPLETE!'), h2:has-text('進化完了！')"
     )
     await expect(modalTitle).toBeVisible({ timeout: 10000 })
+
+    // Wait for the 3D flip animation and particle explosion to complete
+    await page.waitForTimeout(2000)
 
     // Capture screenshot of evolution success modal (with sparkles and visual highlights)
     await page.screenshot({
