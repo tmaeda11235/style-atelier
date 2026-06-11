@@ -10,6 +10,13 @@ export interface ExtractedColors {
   isFallback?: boolean
 }
 
+export interface WeightedColor {
+  name: string
+  count: number
+  weightedCount: number
+  hex: string
+}
+
 export function hexToRgb(hex: string): [number, number, number] {
   const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i
   const fullHex = hex.replace(
@@ -98,7 +105,7 @@ export function getQuantizedColorName(h: number, s: number, l: number): string {
   return "Gray"
 }
 
-function shouldUseFallback(imageUrl: string): boolean {
+export function shouldUseFallback(imageUrl: string): boolean {
   const isTest =
     typeof process !== "undefined" &&
     process.env.VITEST &&
@@ -113,15 +120,18 @@ function shouldUseFallback(imageUrl: string): boolean {
   )
 }
 
-function getFallbackColors(fallbackRarity: RarityTier): ExtractedColors {
-  const fallback = RARITY_FALLBACK_COLORS[fallbackRarity]
+export function getFallbackColors(
+  fallbackRarity: RarityTier = "Common"
+): ExtractedColors {
+  const fallback =
+    RARITY_FALLBACK_COLORS[fallbackRarity] || RARITY_FALLBACK_COLORS.Common
   return {
     ...fallback,
     isFallback: true
   }
 }
 
-function samplePixels(
+export function samplePixels(
   data: Uint8ClampedArray
 ): Record<string, { count: number; rSum: number; gSum: number; bSum: number }> {
   const nameCounts: Record<
@@ -135,7 +145,6 @@ function samplePixels(
     const b = data[i + 2]
     const a = data[i + 3]
 
-    // Ignore transparent/highly semi-transparent pixels
     if (a < 128) continue
 
     const [h, s, l] = rgbToHsl(r, g, b)
@@ -153,22 +162,15 @@ function samplePixels(
   return nameCounts
 }
 
-function determineDominantAndAccent(
+export function getSortedWeightedColors(
   nameCounts: Record<
     string,
     { count: number; rSum: number; gSum: number; bSum: number }
-  >,
-  fallbackRarity: RarityTier
-): ExtractedColors {
-  const totalPixels = Object.values(nameCounts).reduce(
-    (acc, curr) => acc + curr.count,
-    0
-  )
-
-  const sortedColors = Object.entries(nameCounts)
+  >
+): WeightedColor[] {
+  return Object.entries(nameCounts)
     .map(([name, stats]) => {
       const isNeutral = name === "White" || name === "Black" || name === "Gray"
-      // Boost chromatic colors to prioritize vibrant shades over white/gray backgrounds
       const weightedCount = stats.count * (isNeutral ? 1.0 : 2.5)
       return {
         name,
@@ -182,35 +184,48 @@ function determineDominantAndAccent(
       }
     })
     .sort((a, b) => b.weightedCount - a.weightedCount)
+}
 
-  if (sortedColors.length === 0) {
-    return getFallbackColors(fallbackRarity)
-  }
-
-  const dominant = sortedColors[0]
+export function selectAccentColor(
+  sortedColors: WeightedColor[],
+  dominant: WeightedColor,
+  totalPixels: number
+): WeightedColor {
   const isDomNeutral =
     dominant.name === "White" ||
     dominant.name === "Black" ||
     dominant.name === "Gray"
 
-  // Try to pick a vibrant chromatic color as accent if dominant is neutral
-  let accent = sortedColors[0]
   if (isDomNeutral) {
     const chromaticAccent = sortedColors.find((c) => {
       const isNeut =
         c.name === "White" || c.name === "Black" || c.name === "Gray"
-      return !isNeut && c.count >= totalPixels * 0.05 // Must have at least 5% coverage
+      return !isNeut && c.count >= totalPixels * 0.05
     })
-    if (chromaticAccent) {
-      accent = chromaticAccent
-    } else {
-      accent =
-        sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0]
-    }
-  } else {
-    accent =
-      sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0]
+    if (chromaticAccent) return chromaticAccent
   }
+
+  return sortedColors.find((c) => c.name !== dominant.name) || sortedColors[0]
+}
+
+export function determineDominantAndAccent(
+  nameCounts: Record<
+    string,
+    { count: number; rSum: number; gSum: number; bSum: number }
+  >,
+  fallbackRarity: RarityTier
+): ExtractedColors {
+  const sortedColors = getSortedWeightedColors(nameCounts)
+  if (sortedColors.length === 0) {
+    return getFallbackColors(fallbackRarity)
+  }
+
+  const totalPixels = Object.values(nameCounts).reduce(
+    (acc, curr) => acc + curr.count,
+    0
+  )
+  const dominant = sortedColors[0]
+  const accent = selectAccentColor(sortedColors, dominant, totalPixels)
 
   return {
     dominantHex: dominant.hex,
@@ -221,14 +236,59 @@ function determineDominantAndAccent(
   }
 }
 
-function loadImageAndProcess(
+export function extractColorsFromImage(
+  img: HTMLImageElement,
+  fallbackRarity: RarityTier
+): ExtractedColors {
+  const canvas = document.createElement("canvas")
+  const ctx = canvas.getContext("2d")
+  if (!ctx) {
+    throw new Error("Canvas context not available")
+  }
+
+  canvas.width = 50
+  canvas.height = 50
+  ctx.drawImage(img, 0, 0, 50, 50)
+
+  const imageData = ctx.getImageData(0, 0, 50, 50)
+  const nameCounts = samplePixels(imageData.data)
+  return determineDominantAndAccent(nameCounts, fallbackRarity)
+}
+
+export async function setupImageSrc(
+  imageUrl: string,
+  img: HTMLImageElement
+): Promise<string | null> {
+  if (imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
+    img.src = imageUrl
+    return null
+  }
+  try {
+    const res = await fetch(imageUrl)
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
+    }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    img.src = url
+    return url
+  } catch (err) {
+    console.warn(
+      "Failed to fetch image with CORS bypass, setting direct URL",
+      err
+    )
+    img.src = imageUrl
+    return null
+  }
+}
+
+export function loadImageAndProcess(
   imageUrl: string,
   fallbackRarity: RarityTier
 ): Promise<ExtractedColors> {
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = "Anonymous"
-
     let objectUrlToRevoke: string | null = null
 
     const cleanup = () => {
@@ -238,22 +298,9 @@ function loadImageAndProcess(
       }
     }
 
-    const processImage = () => {
+    img.onload = () => {
       try {
-        const canvas = document.createElement("canvas")
-        const ctx = canvas.getContext("2d")
-        if (!ctx) {
-          throw new Error("Canvas context not available")
-        }
-
-        // Downscale image to 50x50 for rapid color sampling
-        canvas.width = 50
-        canvas.height = 50
-        ctx.drawImage(img, 0, 0, 50, 50)
-
-        const imageData = ctx.getImageData(0, 0, 50, 50)
-        const nameCounts = samplePixels(imageData.data)
-        const result = determineDominantAndAccent(nameCounts, fallbackRarity)
+        const result = extractColorsFromImage(img, fallbackRarity)
         resolve(result)
       } catch (err) {
         console.error("Color analysis failed, using fallback:", err)
@@ -263,38 +310,15 @@ function loadImageAndProcess(
       }
     }
 
-    img.onload = processImage
     img.onerror = () => {
       console.warn("Failed to load image for color analysis, using fallback")
       cleanup()
       resolve(getFallbackColors(fallbackRarity))
     }
 
-    // If it is a local data or blob URL, set directly
-    if (imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
-      img.src = imageUrl
-    } else {
-      // Use extension host permissions to bypass CORS
-      fetch(imageUrl)
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`)
-          }
-          return res.blob()
-        })
-        .then((blob) => {
-          const url = URL.createObjectURL(blob)
-          objectUrlToRevoke = url
-          img.src = url
-        })
-        .catch((err) => {
-          console.warn(
-            "Failed to fetch image with CORS bypass, setting direct URL",
-            err
-          )
-          img.src = imageUrl
-        })
-    }
+    setupImageSrc(imageUrl, img).then((url) => {
+      objectUrlToRevoke = url
+    })
   })
 }
 
@@ -313,15 +337,8 @@ export function filterByHue(
   targetHue: number
 ): boolean {
   if (!cardColor) return false
-  try {
-    const [h, s, l] = hexToHsl(cardColor)
-    if (s < 15 || l > 90 || l < 10) return false
-    const diff = Math.min(
-      Math.abs(h - targetHue),
-      360 - Math.abs(h - targetHue)
-    )
-    return diff <= 25
-  } catch {
-    return false
-  }
+  const [h, s, l] = hexToHsl(cardColor)
+  if (s < 15 || l > 90 || l < 10) return false
+  const diff = Math.min(Math.abs(h - targetHue), 360 - Math.abs(h - targetHue))
+  return diff <= 25
 }
