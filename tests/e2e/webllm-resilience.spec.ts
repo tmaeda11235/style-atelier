@@ -202,6 +202,65 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     }
   })
 
+  test("should display download speed and remaining time during download", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for WebLLM Download Progress/ETA E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    // Expand Local AI Model (WebLLM) accordion
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    // 3. Configure slow download to capture speed/ETA
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.failDownload = false
+        config.downloadSpeed = 800
+      }
+    })
+
+    // 4. Click Download Model button
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    // 5. Verify download progress with speed and remaining time
+    const speedText = spFrame.locator("text=12.5 MB/s")
+    await expect(speedText).toBeVisible({ timeout: 5000 })
+
+    const remainingText = spFrame.locator("text=/Remaining|残り時間/")
+    await expect(remainingText).toBeVisible({ timeout: 5000 })
+
+    // Capture screenshot during active progress
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-download-progress.png")
+    })
+    console.log("WebLLM Download Progress screenshot saved.")
+  })
+
   test("should display download error message on network connection failure", async ({
     page
   }) => {
@@ -231,7 +290,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await webLlmAccordionHeader.click()
     await page.waitForTimeout(300)
 
-    // 3. Configure mock to trigger download failure
+    // 3. Configure mock to trigger download failure (which does retries first)
     await spFrame.locator("body").evaluate(() => {
       const config = (window as any).mockWebLlmConfig
       if (config) {
@@ -247,15 +306,26 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
-    await page.waitForTimeout(500)
 
-    // 5. Verify error notification is displayed with the failure message
+    // 5. Verify retry UI displays (e.g. Reconnecting... (1/3))
+    const retryText = spFrame
+      .locator("text=/Reconnecting|接続を再試行中|接続再試行中/")
+      .first()
+    await expect(retryText).toBeVisible({ timeout: 5000 })
+
+    // Capture screenshot of the retrying state
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-download-retry.png")
+    })
+    console.log("WebLLM Download Retry screenshot saved.")
+
+    // 6. Verify error notification is displayed after retries exhaust
     const errorText = spFrame.locator(
       "text=Failed to fetch model weights: Connection lost"
     )
-    await expect(errorText).toBeVisible({ timeout: 5000 })
+    await expect(errorText).toBeVisible({ timeout: 10000 })
 
-    // Capture screenshot
+    // Capture screenshot of final failure state
     await page.screenshot({
       path: path.join(screenshotsDir, "webllm-download-error.png")
     })

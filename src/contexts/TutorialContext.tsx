@@ -103,6 +103,7 @@ const TutorialContext = createContext<TutorialContextType | undefined>(
   undefined
 )
 
+// eslint-disable-next-line max-lines-per-function
 export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {

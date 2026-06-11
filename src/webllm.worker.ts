@@ -39,6 +39,44 @@ function resetIdleTimer() {
   }, IDLE_TIMEOUT_MS)
 }
 
+const TOTAL_SIZE_BYTES = 1.0 * 1024 * 1024 * 1024 // Assume ~1.0 GB model size
+
+function createProgressCallback(startTime: number) {
+  return (report: any) => {
+    const progress = Math.round(report.progress * 100)
+    const now = Date.now()
+    const elapsedMs = now - startTime
+    let speed = 0
+    let eta = 0
+
+    if (elapsedMs > 500 && report.progress > 0) {
+      const downloadedBytes = TOTAL_SIZE_BYTES * report.progress
+      const speedBps = downloadedBytes / (elapsedMs / 1000)
+      speed = Number((speedBps / (1024 * 1024)).toFixed(1))
+
+      const totalEstimatedMs = elapsedMs / report.progress
+      const etaMs = totalEstimatedMs - elapsedMs
+      eta = Math.max(0, Math.round(etaMs / 1000))
+    }
+
+    self.postMessage({ status: "downloading", progress, speed, eta })
+  }
+}
+
+function waitForEngineInit(): Promise<MLCEngine> {
+  return new Promise((resolve, reject) => {
+    const checkInterval = setInterval(() => {
+      if (engine) {
+        clearInterval(checkInterval)
+        resolve(engine)
+      } else if (!isInitializing) {
+        clearInterval(checkInterval)
+        reject(new Error("Engine initialization failed or cancelled"))
+      }
+    }, 100)
+  })
+}
+
 async function loadEngine(): Promise<MLCEngine> {
   if (engine) {
     resetIdleTimer()
@@ -46,43 +84,49 @@ async function loadEngine(): Promise<MLCEngine> {
   }
 
   if (isInitializing) {
-    // Wait until initialization completes
-    return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (engine) {
-          clearInterval(checkInterval)
-          resolve(engine)
-        } else if (!isInitializing) {
-          clearInterval(checkInterval)
-          reject(new Error("Engine initialization failed or cancelled"))
-        }
-      }, 100)
-    })
+    return waitForEngineInit()
   }
 
-  isInitializing = true
-  try {
-    self.postMessage({ status: "downloading", progress: 0 })
+  const maxRetries = 3
+  let retryCount = 0
 
-    engine = await CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", {
-      initProgressCallback: (report) => {
-        const progress = Math.round(report.progress * 100)
-        self.postMessage({ status: "downloading", progress })
+  while (true) {
+    isInitializing = true
+    const startTime = Date.now()
+    try {
+      self.postMessage({ status: "downloading", progress: 0, speed: 0, eta: 0 })
+
+      const engineInstance = await CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", {
+        initProgressCallback: createProgressCallback(startTime)
+      })
+
+      engine = engineInstance
+      self.postMessage({ status: "ready" })
+      resetIdleTimer()
+      return engineInstance
+    } catch (err: any) {
+      isInitializing = false
+      if (retryCount < maxRetries) {
+        retryCount++
+        const delay = 1000 * Math.pow(2, retryCount - 1)
+        self.postMessage({
+          status: "retrying",
+          retryCount,
+          maxRetries,
+          error: err.message || "Connection lost"
+        })
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        continue
       }
-    })
 
-    self.postMessage({ status: "ready" })
-    resetIdleTimer()
-    return engine
-  } catch (err: any) {
-    isInitializing = false
-    self.postMessage({
-      status: "error",
-      error: err.message || "Failed to load WebLLM model"
-    })
-    throw err
-  } finally {
-    isInitializing = false
+      self.postMessage({
+        status: "error",
+        error: err.message || "Failed to load WebLLM model"
+      })
+      throw err
+    } finally {
+      isInitializing = false
+    }
   }
 }
 

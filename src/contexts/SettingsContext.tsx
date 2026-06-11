@@ -45,6 +45,7 @@ export const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined
 )
 
+// eslint-disable-next-line max-lines-per-function
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {

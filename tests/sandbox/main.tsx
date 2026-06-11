@@ -207,18 +207,37 @@ if (typeof window !== "undefined") {
               }
 
               if (mockWebLlmConfig.failDownload) {
-                setTimeout(() => {
+                let currentRetry = 0
+                const maxRetries = 3
+                const runRetryStep = () => {
                   const listeners = (window as any).chromeMessageListeners || []
-                  listeners.forEach((l: any) =>
-                    l({
-                      source: "offscreen-worker",
-                      payload: {
-                        status: "error",
-                        error: mockWebLlmConfig.downloadErrorMsg
-                      }
-                    })
-                  )
-                }, 100)
+                  if (currentRetry < maxRetries) {
+                    currentRetry++
+                    listeners.forEach((l: any) =>
+                      l({
+                        source: "offscreen-worker",
+                        payload: {
+                          status: "retrying",
+                          retryCount: currentRetry,
+                          maxRetries,
+                          error: `Connection lost. Retrying (${currentRetry}/${maxRetries})...`
+                        }
+                      })
+                    )
+                    setTimeout(runRetryStep, 1000)
+                  } else {
+                    listeners.forEach((l: any) =>
+                      l({
+                        source: "offscreen-worker",
+                        payload: {
+                          status: "error",
+                          error: mockWebLlmConfig.downloadErrorMsg
+                        }
+                      })
+                    )
+                  }
+                }
+                setTimeout(runRetryStep, 200)
                 return
               }
 
@@ -255,7 +274,12 @@ if (typeof window !== "undefined") {
                   listeners.forEach((l: any) =>
                     l({
                       source: "offscreen-worker",
-                      payload: { status: "downloading", progress }
+                      payload: {
+                        status: "downloading",
+                        progress,
+                        speed: 12.5,
+                        eta: Math.round((100 - progress) / 10)
+                      }
                     })
                   )
                 }
