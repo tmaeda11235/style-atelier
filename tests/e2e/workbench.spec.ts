@@ -743,7 +743,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
 
     // 2. Clear database to ensure no cards are pinned
     await spFrame.locator("body").evaluate(async () => {
+      for (let i = 0; i < 50; i++) {
+        if ((window as any).db) break
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
       const database = (window as any).db
+      if (!database) throw new Error("window.db is not initialized")
       await database.styleCards.clear()
     })
 
@@ -789,7 +794,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
 
     // 2. Clear database to ensure no history items
     await spFrame.locator("body").evaluate(async () => {
+      for (let i = 0; i < 50; i++) {
+        if ((window as any).db) break
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
       const database = (window as any).db
+      if (!database) throw new Error("window.db is not initialized")
       await database.historyItems.clear()
     })
 
@@ -833,7 +843,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
 
     // 2. Clear database to ensure no cards and no categories in library
     await spFrame.locator("body").evaluate(async () => {
+      for (let i = 0; i < 50; i++) {
+        if ((window as any).db) break
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
       const database = (window as any).db
+      if (!database) throw new Error("window.db is not initialized")
       await database.styleCards.clear()
       await database.categories.clear()
     })
