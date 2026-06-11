@@ -24,7 +24,7 @@ describe("Button", () => {
 
     rerender(<Button variant="secondary">Secondary</Button>)
     button = screen.getByRole("button", { name: "Secondary" })
-    expect(button.className).toContain("bg-slate-100")
+    expect(button.className).toContain("bg-muted")
   })
 
   it("applies size styles correctly", () => {
