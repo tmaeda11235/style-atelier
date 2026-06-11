@@ -53,58 +53,44 @@ function applyFilters(
 }
 
 function useSemanticSearchEffect(params: EffectParams) {
-  const {
-    isAiSearch,
-    aiSearchQuery,
-    categories,
-    setRarityFilter,
-    setCategoryFilter,
-    setColorFilter,
-    setSearchTag,
-    t,
-    setIsAiSearching,
-    setAiSearchError,
-    setExtractedFilters
-  } = params
-
   useEffect(() => {
-    if (!isAiSearch) return setExtractedFilters(null)
-    if (aiSearchQuery.trim() === "") {
+    if (!params.isAiSearch) return params.setExtractedFilters(null)
+    if (params.aiSearchQuery.trim() === "") {
       resetFilters(
-        setRarityFilter,
-        setCategoryFilter,
-        setColorFilter,
-        setSearchTag
+        params.setRarityFilter,
+        params.setCategoryFilter,
+        params.setColorFilter,
+        params.setSearchTag
       )
-      return setExtractedFilters(null)
+      return params.setExtractedFilters(null)
     }
     const timer = setTimeout(() => {
       executeSemanticSearch(
-        aiSearchQuery,
-        categories,
-        setExtractedFilters,
-        setRarityFilter,
-        setCategoryFilter,
-        setColorFilter,
-        setSearchTag,
-        setIsAiSearching,
-        setAiSearchError,
-        t
+        params.aiSearchQuery,
+        params.categories,
+        params.setExtractedFilters,
+        params.setRarityFilter,
+        params.setCategoryFilter,
+        params.setColorFilter,
+        params.setSearchTag,
+        params.setIsAiSearching,
+        params.setAiSearchError,
+        params.t
       )
     }, 600)
     return () => clearTimeout(timer)
   }, [
-    aiSearchQuery,
-    isAiSearch,
-    categories,
-    setCategoryFilter,
-    setColorFilter,
-    setRarityFilter,
-    setSearchTag,
-    t,
-    setIsAiSearching,
-    setAiSearchError,
-    setExtractedFilters
+    params.aiSearchQuery,
+    params.isAiSearch,
+    params.categories,
+    params.setCategoryFilter,
+    params.setColorFilter,
+    params.setRarityFilter,
+    params.setSearchTag,
+    params.t,
+    params.setIsAiSearching,
+    params.setAiSearchError,
+    params.setExtractedFilters
   ])
 }
 

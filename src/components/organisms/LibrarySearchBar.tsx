@@ -128,6 +128,71 @@ function SearchInputWrapper({
   )
 }
 
+interface LibrarySearchBarContentProps {
+  isAiSearch: boolean
+  handleToggleAiSearch: () => void
+  aiSearchQuery: string
+  searchTag: string
+  allSrefs: string[]
+  setAiSearchQuery: (val: string) => void
+  setSearchTag: (val: string) => void
+  isFiltersExpanded: boolean
+  activeFiltersCount: number
+  setIsFiltersExpanded: (val: boolean) => void
+  extractedFilters: any
+  isAiSearching: boolean
+  aiSearchError: string | null
+  aiWarningOpen: boolean
+  setAiWarningOpen: (val: boolean) => void
+  t: any
+  i18nSettings: any
+}
+
+function LibrarySearchBarContent(props: LibrarySearchBarContentProps) {
+  return (
+    <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+      <div className="flex gap-2 items-center">
+        <AiSearchToggleBtn
+          isAiSearch={props.isAiSearch}
+          onClick={props.handleToggleAiSearch}
+          title={props.t.aiSearchToggle || "AI Semantic Search"}
+        />
+        <SearchInputWrapper
+          isAiSearch={props.isAiSearch}
+          aiSearchQuery={props.aiSearchQuery}
+          searchTag={props.searchTag}
+          allSrefs={props.allSrefs}
+          setAiSearchQuery={props.setAiSearchQuery}
+          setSearchTag={props.setSearchTag}
+          t={props.t}
+        />
+        <FilterToggleBtn
+          isFiltersExpanded={props.isFiltersExpanded}
+          activeFiltersCount={props.activeFiltersCount}
+          onClick={() => props.setIsFiltersExpanded(!props.isFiltersExpanded)}
+          disabled={props.isAiSearch}
+          t={props.t}
+        />
+      </div>
+      {props.isAiSearch && (
+        <ExtractedFiltersDisplay
+          extractedFilters={props.extractedFilters}
+          isAiSearching={props.isAiSearching}
+          aiSearchError={props.aiSearchError}
+          t={props.t}
+        />
+      )}
+      {props.aiWarningOpen && (
+        <AiWarningModal
+          onClose={() => props.setAiWarningOpen(false)}
+          t={props.t}
+          i18nSettings={props.i18nSettings}
+        />
+      )}
+    </div>
+  )
+}
+
 export function LibrarySearchBar(props: LibrarySearchBarProps) {
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
@@ -153,45 +218,24 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
   })
 
   return (
-    <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-      <div className="flex gap-2 items-center">
-        <AiSearchToggleBtn
-          isAiSearch={isAiSearch}
-          onClick={handleToggleAiSearch}
-          title={t.aiSearchToggle || "AI Semantic Search"}
-        />
-        <SearchInputWrapper
-          isAiSearch={isAiSearch}
-          aiSearchQuery={aiSearchQuery}
-          searchTag={props.searchTag}
-          allSrefs={props.allSrefs}
-          setAiSearchQuery={setAiSearchQuery}
-          setSearchTag={props.setSearchTag}
-          t={t}
-        />
-        <FilterToggleBtn
-          isFiltersExpanded={props.isFiltersExpanded}
-          activeFiltersCount={props.activeFiltersCount}
-          onClick={() => props.setIsFiltersExpanded(!props.isFiltersExpanded)}
-          disabled={isAiSearch}
-          t={t}
-        />
-      </div>
-      {isAiSearch && (
-        <ExtractedFiltersDisplay
-          extractedFilters={extractedFilters}
-          isAiSearching={isAiSearching}
-          aiSearchError={aiSearchError}
-          t={t}
-        />
-      )}
-      {aiWarningOpen && (
-        <AiWarningModal
-          onClose={() => setAiWarningOpen(false)}
-          t={t}
-          i18nSettings={i18n.settings}
-        />
-      )}
-    </div>
+    <LibrarySearchBarContent
+      isAiSearch={isAiSearch}
+      handleToggleAiSearch={handleToggleAiSearch}
+      aiSearchQuery={aiSearchQuery}
+      searchTag={props.searchTag}
+      allSrefs={props.allSrefs}
+      setAiSearchQuery={setAiSearchQuery}
+      setSearchTag={props.setSearchTag}
+      isFiltersExpanded={props.isFiltersExpanded}
+      activeFiltersCount={props.activeFiltersCount}
+      setIsFiltersExpanded={props.setIsFiltersExpanded}
+      extractedFilters={extractedFilters}
+      isAiSearching={isAiSearching}
+      aiSearchError={aiSearchError}
+      aiWarningOpen={aiWarningOpen}
+      setAiWarningOpen={setAiWarningOpen}
+      t={t}
+      i18nSettings={i18n.settings}
+    />
   )
 }
