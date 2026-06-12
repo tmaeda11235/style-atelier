@@ -1,6 +1,7 @@
 import {
   analyzeImageColors,
   determineDominantAndAccent,
+  extractColorsFromImage,
   filterByHue,
   getColorNameFromHex,
   getFallbackColors,
@@ -962,6 +963,513 @@ describe("Color Utilities", () => {
 
         document.createElement = originalCreateElement
         global.fetch = originalFetch
+      })
+    })
+
+    describe("Additional mutant killers", () => {
+      it("tests shouldUseFallback process/env variants", () => {
+        const originalBypass = process.env.BYPASS_VITEST
+        const originalVitest = process.env.VITEST
+
+        // Test when process.env.VITEST is undefined
+        delete (process.env as any).VITEST
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(false)
+        process.env.VITEST = originalVitest
+
+        // Test with different icon paths
+        process.env.BYPASS_VITEST = "true"
+        expect(shouldUseFallback("url:../../assets/icon.png")).toBe(true)
+        expect(shouldUseFallback("http://example.com/assets/icon.png")).toBe(
+          true
+        )
+
+        process.env.BYPASS_VITEST = originalBypass
+      })
+
+      it("tests getFallbackColors with invalid rarity", () => {
+        const fallback = getFallbackColors("InvalidRarity" as any)
+        expect(fallback.dominantHex).toBe("#64748b") // Common fallback
+        expect(fallback.isFallback).toBe(true)
+      })
+
+      it("tests samplePixels alpha threshold boundary values strictly", () => {
+        // alpha = 127 should be ignored, alpha = 128 should be counted
+        const data = new Uint8ClampedArray([
+          255,
+          0,
+          0,
+          127, // Red (alpha 127) -> ignored
+          0,
+          255,
+          0,
+          128 // Green (alpha 128) -> counted
+        ])
+        const counts = samplePixels(data)
+        expect(counts.Red).toBeUndefined()
+        expect(counts.Green).toBeDefined()
+        expect(counts.Green.count).toBe(1)
+      })
+
+      it("tests getSortedWeightedColors rounding boundaries", () => {
+        const nameCounts = {
+          Red: { count: 3, rSum: 101, gSum: 0, bSum: 0 },
+          Green: { count: 3, rSum: 100, gSum: 0, bSum: 0 }
+        }
+        const sorted = getSortedWeightedColors(nameCounts)
+        expect(sorted.find((c) => c.name === "Red")?.hex).toBe("#220000")
+        expect(sorted.find((c) => c.name === "Green")?.hex).toBe("#210000")
+      })
+
+      it("tests setupImageSrc HTTP response non-ok handling", async () => {
+        const originalFetch = global.fetch
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500
+        })
+        const consoleWarnSpy = vi
+          .spyOn(console, "warn")
+          .mockImplementation(() => {})
+
+        const img = { src: "" } as any
+        const res = await setupImageSrc("http://example.com/error-img.png", img)
+        expect(res).toBeNull()
+        expect(img.src).toBe("http://example.com/error-img.png")
+        expect(consoleWarnSpy).toHaveBeenCalled()
+
+        global.fetch = originalFetch
+        consoleWarnSpy.mockRestore()
+      })
+
+      it("tests setupImageSrc fallback logic and logs", async () => {
+        const originalFetch = global.fetch
+        global.fetch = vi
+          .fn()
+          .mockRejectedValue(new Error("CORS or Network error"))
+        const consoleWarnSpy = vi
+          .spyOn(console, "warn")
+          .mockImplementation(() => {})
+
+        const img = { src: "" } as any
+        const res = await setupImageSrc("http://example.com/cors-img.png", img)
+        expect(res).toBeNull()
+        expect(img.src).toBe("http://example.com/cors-img.png")
+        expect(consoleWarnSpy).toHaveBeenCalled()
+
+        global.fetch = originalFetch
+        consoleWarnSpy.mockRestore()
+      })
+
+      it("tests loadImageAndProcess cleanup on error or success", async () => {
+        const originalFetch = global.fetch
+        const originalCreateObjectURL = URL.createObjectURL
+        const originalRevokeObjectURL = URL.revokeObjectURL
+        const originalBypass = process.env.BYPASS_VITEST
+
+        process.env.BYPASS_VITEST = "true"
+
+        const mockRevoke = vi.fn()
+        URL.createObjectURL = vi.fn().mockImplementation(() => {
+          return "blob:test-cleanup"
+        })
+        URL.revokeObjectURL = mockRevoke
+
+        global.fetch = vi.fn().mockImplementation(() => {
+          return Promise.resolve({
+            ok: true,
+            blob: () => {
+              return Promise.resolve(new Blob(["mock"]))
+            }
+          })
+        })
+
+        class MockImage {
+          onload = () => {}
+          onerror = () => {}
+          _src = ""
+          get src() {
+            return this._src
+          }
+          set src(val) {
+            this._src = val
+            setTimeout(() => {
+              this.onerror()
+            }, 10)
+          }
+        }
+        global.Image = MockImage as any
+
+        const colors = await analyzeImageColors(
+          "http://example.com/trigger-error.png"
+        )
+        expect(colors.isFallback).toBe(true)
+        expect(mockRevoke).toHaveBeenCalledWith("blob:test-cleanup")
+
+        global.fetch = originalFetch
+        URL.createObjectURL = originalCreateObjectURL
+        URL.revokeObjectURL = originalRevokeObjectURL
+        process.env.BYPASS_VITEST = originalBypass
+      })
+
+      it("tests shouldUseFallback with undefined window or document", () => {
+        const originalWindow = global.window
+        const originalDocument = global.document
+
+        vi.stubGlobal("window", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        vi.stubGlobal("window", originalWindow)
+        vi.stubGlobal("document", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        vi.stubGlobal("document", originalDocument)
+      })
+
+      it("asserts samplePixels sums RGB colors and counts correctly", () => {
+        const data = new Uint8ClampedArray([
+          200, 100, 50, 255, 200, 100, 50, 255, 10, 20, 30, 255
+        ])
+        const counts = samplePixels(data)
+
+        expect(counts.Orange).toBeDefined()
+        expect(counts.Orange.count).toBe(2)
+        expect(counts.Orange.rSum).toBe(400)
+        expect(counts.Orange.gSum).toBe(200)
+        expect(counts.Orange.bSum).toBe(100)
+
+        expect(counts.Black).toBeDefined()
+        expect(counts.Black.count).toBe(1)
+        expect(counts.Black.rSum).toBe(10)
+        expect(counts.Black.gSum).toBe(20)
+        expect(counts.Black.bSum).toBe(30)
+      })
+
+      it("asserts getSortedWeightedColors strict sorting and weighting boundaries", () => {
+        const nameCounts = {
+          Orange: { count: 10, rSum: 2000, gSum: 1000, bSum: 500 },
+          White: { count: 24, rSum: 6120, gSum: 6120, bSum: 6120 }
+        }
+        const sorted = getSortedWeightedColors(nameCounts)
+        expect(sorted[0].name).toBe("Orange")
+        expect(sorted[0].weightedCount).toBe(25)
+        expect(sorted[1].name).toBe("White")
+        expect(sorted[1].weightedCount).toBe(24)
+
+        const neutralCounts = {
+          White: { count: 10, rSum: 2550, gSum: 2550, bSum: 2550 }
+        }
+        const neutralSorted = getSortedWeightedColors(neutralCounts)
+        expect(neutralSorted[0].weightedCount).toBe(10)
+      })
+
+      it("verifies extractColorsFromImage canvas configuration", () => {
+        const originalCreateElement = document.createElement
+        const mockCtx = {
+          drawImage: vi.fn(),
+          getImageData: vi.fn().mockReturnValue({
+            data: new Uint8ClampedArray(10000)
+          })
+        }
+        const mockCanvas = {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue(mockCtx)
+        }
+
+        document.createElement = vi.fn().mockImplementation((tagName) => {
+          if (tagName === "canvas") return mockCanvas
+          return originalCreateElement.call(document, tagName)
+        })
+
+        const mockImg = {} as any
+        extractColorsFromImage(mockImg, "Common")
+
+        expect(mockCanvas.width).toBe(50)
+        expect(mockCanvas.height).toBe(50)
+        expect(mockCtx.drawImage).toHaveBeenCalledWith(mockImg, 0, 0, 50, 50)
+        expect(mockCtx.getImageData).toHaveBeenCalledWith(0, 0, 50, 50)
+
+        document.createElement = originalCreateElement
+      })
+
+      it("tests setupImageSrc URL type checks strictly", async () => {
+        const mockImg = { src: "" } as any
+
+        let res = await setupImageSrc("data:image/png;base64,mock", mockImg)
+        expect(res).toBeNull()
+        expect(mockImg.src).toBe("data:image/png;base64,mock")
+
+        res = await setupImageSrc("blob:http://example.com/uuid", mockImg)
+        expect(res).toBeNull()
+        expect(mockImg.src).toBe("blob:http://example.com/uuid")
+
+        const originalFetch = global.fetch
+        global.fetch = vi.fn().mockRejectedValue(new Error("CORS"))
+        const consoleWarnSpy = vi
+          .spyOn(console, "warn")
+          .mockImplementation(() => {})
+
+        res = await setupImageSrc("http://example.com/notdata:image", mockImg)
+        expect(res).toBeNull()
+        expect(mockImg.src).toBe("http://example.com/notdata:image")
+        expect(global.fetch).toHaveBeenCalledWith(
+          "http://example.com/notdata:image"
+        )
+
+        global.fetch = originalFetch
+        consoleWarnSpy.mockRestore()
+      })
+
+      it("verifies loadImageAndProcess anonymous crossOrigin configuration", async () => {
+        const originalFetch = global.fetch
+        const originalBypass = process.env.BYPASS_VITEST
+        process.env.BYPASS_VITEST = "true"
+
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          blob: () => Promise.resolve(new Blob(["mock"]))
+        })
+
+        let crossOriginSet: string | null = null
+        class MockImage {
+          onload = () => {}
+          onerror = () => {}
+          _crossOrigin = ""
+          get crossOrigin() {
+            return this._crossOrigin
+          }
+          set crossOrigin(val) {
+            crossOriginSet = val
+            this._crossOrigin = val
+          }
+          set src(val) {
+            setTimeout(() => this.onload(), 10)
+          }
+        }
+        global.Image = MockImage as any
+
+        const originalCreateElement = document.createElement
+        const mockCtx = {
+          drawImage: vi.fn(),
+          getImageData: vi.fn().mockReturnValue({
+            data: new Uint8ClampedArray(4)
+          })
+        }
+        const mockCanvas = {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue(mockCtx)
+        }
+        document.createElement = vi.fn().mockImplementation((tagName) => {
+          if (tagName === "canvas") return mockCanvas
+          return originalCreateElement.call(document, tagName)
+        })
+
+        await analyzeImageColors("http://example.com/cross-origin-test.png")
+
+        expect(crossOriginSet).toBe("Anonymous")
+
+        document.createElement = originalCreateElement
+        global.fetch = originalFetch
+        process.env.BYPASS_VITEST = originalBypass
+      })
+
+      it("tests shouldUseFallback with all process/window/document environment combinations", () => {
+        const originalWindow = global.window
+        const originalDocument = global.document
+        const originalProcess = global.process
+
+        vi.stubGlobal("window", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        vi.stubGlobal("window", originalWindow)
+        vi.stubGlobal("document", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        vi.stubGlobal("document", originalDocument)
+        vi.stubGlobal("process", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(false)
+
+        vi.stubGlobal("process", originalProcess)
+      })
+
+      it("tests getFallbackColors and analyzeImageColors default arguments", () => {
+        const defaultFallback = getFallbackColors()
+        expect(defaultFallback.dominantName).toBe("Gray")
+        expect(defaultFallback.isFallback).toBe(true)
+
+        const originalBypass = process.env.BYPASS_VITEST
+        process.env.BYPASS_VITEST = "true"
+
+        // Triggers fallback to Common since imageUrl is empty
+        const colors = getFallbackColors(undefined)
+        expect(colors.dominantHex).toBe("#64748b")
+
+        process.env.BYPASS_VITEST = originalBypass
+      })
+
+      it("tests getSortedWeightedColors strict neutral weighting and sorting", () => {
+        const nameCounts = {
+          Orange: { count: 10, rSum: 2000, gSum: 1000, bSum: 500 },
+          White: { count: 24, rSum: 6120, gSum: 6120, bSum: 6120 },
+          Black: { count: 24, rSum: 0, gSum: 0, bSum: 0 },
+          Gray: { count: 24, rSum: 3072, gSum: 3072, bSum: 3072 }
+        }
+        const sorted = getSortedWeightedColors(nameCounts)
+        expect(sorted[0].name).toBe("Orange")
+        expect(sorted[0].weightedCount).toBe(25)
+
+        const white = sorted.find((c) => c.name === "White")
+        const black = sorted.find((c) => c.name === "Black")
+        const gray = sorted.find((c) => c.name === "Gray")
+        expect(white?.weightedCount).toBe(24)
+        expect(black?.weightedCount).toBe(24)
+        expect(gray?.weightedCount).toBe(24)
+      })
+
+      it("tests selectAccentColor 5% threshold strictly for all neutral dominants", () => {
+        const neutrals = ["White", "Black", "Gray"] as const
+
+        for (const neutral of neutrals) {
+          const alternativeNeutral = neutral === "White" ? "Black" : "White"
+
+          const nameCounts5 = {
+            [neutral]: { count: 80, rSum: 0, gSum: 0, bSum: 0 },
+            [alternativeNeutral]: { count: 15, rSum: 0, gSum: 0, bSum: 0 },
+            Orange: { count: 5, rSum: 1000, gSum: 500, bSum: 0 }
+          }
+          const colors5 = determineDominantAndAccent(nameCounts5, "Common")
+          expect(colors5.dominantName).toBe(neutral)
+          expect(colors5.accentName).toBe("Orange")
+
+          const nameCounts4 = {
+            [neutral]: { count: 81, rSum: 0, gSum: 0, bSum: 0 },
+            [alternativeNeutral]: { count: 15, rSum: 0, gSum: 0, bSum: 0 },
+            Orange: { count: 4, rSum: 800, gSum: 400, bSum: 0 }
+          }
+          const colors4 = determineDominantAndAccent(nameCounts4, "Common")
+          expect(colors4.dominantName).toBe(neutral)
+          expect(colors4.accentName).toBe(alternativeNeutral)
+        }
+      })
+
+      it("tests canvas context not available error message strictly", () => {
+        const originalCreateElement = document.createElement
+        const mockCanvas = {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue(null)
+        }
+
+        document.createElement = vi.fn().mockImplementation((tagName) => {
+          if (tagName === "canvas") return mockCanvas
+          return originalCreateElement.call(document, tagName)
+        })
+
+        const mockImg = {} as any
+        expect(() => extractColorsFromImage(mockImg, "Common")).toThrowError(
+          "Canvas context not available"
+        )
+
+        document.createElement = originalCreateElement
+      })
+
+      it("tests setupImageSrc HTTP error status and warning message strictly", async () => {
+        const originalFetch = global.fetch
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403
+        })
+        const consoleWarnSpy = vi
+          .spyOn(console, "warn")
+          .mockImplementation(() => {})
+
+        const img = { src: "" } as any
+        await setupImageSrc("http://example.com/forbidden.png", img)
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          "Failed to fetch image with CORS bypass, setting direct URL",
+          expect.objectContaining({ message: "HTTP error! status: 403" })
+        )
+
+        global.fetch = originalFetch
+        consoleWarnSpy.mockRestore()
+      })
+
+      it("tests loadImageAndProcess cleanup warn/error messages strictly", async () => {
+        const originalFetch = global.fetch
+        const originalBypass = process.env.BYPASS_VITEST
+        process.env.BYPASS_VITEST = "true"
+
+        const consoleErrorSpy = vi
+          .spyOn(console, "error")
+          .mockImplementation(() => {})
+        const consoleWarnSpy = vi
+          .spyOn(console, "warn")
+          .mockImplementation(() => {})
+
+        global.fetch = vi.fn().mockRejectedValue(new Error("Network Error"))
+
+        class MockImage {
+          onload = () => {}
+          onerror = () => {}
+          set src(val) {
+            setTimeout(() => this.onerror(), 10)
+          }
+        }
+        global.Image = MockImage as any
+
+        await analyzeImageColors("http://example.com/network-error-img.png")
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          "Failed to fetch image with CORS bypass, setting direct URL",
+          expect.objectContaining({ message: "Network Error" })
+        )
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          "Failed to load image for color analysis, using fallback"
+        )
+
+        const originalCreateElement = document.createElement
+        const mockCtx = {
+          drawImage: vi.fn(),
+          getImageData: vi.fn().mockImplementation(() => {
+            throw new Error("Canvas read error")
+          })
+        }
+        const mockCanvas = {
+          width: 0,
+          height: 0,
+          getContext: vi.fn().mockReturnValue(mockCtx)
+        }
+        document.createElement = vi.fn().mockImplementation((tagName) => {
+          if (tagName === "canvas") return mockCanvas
+          return originalCreateElement.call(document, tagName)
+        })
+
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          blob: () => Promise.resolve(new Blob(["mock"]))
+        })
+        class MockImageSuccess {
+          onload = () => {}
+          onerror = () => {}
+          set src(val) {
+            setTimeout(() => this.onload(), 10)
+          }
+        }
+        global.Image = MockImageSuccess as any
+
+        await analyzeImageColors("http://example.com/canvas-error-img.png")
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          "Color analysis failed, using fallback:",
+          expect.objectContaining({ message: "Canvas read error" })
+        )
+
+        document.createElement = originalCreateElement
+        global.fetch = originalFetch
+        consoleErrorSpy.mockRestore()
+        consoleWarnSpy.mockRestore()
+        process.env.BYPASS_VITEST = originalBypass
       })
     })
   })
