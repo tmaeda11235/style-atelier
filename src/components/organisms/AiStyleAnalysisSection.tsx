@@ -21,11 +21,13 @@ interface GenreBadgeProps {
 function GenreBadge({ genre }: GenreBadgeProps) {
   if (!genre) return null
   return (
-    <div className="flex items-center gap-2 bg-indigo-50/50 border border-indigo-100/50 p-2.5 rounded-lg">
-      <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+    <div className="flex items-center gap-2 bg-indigo-50/50 border border-indigo-100/50 dark:bg-indigo-950/30 dark:border-indigo-900/30 p-2.5 rounded-lg">
+      <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
         Genre:
       </span>
-      <span className="text-sm font-bold text-slate-800">{genre}</span>
+      <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+        {genre}
+      </span>
     </div>
   )
 }
@@ -41,7 +43,7 @@ function RecommendTags({ tags, customTags, onToggle, t }: RecommendTagsProps) {
   if (!tags || tags.length === 0) return null
   return (
     <div>
-      <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-2">
+      <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
         <Tags className="w-3.5 h-3.5" />
         {t.minting.aiRecommendTags}
       </span>
@@ -56,8 +58,8 @@ function RecommendTags({ tags, customTags, onToggle, t }: RecommendTagsProps) {
               onClick={() => onToggle(tag)}
               className={`text-xs px-2.5 py-1 rounded-full border transition-all duration-200 hover:scale-105 font-medium ${
                 isSelected
-                  ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-blue-600 shadow-sm shadow-blue-200"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-blue-600 shadow-sm shadow-blue-200 dark:shadow-none"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:border-slate-600"
               }`}>
               {tag}
             </button>
@@ -77,11 +79,11 @@ interface SummaryCardProps {
 function SummaryCard({ summary, onApply, t }: SummaryCardProps) {
   if (!summary) return null
   return (
-    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/60 space-y-2">
-      <span className="block text-xs font-bold text-slate-700">
+    <div className="bg-slate-50 border border-slate-200/60 dark:bg-slate-950 dark:border-slate-800 p-3 rounded-lg space-y-2">
+      <span className="block text-xs font-bold text-slate-700 dark:text-slate-300">
         {t.minting.aiSummary}
       </span>
-      <p className="text-xs text-slate-600 leading-relaxed italic bg-white p-2.5 rounded border border-slate-100">
+      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic bg-white dark:bg-slate-900 p-2.5 rounded border border-slate-100 dark:border-slate-800">
         "{summary}"
       </p>
       <Button
@@ -89,7 +91,7 @@ function SummaryCard({ summary, onApply, t }: SummaryCardProps) {
         size="xs"
         variant="outline"
         onClick={onApply}
-        className="flex items-center gap-1 border-slate-300 bg-white hover:bg-slate-50 text-slate-600">
+        className="flex items-center gap-1 border-slate-300 bg-white hover:bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300">
         {t.minting.aiUseSummary}
         <ArrowRight className="w-3 h-3" />
       </Button>
@@ -163,7 +165,7 @@ function AiReadySection({
       </Button>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-xs flex items-start gap-1.5 shadow-sm">
+        <div className="p-3 bg-red-50 border border-red-100 dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400 rounded-lg text-red-600 text-xs flex items-start gap-1.5 shadow-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <span>{t.minting.aiAnalysisError.replace("{{error}}", error)}</span>
         </div>
@@ -214,8 +216,8 @@ function useAiHandlers(
 function StyleAnalysisHeader({ t }: { t: any }) {
   return (
     <>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 rounded-full blur-2xl -z-10" />
-      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/20 dark:to-blue-950/20 rounded-full blur-2xl -z-10" />
+      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
         <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
         {t.minting.aiAnalysis}
       </h3>
@@ -243,7 +245,7 @@ export function AiStyleAnalysisSection({
   const isReady = gen.status === "ready"
 
   return (
-    <div className="p-4 bg-white border border-slate-100 rounded-xl shadow-sm space-y-4 relative overflow-hidden">
+    <div className="p-4 bg-white border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80 rounded-xl shadow-sm space-y-4 relative overflow-hidden">
       <StyleAnalysisHeader t={t} />
       {isReady ? (
         <AiReadySection
