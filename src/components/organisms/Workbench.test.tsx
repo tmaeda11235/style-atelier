@@ -142,7 +142,7 @@ describe("Workbench", () => {
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
 
     // Check headings and bubbles
-    expect(screen.getByText("Slot Variables")).toBeDefined()
+    expect(screen.getByText("スロット変数")).toBeDefined()
     expect(screen.getAllByText("Subject")).toBeDefined()
     expect(screen.getAllByText("Style")).toBeDefined()
 

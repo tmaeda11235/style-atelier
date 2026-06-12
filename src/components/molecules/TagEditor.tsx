@@ -49,6 +49,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, onChange }) => {
             {tag}
             <button
               type="button"
+              aria-label={`Remove ${tag}`}
               onClick={() => handleRemoveTag(tag)}
               className="text-slate-400 hover:text-red-500 text-[10px]">
               <X className="w-2.5 h-2.5" />

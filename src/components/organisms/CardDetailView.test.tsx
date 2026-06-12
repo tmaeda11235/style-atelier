@@ -137,8 +137,8 @@ describe("CardDetailView", () => {
     fireEvent.submit(tagInput)
 
     // Remove tag
-    const removeButtons = screen.getAllByText("×")
-    fireEvent.click(removeButtons[0]) // remove first tag ("cyber")
+    const removeButton = screen.getByLabelText("Remove cyber")
+    fireEvent.click(removeButton) // remove first tag ("cyber")
 
     const saveButton = screen.getByText("Save")
     await act(async () => {
