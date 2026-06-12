@@ -169,7 +169,7 @@ export function SimpleWorkbenchModal({
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🎴</span>
+            <span className="text-lg">{t.cardIcon}</span>
             <div>
               <h3 className="text-sm font-black text-slate-800">{t.title}</h3>
               <p className="text-[10px] text-slate-400 font-bold truncate max-w-[200px]">
@@ -197,7 +197,7 @@ export function SimpleWorkbenchModal({
             </div>
             <div className="flex-1 min-w-0">
               <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                Card Name
+                {i18n.minting.cardName}
               </span>
               <p className="text-xs font-bold text-slate-800 truncate">
                 {card.name}
@@ -229,7 +229,7 @@ export function SimpleWorkbenchModal({
           {editedSegments.some((seg) => seg.type === "slot") && (
             <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
               <label className="block text-xs font-semibold text-slate-500">
-                {t.slotVariables || "Slot Variables"}
+                {t.slotVariables}
               </label>
               <div className="space-y-2">
                 {editedSegments

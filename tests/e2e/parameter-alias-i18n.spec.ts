@@ -28,7 +28,6 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     // 2. Seed database
     await spFrame.locator("body").evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
       for (let i = 0; i < 50; i++) {
         const count = await database.categories.count()

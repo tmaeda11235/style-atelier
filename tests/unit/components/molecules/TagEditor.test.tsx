@@ -30,8 +30,8 @@ describe("TagEditor", () => {
     const mockOnChange = vi.fn()
     render(<TagEditor tags={["tag1", "tag2"]} onChange={mockOnChange} />)
 
-    const removeButtons = screen.getAllByText("×")
-    fireEvent.click(removeButtons[0]) // remove "tag1"
+    const removeButton = screen.getByLabelText("Remove tag1")
+    fireEvent.click(removeButton) // remove "tag1"
 
     expect(mockOnChange).toHaveBeenCalledWith(["tag2"])
   })

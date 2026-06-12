@@ -32,26 +32,26 @@ export const AssociatedImageGallery: React.FC<AssociatedImageGalleryProps> = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
-          Associated Images ({images.length})
+          {t.minting.associatedImages.replace("{0}", String(images.length))}
           <HelpTooltip
             content={t.helpTooltips.multiImage}
             position="top-left"
           />
         </h3>
         <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-full">
-          Selected: {selectedThumbs.length} / 4
+          {t.minting.selectedCount.replace(
+            "{0}",
+            String(selectedThumbs.length)
+          )}
         </span>
       </div>
-      <p className="text-[11px] text-slate-400">
-        Click on images to toggle their use as the card's thumbnail (up to
-        four). The selection order determines display layout.
-      </p>
+      <p className="text-[11px] text-slate-400">{t.minting.galleryTip}</p>
 
       <div className="grid grid-cols-2 gap-3">
         {images.map((imgUrl, index) => {
           const selectedIdx = selectedThumbs.indexOf(imgUrl)
           const isSelected = selectedIdx !== -1
-          const orderLabels = ["1st", "2nd", "3rd", "4th"]
+          const orderLabels = t.minting.orders
           const orderLabel = orderLabels[selectedIdx] || `${selectedIdx + 1}th`
 
           return (

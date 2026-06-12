@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 

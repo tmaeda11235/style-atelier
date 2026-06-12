@@ -221,7 +221,16 @@ export default ts.config(
       "src/components/organisms/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/components/organisms/InteractiveTutorial.tsx",
-      "src/components/organisms/WebLlmSettingsSection.tsx"
+      "src/components/organisms/WebLlmSettingsSection.tsx",
+      "src/components/organisms/SimpleWorkbenchModal.tsx",
+      "src/components/organisms/SlotVariablesSection.tsx",
+      "src/components/organisms/StorageManagerSection.tsx",
+      "src/components/organisms/CategoryManagerModal.tsx",
+      "src/components/organisms/CloudSyncSection.tsx",
+      "src/components/organisms/LocalBackupSection.tsx",
+      "src/components/organisms/Cauldron.tsx",
+      "src/components/molecules/AssociatedImageGallery.tsx",
+      "src/components/molecules/TagEditor.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [

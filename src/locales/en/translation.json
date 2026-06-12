@@ -236,6 +236,7 @@
   },
   "simpleWorkbench": {
     "title": "Simple Workbench",
+    "cardIcon": "🎴",
     "tryOnMidjourney": "Try on Midjourney",
     "injecting": "Injecting...",
     "close": "Close",
@@ -474,6 +475,10 @@
   ],
   "minting": {
     "title": "Mint New Card",
+    "associatedImages": "Associated Images ({0})",
+    "selectedCount": "Selected: {0} / 4",
+    "galleryTip": "Click on images to toggle their use as the card's thumbnail (up to four). The selection order determines display layout.",
+    "orders": ["1st", "2nd", "3rd", "4th"],
     "cardIdentity": "Card Identity",
     "previewName": "Preview Name",
     "selectKeywords": "Select Keywords",
@@ -483,6 +488,8 @@
     "noCategory": "No Category",
     "customTags": "Custom Tags",
     "noCustomTags": "No custom tags added.",
+    "noTagsYet": "No tags added yet.",
+    "tagsPlaceholder": "Add new tag...",
     "pressEnterToAdd": "Press enter to add...",
     "add": "Add",
     "detectedPalette": "Detected Palette",

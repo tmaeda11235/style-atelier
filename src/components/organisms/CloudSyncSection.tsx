@@ -230,7 +230,7 @@ export function CloudSyncSection({
           <div className="flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
             <span className="text-[10px] text-blue-700 font-bold">
-              {t.securityNoteTitle || "Security & Privacy"}
+              {t.securityNoteTitle}
             </span>
           </div>
           <HelpTooltip content={t.securityNote} position="top-left" />
