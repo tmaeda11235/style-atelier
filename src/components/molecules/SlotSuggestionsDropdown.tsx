@@ -54,22 +54,12 @@ const HandSuggestionsList = ({
   )
 }
 
-const HistorySuggestionItem = ({
-  item,
-  idx,
-  handSuggestionsLength,
-  activeIndex,
-  onSlotValueChange,
-  onSendToWorkbench,
-  setActiveSlot,
-  setActiveIndex,
-  label
-}: any) => {
-  const globalIdx = handSuggestionsLength + idx
-  const isSelected = activeIndex === globalIdx
+const HistorySuggestionItem = (props: any) => {
+  const globalIdx = props.handSuggestionsLength + props.idx
+  const isSelected = props.activeIndex === globalIdx
   return (
     <div
-      onMouseEnter={() => setActiveIndex(globalIdx)}
+      onMouseEnter={() => props.setActiveIndex(globalIdx)}
       className={`flex items-center justify-between rounded px-2 py-0.5 text-xs transition-colors ${
         isSelected
           ? "bg-blue-500 text-white"
@@ -79,20 +69,20 @@ const HistorySuggestionItem = ({
         type="button"
         onMouseDown={(e) => (
           e.preventDefault(),
-          onSlotValueChange(label, item.value),
-          setActiveSlot(null),
-          setActiveIndex(-1)
+          props.onSlotValueChange(props.label, props.item.value),
+          props.setActiveSlot(null),
+          props.setActiveIndex(-1)
         )}
         className={`flex-1 text-left text-xs truncate py-0.5 ${
           isSelected ? "text-white" : "text-slate-700 dark:text-slate-300"
         }`}>
-        {item.label}
+        {props.item.label}
       </button>
       <button
         type="button"
         onMouseDown={(e) => (
           e.preventDefault(),
-          onSendToWorkbench(item.value, label)
+          props.onSendToWorkbench(props.item.value, props.label)
         )}
         title="Send this value to Workbench"
         className={`p-0.5 rounded ${

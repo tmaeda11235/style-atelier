@@ -129,23 +129,18 @@ export function useSimpleWorkbenchModal({
   const [isInjecting, setIsInjecting] = useState(false)
   const { t: i18n } = useLanguage()
   const t = i18n.simpleWorkbench
-
-  const {
-    editedSegments,
-    setEditedSegments,
-    editedParams,
-    setEditedParams,
-    slotValues,
-    setSlotValues
-  } = useSimpleWorkbenchSegments(card)
+  const segs = useSimpleWorkbenchSegments(card)
 
   useSimpleWorkbenchConnection(card.id, addLog, setAlertType, t.noActiveTab)
 
   const handleInjectPrompt = async () => {
     setIsInjecting(true)
     setAlertType(null)
-    const resolvedSegments = resolveSegments(editedSegments, slotValues)
-    const fullPrompt = buildPromptString(resolvedSegments, editedParams)
+    const resolvedSegments = resolveSegments(
+      segs.editedSegments,
+      segs.slotValues
+    )
+    const fullPrompt = buildPromptString(resolvedSegments, segs.editedParams)
     try {
       const response = await sendInjectMessage(fullPrompt)
       if (response && response.status === "error") {
@@ -168,12 +163,7 @@ export function useSimpleWorkbenchModal({
   }
 
   return {
-    editedSegments,
-    setEditedSegments,
-    editedParams,
-    setEditedParams,
-    slotValues,
-    setSlotValues,
+    ...segs,
     isInjecting,
     handleInjectPrompt
   }

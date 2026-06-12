@@ -23,44 +23,36 @@ interface UseSlotFieldProps {
   onSlotValueChange: (label: string, value: string) => void
 }
 
-export function useSlotField({
-  label,
-  suggestions,
-  onSlotValueChange
-}: UseSlotFieldProps) {
+export function useSlotField(props: UseSlotFieldProps) {
   const [activeSlot, setActiveSlot] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number>(-1)
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
+  const handleDragOver = (e: React.DragEvent) => (
+    e.preventDefault(),
     setIsDragOver(true)
-  }
-
+  )
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(false)
     const text = e.dataTransfer.getData("text/plain")
-    if (text) onSlotValueChange(label, text)
+    if (text) props.onSlotValueChange(props.label, text)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (suggestions.length === 0) return
+    const len = props.suggestions.length
+    if (len === 0) return
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setActiveIndex((prev) => (prev + 1) % suggestions.length)
+      setActiveIndex((prev) => (prev + 1) % len)
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
-      setActiveIndex(
-        (prev) => (prev - 1 + suggestions.length) % suggestions.length
-      )
-    } else if (e.key === "Enter") {
-      if (activeIndex >= 0 && activeIndex < suggestions.length) {
-        e.preventDefault()
-        onSlotValueChange(label, suggestions[activeIndex].value)
-        setActiveSlot(null)
-        setActiveIndex(-1)
-      }
+      setActiveIndex((prev) => (prev - 1 + len) % len)
+    } else if (e.key === "Enter" && activeIndex >= 0 && activeIndex < len) {
+      e.preventDefault()
+      props.onSlotValueChange(props.label, props.suggestions[activeIndex].value)
+      setActiveSlot(null)
+      setActiveIndex(-1)
     } else if (e.key === "Escape") {
       setActiveSlot(null)
       setActiveIndex(-1)

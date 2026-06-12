@@ -186,21 +186,11 @@ export function SimpleWorkbenchModal({
   addLog,
   setAlertType
 }: SimpleWorkbenchModalProps) {
-  const {
-    editedSegments,
-    setEditedSegments,
-    editedParams,
-    setEditedParams,
-    slotValues,
-    setSlotValues,
-    isInjecting,
-    handleInjectPrompt
-  } = useSimpleWorkbenchModal({ card, addLog, setAlertType })
-
+  const swm = useSimpleWorkbenchModal({ card, addLog, setAlertType })
   const { t: i18n } = useLanguage()
   const t = i18n.simpleWorkbench
 
-  const slots = editedSegments.reduce<{ label: string; default: string }[]>(
+  const slots = swm.editedSegments.reduce<{ label: string; default: string }[]>(
     (acc, seg) => {
       if (seg.type === "slot" && !acc.some((s) => s.label === seg.label)) {
         acc.push({ label: seg.label, default: seg.default })
@@ -218,18 +208,18 @@ export function SimpleWorkbenchModal({
           card={card}
           i18n={i18n}
           t={t}
-          editedSegments={editedSegments}
-          setEditedSegments={setEditedSegments}
-          editedParams={editedParams}
-          setEditedParams={setEditedParams}
+          editedSegments={swm.editedSegments}
+          setEditedSegments={swm.setEditedSegments}
+          editedParams={swm.editedParams}
+          setEditedParams={swm.setEditedParams}
           slots={slots}
-          slotValues={slotValues}
-          setSlotValues={setSlotValues}
+          slotValues={swm.slotValues}
+          setSlotValues={swm.setSlotValues}
         />
         <SimpleWorkbenchFooter
           onClose={onClose}
-          onInject={handleInjectPrompt}
-          isInjecting={isInjecting}
+          onInject={swm.handleInjectPrompt}
+          isInjecting={swm.isInjecting}
           t={t}
         />
       </div>
