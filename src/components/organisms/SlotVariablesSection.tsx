@@ -109,7 +109,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
   return (
     <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">
       <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-        Slot Variables
+        {t.simpleWorkbench.slotVariables}
         <HelpTooltip content={t.helpTooltips.slot} position="top-left" />
       </h4>
       <div className="space-y-3">

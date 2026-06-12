@@ -104,7 +104,7 @@ export function LocalBackupSection({
           <div className="flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span className="text-[10px] text-indigo-700 font-bold">
-              {t.privacyNoteTitle || "Privacy Info"}
+              {t.privacyNoteTitle}
             </span>
           </div>
           <HelpTooltip content={t.privacyNote} position="top-left" />

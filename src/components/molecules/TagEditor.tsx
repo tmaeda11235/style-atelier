@@ -1,15 +1,18 @@
-import React, { useState } from "react";
-import { Input } from "../atoms/Input";
-import { Button } from "../atoms/Button";
+import { X } from "lucide-react"
+import React, { useState } from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
+import { Button } from "../atoms/Button"
+import { Input } from "../atoms/Input"
 
 /**
  * Props for the TagEditor component.
  */
 export interface TagEditorProps {
   /** The array of current tag strings */
-  tags: string[];
+  tags: string[]
   /** Callback called with the updated list of tags when a tag is added or removed */
-  onChange: (updatedTags: string[]) => void;
+  onChange: (updatedTags: string[]) => void
 }
 
 /**
@@ -17,42 +20,45 @@ export interface TagEditorProps {
  * with deletion buttons and an input field to add new tags.
  */
 export const TagEditor: React.FC<TagEditorProps> = ({ tags, onChange }) => {
-  const [newTagInput, setNewTagInput] = useState("");
+  const { t } = useLanguage()
+  const [newTagInput, setNewTagInput] = useState("")
 
   const handleAddTag = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = newTagInput.trim().toLowerCase();
+    e.preventDefault()
+    const trimmed = newTagInput.trim().toLowerCase()
     if (trimmed && !tags.includes(trimmed)) {
-      onChange([...tags, trimmed]);
+      onChange([...tags, trimmed])
     }
-    setNewTagInput("");
-  };
+    setNewTagInput("")
+  }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    onChange(tags.filter((t) => t !== tagToRemove));
-  };
+    onChange(tags.filter((t) => t !== tagToRemove))
+  }
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-medium text-slate-500 mb-1">Tags</label>
+      <label className="block text-xs font-medium text-slate-500 mb-1">
+        {t.cardDetail.tags}
+      </label>
       <div className="flex flex-wrap gap-1.5 mb-2">
-        {tags.map((t, idx) => (
+        {tags.map((tag, idx) => (
           <span
             key={idx}
-            className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200"
-          >
-            {t}
+            className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
+            {tag}
             <button
               type="button"
-              onClick={() => handleRemoveTag(t)}
-              className="text-slate-400 hover:text-red-500 text-[10px]"
-            >
-              &times;
+              onClick={() => handleRemoveTag(tag)}
+              className="text-slate-400 hover:text-red-500 text-[10px]">
+              <X className="w-2.5 h-2.5" />
             </button>
           </span>
         ))}
         {tags.length === 0 && (
-          <span className="text-xs text-slate-400 italic">No tags added yet.</span>
+          <span className="text-xs text-slate-400 italic">
+            {t.minting.noTagsYet}
+          </span>
         )}
       </div>
       <form onSubmit={handleAddTag} className="flex gap-2">
@@ -60,13 +66,13 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, onChange }) => {
           type="text"
           value={newTagInput}
           onChange={(e) => setNewTagInput(e.target.value)}
-          placeholder="Add new tag..."
+          placeholder={t.minting.tagsPlaceholder}
           className="text-xs py-1"
         />
         <Button type="submit" size="xs" variant="secondary">
-          Add
+          {t.minting.add}
         </Button>
       </form>
     </div>
-  );
-};
+  )
+}

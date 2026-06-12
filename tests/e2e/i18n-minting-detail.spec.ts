@@ -289,7 +289,13 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     await expect(
       spFrame.locator("span:has-text('アクセントカラー')")
     ).toBeVisible()
-    await expect(spFrame.locator("label:has-text('タグ')")).toBeVisible()
+    await expect(
+      spFrame.locator("label:has-text('タグ')").first()
+    ).toBeVisible()
+    await expect(
+      spFrame.locator("input[placeholder='新しいタグを追加...']")
+    ).toBeVisible()
+    await expect(spFrame.locator("button:has-text('追加')")).toBeVisible()
     await expect(
       spFrame.locator("h3:has-text('プロンプトレシピ')").first()
     ).toBeVisible()
