@@ -322,19 +322,21 @@ if (typeof window !== "undefined") {
                   localStorage.setItem("mock-webllm-downloaded", "true")
 
                   // Seed actual cache on successful download finish to satisfy integrity check
-                  ;(async () => {
-                    try {
-                      if (typeof caches !== "undefined") {
-                        const cache = await caches.open("webllm/model_cache")
-                        await cache.put(
-                          "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
-                          new Response(new Uint8Array(1024 * 1024 * 1024))
-                        )
+                  if (mockWebLlmConfig.useRealIntegrity) {
+                    ;(async () => {
+                      try {
+                        if (typeof caches !== "undefined") {
+                          const cache = await caches.open("webllm/model_cache")
+                          await cache.put(
+                            "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
+                            new Response(new Uint8Array(1024 * 1024 * 1024))
+                          )
+                        }
+                      } catch (e) {
+                        console.error("Failed to seed dummy cache file", e)
                       }
-                    } catch (e) {
-                      console.error("Failed to seed dummy cache file", e)
-                    }
-                  })()
+                    })()
+                  }
 
                   listeners.forEach((l: any) =>
                     l({
