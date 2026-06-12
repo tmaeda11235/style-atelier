@@ -71,7 +71,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1">
         {icon} {label}
       </label>
       <div className="flex flex-wrap gap-2 mb-2">
@@ -164,7 +164,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className="h-8 text-xs bg-white w-full"
+            className="h-8 text-xs w-full"
           />
           {options.length > 0 && (
             <AutocompleteDropdown
@@ -183,9 +183,9 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
         </div>
         <button
           onClick={() => addValue(inputValue)}
-          className="p-1 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors h-8 flex items-center justify-center"
+          className="p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors h-8 flex items-center justify-center cursor-pointer"
           type="button">
-          <Plus className="w-4 h-4 text-slate-400" />
+          <Plus className="w-4 h-4 text-slate-400 dark:text-slate-500" />
         </button>
       </div>
 

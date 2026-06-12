@@ -1,4 +1,4 @@
-import { BookUp2 } from "lucide-react"
+import { BookUp2, Dices } from "lucide-react"
 import React from "react"
 
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
@@ -12,6 +12,7 @@ interface WorkbenchHeaderProps {
   workbenchCards: StyleCard[]
   clearWorkbench: () => void
   pickRandomCards: () => void
+  isShuffling?: boolean
   t: any
 }
 
@@ -19,6 +20,7 @@ const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
   workbenchCards,
   clearWorkbench,
   pickRandomCards,
+  isShuffling,
   t
 }) => (
   <div className="flex items-center justify-between">
@@ -29,13 +31,14 @@ const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
     <div className="flex items-center gap-2">
       <button
         onClick={pickRandomCards}
-        className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full text-[10px] font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer"
+        disabled={isShuffling}
+        className={`flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full text-[10px] font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer ${isShuffling ? "opacity-50 cursor-not-allowed" : ""}`}
         title="Pick 1-3 random styles from library"
         id="workbench-gacha-btn"
         data-testid="workbench-gacha-btn"
         type="button">
-        <span>🔮</span>
-        <span>Gacha Pick</span>
+        <Dices className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`} />
+        <span>{t.gachaPick || "Gacha Pick"}</span>
       </button>
       {workbenchCards.length > 0 && (
         <Button
@@ -107,6 +110,7 @@ interface WorkbenchViewProps {
   handleInject: () => void
   isMixingMode: boolean
   isBlending: boolean
+  isShuffling?: boolean
   isDragOver: boolean
   setIsDragOver: (drag: boolean) => void
   selectedCardId: string | null
@@ -140,6 +144,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
         workbenchCards={props.workbenchCards}
         clearWorkbench={props.clearWorkbench}
         pickRandomCards={props.pickRandomCards}
+        isShuffling={props.isShuffling}
         t={props.t}
       />
       <Cauldron
@@ -147,6 +152,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
         handCards={props.handCards}
         isMixingMode={props.isMixingMode}
         isBlending={props.isBlending}
+        isShuffling={props.isShuffling}
         isDragOver={props.isDragOver}
         setIsDragOver={props.setIsDragOver}
         selectedCardId={props.selectedCardId}

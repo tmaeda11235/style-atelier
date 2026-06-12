@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -93,6 +92,16 @@ test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORG
     const gachaBtn = spFrame.locator("#workbench-gacha-btn").first()
     await expect(gachaBtn).toBeVisible({ timeout: 5000 })
     await gachaBtn.click()
+
+    // Assert shuffling overlay appears
+    const shuffleOverlay = spFrame.locator("text=SHUFFLING RECIPE...").first()
+    await expect(shuffleOverlay).toBeVisible({ timeout: 2000 })
+
+    // Take screenshot during Shuffle animation
+    await page.screenshot({
+      path: path.join(screenshotsDir, "parameter-gacha-during-shuffle.png")
+    })
+
     const cauldronCards = spFrame.locator(".animate-float-gentle")
     await expect(cauldronCards.first()).toBeVisible({ timeout: 5000 })
 

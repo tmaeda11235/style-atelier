@@ -1,0 +1,157 @@
+import { useAiRecipeAdvice } from "@/hooks/useAiRecipeAdvice"
+import { useWebLlm } from "@/hooks/useWebLlm"
+import { act, renderHook } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+// Mock useWebLlm
+vi.mock("@/hooks/useWebLlm", () => {
+  return {
+    useWebLlm: vi.fn()
+  }
+})
+
+// Mock react-i18next
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en" }
+  })
+}))
+
+describe("useAiRecipeAdvice", () => {
+  const mockRunInference = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    vi.mocked(useWebLlm).mockReturnValue({
+      status: "ready",
+      progress: 100,
+      error: null,
+      startDownload: vi.fn(),
+      purgeCache: vi.fn(),
+      checkCurrentState: vi.fn(),
+      runInference: mockRunInference
+    })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("should return null advice and loading=false when card length < 2", () => {
+    const { result } = renderHook(() => useAiRecipeAdvice([]))
+
+    expect(result.current.advice).toBeNull()
+    expect(result.current.loading).toBe(false)
+    expect(result.current.error).toBeNull()
+    expect(mockRunInference).not.toHaveBeenCalled()
+  })
+
+  it("should return null advice when WebLLM status is not ready", () => {
+    vi.mocked(useWebLlm).mockReturnValue({
+      status: "idle",
+      progress: 0,
+      error: null,
+      startDownload: vi.fn(),
+      purgeCache: vi.fn(),
+      checkCurrentState: vi.fn(),
+      runInference: mockRunInference
+    })
+
+    const cards = [
+      { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
+      { id: "2", name: "Card 2", prompt: "prompt 2", weight: 1.0 }
+    ]
+    const { result } = renderHook(() => useAiRecipeAdvice(cards))
+
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.advice).toBeNull()
+    expect(result.current.loading).toBe(false)
+    expect(mockRunInference).not.toHaveBeenCalled()
+  })
+
+  it("should trigger inference after debounce duration when status is ready and cards >= 2", async () => {
+    mockRunInference.mockResolvedValue("AI recipe advice mock result")
+    const cards = [
+      { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
+      { id: "2", name: "Card 2", prompt: "prompt 2", weight: 1.0 }
+    ]
+
+    const { result } = renderHook(() => useAiRecipeAdvice(cards))
+
+    // Debounce timer is running, should not call immediately
+    expect(result.current.loading).toBe(false)
+    expect(mockRunInference).not.toHaveBeenCalled()
+
+    // Advance timer to trigger inference
+    await act(async () => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.loading).toBe(false)
+    expect(result.current.advice).toBe("AI recipe advice mock result")
+    expect(mockRunInference).toHaveBeenCalledTimes(1)
+  })
+
+  it("should use cache and not trigger runInference again for the same card combination", async () => {
+    mockRunInference.mockResolvedValue("Cached advice")
+    const cards = [
+      { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
+      { id: "2", name: "Card 2", prompt: "prompt 2", weight: 1.0 }
+    ]
+
+    const { result, rerender } = renderHook(
+      ({ cardsList }) => useAiRecipeAdvice(cardsList),
+      {
+        initialProps: { cardsList: cards }
+      }
+    )
+
+    await act(async () => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.advice).toBe("Cached advice")
+    expect(mockRunInference).toHaveBeenCalledTimes(1)
+
+    // Clear call history of the mock
+    mockRunInference.mockClear()
+
+    // Change cards to 1 card (resets advice)
+    rerender({ cardsList: [cards[0]] })
+    expect(result.current.advice).toBeNull()
+
+    // Change cards back to the same combination
+    rerender({ cardsList: cards })
+
+    await act(async () => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    // Should return cached result immediately and not run inference again
+    expect(result.current.advice).toBe("Cached advice")
+    expect(mockRunInference).not.toHaveBeenCalled()
+  })
+
+  it("should set error state when runInference fails", async () => {
+    mockRunInference.mockRejectedValue(new Error("Inference failed"))
+    const cards = [
+      { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
+      { id: "2", name: "Card 2", prompt: "prompt 2", weight: 1.0 }
+    ]
+
+    const { result } = renderHook(() => useAiRecipeAdvice(cards))
+
+    await act(async () => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.loading).toBe(false)
+    expect(result.current.advice).toBeNull()
+    expect(result.current.error).toBe("Inference failed")
+  })
+})

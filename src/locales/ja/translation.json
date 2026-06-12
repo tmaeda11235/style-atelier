@@ -357,10 +357,20 @@
       "white": "ホワイト",
       "gray": "グレー",
       "black": "ブラック"
+    },
+    "tooltips": {
+      "inject": "大釜へ適用",
+      "share": "カードを共有",
+      "edit": "カードを編集",
+      "quickSend": "ワークベンチへ送って遷移",
+      "pin": "ワークベンチに送る",
+      "unpin": "ワークベンチから外す",
+      "more": "その他のアクション"
     }
   },
   "workbench": {
     "clearAll": "すべてクリア",
+    "gachaPick": "ガチャピック",
     "addPromptDesc": "LibraryからスタイルカードをWorkbenchに追加してください",
     "evolution": "進化",
     "variationRecipe": "調合（レシピ）",

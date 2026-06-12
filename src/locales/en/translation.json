@@ -357,10 +357,20 @@
       "white": "White",
       "gray": "Gray",
       "black": "Black"
+    },
+    "tooltips": {
+      "inject": "Inject Prompt",
+      "share": "Share Card",
+      "edit": "Edit Card",
+      "quickSend": "Quick Send to Workbench",
+      "pin": "Send to Workbench",
+      "unpin": "Remove from Workbench",
+      "more": "More Actions"
     }
   },
   "workbench": {
     "clearAll": "Clear All",
+    "gachaPick": "Gacha Pick",
     "addPromptDesc": "Add style cards to Workbench from Library",
     "evolution": "Evolution",
     "variationRecipe": "Variation Recipe",

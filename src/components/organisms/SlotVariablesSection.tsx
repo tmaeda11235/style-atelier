@@ -107,8 +107,8 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
   }
 
   return (
-    <div className="bg-white p-3 border border-slate-200 rounded-lg space-y-3">
-      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+    <div className="bg-white dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-800 rounded-lg space-y-3">
+      <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
         {t.simpleWorkbench.slotVariables}
         <HelpTooltip content={t.helpTooltips.slot} position="top-left" />
       </h4>
@@ -136,11 +136,11 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
               onDrop={(e) => handleDrop(e, label)}
               className={`p-2 rounded-lg border-2 transition-all relative space-y-1 ${
                 dragOverSlots[label]
-                  ? "border-dashed border-blue-400 bg-blue-50/50"
+                  ? "border-dashed border-blue-400 bg-blue-50/50 dark:bg-blue-950/20"
                   : "border-transparent"
               }`}
               data-testid={`slot-zone-${label}`}>
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {label}
               </label>
               <div className="flex gap-2 items-center relative">
@@ -161,7 +161,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                   }}
                   onKeyDown={(e) => handleKeyDown(e, label, suggestions)}
                   placeholder={slot.default || `Enter ${label}...`}
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm text-slate-800 focus:outline-none focus:border-blue-500"
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2 py-1 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
                   data-testid={`slot-input-${label}`}
                 />
                 <Button
@@ -170,15 +170,15 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                   size="xs"
                   onClick={() => onSendToWorkbench(currentValue, label)}
                   title="Send to Workbench"
-                  className="text-slate-400 hover:text-blue-500">
+                  className="text-slate-400 dark:text-slate-500 hover:text-blue-500">
                   <Pin className="w-3.5 h-3.5" />
                 </Button>
 
                 {activeSlot === label && suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 p-1.5 max-h-48 overflow-y-auto space-y-1.5">
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-50 p-1.5 max-h-48 overflow-y-auto space-y-1.5">
                     {handSuggestions.length > 0 && (
                       <div className="space-y-1">
-                        <div className="text-[9px] font-bold text-slate-400 px-1 uppercase tracking-wider">
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-slate-500 px-1 uppercase tracking-wider">
                           {t.workbench.fillFromWorkbench}
                         </div>
                         {handSuggestions.map((item, idx) => {
@@ -198,7 +198,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                               className={`w-full text-left text-xs px-2 py-1 rounded transition-colors block truncate ${
                                 isSelected
                                   ? "bg-blue-500 text-white"
-                                  : "text-slate-700 hover:bg-slate-100"
+                                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                               }`}>
                               {item.label}
                             </button>
@@ -208,8 +208,8 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                     )}
 
                     {historySuggestions.length > 0 && (
-                      <div className="space-y-1 pt-1.5 border-t border-slate-100">
-                        <div className="text-[9px] font-bold text-slate-400 px-1 uppercase tracking-wider">
+                      <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-slate-500 px-1 uppercase tracking-wider">
                           {t.workbench.recent}
                         </div>
                         {historySuggestions.map((item, idx) => {
@@ -222,7 +222,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                               className={`flex items-center justify-between rounded px-2 py-0.5 text-xs transition-colors ${
                                 isSelected
                                   ? "bg-blue-500 text-white"
-                                  : "hover:bg-slate-100"
+                                  : "hover:bg-slate-100 dark:hover:bg-slate-800"
                               }`}>
                               <button
                                 type="button"
@@ -233,7 +233,9 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                                   setActiveIndex(-1)
                                 }}
                                 className={`flex-1 text-left text-xs truncate py-0.5 ${
-                                  isSelected ? "text-white" : "text-slate-700"
+                                  isSelected
+                                    ? "text-white"
+                                    : "text-slate-700 dark:text-slate-300"
                                 }`}>
                                 {item.label}
                               </button>
@@ -244,7 +246,7 @@ export const SlotVariablesSection: React.FC<SlotVariablesSectionProps> = ({
                                   onSendToWorkbench(item.value, label)
                                 }}
                                 title="Send this value to Workbench"
-                                className={`p-0.5 rounded ${isSelected ? "text-white hover:text-blue-200" : "text-slate-400 hover:text-blue-500"}`}>
+                                className={`p-0.5 rounded ${isSelected ? "text-white hover:text-blue-200" : "text-slate-400 dark:text-slate-500 hover:text-blue-500"}`}>
                                 <Pin className="w-3 h-3" />
                               </button>
                             </div>

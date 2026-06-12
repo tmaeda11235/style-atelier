@@ -28,7 +28,6 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     // 2. Seed database
     await spFrame.locator("body").evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
       for (let i = 0; i < 50; i++) {
         const count = await database.categories.count()
@@ -72,6 +71,12 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     const gachaBtn = spFrame.locator("#workbench-gacha-btn").first()
     await expect(gachaBtn).toBeVisible()
     await gachaBtn.click()
+
+    // Wait for shuffling overlay to appear and then disappear to avoid race conditions
+    const shuffleOverlay = spFrame.locator("text=SHUFFLING RECIPE...").first()
+    await expect(shuffleOverlay).toBeVisible({ timeout: 2000 })
+    await expect(shuffleOverlay).toBeHidden({ timeout: 5000 })
+
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
     await expect(srefEditBtn).toBeVisible()
     await srefEditBtn.click()
@@ -94,7 +99,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     console.log("English Alias Modal screenshot saved.")
 
     // Cancel modal via X button
-    const closeBtn = spFrame.locator(".w-80.shadow-2xl button").first()
+    const closeBtn = spFrame.locator("#alias-modal-close-btn").first()
     await closeBtn.click()
     console.log("Setting language to Japanese...")
     await settingsNavBtn.click()

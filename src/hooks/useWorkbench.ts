@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks"
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
@@ -97,13 +97,80 @@ export async function pickRandomCards(handCards: StyleCard[]) {
   }
 }
 
+async function performShuffleAndPick(
+  handCards: StyleCard[],
+  setIsShuffling: (shuffling: boolean) => void,
+  setShuffleCards: (cards: StyleCard[] | null) => void
+) {
+  setIsShuffling(true)
+  try {
+    await clearWorkbench(handCards)
+    const allCards = await db.getAllCards()
+    const validCards = allCards.filter((c) => !c.isDeleted && !c.isVariable)
+
+    if (validCards.length > 0) {
+      const duration = 400
+
+      // 50msごとにランダムなカードをセットしてシャッフルアニメーションを表現
+      const intervalId = setInterval(() => {
+        const count = Math.min(
+          validCards.length,
+          Math.floor(Math.random() * 3) + 1
+        )
+        const selected: StyleCard[] = []
+        const temp = [...validCards]
+        for (let i = 0; i < count; i++) {
+          const idx = Math.floor(Math.random() * temp.length)
+          selected.push(temp[idx])
+          temp.splice(idx, 1)
+        }
+        setShuffleCards(selected)
+      }, 60)
+
+      await new Promise((resolve) => setTimeout(resolve, duration))
+      clearInterval(intervalId)
+
+      // 最終的なピック結果を決定
+      const count = Math.min(
+        validCards.length,
+        Math.floor(Math.random() * 3) + 1
+      )
+      const selected: StyleCard[] = []
+      const temp = [...validCards]
+      for (let i = 0; i < count; i++) {
+        const idx = Math.floor(Math.random() * temp.length)
+        selected.push(temp[idx])
+        temp.splice(idx, 1)
+      }
+
+      // DBを更新
+      await Promise.all(
+        selected.map((c) => db.styleCards.update(c.id, { isPinned: true }))
+      )
+    }
+  } catch (err) {
+    console.error("Failed to pick random cards with shuffle:", err)
+  } finally {
+    setIsShuffling(false)
+    setShuffleCards(null)
+  }
+}
+
 export function useWorkbench() {
+  const [isShuffling, setIsShuffling] = useState(false)
+  const [shuffleCards, setShuffleCards] = useState<StyleCard[] | null>(null)
+
   const handCardsList = useLiveQuery(() =>
     db.styleCards.filter((c) => !!c.isPinned).toArray()
   )
   const handCards = useMemo(() => handCardsList || [], [handCardsList])
 
-  const workbenchCards = useMemo(() => handCards, [handCards])
+  const workbenchCards = useMemo(() => {
+    if (isShuffling && shuffleCards) {
+      return shuffleCards
+    }
+    return handCards
+  }, [isShuffling, shuffleCards, handCards])
 
   const selectedCardIds = useMemo(() => {
     return workbenchCards.map((c) => c.id)
@@ -116,13 +183,18 @@ export function useWorkbench() {
   const rawSlotHistory = useLiveQuery(() => db.getAllSlotHistory())
   const slotHistory = useMemo(() => rawSlotHistory || {}, [rawSlotHistory])
 
+  const pickRandomCardsWithShuffle = useCallback(async () => {
+    await performShuffleAndPick(handCards, setIsShuffling, setShuffleCards)
+  }, [handCards])
+
   return {
     handCards,
     workbenchCards,
+    isShuffling,
     selectedCardIds,
     toggleCardSelection,
     clearWorkbench: () => clearWorkbench(handCards),
-    pickRandomCards: () => pickRandomCards(handCards),
+    pickRandomCards: pickRandomCardsWithShuffle,
     mergedPrompt,
     slotHistory,
     saveSlotHistory,

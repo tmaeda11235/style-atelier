@@ -1,15 +1,22 @@
-import { ArrowDown, Sparkles } from "lucide-react"
+import { ArrowDown } from "lucide-react"
 import React, { useEffect, useState } from "react"
 
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
 import { AiRecipeAdviceSection } from "./AiRecipeAdviceSection"
-import { WorkbenchCard } from "./WorkbenchCard"
+import {
+  BlendingOverlay,
+  CauldronBackground,
+  CauldronBubbles,
+  ShufflingOverlay,
+  WorkbenchCardList
+} from "./CauldronSubcomponents"
 
 interface CauldronProps {
   workbenchCards: StyleCard[]
   handCards: StyleCard[]
   isMixingMode: boolean
   isBlending: boolean
+  isShuffling?: boolean
   isDragOver: boolean
   setIsDragOver: (drag: boolean) => void
   selectedCardId: string | null
@@ -24,97 +31,6 @@ interface CauldronProps {
   addLog?: (msg: string) => void
   t: any
 }
-
-interface CauldronBackgroundProps {
-  isGlobalDragging: boolean
-  isDragOver: boolean
-}
-
-const CauldronBackground: React.FC<CauldronBackgroundProps> = ({
-  isGlobalDragging,
-  isDragOver
-}) => (
-  <>
-    <div
-      className={`absolute inset-0 bg-radial-[circle_at_center,_var(--tw-gradient-stops)] transition-all duration-500 pointer-events-none ${
-        isDragOver
-          ? "from-blue-900/40 via-slate-950 to-slate-950"
-          : isGlobalDragging
-            ? "from-indigo-900/30 via-slate-950 to-slate-950"
-            : "from-indigo-950/40 via-slate-950 to-slate-950"
-      }`}
-    />
-    <div
-      className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none transition-all duration-500 ${
-        isDragOver
-          ? "w-64 h-64 bg-blue-500/15 blur-3xl"
-          : isGlobalDragging
-            ? "w-56 h-56 bg-indigo-500/10 blur-3xl animate-pulse"
-            : "w-48 h-48 bg-blue-500/5 blur-3xl animate-pulse"
-      }`}
-    />
-  </>
-)
-
-const CauldronBubbles: React.FC = () => (
-  <div className="absolute inset-x-0 bottom-2 flex justify-around pointer-events-none h-16 overflow-hidden">
-    <div className="w-1.5 h-1.5 rounded-full bg-blue-400/40 animate-cauldron-bubble [animation-delay:0.2s]" />
-    <div className="w-2.5 h-2.5 rounded-full bg-purple-400/40 animate-cauldron-bubble [animation-delay:0.8s]" />
-    <div className="w-2.5 h-2.5 rounded-full bg-purple-400/40 animate-cauldron-bubble [animation-delay:0.8s]" />
-    <div className="w-2 h-2 rounded-full bg-indigo-400/40 animate-cauldron-bubble [animation-delay:1.5s]" />
-    <div className="w-1.5 h-1.5 rounded-full bg-teal-400/40 animate-cauldron-bubble [animation-delay:2.1s]" />
-  </div>
-)
-
-const BlendingOverlay: React.FC = () => (
-  <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex flex-col items-center justify-center z-50 animate-in fade-in duration-300">
-    <div className="relative w-24 h-24 flex items-center justify-center">
-      <div className="absolute inset-0 border-4 border-dashed border-teal-400 rounded-full animate-spin [animation-duration:2s]" />
-      <div className="absolute inset-2 border border-purple-400 rounded-full animate-spin [animation-duration:4s] [animation-direction:reverse]" />
-      <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
-    </div>
-    <span className="text-[10px] font-bold text-teal-300 mt-3 animate-pulse tracking-widest font-mono">
-      ALCHEMY IN PROGRESS...
-    </span>
-  </div>
-)
-
-interface WorkbenchCardListProps {
-  workbenchCards: StyleCard[]
-  selectedCardId: string | null
-  setSelectedCardId: (id: string | null) => void
-  toggleCardSelection: (id: string) => Promise<void> | void
-  updateCardWeight: (id: string, weight: number) => Promise<void> | void
-  handleExtractPortion: (
-    name: string,
-    segments: PromptSegment[],
-    params: any
-  ) => Promise<void> | void
-}
-
-const WorkbenchCardList: React.FC<WorkbenchCardListProps> = ({
-  workbenchCards,
-  selectedCardId,
-  setSelectedCardId,
-  toggleCardSelection,
-  updateCardWeight,
-  handleExtractPortion
-}) => (
-  <>
-    {workbenchCards.map((card, idx) => (
-      <WorkbenchCard
-        key={card.id}
-        card={card}
-        idx={idx}
-        selectedCardId={selectedCardId}
-        setSelectedCardId={setSelectedCardId}
-        toggleCardSelection={toggleCardSelection}
-        updateCardWeight={updateCardWeight}
-        handleExtractPortion={handleExtractPortion}
-      />
-    ))}
-  </>
-)
 
 const handleCauldronDrop = async (
   e: React.DragEvent,
@@ -251,20 +167,24 @@ const CauldronContent: React.FC<CauldronContentProps> = ({
   isDragOver,
   setIsDragOver,
   isGlobalDragging,
+  isShuffling,
   addLog,
   t
 }) => (
   <div className="flex items-center justify-center gap-6 z-10 w-full">
-    <WorkbenchCardList
-      workbenchCards={workbenchCards}
-      selectedCardId={selectedCardId}
-      setSelectedCardId={setSelectedCardId}
-      toggleCardSelection={toggleCardSelection}
-      updateCardWeight={updateCardWeight}
-      handleExtractPortion={handleExtractPortion}
-    />
+    <div
+      className={`flex items-center justify-center gap-6 transition-transform ${isShuffling ? "animate-gacha-shake blur-[0.3px]" : ""}`}>
+      <WorkbenchCardList
+        workbenchCards={workbenchCards}
+        selectedCardId={selectedCardId}
+        setSelectedCardId={setSelectedCardId}
+        toggleCardSelection={toggleCardSelection}
+        updateCardWeight={updateCardWeight}
+        handleExtractPortion={handleExtractPortion}
+      />
+    </div>
 
-    {workbenchCards.length < 2 && (
+    {!isShuffling && workbenchCards.length < 2 && (
       <CauldronDropZone
         isDragOver={isDragOver}
         setIsDragOver={setIsDragOver}
@@ -300,6 +220,7 @@ export const Cauldron: React.FC<CauldronProps> = (props) => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border border-dashed border-indigo-500/20 animate-cauldron-spin pointer-events-none" />
         )}
         {props.isBlending && <BlendingOverlay />}
+        {props.isShuffling && <ShufflingOverlay />}
         <CauldronContent {...props} isGlobalDragging={isGlobalDragging} />
       </div>
       {props.workbenchCards.length >= 2 && (

@@ -47,6 +47,7 @@ tags: []
   - `CardDetailView.tsx` (`src/components/organisms/CardDetailView.tsx`) is decomposed into sub-components (`ActionButtons`, `IdentitySection`, `ParametersSection`, `VersionHistorySection`, `SubSections`) and the state handling is isolated to `useCardDetailView` hook.
   - `MintingView.tsx` (`src/components/organisms/MintingView.tsx`) is decomposed into `MintingViewContent`, `CardIdentitySection`, and `CardIdentitySubSections` to separate concerns and simplify layout structure.
   - `CategoryManagerModal` is decomposed into `useCategoryForm` hook and modular display components (`CardSelectionView`, `CategoryForm`, `CategoryList`, `CategoryModalHeader`, `ModalContent`).
+  - **Tooltip & Responsive Action Collapsing**: A reusable `Tooltip` atom (`src/components/atoms/Tooltip.tsx`) provides hover labels with full translation support. To prevent layout breakages on narrow screens, card action buttons dynamically collapse into a "More" action menu popover. This is achieved via CSS Container Queries and cleanly modularized sub-components (`CardThumbnailActions`, `CardThumbnailImages`, `CardThumbnailIcons`) to satisfy strict ESLint file and function length limits.
 
 - **Feature Flags & Context Patterns**:
   - `SettingsContext` (`useSettings`): Manages theme ("system" | "light" | "dark"), "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`). To ensure responsive design (down to 320px) and clean visual hierarchy, long text descriptions and toggles in Settings Tab utilize `HelpTooltip` elements next to headers instead of occupying vertical list space.
@@ -131,6 +132,10 @@ To ensure maintainability and scalability, the project follows a strict director
   - `src/background.ts`: Extension background script.
   - `src/sidepanel.tsx`: Main entry point for the side panel UI.
   - `src/content.ts`: Content scripts (if applicable).
+- `tests/`: Directory containing all test suites.
+  - `tests/unit/`: Relocated directory containing all Vitest unit and integration test files (separated from `src/` to isolate application code).
+  - `tests/e2e/`: Playwright end-to-end test files.
+  - `tests/fixtures/`: Playwright test fixtures.
 
 ## Semantic Design Tokens & Dark Mode Theme Management:
 
