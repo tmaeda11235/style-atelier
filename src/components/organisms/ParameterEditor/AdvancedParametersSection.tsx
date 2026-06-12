@@ -96,7 +96,7 @@ function ParamButton({
     <div className="relative group">
       <ParamTooltip label={param.label} />
       <label
-        className={`cursor-pointer flex flex-col items-center justify-center p-2 rounded-lg border transition-all h-[54px] ${activeClass}`}
+        className={`cursor-pointer flex flex-col items-center justify-center p-2 rounded-lg border transition-all h-[54px] relative ${activeClass}`}
         title={param.label}
         data-testid={`param-btn-${param.key}`}>
         <input
@@ -109,12 +109,12 @@ function ParamButton({
               updateParam(param.key, e.target.checked ? true : undefined)
             }
           }}
-          className="sr-only"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        <span className="sr-only">{param.label}</span>
+        <div className="sr-only">{param.label}</div>
         <Icon className="w-5 h-5" />
         {isActive && param.isSlider && (
-          <span className="mt-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-950/50 px-1 rounded max-w-full truncate">
+          <span className="mt-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-950/50 px-1 rounded max-w-full truncate z-10">
             {param.value}
           </span>
         )}
