@@ -43,6 +43,8 @@ stateDiagram-v2
   _J_ORGAN_UX_PARAM_01 : パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ）
   _J_WB_MIXING_INTELLIGENT_01 : Midjourney sref/cref インテリジェントブレンド
   _J_ORG_QUICK_SEND_01 : クイックワークベンチ送信
+  _J_ORG_SEMANTIC_SEARCH_01 : セマンティック検索による自然言語フィルタリング
+  _J_WB_AI_ADVICE_01 : AI調合アドバイス表示
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -71,6 +73,7 @@ stateDiagram-v2
   _J_WB_EXPERT_02 --> _J_WB_PORTION_EXTRACT_01
   _J_WB_EXPERT_02 --> _J_WB_ATELIER_EFFECTS_01
   _J_WB_EXPERT_02 --> _J_WB_MIXING_INTELLIGENT_01
+  _J_WB_EXPERT_02 --> _J_WB_AI_ADVICE_01
   _J_WB_EXPERT_03 --> _J_MINT_EXPERT_01
   _J_WB_EASY_01 --> _J_WB_EXPERT_01
   _J_IO_QR_IN --> _J_ORG_EXPERT_01
@@ -86,6 +89,7 @@ stateDiagram-v2
   _J_SET_01 --> _J_SYS_04
   _J_WB_EXPERT_04 --> _J_WB_EXPERT_01
   _J_ORG_SEARCH_01 --> _J_ORG_EXPERT_01
+  _J_ORG_SEARCH_01 --> _J_ORG_SEMANTIC_SEARCH_01
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_05 --> _J_WB_EXPERT_02
   _J_TUTORIAL_01 --> _J_MINT_EXPERT_01
@@ -105,6 +109,10 @@ stateDiagram-v2
   _J_WB_MIXING_INTELLIGENT_01 --> _J_WB_EXPERT_03
   _J_ORG_QUICK_SEND_01 --> _J_WB_EXPERT_01
   _J_ORG_QUICK_SEND_01 --> _J_WB_EASY_01
+  _J_ORG_SEMANTIC_SEARCH_01 --> _J_ORG_EXPERT_01
+  _J_ORG_SEMANTIC_SEARCH_01 --> _J_ORG_SEARCH_01
+  _J_WB_AI_ADVICE_01 --> _J_WB_EXPERT_01
+  _J_WB_AI_ADVICE_01 --> _J_WB_EXPERT_03
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -588,4 +596,34 @@ flowchart TD
   S1 --> S2
   S3["ワークベンチに登録され自動遷移されるのを確認"]
   S2 --> S3
+```
+
+### @J-ORG-SEMANTIC-SEARCH-01: セマンティック検索による自然言語フィルタリング
+
+自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換、または類似カードを抽出する
+
+```mermaid
+flowchart TD
+  S1["ライブラリを開く"]
+  S2["検索バーのAIアシスタントボタンをONにする"]
+  S1 --> S2
+  S3["自然言語クエリを入力する"]
+  S2 --> S3
+  S4["AIによるフィルタ自動抽出とカード絞り込み結果を確認する"]
+  S3 --> S4
+```
+
+### @J-WB-AI-ADVICE-01: AI調合アドバイス表示
+
+ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する
+
+```mermaid
+flowchart TD
+  S1["Workbench（Cauldron）に複数カードを追加"]
+  S2["AI Recipe Advice エリアを展開"]
+  S1 --> S2
+  S3["AIによる調合アドバイス（日本語・英語）が生成・表示されるのを確認"]
+  S2 --> S3
+  S4["アドバイス内の推奨事項やキーワードを確認する"]
+  S3 --> S4
 ```

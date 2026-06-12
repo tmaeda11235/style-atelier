@@ -39,9 +39,11 @@
 | **@J-ORGAN-UX-PARAM-01**        | パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ） | ✔️ `tests\e2e\parameter-alias-gacha.spec.ts`<br>✔️ `tests\e2e\parameter-alias-i18n.spec.ts`                                               |
 | **@J-WB-MIXING-INTELLIGENT-01** | Midjourney sref/cref インテリジェントブレンド                                    | ✔️ `tests\e2e\sref-cref-blend.spec.ts`                                                                                                    |
 | **@J-ORG-QUICK-SEND-01**        | クイックワークベンチ送信                                                         | ✔️ `tests\e2e\quick-send.spec.ts`                                                                                                         |
+| **@J-ORG-SEMANTIC-SEARCH-01**   | セマンティック検索による自然言語フィルタリング                                   | ✔️ `tests\e2e\library-semantic-search.spec.ts`                                                                                            |
+| **@J-WB-AI-ADVICE-01**          | AI調合アドバイス表示                                                             | ✔️ `tests\e2e\ai-recipe-advice.spec.ts`                                                                                                   |
 
 ## サマリー
 
-- 全ジャーニー数: 35
-- カバー済み: 35
+- 全ジャーニー数: 37
+- カバー済み: 37
 - 未カバー: 0
