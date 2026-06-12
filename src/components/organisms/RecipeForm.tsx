@@ -9,13 +9,8 @@ import { PromptBubble } from "../molecules/PromptBubble"
 import { ParameterEditor } from "./ParameterEditor"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
-interface RecipeHeaderProps {
-  isEvolutionMode: boolean
-  isMixingMode: boolean
-  targetCard: StyleCard | undefined
-  t: any
-  i18n: any
-}
+// prettier-ignore
+interface RecipeHeaderProps { isEvolutionMode: boolean; isMixingMode: boolean; targetCard: StyleCard | undefined; t: any; i18n: any }
 
 const RecipeHeader: React.FC<RecipeHeaderProps> = ({
   isEvolutionMode,
@@ -25,7 +20,7 @@ const RecipeHeader: React.FC<RecipeHeaderProps> = ({
   i18n
 }) => (
   <div className="flex items-center justify-between">
-    <h3 className="flex items-center gap-1 text-sm font-bold text-slate-700">
+    <h3 className="flex items-center gap-1 text-sm font-bold text-slate-700 dark:text-slate-300">
       {isEvolutionMode ? t.evolution : t.variationRecipe}
       {isMixingMode && (
         <HelpTooltip
@@ -38,15 +33,8 @@ const RecipeHeader: React.FC<RecipeHeaderProps> = ({
   </div>
 )
 
-interface PromptSegmentSectionProps {
-  expertFeatures: any
-  editedSegments: PromptSegment[]
-  setEditedSegments: (seg: PromptSegment[]) => void
-  isEvolutionMode: boolean
-  targetCard: StyleCard | undefined
-  t: any
-  i18n: any
-}
+// prettier-ignore
+interface PromptSegmentSectionProps { expertFeatures: any; editedSegments: PromptSegment[]; setEditedSegments: (seg: PromptSegment[]) => void; isEvolutionMode: boolean; targetCard: StyleCard | undefined; t: any; i18n: any }
 
 const PromptSegmentSection: React.FC<PromptSegmentSectionProps> = ({
   expertFeatures,
@@ -59,7 +47,7 @@ const PromptSegmentSection: React.FC<PromptSegmentSectionProps> = ({
 }) => (
   <div className="space-y-2">
     <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-slate-500">
+      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
         {t.promptSegments}
       </span>
       {expertFeatures.cardEditing && (
@@ -69,7 +57,7 @@ const PromptSegmentSection: React.FC<PromptSegmentSectionProps> = ({
         />
       )}
     </div>
-    <div className="bg-white">
+    <div className="bg-white dark:bg-slate-900">
       {expertFeatures.cardEditing ? (
         <PromptBubbleEditor
           initialSegments={editedSegments}
@@ -77,7 +65,7 @@ const PromptSegmentSection: React.FC<PromptSegmentSectionProps> = ({
           tier={isEvolutionMode ? targetCard?.tier : "Common"}
         />
       ) : (
-        <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
+        <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[50px] items-start content-start">
           {editedSegments.map((segment, index) => (
             <PromptBubble
               key={index}
@@ -97,13 +85,8 @@ const PromptSegmentSection: React.FC<PromptSegmentSectionProps> = ({
   </div>
 )
 
-interface ParameterDisplaySectionProps {
-  expertFeatures: any
-  editedParams: any
-  setEditedParams: (p: any) => void
-  hasParams: boolean
-  t: any
-}
+// prettier-ignore
+interface ParameterDisplaySectionProps { expertFeatures: any; editedParams: any; setEditedParams: (p: any) => void; hasParams: boolean; t: any }
 
 const ParameterItem: React.FC<{ label: string; value: string | string[] }> = ({
   label,
@@ -112,7 +95,10 @@ const ParameterItem: React.FC<{ label: string; value: string | string[] }> = ({
   const displayVal = Array.isArray(value) ? value.join(", ") : value
   return displayVal && displayVal.length > 0 ? (
     <div>
-      <span className="font-bold text-slate-500">{label}</span> {displayVal}
+      <span className="font-bold text-slate-500 dark:text-slate-400">
+        {label}
+      </span>{" "}
+      {displayVal}
     </div>
   ) : null
 }
@@ -131,14 +117,16 @@ const ParameterDisplaySection: React.FC<ParameterDisplaySectionProps> = ({
   }
 
   return (
-    <div className="space-y-2 bg-slate-50/50 p-3 rounded-lg border border-slate-100 text-xs">
+    <div className="space-y-2 bg-slate-50/50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
       <ParameterItem label={t.aspectRatio} value={editedParams.ar} />
       <ParameterItem label={t.personalization} value={editedParams.p} />
       <ParameterItem label={t.imagePrompts} value={editedParams.imagePrompts} />
       <ParameterItem label={t.styleReference} value={editedParams.sref} />
       <ParameterItem label={t.characterReference} value={editedParams.cref} />
       {!hasParams && (
-        <div className="text-slate-400 italic">{t.noParameters}</div>
+        <div className="text-slate-400 dark:text-slate-500 italic">
+          {t.noParameters}
+        </div>
       )}
     </div>
   )
@@ -153,10 +141,12 @@ const EvolveButtonSection: React.FC<{
 }> = ({ targetCard, expertFeatures, canEvolveTarget, handleEvolve, t }) => {
   if (!expertFeatures.stack) return null
   return (
-    <div className="border-t border-slate-100 pt-2">
+    <div className="border-t border-slate-100 dark:border-slate-800 pt-2">
       <div className="flex justify-between items-center text-xs mb-2">
-        <span className="text-slate-500">{t.usageProgress}</span>
-        <span className="font-mono font-bold text-blue-600">
+        <span className="text-slate-500 dark:text-slate-400">
+          {t.usageProgress}
+        </span>
+        <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
           {targetCard.usageCount} {t.uses}
         </span>
       </div>
@@ -170,7 +160,7 @@ const EvolveButtonSection: React.FC<{
           </Button>
         </div>
       ) : (
-        <p className="text-[10px] text-slate-400 italic text-center">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 italic text-center">
           {t.evolveNeedMore}
         </p>
       )}
@@ -196,18 +186,8 @@ const MintVariationButtonSection: React.FC<{
   )
 }
 
-interface ActionButtonSectionProps {
-  isEvolutionMode: boolean
-  isMixingMode: boolean
-  targetCard: StyleCard | undefined
-  canEvolveTarget: boolean | undefined
-  expertFeatures: any
-  handleEvolve: () => Promise<void>
-  handleMintVariation: () => void
-  handleInjectPrompt: () => void
-  isInjecting: boolean
-  t: any
-}
+// prettier-ignore
+interface ActionButtonSectionProps { isEvolutionMode: boolean; isMixingMode: boolean; targetCard: StyleCard | undefined; canEvolveTarget: boolean | undefined; expertFeatures: any; handleEvolve: () => Promise<void>; handleMintVariation: () => void; handleInjectPrompt: () => void; isInjecting: boolean; t: any }
 
 const ActionButtonSection: React.FC<ActionButtonSectionProps> = ({
   isEvolutionMode,
@@ -256,24 +236,8 @@ const ActionButtonSection: React.FC<ActionButtonSectionProps> = ({
   </div>
 )
 
-export interface RecipeFormProps {
-  isEvolutionMode: boolean
-  isMixingMode: boolean
-  targetCard: StyleCard | undefined
-  canEvolveTarget: boolean | undefined
-  t: any
-  i18n: any
-  expertFeatures: any
-  editedSegments: PromptSegment[]
-  setEditedSegments: (seg: PromptSegment[]) => void
-  editedParams: any
-  setEditedParams: (p: any) => void
-  hasParams: boolean
-  handleEvolve: () => Promise<void>
-  handleMintVariation: () => void
-  handleInjectPrompt: () => void
-  isInjecting: boolean
-}
+// prettier-ignore
+export interface RecipeFormProps { isEvolutionMode: boolean; isMixingMode: boolean; targetCard: StyleCard | undefined; canEvolveTarget: boolean | undefined; t: any; i18n: any; expertFeatures: any; editedSegments: PromptSegment[]; setEditedSegments: (seg: PromptSegment[]) => void; editedParams: any; setEditedParams: (p: any) => void; hasParams: boolean; handleEvolve: () => Promise<void>; handleMintVariation: () => void; handleInjectPrompt: () => void; isInjecting: boolean }
 
 export const RecipeForm: React.FC<RecipeFormProps> = (props) => (
   <>
