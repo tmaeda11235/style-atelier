@@ -127,7 +127,6 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-max-lines.ts",
       "src/components/organisms/EasyModeSection.tsx",
-      "src/components/organisms/HandBar.tsx",
       "src/components/organisms/Workbench.tsx",
     ],
     rules: {
