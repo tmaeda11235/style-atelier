@@ -47,6 +47,7 @@ stateDiagram-v2
   _J_WB_AI_ADVICE_01 : AI調合アドバイス表示
   _J_ORG_CARD_TOOLTIP_01 : カードアクションツールチップ＆レスポンシブメニュー
   _J_WB_EMPTY_CAULDRON_01 : 空状態の大釜アフォーダンス
+  _J_UX_RESILIENCE_01 : 狭小画面ビジュアルレジリエンス
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -120,6 +121,9 @@ stateDiagram-v2
   _J_ORG_CARD_TOOLTIP_01 --> _J_ORG_QUICK_SEND_01
   _J_WB_EMPTY_CAULDRON_01 --> _J_WB_EXPERT_02
   _J_WB_EMPTY_CAULDRON_01 --> _J_WB_EXPERT_01
+  _J_UX_RESILIENCE_01 --> _J_ORG_EXPERT_01
+  _J_UX_RESILIENCE_01 --> _J_WB_EXPERT_01
+  _J_UX_RESILIENCE_01 --> _J_SET_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -669,4 +673,19 @@ flowchart TD
   S3 --> S4
   S5["ドロップしてカードが追加されるのを確認する"]
   S4 --> S5
+```
+
+### @J-UX-RESILIENCE-01: 狭小画面ビジュアルレジリエンス
+
+320pxや400pxの狭小画面で、横スクロールがなく、各要素が衝突・遮蔽されずにレイアウトが正しく調整されることを保証する
+
+```mermaid
+flowchart TD
+  S1["画面幅を狭小サイズに変更する"]
+  S2["各タブ（Library, Workbench, Settings）を切り替える"]
+  S1 --> S2
+  S3["主要なインタラクティブ要素が他の要素で遮蔽されずにクリック可能であることを確認する"]
+  S2 --> S3
+  S4["横スクロールバーが発生していないことを確認する"]
+  S3 --> S4
 ```
