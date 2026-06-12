@@ -47,6 +47,7 @@ tags: []
   - `CardDetailView.tsx` (`src/components/organisms/CardDetailView.tsx`) is decomposed into sub-components (`ActionButtons`, `IdentitySection`, `ParametersSection`, `VersionHistorySection`, `SubSections`) and the state handling is isolated to `useCardDetailView` hook.
   - `MintingView.tsx` (`src/components/organisms/MintingView.tsx`) is decomposed into `MintingViewContent`, `CardIdentitySection`, and `CardIdentitySubSections` to separate concerns and simplify layout structure.
   - `CategoryManagerModal` is decomposed into `useCategoryForm` hook and modular display components (`CardSelectionView`, `CategoryForm`, `CategoryList`, `CategoryModalHeader`, `ModalContent`).
+  - `EasyModeSection.tsx` (`src/components/organisms/EasyModeSection.tsx`) is decomposed into modular sub-components (`InterfaceModeToggle`, `FeatureToggleGroup`, `FeatureToggleItem`) to reduce complexity and maintain file and function size limits.
   - **Tooltip & Responsive Action Collapsing**: A reusable `Tooltip` atom (`src/components/atoms/Tooltip.tsx`) provides hover labels with full translation support. To prevent layout breakages on narrow screens, card action buttons dynamically collapse into a "More" action menu popover. This is achieved via CSS Container Queries and cleanly modularized sub-components (`CardThumbnailActions`, `CardThumbnailImages`, `CardThumbnailIcons`) to satisfy strict ESLint file and function length limits.
 
 - **Feature Flags & Context Patterns**:
