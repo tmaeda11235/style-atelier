@@ -1,12 +1,10 @@
 import { Send, X } from "lucide-react"
-import React, { useEffect, useState } from "react"
+import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
-import { buildPromptString } from "../../lib/prompt-utils"
-import { updateStyleCard } from "../../lib/style-card-store"
+import { useSimpleWorkbenchModal } from "../../hooks/useSimpleWorkbenchModal"
+import type { StyleCard } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
-import { CardThumbnail } from "../molecules/CardThumbnail"
 import type { AlertType } from "../molecules/ConnectionAlert"
 import { ParameterEditor } from "./ParameterEditor"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
@@ -18,273 +16,222 @@ interface SimpleWorkbenchModalProps {
   setAlertType: (type: AlertType | null) => void
 }
 
+const SimpleWorkbenchHeader = ({
+  name,
+  onClose,
+  t
+}: {
+  name: string
+  onClose: () => void
+  t: any
+}) => (
+  <div className="p-4 border-b flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <span className="text-lg">{t.cardIcon}</span>
+      <div>
+        <h3 className="text-sm font-black text-slate-800">{t.title}</h3>
+        <p className="text-[10px] text-slate-400 font-bold truncate max-w-[200px]">
+          {name}
+        </p>
+      </div>
+    </div>
+    <button
+      onClick={onClose}
+      className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+      aria-label="Close">
+      <X className="w-4 h-4" />
+    </button>
+  </div>
+)
+
+const SimpleWorkbenchCardInfo = ({
+  card,
+  i18n
+}: {
+  card: StyleCard
+  i18n: any
+}) => (
+  <div className="flex gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-100">
+    <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden border border-slate-200 shadow-sm">
+      <img
+        src={card.thumbnailData || "assets/icon.png"}
+        className="w-full h-full object-cover"
+        alt={card.name}
+      />
+    </div>
+    <div className="flex-1 min-w-0">
+      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+        {i18n.minting.cardName}
+      </span>
+      <p className="text-xs font-bold text-slate-800 truncate">{card.name}</p>
+      <div className="mt-1 flex items-center gap-1.5">
+        <span className="text-[10px] bg-slate-150 px-1.5 py-0.5 rounded text-slate-600 font-semibold">
+          {card.tier}
+        </span>
+        {card.category && (
+          <span className="text-[10px] bg-blue-50 px-1.5 py-0.5 rounded text-blue-600 font-semibold">
+            {card.category}
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
+)
+
+const SimpleSlotInputSection = ({
+  slots,
+  slotValues,
+  setSlotValues,
+  t
+}: {
+  slots: { label: string; default: string }[]
+  slotValues: Record<string, string>
+  setSlotValues: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  t: any
+}) => {
+  if (slots.length === 0) return null
+  return (
+    <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+      <label className="block text-xs font-semibold text-slate-500">
+        {t.slotVariables}
+      </label>
+      <div className="space-y-2">
+        {slots.map((slot) => (
+          <div key={slot.label} className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-600 uppercase">
+              {slot.label}
+            </span>
+            <input
+              type="text"
+              value={slotValues[slot.label] ?? ""}
+              onChange={(e) =>
+                setSlotValues((prev) => ({
+                  ...prev,
+                  [slot.label]: e.target.value
+                }))
+              }
+              placeholder={slot.default || `Enter ${slot.label}...`}
+              className="bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              data-testid={`simple-slot-input-${slot.label}`}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const SimpleWorkbenchFooter = ({
+  onClose,
+  onInject,
+  isInjecting,
+  t
+}: {
+  onClose: () => void
+  onInject: () => void
+  isInjecting: boolean
+  t: any
+}) => (
+  <div className="p-4 border-t flex gap-2 bg-slate-50">
+    <Button variant="ghost" className="flex-1" onClick={onClose}>
+      {t.cancel}
+    </Button>
+    <Button
+      className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold"
+      onClick={onInject}
+      disabled={isInjecting}>
+      <Send className="w-4 h-4 mr-2" />
+      {isInjecting ? t.injecting : t.tryOnMidjourney}
+    </Button>
+  </div>
+)
+
+const SimpleWorkbenchBody = ({
+  card,
+  i18n,
+  t,
+  editedSegments,
+  setEditedSegments,
+  editedParams,
+  setEditedParams,
+  slots,
+  slotValues,
+  setSlotValues
+}: any) => (
+  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <SimpleWorkbenchCardInfo card={card} i18n={i18n} />
+    <div className="space-y-1">
+      <label className="block text-xs font-semibold text-slate-500">
+        {t.promptPreview}
+      </label>
+      <PromptBubbleEditor
+        initialSegments={editedSegments}
+        onChange={setEditedSegments}
+        tier={card.tier}
+      />
+    </div>
+    <SimpleSlotInputSection
+      slots={slots}
+      slotValues={slotValues}
+      setSlotValues={setSlotValues}
+      t={t}
+    />
+    <ParameterEditor parameters={editedParams} onChange={setEditedParams} />
+  </div>
+)
+
 export function SimpleWorkbenchModal({
   card,
   onClose,
   addLog,
   setAlertType
 }: SimpleWorkbenchModalProps) {
-  const [editedSegments, setEditedSegments] = useState<PromptSegment[]>([])
-  const [editedParams, setEditedParams] = useState<any>({})
-  const [slotValues, setSlotValues] = useState<Record<string, string>>({})
-  const [isInjecting, setIsInjecting] = useState(false)
+  const {
+    editedSegments,
+    setEditedSegments,
+    editedParams,
+    setEditedParams,
+    slotValues,
+    setSlotValues,
+    isInjecting,
+    handleInjectPrompt
+  } = useSimpleWorkbenchModal({ card, addLog, setAlertType })
 
   const { t: i18n } = useLanguage()
   const t = i18n.simpleWorkbench
 
-  // Load segments and parameters on mount or when card changes
-  useEffect(() => {
-    const segments = card.promptSegments || []
-    setEditedSegments(segments)
-    setEditedParams(card.parameters || {})
-
-    // Initialize slot values
-    const initialSlots: Record<string, string> = {}
-    segments.forEach((seg) => {
-      if (seg.type === "slot") {
-        initialSlots[seg.label] = seg.default || ""
+  const slots = editedSegments.reduce<{ label: string; default: string }[]>(
+    (acc, seg) => {
+      if (seg.type === "slot" && !acc.some((s) => s.label === seg.label)) {
+        acc.push({ label: seg.label, default: seg.default })
       }
-    })
-    setSlotValues(initialSlots)
-  }, [card])
-
-  // Connection check on mount
-  useEffect(() => {
-    let isCancelled = false
-    let retryCount = 0
-    const maxRetries = 2
-    let timerId: any = null
-
-    const checkConnection = async () => {
-      if (isCancelled) return
-      try {
-        const tabs = await chrome.tabs.query({
-          active: true,
-          currentWindow: true
-        })
-        const activeTab = tabs[0]
-        if (isCancelled) return
-        if (!activeTab || !activeTab.id) {
-          addLog?.(`Check Connection: ${t.noActiveTab}`)
-          return
-        }
-
-        if (activeTab.status !== "complete") {
-          timerId = setTimeout(checkConnection, 1000)
-          return
-        }
-
-        const response = await chrome.tabs.sendMessage(activeTab.id, {
-          type: "PING"
-        })
-        if (isCancelled) return
-        setAlertType(null)
-      } catch (err: any) {
-        if (isCancelled) return
-        console.log("Connection check failed:", err)
-        if (retryCount < maxRetries) {
-          retryCount++
-          timerId = setTimeout(checkConnection, 1500)
-        } else {
-          setAlertType("disconnected")
-        }
-      }
-    }
-
-    checkConnection()
-
-    return () => {
-      isCancelled = true
-      if (timerId) {
-        clearTimeout(timerId)
-      }
-    }
-  }, [card.id])
-
-  const handleInjectPrompt = async () => {
-    setIsInjecting(true)
-    setAlertType(null)
-
-    // In Easy Mode, replace slot segments with filled values or fallback to default/label
-    const resolvedSegments = editedSegments.map((seg) => {
-      if (seg.type === "slot") {
-        return {
-          type: "text" as const,
-          value:
-            slotValues[seg.label] !== undefined && slotValues[seg.label] !== ""
-              ? slotValues[seg.label]
-              : seg.default || seg.label
-        }
-      }
-      return seg
-    })
-
-    const fullPrompt = buildPromptString(resolvedSegments, editedParams)
-
-    try {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true
-      })
-      const activeTab = tabs[0]
-
-      if (!activeTab?.id) {
-        throw new Error("No active tab found")
-      }
-
-      const response = await chrome.tabs.sendMessage(activeTab.id, {
-        type: "INJECT_PROMPT",
-        prompt: fullPrompt
-      })
-
-      if (response && response.status === "error") {
-        if (
-          response.message &&
-          response.message.includes("Could not find chat input")
-        ) {
-          setAlertType("no_input")
-        } else {
-          setAlertType("disconnected")
-        }
-      } else {
-        addLog?.(t.injectSuccess)
-
-        // Increment usage count for the card
-        await updateStyleCard(card.id, {
-          usageCount: (card.usageCount || 0) + 1
-        })
-      }
-    } catch (err) {
-      console.error("Injection failed:", err)
-      setAlertType("disconnected")
-    } finally {
-      setIsInjecting(false)
-    }
-  }
+      return acc
+    },
+    []
+  )
 
   return (
     <div className="absolute inset-0 bg-black/20 dark:bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end">
-      {/* Drawer Container */}
       <div className="bg-white rounded-t-xl max-h-[90%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0">
-        {/* Header */}
-        <div className="p-4 border-b flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{t.cardIcon}</span>
-            <div>
-              <h3 className="text-sm font-black text-slate-800">{t.title}</h3>
-              <p className="text-[10px] text-slate-400 font-bold truncate max-w-[200px]">
-                {card.name}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-            aria-label="Close">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="flex gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden border border-slate-200 shadow-sm">
-              <img
-                src={card.thumbnailData || "assets/icon.png"}
-                className="w-full h-full object-cover"
-                alt={card.name}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                {i18n.minting.cardName}
-              </span>
-              <p className="text-xs font-bold text-slate-800 truncate">
-                {card.name}
-              </p>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="text-[10px] bg-slate-150 px-1.5 py-0.5 rounded text-slate-600 font-semibold">
-                  {card.tier}
-                </span>
-                {card.category && (
-                  <span className="text-[10px] bg-blue-50 px-1.5 py-0.5 rounded text-blue-600 font-semibold">
-                    {card.category}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-500">
-              {t.promptPreview}
-            </label>
-            <PromptBubbleEditor
-              initialSegments={editedSegments}
-              onChange={setEditedSegments}
-              tier={card.tier}
-            />
-          </div>
-
-          {editedSegments.some((seg) => seg.type === "slot") && (
-            <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-              <label className="block text-xs font-semibold text-slate-500">
-                {t.slotVariables}
-              </label>
-              <div className="space-y-2">
-                {editedSegments
-                  .reduce<{ label: string; default: string }[]>((acc, seg) => {
-                    if (
-                      seg.type === "slot" &&
-                      !acc.some((s) => s.label === seg.label)
-                    ) {
-                      acc.push({ label: seg.label, default: seg.default })
-                    }
-                    return acc
-                  }, [])
-                  .map((slot) => (
-                    <div key={slot.label} className="flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-slate-600 uppercase">
-                        {slot.label}
-                      </span>
-                      <input
-                        type="text"
-                        value={slotValues[slot.label] ?? ""}
-                        onChange={(e) =>
-                          setSlotValues((prev) => ({
-                            ...prev,
-                            [slot.label]: e.target.value
-                          }))
-                        }
-                        placeholder={slot.default || `Enter ${slot.label}...`}
-                        className="bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
-                        data-testid={`simple-slot-input-${slot.label}`}
-                      />
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          <ParameterEditor
-            parameters={editedParams}
-            onChange={setEditedParams}
-          />
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t flex gap-2 bg-slate-50">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>
-            {t.cancel}
-          </Button>
-          <Button
-            className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold"
-            onClick={handleInjectPrompt}
-            disabled={isInjecting}>
-            <Send className="w-4 h-4 mr-2" />
-            {isInjecting ? t.injecting : t.tryOnMidjourney}
-          </Button>
-        </div>
+        <SimpleWorkbenchHeader name={card.name} onClose={onClose} t={t} />
+        <SimpleWorkbenchBody
+          card={card}
+          i18n={i18n}
+          t={t}
+          editedSegments={editedSegments}
+          setEditedSegments={setEditedSegments}
+          editedParams={editedParams}
+          setEditedParams={setEditedParams}
+          slots={slots}
+          slotValues={slotValues}
+          setSlotValues={setSlotValues}
+        />
+        <SimpleWorkbenchFooter
+          onClose={onClose}
+          onInject={handleInjectPrompt}
+          isInjecting={isInjecting}
+          t={t}
+        />
       </div>
     </div>
   )
