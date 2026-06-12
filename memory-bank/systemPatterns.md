@@ -153,6 +153,7 @@ To maintain clean architecture and prevent technical debt, the following strict 
 2. **Pure Test Mocks**:
    - Mock databases and utility mocks (e.g., in `tests/mocks/`) must remain pure mocks and not contain business logic.
    - Test expectations should verify interactions with the mock rather than replicating real database logic or state transitions inside the mock.
+   - Database mocks (e.g., `MockStyleAtelierDatabase`) should support consistent interface contract simulations (such as Dexie Collection API's `.first()`, `.last()`, `.each()`, `.limit()`, and `.reverse()`) to prevent mock-related exceptions in the tested components.
 3. **File Length Limits**:
    - Component files should not exceed 300 lines of code (excluding comments and blank lines).
    - Functions should be kept under 50 lines.
