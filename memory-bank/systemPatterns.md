@@ -45,8 +45,11 @@ tags: []
   - `color-utils.ts` (`src/lib/color-utils.ts`) is refactored by splitting pure color conversion utilities into a new `src/lib/color-converter.ts` and delegating canvas/analysis sub-routines to satisfy the 300-line file limit and 50-line function limit.
   - `db-setup.ts` (`src/lib/db-setup.ts`) delegates its version migration configuration to the `setupMigrations` helper in `src/lib/db/migrations.ts` to keep the constructor clean and minimize class complexity.
   - `CardDetailView.tsx` (`src/components/organisms/CardDetailView.tsx`) is decomposed into sub-components (`ActionButtons`, `IdentitySection`, `ParametersSection`, `VersionHistorySection`, `SubSections`) and the state handling is isolated to `useCardDetailView` hook.
+  - `SimpleWorkbenchModal.tsx` is decomposed into sub-components (`SimpleWorkbenchHeader`, `SimpleWorkbenchBody`, `SimpleWorkbenchFooter`) and its logic is extracted to the custom hooks `useSimpleWorkbenchModal`, `useSimpleWorkbenchSegments`, and `useSimpleWorkbenchConnection` to conform to function size rules.
+  - `SlotVariablesSection.tsx` is refactored by extracting `SlotField` and `SlotSuggestionsDropdown` molecules, and decomposing them into helper sub-components (`SlotInput`, `SlotInputField`, `HistorySuggestionItem`, `HandSuggestionsList`) and the `useSlotField` custom hook to strictly keep each function under the 50-line limit.
   - `MintingView.tsx` (`src/components/organisms/MintingView.tsx`) is decomposed into `MintingViewContent`, `CardIdentitySection`, and `CardIdentitySubSections` to separate concerns and simplify layout structure.
   - `CategoryManagerModal` is decomposed into `useCategoryForm` hook and modular display components (`CardSelectionView`, `CategoryForm`, `CategoryList`, `CategoryModalHeader`, `ModalContent`).
+  - `EasyModeSection.tsx` (`src/components/organisms/EasyModeSection.tsx`) is decomposed into modular sub-components (`InterfaceModeToggle`, `FeatureToggleGroup`, `FeatureToggleItem`) to reduce complexity and maintain file and function size limits.
   - **Tooltip & Responsive Action Collapsing**: A reusable `Tooltip` atom (`src/components/atoms/Tooltip.tsx`) provides hover labels with full translation support. To prevent layout breakages on narrow screens, card action buttons dynamically collapse into a "More" action menu popover. This is achieved via CSS Container Queries and cleanly modularized sub-components (`CardThumbnailActions`, `CardThumbnailImages`, `CardThumbnailIcons`) to satisfy strict ESLint file and function length limits.
 
 - **Feature Flags & Context Patterns**:
@@ -115,6 +118,14 @@ tags: []
 3. **Pure Atoms**: Atoms must not depend on external hooks or global state (use props instead). They should be highly reusable and testable in isolation.
 4. **Consistency**: Reuse existing Atoms/Molecules to maintain UI consistency and reduce technical debt.
 5. **No Logic in Molecules**: Molecules should focus on UI structure and composition. Business logic or heavy state management should be handled in Organisms or Custom Hooks.
+
+## Visual Resilience & Responsive UI Rules (Narrow Screens)
+
+To ensure the Side Panel is fully functional at extremely narrow widths (minimum 320px) without layout breakages or misclicks:
+
+1. **Horizontal Scroll Prevention**: Side panel pages must fit within the viewport. Global horizontal scrollbars are strictly forbidden. Dynamic text and list items must wrap, truncate, or collapse when space is restricted.
+2. **Interactive Element Safety (Obstructed Element Guardrail)**: All buttons, textareas, inputs, and toggle switches must remain fully visible and clickable. Under no circumstance should floating elements, tooltips, or overlapping card actions obscure interactive zones. This is verified by ensuring `document.elementFromPoint(x, y)` resolves to the interactive target.
+3. **Adaptive Component Collapse**: Components must dynamically collapse or shift states to adapt to narrow viewports. Labels should hide (showing icons only, with tooltips) or wrap into action popovers when container width drops below 320px.
 
 ## Project Structure
 

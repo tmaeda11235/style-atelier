@@ -126,8 +126,8 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-max-lines.ts",
-      "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/HandBar.tsx",
+      "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/Workbench.tsx",
     ],
     rules: {
@@ -139,7 +139,6 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-complexity.ts",
       "src/components/organisms/CloudSyncSection.tsx",
-      "src/components/organisms/EasyModeSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
       "src/lib/prompt-utils.ts",
     ],
@@ -158,8 +157,6 @@ export default ts.config(
       "src/components/molecules/GenealogySection.tsx",
       "src/components/molecules/HistoryCard.tsx",
       "src/components/molecules/ParameterArrayEditor.tsx",
-      "src/components/molecules/PromptBubble.tsx",
-      "src/components/molecules/TagEditor.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
@@ -176,8 +173,6 @@ export default ts.config(
       "src/components/organisms/SettingsTab.tsx",
       "src/components/organisms/ShareCardModal.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
-      "src/components/organisms/SimpleWorkbenchModal.tsx",
-      "src/components/organisms/SlotVariablesSection.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/components/templates/SidePanelLayout.tsx",
