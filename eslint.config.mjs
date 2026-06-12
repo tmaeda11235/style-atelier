@@ -173,8 +173,6 @@ export default ts.config(
       "src/components/organisms/SettingsTab.tsx",
       "src/components/organisms/ShareCardModal.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
-      "src/components/organisms/SimpleWorkbenchModal.tsx",
-      "src/components/organisms/SlotVariablesSection.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/components/templates/SidePanelLayout.tsx",
