@@ -1,23 +1,16 @@
 import { PromptBubble } from "@/components/molecules/PromptBubble"
-import { SettingsProvider } from "@/contexts/SettingsContext"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-const renderWithContext = (ui: React.ReactElement) => {
-  return render(<SettingsProvider>{ui}</SettingsProvider>)
-}
-
 describe("PromptBubble", () => {
   it("renders text segment correctly", () => {
-    renderWithContext(
-      <PromptBubble segment={{ type: "text", value: "hello" }} />
-    )
+    render(<PromptBubble segment={{ type: "text", value: "hello" }} />)
     expect(screen.getByText("hello")).toBeInTheDocument()
   })
 
   it("renders slot segment correctly", () => {
-    renderWithContext(
+    render(
       <PromptBubble
         segment={{ type: "slot", name: "slot1", label: "Age", value: "" }}
       />
@@ -27,7 +20,7 @@ describe("PromptBubble", () => {
   })
 
   it("renders chip segment correctly", () => {
-    renderWithContext(
+    render(
       <PromptBubble segment={{ type: "chip", cardId: "card1", kind: "Sref" }} />
     )
     expect(screen.getByText("Sref")).toBeInTheDocument()
@@ -36,7 +29,7 @@ describe("PromptBubble", () => {
 
   it("calls onClick when clicked", () => {
     const handleClick = vi.fn()
-    renderWithContext(
+    render(
       <PromptBubble
         segment={{ type: "text", value: "click-me" }}
         onClick={handleClick}
@@ -49,7 +42,7 @@ describe("PromptBubble", () => {
 
   it("calls onRemove when remove button is clicked", () => {
     const handleRemove = vi.fn()
-    const { container } = renderWithContext(
+    const { container } = render(
       <PromptBubble
         segment={{ type: "text", value: "removable" }}
         onRemove={handleRemove}
@@ -62,7 +55,7 @@ describe("PromptBubble", () => {
   })
 
   it("applies rarity tier styles correctly", () => {
-    const { container } = renderWithContext(
+    const { container } = render(
       <PromptBubble
         segment={{ type: "text", value: "rare-bubble" }}
         tier="Rare"
@@ -70,5 +63,29 @@ describe("PromptBubble", () => {
     )
     const bubble = container.firstChild as HTMLElement
     expect(bubble.className).toContain("bg-blue-500")
+  })
+
+  it("shows To Slot when enableSlotAction is true and onClick is provided", () => {
+    const handleClick = vi.fn()
+    render(
+      <PromptBubble
+        segment={{ type: "text", value: "hello" }}
+        onClick={handleClick}
+        enableSlotAction={true}
+      />
+    )
+    expect(screen.getByText("To Slot")).toBeInTheDocument()
+  })
+
+  it("does not show To Slot when enableSlotAction is false", () => {
+    const handleClick = vi.fn()
+    render(
+      <PromptBubble
+        segment={{ type: "text", value: "hello" }}
+        onClick={handleClick}
+        enableSlotAction={false}
+      />
+    )
+    expect(screen.queryByText("To Slot")).not.toBeInTheDocument()
   })
 })

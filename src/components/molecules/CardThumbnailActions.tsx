@@ -78,6 +78,7 @@ function getButtonsConfig(
       content: t("libraryTab.tooltips.inject"),
       variant: "blue",
       click: props.onInjectClick!,
+      dataId: "inject-card-button",
       icon: InjectIcon
     },
     {
@@ -120,6 +121,7 @@ function PinButton({ props }: { props: CardThumbnailActionsProps }) {
       variant={props.isPinned ? "yellow" : "white"}
       onClick={props.onPinClick!}
       className=""
+      dataTestId="pin-card-button"
       icon={props.isPinned ? PinnedIcon : PinIcon}
     />
   )

@@ -279,6 +279,7 @@ export const PromptBubbleEditor: React.FC<PromptBubbleEditorProps> = ({
                 : undefined
             }
             tier={segment.type === "text" ? undefined : tier}
+            enableSlotAction={expertFeatures.slot}
           />
         ))}
         <input
