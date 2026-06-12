@@ -119,6 +119,14 @@ tags: []
 4. **Consistency**: Reuse existing Atoms/Molecules to maintain UI consistency and reduce technical debt.
 5. **No Logic in Molecules**: Molecules should focus on UI structure and composition. Business logic or heavy state management should be handled in Organisms or Custom Hooks.
 
+## Visual Resilience & Responsive UI Rules (Narrow Screens)
+
+To ensure the Side Panel is fully functional at extremely narrow widths (minimum 320px) without layout breakages or misclicks:
+
+1. **Horizontal Scroll Prevention**: Side panel pages must fit within the viewport. Global horizontal scrollbars are strictly forbidden. Dynamic text and list items must wrap, truncate, or collapse when space is restricted.
+2. **Interactive Element Safety (Obstructed Element Guardrail)**: All buttons, textareas, inputs, and toggle switches must remain fully visible and clickable. Under no circumstance should floating elements, tooltips, or overlapping card actions obscure interactive zones. This is verified by ensuring `document.elementFromPoint(x, y)` resolves to the interactive target.
+3. **Adaptive Component Collapse**: Components must dynamically collapse or shift states to adapt to narrow viewports. Labels should hide (showing icons only, with tooltips) or wrap into action popovers when container width drops below 320px.
+
 ## Project Structure
 
 To ensure maintainability and scalability, the project follows a strict directory structure:
