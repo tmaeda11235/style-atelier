@@ -23,29 +23,14 @@ interface LibraryTabProps {
   onOpenSimpleWorkbench?: (card: StyleCard) => void
 }
 
-export function LibraryTab(props: LibraryTabProps) {
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
-  const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
-  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
-  const { advanceIfStep } = useTutorial()
-  const { expertFeatures } = useSettings()
-  const { t: i18n } = useLanguage()
-  const t = i18n.libraryTab
-  const lib = useLibrary(
-    props.addLog,
-    props.setAlertType,
-    props.onNavigateToWorkbench
-  )
-
-  const activeFiltersCount = [
-    lib.rarityFilter !== "All",
-    lib.modelFilter !== "All",
-    lib.categoryFilter !== "All",
-    lib.colorFilter !== "All" || lib.colorHueFilter !== null,
-    lib.sortBy !== "newest"
-  ].filter(Boolean).length
-
-  const filterAccordionProps = {
+function buildFilterProps(
+  lib: any,
+  isFiltersExpanded: boolean,
+  expertFeatures: boolean,
+  setIsCategoryModalOpen: (v: boolean) => void,
+  t: any
+) {
+  return {
     isFiltersExpanded,
     expertFeatures,
     rarityFilter: lib.rarityFilter,
@@ -75,9 +60,33 @@ export function LibraryTab(props: LibraryTabProps) {
     sortByUsageLabel: t.sortBy?.usage,
     sortByColorLabel: t.sortBy?.color
   }
+}
+
+function SearchAndFilterSection({
+  lib,
+  isFiltersExpanded,
+  setIsFiltersExpanded,
+  expertFeatures,
+  setIsCategoryModalOpen,
+  t
+}: {
+  lib: any
+  isFiltersExpanded: boolean
+  setIsFiltersExpanded: (v: boolean) => void
+  expertFeatures: boolean
+  setIsCategoryModalOpen: (v: boolean) => void
+  t: any
+}) {
+  const filterProps = buildFilterProps(
+    lib,
+    isFiltersExpanded,
+    expertFeatures,
+    setIsCategoryModalOpen,
+    t
+  )
 
   return (
-    <div className="flex flex-col gap-4">
+    <>
       <LibrarySearchBar
         categories={lib.categories}
         allSrefs={lib.allSrefs}
@@ -88,64 +97,153 @@ export function LibraryTab(props: LibraryTabProps) {
         setColorFilter={lib.setColorFilter}
         isFiltersExpanded={isFiltersExpanded}
         setIsFiltersExpanded={setIsFiltersExpanded}
-        activeFiltersCount={activeFiltersCount}
+        activeFiltersCount={lib.activeFiltersCount}
       />
-      <LibraryFilterAccordion {...filterAccordionProps} />
-      <FolderExplorer
-        breadcrumbs={lib.breadcrumbs}
-        currentSubfolders={lib.currentSubfolders}
-        setCurrentFolderId={lib.setCurrentFolderId}
+      <LibraryFilterAccordion {...filterProps} />
+    </>
+  )
+}
+
+interface GridOrEmptySectionProps {
+  lib: any
+  isEasyMode?: boolean
+  onOpenSimpleWorkbench?: (card: StyleCard) => void
+  onOpenDetailCard: (card: StyleCard) => void
+  onNavigateToWorkbench?: () => void
+  setSharingCard: (card: StyleCard | null) => void
+  t: any
+}
+
+function GridOrEmptySection({
+  lib,
+  isEasyMode,
+  onOpenSimpleWorkbench,
+  onOpenDetailCard,
+  onNavigateToWorkbench,
+  setSharingCard,
+  t
+}: GridOrEmptySectionProps) {
+  const { advanceIfStep } = useTutorial()
+  if (lib.styleCards.length > 0) {
+    return (
+      <CardsGrid
+        styleCards={lib.styleCards}
+        isEasyMode={isEasyMode}
+        onOpenSimpleWorkbench={onOpenSimpleWorkbench}
+        togglePin={lib.togglePin}
+        advanceIfStep={advanceIfStep}
+        onOpenDetailCard={onOpenDetailCard}
+        handleCardClick={lib.handleCardClick}
+        setSharingCard={setSharingCard}
+        categories={lib.categories}
+        handleQuickSend={async (card, e) => {
+          if (!card.isPinned) await lib.togglePin(card, e)
+          onNavigateToWorkbench?.()
+        }}
         moveCardToCategory={lib.moveCardToCategory}
+        hasMore={lib.hasMore}
+        loadMore={lib.loadMore}
+        t={t}
       />
-      {lib.styleCards.length > 0 ? (
-        <CardsGrid
-          styleCards={lib.styleCards}
-          isEasyMode={props.isEasyMode}
-          onOpenSimpleWorkbench={props.onOpenSimpleWorkbench}
-          togglePin={lib.togglePin}
-          advanceIfStep={advanceIfStep}
-          onOpenDetailCard={props.onOpenDetailCard}
-          handleCardClick={lib.handleCardClick}
-          setSharingCard={setSharingCard}
-          categories={lib.categories}
-          handleQuickSend={async (card, e) => {
-            if (!card.isPinned) await lib.togglePin(card, e)
-            props.onNavigateToWorkbench?.()
-          }}
-          moveCardToCategory={lib.moveCardToCategory}
-          hasMore={lib.hasMore}
-          loadMore={lib.loadMore}
-          t={t}
-        />
-      ) : (
-        <EmptyState
-          allCards={lib.allCards}
-          searchTag={lib.searchTag}
-          rarityFilter={lib.rarityFilter}
-          modelFilter={lib.modelFilter}
-          categoryFilter={lib.categoryFilter}
-          colorFilter={lib.colorFilter}
-          setSearchTag={lib.setSearchTag}
-          setRarityFilter={lib.setRarityFilter}
-          setModelFilter={lib.setModelFilter}
-          setCategoryFilter={lib.setCategoryFilter}
-          setColorFilter={lib.setColorFilter}
-          t={t}
-        />
-      )}
+    )
+  }
+  return (
+    <EmptyState
+      allCards={lib.allCards}
+      searchTag={lib.searchTag}
+      rarityFilter={lib.rarityFilter}
+      modelFilter={lib.modelFilter}
+      categoryFilter={lib.categoryFilter}
+      colorFilter={lib.colorFilter}
+      setSearchTag={lib.setSearchTag}
+      setRarityFilter={lib.setRarityFilter}
+      setModelFilter={lib.setModelFilter}
+      setCategoryFilter={lib.setCategoryFilter}
+      setColorFilter={lib.setColorFilter}
+      t={t}
+    />
+  )
+}
+
+interface ModalsSectionProps {
+  isCategoryModalOpen: boolean
+  setIsCategoryModalOpen: (v: boolean) => void
+  sharingCard: StyleCard | null
+  setSharingCard: (card: StyleCard | null) => void
+  addLog: (msg: string) => void
+}
+
+function ModalsSection({
+  isCategoryModalOpen,
+  setIsCategoryModalOpen,
+  sharingCard,
+  setSharingCard,
+  addLog
+}: ModalsSectionProps) {
+  return (
+    <>
       {isCategoryModalOpen && (
         <CategoryManagerModal
           onClose={() => setIsCategoryModalOpen(false)}
-          addLog={props.addLog}
+          addLog={addLog}
         />
       )}
       {sharingCard && (
         <ShareCardModal
           card={sharingCard}
           onClose={() => setSharingCard(null)}
-          addLog={props.addLog}
+          addLog={addLog}
         />
       )}
+    </>
+  )
+}
+
+export function LibraryTab(props: LibraryTabProps) {
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
+  const { expertFeatures } = useSettings()
+  const { t: i18n } = useLanguage()
+  const t = i18n.libraryTab
+  const lib = useLibrary(
+    props.addLog,
+    props.setAlertType,
+    props.onNavigateToWorkbench
+  )
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SearchAndFilterSection
+        lib={lib}
+        isFiltersExpanded={isFiltersExpanded}
+        setIsFiltersExpanded={setIsFiltersExpanded}
+        expertFeatures={expertFeatures}
+        setIsCategoryModalOpen={setIsCategoryModalOpen}
+        t={t}
+      />
+      <FolderExplorer
+        breadcrumbs={lib.breadcrumbs}
+        currentSubfolders={lib.currentSubfolders}
+        setCurrentFolderId={lib.setCurrentFolderId}
+        moveCardToCategory={lib.moveCardToCategory}
+      />
+      <GridOrEmptySection
+        lib={lib}
+        isEasyMode={props.isEasyMode}
+        onOpenSimpleWorkbench={props.onOpenSimpleWorkbench}
+        onOpenDetailCard={props.onOpenDetailCard}
+        onNavigateToWorkbench={props.onNavigateToWorkbench}
+        setSharingCard={setSharingCard}
+        t={t}
+      />
+      <ModalsSection
+        isCategoryModalOpen={isCategoryModalOpen}
+        setIsCategoryModalOpen={setIsCategoryModalOpen}
+        sharingCard={sharingCard}
+        setSharingCard={setSharingCard}
+        addLog={props.addLog}
+      />
     </div>
   )
 }

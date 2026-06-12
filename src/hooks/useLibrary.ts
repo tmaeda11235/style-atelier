@@ -64,6 +64,14 @@ export function useLibrary(
 
   const moveCardToCategory = useMoveCardToCategory(categories, addLog)
 
+  const activeFiltersCount = [
+    filterStates.rarityFilter !== "All",
+    filterStates.modelFilter !== "All",
+    filterStates.categoryFilter !== "All",
+    filterStates.colorFilter !== "All" || filterStates.colorHueFilter !== null,
+    filterStates.sortBy !== "newest"
+  ].filter(Boolean).length
+
   return {
     ...filterStates,
     ...filtered,
@@ -74,6 +82,7 @@ export function useLibrary(
     handleCardClick,
     allCards: allCardsMeta,
     categories,
-    allSrefs
+    allSrefs,
+    activeFiltersCount
   }
 }

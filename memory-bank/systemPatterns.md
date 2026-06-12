@@ -44,6 +44,9 @@ tags: []
   - `card-export.ts` (`src/lib/card-export.ts`) encapsulates export data structuring for CSV and Markdown ZIP (via `fflate`), separated from the React hook layer (`useCardExport.ts`) to comply with strict function size limits.
   - `color-utils.ts` (`src/lib/color-utils.ts`) is refactored by splitting pure color conversion utilities into a new `src/lib/color-converter.ts` and delegating canvas/analysis sub-routines to satisfy the 300-line file limit and 50-line function limit.
   - `db-setup.ts` (`src/lib/db-setup.ts`) has its constructor version setup logic extracted to `initializeVersions` (split into submethods to fit under 50 lines) and schema upgrade migrations modularized to keep the class definition lightweight.
+  - `CardDetailView.tsx` (`src/components/organisms/CardDetailView.tsx`) is decomposed into sub-components (`ActionButtons`, `IdentitySection`, `ParametersSection`, `VersionHistorySection`, `SubSections`) and the state handling is isolated to `useCardDetailView` hook.
+  - `MintingView.tsx` (`src/components/organisms/MintingView.tsx`) is decomposed into `MintingViewContent`, `CardIdentitySection`, and `CardIdentitySubSections` to separate concerns and simplify layout structure.
+  - `CategoryManagerModal` is decomposed into `useCategoryForm` hook and modular display components (`CardSelectionView`, `CategoryForm`, `CategoryList`, `CategoryModalHeader`, `ModalContent`).
 
 - **Feature Flags & Context Patterns**:
   - `SettingsContext` (`useSettings`): Manages theme ("system" | "light" | "dark"), "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`). To ensure responsive design (down to 320px) and clean visual hierarchy, long text descriptions and toggles in Settings Tab utilize `HelpTooltip` elements next to headers instead of occupying vertical list space.

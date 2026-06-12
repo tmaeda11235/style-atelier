@@ -1,605 +1,288 @@
-import {
-  AlertCircle,
-  Beaker,
-  Download,
-  History,
-  RotateCcw,
-  Save,
-  Send,
-  Trash2,
-  X
-} from "lucide-react"
 import React, { useState } from "react"
-import iconUrl from "url:../../../assets/icon.png"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
-import { useCardDetailsForm } from "../../hooks/useCardDetailsForm"
-import { useCardExporter } from "../../hooks/useCardExporter"
 import { useCategories } from "../../hooks/useCategories"
 import { useHand } from "../../hooks/useHand"
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
-import { buildPromptString } from "../../lib/prompt-utils"
-import { Button } from "../atoms/Button"
-import { HelpTooltip } from "../atoms/HelpTooltip"
-import { Input } from "../atoms/Input"
+import type { StyleCard } from "../../lib/db-schema"
 import { AssociatedImageGallery } from "../molecules/AssociatedImageGallery"
 import type { AlertType } from "../molecules/ConnectionAlert"
 import { DeleteConfirmModal } from "../molecules/DeleteConfirmModal"
 import { GenealogySection } from "../molecules/GenealogySection"
-import { PromptBubble } from "../molecules/PromptBubble"
-import { RaritySelector } from "../molecules/RaritySelector"
-import { TagEditor } from "../molecules/TagEditor"
-import { ParameterEditor } from "./ParameterEditor"
-import { PromptBubbleEditor } from "./PromptBubbleEditor"
+import { ActionButtons } from "./CardDetailView/ActionButtons"
+import { IdentitySection } from "./CardDetailView/IdentitySection"
+import { ParametersSection } from "./CardDetailView/ParametersSection"
+import {
+  AlertsSection,
+  HeaderSection,
+  PromptRecipeSection,
+  RaritySection,
+  SealingOptionsSection
+} from "./CardDetailView/SubSections"
+import { useCardDetailView } from "./CardDetailView/useCardDetailView"
+import { VersionHistorySection } from "./CardDetailView/VersionHistorySection"
 
-const CHAR_CLOSE = "✕"
-const DEFAULT_CATEGORY_ICON = "🖼️"
-const TEXT_TRUE = "true"
-
-/**
- * Props for the CardDetailView component.
- */
 interface CardDetailViewProps {
-  /** The StyleCard object being viewed or edited */
   card: StyleCard
-  /** Callback to close the detail panel */
   onClose: () => void
-  /** Callback to inject the built prompt into the target application page */
   onInject: (prompt: string) => Promise<void>
-  /** Callback to save the updated StyleCard object to storage */
   onSave: (updatedCard: StyleCard) => Promise<void>
-  /** Callback to update the alert state */
   setAlertType: (type: AlertType) => void
-  /** Callback when a parent card is clicked */
   onCardSelect?: (cardId: string) => void
-  /** Callback to delete the StyleCard */
   onDelete?: (cardId: string) => Promise<void>
-  /** Callback to send the StyleCard to the Workbench and switch tab */
   onSendToWorkbench?: (card: StyleCard) => Promise<void>
 }
 
-/**
- * CardDetailView component renders the full inspection and modification panel
- * for a specific StyleCard. It enables users to rename cards, edit prompt recipes/bubbles,
- * set parameter options, manage tags, select thumbnail images, and export the card.
- */
-export function CardDetailView({
-  card,
-  onClose,
-  onInject,
-  onSave,
-  setAlertType,
-  onCardSelect,
-  onDelete,
-  onSendToWorkbench
-}: CardDetailViewProps) {
-  const { pinnedCards } = useHand()
-  const hasPinnedCards = pinnedCards.length > 0
-  const { expertFeatures } = useSettings()
-  const { t } = useLanguage()
-
-  const categoriesList = useCategories()
-
-  const {
-    name,
-    setName,
-    tier,
-    setTier,
-    promptSegments,
-    setPromptSegments,
-    parameters,
-    setParameters,
-    isSrefHidden,
-    setIsSrefHidden,
-    isPHidden,
-    setIsPHidden,
-    category,
-    setCategory,
-    tags,
-    setTags,
-    selectedThumbs,
-    parents,
-    images,
-    handleToggleThumbnail,
-    handleSaveChanges,
-    handleRollback
-  } = useCardDetailsForm(card, onSave)
-
-  const [showRollbackNotice, setShowRollbackNotice] = useState(false)
-
-  const triggerRollback = (version: any) => {
-    handleRollback(version)
-    setShowRollbackNotice(true)
-  }
-
-  const onSaveClick = async () => {
-    await handleSaveChanges()
-    setShowRollbackNotice(false)
-  }
-
-  const { isExporting, errorMessage, handleExportCard } = useCardExporter(
-    card,
-    name,
-    tier,
-    promptSegments,
-    parameters,
-    tags,
-    images,
-    selectedThumbs,
-    category || undefined
+function AdvancedOptionsBlock({ t, expertFeatures, logic, card }: any) {
+  return (
+    <>
+      <SealingOptionsSection
+        t={t}
+        expertFeatures={expertFeatures}
+        isSrefHidden={logic.form.isSrefHidden}
+        setIsSrefHidden={logic.form.setIsSrefHidden}
+        isPHidden={logic.form.isPHidden}
+        setIsPHidden={logic.form.setIsPHidden}
+      />
+      <RaritySection
+        t={t}
+        expertFeatures={expertFeatures}
+        tier={logic.form.tier}
+        setTier={logic.form.setTier}
+      />
+      <VersionHistorySection
+        t={t}
+        expertFeatures={expertFeatures}
+        versionHistory={card.versionHistory}
+        triggerRollback={logic.triggerRollback}
+      />
+    </>
   )
+}
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+function IdentityBlock({
+  t,
+  expertFeatures,
+  logic,
+  categoriesList,
+  card,
+  onCardSelect
+}: any) {
+  return (
+    <>
+      <IdentitySection
+        t={t}
+        expertFeatures={expertFeatures}
+        name={logic.form.name}
+        setName={logic.form.setName}
+        category={logic.form.category}
+        setCategory={logic.form.setCategory}
+        categoriesList={categoriesList}
+        dominantColor={card.dominantColor}
+        accentColor={card.accentColor}
+        tags={logic.form.tags}
+        setTags={logic.form.setTags}
+      />
+      <GenealogySection
+        card={card}
+        parents={logic.form.parents}
+        onCardSelect={onCardSelect}
+      />
+    </>
+  )
+}
 
-  const hasParams = Object.entries(parameters).some(([key, v]) => {
-    if (v === undefined) return false
-    if (Array.isArray(v)) return v.length > 0
-    if (typeof v === "boolean") return v
-    return v !== "" && v !== null
-  })
+function ImageGalleryBlock({
+  expertFeatures,
+  images,
+  selectedThumbs,
+  handleToggleThumbnail
+}: any) {
+  if (!expertFeatures.multiImage) return null
+  return (
+    <div className="p-4 bg-white border rounded-lg shadow-sm">
+      <AssociatedImageGallery
+        images={images}
+        selectedThumbs={selectedThumbs}
+        onToggleThumbnail={handleToggleThumbnail}
+      />
+    </div>
+  )
+}
 
-  const handleTryOnMidjourney = async () => {
-    const maskedKeys: (keyof StyleCard["parameters"])[] = []
-    if (isSrefHidden) maskedKeys.push("sref")
-    if (isPHidden) maskedKeys.push("p")
+function DeleteModalBlock({ isOpen, cardName, onClose, onConfirm }: any) {
+  return (
+    <DeleteConfirmModal
+      isOpen={isOpen}
+      cardName={cardName}
+      onClose={onClose}
+      onConfirm={onConfirm}
+    />
+  )
+}
 
-    const fullPrompt = buildPromptString(promptSegments, parameters, maskedKeys)
-    await onInject(fullPrompt)
+function DetailsScrollContentBlock1({
+  t,
+  logic,
+  expertFeatures,
+  categoriesList,
+  card,
+  onCardSelect
+}: any) {
+  return (
+    <>
+      <AlertsSection
+        t={t}
+        showRollbackNotice={logic.showRollbackNotice}
+        setShowRollbackNotice={logic.setShowRollbackNotice}
+        errorMessage={logic.exporter.errorMessage}
+      />
+      <IdentityBlock
+        t={t}
+        expertFeatures={expertFeatures}
+        logic={logic}
+        categoriesList={categoriesList}
+        card={card}
+        onCardSelect={onCardSelect}
+      />
+      <ImageGalleryBlock
+        expertFeatures={expertFeatures}
+        images={logic.form.images}
+        selectedThumbs={logic.form.selectedThumbs}
+        handleToggleThumbnail={logic.form.handleToggleThumbnail}
+      />
+    </>
+  )
+}
+
+function DetailsScrollContentBlock2({ t, expertFeatures, logic, card }: any) {
+  return (
+    <>
+      <PromptRecipeSection
+        t={t}
+        expertFeatures={expertFeatures}
+        promptSegments={logic.form.promptSegments}
+        setPromptSegments={logic.form.setPromptSegments}
+        tier={logic.form.tier}
+      />
+      <ParametersSection
+        t={t}
+        expertFeatures={expertFeatures}
+        parameters={logic.form.parameters}
+        setParameters={logic.form.setParameters}
+      />
+      <AdvancedOptionsBlock
+        t={t}
+        expertFeatures={expertFeatures}
+        logic={logic}
+        card={card}
+      />
+    </>
+  )
+}
+
+function DetailsScrollContent({
+  card,
+  logic,
+  t,
+  expertFeatures,
+  categoriesList,
+  onCardSelect
+}: any) {
+  return (
+    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <DetailsScrollContentBlock1
+        t={t}
+        logic={logic}
+        expertFeatures={expertFeatures}
+        categoriesList={categoriesList}
+        card={card}
+        onCardSelect={onCardSelect}
+      />
+      <DetailsScrollContentBlock2
+        t={t}
+        expertFeatures={expertFeatures}
+        logic={logic}
+        card={card}
+      />
+    </div>
+  )
+}
+
+function CardDetailViewLayout({
+  props,
+  logic,
+  t,
+  expertFeatures,
+  categoriesList,
+  pinnedCards,
+  showDeleteConfirm,
+  setShowDeleteConfirm
+}: any) {
+  const hasPinned = pinnedCards.length > 0
+  const handleDeleteConfirm = async () => {
+    if (props.onDelete) await props.onDelete(props.card.id)
+    setShowDeleteConfirm(false)
   }
 
   return (
     <div
       data-testid="card-detail-view-container"
-      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}>
-      {/* Header */}
-      <div className="p-4 bg-white shadow-sm flex items-center justify-between border-b">
-        <h2 className="text-lg font-bold text-slate-800">
-          {t.cardDetail.title}
-        </h2>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={onClose}
-          className="text-slate-400 hover:text-slate-600">
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {showRollbackNotice && (
-          <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-[11px] flex items-start gap-1.5 shadow-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span className="flex-1">{t.cardDetail.rollbackNotice}</span>
-            <button
-              onClick={() => setShowRollbackNotice(false)}
-              className="text-amber-500 hover:text-amber-700 font-bold ml-1">
-              {CHAR_CLOSE}
-            </button>
-          </div>
-        )}
-        {errorMessage && (
-          <div className="p-2.5 bg-red-50 border border-red-100 rounded-lg text-red-600 text-[11px] flex items-start gap-1.5 shadow-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-        {/* Card Metadata Section */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-4">
-          <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
-            {t.cardDetail.identity}
-            {expertFeatures.cardEditing && (
-              <HelpTooltip
-                content={t.helpTooltips.cardEditing}
-                position="bottom-left"
-              />
-            )}
-          </h3>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">
-              {t.cardDetail.cardName}
-            </label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t.cardDetail.cardNamePlaceholder}
-              className="font-bold text-slate-800 text-sm"
-              disabled={!expertFeatures.cardEditing}
-            />
-          </div>
-
-          {/* Category Selector */}
-          {expertFeatures.categories && (
-            <div>
-              <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                {t.cardDetail.category}
-                <HelpTooltip
-                  content={t.helpTooltips.categories}
-                  position="top-left"
-                />
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full text-sm border rounded bg-white p-2"
-                disabled={!expertFeatures.cardEditing}>
-                <option value="">{t.cardDetail.noCategory}</option>
-                {categoriesList.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.iconEmoji || DEFAULT_CATEGORY_ICON} {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Color Palette Display */}
-          {(card.dominantColor || card.accentColor) && (
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-2">
-                {t.cardDetail.detectedPalette}
-              </label>
-              <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                {card.dominantColor && (
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
-                      style={{ backgroundColor: card.dominantColor }}
-                      title="Dominant Color"
-                    />
-                    <span className="text-xs font-bold text-slate-700">
-                      {t.cardDetail.dominant} ({card.dominantColor})
-                    </span>
-                  </div>
-                )}
-                {card.accentColor && (
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
-                      style={{ backgroundColor: card.accentColor }}
-                      title="Accent Color"
-                    />
-                    <span className="text-xs font-bold text-slate-700">
-                      {t.cardDetail.accent} ({card.accentColor})
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Tags Editor */}
-          {expertFeatures.tags && (
-            <div>
-              <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1.5">
-                {t.cardDetail.tags}
-                <HelpTooltip
-                  content={t.helpTooltips.tags}
-                  position="top-left"
-                />
-              </label>
-              {expertFeatures.cardEditing ? (
-                <TagEditor tags={tags} onChange={setTags} />
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {tags.map((t) => (
-                    <span
-                      key={t}
-                      className="inline-flex items-center bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
-                      {t}
-                    </span>
-                  ))}
-                  {tags.length === 0 && (
-                    <span className="text-xs text-slate-400 italic">
-                      {t.cardDetail.noTags}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Genealogy (Ancestry) Section */}
-        <GenealogySection
-          card={card}
-          parents={parents}
-          onCardSelect={onCardSelect}
-        />
-
-        {/* Gallery & Thumbnail Selector Section */}
-        {expertFeatures.multiImage && (
-          <div className="p-4 bg-white border rounded-lg shadow-sm">
-            <AssociatedImageGallery
-              images={images}
-              selectedThumbs={selectedThumbs}
-              onToggleThumbnail={handleToggleThumbnail}
-            />
-          </div>
-        )}
-
-        {/* Prompt segments bubble editor */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            {t.cardDetail.promptRecipe}
-          </h3>
-          {expertFeatures.cardEditing ? (
-            <PromptBubbleEditor
-              initialSegments={promptSegments}
-              onChange={setPromptSegments}
-              tier={tier}
-            />
-          ) : (
-            <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
-              {promptSegments.map((segment, index) => (
-                <PromptBubble
-                  key={index}
-                  segment={segment}
-                  tier={segment.type === "text" ? undefined : tier}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Parameters editor */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            {t.cardDetail.parameters}
-          </h3>
-          {expertFeatures.cardEditing ? (
-            <ParameterEditor parameters={parameters} onChange={setParameters} />
-          ) : (
-            <div className="space-y-2 bg-slate-50/50 p-3 rounded-lg border border-slate-100 text-xs">
-              {parameters.ar && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.aspectRatio}
-                  </span>{" "}
-                  {parameters.ar}
-                </div>
-              )}
-              {parameters.p && parameters.p.length > 0 && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.personalization}
-                  </span>{" "}
-                  {parameters.p.join(", ")}
-                </div>
-              )}
-              {parameters.imagePrompts &&
-                parameters.imagePrompts.length > 0 && (
-                  <div>
-                    <span className="font-bold text-slate-500">
-                      {t.cardDetail.imagePrompts}
-                    </span>{" "}
-                    {parameters.imagePrompts.join(", ")}
-                  </div>
-                )}
-              {parameters.sref && parameters.sref.length > 0 && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.styleReference}
-                  </span>{" "}
-                  {parameters.sref.join(", ")}
-                </div>
-              )}
-              {parameters.cref && parameters.cref.length > 0 && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.characterReference}
-                  </span>{" "}
-                  {parameters.cref.join(", ")}
-                </div>
-              )}
-              {parameters.stylize !== undefined && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.stylize}:
-                  </span>{" "}
-                  {parameters.stylize}
-                </div>
-              )}
-              {parameters.chaos !== undefined && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.chaos}:
-                  </span>{" "}
-                  {parameters.chaos}
-                </div>
-              )}
-              {parameters.weird !== undefined && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.weird}:
-                  </span>{" "}
-                  {parameters.weird}
-                </div>
-              )}
-              {parameters.tile && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.tile}:
-                  </span>{" "}
-                  {TEXT_TRUE}
-                </div>
-              )}
-              {parameters.raw && (
-                <div>
-                  <span className="font-bold text-slate-500">
-                    {t.cardDetail.raw}:
-                  </span>{" "}
-                  {TEXT_TRUE}
-                </div>
-              )}
-              {!hasParams && (
-                <div className="text-slate-400 italic">
-                  {t.cardDetail.noParameters}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Sealing options */}
-        <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            {t.cardDetail.sealingOptions}
-          </h3>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="detail-hide-sref"
-                checked={isSrefHidden}
-                onChange={(e) => setIsSrefHidden(e.target.checked)}
-                disabled={!expertFeatures.cardEditing}
-              />
-              <label
-                htmlFor="detail-hide-sref"
-                className="text-xs text-slate-600">
-                {t.cardDetail.hideSref}
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="detail-hide-p"
-                checked={isPHidden}
-                onChange={(e) => setIsPHidden(e.target.checked)}
-                disabled={!expertFeatures.cardEditing}
-              />
-              <label htmlFor="detail-hide-p" className="text-xs text-slate-600">
-                {t.cardDetail.hideP}
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Rarity selector */}
-        {expertFeatures.rarity && (
-          <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-            <h3 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-slate-500">
-              {t.cardDetail.rarityFrame}
-              <HelpTooltip
-                content={t.helpTooltips.rarity}
-                position="top-left"
-              />
-            </h3>
-            <RaritySelector selected={tier} onSelect={setTier} />
-          </div>
-        )}
-
-        {/* Version History Section */}
-        {expertFeatures.cardEditing &&
-          card.versionHistory &&
-          card.versionHistory.length > 0 && (
-            <div className="p-4 bg-white border rounded-lg shadow-sm space-y-3">
-              <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
-                <History className="w-3.5 h-3.5" />
-                {t.cardDetail.versionHistory}
-              </h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {card.versionHistory.map((version) => (
-                  <div
-                    key={version.id}
-                    className="flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-100 transition-colors text-xs">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-slate-700">
-                        {version.name}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {new Date(version.timestamp).toLocaleString()}
-                      </span>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="xs"
-                      onClick={() => triggerRollback(version)}
-                      className="flex items-center gap-1 text-[11px] px-2 py-1 border-slate-200 hover:border-slate-300 text-slate-600 bg-white">
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      {t.cardDetail.rollback}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-      </div>
-
-      <div className="p-4 bg-white shadow-t-sm flex flex-col gap-2 border-t z-10">
-        {/* Row 1: Secondary Actions (Delete, Cancel, Export) */}
-        <div className="flex justify-between items-center gap-2">
-          <div className="flex gap-1.5">
-            {onDelete && (
-              <Button
-                variant="danger"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-1"
-                data-testid="delete-card-button">
-                <Trash2 className="w-3.5 h-3.5" />
-                {t.cardDetail.delete}
-              </Button>
-            )}
-            <Button variant="ghost" onClick={onClose} className="px-2">
-              {t.cardDetail.cancel}
-            </Button>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleExportCard}
-            disabled={isExporting}
-            className="flex items-center gap-1 border-slate-300 hover:bg-slate-50 text-slate-700 px-2.5"
-            data-testid="export-card-button">
-            <Download className="w-3.5 h-3.5" />
-            {isExporting ? t.cardDetail.exporting : t.cardDetail.export}
-          </Button>
-        </div>
-
-        {/* Row 2: Primary Actions (Inject, Save) */}
-        <div className="flex gap-2 mt-1">
-          {onSendToWorkbench && (
-            <Button
-              variant="outline"
-              onClick={() => onSendToWorkbench(card)}
-              className="px-3 border-slate-300 hover:bg-slate-50 text-slate-700"
-              title={t.cardDetail.sendToWorkbench}
-              data-testid="detail-quick-send-button">
-              <Beaker className="w-4.5 h-4.5" />
-            </Button>
-          )}
-          <Button
-            variant="secondary"
-            onClick={handleTryOnMidjourney}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2">
-            <Send className="w-4 h-4" />
-            {t.cardDetail.inject}
-          </Button>
-          {expertFeatures.cardEditing && (
-            <Button
-              onClick={onSaveClick}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 py-2">
-              <Save className="w-4 h-4" />
-              {t.cardDetail.save}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Confirmation Modal */}
-      <DeleteConfirmModal
+      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinned ? "pb-[110px]" : ""}`}>
+      <HeaderSection t={t} onClose={props.onClose} />
+      <DetailsScrollContent
+        card={props.card}
+        logic={logic}
+        t={t}
+        expertFeatures={expertFeatures}
+        categoriesList={categoriesList}
+        onCardSelect={props.onCardSelect}
+      />
+      <ActionButtons
+        t={t}
+        expertFeatures={expertFeatures}
+        card={props.card}
+        onDelete={props.onDelete}
+        onClose={props.onClose}
+        handleExportCard={logic.exporter.handleExportCard}
+        isExporting={logic.exporter.isExporting}
+        onSendToWorkbench={props.onSendToWorkbench}
+        handleTryOnMidjourney={logic.handleTryOnMidjourney}
+        onSaveClick={logic.onSaveClick}
+        setShowDeleteConfirm={setShowDeleteConfirm}
+      />
+      <DeleteModalBlock
         isOpen={showDeleteConfirm}
-        cardName={name}
+        cardName={logic.form.name}
         onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={async () => {
-          if (onDelete) {
-            await onDelete(card.id)
-          }
-          setShowDeleteConfirm(false)
-        }}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
+  )
+}
+
+export function CardDetailView(props: CardDetailViewProps) {
+  const { pinnedCards } = useHand()
+  const { expertFeatures } = useSettings()
+  const { t } = useLanguage()
+  const categoriesList = useCategories()
+  const logic = useCardDetailView({
+    card: props.card,
+    onSave: props.onSave,
+    onInject: props.onInject
+  })
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  return (
+    <CardDetailViewLayout
+      props={props}
+      logic={logic}
+      t={t}
+      expertFeatures={expertFeatures}
+      categoriesList={categoriesList}
+      pinnedCards={pinnedCards}
+      showDeleteConfirm={showDeleteConfirm}
+      setShowDeleteConfirm={setShowDeleteConfirm}
+    />
   )
 }
