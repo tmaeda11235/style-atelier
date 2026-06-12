@@ -360,6 +360,7 @@
   },
   "workbench": {
     "clearAll": "Clear All",
+    "gachaPick": "Gacha Pick",
     "addPromptDesc": "Add style cards to Workbench from Library",
     "evolution": "Evolution",
     "variationRecipe": "Variation Recipe",
