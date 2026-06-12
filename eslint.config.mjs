@@ -129,10 +129,6 @@ export default ts.config(
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/HandBar.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/lib/backup-validator.ts",
-      "src/lib/db.ts",
-      "src/lib/export-utils.ts",
-      "src/lib/google-drive.ts",
     ],
     rules: {
       "max-lines": "warn"
@@ -142,12 +138,9 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-complexity.ts",
-      "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
-      "src/contents/_domain/extractors/WebDataExtractor.ts",
-      "src/hooks/usePromptInjector.ts",
       "src/lib/prompt-utils.ts",
     ],
     rules: {
@@ -189,22 +182,12 @@ export default ts.config(
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/components/templates/SidePanelLayout.tsx",
-      "src/contents/_domain/extractors/WebDataExtractor.ts",
       "src/hooks/useActiveTabUrl.ts",
       "src/hooks/useCardDetailsForm.ts",
       "src/hooks/useChromeTabConnection.ts",
       "src/hooks/useEasyModeView.ts",
       "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
-      "src/hooks/usePromptInjector.ts",
-      "src/hooks/useWorkbench.ts",
-      "src/lib/backup-validator.ts",
-      "src/lib/color-utils.ts",
-      "src/lib/db-setup.ts",
-      "src/lib/db.ts",
-      "src/lib/export-utils.ts",
-      "src/lib/google-drive.ts",
-      "src/lib/nlp-utils.ts",
       "src/lib/prompt-utils.ts",
     ],
     rules: {
