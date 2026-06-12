@@ -272,6 +272,13 @@ export default ts.config(
       "max-lines": "off",
       "max-lines-per-function": "off",
       "boundaries/dependencies": "off",
+      // Ease strict TypeScript rules for test files relocated outside src/
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-unsafe-function-type": "warn",
+      "@typescript-eslint/no-wrapper-object-types": "warn",
+      "@typescript-eslint/ban-ts-comment": "off",
     }
   }
 );
