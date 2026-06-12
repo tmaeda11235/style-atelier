@@ -1,9 +1,10 @@
-import { AlertCircle, ArrowRight, Download, Sparkles, Tags } from "lucide-react"
+import { AlertCircle, ArrowRight, Sparkles, Tags } from "lucide-react"
 import React, { useEffect } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useAiMetadataGenerator } from "../../hooks/useAiMetadataGenerator"
 import { Button } from "../atoms/Button"
+import { AiDownloadStatus } from "../molecules/AiDownloadStatus"
 
 interface AiStyleAnalysisSectionProps {
   promptText: string
@@ -11,59 +12,6 @@ interface AiStyleAnalysisSectionProps {
   setCustomTags: (tags: string[]) => void
   setCustomName: (name: string) => void
   setMutationNote?: (note: string) => void
-}
-
-interface AiDownloadStatusProps {
-  status: string
-  progress: number
-  startDownload: () => void
-  t: any
-}
-
-function AiDownloadStatus({
-  status,
-  progress,
-  startDownload,
-  t
-}: AiDownloadStatusProps) {
-  if (status === "downloading") {
-    return (
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs text-slate-500">
-          <span>
-            {t.settings.webLlmStatusDownloading.replace(
-              "{{progress}}",
-              progress.toString()
-            )}
-          </span>
-          <span className="font-bold text-blue-600">{progress}%</span>
-        </div>
-        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border">
-          <div
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-      <p className="text-xs text-slate-500 mb-3 text-center">
-        {t.minting.aiModelNotDownloaded}
-      </p>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        onClick={startDownload}
-        className="flex items-center gap-2 hover:scale-[1.02] transition-transform">
-        <Download className="w-4 h-4 text-blue-500" />
-        {t.settings.webLlmDownloadBtn}
-      </Button>
-    </div>
-  )
 }
 
 interface GenreBadgeProps {
@@ -263,6 +211,18 @@ function useAiHandlers(
   return { handleToggleTag, handleApplySummary }
 }
 
+function StyleAnalysisHeader({ t }: { t: any }) {
+  return (
+    <>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 rounded-full blur-2xl -z-10" />
+      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+        <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
+        {t.minting.aiAnalysis}
+      </h3>
+    </>
+  )
+}
+
 export function AiStyleAnalysisSection({
   promptText,
   customTags,
@@ -280,14 +240,12 @@ export function AiStyleAnalysisSection({
     setMutationNote
   )
 
+  const isReady = gen.status === "ready"
+
   return (
     <div className="p-4 bg-white border border-slate-100 rounded-xl shadow-sm space-y-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 rounded-full blur-2xl -z-10" />
-      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
-        <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
-        {t.minting.aiAnalysis}
-      </h3>
-      {gen.status === "ready" ? (
+      <StyleAnalysisHeader t={t} />
+      {isReady ? (
         <AiReadySection
           promptText={promptText}
           generateMetadata={gen.generateMetadata}
@@ -303,6 +261,12 @@ export function AiStyleAnalysisSection({
         <AiDownloadStatus
           status={gen.status}
           progress={gen.progress}
+          speed={gen.speed}
+          eta={gen.eta}
+          retryCount={gen.retryCount}
+          maxRetries={gen.maxRetries}
+          text={gen.text}
+          webLlmError={gen.webLlmError}
           startDownload={gen.startDownload}
           t={t}
         />

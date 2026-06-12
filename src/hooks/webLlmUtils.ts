@@ -181,6 +181,59 @@ export function runInferenceHelper(
   })
 }
 
+interface Dispatchers {
+  setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>
+  setProgress: React.Dispatch<React.SetStateAction<number>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setSpeed: React.Dispatch<React.SetStateAction<number>>
+  setEta: React.Dispatch<React.SetStateAction<number>>
+  setRetryCount: React.Dispatch<React.SetStateAction<number>>
+  setMaxRetries: React.Dispatch<React.SetStateAction<number>>
+  setText: React.Dispatch<React.SetStateAction<string>>
+}
+
+function handleStatusMessage(
+  ws: string,
+  payload: {
+    wp: number
+    we: string | null
+    wsp: number
+    weta: number
+    wrc: number
+    wmr: number
+    wtxt: string
+  },
+  dispatch: Dispatchers
+) {
+  if (ws === "downloading") {
+    dispatch.setStatus("downloading")
+    dispatch.setProgress(payload.wp ?? 0)
+    dispatch.setSpeed(payload.wsp ?? 0)
+    dispatch.setEta(payload.weta ?? 0)
+    dispatch.setText(payload.wtxt ?? "")
+    dispatch.setError(null)
+  } else if (ws === "retrying") {
+    dispatch.setStatus("retrying")
+    dispatch.setRetryCount(payload.wrc ?? 0)
+    dispatch.setMaxRetries(payload.wmr ?? 0)
+    dispatch.setText("")
+    dispatch.setError(payload.we ?? "Connection lost, retrying...")
+  } else if (ws === "ready") {
+    dispatch.setStatus("ready")
+    dispatch.setProgress(100)
+    dispatch.setSpeed(0)
+    dispatch.setEta(0)
+    dispatch.setText("")
+    dispatch.setError(null)
+  } else if (ws === "error") {
+    dispatch.setStatus("error")
+    dispatch.setSpeed(0)
+    dispatch.setEta(0)
+    dispatch.setText("")
+    dispatch.setError(payload.we ?? "Unknown worker error")
+  }
+}
+
 export function createMessageListener(
   setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>,
   setProgress: React.Dispatch<React.SetStateAction<number>>,
@@ -188,7 +241,8 @@ export function createMessageListener(
   setSpeed: React.Dispatch<React.SetStateAction<number>>,
   setEta: React.Dispatch<React.SetStateAction<number>>,
   setRetryCount: React.Dispatch<React.SetStateAction<number>>,
-  setMaxRetries: React.Dispatch<React.SetStateAction<number>>
+  setMaxRetries: React.Dispatch<React.SetStateAction<number>>,
+  setText: React.Dispatch<React.SetStateAction<string>>
 ) {
   return (message: any) => {
     if (message.source !== "offscreen-worker") return
@@ -199,30 +253,20 @@ export function createMessageListener(
       speed: wsp,
       eta: weta,
       retryCount: wrc,
-      maxRetries: wmr
+      maxRetries: wmr,
+      text: wtxt
     } = message.payload || {}
-    if (ws === "downloading") {
-      setStatus("downloading")
-      setProgress(wp ?? 0)
-      setSpeed(wsp ?? 0)
-      setEta(weta ?? 0)
-      setError(null)
-    } else if (ws === "retrying") {
-      setStatus("retrying")
-      setRetryCount(wrc ?? 0)
-      setMaxRetries(wmr ?? 0)
-      setError(we ?? "Connection lost, retrying...")
-    } else if (ws === "ready") {
-      setStatus("ready")
-      setProgress(100)
-      setSpeed(0)
-      setEta(0)
-      setError(null)
-    } else if (ws === "error") {
-      setStatus("error")
-      setSpeed(0)
-      setEta(0)
-      setError(we ?? "Unknown worker error")
+
+    const dispatch: Dispatchers = {
+      setStatus,
+      setProgress,
+      setError,
+      setSpeed,
+      setEta,
+      setRetryCount,
+      setMaxRetries,
+      setText
     }
+    handleStatusMessage(ws, { wp, we, wsp, weta, wrc, wmr, wtxt }, dispatch)
   }
 }

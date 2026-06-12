@@ -100,7 +100,7 @@ tags: []
     - Generates mixing advice automatically when 2 or more cards are in the Cauldron.
     - Utilizes a 500ms debounce inside the `useAiRecipeAdvice` hook to prevent redundant inference during active editing.
     - Employs an in-memory combination cache based on sorted card IDs and weights to instantly retrieve past blend advice.
-    - Complies with strict ESLint line limits (50 lines per function) by modularizing the section UI into lightweight sub-components (`ModelStatusOverlay`, `AdviceViewer`, `AdviceSectionContent`).
+    - Complies with strict ESLint line limits (50 lines per function) by modularizing the section UI into lightweight sub-components (`AiDownloadStatus`, `AiRecipeAdviceOverlay`, `AdviceViewer`).
   - **Zero-cost, High-frequency Orchestration**: Because client-side execution incurs zero API costs, the agent can trigger background tasks (e.g., parsing, tagging, style synthesis, user action predictions) frequently without budgeting concerns.
 
 ## Data Flow

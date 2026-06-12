@@ -59,7 +59,13 @@ function createProgressCallback(startTime: number) {
       eta = Math.max(0, Math.round(etaMs / 1000))
     }
 
-    self.postMessage({ status: "downloading", progress, speed, eta })
+    self.postMessage({
+      status: "downloading",
+      progress,
+      speed,
+      eta,
+      text: report.text
+    })
   }
 }
 
