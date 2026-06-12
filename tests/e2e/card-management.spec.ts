@@ -439,7 +439,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     expect(cardInDb.name).toBe("Initial Version")
   })
 
-  test("should display tooltips on hover and collapse low-priority actions on narrow container", async ({
+  test("should display tooltips on hover and collapse low-priority actions on narrow container @J-ORG-CARD-TOOLTIP-01", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -476,52 +476,172 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     const libraryTabButton = spFrame.locator("button:has-text('Library')")
     await libraryTabButton.click()
 
-    // 4. Hover over Edit button to check tooltip content
+    // 4. Hover over buttons to check English tooltip content (Default)
     const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    const shareBtn = spFrame
+      .locator("[data-testid='share-card-button']")
+      .first()
+    const quickSendBtn = spFrame
+      .locator("[data-testid='quick-send-button']")
+      .first()
+    const pinBtn = spFrame.locator("[data-testid='pin-card-button']").first()
+    const injectBtn = spFrame
+      .locator("[data-testid='inject-card-button']")
+      .first()
+
     await expect(editBtn).toBeVisible({ timeout: 10000 })
     await editBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^Edit Card$/ })
+    ).toBeVisible()
 
-    const tooltip = spFrame.locator("[data-testid='tooltip-content']").first()
-    await expect(tooltip).toBeVisible()
+    await shareBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^Share Card$/ })
+    ).toBeVisible()
 
-    // Take a screenshot of the tooltip shown on hover
+    await quickSendBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^Quick Send to Workbench$/ })
+    ).toBeVisible()
+
+    await pinBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^Send to Workbench$/ })
+    ).toBeVisible()
+
+    await injectBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^Inject Prompt$/ })
+    ).toBeVisible()
+
+    // Take a screenshot of the tooltip shown on hover (English)
     await page.screenshot({
-      path: path.join(screenshotsDir, "card-action-tooltip.png")
+      path: path.join(screenshotsDir, "card-action-tooltip-en.png")
     })
 
-    // 5. Change viewport width to very narrow (e.g. 320px) to test collapsing actions
+    // 5. Open Settings and Switch to Japanese (ja)
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible()
+    await settingsNavBtn.click()
+
+    const langSelect = spFrame.locator("#language-select")
+    await expect(langSelect).toBeVisible()
+    await langSelect.selectOption("ja")
+
+    // Switch back to Library tab (the text is still 'Library' in i18n test context for tab buttons)
+    await libraryTabButton.click()
+
+    // Verify Japanese Tooltips
+    await editBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^カードを編集$/ })
+    ).toBeVisible()
+
+    await shareBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^カードを共有$/ })
+    ).toBeVisible()
+
+    await quickSendBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^ワークベンチへ送って遷移$/ })
+    ).toBeVisible()
+
+    await pinBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^ワークベンチに送る$/ })
+    ).toBeVisible()
+
+    await injectBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^大釜へ適用$/ })
+    ).toBeVisible()
+
+    // Take a screenshot of the tooltip shown on hover (Japanese)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "card-action-tooltip-ja.png")
+    })
+
+    // 6. Change viewport width to very narrow (e.g. 320px) to test collapsing actions
     await page.setViewportSize({ width: 320, height: 600 })
 
     // Wait for layout updates
     await page.waitForTimeout(500)
 
-    // 6. Verify that "Edit" action button (with hide-on-narrow) is hidden and "More" button is visible
+    // 7. Verify that action buttons (with hide-on-narrow) are hidden and "More" button is visible
     await expect(editBtn).not.toBeVisible()
+    await expect(shareBtn).not.toBeVisible()
+    await expect(quickSendBtn).not.toBeVisible()
+
     const moreBtn = spFrame
       .locator("[data-testid='more-actions-button']")
       .first()
     await expect(moreBtn).toBeVisible()
+
+    // Hover "More" button to check Japanese tooltip
+    await moreBtn.hover()
+    await expect(
+      spFrame
+        .locator("[data-testid='tooltip-content']")
+        .filter({ hasText: /^その他のアクション$/ })
+    ).toBeVisible()
 
     // Take screenshot of the collapsed layout
     await page.screenshot({
       path: path.join(screenshotsDir, "card-actions-collapsed.png")
     })
 
-    // 7. Click "More" button to show popover menu
+    // 8. Click "More" button to show popover menu
     await moreBtn.click()
 
-    // 8. Verify popup items are visible
+    // 9. Verify popup items are visible and translated in Japanese
     const moreEditBtn = spFrame.locator("[data-testid='more-edit-card-button']")
     await expect(moreEditBtn).toBeVisible()
+    await expect(moreEditBtn).toHaveText(/カードを編集/)
+
+    const moreShareBtn = spFrame.locator(
+      "[data-testid='more-share-card-button']"
+    )
+    await expect(moreShareBtn).toBeVisible()
+    await expect(moreShareBtn).toHaveText(/カードを共有/)
+
+    const moreQuickSendBtn = spFrame.locator(
+      "[data-testid='more-quick-send-button']"
+    )
+    await expect(moreQuickSendBtn).toBeVisible()
+    await expect(moreQuickSendBtn).toHaveText(/ワークベンチへ送って遷移/)
 
     // Take screenshot of the popup menu
     await page.screenshot({
       path: path.join(screenshotsDir, "card-actions-more-menu.png")
     })
 
-    // 9. Click "Edit" item inside popup and verify it opens Card Details
+    // 10. Click "Edit" item inside popup and verify it opens Card Details (in Japanese context: カード詳細)
     await moreEditBtn.click()
-    const detailTitle = spFrame.locator("h2:has-text('Card Details')")
+    const detailTitle = spFrame
+      .locator("h2:has-text('Card Details')")
+      .or(spFrame.locator("h2:has-text('カード詳細')"))
     await expect(detailTitle).toBeVisible()
 
     // Reset viewport size

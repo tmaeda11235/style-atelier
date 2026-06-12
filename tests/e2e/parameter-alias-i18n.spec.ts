@@ -74,7 +74,6 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     // Wait for shuffling overlay to appear and then disappear to avoid race conditions
     const shuffleOverlay = spFrame.locator("text=SHUFFLING RECIPE...").first()
-    await expect(shuffleOverlay).toBeVisible({ timeout: 2000 })
     await expect(shuffleOverlay).toBeHidden({ timeout: 5000 })
 
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()

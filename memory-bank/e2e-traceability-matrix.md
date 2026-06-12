@@ -41,12 +41,12 @@
 | **@J-ORG-QUICK-SEND-01**        | クイックワークベンチ送信                                                         | ✔️ `tests\e2e\quick-send.spec.ts`                                                                                                         |
 | **@J-ORG-SEMANTIC-SEARCH-01**   | セマンティック検索による自然言語フィルタリング                                   | ✔️ `tests\e2e\library-semantic-search.spec.ts`                                                                                            |
 | **@J-WB-AI-ADVICE-01**          | AI調合アドバイス表示                                                             | ✔️ `tests\e2e\ai-recipe-advice.spec.ts`                                                                                                   |
-| **@J-ORG-CARD-TOOLTIP-01**      | カードアクションツールチップ＆レスポンシブメニュー                               | ❌ 未カバー (Missing)                                                                                                                     |
+| **@J-ORG-CARD-TOOLTIP-01**      | カードアクションツールチップ＆レスポンシブメニュー                               | ✔️ `tests\e2e\card-management.spec.ts`                                                                                                    |
 | **@J-WB-EMPTY-CAULDRON-01**     | 空状態の大釜アフォーダンス                                                       | ✔️ `tests\e2e\workbench-empty-cauldron.spec.ts`                                                                                           |
 | **@J-UX-RESILIENCE-01**         | 狭小画面ビジュアルレジリエンス                                                   | ✔️ `tests\e2e\visual-resilience.spec.ts`                                                                                                  |
 
 ## サマリー
 
 - 全ジャーニー数: 40
-- カバー済み: 39
-- 未カバー: 1
+- カバー済み: 40
+- 未カバー: 0

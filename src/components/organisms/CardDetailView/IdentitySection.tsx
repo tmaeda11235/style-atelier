@@ -147,6 +147,24 @@ function PaletteSection({
   )
 }
 
+const ReadOnlyTags: React.FC<{ tags: string[]; noTagsText: string }> = ({
+  tags,
+  noTagsText
+}) => (
+  <div className="flex flex-wrap gap-1.5">
+    {tags.map((tg) => (
+      <span
+        key={tg}
+        className="inline-flex items-center bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
+        {tg}
+      </span>
+    ))}
+    {tags.length === 0 && (
+      <span className="text-xs text-slate-400 italic">{noTagsText}</span>
+    )}
+  </div>
+)
+
 function TagsSection({
   t,
   expertFeatures,
@@ -158,6 +176,21 @@ function TagsSection({
   tags: string[]
   setTags: (tags: string[]) => void
 }) {
+  const [newTagInput, setNewTagInput] = React.useState("")
+
+  const handleAddTag = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = newTagInput.trim().toLowerCase()
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed])
+    }
+    setNewTagInput("")
+  }
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove))
+  }
+
   if (!expertFeatures.tags) return null
   return (
     <div>
@@ -166,22 +199,16 @@ function TagsSection({
         <HelpTooltip content={t.helpTooltips.tags} position="top-left" />
       </label>
       {expertFeatures.cardEditing ? (
-        <TagEditor tags={tags} onChange={setTags} />
+        <TagEditor
+          tags={tags}
+          newTagInput={newTagInput}
+          onNewTagInputChange={setNewTagInput}
+          onAddTag={handleAddTag}
+          onRemoveTag={handleRemoveTag}
+          t={t}
+        />
       ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {tags.map((tg) => (
-            <span
-              key={tg}
-              className="inline-flex items-center bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
-              {tg}
-            </span>
-          ))}
-          {tags.length === 0 && (
-            <span className="text-xs text-slate-400 italic">
-              {t.cardDetail.noTags}
-            </span>
-          )}
-        </div>
+        <ReadOnlyTags tags={tags} noTagsText={t.cardDetail.noTags} />
       )}
     </div>
   )
