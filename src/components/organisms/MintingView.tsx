@@ -8,19 +8,10 @@ import { useHand } from "../../hooks/useHand"
 import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
 import type { RarityTier } from "../../lib/rarity-config"
 import { Button } from "../atoms/Button"
-import { HelpTooltip } from "../atoms/HelpTooltip"
-import { Input } from "../atoms/Input"
-import { KeywordChip } from "../molecules/KeywordChip"
-import { PromptBubble } from "../molecules/PromptBubble"
-import { RaritySelector } from "../molecules/RaritySelector"
-import { AiStyleAnalysisSection } from "./AiStyleAnalysisSection"
-import { PromptBubbleEditor } from "./PromptBubbleEditor"
+import { MintingViewContent } from "./MintingView/MintingViewContent"
 
 const STEP_TITLE_INPUT = "title-input"
 const STEP_SAVE_CARD = "save-card"
-const DEFAULT_CATEGORY_ICON = "🖼️"
-const EMOJI_PALETTE = "🎨"
-const CHAR_CLOSE = "×"
 
 interface MintingViewProps {
   mintingItem: HistoryItem | null
@@ -34,13 +25,11 @@ interface MintingViewProps {
   onSaveMintedCard: () => Promise<void>
   selectedRarity: RarityTier
   setSelectedRarity: (rarity: RarityTier) => void
-  // Auto-naming props
   suggestedKeywords: string[]
   selectedKeywords: string[]
   setSelectedKeywords: (keywords: string[]) => void
   customName: string
   setCustomName: (name: string) => void
-  // Custom Category, Tags, and Colors props
   selectedCategory?: string
   setSelectedCategory?: (category: string) => void
   customTags?: string[]
@@ -52,33 +41,112 @@ interface MintingViewProps {
   setMutationNote?: (note: string) => void
 }
 
-export function MintingView({
-  mintingItem,
-  editedSegments,
-  setEditedSegments,
+function MintingHeader({ t }: { t: any }) {
+  return (
+    <div className="p-4 bg-white shadow-sm">
+      <h2 className="text-lg font-bold text-slate-800">{t.minting.title}</h2>
+    </div>
+  )
+}
+
+function SealingOptionsBox({
+  t,
   isSrefHidden,
   setIsSrefHidden,
   isPHidden,
-  setIsPHidden,
+  setIsPHidden
+}: {
+  t: any
+  isSrefHidden: boolean
+  setIsSrefHidden: (hidden: boolean) => void
+  isPHidden: boolean
+  setIsPHidden: (hidden: boolean) => void
+}) {
+  return (
+    <div className="mt-4 p-4 border rounded-lg bg-white">
+      <h3 className="text-sm font-bold mb-2">{t.minting.sealingOptions}</h3>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="hide-sref"
+          checked={isSrefHidden}
+          onChange={(e) => setIsSrefHidden(e.target.checked)}
+        />
+        <label htmlFor="hide-sref" className="text-sm">
+          {t.minting.hideSref}
+        </label>
+      </div>
+      <div className="flex items-center gap-2 mt-2">
+        <input
+          type="checkbox"
+          id="hide-p"
+          checked={isPHidden}
+          onChange={(e) => setIsPHidden(e.target.checked)}
+        />
+        <label htmlFor="hide-p" className="text-sm">
+          {t.minting.hideP}
+        </label>
+      </div>
+    </div>
+  )
+}
+
+function FooterActionButtons({
+  t,
   onCancelMinting,
   onSaveMintedCard,
-  selectedRarity,
-  setSelectedRarity,
-  suggestedKeywords,
-  selectedKeywords,
-  setSelectedKeywords,
-  customName,
-  setCustomName,
-  selectedCategory = "",
-  setSelectedCategory = () => {},
-  customTags = [],
-  setCustomTags = () => {},
-  detectedDominantColor = "#ffffff",
-  detectedAccentColor = "#ffffff",
-  detectedColorTags = [],
-  mutationNote = "",
-  setMutationNote = () => {}
-}: MintingViewProps) {
+  advanceIfStep
+}: {
+  t: any
+  onCancelMinting: () => void
+  onSaveMintedCard: () => Promise<void>
+  advanceIfStep: (v: string) => void
+}) {
+  return (
+    <div
+      className="p-4 bg-white shadow-t-sm flex justify-end gap-2"
+      data-tutorial="mint-save-footer">
+      <Button variant="ghost" onClick={onCancelMinting}>
+        {t.minting.cancel}
+      </Button>
+      <Button
+        onClick={async () => {
+          await onSaveMintedCard()
+          advanceIfStep(STEP_SAVE_CARD)
+        }}>
+        {t.minting.saveCard}
+      </Button>
+    </div>
+  )
+}
+
+function useMintingLogic(
+  props: MintingViewProps,
+  t: any,
+  advanceIfStep: (v: string) => void
+) {
+  const toggleKeyword = (keyword: string) => {
+    if (props.selectedKeywords.includes(keyword)) {
+      props.setSelectedKeywords(
+        props.selectedKeywords.filter((k) => k !== keyword)
+      )
+    } else {
+      props.setSelectedKeywords([...props.selectedKeywords, keyword])
+    }
+    advanceIfStep(STEP_TITLE_INPUT)
+  }
+
+  const currentName =
+    props.selectedKeywords.length > 0
+      ? `${props.selectedKeywords.join(" ")}${
+          props.customName ? ` (${props.customName})` : ""
+        }`
+      : props.customName || t.minting.newCardDefault
+
+  return { toggleKeyword, currentName }
+}
+
+export function MintingView(props: MintingViewProps) {
   const { pinnedCards } = useHand()
   const hasPinnedCards = pinnedCards.length > 0
   const { advanceIfStep } = useTutorial()
@@ -86,323 +154,43 @@ export function MintingView({
   const { t } = useLanguage()
 
   const categoriesList = useCategories()
-
-  const toggleKeyword = (keyword: string) => {
-    if (selectedKeywords.includes(keyword)) {
-      setSelectedKeywords(selectedKeywords.filter((k) => k !== keyword))
-    } else {
-      setSelectedKeywords([...selectedKeywords, keyword])
-    }
-    advanceIfStep(STEP_TITLE_INPUT)
-  }
-
-  const currentName =
-    selectedKeywords.length > 0
-      ? `${selectedKeywords.join(" ")}${customName ? ` (${customName})` : ""}`
-      : customName || t.minting.newCardDefault
+  const { toggleKeyword, currentName } = useMintingLogic(
+    props,
+    t,
+    advanceIfStep
+  )
 
   return (
     <div
       data-testid="minting-view-container"
-      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinnedCards ? "pb-[110px]" : ""}`}>
-      <div className="p-4 bg-white shadow-sm">
-        <h2 className="text-lg font-bold text-slate-800">{t.minting.title}</h2>
-      </div>
+      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${
+        hasPinnedCards ? "pb-[110px]" : ""
+      }`}>
+      <MintingHeader t={t} />
       <div className="flex-1 overflow-y-auto p-4">
-        {mintingItem && (
-          <>
-            <img
-              src={mintingItem.imageUrl}
-              className="w-full h-auto rounded-lg mb-4 shadow-md"
-            />
-
-            <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
-              <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
-                {t.minting.cardIdentity}
-              </h3>
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-500 mb-1">
-                  {t.minting.previewName}
-                </label>
-                <div className="p-2 bg-slate-100 rounded border text-sm font-bold text-slate-800 min-h-[2.5rem] flex items-center">
-                  {currentName}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-500 mb-2">
-                  {t.minting.selectKeywords}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {suggestedKeywords.map((kw, i) => (
-                    <KeywordChip
-                      key={i}
-                      label={kw}
-                      isSelected={selectedKeywords.includes(kw)}
-                      onClick={() => toggleKeyword(kw)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4" data-tutorial="title-input">
-                <label className="block text-xs font-medium text-slate-500 mb-1">
-                  {t.minting.customName}
-                </label>
-                <Input
-                  type="text"
-                  value={customName}
-                  onChange={(e) => {
-                    setCustomName(e.target.value)
-                    advanceIfStep(STEP_TITLE_INPUT)
-                  }}
-                  placeholder={t.minting.addDetailsPlaceholder}
-                />
-              </div>
-
-              {/* AI Style Analysis Section */}
-              <div className="mb-4">
-                <AiStyleAnalysisSection
-                  promptText={editedSegments
-                    .map((s) => (s.type === "slot" ? s.default : s.value))
-                    .join(" ")}
-                  customTags={customTags}
-                  setCustomTags={setCustomTags}
-                  setCustomName={setCustomName}
-                  setMutationNote={setMutationNote}
-                />
-              </div>
-
-              {/* Category Dropdown */}
-              {expertFeatures.categories && (
-                <div className="mb-4">
-                  <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                    {t.minting.category}
-                    <HelpTooltip
-                      content={t.helpTooltips.categories}
-                      position="top-left"
-                    />
-                  </label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full text-sm border rounded bg-white p-2">
-                    <option value="">{t.minting.noCategory}</option>
-                    {categoriesList.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.iconEmoji || DEFAULT_CATEGORY_ICON} {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Custom Tags Section */}
-              {expertFeatures.tags && (
-                <div className="mb-4">
-                  <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
-                    {t.minting.customTags}
-                    <HelpTooltip
-                      content={t.helpTooltips.tags}
-                      position="top-left"
-                    />
-                  </label>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {customTags.map((t, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-medium border border-blue-100">
-                        {t}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setCustomTags(customTags.filter((tag) => tag !== t))
-                          }
-                          className="text-blue-400 hover:text-red-500 text-[10px]">
-                          {CHAR_CLOSE}
-                        </button>
-                      </span>
-                    ))}
-                    {customTags.length === 0 && (
-                      <span className="text-xs text-slate-400 italic">
-                        {t.minting.noCustomTags}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      id="custom-tag-input"
-                      placeholder={t.minting.pressEnterToAdd}
-                      className="text-xs py-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          const input = e.currentTarget
-                          const trimmed = input.value.trim().toLowerCase()
-                          if (trimmed && !customTags.includes(trimmed)) {
-                            setCustomTags([...customTags, trimmed])
-                            input.value = ""
-                          }
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      size="xs"
-                      variant="secondary"
-                      onClick={() => {
-                        const input = document.getElementById(
-                          "custom-tag-input"
-                        ) as HTMLInputElement
-                        if (input) {
-                          const trimmed = input.value.trim().toLowerCase()
-                          if (trimmed && !customTags.includes(trimmed)) {
-                            setCustomTags([...customTags, trimmed])
-                            input.value = ""
-                          }
-                        }
-                      }}>
-                      {t.minting.add}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Dominant and Accent Color Palette preview */}
-              <div className="mb-2">
-                <label className="block text-xs font-medium text-slate-500 mb-2">
-                  {t.minting.detectedPalette}
-                </label>
-                <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
-                      style={{ backgroundColor: detectedDominantColor }}
-                      title="Dominant Color"
-                    />
-                    <span className="text-xs font-bold text-slate-700">
-                      {t.minting.dominant}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
-                      style={{ backgroundColor: detectedAccentColor }}
-                      title="Accent Color"
-                    />
-                    <span className="text-xs font-bold text-slate-700">
-                      {t.minting.accent}
-                    </span>
-                  </div>
-                  {detectedColorTags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 ml-auto">
-                      {detectedColorTags.map((colName, i) => (
-                        <span
-                          key={i}
-                          className="bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                          <span>{EMOJI_PALETTE}</span>
-                          <span>{colName}</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
-              <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
-                {t.minting.promptSegments}
-                {expertFeatures.slot && (
-                  <HelpTooltip
-                    content={t.helpTooltips.slot}
-                    position="top-left"
-                  />
-                )}
-              </h3>
-              <div data-tutorial="prompt-segment-bubble" className="bg-white">
-                {expertFeatures.cardEditing ? (
-                  <PromptBubbleEditor
-                    initialSegments={editedSegments}
-                    onChange={setEditedSegments}
-                    tier={selectedRarity}
-                  />
-                ) : (
-                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg min-h-[50px] items-start content-start">
-                    {editedSegments.map((segment, index) => (
-                      <PromptBubble
-                        key={index}
-                        segment={segment}
-                        tier={
-                          segment.type === "text" ? undefined : selectedRarity
-                        }
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {expertFeatures.rarity && (
-              <div
-                className="mt-6 p-4 border rounded-lg bg-white shadow-sm"
-                data-tutorial="rarity-section">
-                <h3 className="flex items-center gap-1 text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
-                  {t.minting.rarityFrame}
-                  <HelpTooltip
-                    content={t.helpTooltips.rarity}
-                    position="top-left"
-                  />
-                </h3>
-                <RaritySelector
-                  selected={selectedRarity}
-                  onSelect={setSelectedRarity}
-                />
-              </div>
-            )}
-          </>
-        )}
-        <div className="mt-4 p-4 border rounded-lg bg-white">
-          <h3 className="text-sm font-bold mb-2">{t.minting.sealingOptions}</h3>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="hide-sref"
-              checked={isSrefHidden}
-              onChange={(e) => setIsSrefHidden(e.target.checked)}
-            />
-            <label htmlFor="hide-sref" className="text-sm">
-              {t.minting.hideSref}
-            </label>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="checkbox"
-              id="hide-p"
-              checked={isPHidden}
-              onChange={(e) => setIsPHidden(e.target.checked)}
-            />
-            <label htmlFor="hide-p" className="text-sm">
-              {t.minting.hideP}
-            </label>
-          </div>
-        </div>
+        <MintingViewContent
+          props={props}
+          t={t}
+          expertFeatures={expertFeatures}
+          categoriesList={categoriesList}
+          currentName={currentName}
+          toggleKeyword={toggleKeyword}
+          advanceIfStep={advanceIfStep}
+        />
+        <SealingOptionsBox
+          t={t}
+          isSrefHidden={props.isSrefHidden}
+          setIsSrefHidden={props.setIsSrefHidden}
+          isPHidden={props.isPHidden}
+          setIsPHidden={props.setIsPHidden}
+        />
       </div>
-      <div
-        className="p-4 bg-white shadow-t-sm flex justify-end gap-2"
-        data-tutorial="mint-save-footer">
-        <Button variant="ghost" onClick={onCancelMinting}>
-          {t.minting.cancel}
-        </Button>
-        <Button
-          onClick={async () => {
-            await onSaveMintedCard()
-            advanceIfStep(STEP_SAVE_CARD)
-          }}>
-          {t.minting.saveCard}
-        </Button>
-      </div>
+      <FooterActionButtons
+        t={t}
+        onCancelMinting={props.onCancelMinting}
+        onSaveMintedCard={props.onSaveMintedCard}
+        advanceIfStep={advanceIfStep}
+      />
     </div>
   )
 }

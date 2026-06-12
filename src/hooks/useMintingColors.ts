@@ -29,7 +29,10 @@ export function useImageColorAnalysis(
   setFallback: (f: boolean) => void
 ) {
   useEffect(() => {
+    let active = true
+
     const applyFallback = () => {
+      if (!active) return
       const { dominantHex, accentHex, colorTags } =
         getFallbackColors(selectedRarity)
       setDominant(dominantHex)
@@ -41,6 +44,7 @@ export function useImageColorAnalysis(
     if (mintingItem && mintingItem.imageUrl) {
       analyzeImageColors(mintingItem.imageUrl, selectedRarity)
         .then((colors) => {
+          if (!active) return
           setDominant(colors.dominantHex)
           setAccent(colors.accentHex)
           setFallback(!!colors.isFallback)
@@ -53,10 +57,15 @@ export function useImageColorAnalysis(
         })
         .catch((err) => {
           console.error("Failed to analyze image colors:", err)
+          if (!active) return
           applyFallback()
         })
     } else {
       applyFallback()
+    }
+
+    return () => {
+      active = false
     }
   }, [mintingItem, variationBase, selectedRarity])
 }
