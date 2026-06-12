@@ -42,49 +42,63 @@ function parseResponse(response: string): GeneratedMetadata {
   }
 }
 
-export function useAiMetadataGenerator() {
-  const { status, progress, startDownload, runInference } = useWebLlm()
-  const { i18n } = useTranslation()
+function getSystemPrompt(language: string): string {
+  const isJa = language?.startsWith("ja")
+  return isJa
+    ? 'あなたはMidjourneyのプロンプトを分析するAIアシスタントです。入力されたプロンプトのアートスタイルを詳細に分析し、その芸術的ジャンル/スタイル（genre）、画像の特徴を表現する英単語のタグ（tags、最大5個、すべて英語）、および人間が理解しやすい簡潔な日本語の1文の説明（summary）を、以下のJSONフォーマットで出力してください。余計なテキストは含めず純粋なJSONのみを出力してください。\n\nフォーマット:\n{\n  "genre": "ジャンル名",\n  "tags": ["tag1", "tag2"],\n  "summary": "日本語の要約"\n}'
+    : 'You are an AI assistant that analyzes Midjourney prompts. Analyze the art style and output its artistic genre/style (genre), English tags (tags, up to 5 elements), and a concise summary (summary) in the following JSON format. Output ONLY pure JSON.\n\nFormat:\n{\n  "genre": "genre name",\n  "tags": ["tag1", "tag2"],\n  "summary": "concise English summary"\n}'
+}
+
+function useAiMetadataState() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<GeneratedMetadata | null>(null)
+  return { loading, setLoading, error, setError, result, setResult }
+}
+
+export function useAiMetadataGenerator() {
+  const llm = useWebLlm()
+  const { i18n } = useTranslation()
+  const state = useAiMetadataState()
 
   const generateMetadata = useCallback(
     async (promptText: string) => {
       if (!promptText) return null
-      setLoading(true)
-      setError(null)
-      setResult(null)
-
-      const isJa = i18n.language?.startsWith("ja")
-      const systemPrompt = isJa
-        ? 'あなたはMidjourneyのプロンプトを分析するAIアシスタントです。入力されたプロンプトのアートスタイルを詳細に分析し、その芸術的ジャンル/スタイル（genre）、画像の特徴を表現する英単語のタグ（tags、最大5個、すべて英語）、および人間が理解しやすい簡潔な日本語の1文の説明（summary）を、以下のJSONフォーマットで出力してください。余計なテキストは含めず純粋なJSONのみを出力してください。\n\nフォーマット:\n{\n  "genre": "ジャンル名",\n  "tags": ["tag1", "tag2"],\n  "summary": "日本語の要約"\n}'
-        : 'You are an AI assistant that analyzes Midjourney prompts. Analyze the art style and output its artistic genre/style (genre), English tags (tags, up to 5 elements), and a concise summary (summary) in the following JSON format. Output ONLY pure JSON.\n\nFormat:\n{\n  "genre": "genre name",\n  "tags": ["tag1", "tag2"],\n  "summary": "concise English summary"\n}'
+      state.setLoading(true)
+      state.setError(null)
+      state.setResult(null)
 
       try {
-        const response = await runInference(promptText, systemPrompt, 0.2)
+        const systemPrompt = getSystemPrompt(i18n.language)
+        const response = await llm.runInference(promptText, systemPrompt, 0.2)
         const parsed = parseResponse(response)
-        setResult(parsed)
+        state.setResult(parsed)
         return parsed
       } catch (err: any) {
-        setError(err.message || "Failed to generate metadata")
+        state.setError(err.message || "Failed to generate metadata")
         return null
       } finally {
-        setLoading(false)
+        state.setLoading(false)
       }
     },
-    [runInference, i18n.language]
+    [llm.runInference, i18n.language]
   )
 
   return {
-    status,
-    progress,
-    startDownload,
-    loading,
-    error,
-    result,
-    setResult,
+    status: llm.status,
+    progress: llm.progress,
+    startDownload: llm.startDownload,
+    loading: state.loading,
+    error: state.error,
+    webLlmError: llm.error,
+    speed: llm.speed,
+    eta: llm.eta,
+    retryCount: llm.retryCount,
+    maxRetries: llm.maxRetries,
+    text: llm.text,
+    result: state.result,
+    setResult: state.setResult,
     generateMetadata,
-    isModelReady: status === "ready"
+    isModelReady: llm.status === "ready"
   }
 }

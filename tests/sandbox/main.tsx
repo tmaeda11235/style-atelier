@@ -350,7 +350,8 @@ if (typeof window !== "undefined") {
                         status: "downloading",
                         progress,
                         speed: 12.5,
-                        eta: Math.round((100 - progress) / 10)
+                        eta: Math.round((100 - progress) / 10),
+                        text: `Fetching model weights: ${progress}% (dummy size info: 1.0 GB total)`
                       }
                     })
                   )
