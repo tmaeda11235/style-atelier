@@ -158,8 +158,6 @@ export default ts.config(
       "src/components/molecules/GenealogySection.tsx",
       "src/components/molecules/HistoryCard.tsx",
       "src/components/molecules/ParameterArrayEditor.tsx",
-      "src/components/molecules/PromptBubble.tsx",
-      "src/components/molecules/TagEditor.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
