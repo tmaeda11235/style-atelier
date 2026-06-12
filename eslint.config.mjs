@@ -10,7 +10,7 @@ import i18next from "eslint-plugin-i18next";
 
 export default ts.config(
   {
-    ignores: ["postcss.config.js"]
+    ignores: ["postcss.config.js", "scratch/**/*"]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
@@ -142,22 +142,13 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-complexity.ts",
-            "src/components/organisms/CategoryManagerModal.tsx",
+      "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
       "src/contents/_domain/extractors/WebDataExtractor.ts",
-      "src/hooks/useDragAndDrop.ts",
       "src/hooks/usePromptInjector.ts",
-      "src/lib/backup-validator.ts",
-      "src/lib/color-utils.ts",
-      "src/lib/db-setup.ts",
-      "src/lib/db.ts",
-      "src/lib/export-utils.ts",
-      "src/lib/google-drive.ts",
-      "src/lib/nlp-utils.ts",
       "src/lib/prompt-utils.ts",
-      
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
@@ -199,15 +190,13 @@ export default ts.config(
       "src/components/organisms/Workbench.tsx",
       "src/components/templates/SidePanelLayout.tsx",
       "src/contents/_domain/extractors/WebDataExtractor.ts",
-      "src/contexts/SettingsContext.tsx",
-      "src/contexts/TutorialContext.tsx",
       "src/hooks/useActiveTabUrl.ts",
       "src/hooks/useCardDetailsForm.ts",
       "src/hooks/useChromeTabConnection.ts",
-      "src/hooks/useDragAndDrop.ts",
       "src/hooks/useEasyModeView.ts",
       "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
+      "src/hooks/usePromptInjector.ts",
       "src/hooks/useWorkbench.ts",
       "src/lib/backup-validator.ts",
       "src/lib/color-utils.ts",
@@ -231,7 +220,8 @@ export default ts.config(
       "src/components/organisms/MintingView.tsx",
       "src/components/organisms/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx"
+      "src/components/organisms/InteractiveTutorial.tsx",
+      "src/components/organisms/WebLlmSettingsSection.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [

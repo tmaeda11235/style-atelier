@@ -48,7 +48,7 @@ tags: []
   - Branches: 70%
   - Functions: 75%
   - Lines: 80%
-- **CI Pipeline**: Automated via GitHub Actions (`.github/workflows/ci.yml`). ESLint (`npm run lint`) and Unit Tests with Coverage (`npm test -- --coverage`) are run on every pull request to ensure high quality and prevent code decay.
+- **CI Pipeline**: Automated via GitHub Actions (`.github/workflows/ci.yml`). ESLint (`npm run lint`), ESLint whitelist growth verification (`scratch/check-eslint-whitelist.js`), and Unit Tests with Coverage (`npm test -- --coverage`) are run on every pull request to ensure high quality and prevent code decay.
 - **Mutation Testing**: [StrykerJS](https://stryker-mutator.io/) is integrated (`npm run test:mutate`) to evaluate test suite robustness. To maintain high execution performance in local development and CI:
   - Scope is strictly limited to key side-effect-free business logic files (`src/lib/mj-parser.ts`, `src/lib/prompt-utils.ts`, `src/lib/nlp-utils.ts`, `src/lib/color-utils.ts`).
   - Incremental execution mode is enabled (`"incremental": true`), saving change states to `reports/stryker-incremental.json`.
