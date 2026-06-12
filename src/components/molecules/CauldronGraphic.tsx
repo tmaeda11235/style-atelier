@@ -84,20 +84,12 @@ const MagicFire: React.FC<CauldronSubProps> = ({ isDragOver }) => (
   </g>
 )
 
+/* prettier-ignore */
 const CauldronMainBody: React.FC<CauldronSubProps> = ({ isDragOver }) => (
   <>
-    <path
-      d="M 32 80 C 28 88, 32 94, 34 94 C 36 94, 38 88, 38 80 Z"
-      fill="#0f172a"
-    />
-    <path
-      d="M 88 80 C 92 88, 88 94, 86 94 C 84 94, 82 88, 82 80 Z"
-      fill="#0f172a"
-    />
-    <path
-      d="M 60 83 C 58 92, 60 96, 60 96 C 60 96, 62 92, 60 83 Z"
-      fill="#090d16"
-    />
+    <path d="M 32 80 C 28 88, 32 94, 34 94 C 36 94, 38 88, 38 80 Z" fill="#0f172a" />
+    <path d="M 88 80 C 92 88, 88 94, 86 94 C 84 94, 82 88, 82 80 Z" fill="#0f172a" />
+    <path d="M 60 83 C 58 92, 60 96, 60 96 C 60 96, 62 92, 60 83 Z" fill="#090d16" />
     <path
       d="M 24 50 C 20 82, 40 90, 60 90 C 80 90, 100 82, 96 50 C 96 50, 96 46, 90 46 C 84 46, 36 46, 30 46 C 24 46, 24 50, 24 50 Z"
       fill="url(#cauldron-metal)"
@@ -105,20 +97,8 @@ const CauldronMainBody: React.FC<CauldronSubProps> = ({ isDragOver }) => (
       strokeWidth="2"
       className="transition-colors duration-500"
     />
-    <path
-      d="M 25 55 C 17 55, 17 67, 25 67"
-      fill="none"
-      stroke="#1e293b"
-      strokeWidth="4"
-      strokeLinecap="round"
-    />
-    <path
-      d="M 95 55 C 103 55, 103 67, 95 67"
-      fill="none"
-      stroke="#1e293b"
-      strokeWidth="4"
-      strokeLinecap="round"
-    />
+    <path d="M 25 55 C 17 55, 17 67, 25 67" fill="none" stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
+    <path d="M 95 55 C 103 55, 103 67, 95 67" fill="none" stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
     <path
       d="M 50 68 H 70 M 60 58 V 78"
       stroke={isDragOver ? "#22d3ee" : "#334155"}
