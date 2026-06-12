@@ -83,7 +83,8 @@
         "@J-WB-EXPERT-02",
         "@J-WB-EXPERT-03",
         "@J-WB-EXPERT-04",
-        "@J-WB-EXPERT-05"
+        "@J-WB-EXPERT-05",
+        "@J-WB-EMPTY-CAULDRON-01"
       ]
     },
     {
@@ -412,6 +413,19 @@
         "「もっと見る」ボタンを押下してメニューを開き、折りたたまれたアクションを呼び出す"
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-QUICK-SEND-01"]
+    },
+    {
+      "id": "@J-WB-EMPTY-CAULDRON-01",
+      "name": "空状態の大釜アフォーダンス",
+      "description": "ワークベンチが空の時、大釜グラフィックが表示され、ドラッグオーバー時に光るなどの視覚的フィードバックが発生することを確認する",
+      "steps": [
+        "Workbenchを開く",
+        "カードが無い時に大釜のグラフィックが表示されているのを確認する",
+        "カードをドラッグしてWorkbenchに重ねる",
+        "大釜が光る（isDragOver）などの視覚的フィードバックが発生するのを確認する",
+        "ドロップしてカードが追加されるのを確認する"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-01"]
     }
   ]
 }
