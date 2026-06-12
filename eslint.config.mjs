@@ -153,7 +153,6 @@ export default ts.config(
       "src/placeholder-non-existent-func-lines.ts",
       "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/AutocompleteDropdown.tsx",
-      "src/components/molecules/CardThumbnail.tsx",
       "src/components/molecules/ConfirmationDialog.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
       "src/components/molecules/GenealogySection.tsx",
