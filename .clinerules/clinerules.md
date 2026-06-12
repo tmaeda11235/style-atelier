@@ -1,6 +1,7 @@
 # Clinerules
 
 ## Memory Bank & Context
+
 1. `projectbrief.md`
    - Foundation document that shapes all other files
    - Created at project start if it doesn't exist
@@ -23,8 +24,20 @@
    - Technical constraints
    - Dependencies
    - Tool usage patterns
+5. **Memory Bank Synchronization & ADR Pattern**
+   - When introducing any new features, library dependencies, or architectural adjustments, you MUST update the Memory Bank (`systemPatterns.md`, `techContext.md`).
+   - Major structural decisions must be documented using the Architecture Decision Record (ADR) pattern in the Memory Bank.
+   - Always ensure that the documentation in the Memory Bank matches the actual implementation.
+
+6. **Layer Boundaries & File Size Rules**
+   - **No direct database queries inside UI components**: Files in `src/components/` must not import `src/lib/db.ts` directly. Always use hooks or services.
+   - **Maintain test mock purity**: Do not place business logic or simulate database state transition logic in test mocks (e.g. `tests/mocks/db.ts`).
+   - **File and Function Limits**: Keep components under 300 lines (excluding blank lines and comments) and functions under 50 lines. Refactor when limits are exceeded.
+   - **Atomic Design Principles (Hooks and Molecules Separation)**: When implementing UI components, always separate business logic and side effects into custom hooks. Molecules must remain pure presentation components without business logic or raw state mutation handlers.
+   - **ESLint Whitelist Guardrail**: Do not expand the ESLint exception lists (`eslint.config.mjs` overrides). The CI pipeline blocks PRs adding new exception files. If you refactor legacy files to satisfy ESLint rules, run `node scratch/auto-sync-eslint.js` to automatically clean up and synchronize the exception list.
 
 ## Style
+
 - **Documentation Style**: Prioritize **conciseness** over detail or comprehensiveness. Avoid verbose explanations.
 
 - **Permission Guidelines**: Approval is not required for changes that can be reverted via Git. Additionally, you are free to execute npm and gh commands at your discretion.
@@ -34,6 +47,7 @@
 ## Task Management & Workflow
 
 ### Case 1: When an Issue Number is Provided (New Task)
+
 When the user instructs to start working on a specific Issue number:
 
 1.  **Reset Environment**:
@@ -58,6 +72,7 @@ When the user instructs to start working on a specific Issue number:
     - Check for feedback and address any review comments.
 
 ### Case 2: When No Issue Number is Provided (Continuing Task)
+
 When starting a session without a specific Issue number:
 
 1.  **Identify Context**:

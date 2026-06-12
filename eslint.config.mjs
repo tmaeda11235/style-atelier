@@ -10,7 +10,7 @@ import i18next from "eslint-plugin-i18next";
 
 export default ts.config(
   {
-    ignores: ["postcss.config.js"]
+    ignores: ["postcss.config.js", "scratch/**/*"]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
@@ -126,18 +126,13 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-max-lines.ts",
-            "src/components/organisms/CardDetailView.tsx",
-      "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/HandBar.tsx",
-      "src/components/organisms/MintingView.tsx",
-      "src/components/organisms/ParameterEditor.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/lib/backup-validator.ts",
       "src/lib/db.ts",
       "src/lib/export-utils.ts",
       "src/lib/google-drive.ts",
-      
     ],
     rules: {
       "max-lines": "warn"
@@ -147,22 +142,13 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-complexity.ts",
-            "src/components/organisms/CategoryManagerModal.tsx",
+      "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
       "src/contents/_domain/extractors/WebDataExtractor.ts",
-      "src/hooks/useDragAndDrop.ts",
       "src/hooks/usePromptInjector.ts",
-      "src/lib/backup-validator.ts",
-      "src/lib/color-utils.ts",
-      "src/lib/db-setup.ts",
-      "src/lib/db.ts",
-      "src/lib/export-utils.ts",
-      "src/lib/google-drive.ts",
-      "src/lib/nlp-utils.ts",
       "src/lib/prompt-utils.ts",
-      
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
@@ -172,7 +158,7 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-func-lines.ts",
-            "src/components/molecules/AssociatedImageGallery.tsx",
+      "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/AutocompleteDropdown.tsx",
       "src/components/molecules/CardThumbnail.tsx",
       "src/components/molecules/ConfirmationDialog.tsx",
@@ -182,8 +168,6 @@ export default ts.config(
       "src/components/molecules/ParameterArrayEditor.tsx",
       "src/components/molecules/PromptBubble.tsx",
       "src/components/molecules/TagEditor.tsx",
-      "src/components/organisms/CardDetailView.tsx",
-      "src/components/organisms/CategoryManagerModal.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
@@ -193,12 +177,9 @@ export default ts.config(
       "src/components/organisms/HandBar.tsx",
       "src/components/organisms/HistoryTab.tsx",
       "src/components/organisms/InteractiveTutorial.tsx",
-      "src/components/organisms/LibraryTab.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/MergeStackModal.tsx",
-      "src/components/organisms/MintingView.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/ParameterEditor.tsx",
       "src/components/organisms/PromptBubbleEditor.tsx",
       "src/components/organisms/SettingsTab.tsx",
       "src/components/organisms/ShareCardModal.tsx",
@@ -209,15 +190,10 @@ export default ts.config(
       "src/components/organisms/Workbench.tsx",
       "src/components/templates/SidePanelLayout.tsx",
       "src/contents/_domain/extractors/WebDataExtractor.ts",
-      "src/contexts/SettingsContext.tsx",
-      "src/contexts/TutorialContext.tsx",
       "src/hooks/useActiveTabUrl.ts",
       "src/hooks/useCardDetailsForm.ts",
-      "src/hooks/useCategoryManager.ts",
       "src/hooks/useChromeTabConnection.ts",
-      "src/hooks/useDragAndDrop.ts",
       "src/hooks/useEasyModeView.ts",
-      "src/hooks/useEvolution.ts",
       "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
       "src/hooks/usePromptInjector.ts",
@@ -230,7 +206,6 @@ export default ts.config(
       "src/lib/google-drive.ts",
       "src/lib/nlp-utils.ts",
       "src/lib/prompt-utils.ts",
-      
     ],
     rules: {
       "max-lines-per-function": "warn"
@@ -245,7 +220,8 @@ export default ts.config(
       "src/components/organisms/MintingView.tsx",
       "src/components/organisms/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx"
+      "src/components/organisms/InteractiveTutorial.tsx",
+      "src/components/organisms/WebLlmSettingsSection.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [
