@@ -42,7 +42,7 @@ tags: []
 
 ## Testing & CI
 
-- **Unit Tests**: [Vitest](https://vitest.dev/) with JSDOM environment.
+- **Unit Tests**: [Vitest](https://vitest.dev/) with JSDOM environment. Test files are relocated to the `tests/unit/` directory to cleanly separate tests from source code, and Vitest is configured to run tests from this directory.
 - **Coverage**: Measured via `@vitest/coverage-v8`. Thresholds are enforced to prevent regression:
   - Statements: 80%
   - Branches: 70%
@@ -55,4 +55,4 @@ tags: []
   - Static mutants are ignored (`"ignoreStatic": true`) to eliminate dry-run/initialization overhead.
   - Concurrency is optimized (`"concurrency": 4`) to leverage multiple CPU cores without overloading memory.
 - **E2E Tests**: [Playwright](https://playwright.dev/) is used for End-to-End browser-level testing (configured in [playwright.config.ts](file:///c:/Users/oculus/Desktop/style-atelier/playwright.config.ts)). To achieve fast execution, fully parallel testing (`fullyParallel: true`) is enabled. To prevent state/storage collisions (IndexedDB, LocalStorage, etc.) during parallel execution, the custom extension fixture (`tests/fixtures/extension-fixture.ts`) creates and cleans up a unique temporary user data directory for each test/worker. Screenshots are captured to verify UX changes across English and Japanese locales.
-- **Linter Rule Testing**: A dedicated unit test `src/eslint-config.test.ts` validates that the ESLint configuration enforces the strict defaults, maintains specific whitelists for pre-existing files, verifies that i18n literal rules (`eslint-plugin-i18next`) are enforced on fully-translated files, and ensures that test files are properly exempted. This prevents configuration regressions that could weaken codebase constraints.
+- **Linter Rule Testing**: A dedicated unit test `tests/unit/eslint-config.test.ts` validates that the ESLint configuration enforces the strict defaults, maintains specific whitelists for pre-existing files, verifies that i18n literal rules (`eslint-plugin-i18next`) are enforced on fully-translated files, and ensures that test files are properly exempted. This prevents configuration regressions that could weaken codebase constraints.
