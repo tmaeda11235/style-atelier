@@ -126,6 +126,7 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-max-lines.ts",
+      "src/components/organisms/HandBar.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/Workbench.tsx",
     ],
@@ -138,7 +139,6 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-complexity.ts",
       "src/components/organisms/CloudSyncSection.tsx",
-      "src/components/organisms/EasyModeSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
       "src/lib/prompt-utils.ts",
     ],
