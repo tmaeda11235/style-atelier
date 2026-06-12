@@ -131,6 +131,10 @@ To ensure maintainability and scalability, the project follows a strict director
   - `src/background.ts`: Extension background script.
   - `src/sidepanel.tsx`: Main entry point for the side panel UI.
   - `src/content.ts`: Content scripts (if applicable).
+- `tests/`: Directory containing all test suites.
+  - `tests/unit/`: Relocated directory containing all Vitest unit and integration test files (separated from `src/` to isolate application code).
+  - `tests/e2e/`: Playwright end-to-end test files.
+  - `tests/fixtures/`: Playwright test fixtures.
 
 ## Semantic Design Tokens & Dark Mode Theme Management:
 
