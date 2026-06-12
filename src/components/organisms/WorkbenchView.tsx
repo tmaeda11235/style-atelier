@@ -76,9 +76,23 @@ interface RecipeSectionProps {
   isInjecting: boolean
   t: any
   i18n: any
+  isDragOver: boolean
+  setIsDragOver: (drag: boolean) => void
+  toggleCardSelection: (id: string) => Promise<void> | void
+  addLog?: (msg: string) => void
 }
 
 const RecipeSection: React.FC<RecipeSectionProps> = (props) => {
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    props.setIsDragOver(false)
+    const cardId = e.dataTransfer.getData("cardId")
+    if (cardId && !props.handCards.find((c) => c.id === cardId)) {
+      await props.toggleCardSelection(cardId)
+      props.addLog?.(`Card dragged and dropped to Workbench empty state`)
+    }
+  }
+
   if (props.isEvolutionMode || props.isMixingMode) {
     return (
       <RecipeEditor
@@ -89,7 +103,14 @@ const RecipeSection: React.FC<RecipeSectionProps> = (props) => {
       />
     )
   }
-  return <WorkbenchEmptyState t={props.t} />
+  return (
+    <WorkbenchEmptyState
+      t={props.t}
+      isDragOver={props.isDragOver}
+      setIsDragOver={props.setIsDragOver}
+      onDrop={handleDrop}
+    />
+  )
 }
 
 interface WorkbenchViewProps {
