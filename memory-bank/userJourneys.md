@@ -45,6 +45,7 @@ stateDiagram-v2
   _J_ORG_QUICK_SEND_01 : クイックワークベンチ送信
   _J_ORG_SEMANTIC_SEARCH_01 : セマンティック検索による自然言語フィルタリング
   _J_WB_AI_ADVICE_01 : AI調合アドバイス表示
+  _J_ORG_CARD_TOOLTIP_01 : カードアクションツールチップ＆レスポンシブメニュー
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -113,6 +114,8 @@ stateDiagram-v2
   _J_ORG_SEMANTIC_SEARCH_01 --> _J_ORG_SEARCH_01
   _J_WB_AI_ADVICE_01 --> _J_WB_EXPERT_01
   _J_WB_AI_ADVICE_01 --> _J_WB_EXPERT_03
+  _J_ORG_CARD_TOOLTIP_01 --> _J_ORG_EXPERT_01
+  _J_ORG_CARD_TOOLTIP_01 --> _J_ORG_QUICK_SEND_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -628,4 +631,21 @@ flowchart TD
   S2 --> S3
   S4["アドバイス内の推奨事項やキーワードを確認する"]
   S3 --> S4
+```
+
+### @J-ORG-CARD-TOOLTIP-01: カードアクションツールチップ＆レスポンシブメニュー
+
+スタイルカードのアクションボタンホバー時にツールチップを表示し、画面幅が狭い場合は「もっと見る」メニューに折りたたんで表示崩れを防ぐ
+
+```mermaid
+flowchart TD
+  S1["ライブラリのスタイルカードにホバーする"]
+  S2["各アクションボタン（Inject, Share, Edit, QuickSend等）ホバー時に適切なツールチップ（日本語/英語）が表示されることを確認する"]
+  S1 --> S2
+  S3["画面幅を縮小する"]
+  S2 --> S3
+  S4["アクションボタンが「もっと見る」ボタンに折りたたまれて表示されることを確認する"]
+  S3 --> S4
+  S5["「もっと見る」ボタンを押下してメニューを開き、折りたたまれたアクションを呼び出す"]
+  S4 --> S5
 ```

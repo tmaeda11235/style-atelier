@@ -41,9 +41,10 @@
 | **@J-ORG-QUICK-SEND-01**        | クイックワークベンチ送信                                                         | ✔️ `tests\e2e\quick-send.spec.ts`                                                                                                         |
 | **@J-ORG-SEMANTIC-SEARCH-01**   | セマンティック検索による自然言語フィルタリング                                   | ✔️ `tests\e2e\library-semantic-search.spec.ts`                                                                                            |
 | **@J-WB-AI-ADVICE-01**          | AI調合アドバイス表示                                                             | ✔️ `tests\e2e\ai-recipe-advice.spec.ts`                                                                                                   |
+| **@J-ORG-CARD-TOOLTIP-01**      | カードアクションツールチップ＆レスポンシブメニュー                               | ❌ 未カバー (Missing)                                                                                                                     |
 
 ## サマリー
 
-- 全ジャーニー数: 37
+- 全ジャーニー数: 38
 - カバー済み: 37
-- 未カバー: 0
+- 未カバー: 1
