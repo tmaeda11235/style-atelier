@@ -58,6 +58,12 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Fetch base branch for verification
+        run: git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
+
+      - name: Verify ESLint Whitelist has not grown
+        run: node scratch/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
+
       - name: Run unit tests with coverage
         run: npm test -- --coverage
 

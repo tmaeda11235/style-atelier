@@ -154,3 +154,4 @@ To maintain clean architecture and prevent technical debt, the following strict 
    - A whitelist of pre-existing violating files is explicitly maintained in the `eslint.config.mjs` overrides, treating them as `warn` only. Any new files are fully subject to errors.
    - Progressive localization (i18n) checks are enforced via `eslint-plugin-i18next`'s `no-literal-string` rule, targeting fully-translated files (e.g. `DeleteConfirmModal.tsx`, `HistoryTab.tsx`) to prevent future raw text/translation leaks.
    - The helper script `scratch/auto-sync-eslint.js` dynamically compiles and synchronizes these whitelists. As developers refactor legacy files, executing this script automatically removes them from exceptions, permanently locking in the strict rules.
+   - The verification script `scratch/check-eslint-whitelist.js` is run during CI to ensure no new files are added to the overrides block, blocking pull requests that attempt to expand exceptions.
