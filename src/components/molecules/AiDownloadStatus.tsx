@@ -1,13 +1,8 @@
-import {
-  AlertCircle,
-  AlertTriangle,
-  Download,
-  Loader2,
-  RefreshCw
-} from "lucide-react"
+import { AlertCircle, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import React from "react"
 
 import { Button } from "../atoms/Button"
+import { StatusIdle } from "./StatusIdle"
 
 interface AiDownloadStatusProps {
   status: string
@@ -172,32 +167,6 @@ function StatusDownloading({
           {text}
         </p>
       )}
-    </div>
-  )
-}
-
-function StatusIdle({
-  startDownload,
-  t
-}: {
-  startDownload: () => void
-  t: any
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-      <p className="text-xs text-slate-500 mb-3 text-center">
-        {t.minting?.aiModelNotDownloaded ||
-          "Download AI Model to Enable Recommendations"}
-      </p>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        onClick={startDownload}
-        className="flex items-center gap-2 hover:scale-[1.02] transition-transform">
-        <Download className="w-4 h-4 text-blue-500" />
-        {t.settings?.webLlmDownloadBtn || "Download Model"}
-      </Button>
     </div>
   )
 }

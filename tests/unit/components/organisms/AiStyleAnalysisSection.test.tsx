@@ -70,6 +70,9 @@ describe("AiStyleAnalysisSection", () => {
     expect(downloadBtn).toBeDefined()
 
     fireEvent.click(downloadBtn)
+    const confirmBtn = screen.getByText("Download")
+    expect(confirmBtn).toBeDefined()
+    fireEvent.click(confirmBtn)
     expect(mockStartDownload).toHaveBeenCalledTimes(1)
   })
 

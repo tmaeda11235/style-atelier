@@ -3,6 +3,7 @@ import React from "react"
 import { useConfirm } from "../../contexts/ConfirmContext"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useWebLlm } from "../../hooks/useWebLlm"
+import { isMobileConnection } from "../../lib/network-utils"
 import {
   WebLlmActionButtons,
   WebLlmError,
@@ -129,6 +130,42 @@ function WebLlmSettingsContent({
   )
 }
 
+function useWebLlmSettingsHandlers(
+  t: Record<string, string>,
+  confirm: any,
+  startDownload: () => void,
+  purgeCache: () => Promise<void>
+) {
+  const handleDownload = async () => {
+    const isMobile = isMobileConnection()
+    const warningText = isMobile
+      ? `\n\n⚠️ ${t.webLlmMobileWarning || "Mobile connection or data saver detected. Wi-Fi connection is strongly recommended."}`
+      : ""
+
+    const ok = await confirm({
+      title: t.webLlmDownloadConfirmTitle || "Confirm Large Download",
+      message: `${t.webLlmDownloadConfirmDesc || "You are about to download the local AI model (~980 MB). If you are using a mobile hotspot or metered connection, please be aware of potential data charges. Do you want to proceed?"}\n\n• ${t.webLlmDownloadSize || "Download Size: ~980 MB"}\n• ${t.webLlmDiskSpaceWarning || "Required space: ~1.5 GB"}${warningText}`,
+      confirmText: t.webLlmDownloadConfirmBtn || "Start Download",
+      cancelText: t.webLlmCancelBtn || "Cancel",
+      variant: "default"
+    })
+    if (ok) startDownload()
+  }
+
+  const handlePurge = async () => {
+    const ok = await confirm({
+      title: t.confirmTitle || "Confirm Action",
+      message: t.webLlmPurgeConfirm,
+      confirmText: t.confirmBtn || "Confirm",
+      cancelText: t.cancelBtn || "Cancel",
+      variant: "danger"
+    })
+    if (ok) await purgeCache()
+  }
+
+  return { handleDownload, handlePurge }
+}
+
 export function WebLlmSettingsSection() {
   const {
     status,
@@ -145,16 +182,12 @@ export function WebLlmSettingsSection() {
   const t = i18n.settings
   const confirm = useConfirm()
 
-  const handlePurge = async () => {
-    const ok = await confirm({
-      title: t.confirmTitle || "Confirm Action",
-      message: t.webLlmPurgeConfirm,
-      confirmText: t.confirmBtn || "Confirm",
-      cancelText: t.cancelBtn || "Cancel",
-      variant: "danger"
-    })
-    if (ok) await purgeCache()
-  }
+  const { handleDownload, handlePurge } = useWebLlmSettingsHandlers(
+    t,
+    confirm,
+    startDownload,
+    purgeCache
+  )
 
   const disp = getStatusDisplay(status, progress, t)
 
@@ -169,7 +202,7 @@ export function WebLlmSettingsSection() {
         eta={eta}
         retryCount={retryCount}
         maxRetries={maxRetries}
-        startDownload={startDownload}
+        startDownload={handleDownload}
         handlePurge={handlePurge}
         t={t}
         disp={disp}

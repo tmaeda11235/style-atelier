@@ -185,7 +185,15 @@
     "webLlmQuotaWarningDesc": "端末の空き容量が不足しています。WebLLMを動作させるには1.5GB（モデルデータ1.0GB + 実行キャッシュ500MB）の空き領域が必要です。",
     "webLlmStatusRetrying": "接続再試行中...",
     "webLlmRemaining": "残り時間",
-    "webLlmRetryingTitle": "接続を再試行中... ({{count}}/{{max}})"
+    "webLlmRetryingTitle": "接続を再試行中... ({{count}}/{{max}})",
+    "webLlmDownloadSize": "ダウンロードサイズ: 約 980 MB",
+    "webLlmDownloadWarning": "この操作は大量のデータ通信が発生します。Wi-Fi環境でのダウンロードを推奨します。",
+    "webLlmDiskSpaceWarning": "必要な空きディスク容量: 約 1.5 GB",
+    "webLlmDownloadConfirmTitle": "大容量ダウンロードの確認",
+    "webLlmDownloadConfirmDesc": "ローカルAIモデル（約980MB）のダウンロードを開始します。モバイル回線や制限付き回線を使用している場合、通信量にご注意ください。ダウンロードを開始しますか？",
+    "webLlmDownloadConfirmBtn": "ダウンロードを開始する",
+    "webLlmCancelBtn": "キャンセル",
+    "webLlmMobileWarning": "データセーバーが有効、または低速回線が検出されました。Wi-Fi接続でのダウンロードを強く推奨します。"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",

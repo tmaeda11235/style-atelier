@@ -79,6 +79,15 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click({ force: true })
 
+    // Click confirmation button
+    const confirmDownloadBtn = spFrame
+      .locator(
+        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+      )
+      .first()
+    await expect(confirmDownloadBtn).toBeVisible()
+    await confirmDownloadBtn.click({ force: true })
+
     // Assert that the error status UI appears
     const errorTitle = spFrame
       .locator("text=/Error occurred|エラーが発生しました/")
@@ -156,6 +165,15 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
           .first()
         await expect(downloadBtn2).toBeVisible()
         await downloadBtn2.click({ force: true })
+
+        // Click confirmation button
+        const confirmDownloadBtn2 = spFrame
+          .locator(
+            "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+          )
+          .first()
+        await expect(confirmDownloadBtn2).toBeVisible()
+        await confirmDownloadBtn2.click({ force: true })
       }
 
       // Assert that download progress shows up (only if not already ready)
@@ -279,6 +297,15 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
     await downloadBtn.click({ force: true })
+
+    // Click confirmation button
+    const confirmDownloadBtn = spFrame
+      .locator(
+        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+      )
+      .first()
+    await expect(confirmDownloadBtn).toBeVisible()
+    await confirmDownloadBtn.click({ force: true })
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame

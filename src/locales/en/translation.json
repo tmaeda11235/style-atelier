@@ -185,7 +185,15 @@
     "webLlmQuotaWarningDesc": "Insufficient storage space on your device. WebLLM requires at least 1.5 GB of free space (1.0 GB for model file + 500 MB workspace) to operate.",
     "webLlmStatusRetrying": "Reconnecting...",
     "webLlmRemaining": "Remaining",
-    "webLlmRetryingTitle": "Reconnecting... ({{count}}/{{max}})"
+    "webLlmRetryingTitle": "Reconnecting... ({{count}}/{{max}})",
+    "webLlmDownloadSize": "Download Size: ~980 MB",
+    "webLlmDownloadWarning": "This operation requires a large amount of data transfer. Downloading over Wi-Fi is highly recommended.",
+    "webLlmDiskSpaceWarning": "Required disk space: ~1.5 GB",
+    "webLlmDownloadConfirmTitle": "Confirm Large Download",
+    "webLlmDownloadConfirmDesc": "You are about to download the local AI model (~980 MB). If you are using a mobile hotspot or metered connection, please be aware of potential data charges. Do you want to proceed?",
+    "webLlmDownloadConfirmBtn": "Start Download",
+    "webLlmCancelBtn": "Cancel",
+    "webLlmMobileWarning": "Data saver or slow connection detected. Downloading over Wi-Fi is strongly recommended."
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",

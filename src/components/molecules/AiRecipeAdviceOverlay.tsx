@@ -2,6 +2,7 @@ import { AlertTriangle, Loader2 } from "lucide-react"
 import React from "react"
 
 import { AdviceViewer } from "../atoms/AdviceViewer"
+import { ModelIdleOverlay } from "./ModelIdleOverlay"
 
 interface ModelStatusOverlayProps {
   status: string
@@ -142,30 +143,6 @@ function ModelErrorOverlay({
         type="button"
         className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-md active:scale-95 transition-all text-[9px] cursor-pointer">
         {t.webLlmRetryBtn || "Try Again"}
-      </button>
-    </div>
-  )
-}
-
-function ModelIdleOverlay({
-  startDownload,
-  t
-}: {
-  startDownload: () => void
-  t: any
-}) {
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <AlertTriangle className="w-5 h-5 text-slate-400" />
-      <p className="text-slate-500 dark:text-slate-400 text-center">
-        {t.aiAdviceModelNotReady ||
-          "Local AI model is not loaded. Download it to activate recipe advice."}
-      </p>
-      <button
-        onClick={startDownload}
-        type="button"
-        className="px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-md shadow-xs active:scale-95 transition-all duration-200 cursor-pointer text-[9px]">
-        {t.webLlmDownloadBtn || "Download Model"}
       </button>
     </div>
   )
