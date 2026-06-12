@@ -356,6 +356,15 @@
       "white": "White",
       "gray": "Gray",
       "black": "Black"
+    },
+    "tooltips": {
+      "inject": "Inject Prompt",
+      "share": "Share Card",
+      "edit": "Edit Card",
+      "quickSend": "Quick Send to Workbench",
+      "pin": "Send to Workbench",
+      "unpin": "Remove from Workbench",
+      "more": "More Actions"
     }
   },
   "workbench": {
