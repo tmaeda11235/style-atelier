@@ -42,9 +42,10 @@
 | **@J-ORG-SEMANTIC-SEARCH-01**   | セマンティック検索による自然言語フィルタリング                                   | ✔️ `tests\e2e\library-semantic-search.spec.ts`                                                                                            |
 | **@J-WB-AI-ADVICE-01**          | AI調合アドバイス表示                                                             | ✔️ `tests\e2e\ai-recipe-advice.spec.ts`                                                                                                   |
 | **@J-ORG-CARD-TOOLTIP-01**      | カードアクションツールチップ＆レスポンシブメニュー                               | ❌ 未カバー (Missing)                                                                                                                     |
+| **@J-WB-EMPTY-CAULDRON-01**     | 空状態の大釜アフォーダンス                                                       | ✔️ `tests\e2e\workbench-empty-cauldron.spec.ts`                                                                                           |
 
 ## サマリー
 
-- 全ジャーニー数: 38
-- カバー済み: 37
+- 全ジャーニー数: 39
+- カバー済み: 38
 - 未カバー: 1

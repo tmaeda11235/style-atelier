@@ -2,11 +2,13 @@ import { ChevronDown, SlidersHorizontal, Sparkles } from "lucide-react"
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
+import { useSettings } from "../../contexts/SettingsContext"
 import { useAiSearch } from "../../hooks/useAiSearch"
 import { useWebLlm } from "../../hooks/useWebLlm"
 import { AiWarningModal } from "../molecules/AiWarningModal"
 import { ExtractedFiltersDisplay } from "../molecules/ExtractedFiltersDisplay"
 import { SearchField } from "../molecules/SearchField"
+import { SortSelector } from "../molecules/SortSelector"
 
 interface LibrarySearchBarProps {
   categories: { id: string; name: string }[]
@@ -19,6 +21,8 @@ interface LibrarySearchBarProps {
   isFiltersExpanded: boolean
   setIsFiltersExpanded: (val: boolean) => void
   activeFiltersCount: number
+  sortBy: string
+  setSortBy: (val: any) => void
 }
 
 function FilterToggleBtn({
@@ -146,34 +150,80 @@ interface LibrarySearchBarContentProps {
   setAiWarningOpen: (val: boolean) => void
   t: any
   i18nSettings: any
+  sortBy: string
+  setSortBy: (val: any) => void
+  expertFeatures: { rarity?: boolean }
+}
+
+interface SearchInputRowProps {
+  isAiSearch: boolean
+  handleToggleAiSearch: () => void
+  aiSearchQuery: string
+  searchTag: string
+  allSrefs: string[]
+  setAiSearchQuery: (val: string) => void
+  setSearchTag: (val: string) => void
+  isFiltersExpanded: boolean
+  activeFiltersCount: number
+  setIsFiltersExpanded: (val: boolean) => void
+  t: any
+}
+
+function SearchInputRow(props: SearchInputRowProps) {
+  return (
+    <div className="flex gap-2 items-center">
+      <AiSearchToggleBtn
+        isAiSearch={props.isAiSearch}
+        onClick={props.handleToggleAiSearch}
+        title={props.t.aiSearchToggle || "AI Semantic Search"}
+      />
+      <SearchInputWrapper
+        isAiSearch={props.isAiSearch}
+        aiSearchQuery={props.aiSearchQuery}
+        searchTag={props.searchTag}
+        allSrefs={props.allSrefs}
+        setAiSearchQuery={props.setAiSearchQuery}
+        setSearchTag={props.setSearchTag}
+        t={props.t}
+      />
+      <FilterToggleBtn
+        isFiltersExpanded={props.isFiltersExpanded}
+        activeFiltersCount={props.activeFiltersCount}
+        onClick={() => props.setIsFiltersExpanded(!props.isFiltersExpanded)}
+        disabled={props.isAiSearch}
+        t={props.t}
+      />
+    </div>
+  )
 }
 
 function LibrarySearchBarContent(props: LibrarySearchBarContentProps) {
   return (
     <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-      <div className="flex gap-2 items-center">
-        <AiSearchToggleBtn
-          isAiSearch={props.isAiSearch}
-          onClick={props.handleToggleAiSearch}
-          title={props.t.aiSearchToggle || "AI Semantic Search"}
-        />
-        <SearchInputWrapper
-          isAiSearch={props.isAiSearch}
-          aiSearchQuery={props.aiSearchQuery}
-          searchTag={props.searchTag}
-          allSrefs={props.allSrefs}
-          setAiSearchQuery={props.setAiSearchQuery}
-          setSearchTag={props.setSearchTag}
-          t={props.t}
-        />
-        <FilterToggleBtn
-          isFiltersExpanded={props.isFiltersExpanded}
-          activeFiltersCount={props.activeFiltersCount}
-          onClick={() => props.setIsFiltersExpanded(!props.isFiltersExpanded)}
-          disabled={props.isAiSearch}
-          t={props.t}
-        />
-      </div>
+      <SearchInputRow
+        isAiSearch={props.isAiSearch}
+        handleToggleAiSearch={props.handleToggleAiSearch}
+        aiSearchQuery={props.aiSearchQuery}
+        searchTag={props.searchTag}
+        allSrefs={props.allSrefs}
+        setAiSearchQuery={props.setAiSearchQuery}
+        setSearchTag={props.setSearchTag}
+        isFiltersExpanded={props.isFiltersExpanded}
+        activeFiltersCount={props.activeFiltersCount}
+        setIsFiltersExpanded={props.setIsFiltersExpanded}
+        t={props.t}
+      />
+      {!props.isAiSearch && (
+        <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 pt-1.5 mt-0.5 px-0.5">
+          <SortSelector
+            sortBy={props.sortBy}
+            setSortBy={props.setSortBy}
+            expertFeatures={props.expertFeatures}
+            t={props.t}
+            disabled={props.isAiSearch}
+          />
+        </div>
+      )}
       {props.isAiSearch && (
         <ExtractedFiltersDisplay
           extractedFilters={props.extractedFilters}
@@ -196,6 +246,7 @@ function LibrarySearchBarContent(props: LibrarySearchBarContentProps) {
 export function LibrarySearchBar(props: LibrarySearchBarProps) {
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
+  const { expertFeatures } = useSettings()
   const { status: webLlmStatus } = useWebLlm()
   const {
     isAiSearch,
@@ -236,6 +287,9 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
       setAiWarningOpen={setAiWarningOpen}
       t={t}
       i18nSettings={i18n.settings}
+      sortBy={props.sortBy}
+      setSortBy={props.setSortBy}
+      expertFeatures={expertFeatures}
     />
   )
 }

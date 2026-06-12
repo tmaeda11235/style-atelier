@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -179,9 +178,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
       path: path.join(screenshotsDir, "library-filters-expanded.png")
     })
 
-    // Click toggle button to collapse again
+    // Click close button to collapse again
     console.log("Collapsing filters accordion...")
-    await toggleButton.click()
+    const closeButton = spFrame.locator("[data-testid='close-filters-btn']")
+    await expect(closeButton).toBeVisible()
+    await closeButton.click()
 
     const collapsedStyle = await accordion.getAttribute("style")
     expect(collapsedStyle).toContain("max-height: 0px")
@@ -223,6 +224,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
       "[data-tutorial='library-card-grid'] > div"
     )
     await expect(allCardsInGrid).toHaveCount(0)
+
+    // Close the filter modal so we can click the Clear Filters button in the main view
+    console.log("Closing filter modal before clearing filters...")
+    const closeBtn2 = spFrame.locator("[data-testid='close-filters-btn']")
+    await expect(closeBtn2).toBeVisible()
+    await closeBtn2.click()
 
     // "Clear Filters" button should be visible
     const clearFiltersBtn = spFrame.locator("button:has-text('Clear Filters')")

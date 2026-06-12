@@ -328,6 +328,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       await parentSelect.selectOption({ label: "E2E Parent Dir" })
 
       await submitBtn.click()
+
+      // Close filter modal to interact with the folder explorer behind it
+      const closeFiltersBtn = spFrame.locator(
+        "[data-testid='close-filters-btn']"
+      )
+      await expect(closeFiltersBtn).toBeVisible({ timeout: 10000 })
+      await closeFiltersBtn.click()
+
       console.log("7. Verifying explorer structure...")
       // Breadcrumbs should contain "Home"
       const breadcrumbHome = spFrame.locator(
@@ -375,6 +383,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
 
       // Cleanup
       console.log("10. Cleaning up categories...")
+      // Open filter modal first to access the category management button
+      await filterToggleBtn.click()
       await addCategoryBtn.click()
       const manageTabBtn = spFrame.locator(
         "button:has-text('Manage Categories')"
@@ -427,7 +437,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       await libraryTabButton.click()
       console.log("3. Seeding style card and category folder in DB...")
       await spFrame.locator("body").evaluate(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const database = (window as any).db
         await database.categories.clear()
         await database.styleCards.clear()
@@ -484,7 +493,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       const updatedCardCategory = await spFrame
         .locator("body")
         .evaluate(async () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const database = (window as any).db
           const card = await database.getCard("card-to-drag-123")
           return card?.category
@@ -516,7 +524,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
 
       // Check DB value again
       const finalCategory = await spFrame.locator("body").evaluate(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const database = (window as any).db
         const card = await database.getCard("card-to-drag-123")
         return card?.category

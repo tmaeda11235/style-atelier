@@ -26,12 +26,14 @@ interface LibraryTabProps {
 function buildFilterProps(
   lib: any,
   isFiltersExpanded: boolean,
+  setIsFiltersExpanded: (v: boolean) => void,
   expertFeatures: boolean,
   setIsCategoryModalOpen: (v: boolean) => void,
   t: any
 ) {
   return {
     isFiltersExpanded,
+    setIsFiltersExpanded,
     expertFeatures,
     rarityFilter: lib.rarityFilter,
     setRarityFilter: lib.setRarityFilter,
@@ -80,6 +82,7 @@ function SearchAndFilterSection({
   const filterProps = buildFilterProps(
     lib,
     isFiltersExpanded,
+    setIsFiltersExpanded,
     expertFeatures,
     setIsCategoryModalOpen,
     t
@@ -98,6 +101,8 @@ function SearchAndFilterSection({
         isFiltersExpanded={isFiltersExpanded}
         setIsFiltersExpanded={setIsFiltersExpanded}
         activeFiltersCount={lib.activeFiltersCount}
+        sortBy={lib.sortBy}
+        setSortBy={lib.setSortBy}
       />
       <LibraryFilterAccordion {...filterProps} />
     </>

@@ -46,6 +46,7 @@ stateDiagram-v2
   _J_ORG_SEMANTIC_SEARCH_01 : セマンティック検索による自然言語フィルタリング
   _J_WB_AI_ADVICE_01 : AI調合アドバイス表示
   _J_ORG_CARD_TOOLTIP_01 : カードアクションツールチップ＆レスポンシブメニュー
+  _J_WB_EMPTY_CAULDRON_01 : 空状態の大釜アフォーダンス
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -68,6 +69,7 @@ stateDiagram-v2
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_03
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_04
   _J_WB_EXPERT_01 --> _J_WB_EXPERT_05
+  _J_WB_EXPERT_01 --> _J_WB_EMPTY_CAULDRON_01
   _J_WB_EXPERT_02 --> _J_WB_EXPERT_01
   _J_WB_EXPERT_02 --> _J_WB_EXPERT_05
   _J_WB_EXPERT_02 --> _J_WB_MIXING_WEIGHTS_01
@@ -116,6 +118,8 @@ stateDiagram-v2
   _J_WB_AI_ADVICE_01 --> _J_WB_EXPERT_03
   _J_ORG_CARD_TOOLTIP_01 --> _J_ORG_EXPERT_01
   _J_ORG_CARD_TOOLTIP_01 --> _J_ORG_QUICK_SEND_01
+  _J_WB_EMPTY_CAULDRON_01 --> _J_WB_EXPERT_02
+  _J_WB_EMPTY_CAULDRON_01 --> _J_WB_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -647,5 +651,22 @@ flowchart TD
   S4["アクションボタンが「もっと見る」ボタンに折りたたまれて表示されることを確認する"]
   S3 --> S4
   S5["「もっと見る」ボタンを押下してメニューを開き、折りたたまれたアクションを呼び出す"]
+  S4 --> S5
+```
+
+### @J-WB-EMPTY-CAULDRON-01: 空状態の大釜アフォーダンス
+
+ワークベンチが空の時、大釜グラフィックが表示され、ドラッグオーバー時に光るなどの視覚的フィードバックが発生することを確認する
+
+```mermaid
+flowchart TD
+  S1["Workbenchを開く"]
+  S2["カードが無い時に大釜のグラフィックが表示されているのを確認する"]
+  S1 --> S2
+  S3["カードをドラッグしてWorkbenchに重ねる"]
+  S2 --> S3
+  S4["大釜が光る（isDragOver）などの視覚的フィードバックが発生するのを確認する"]
+  S3 --> S4
+  S5["ドロップしてカードが追加されるのを確認する"]
   S4 --> S5
 ```

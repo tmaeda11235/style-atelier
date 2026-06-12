@@ -8,6 +8,62 @@ import type {
   UserSettings
 } from "../../src/lib/db-schema"
 
+class MockCollection<T> {
+  private items: T[]
+  private onModify?: (modifiedItems: T[]) => Promise<void>
+
+  constructor(items: T[], onModify?: (modifiedItems: T[]) => Promise<void>) {
+    this.items = [...items]
+    this.onModify = onModify
+  }
+
+  toArray = vi.fn().mockImplementation(async () => {
+    return this.items
+  })
+
+  first = vi.fn().mockImplementation(async () => {
+    return this.items[0] || undefined
+  })
+
+  last = vi.fn().mockImplementation(async () => {
+    return this.items[this.items.length - 1] || undefined
+  })
+
+  each = vi.fn().mockImplementation(async (callback: (item: T) => any) => {
+    for (const item of this.items) {
+      await callback(item)
+    }
+  })
+
+  count = vi.fn().mockImplementation(async () => {
+    return this.items.length
+  })
+
+  limit = vi.fn().mockImplementation((n: number) => {
+    this.items = this.items.slice(0, n)
+    return this
+  })
+
+  offset = vi.fn().mockImplementation((n: number) => {
+    this.items = this.items.slice(n)
+    return this
+  })
+
+  reverse = vi.fn().mockImplementation(() => {
+    this.items.reverse()
+    return this
+  })
+
+  modify = vi.fn().mockImplementation(async (modifyFn: (item: any) => void) => {
+    this.items.forEach((item) => {
+      modifyFn(item)
+    })
+    if (this.onModify) {
+      await this.onModify(this.items)
+    }
+  })
+}
+
 class MockTable<T extends { id: string } | any, Key = string> {
   private items: Map<any, T> = new Map()
   hooks: Record<string, any> = {}
@@ -88,18 +144,12 @@ class MockTable<T extends { id: string } | any, Key = string> {
       return valA > valB ? 1 : valA < valB ? -1 : 0
     })
 
-    const chain: any = {
-      reverse: () => {
-        sorted.reverse()
-        return chain
-      },
-      limit: (n: number) => {
-        sorted.splice(n)
-        return chain
-      },
-      toArray: async () => sorted
-    }
-    return chain
+    return new MockCollection(sorted, async (modified) => {
+      modified.forEach((item) => {
+        const key = item.id || item.userId || item.timestamp
+        this.items.set(key, item)
+      })
+    })
   })
 
   bulkPut = vi.fn().mockImplementation(async (items: T[]) => {
@@ -118,9 +168,12 @@ class MockTable<T extends { id: string } | any, Key = string> {
 
   filter = vi.fn().mockImplementation((fn: (item: T) => boolean) => {
     const filtered = Array.from(this.items.values()).filter(fn)
-    return {
-      toArray: async () => filtered
-    }
+    return new MockCollection(filtered, async (modified) => {
+      modified.forEach((item) => {
+        const key = item.id || item.userId || item.timestamp
+        this.items.set(key, item)
+      })
+    })
   })
 
   where = vi.fn().mockImplementation((indexName: string) => {
@@ -129,17 +182,12 @@ class MockTable<T extends { id: string } | any, Key = string> {
         const matched = Array.from(this.items.values()).filter(
           (item: any) => item[indexName] === val
         )
-        return {
-          first: async () => matched[0] || undefined,
-          toArray: async () => matched,
-          modify: async (modifyFn: (item: any) => void) => {
-            matched.forEach((item) => {
-              modifyFn(item)
-              const key = item.id || item.userId || item.timestamp
-              this.items.set(key, item)
-            })
-          }
-        }
+        return new MockCollection(matched, async (modified) => {
+          modified.forEach((item) => {
+            const key = item.id || item.userId || item.timestamp
+            this.items.set(key, item)
+          })
+        })
       }
     }
   })
