@@ -128,6 +128,29 @@
   background: rgba(156, 163, 175, 0.6);
 }
 
+@keyframes gacha-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(-2px, 2px) rotate(-1deg);
+  }
+  40% {
+    transform: translate(-2px, -2px) rotate(1deg);
+  }
+  60% {
+    transform: translate(2px, 2px) rotate(0deg);
+  }
+  80% {
+    transform: translate(2px, -2px) rotate(1deg);
+  }
+}
+
+.animate-gacha-shake {
+  animation: gacha-shake 0.15s infinite linear;
+}
+
 .card-thumbnail-container {
   container-type: inline-size;
 }

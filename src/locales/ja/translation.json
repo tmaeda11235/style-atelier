@@ -369,6 +369,7 @@
   },
   "workbench": {
     "clearAll": "すべてクリア",
+    "gachaPick": "ガチャピック",
     "addPromptDesc": "LibraryからスタイルカードをWorkbenchに追加してください",
     "evolution": "進化",
     "variationRecipe": "調合（レシピ）",

@@ -31,6 +31,7 @@ const ModalHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </h4>
       <button
         onClick={onClose}
+        id="alias-modal-close-btn"
         className="text-slate-400 hover:text-slate-600"
         type="button">
         <X className="w-4 h-4" />
@@ -175,10 +176,22 @@ const ModalActions: React.FC<ModalActionsProps> = ({ onDelete, onSave }) => {
 }
 
 const useAliasEdit = (props: AliasEditModalProps) => {
-  const { editingValue, typeAliases, addFolder, saveAlias, deleteAlias, onClose, parameterType } = props
+  const {
+    editingValue,
+    typeAliases,
+    addFolder,
+    saveAlias,
+    deleteAlias,
+    onClose,
+    parameterType
+  } = props
   const existing = typeAliases.find((a) => a.value === editingValue)
-  const [aliasNameInput, setAliasNameInput] = useState(existing ? existing.alias || (existing as any).name : "")
-  const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>(existing ? existing.folderId : undefined)
+  const [aliasNameInput, setAliasNameInput] = useState(
+    existing ? existing.alias || (existing as any).name : ""
+  )
+  const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>(
+    existing ? existing.folderId : undefined
+  )
   const [newFolderNameInput, setNewFolderNameInput] = useState("")
 
   const handleDelete = async () => {
@@ -202,10 +215,14 @@ const useAliasEdit = (props: AliasEditModalProps) => {
   }
 
   return {
-    aliasNameInput, setAliasNameInput,
-    selectedFolderId, setSelectedFolderId,
-    newFolderNameInput, setNewFolderNameInput,
-    handleDelete, handleSave
+    aliasNameInput,
+    setAliasNameInput,
+    selectedFolderId,
+    setSelectedFolderId,
+    newFolderNameInput,
+    setNewFolderNameInput,
+    handleDelete,
+    handleSave
   }
 }
 
