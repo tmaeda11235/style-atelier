@@ -66,6 +66,56 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
     })
     console.log("ParameterEditor expanded screenshot saved.")
 
+    // 6.5. Test the new compact, icon-based Advanced Parameters layout
+    console.log("Testing Advanced Parameters layout...")
+    const advParamsToggle = spFrame.locator(
+      "[data-testid='advanced-params-toggle']"
+    )
+    await expect(advParamsToggle).toBeVisible()
+    await advParamsToggle.click()
+
+    // Verify grid is visible
+    const advParamsGrid = spFrame.locator(
+      "[data-testid='advanced-params-grid']"
+    )
+    await expect(advParamsGrid).toBeVisible()
+
+    // Get the Stylize button
+    const stylizeBtn = spFrame.locator("[data-testid='param-btn-stylize']")
+    await expect(stylizeBtn).toBeVisible()
+
+    // Check if the stylize slider is initially visible
+    const activeStylizeSlider = spFrame.locator(
+      "[data-testid='active-slider-stylize']"
+    )
+    const isInitiallyActive = await activeStylizeSlider
+      .isVisible()
+      .catch(() => false)
+    console.log(`Stylize is initially active: ${isInitiallyActive}`)
+
+    // Toggle it
+    console.log("Toggling Stylize parameter...")
+    await stylizeBtn.click()
+    if (isInitiallyActive) {
+      await expect(activeStylizeSlider).not.toBeVisible()
+    } else {
+      await expect(activeStylizeSlider).toBeVisible()
+    }
+
+    // Toggle it again to return to opposite state
+    await stylizeBtn.click()
+    if (isInitiallyActive) {
+      await expect(activeStylizeSlider).toBeVisible()
+    } else {
+      await expect(activeStylizeSlider).not.toBeVisible()
+    }
+
+    // Capture screenshot showing active sliders in the new layout
+    await page.screenshot({
+      path: path.join(screenshotsDir, "parameter-editor-advanced-active.png")
+    })
+    console.log("Advanced parameters active sliders screenshot saved.")
+
     // 7. Locate responsive buttons
     // The main Try on Midjourney button should be visible with text initially (width 380px)
     const tryOnMidjourneyBtn = spFrame.locator(
