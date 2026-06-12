@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -1127,6 +1126,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // 4. Click Download Model button
     console.log("Clicking Download Model button...")
     await downloadBtn.click()
+
+    // Confirm download in dialog
+    const downloadDialog = spFrame.locator("#confirmation-dialog-container")
+    await expect(downloadDialog).toBeVisible()
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(downloadConfirmBtn).toBeVisible()
+    await downloadConfirmBtn.click()
 
     // 5. Verify downloading progress and transition to Loaded
     const purgeBtn = spFrame.locator(
