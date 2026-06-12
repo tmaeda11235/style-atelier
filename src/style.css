@@ -150,3 +150,20 @@
 .animate-gacha-shake {
   animation: gacha-shake 0.15s infinite linear;
 }
+
+.card-thumbnail-container {
+  container-type: inline-size;
+}
+
+.show-on-narrow {
+  display: none !important;
+}
+
+@container (max-width: 150px) {
+  .hide-on-narrow {
+    display: none !important;
+  }
+  .show-on-narrow {
+    display: inline-block !important;
+  }
+}

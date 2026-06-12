@@ -439,4 +439,93 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     })
     expect(cardInDb.name).toBe("Initial Version")
   })
+
+  test("should display tooltips on hover and collapse low-priority actions on narrow container", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for card actions and tooltips test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed a test card to database
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.add({
+        id: "card-tooltip-test",
+        name: "Tooltip Test Card",
+        promptSegments: [{ type: "text", value: "tooltip prompt" }],
+        parameters: {},
+        masking: {},
+        tier: "Common",
+        tags: ["tooltip-test"],
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+      })
+    })
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await libraryTabButton.click()
+
+    // 4. Hover over Edit button to check tooltip content
+    const editBtn = spFrame.locator("[data-testid='edit-card-button']").first()
+    await expect(editBtn).toBeVisible({ timeout: 10000 })
+    await editBtn.hover()
+
+    const tooltip = spFrame.locator("[data-testid='tooltip-content']").first()
+    await expect(tooltip).toBeVisible()
+
+    // Take a screenshot of the tooltip shown on hover
+    await page.screenshot({
+      path: path.join(screenshotsDir, "card-action-tooltip.png")
+    })
+
+    // 5. Change viewport width to very narrow (e.g. 320px) to test collapsing actions
+    await page.setViewportSize({ width: 320, height: 600 })
+
+    // Wait for layout updates
+    await page.waitForTimeout(500)
+
+    // 6. Verify that "Edit" action button (with hide-on-narrow) is hidden and "More" button is visible
+    await expect(editBtn).not.toBeVisible()
+    const moreBtn = spFrame
+      .locator("[data-testid='more-actions-button']")
+      .first()
+    await expect(moreBtn).toBeVisible()
+
+    // Take screenshot of the collapsed layout
+    await page.screenshot({
+      path: path.join(screenshotsDir, "card-actions-collapsed.png")
+    })
+
+    // 7. Click "More" button to show popover menu
+    await moreBtn.click()
+
+    // 8. Verify popup items are visible
+    const moreEditBtn = spFrame.locator("[data-testid='more-edit-card-button']")
+    await expect(moreEditBtn).toBeVisible()
+
+    // Take screenshot of the popup menu
+    await page.screenshot({
+      path: path.join(screenshotsDir, "card-actions-more-menu.png")
+    })
+
+    // 9. Click "Edit" item inside popup and verify it opens Card Details
+    await moreEditBtn.click()
+    const detailTitle = spFrame.locator("h2:has-text('Card Details')")
+    await expect(detailTitle).toBeVisible()
+
+    // Reset viewport size
+    await page.setViewportSize({ width: 1280, height: 720 })
+  })
 })
