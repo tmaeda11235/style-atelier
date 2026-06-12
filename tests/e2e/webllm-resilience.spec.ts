@@ -91,7 +91,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
         const cache = await window.caches.open("webllm/model_cache")
         await cache.put(
           "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
-          new Response(new Uint8Array(100)) // Corrupted file (100 bytes)
+          new Response(
+            new Blob([new Uint8Array(100)], {
+              type: "application/octet-stream"
+            })
+          )
         )
       }
     })
@@ -111,6 +115,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
         await writable.write(new Uint8Array(100)) // Corrupted file
         await writable.close()
       }
+    })
+
+    // Enable real integrity check mock via localStorage so it persists across reload
+    await spFrame.locator("body").evaluate(() => {
+      localStorage.setItem("mock-webllm-use-real-integrity", "true")
     })
 
     // Now reload the page to trigger integrity check
@@ -138,17 +147,58 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(notDownloadedStatus).toBeVisible({ timeout: 10000 })
 
     // Let's assert that the cache has actually been purged (no longer exists)
-    const isCachePurged = await spFrame.locator("body").evaluate(async () => {
-      if (typeof window !== "undefined" && "caches" in window) {
-        const cache = await window.caches.open("webllm/model_cache")
-        const res = await cache.match(
-          "https://webllm/model/gemma-4-e2b-q4f16_1.bin"
-        )
-        return !res // Should be deleted!
-      }
-      return true
-    })
-    expect(isCachePurged).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          return await spFrame.locator("body").evaluate(async () => {
+            if (typeof window !== "undefined" && "caches" in window) {
+              const cache = await window.caches.open("webllm/model_cache")
+              const res = await cache.match(
+                "https://webllm/model/gemma-4-e2b-q4f16_1.bin"
+              )
+              return !res // Should be deleted!
+            }
+            return true
+          })
+        },
+        {
+          message: "Cache storage was not purged after integrity failure",
+          timeout: 10000
+        }
+      )
+      .toBe(true)
+
+    // Verify OPFS is also purged if supported
+    await expect
+      .poll(
+        async () => {
+          return await spFrame.locator("body").evaluate(async () => {
+            if (navigator.storage && navigator.storage.getDirectory) {
+              try {
+                const root = await navigator.storage.getDirectory()
+                const dirHandle = await root.getDirectoryHandle(
+                  "webllm_models",
+                  {
+                    create: false
+                  }
+                )
+                await dirHandle.getFileHandle("gemma-4-e2b-q4f16_1.bin", {
+                  create: false
+                })
+                return false // Still exists
+              } catch {
+                return true // Purged successfully!
+              }
+            }
+            return true
+          })
+        },
+        {
+          message: "OPFS model file was not purged after integrity failure",
+          timeout: 10000
+        }
+      )
+      .toBe(true)
 
     // Trigger clean download
     const downloadBtn = spFrame.locator(
@@ -160,6 +210,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     // Download completes successfully (status ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
     await expect(readyStatus).toBeVisible({ timeout: 10000 })
+
+    // Clean up real integrity check mock from localStorage
+    await spFrame.locator("body").evaluate(() => {
+      localStorage.removeItem("mock-webllm-use-real-integrity")
+    })
   })
 
   test("should handle network interruption and automatically retry then recover", async ({

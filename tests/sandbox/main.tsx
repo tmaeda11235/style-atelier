@@ -101,6 +101,9 @@ if (typeof window !== "undefined") {
   const mockWebLlmConfig = {
     quotaSufficient: true,
     integrityPassed: null as boolean | null,
+    useRealIntegrity:
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("mock-webllm-use-real-integrity") === "true",
     downloadSpeed: 100,
     failDownload: false,
     downloadErrorMsg: "Failed to fetch model weights: Connection lost",
@@ -188,7 +191,7 @@ if (typeof window !== "undefined") {
                 if (callback)
                   callback({ status: "success", integrityPassed: passed })
               }, 50)
-            } else {
+            } else if (mockWebLlmConfig.useRealIntegrity) {
               // Execute actual integrity check
               ;(async () => {
                 try {
@@ -220,6 +223,11 @@ if (typeof window !== "undefined") {
                     callback({ status: "error", error: err.message })
                 }
               })()
+            } else {
+              setTimeout(() => {
+                if (callback)
+                  callback({ status: "success", integrityPassed: isDownloaded })
+              }, 50)
             }
           } else if (message.action === "check-quota") {
             const requiredBytes =
