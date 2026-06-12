@@ -9,6 +9,7 @@ import "../../src/style.css" // スタイルの読み込み
 
 import { db } from "../../src/lib/db"
 import {
+  checkAvailableStorage,
   verifyCacheIntegrity,
   verifyOpfsIntegrity
 } from "../../src/lib/storage-utils"
@@ -95,13 +96,17 @@ if (typeof window !== "undefined") {
   ;(window as any).db = db
   ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
+  ;(window as any).checkAvailableStorage = checkAvailableStorage
 
   const mockWebLlmConfig = {
     quotaSufficient: true,
     integrityPassed: null as boolean | null,
+    useRealIntegrity:
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("mock-webllm-use-real-integrity") === "true",
     downloadSpeed: 100,
     failDownload: false,
-    downloadErrorMsg: "Network connection lost",
+    downloadErrorMsg: "Failed to fetch model weights: Connection lost",
     offlineMode: false,
     onDownloadStart: null as (() => void) | null,
     inferenceResult: null as string | null
@@ -179,22 +184,70 @@ if (typeof window !== "undefined") {
           if (message.action === "verify-integrity") {
             const isDownloaded =
               localStorage.getItem("mock-webllm-downloaded") === "true"
-            const passed =
-              mockWebLlmConfig.integrityPassed !== null
-                ? mockWebLlmConfig.integrityPassed
-                : isDownloaded
-            setTimeout(() => {
-              if (callback)
-                callback({ status: "success", integrityPassed: passed })
-            }, 50)
+            const passed = mockWebLlmConfig.integrityPassed
+
+            if (passed !== null) {
+              setTimeout(() => {
+                if (callback)
+                  callback({ status: "success", integrityPassed: passed })
+              }, 50)
+            } else if (mockWebLlmConfig.useRealIntegrity) {
+              // Execute actual integrity check
+              ;(async () => {
+                try {
+                  const GEMMA_MODEL_FILES = [
+                    {
+                      name: "gemma-4-e2b-q4f16_1.bin",
+                      size: 1024 * 1024 * 1024
+                    }
+                  ]
+                  const opfsValid = await verifyOpfsIntegrity(
+                    "webllm_models",
+                    GEMMA_MODEL_FILES
+                  )
+                  const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
+                    url: `https://webllm/model/${f.name}`,
+                    size: f.size
+                  }))
+                  const cacheValid = await verifyCacheIntegrity(
+                    "webllm/model_cache",
+                    cacheExpected
+                  )
+                  const integrityPassed = opfsValid || cacheValid
+
+                  if (callback) {
+                    callback({ status: "success", integrityPassed })
+                  }
+                } catch (err: any) {
+                  if (callback)
+                    callback({ status: "error", error: err.message })
+                }
+              })()
+            } else {
+              setTimeout(() => {
+                if (callback)
+                  callback({ status: "success", integrityPassed: isDownloaded })
+              }, 50)
+            }
           } else if (message.action === "check-quota") {
-            setTimeout(() => {
-              if (callback)
-                callback({
-                  status: "success",
-                  isSufficient: mockWebLlmConfig.quotaSufficient
-                })
-            }, 50)
+            const requiredBytes =
+              message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024
+            ;(async () => {
+              try {
+                // If config explicitly says not sufficient, fail immediately.
+                if (!mockWebLlmConfig.quotaSufficient) {
+                  if (callback)
+                    callback({ status: "success", isSufficient: false })
+                  return
+                }
+                const isSufficient = await checkAvailableStorage(requiredBytes)
+                if (callback) {
+                  callback({ status: "success", isSufficient })
+                }
+              } catch (err: any) {
+                if (callback) callback({ status: "error", error: err.message })
+              }
+            })()
           } else if (message.action === "init-worker") {
             setTimeout(() => {
               if (callback) callback({ status: "success" })
@@ -207,64 +260,82 @@ if (typeof window !== "undefined") {
                 mockWebLlmConfig.onDownloadStart()
               }
 
-              if (mockWebLlmConfig.failDownload) {
-                let currentRetry = 0
-                const maxRetries = 3
-                const runRetryStep = () => {
-                  const listeners = (window as any).chromeMessageListeners || []
-                  if (currentRetry < maxRetries) {
-                    currentRetry++
+              let progress = 0
+              let intervalId: any = null
+              let isRetrying = false
+              let retryCount = 0
+              const maxRetries = 3
+
+              const runProgressStep = () => {
+                const isOffline =
+                  !navigator.onLine ||
+                  mockWebLlmConfig.offlineMode ||
+                  mockWebLlmConfig.failDownload
+                const listeners = (window as any).chromeMessageListeners || []
+
+                if (isOffline) {
+                  if (!isRetrying) {
+                    isRetrying = true
+                    retryCount = 0
+                  }
+
+                  if (retryCount < maxRetries) {
+                    retryCount++
                     listeners.forEach((l: any) =>
                       l({
                         source: "offscreen-worker",
                         payload: {
                           status: "retrying",
-                          retryCount: currentRetry,
+                          retryCount,
                           maxRetries,
-                          error: `Connection lost. Retrying (${currentRetry}/${maxRetries})...`
+                          error:
+                            "Failed to fetch model weights: Connection lost"
                         }
                       })
                     )
-                    setTimeout(runRetryStep, 1000)
                   } else {
+                    clearInterval(intervalId)
                     listeners.forEach((l: any) =>
                       l({
                         source: "offscreen-worker",
                         payload: {
                           status: "error",
-                          error: mockWebLlmConfig.downloadErrorMsg
+                          error:
+                            mockWebLlmConfig.downloadErrorMsg ||
+                            "Failed to fetch model weights: Connection lost"
                         }
                       })
                     )
                   }
-                }
-                setTimeout(runRetryStep, 200)
-                return
-              }
-
-              let progress = 0
-              let intervalId: any = null
-
-              const runProgressStep = () => {
-                if (mockWebLlmConfig.offlineMode) {
-                  const listeners = (window as any).chromeMessageListeners || []
-                  listeners.forEach((l: any) =>
-                    l({
-                      source: "offscreen-worker",
-                      payload: {
-                        status: "error",
-                        error: "Network connection offline"
-                      }
-                    })
-                  )
                   return
                 }
 
+                // If online
+                if (isRetrying) {
+                  isRetrying = false
+                  retryCount = 0
+                }
+
                 progress += 25
-                const listeners = (window as any).chromeMessageListeners || []
                 if (progress > 100) {
                   clearInterval(intervalId)
                   localStorage.setItem("mock-webllm-downloaded", "true")
+
+                  // Seed actual cache on successful download finish to satisfy integrity check
+                  ;(async () => {
+                    try {
+                      if (typeof caches !== "undefined") {
+                        const cache = await caches.open("webllm/model_cache")
+                        await cache.put(
+                          "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
+                          new Response(new Uint8Array(1024 * 1024 * 1024))
+                        )
+                      }
+                    } catch (e) {
+                      console.error("Failed to seed dummy cache file", e)
+                    }
+                  })()
+
                   listeners.forEach((l: any) =>
                     l({
                       source: "offscreen-worker",
