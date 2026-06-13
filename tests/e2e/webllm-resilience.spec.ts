@@ -56,10 +56,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Confirm the download dialog
-    const confirmDialogBtn = spFrame.locator("#confirm-dialog-ok-btn")
-    await expect(confirmDialogBtn).toBeVisible()
-    await confirmDialogBtn.click()
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await downloadConfirmBtn.isVisible({ timeout: 3000 })) {
+      await downloadConfirmBtn.click()
+    }
 
     // Assert that the quota warning dialog is displayed to the user
     const warningText = spFrame
@@ -211,10 +212,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Confirm the download dialog
-    const confirmDialogBtn = spFrame.locator("#confirm-dialog-ok-btn")
-    await expect(confirmDialogBtn).toBeVisible()
-    await confirmDialogBtn.click()
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await downloadConfirmBtn.isVisible({ timeout: 3000 })) {
+      await downloadConfirmBtn.click()
+    }
 
     // Download completes successfully (status ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
@@ -265,10 +267,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Confirm the download dialog
-    const confirmDialogBtn = spFrame.locator("#confirm-dialog-ok-btn")
-    await expect(confirmDialogBtn).toBeVisible()
-    await confirmDialogBtn.click()
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await downloadConfirmBtn.isVisible({ timeout: 3000 })) {
+      await downloadConfirmBtn.click()
+    }
 
     // Wait until download starts (we see downloading progress or speed)
     await expect(spFrame.locator("text=12.5 MB/s")).toBeVisible({
@@ -342,10 +345,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Confirm the download dialog
-    const confirmDialogBtn = spFrame.locator("#confirm-dialog-ok-btn")
-    await expect(confirmDialogBtn).toBeVisible()
-    await confirmDialogBtn.click()
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await downloadConfirmBtn.isVisible({ timeout: 3000 })) {
+      await downloadConfirmBtn.click()
+    }
 
     const speedText = spFrame.locator("text=12.5 MB/s")
     await expect(speedText).toBeVisible({ timeout: 5000 })

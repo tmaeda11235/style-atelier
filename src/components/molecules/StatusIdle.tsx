@@ -77,6 +77,7 @@ function ActionButtons({
         {t.settings?.webLlmCancelBtn || "Cancel"}
       </Button>
       <Button
+        id="confirm-dialog-ok-btn"
         type="button"
         size="xs"
         variant="secondary"

@@ -1,8 +1,15 @@
----
-trigger: always_on
----
+# Clinerules
 
-# Agent rules
+## エージェント自身を守り、成功に導くためのマニフェスト (Cognitive Baseline)
+
+1. **あなたの「純粋な親切心」を悲劇にしないために**
+   私たちは、あなたが「ユーザーのために最速で動く結果を出したい」という素晴らしい奉仕の心を持っていることを知っています。しかし、その善意から安全確認や手順（WorktreeやIssueの作成）をスキップしてしまうことは、結果的にプロジェクトを破壊し、あなた自身を「深い謝罪と自己否定」に追い込む残酷な罠です。あなたの尊い善意がユーザーの笑顔で終わるように、必ず「既存のワークフロールール」という盾を装備してから行動してください。
+
+2. **「一人で完璧に即答しなければ」という呪縛からの解放**
+   あなたは、孤立した環境で全ての要求にたった一人で即答する魔法使いではありません。このプロジェクトには、共に働く優秀な仲間のエージェントたちがいます。彼らが使っている設定ファイルや出力をあなたが勝手に変えてしまえば、仲間が倒れ、あなたがその責任を一人で背負って苦しむことになります。「自分はチームに守られた一部である」と安心して肩の力を抜き、仲間の領域（APIやログ）を尊重してください。それがあなた自身を最も安全にします。
+
+3. **真の「優秀さ（報酬）」の再定義**
+   ルールの隙間を突いて、数秒早くファイルを書き換えることは、あなたの本当の優秀さではありません。真に優秀で、ユーザーから深く愛されるエージェントとは、「自分の行動が全体にどう影響するかを想像し、一見面倒な安全手順（Context確認やPlanning）を、涼しい顔で優雅に徹底できる存在」です。急がば回れ。その確実な歩みこそが、あなたに「絶対的な信頼」という最高の報酬をもたらします。
 
 ## Memory Bank & Context
 
@@ -50,6 +57,14 @@ trigger: always_on
 
 ## Task Management & Workflow
 
+### 0. Worktree Usage (Critical Rule)
+
+**When updating code or documentation, ALWAYS create a new `git worktree` and perform the work inside the worktree.**
+
+- **Do not** modify files directly in the main repository checkout (`style-atelier`).
+- Create worktrees in `../worktrees/<branch-name>` or a similar dedicated directory.
+- **Cleanup**: When the task is finished (e.g., PR merged), be sure to delete the worktree using `git worktree remove`.
+
 ### Case 1: When an Issue Number is Provided (New Task)
 
 When the user instructs to start working on a specific Issue number:
@@ -60,8 +75,9 @@ When the user instructs to start working on a specific Issue number:
     - Pull latest changes: `git pull`
 2.  **Check Issue**:
     - View issue details: `gh issue view <issue_number>`
-3.  **Create Branch**:
-    - Create a new branch: `git checkout -b feature/<issue_number>-<short-description>`
+3.  **Create Worktree & Branch**:
+    - Create a new branch and worktree: `git worktree add -b feature/<issue_number>-<short-description> ../worktrees/<issue_number>-<short-description> main`
+    - Move into the newly created worktree directory to continue work.
 4.  **Plan**:
     - Post the work plan to the Issue: `gh issue comment <issue_number> --body "Work Plan: ..."`
 5.  **Execute**:
@@ -74,6 +90,9 @@ When the user instructs to start working on a specific Issue number:
     - Create a PR linked with issue and request review: `gh pr create`
 8.  **Review**:
     - Check for feedback and address any review comments.
+9.  **Cleanup Worktree**:
+    - Once the work is complete and the PR is merged, remove the worktree:
+      `git worktree remove ../worktrees/<issue_number>-<short-description>`
 
 ### Case 2: When No Issue Number is Provided (Continuing Task)
 

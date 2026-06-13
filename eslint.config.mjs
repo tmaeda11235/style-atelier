@@ -138,7 +138,6 @@ export default ts.config(
       "src/placeholder-non-existent-complexity.ts",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
-      "src/lib/prompt-utils.ts",
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
@@ -176,7 +175,6 @@ export default ts.config(
       "src/hooks/useEasyModeView.ts",
       "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
-      "src/lib/prompt-utils.ts",
     ],
     rules: {
       "max-lines-per-function": "warn"

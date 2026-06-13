@@ -20,39 +20,65 @@ function extractImagePrompts(promptText: string): {
   return { imagePrompts, cleanPromptText }
 }
 
+function setListParam(
+  key: string,
+  value: string,
+  parameters: StyleCard["parameters"]
+): boolean {
+  if (key === "sref" || key === "cref" || key === "p" || key === "profile") {
+    const list = value
+      .trim()
+      .split(/\s+/)
+      .filter((v) => v.length > 0)
+    if (key === "sref") {
+      parameters.sref = list
+    } else if (key === "cref") {
+      parameters.cref = list
+    } else {
+      parameters.p = list
+    }
+    return true
+  }
+  return false
+}
+
+function setIntParam(
+  key: string,
+  value: string,
+  parameters: StyleCard["parameters"]
+): boolean {
+  if (
+    key === "stylize" ||
+    key === "s" ||
+    key === "chaos" ||
+    key === "c" ||
+    key === "weird" ||
+    key === "w"
+  ) {
+    const val = parseInt(value, 10)
+    if (key === "stylize" || key === "s") {
+      parameters.stylize = val
+    } else if (key === "chaos" || key === "c") {
+      parameters.chaos = val
+    } else {
+      parameters.weird = val
+    }
+    return true
+  }
+  return false
+}
+
 function applyParameter(
   key: string,
   value: string,
   parameters: StyleCard["parameters"]
 ): void {
+  if (setListParam(key, value, parameters)) return
+  if (setIntParam(key, value, parameters)) return
+
   switch (key) {
     case "ar":
       parameters.ar = value
-      break
-    case "sref":
-      parameters.sref = value.split(/\s+/).filter((v) => v.length > 0)
-      break
-    case "cref":
-      parameters.cref = value.split(/\s+/).filter((v) => v.length > 0)
-      break
-    case "p":
-    case "profile":
-      parameters.p = value
-        .trim()
-        .split(/\s+/)
-        .filter((v) => v.length > 0)
-      break
-    case "stylize":
-    case "s":
-      parameters.stylize = parseInt(value, 10)
-      break
-    case "chaos":
-    case "c":
-      parameters.chaos = parseInt(value, 10)
-      break
-    case "weird":
-    case "w":
-      parameters.weird = parseInt(value, 10)
       break
     case "tile":
       parameters.tile = true
@@ -131,20 +157,18 @@ export function buildSegmentString(
     .join(", ")
 }
 
-export function buildParamParts(
+function buildListParams(
   params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[]
-): string[] {
-  const paramParts: string[] = []
-  if (params.ar && !maskedKeys.includes("ar"))
-    paramParts.push(`--ar ${params.ar}`)
+  maskedKeys: (keyof StyleCard["parameters"])[],
+  parts: string[]
+): void {
   if (params.sref?.length && !maskedKeys.includes("sref")) {
     const srefArray = Array.isArray(params.sref) ? params.sref : [params.sref]
-    paramParts.push(`--sref ${srefArray.join(" ")}`)
+    parts.push(`--sref ${srefArray.join(" ")}`)
   }
   if (params.cref?.length && !maskedKeys.includes("cref")) {
     const crefArray = Array.isArray(params.cref) ? params.cref : [params.cref]
-    paramParts.push(`--cref ${crefArray.join(" ")}`)
+    parts.push(`--cref ${crefArray.join(" ")}`)
   }
 
   // Backward compatibility for p
@@ -153,21 +177,40 @@ export function buildParamParts(
     : params.p
       ? [params.p]
       : []
-  if (pValues.length && !maskedKeys.includes("p"))
-    paramParts.push(`--p ${pValues.join(" ")}`)
+  if (pValues.length && !maskedKeys.includes("p")) {
+    parts.push(`--p ${pValues.join(" ")}`)
+  }
+}
 
+function buildNumericAndOtherParams(
+  params: StyleCard["parameters"],
+  maskedKeys: (keyof StyleCard["parameters"])[],
+  parts: string[]
+): void {
   if (params.stylize !== undefined && !maskedKeys.includes("stylize"))
-    paramParts.push(`--s ${params.stylize}`)
+    parts.push(`--s ${params.stylize}`)
   if (params.chaos !== undefined && !maskedKeys.includes("chaos"))
-    paramParts.push(`--c ${params.chaos}`)
+    parts.push(`--c ${params.chaos}`)
   if (params.weird !== undefined && !maskedKeys.includes("weird"))
-    paramParts.push(`--w ${params.weird}`)
-  if (params.tile && !maskedKeys.includes("tile")) paramParts.push("--tile")
-  if (params.raw && !maskedKeys.includes("raw")) paramParts.push("--style raw")
+    parts.push(`--w ${params.weird}`)
+  if (params.tile && !maskedKeys.includes("tile")) parts.push("--tile")
+  if (params.raw && !maskedKeys.includes("raw")) parts.push("--style raw")
   if (params.version && !maskedKeys.includes("version"))
-    paramParts.push(`--v ${params.version}`)
+    parts.push(`--v ${params.version}`)
   if (params.niji && !maskedKeys.includes("niji"))
-    paramParts.push(`--niji ${params.niji}`)
+    parts.push(`--niji ${params.niji}`)
+}
+
+export function buildParamParts(
+  params: StyleCard["parameters"],
+  maskedKeys: (keyof StyleCard["parameters"])[]
+): string[] {
+  const paramParts: string[] = []
+  if (params.ar && !maskedKeys.includes("ar"))
+    paramParts.push(`--ar ${params.ar}`)
+
+  buildListParams(params, maskedKeys, paramParts)
+  buildNumericAndOtherParams(params, maskedKeys, paramParts)
 
   return paramParts
 }
@@ -212,5 +255,3 @@ export const mergePromptSegments = (
 
   return merged
 }
-
-
