@@ -97,4 +97,54 @@ describe("parseSemanticQuery", () => {
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     await expect(parseSemanticQuery("something", categories)).rejects.toThrow()
   })
+
+  it("should handle plain markdown block without json language specifier", async () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "run-inference") {
+          if (callback) {
+            callback({
+              status: "success",
+              result: '```\n{\n  "rarity": "Epic",\n  "color": "Green"\n}\n```'
+            })
+          }
+        }
+      }
+    )
+
+    const categories = [{ id: "cat-1", name: "Cyberpunk" }]
+    const result = await parseSemanticQuery("Epic green stuff", categories)
+
+    expect(result).toEqual({
+      rarity: "Epic",
+      color: "Green",
+      category: "All",
+      query: ""
+    })
+  })
+
+  it("should handle partial JSON properties and fallback to All", async () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "run-inference") {
+          if (callback) {
+            callback({
+              status: "success",
+              result: "{}"
+            })
+          }
+        }
+      }
+    )
+
+    const categories = [{ id: "cat-1", name: "Cyberpunk" }]
+    const result = await parseSemanticQuery("something", categories)
+
+    expect(result).toEqual({
+      rarity: "All",
+      color: "All",
+      category: "All",
+      query: ""
+    })
+  })
 })

@@ -126,8 +126,6 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-max-lines.ts",
-      "src/components/organisms/HandBar.tsx",
-      "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/Workbench.tsx",
     ],
     rules: {
@@ -140,7 +138,6 @@ export default ts.config(
       "src/placeholder-non-existent-complexity.ts",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
-      "src/lib/prompt-utils.ts",
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
@@ -152,11 +149,7 @@ export default ts.config(
       "src/placeholder-non-existent-func-lines.ts",
       "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/AutocompleteDropdown.tsx",
-      "src/components/molecules/ConfirmationDialog.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
-      "src/components/molecules/GenealogySection.tsx",
-      "src/components/molecules/HistoryCard.tsx",
-      "src/components/molecules/ParameterArrayEditor.tsx",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
@@ -182,7 +175,6 @@ export default ts.config(
       "src/hooks/useEasyModeView.ts",
       "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
-      "src/lib/prompt-utils.ts",
     ],
     rules: {
       "max-lines-per-function": "warn"
@@ -207,7 +199,11 @@ export default ts.config(
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/Cauldron.tsx",
       "src/components/molecules/AssociatedImageGallery.tsx",
-      "src/components/molecules/TagEditor.tsx"
+      "src/components/molecules/TagEditor.tsx",
+      "src/components/molecules/HistoryCard.tsx",
+      "src/components/molecules/GenealogySection.tsx",
+      "src/components/molecules/ConfirmationDialog.tsx",
+      "src/components/molecules/ParameterArrayEditor.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [

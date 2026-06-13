@@ -10,11 +10,9 @@ import type {
 
 class MockCollection<T> {
   private items: T[]
-  private onModify?: (modifiedItems: T[]) => Promise<void>
 
-  constructor(items: T[], onModify?: (modifiedItems: T[]) => Promise<void>) {
+  constructor(items: T[]) {
     this.items = [...items]
-    this.onModify = onModify
   }
 
   toArray = vi.fn().mockImplementation(async () => {
@@ -40,27 +38,19 @@ class MockCollection<T> {
   })
 
   limit = vi.fn().mockImplementation((n: number) => {
-    this.items = this.items.slice(0, n)
-    return this
+    return new MockCollection(this.items.slice(0, n))
   })
 
   offset = vi.fn().mockImplementation((n: number) => {
-    this.items = this.items.slice(n)
-    return this
+    return new MockCollection(this.items.slice(n))
   })
 
   reverse = vi.fn().mockImplementation(() => {
-    this.items.reverse()
-    return this
+    return new MockCollection([...this.items].reverse())
   })
 
   modify = vi.fn().mockImplementation(async (modifyFn: (item: any) => void) => {
-    this.items.forEach((item) => {
-      modifyFn(item)
-    })
-    if (this.onModify) {
-      await this.onModify(this.items)
-    }
+    this.items.forEach(modifyFn)
   })
 }
 
@@ -143,13 +133,7 @@ class MockTable<T extends { id: string } | any, Key = string> {
       const valB = b[index] || 0
       return valA > valB ? 1 : valA < valB ? -1 : 0
     })
-
-    return new MockCollection(sorted, async (modified) => {
-      modified.forEach((item) => {
-        const key = item.id || item.userId || item.timestamp
-        this.items.set(key, item)
-      })
-    })
+    return new MockCollection(sorted)
   })
 
   bulkPut = vi.fn().mockImplementation(async (items: T[]) => {
@@ -168,12 +152,7 @@ class MockTable<T extends { id: string } | any, Key = string> {
 
   filter = vi.fn().mockImplementation((fn: (item: T) => boolean) => {
     const filtered = Array.from(this.items.values()).filter(fn)
-    return new MockCollection(filtered, async (modified) => {
-      modified.forEach((item) => {
-        const key = item.id || item.userId || item.timestamp
-        this.items.set(key, item)
-      })
-    })
+    return new MockCollection(filtered)
   })
 
   where = vi.fn().mockImplementation((indexName: string) => {
@@ -182,12 +161,7 @@ class MockTable<T extends { id: string } | any, Key = string> {
         const matched = Array.from(this.items.values()).filter(
           (item: any) => item[indexName] === val
         )
-        return new MockCollection(matched, async (modified) => {
-          modified.forEach((item) => {
-            const key = item.id || item.userId || item.timestamp
-            this.items.set(key, item)
-          })
-        })
+        return new MockCollection(matched)
       }
     }
   })
@@ -289,7 +263,7 @@ export class MockStyleAtelierDatabase {
   })
 
   deleteCard = vi.fn().mockImplementation(async (id: string) => {
-    await this.deleteStyleCardAndCleanup(id)
+    await this.styleCards.delete(id)
   })
 
   // Category Operations
@@ -304,25 +278,19 @@ export class MockStyleAtelierDatabase {
   })
 
   addCategory = vi.fn().mockImplementation(async (category: CustomCategory) => {
-    return this.categories.add({
-      ...category,
-      updatedAt: category.updatedAt || category.createdAt
-    })
+    return this.categories.add(category)
   })
 
   updateCategory = vi
     .fn()
     .mockImplementation(
       async (id: string, changes: Partial<CustomCategory>) => {
-        return this.categories.update(id, {
-          ...changes,
-          updatedAt: Date.now()
-        })
+        return this.categories.update(id, changes)
       }
     )
 
   deleteCategory = vi.fn().mockImplementation(async (id: string) => {
-    await this.categories.update(id, { isDeleted: true, updatedAt: Date.now() })
+    await this.categories.delete(id)
   })
 
   mergeStyleCards = vi.fn()
@@ -337,7 +305,7 @@ export class MockStyleAtelierDatabase {
   saveSlotHistory = vi
     .fn()
     .mockImplementation(async (label: string, values: string[]) => {
-      await this.slotHistory.put({ label, values, updatedAt: Date.now() })
+      await this.slotHistory.put({ label, values })
     })
 
   getAllSlotHistory = vi.fn().mockImplementation(async () => {
@@ -352,10 +320,7 @@ export class MockStyleAtelierDatabase {
   deleteStyleCardAndCleanup = vi
     .fn()
     .mockImplementation(async (cardId: string) => {
-      await this.styleCards.update(cardId, {
-        isDeleted: true,
-        updatedAt: Date.now()
-      })
+      await this.styleCards.delete(cardId)
     })
 
   transaction = vi
@@ -385,30 +350,7 @@ export class MockStyleAtelierDatabase {
   })
 
   saveParameterAlias = vi.fn().mockImplementation(async (alias: any) => {
-    const now = Date.now()
-    if (alias.id) {
-      await this.parameterAliases.update(alias.id, { ...alias, updatedAt: now })
-      return alias.id
-    } else {
-      const existing = await this.getAliasByValue(alias.paramType, alias.value)
-      if (existing) {
-        await this.parameterAliases.update(existing.id, {
-          alias: alias.alias,
-          folderId: alias.folderId,
-          updatedAt: now
-        })
-        return existing.id
-      } else {
-        const id = Math.random().toString()
-        await this.parameterAliases.add({
-          id,
-          ...alias,
-          createdAt: now,
-          updatedAt: now
-        })
-        return id
-      }
-    }
+    return this.parameterAliases.put(alias)
   })
 
   deleteParameterAlias = vi.fn().mockImplementation(async (id: string) => {
@@ -421,7 +363,7 @@ export class MockStyleAtelierDatabase {
 
   addParameterFolder = vi.fn().mockImplementation(async (folder: any) => {
     const id = folder.id || Math.random().toString()
-    await this.parameterFolders.add({ id, ...folder, createdAt: Date.now() })
+    await this.parameterFolders.add({ id, ...folder })
     return id
   })
 
@@ -432,20 +374,6 @@ export class MockStyleAtelierDatabase {
     })
 
   deleteParameterFolder = vi.fn().mockImplementation(async (id: string) => {
-    const aliases = await this.parameterAliases.toArray()
-    aliases.forEach(async (a: any) => {
-      if (a.folderId === id) {
-        await this.parameterAliases.update(a.id, { folderId: undefined })
-      }
-    })
-    const folders = await this.parameterFolders.toArray()
-    const folder = folders.find((f: any) => f.id === id)
-    const newParentId = folder?.parentId
-    folders.forEach(async (f: any) => {
-      if (f.parentId === id) {
-        await this.parameterFolders.update(f.id, { parentId: newParentId })
-      }
-    })
     await this.parameterFolders.delete(id)
   })
 }
