@@ -155,7 +155,15 @@ export const test = base.extend<{
     }
   },
 
-  extensionId: async ({ context }, use) => {
+  extensionId: async ({ context }, use, testInfo) => {
+    if (testInfo.project.name !== "extension") {
+      testInfo.skip(
+        true,
+        "Skip extension lifecycle tests on non-extension browser projects"
+      )
+      await use("")
+      return
+    }
     logPhase("拡張機能IDの取得開始")
     let [background] = context.serviceWorkers()
     if (!background) {
