@@ -127,10 +127,12 @@ function cleanPromptText(prompt: string): string {
 }
 
 /**
- * Remove leading and trailing punctuation and trim whitespace.
+ * Remove leading and trailing punctuation and trim whitespace, including Japanese punctuation.
  */
 function cleanWord(word: string): string {
-  return word.trim().replace(/^[."':;!?,()]+|[."':;!?,()]+$/g, "")
+  return word
+    .trim()
+    .replace(/^[."':;!?,()、。，．・「」]+|[."':;!?,()、。，．・「」]+$/g, "")
 }
 
 /**
@@ -195,7 +197,7 @@ export function extractKeywords(prompt: string): string[] {
 
   const cleanPrompt = cleanPromptText(prompt)
   const segments = cleanPrompt
-    .split(",")
+    .split(/[,\u3001\uFF0C]+/)
     .map((s) => s.trim())
     .filter(Boolean)
   const keywords: string[] = []

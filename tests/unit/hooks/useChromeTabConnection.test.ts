@@ -118,4 +118,72 @@ describe("useChromeTabConnection", () => {
     // Should not have called sendMessage a second time
     expect(chrome.tabs.sendMessage).toHaveBeenCalledTimes(1)
   })
+
+  it("handles case where no active tab is returned", async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([] as any)
+
+    renderHook(() =>
+      useChromeTabConnection({
+        workbenchCardsDependency: "card-1-12345",
+        setAlertType: mockSetAlertType,
+        addLog: mockAddLog
+      })
+    )
+
+    await flushPromises()
+    expect(mockAddLog).toHaveBeenCalledWith(
+      expect.stringContaining("No active tab returned from query")
+    )
+  })
+
+  it("handles case where active tab has no ID", async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([
+      { status: "complete", url: "https://example.com" }
+    ] as any)
+
+    renderHook(() =>
+      useChromeTabConnection({
+        workbenchCardsDependency: "card-1-12345",
+        setAlertType: mockSetAlertType,
+        addLog: mockAddLog
+      })
+    )
+
+    await flushPromises()
+    expect(mockAddLog).toHaveBeenCalledWith(
+      expect.stringContaining("Active tab has no ID")
+    )
+  })
+
+  it("retries when tab status is loading", async () => {
+    vi.mocked(chrome.tabs.query)
+      .mockResolvedValueOnce([
+        { id: 1, status: "loading", url: "https://example.com" }
+      ] as any)
+      .mockResolvedValueOnce([
+        { id: 1, status: "complete", url: "https://example.com" }
+      ] as any)
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+
+    renderHook(() =>
+      useChromeTabConnection({
+        workbenchCardsDependency: "card-1-12345",
+        setAlertType: mockSetAlertType,
+        addLog: mockAddLog
+      })
+    )
+
+    // First query returns loading status, sets timer for 1s
+    await flushPromises()
+    expect(mockAddLog).toHaveBeenCalledWith(
+      expect.stringContaining("Tab is still loading")
+    )
+
+    // Advance timer by 1000ms to trigger checkConnection again
+    vi.advanceTimersByTime(1000)
+    await flushPromises()
+
+    // Second attempt succeeds
+    expect(mockSetAlertType).toHaveBeenCalledWith(null)
+  })
 })

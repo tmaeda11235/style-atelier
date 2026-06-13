@@ -175,3 +175,10 @@ To maintain clean architecture and prevent technical debt, the following strict 
    - Progressive localization (i18n) checks are enforced via `eslint-plugin-i18next`'s `no-literal-string` rule, targeting fully-translated files (e.g. `DeleteConfirmModal.tsx`, `HistoryTab.tsx`) to prevent future raw text/translation leaks.
    - The helper script `scratch/auto-sync-eslint.js` dynamically compiles and synchronizes these whitelists. As developers refactor legacy files, executing this script automatically removes them from exceptions, permanently locking in the strict rules.
    - The verification script `scratch/check-eslint-whitelist.js` is run during CI to ensure no new files are added to the overrides block, blocking pull requests that attempt to expand exceptions.
+
+## Testing Patterns & UX Quality Assurance:
+
+- **E2E Testing & UI Overlap Detection**:
+  - Interactive UI element visibility and safety are verified in E2E tests (e.g., [overlap-detection.spec.ts](file:///c:/Users/oculus/Desktop/style-atelier/tests/e2e/overlap-detection.spec.ts)).
+  - It scrolls elements into view and uses `document.elementFromPoint(centerX, centerY)` within the browser context to ensure that the element at the center coordinates is either the target element itself, a descendant, or a container. This prevents accidental UI overlaps, layout shifts, or obscuration from overlays.
+  - Interactive elements checked include: Library Tab Button, Search Input, Toggle Filters, Card hover actions (Edit, Pin, Share, Inject), Filters Accordion, Close Filters Button, Workbench Tab Button, Cauldron Dropzone, and Slot Zones.
