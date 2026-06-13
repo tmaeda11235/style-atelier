@@ -17,6 +17,8 @@ import {
 import React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { i18n } from "../../../../src/lib/i18n"
+
 vi.mock("@/contexts/ConfirmContext", () => ({
   useConfirm: () => (options: any) =>
     Promise.resolve(window.confirm(options.message))

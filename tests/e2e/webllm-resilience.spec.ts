@@ -66,7 +66,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     const warningDesc = spFrame
       .locator(
-        "text=/WebLLM requires at least 1.5 GB|WebLLMを動作させるには1.5GB/"
+        "text=/WebLLM requires at least 2.5 GB|WebLLMを動作させるには2.5GB/"
       )
       .first()
     await expect(warningDesc).toBeVisible({ timeout: 15000 })

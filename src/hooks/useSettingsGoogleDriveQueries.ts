@@ -1,5 +1,6 @@
-import { useEffect } from "react"
+/* eslint-disable max-lines-per-function */
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 
 import type { GoogleDriveClient } from "../lib/google-drive"
 
@@ -24,11 +25,17 @@ export function useSettingsGoogleDriveQueries(gdriveClient: GoogleDriveClient) {
 
     const handleToggle = (e: Event) => {
       const customEvent = e as CustomEvent
-      queryClient.setQueryData(["gdrive", "autoSyncEnabled"], customEvent.detail)
+      queryClient.setQueryData(
+        ["gdrive", "autoSyncEnabled"],
+        customEvent.detail
+      )
     }
     window.addEventListener("style-atelier-auto-sync-toggled", handleToggle)
     return () => {
-      window.removeEventListener("style-atelier-auto-sync-toggled", handleToggle)
+      window.removeEventListener(
+        "style-atelier-auto-sync-toggled",
+        handleToggle
+      )
     }
   }, [queryClient])
   const syncEnabledQuery = useQuery({
