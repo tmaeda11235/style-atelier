@@ -609,5 +609,29 @@
     "createNewFolder": "+ 新しいフォルダを作成...",
     "enterFolderName": "新しいフォルダ名を入力",
     "enterAliasNamePlaceholder": "マイカスタムスタイル"
+  },
+  "historyCard": {
+    "mintButton": "カード化 (Mint)"
+  },
+  "genealogy": {
+    "title": "系統と進化",
+    "generation": "世代",
+    "genLabel": "Gen",
+    "mutationNote": "変異メモ",
+    "parentCards": "親カード",
+    "deletedCardTitle": "この親カードは削除されました",
+    "deletedCard": "削除されたカード",
+    "idLabel": "ID:",
+    "trashEmoji": "🗑️",
+    "paletteEmoji": "🎨"
+  },
+  "confirmation": {
+    "confirm": "確認",
+    "cancel": "キャンセル"
+  },
+  "parameterArrayEditor": {
+    "editAlias": "エイリアスを編集",
+    "usedInStyles": "使用スタイル:",
+    "imageEmoji": "🖼️"
   }
 }

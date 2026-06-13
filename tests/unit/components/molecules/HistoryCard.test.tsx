@@ -1,4 +1,5 @@
 import { HistoryCard } from "@/components/molecules/HistoryCard"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 import { db } from "@/lib/db"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
@@ -96,5 +97,21 @@ describe("HistoryCard", () => {
     fireEvent.click(button)
 
     expect(mockOnMintClick).toHaveBeenCalledWith(mockItem)
+  })
+
+  it("renders localized button text based on LanguageProvider", () => {
+    localStorage.setItem("style-atelier-language", "ja")
+    try {
+      render(
+        <LanguageProvider>
+          <HistoryCard item={mockItem} onMintClick={mockOnMintClick} />
+        </LanguageProvider>
+      )
+      expect(
+        screen.getByRole("button", { name: "カード化 (Mint)" })
+      ).toBeDefined()
+    } finally {
+      localStorage.removeItem("style-atelier-language")
+    }
   })
 })

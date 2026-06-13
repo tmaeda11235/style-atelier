@@ -207,7 +207,11 @@ export default ts.config(
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/Cauldron.tsx",
       "src/components/molecules/AssociatedImageGallery.tsx",
-      "src/components/molecules/TagEditor.tsx"
+      "src/components/molecules/TagEditor.tsx",
+      "src/components/molecules/HistoryCard.tsx",
+      "src/components/molecules/GenealogySection.tsx",
+      "src/components/molecules/ConfirmationDialog.tsx",
+      "src/components/molecules/ParameterArrayEditor.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [

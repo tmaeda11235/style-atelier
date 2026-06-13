@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 
+import { useLanguage } from "../../contexts/LanguageContext"
 import type { HistoryItem } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
 
@@ -24,6 +25,7 @@ export function HistoryCard({
   onImageCached,
   className = ""
 }: HistoryCardProps) {
+  const { t } = useLanguage()
   const [imgSrc, setImgSrc] = useState<string>(item.imageUrl)
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export function HistoryCard({
           size="xs"
           onClick={() => onMintClick(item)}
           className="mt-2">
-          Mint Card
+          {t.historyCard.mintButton}
         </Button>
       </div>
     </div>

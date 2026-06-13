@@ -1,4 +1,5 @@
 import { ParameterArrayEditor } from "@/components/molecules/ParameterArrayEditor"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
@@ -113,5 +114,54 @@ describe("ParameterArrayEditor", () => {
 
     // Autocomplete dropdown selects it and updates input value
     expect((input as HTMLInputElement).value).toBe("suggested-val1")
+  })
+
+  it("renders localized alias tooltip and edit button title based on LanguageProvider", () => {
+    const mockStyleCards = [
+      {
+        id: "card-1",
+        name: "Neon Light Style",
+        parameters: { sref: ["val1"] }
+      }
+    ] as any
+
+    const { unmount } = render(
+      <LanguageProvider>
+        <ParameterArrayEditor
+          label="Test Params"
+          icon={null}
+          values={["val1"]}
+          onChange={() => {}}
+          styleCards={mockStyleCards}
+          parameterType="sref"
+        />
+      </LanguageProvider>
+    )
+
+    const editBtn = screen.getByTitle("Edit alias")
+    expect(editBtn).toBeInTheDocument()
+    expect(screen.getByText("Used in Styles:")).toBeInTheDocument()
+    unmount()
+
+    localStorage.setItem("style-atelier-language", "ja")
+    try {
+      render(
+        <LanguageProvider>
+          <ParameterArrayEditor
+            label="Test Params"
+            icon={null}
+            values={["val1"]}
+            onChange={() => {}}
+            styleCards={mockStyleCards}
+            parameterType="sref"
+          />
+        </LanguageProvider>
+      )
+      const editBtnJa = screen.getByTitle("エイリアスを編集")
+      expect(editBtnJa).toBeInTheDocument()
+      expect(screen.getByText("使用スタイル:")).toBeInTheDocument()
+    } finally {
+      localStorage.removeItem("style-atelier-language")
+    }
   })
 })

@@ -1,4 +1,5 @@
 import { GenealogySection } from "@/components/molecules/GenealogySection"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 import type { StyleCard } from "@/lib/db-schema"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
@@ -62,5 +63,30 @@ describe("GenealogySection", () => {
 
     fireEvent.click(screen.getByText("Parent Neo Cat"))
     expect(onCardSelect).toHaveBeenCalledWith("parent-uuid-1")
+  })
+
+  it("renders Japanese labels when LanguageProvider is set to ja", () => {
+    const onCardSelect = vi.fn()
+    const parents = [mockParentCard, null]
+    localStorage.setItem("style-atelier-language", "ja")
+    try {
+      render(
+        <LanguageProvider>
+          <GenealogySection
+            card={mockCard}
+            parents={parents}
+            onCardSelect={onCardSelect}
+          />
+        </LanguageProvider>
+      )
+      expect(screen.getByText("系統と進化")).toBeDefined()
+      expect(screen.getByText("世代")).toBeDefined()
+      expect(screen.getByText("Gen 2")).toBeDefined()
+      expect(screen.getByText("変異メモ")).toBeDefined()
+      expect(screen.getByText("親カード")).toBeDefined()
+      expect(screen.getByText("削除されたカード")).toBeDefined()
+    } finally {
+      localStorage.removeItem("style-atelier-language")
+    }
   })
 })

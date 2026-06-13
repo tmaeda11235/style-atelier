@@ -1,4 +1,5 @@
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
@@ -77,5 +78,39 @@ describe("ConfirmationDialog", () => {
     expect(backdrop).toBeInTheDocument()
     fireEvent.click(backdrop!)
     expect(mockOnCancel).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders default localized button text based on LanguageProvider when no custom text is provided", () => {
+    const { unmount } = render(
+      <LanguageProvider>
+        <ConfirmationDialog
+          isOpen={true}
+          message="Confirm default"
+          onConfirm={() => {}}
+          onCancel={() => {}}
+        />
+      </LanguageProvider>
+    )
+    expect(screen.getByText("Confirm")).toBeInTheDocument()
+    expect(screen.getByText("Cancel")).toBeInTheDocument()
+    unmount()
+
+    localStorage.setItem("style-atelier-language", "ja")
+    try {
+      render(
+        <LanguageProvider>
+          <ConfirmationDialog
+            isOpen={true}
+            message="Confirm default"
+            onConfirm={() => {}}
+            onCancel={() => {}}
+          />
+        </LanguageProvider>
+      )
+      expect(screen.getByText("確認")).toBeInTheDocument()
+      expect(screen.getByText("キャンセル")).toBeInTheDocument()
+    } finally {
+      localStorage.removeItem("style-atelier-language")
+    }
   })
 })
