@@ -5,6 +5,10 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
   test.slow()
 
   test.beforeEach(async ({ page }) => {
+    // Ensure mock-webllm-downloaded is cleared BEFORE React mounts on sandbox load
+    await page.addInitScript(() => {
+      window.localStorage.removeItem("mock-webllm-downloaded")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
