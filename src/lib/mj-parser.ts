@@ -1,6 +1,7 @@
 export const extractJobIdFromUrl = (url: string): string | undefined => {
-  const uuidPattern = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/
-  
+  const uuidPattern =
+    /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/
+
   // 1. Check for /jobs/ path
   if (url.includes("/jobs/")) {
     const match = url.match(uuidPattern)
@@ -18,7 +19,7 @@ export const extractJobIdFromUrl = (url: string): string | undefined => {
   } catch {
     // Ignore invalid URLs and fall through
   }
-  
+
   return undefined
 }
 
@@ -34,7 +35,7 @@ export const extractParameters = (text: string): string[] => {
   const matches = [...text.matchAll(PARAM_REGEX)]
   const paramMap = new Map<string, string[]>()
 
-  matches.forEach(match => {
+  matches.forEach((match) => {
     const rawParam = match[0].trim()
 
     // Split into key and value
@@ -45,7 +46,7 @@ export const extractParameters = (text: string): string[] => {
 
     let value = ""
     if (parts.length > 1) {
-      value = rawParam.substring(fullKey.length).trim()
+      value = rawParam.substring(fullKey.length)
 
       // Clean up repetition
       const repetitionRegex = new RegExp(`\\s+${keyName}\\b.*$`, "i")
@@ -57,7 +58,7 @@ export const extractParameters = (text: string): string[] => {
     }
 
     if (value) {
-      paramMap.get(fullKey)?.push(value)
+      paramMap.get(fullKey).push(value)
     }
   })
 
@@ -78,7 +79,7 @@ export const extractParameters = (text: string): string[] => {
  * Clean up text by removing extra whitespace and newlines
  */
 export const normalizeText = (text: string): string => {
-  return text.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim()
+  return text.replace(/\s+/g, " ").trim()
 }
 
 /**
@@ -88,8 +89,10 @@ export const cleanPromptBody = (element: Element): string => {
   const clone = element.cloneNode(true) as HTMLElement
 
   // Remove buttons which typically contain parameters or actions
-  const buttons = clone.querySelectorAll("button, a, img, .hidden, [aria-hidden='true']")
-  buttons.forEach(b => b.remove())
+  const buttons = clone.querySelectorAll(
+    "button, a, img, .hidden, [aria-hidden='true']"
+  )
+  buttons.forEach((b) => b.remove())
 
   let text = clone.textContent || ""
 
