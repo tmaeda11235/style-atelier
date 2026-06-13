@@ -38,6 +38,9 @@ vi.mock("@/lib/db", () => ({
       })
     },
     getAllSlotHistory: vi.fn().mockImplementation(() => mockSlotHistory),
+    getAllCards: vi
+      .fn()
+      .mockImplementation(async () => Object.values(mockDbCards)),
     saveSlotHistory: vi
       .fn()
       .mockImplementation(async (label: string, values: string[]) => {
@@ -469,6 +472,87 @@ describe("useWorkbench hook", () => {
         expect.any(Error)
       )
       consoleErrorSpy.mockRestore()
+    })
+  })
+
+  describe("updateCardWeight", () => {
+    it("should update card weight", async () => {
+      const card = { id: "card-weight", weight: 1 }
+      mockDbCards["card-weight"] = { ...card }
+
+      const { result } = renderHook(() => useWorkbench())
+
+      await act(async () => {
+        await result.current.updateCardWeight("card-weight", 5)
+      })
+
+      expect(db.styleCards.update).toHaveBeenCalledWith("card-weight", {
+        weight: 5
+      })
+    })
+
+    it("should handle error in updateCardWeight", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {})
+      const { result } = renderHook(() => useWorkbench())
+
+      await act(async () => {
+        await result.current.updateCardWeight("error-id", 5)
+      })
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to update card weight:",
+        expect.any(Error)
+      )
+      consoleErrorSpy.mockRestore()
+    })
+  })
+
+  describe("pickRandomCards", () => {
+    it("should pick random cards and shuffle them", async () => {
+      vi.useFakeTimers()
+
+      const card = { id: "card-pick", isPinned: false, isVariable: false }
+      mockDbCards["card-pick"] = { ...card }
+
+      const { result } = renderHook(() => useWorkbench())
+
+      const pickPromise = result.current.pickRandomCards()
+
+      // Advance timers to trigger the interval and the timeout
+      await act(async () => {
+        await vi.runAllTimersAsync()
+      })
+
+      await pickPromise
+
+      expect(db.styleCards.update).toHaveBeenCalledWith("card-pick", {
+        isPinned: true
+      })
+
+      vi.useRealTimers()
+    })
+
+    it("should catch error in pickRandomCards", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {})
+      const originalGetAllCards = db.getAllCards
+      db.getAllCards = vi.fn().mockRejectedValue(new Error("Mock pick error"))
+
+      const { result } = renderHook(() => useWorkbench())
+
+      await act(async () => {
+        await result.current.pickRandomCards()
+      })
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to pick random cards with shuffle:",
+        expect.any(Error)
+      )
+      consoleErrorSpy.mockRestore()
+      db.getAllCards = originalGetAllCards
     })
   })
 })
