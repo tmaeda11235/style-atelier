@@ -13,7 +13,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
 
     // 1. Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click()
     }
 
@@ -38,14 +38,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     await historyTabButton.click()
 
     const mintCardBtn = spFrame.locator("button:has-text('Mint Card')").first()
-    await expect(mintCardBtn).toBeVisible({ timeout: 30000 })
+    await expect(mintCardBtn).toBeVisible({ timeout: 10000 })
     await mintCardBtn.click()
 
     // 4. Verify Minting View and AI Section are visible
     const mintingView = spFrame.locator(
       "[data-testid='minting-view-container']"
     )
-    await expect(mintingView).toBeVisible({ timeout: 30000 })
+    await expect(mintingView).toBeVisible({ timeout: 10000 })
 
     const aiSectionTitle = spFrame.locator("h3:has-text('AI Style Analysis')")
     await expect(aiSectionTitle).toBeVisible()
@@ -90,34 +90,30 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     })
 
     // Click "Download Model" to trigger transition to ready state
-    const aiSection = spFrame.locator(
-      "div:has(> h3:has-text('AI Style Analysis'))"
-    )
-    const downloadBtn = aiSection.locator(
-      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
-    )
+    const downloadBtn = spFrame.getByRole("button", {
+      name: "Download Model",
+      exact: true
+    })
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Click inline confirm Download button
-    const confirmDownloadBtn = aiSection
-      .locator("button:has-text('Download'), button:has-text('ダウンロード')")
-      .filter({ hasNotText: "Model" })
-      .filter({ hasNotText: "モデル" })
-      .first()
-    await expect(confirmDownloadBtn).toBeVisible({ timeout: 15000 })
-    await confirmDownloadBtn.click()
+    // Click inline "Start Download" button in the confirm view
+    const startDownloadBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+    )
+    await expect(startDownloadBtn).toBeVisible()
+    await startDownloadBtn.click()
 
     // Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(
-      "button:has-text('Analyze Style with AI')"
+      "button:has-text('Analyze Style with AI'), button:has-text('AIでスタイルを分析')"
     )
-    await expect(analyzeBtn).toBeVisible({ timeout: 15000 })
+    await expect(analyzeBtn).toBeVisible({ timeout: 5000 })
     await analyzeBtn.click()
 
     // Verify results
     const genreText = spFrame.locator("text=/Cyberpunk Portrait/i")
-    await expect(genreText).toBeVisible({ timeout: 30000 })
+    await expect(genreText).toBeVisible({ timeout: 10000 })
 
     // Take screenshot of ready state (analysis results shown) in Dark Mode
     console.log("Saving dark mode AI analysis section ready screenshot...")
@@ -181,7 +177,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     const editCardBtn = spFrame
       .locator("[data-testid='edit-card-button']")
       .first()
-    await expect(editCardBtn).toBeVisible({ timeout: 30000 })
+    await expect(editCardBtn).toBeVisible({ timeout: 10000 })
 
     const shareBtn = spFrame
       .locator("[data-testid='share-card-button']")

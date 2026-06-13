@@ -60,6 +60,7 @@
 ### 0. Worktree Usage (Critical Rule)
 
 **When updating code or documentation, ALWAYS create a new `git worktree` and perform the work inside the worktree.**
+
 - **Do not** modify files directly in the main repository checkout (`style-atelier`).
 - Create worktrees in `../worktrees/<branch-name>` or a similar dedicated directory.
 - **Cleanup**: When the task is finished (e.g., PR merged), be sure to delete the worktree using `git worktree remove`.
@@ -92,6 +93,7 @@ When the user instructs to start working on a specific Issue number:
 9.  **Cleanup Worktree**:
     - Once the work is complete and the PR is merged, remove the worktree:
       `git worktree remove ../worktrees/<issue_number>-<short-description>`
+
 ### Case 2: When No Issue Number is Provided (Continuing Task)
 
 When starting a session without a specific Issue number:

@@ -611,5 +611,35 @@
     "createNewFolder": "+ Create New Folder...",
     "enterFolderName": "Enter new folder name",
     "enterAliasNamePlaceholder": "My Custom Style"
+  },
+  "exportSuccessModal": {
+    "title": "Card Exported Successfully!",
+    "message": "The exported card image preserves prompt metadata.\nOther users can directly import it back into Style Atelier.",
+    "shareText": "Share on X (Twitter)",
+    "closeText": "Close"
+  },
+  "historyCard": {
+    "mintButton": "Mint Card"
+  },
+  "genealogy": {
+    "title": "Ancestry & Evolution",
+    "generation": "Generation",
+    "genLabel": "Gen",
+    "mutationNote": "Mutation Note",
+    "parentCards": "Parent Cards",
+    "deletedCardTitle": "This parent card has been deleted",
+    "deletedCard": "Deleted Card",
+    "idLabel": "ID:",
+    "trashEmoji": "🗑️",
+    "paletteEmoji": "🎨"
+  },
+  "confirmation": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "parameterArrayEditor": {
+    "editAlias": "Edit alias",
+    "usedInStyles": "Used in Styles:",
+    "imageEmoji": "🖼️"
   }
 }

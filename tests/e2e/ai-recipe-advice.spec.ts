@@ -22,7 +22,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
 
     // 1. Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click()
     }
 
@@ -65,7 +65,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
 
     // 4. Verify AI Advice Section is visible (since there are 2 pinned cards)
     const adviceSection = spFrame.locator("#ai-recipe-advice-section")
-    await expect(adviceSection).toBeVisible({ timeout: 15000 })
+    await expect(adviceSection).toBeVisible({ timeout: 5000 })
 
     // 5. Expand the advice section accordion (by clicking the header)
     const accordionHeader = adviceSection.locator("#ai-recipe-advice-toggle")
@@ -76,7 +76,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     const notReadyText = spFrame.locator(
       "text=/Local AI model is not loaded|ローカルAIモデルがロードされていません/"
     )
-    await expect(notReadyText).toBeVisible({ timeout: 15000 })
+    await expect(notReadyText).toBeVisible({ timeout: 5000 })
 
     // Capture screenshot of "model not loaded" state in Cauldron
     await page.screenshot({
@@ -105,20 +105,18 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Click inline confirm Download button
-    const confirmDownloadBtn = adviceSection
-      .locator("button:has-text('Download'), button:has-text('ダウンロード')")
-      .filter({ hasNotText: "Model" })
-      .filter({ hasNotText: "モデル" })
-      .first()
-    await expect(confirmDownloadBtn).toBeVisible({ timeout: 15000 })
-    await confirmDownloadBtn.click()
+    // Click inline "Start Download" button in the confirm view
+    const startDownloadBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+    )
+    await expect(startDownloadBtn).toBeVisible()
+    await startDownloadBtn.click()
 
-    await page.waitForTimeout(5000) // Wait for downloading animation, debounce, and mock inference resolution
+    await page.waitForTimeout(3000) // Wait for downloading animation, debounce, and mock inference resolution
 
     // 8. Verify advice is generated and rendered
     const adviceText = spFrame.locator("text=/Expected Visual Blending Effect/")
-    await expect(adviceText).toBeVisible({ timeout: 30000 })
+    await expect(adviceText).toBeVisible({ timeout: 10000 })
 
     // Capture screenshot of the final AI recipe advice in action
     await page.screenshot({

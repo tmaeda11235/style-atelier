@@ -176,6 +176,43 @@ describe("CardDetailView", () => {
     expect(exportCardAsImage).toHaveBeenCalled()
   })
 
+  it("shows export success modal on successful export and opens share link", async () => {
+    const windowOpenSpy = vi
+      .spyOn(window, "open")
+      .mockImplementation(() => null as any)
+
+    render(<CardDetailView {...defaultProps} />)
+
+    const exportButton = screen.getByTestId("export-card-button")
+
+    await act(async () => {
+      fireEvent.click(exportButton)
+    })
+
+    expect(screen.getByText("Card Exported Successfully!")).toBeDefined()
+    expect(
+      screen.getByText("The exported card image preserves prompt metadata.", {
+        exact: false
+      })
+    ).toBeDefined()
+
+    const shareButton = screen.getByText("Share on X (Twitter)")
+    fireEvent.click(shareButton)
+
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      expect.stringContaining("https://x.com/intent/post"),
+      "_blank",
+      "noopener,noreferrer"
+    )
+
+    const closeButton = screen.getByText("Close")
+    fireEvent.click(closeButton)
+
+    expect(screen.queryByText("Card Exported Successfully!")).toBeNull()
+
+    windowOpenSpy.mockRestore()
+  })
+
   it("displays error message if export utility fails", async () => {
     const { exportCardAsImage } = await import("@/lib/export-utils")
     vi.mocked(exportCardAsImage).mockRejectedValueOnce(

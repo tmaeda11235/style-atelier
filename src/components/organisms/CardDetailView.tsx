@@ -8,6 +8,7 @@ import type { StyleCard } from "../../lib/db-schema"
 import { AssociatedImageGallery } from "../molecules/AssociatedImageGallery"
 import type { AlertType } from "../molecules/ConnectionAlert"
 import { DeleteConfirmModal } from "../molecules/DeleteConfirmModal"
+import { ExportSuccessModal } from "../molecules/ExportSuccessModal"
 import { GenealogySection } from "../molecules/GenealogySection"
 import { ActionButtons } from "./CardDetailView/ActionButtons"
 import { IdentitySection } from "./CardDetailView/IdentitySection"
@@ -209,6 +210,7 @@ function DetailsScrollContent({
   )
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 function CardDetailViewLayout({
   props,
   logic,
@@ -256,6 +258,10 @@ function CardDetailViewLayout({
         cardName={logic.form.name}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDeleteConfirm}
+      />
+      <ExportSuccessModal
+        isOpen={logic.exporter.showSuccessModal}
+        onClose={() => logic.exporter.setShowSuccessModal(false)}
       />
     </div>
   )
