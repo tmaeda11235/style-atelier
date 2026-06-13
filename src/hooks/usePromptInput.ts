@@ -1,6 +1,10 @@
-import { useState, useRef, useEffect } from "react"
+import { useRef, useState } from "react"
+
 import type { PromptSegment } from "../lib/db-schema"
-import { PROMPT_DELIMITER_REGEX, PROMPT_DELIMITER_CHARS } from "../lib/prompt-utils"
+import {
+  PROMPT_DELIMITER_CHARS,
+  PROMPT_DELIMITER_REGEX
+} from "../lib/prompt-utils"
 
 interface UsePromptInputProps {
   segments: PromptSegment[]
@@ -8,20 +12,27 @@ interface UsePromptInputProps {
   onRemoveLastSegment: () => void
 }
 
-export const usePromptInput = ({ segments, onAddSegment, onRemoveLastSegment }: UsePromptInputProps) => {
+function parseInputToTokens(inputValue: string): PromptSegment[] {
+  const trimmed = inputValue.trim()
+  if (!trimmed) return []
+
+  return trimmed
+    .split(PROMPT_DELIMITER_REGEX)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((value) => ({ type: "text", value }))
+}
+
+export const usePromptInput = ({
+  segments,
+  onAddSegment,
+  onRemoveLastSegment
+}: UsePromptInputProps) => {
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
   const addTokensFromInput = () => {
-    const trimmed = inputValue.trim()
-    if (!trimmed) return
-
-    const newTokens: PromptSegment[] = trimmed
-      .split(PROMPT_DELIMITER_REGEX)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .map((value) => ({ type: "text", value }))
-
+    const newTokens = parseInputToTokens(inputValue)
     if (newTokens.length > 0) {
       onAddSegment(newTokens)
     }
@@ -32,7 +43,11 @@ export const usePromptInput = ({ segments, onAddSegment, onRemoveLastSegment }: 
     if (e.key === "Enter") {
       e.preventDefault()
       addTokensFromInput()
-    } else if (e.key === "Backspace" && inputValue === "" && segments.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      inputValue === "" &&
+      segments.length > 0
+    ) {
       e.preventDefault() // Prevents default browser back navigation
       onRemoveLastSegment()
     } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
@@ -55,6 +70,6 @@ export const usePromptInput = ({ segments, onAddSegment, onRemoveLastSegment }: 
     inputRef,
     handleKeyDown,
     handleBlur,
-    focusInput,
+    focusInput
   }
 }

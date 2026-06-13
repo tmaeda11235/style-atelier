@@ -62,6 +62,11 @@ describe("mj-parser", () => {
       const url = "https://cdn.midjourney.com/12345/0_0.png"
       expect(extractJobIdFromUrl(url)).toBeUndefined()
     })
+
+    it("should return undefined if host is cdn.midjourney.com but does not contain a UUID path", () => {
+      const url = "https://cdn.midjourney.com/invalid"
+      expect(extractJobIdFromUrl(url)).toBeUndefined()
+    })
   })
 
   describe("extractParameters", () => {
@@ -116,12 +121,32 @@ describe("mj-parser", () => {
         "--niji 6"
       ])
     })
+
+    it("should handle parameters with excessive spaces around and inside keys/values", () => {
+      const text = "  --ar   16:9   "
+      expect(extractParameters(text)).toEqual(["--ar 16:9"])
+    })
+
+    it("should handle duplicate parameters with multiple spaces", () => {
+      const text = "a futuristic city --sref   url1   --sref   url2"
+      expect(extractParameters(text)).toEqual(["--sref url1 url2"])
+    })
+
+    it("should handle standalone parameter with trailing/leading spaces", () => {
+      const text = "  --fast   "
+      expect(extractParameters(text)).toEqual(["--fast"])
+    })
   })
 
   describe("normalizeText", () => {
     it("should collapse multiple spaces and remove newlines", () => {
       const text = "  hello \n \n  world   \r test  "
       expect(normalizeText(text)).toBe("hello world test")
+    })
+
+    it("should normalize multiple consecutive newlines and carriage returns to a single space", () => {
+      const text = "hello\n\n\nworld\r\n\r\nback"
+      expect(normalizeText(text)).toBe("hello world back")
     })
   })
 
@@ -174,6 +199,18 @@ describe("mj-parser", () => {
       const container3 = document.createElement("div")
       container3.innerHTML = "prompt +USE TEXT"
       expect(cleanPromptBody(container3)).toBe("prompt")
+    })
+
+    it("should return empty string when element has no text content", () => {
+      const container = document.createElement("div")
+      expect(cleanPromptBody(container)).toBe("")
+    })
+
+    it("should return empty string when element content consists only of buttons or hidden elements", () => {
+      const container = document.createElement("div")
+      container.innerHTML =
+        "<button>Click me</button><span class='hidden'>Hidden</span>"
+      expect(cleanPromptBody(container)).toBe("")
     })
   })
 })

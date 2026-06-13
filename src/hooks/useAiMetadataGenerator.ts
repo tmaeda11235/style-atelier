@@ -56,49 +56,77 @@ function useAiMetadataState() {
   return { loading, setLoading, error, setError, result, setResult }
 }
 
-export function useAiMetadataGenerator() {
-  const llm = useWebLlm()
-  const { i18n } = useTranslation()
-  const state = useAiMetadataState()
-
-  const generateMetadata = useCallback(
+function useGenerateMetadata(
+  runInference: any,
+  language: string,
+  setLoading: (l: boolean) => void,
+  setError: (e: string | null) => void,
+  setResult: (r: GeneratedMetadata | null) => void
+) {
+  return useCallback(
     async (promptText: string) => {
       if (!promptText) return null
-      state.setLoading(true)
-      state.setError(null)
-      state.setResult(null)
+      setLoading(true)
+      setError(null)
+      setResult(null)
 
       try {
-        const systemPrompt = getSystemPrompt(i18n.language)
-        const response = await llm.runInference(promptText, systemPrompt, 0.2)
+        const systemPrompt = getSystemPrompt(language)
+        const response = await runInference(promptText, systemPrompt, 0.2)
         const parsed = parseResponse(response)
-        state.setResult(parsed)
+        setResult(parsed)
         return parsed
       } catch (err: any) {
-        state.setError(err.message || "Failed to generate metadata")
+        setError(err.message || "Failed to generate metadata")
         return null
       } finally {
-        state.setLoading(false)
+        setLoading(false)
       }
     },
-    [llm.runInference, i18n.language]
+    [runInference, language, setLoading, setError, setResult]
+  )
+}
+
+export function useAiMetadataGenerator() {
+  const {
+    runInference,
+    status,
+    progress,
+    startDownload,
+    error: webLlmError,
+    speed,
+    eta,
+    retryCount,
+    maxRetries,
+    text
+  } = useWebLlm()
+  const { i18n } = useTranslation()
+  const { loading, setLoading, error, setError, result, setResult } =
+    useAiMetadataState()
+
+  const generateMetadata = useGenerateMetadata(
+    runInference,
+    i18n.language,
+    setLoading,
+    setError,
+    setResult
   )
 
   return {
-    status: llm.status,
-    progress: llm.progress,
-    startDownload: llm.startDownload,
-    loading: state.loading,
-    error: state.error,
-    webLlmError: llm.error,
-    speed: llm.speed,
-    eta: llm.eta,
-    retryCount: llm.retryCount,
-    maxRetries: llm.maxRetries,
-    text: llm.text,
-    result: state.result,
-    setResult: state.setResult,
+    status,
+    progress,
+    startDownload,
+    loading,
+    error,
+    webLlmError,
+    speed,
+    eta,
+    retryCount,
+    maxRetries,
+    text,
+    result,
+    setResult,
     generateMetadata,
-    isModelReady: llm.status === "ready"
+    isModelReady: status === "ready"
   }
 }

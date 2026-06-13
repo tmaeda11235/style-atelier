@@ -1,5 +1,4 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
-import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import {
   useHandleCardClick,
