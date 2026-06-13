@@ -52,57 +52,46 @@ function applyFilters(
   setSearchTag(result.query)
 }
 
-function useSemanticSearchEffect({
-  isAiSearch,
-  aiSearchQuery,
-  categories,
-  setRarityFilter,
-  setCategoryFilter,
-  setColorFilter,
-  setSearchTag,
-  t,
-  setIsAiSearching,
-  setAiSearchError,
-  setExtractedFilters
-}: EffectParams) {
+function useSemanticSearchEffect(params: EffectParams) {
   useEffect(() => {
-    if (!isAiSearch) return setExtractedFilters(null)
-    if (aiSearchQuery.trim() === "") {
+    if (!params.isAiSearch) return params.setExtractedFilters(null)
+    if (params.aiSearchQuery.trim() === "") {
       resetFilters(
-        setRarityFilter,
-        setCategoryFilter,
-        setColorFilter,
-        setSearchTag
+        params.setRarityFilter,
+        params.setCategoryFilter,
+        params.setColorFilter,
+        params.setSearchTag
       )
-      return setExtractedFilters(null)
+      return params.setExtractedFilters(null)
     }
     const timer = setTimeout(() => {
       executeSemanticSearch(
-        aiSearchQuery,
-        categories,
-        setExtractedFilters,
-        setRarityFilter,
-        setCategoryFilter,
-        setColorFilter,
-        setSearchTag,
-        setIsAiSearching,
-        setAiSearchError,
-        t
+        params.aiSearchQuery,
+        params.categories,
+        params.setExtractedFilters,
+        params.setRarityFilter,
+        params.setCategoryFilter,
+        params.setColorFilter,
+        params.setSearchTag,
+        params.setIsAiSearching,
+        params.setAiSearchError,
+        params.t
       )
     }, 600)
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    aiSearchQuery,
-    isAiSearch,
-    categories,
-    setCategoryFilter,
-    setColorFilter,
-    setRarityFilter,
-    setSearchTag,
-    t,
-    setIsAiSearching,
-    setAiSearchError,
-    setExtractedFilters
+    params.aiSearchQuery,
+    params.isAiSearch,
+    params.categories,
+    params.setCategoryFilter,
+    params.setColorFilter,
+    params.setRarityFilter,
+    params.setSearchTag,
+    params.t,
+    params.setIsAiSearching,
+    params.setAiSearchError,
+    params.setExtractedFilters
   ])
 }
 
@@ -150,26 +139,15 @@ export function useDebouncedSemanticSearch(
     query: string
   } | null>(null)
 
-  const {
-    aiSearchQuery,
-    isAiSearch,
-    categories,
-    setRarityFilter,
-    setCategoryFilter,
-    setColorFilter,
-    setSearchTag,
-    t
-  } = props
-
   useSemanticSearchEffect({
-    isAiSearch,
-    aiSearchQuery,
-    categories,
-    setRarityFilter,
-    setCategoryFilter,
-    setColorFilter,
-    setSearchTag,
-    t,
+    isAiSearch: props.isAiSearch,
+    aiSearchQuery: props.aiSearchQuery,
+    categories: props.categories,
+    setRarityFilter: props.setRarityFilter,
+    setCategoryFilter: props.setCategoryFilter,
+    setColorFilter: props.setColorFilter,
+    setSearchTag: props.setSearchTag,
+    t: props.t,
     setIsAiSearching,
     setAiSearchError,
     setExtractedFilters

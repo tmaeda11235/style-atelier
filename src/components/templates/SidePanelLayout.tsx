@@ -28,62 +28,44 @@ interface SidePanelLayoutProps {
 
 export function SidePanelLayout(props: SidePanelLayoutProps) {
   const { t } = useLanguage()
-  const {
-    activeTab,
-    onTabChange,
-    children,
-    isDragging,
-    logs,
-    onClearLogs,
-    onResetDb,
-    droppedItem,
-    onClearDroppedItem,
-    alertType,
-    onRetryConnection,
-    onDismissAlert,
-    onOpenGuide,
-    isDraggingFile,
-    isImporting,
-    isEasyMode
-  } = props
 
   return (
     <div
       className={`w-full h-screen flex flex-col font-sans text-slate-800 dark:text-slate-100 transition-colors ${
-        isDraggingFile
+        props.isDraggingFile
           ? "bg-blue-50 dark:bg-blue-950"
-          : isDragging
+          : props.isDragging
             ? "bg-indigo-50 dark:bg-indigo-950"
             : "bg-slate-50 dark:bg-slate-950"
       }`}>
       <ConnectionAlert
-        type={alertType || null}
-        onRetry={onRetryConnection}
-        onDismiss={onDismissAlert}
+        type={props.alertType || null}
+        onRetry={props.onRetryConnection}
+        onDismiss={props.onDismissAlert}
       />
 
       <SidePanelHeader
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        isEasyMode={isEasyMode}
-        onOpenGuide={onOpenGuide}
+        activeTab={props.activeTab}
+        onTabChange={props.onTabChange}
+        isEasyMode={props.isEasyMode}
+        onOpenGuide={props.onOpenGuide}
         t={t}
       />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 relative">
         <SidePanelOverlays
-          isDraggingFile={isDraggingFile}
-          isDragging={isDragging}
-          isImporting={isImporting}
-          droppedItem={droppedItem}
-          onClearDroppedItem={onClearDroppedItem}
+          isDraggingFile={props.isDraggingFile}
+          isDragging={props.isDragging}
+          isImporting={props.isImporting}
+          droppedItem={props.droppedItem}
+          onClearDroppedItem={props.onClearDroppedItem}
           t={t}
         />
-        {children}
+        {props.children}
         <SidePanelDebugLogs
-          logs={logs}
-          onClearLogs={onClearLogs}
-          onResetDb={onResetDb}
+          logs={props.logs}
+          onClearLogs={props.onClearLogs}
+          onResetDb={props.onResetDb}
         />
       </div>
     </div>

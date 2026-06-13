@@ -12,11 +12,7 @@ interface UsePromptInputProps {
   onRemoveLastSegment: () => void
 }
 
-export const usePromptInput = ({
-  segments,
-  onAddSegment,
-  onRemoveLastSegment
-}: UsePromptInputProps) => {
+export const usePromptInput = (props: UsePromptInputProps) => {
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -31,7 +27,7 @@ export const usePromptInput = ({
       .map((value) => ({ type: "text", value }))
 
     if (newTokens.length > 0) {
-      onAddSegment(newTokens)
+      props.onAddSegment(newTokens)
     }
     setInputValue("")
   }
@@ -43,22 +39,14 @@ export const usePromptInput = ({
     } else if (
       e.key === "Backspace" &&
       inputValue === "" &&
-      segments.length > 0
+      props.segments.length > 0
     ) {
-      e.preventDefault() // Prevents default browser back navigation
-      onRemoveLastSegment()
+      e.preventDefault()
+      props.onRemoveLastSegment()
     } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
       e.preventDefault()
       addTokensFromInput()
     }
-  }
-
-  const handleBlur = () => {
-    addTokensFromInput()
-  }
-
-  const focusInput = () => {
-    inputRef.current?.focus()
   }
 
   return {
@@ -66,7 +54,7 @@ export const usePromptInput = ({
     setInputValue,
     inputRef,
     handleKeyDown,
-    handleBlur,
-    focusInput
+    handleBlur: addTokensFromInput,
+    focusInput: () => inputRef.current?.focus()
   }
 }
