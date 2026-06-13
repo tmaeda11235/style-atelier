@@ -4,8 +4,9 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'memory-bank/marketingStrategy.md'
-
+      - '**/*.md'
+      - 'docs/**'
+      - 'memory-bank/**'
 permissions:
   contents: read
 
