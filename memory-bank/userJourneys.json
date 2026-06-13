@@ -13,7 +13,9 @@
         "@J-ORG-EXPERT-01",
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/MintingView.tsx"
+      ]
     },
     {
       "id": "@J-MINT-EASY-01",
@@ -27,7 +29,9 @@
         "@J-ORG-EASY-01",
         "@J-WB-EASY-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/SimpleMintingView.tsx"
+      ]
     },
     {
       "id": "@J-ORG-EXPERT-01",
@@ -50,7 +54,10 @@
         "@J-ORG-FOLDER-01",
         "@J-ORG-QUICK-SEND-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
+        "src/components/organisms/CardsGrid.tsx"
+      ]
     },
     {
       "id": "@J-ORG-EXPERT-02",
@@ -65,7 +72,9 @@
         "@J-ORG-EXPERT-01",
         "@J-ORG-FOLDER-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/CategoryManagerModal.tsx"
+      ]
     },
     {
       "id": "@J-ORG-EASY-01",
@@ -81,7 +90,9 @@
         "@J-ORG-COLOR-FILTER-01",
         "@J-ORG-QUICK-SEND-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/EasyModeView.tsx"
+      ]
     },
     {
       "id": "@J-ORG-COLOR-FILTER-01",
@@ -96,7 +107,9 @@
       "nextJourneys": [
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LibraryFilterAccordion.tsx"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-01",
@@ -114,7 +127,10 @@
         "@J-WB-EXPERT-05",
         "@J-WB-EMPTY-CAULDRON-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/Workbench.tsx",
+        "src/components/organisms/WorkbenchView.tsx"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-02",
@@ -134,7 +150,9 @@
         "@J-WB-MIXING-INTELLIGENT-01",
         "@J-WB-AI-ADVICE-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/HandBar.tsx"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-03",
@@ -147,7 +165,9 @@
       "nextJourneys": [
         "@J-MINT-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/Workbench.tsx"
+      ]
     },
     {
       "id": "@J-WB-EASY-01",
@@ -162,7 +182,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/SimpleWorkbenchModal.tsx"
+      ]
     },
     {
       "id": "@J-IO-QR-OUT",
@@ -174,7 +196,9 @@
         "QRコード表示"
       ],
       "nextJourneys": [],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/ShareCardModal.tsx"
+      ]
     },
     {
       "id": "@J-IO-QR-IN",
@@ -189,7 +213,9 @@
         "@J-ORG-EXPERT-01",
         "@J-ORG-EASY-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx"
+      ]
     },
     {
       "id": "@J-IO-BACKUP",
@@ -203,7 +229,9 @@
       "nextJourneys": [
         "@J-SET-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LocalBackupSection.tsx"
+      ]
     },
     {
       "id": "@J-IO-RESTORE",
@@ -218,7 +246,9 @@
       "nextJourneys": [
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LocalBackupSection.tsx"
+      ]
     },
     {
       "id": "@J-SYS-01",
@@ -232,7 +262,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/HistoryTab.tsx"
+      ]
     },
     {
       "id": "@J-SYS-02",
@@ -247,7 +279,9 @@
         "@J-WB-EXPERT-01",
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/ExpertModeView.tsx"
+      ]
     },
     {
       "id": "@J-SYS-03",
@@ -259,7 +293,9 @@
         "非表示にする"
       ],
       "nextJourneys": [],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/TipsBar.tsx"
+      ]
     },
     {
       "id": "@J-SYS-04",
@@ -272,7 +308,9 @@
       "nextJourneys": [
         "@J-SET-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/UiPreferencesSection.tsx"
+      ]
     },
     {
       "id": "@J-SET-01",
@@ -288,7 +326,9 @@
         "@J-IO-RESTORE",
         "@J-SYS-04"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/SettingsTab.tsx"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-04",
@@ -302,7 +342,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/SlotVariablesSection.tsx"
+      ]
     },
     {
       "id": "@J-ORG-SEARCH-01",
@@ -319,7 +361,9 @@
         "@J-ORG-EXPERT-01",
         "@J-ORG-SEMANTIC-SEARCH-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LibrarySearchBar.tsx"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-05",
@@ -339,7 +383,9 @@
         "@J-WB-EXPERT-01",
         "@J-WB-EXPERT-02"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/HandBar.tsx"
+      ]
     },
     {
       "id": "@J-TUTORIAL-01",
@@ -354,7 +400,10 @@
         "@J-MINT-EXPERT-01",
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/InteractiveTutorial.tsx",
+        "src/components/organisms/OnboardingGuide.tsx"
+      ]
     },
     {
       "id": "@J-IO-MJ-DRAG-IN",
@@ -369,7 +418,9 @@
         "@J-SYS-01",
         "@J-MINT-EASY-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/pages/SidePanel.tsx"
+      ]
     },
     {
       "id": "@J-MINT-COLOR-FALLBACK",
@@ -384,7 +435,9 @@
       "nextJourneys": [
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/MintingView.tsx"
+      ]
     },
     {
       "id": "@J-ORG-VERSION-01",
@@ -400,7 +453,9 @@
       "nextJourneys": [
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/CardDetailView.tsx"
+      ]
     },
     {
       "id": "@J-WB-MIXING-WEIGHTS-01",
@@ -413,7 +468,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-03"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/Cauldron.tsx"
+      ]
     },
     {
       "id": "@J-WB-PORTION-EXTRACT-01",
@@ -426,7 +483,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/PortionExtractorOverlay.tsx"
+      ]
     },
     {
       "id": "@J-IO-CSV",
@@ -440,7 +499,9 @@
       "nextJourneys": [
         "@J-SET-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LocalBackupSection.tsx"
+      ]
     },
     {
       "id": "@J-IO-MD",
@@ -454,7 +515,9 @@
       "nextJourneys": [
         "@J-SET-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LocalBackupSection.tsx"
+      ]
     },
     {
       "id": "@J-WB-ATELIER-EFFECTS-01",
@@ -469,7 +532,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/EvolutionSuccessModal.tsx"
+      ]
     },
     {
       "id": "@J-ORG-FOLDER-01",
@@ -485,7 +550,9 @@
       "nextJourneys": [
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/FolderExplorer.tsx"
+      ]
     },
     {
       "id": "@J-ORGAN-UX-PARAM-01",
@@ -502,7 +569,9 @@
         "@J-WB-EXPERT-01",
         "@J-ORG-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/ParameterEditor.tsx"
+      ]
     },
     {
       "id": "@J-WB-MIXING-INTELLIGENT-01",
@@ -515,7 +584,9 @@
       "nextJourneys": [
         "@J-WB-EXPERT-03"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/Cauldron.tsx"
+      ]
     },
     {
       "id": "@J-ORG-QUICK-SEND-01",
@@ -530,7 +601,9 @@
         "@J-WB-EXPERT-01",
         "@J-WB-EASY-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/CardsGrid.tsx"
+      ]
     },
     {
       "id": "@J-ORG-SEMANTIC-SEARCH-01",
@@ -546,7 +619,9 @@
         "@J-ORG-EXPERT-01",
         "@J-ORG-SEARCH-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/LibrarySearchBar.tsx"
+      ]
     },
     {
       "id": "@J-WB-AI-ADVICE-01",
@@ -562,7 +637,9 @@
         "@J-WB-EXPERT-01",
         "@J-WB-EXPERT-03"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/AiRecipeAdviceSection.tsx"
+      ]
     },
     {
       "id": "@J-ORG-CARD-TOOLTIP-01",
@@ -579,7 +656,9 @@
         "@J-ORG-EXPERT-01",
         "@J-ORG-QUICK-SEND-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/CardsGrid.tsx"
+      ]
     },
     {
       "id": "@J-WB-EMPTY-CAULDRON-01",
@@ -596,7 +675,9 @@
         "@J-WB-EXPERT-02",
         "@J-WB-EXPERT-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/components/organisms/WorkbenchEmptyState.tsx"
+      ]
     },
     {
       "id": "@J-UX-RESILIENCE-01",
@@ -613,7 +694,9 @@
         "@J-WB-EXPERT-01",
         "@J-SET-01"
       ],
-      "viewComponents": []
+      "viewComponents": [
+        "src/pages/SidePanel.tsx"
+      ]
     }
   ]
 }
