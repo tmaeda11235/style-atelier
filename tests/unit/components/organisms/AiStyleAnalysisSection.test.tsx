@@ -27,6 +27,9 @@ vi.mock("@/contexts/LanguageContext", () => ({
       settings: {
         webLlmStatusDownloading: "Downloading ({{progress}}%)",
         webLlmDownloadBtn: "Download Model"
+      },
+      aiStyleAnalysis: {
+        genreLabel: "Genre:"
       }
     }
   })

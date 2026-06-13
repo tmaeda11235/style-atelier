@@ -86,17 +86,19 @@ export function RaritySortFilters({
   )
 }
 
-interface CategoryFilterButtonProps {
-  cat: { id: string; name: string; iconUrl?: string; iconEmoji?: string }
-  isSelected: boolean
-  onClick: () => void
-}
-
 export function CategoryFilterButton({
   cat,
   isSelected,
   onClick
-}: CategoryFilterButtonProps) {
+}: {
+  cat: { id: string; name: string; iconUrl?: string; iconEmoji?: string }
+  isSelected: boolean
+  onClick: () => void
+}) {
+  const { t } = useLanguage()
+  const displayName =
+    (t.defaultCategories as Record<string, string>)[cat.id] || cat.name
+
   return (
     <button
       onClick={onClick}
@@ -109,14 +111,14 @@ export function CategoryFilterButton({
         <img
           src={cat.iconUrl}
           className="w-3.5 h-3.5 rounded-full object-cover border border-white/20"
-          alt={cat.name}
+          alt={displayName}
         />
       ) : (
         <span className="text-[11px] leading-none">
           {cat.iconEmoji || "🖼️"}
         </span>
       )}
-      <span>{cat.name}</span>
+      <span>{displayName}</span>
     </button>
   )
 }

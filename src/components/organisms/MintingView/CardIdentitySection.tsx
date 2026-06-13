@@ -134,7 +134,9 @@ function CategorySelectorBox({
         <option value="">{t.minting.noCategory}</option>
         {categoriesList.map((cat) => (
           <option key={cat.id} value={cat.id}>
-            {cat.iconEmoji || DEFAULT_CATEGORY_ICON} {cat.name}
+            {cat.iconEmoji || DEFAULT_CATEGORY_ICON}{" "}
+            {(t.defaultCategories as Record<string, string>)[cat.id] ||
+              cat.name}
           </option>
         ))}
       </select>
