@@ -1,4 +1,5 @@
 import { execSync } from "child_process"
+import path from "path"
 import { defineConfig, devices } from "@playwright/test"
 
 const getFreePort = () => {
@@ -58,6 +59,20 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1920, height: 1080 }
+      }
+    },
+    {
+      name: "extension",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1920, height: 1080 },
+        headless: false,
+        args: [
+          `--disable-extensions-except=${path.resolve(__dirname, "build/chrome-mv3-prod")}`,
+          `--load-extension=${path.resolve(__dirname, "build/chrome-mv3-prod")}`,
+          "--no-sandbox",
+          "--disable-setuid-sandbox"
+        ]
       }
     }
   ],
