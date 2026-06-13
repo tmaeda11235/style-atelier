@@ -81,6 +81,7 @@ export function ExpertModeView({
     isDraggingFile,
     isImporting,
     droppedItem,
+    clearDroppedItem,
     handleDragOver,
     handleDragLeave,
     handleDrop,
@@ -122,6 +123,7 @@ export function ExpertModeView({
         onClearLogs={handleClearLogs}
         onResetDb={handleResetDb}
         droppedItem={droppedItem}
+        onClearDroppedItem={clearDroppedItem}
         alertType={alertType}
         onRetryConnection={handleRetryConnection}
         onDismissAlert={handleDismissAlert}

@@ -265,7 +265,12 @@
     "importing": "Importing Card...",
     "importSuccess": "Imported Card \"{name}\" successfully!",
     "associated": "Associated with Card \"{name}\"!",
-    "historyAdded": "New History Item Added!"
+    "historyAdded": "New History Item Added!",
+    "errorNoMetadataReason": "We couldn't find style information (metadata or QR code) in the uploaded image. This often happens if the image was compressed or stripped of metadata when shared online.",
+    "errorNoMetadataActionTitle": "3 steps to resolve this:",
+    "errorNoMetadataStep1": "Import the original image: Please drop the original, uncompressed PNG file directly from its source (not saved from social media).",
+    "errorNoMetadataStep2": "Crop and upload the QR code: Try cropping just the QR code portion of the image and dropping it here.",
+    "errorNoMetadataStep3": "Create the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to create a new card."
   },
   "share": {
     "shareTitle": "Share Style Card",

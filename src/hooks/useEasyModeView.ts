@@ -113,6 +113,7 @@ export function useEasyModeView({
     isDraggingFile,
     isImporting,
     droppedItem,
+    clearDroppedItem,
     handleDragOver,
     handleDragLeave,
     handleDrop: rawHandleDrop
@@ -184,6 +185,7 @@ export function useEasyModeView({
     isDraggingFile,
     isImporting,
     droppedItem,
+    clearDroppedItem,
     handleDragOver,
     handleDragLeave,
     handleDrop,

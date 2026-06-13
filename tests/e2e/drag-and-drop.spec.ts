@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -514,10 +513,32 @@ test.describe("Style Atelier Sandbox E2E Tests - Drag and Drop @J-WB-EXPERT-02",
       .first()
     await expect(errorNotification).toBeVisible({ timeout: 15000 })
 
+    // Verify detailed recovery guide is visible
+    console.log("Checking for recovery guide elements...")
+    const recoveryGuideTitle = spFrame
+      .locator("text=/3 steps to resolve this.*|解決のための3つのステップ.*/")
+      .first()
+    await expect(recoveryGuideTitle).toBeVisible({ timeout: 5000 })
+
+    const olList = spFrame.locator("ol")
+    await expect(olList).toBeVisible()
+    const steps = olList.locator("li")
+    await expect(steps).toHaveCount(3)
+
     // 4. Capture screenshot of the error toast for PR evidence
     await page.screenshot({
       path: path.join(screenshotsDir, "drag-and-drop-no-qr-error.png")
     })
+
+    // 5. Dismiss the notification and verify it is hidden
+    console.log("Clicking the dismiss button...")
+    const dismissBtn = spFrame.locator("#dismiss-import-notification-btn")
+    await expect(dismissBtn).toBeVisible()
+    await dismissBtn.click()
+
+    // The notification should disappear
+    await expect(errorNotification).not.toBeVisible({ timeout: 5000 })
+
     console.log("Invalid QR image E2E test passed successfully!")
   })
 })

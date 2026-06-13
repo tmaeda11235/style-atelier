@@ -34,6 +34,7 @@ export function EasyModeView({
     isDraggingFile,
     isImporting,
     droppedItem,
+    clearDroppedItem,
     handleDragOver,
     handleDragLeave,
     handleDrop,
@@ -73,6 +74,7 @@ export function EasyModeView({
         onClearLogs={handleClearLogs}
         onResetDb={handleResetDb}
         droppedItem={droppedItem}
+        onClearDroppedItem={clearDroppedItem}
         alertType={alertType}
         onRetryConnection={handleRetryConnection}
         onDismissAlert={handleDismissAlert}
