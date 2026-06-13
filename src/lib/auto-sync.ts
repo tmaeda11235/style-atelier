@@ -49,6 +49,11 @@ export function setAutoSyncEnabled(enabled: boolean) {
     "style-atelier-auto-sync-enabled",
     enabled ? "true" : "false"
   )
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("style-atelier-auto-sync-toggled", { detail: enabled })
+    )
+  }
   if (enabled) {
     startPolling()
   } else {
