@@ -92,6 +92,27 @@ describe("storage-utils", () => {
       })
     })
 
+    it("should estimate successfully in worker context (window undefined)", async () => {
+      vi.stubGlobal("window", undefined)
+      const mockEstimate = vi
+        .fn()
+        .mockResolvedValue({ usage: 1024, quota: 4096 })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { estimate: mockEstimate } },
+        writable: true,
+        configurable: true
+      })
+
+      const res = await getStorageEstimate()
+      expect(res).toEqual({
+        usage: 1024,
+        quota: 4096,
+        percentage: 25,
+        usageFormatted: "1.0 KB",
+        quotaFormatted: "4.0 KB"
+      })
+    })
+
     it("should handle zero or undefined values gracefully", async () => {
       const mockEstimate = vi
         .fn()
@@ -178,8 +199,8 @@ describe("storage-utils", () => {
   })
 
   describe("verifyCacheIntegrity", () => {
-    it("should return true if caches is not in window", async () => {
-      vi.stubGlobal("window", {})
+    it("should return true if caches is undefined", async () => {
+      vi.stubGlobal("caches", undefined)
       const res = await verifyCacheIntegrity("test-cache", [])
       expect(res).toBe(true)
     })
@@ -194,7 +215,28 @@ describe("storage-utils", () => {
       const mockCaches = {
         open: vi.fn().mockResolvedValue(mockCache)
       }
-      vi.stubGlobal("window", { caches: mockCaches })
+      vi.stubGlobal("caches", mockCaches)
+
+      const res = await verifyCacheIntegrity("test-cache", [
+        { url: "file1.bin", size: 100 }
+      ])
+      expect(res).toBe(true)
+      expect(mockCache.match).toHaveBeenCalledWith("file1.bin")
+      expect(mockCache.delete).not.toHaveBeenCalled()
+    })
+
+    it("should verify successfully in worker context (window undefined, caches defined)", async () => {
+      vi.stubGlobal("window", undefined)
+      const mockBlob = { size: 100 }
+      const mockResponse = { blob: vi.fn().mockResolvedValue(mockBlob) }
+      const mockCache = {
+        match: vi.fn().mockResolvedValue(mockResponse),
+        delete: vi.fn()
+      }
+      const mockCaches = {
+        open: vi.fn().mockResolvedValue(mockCache)
+      }
+      vi.stubGlobal("caches", mockCaches)
 
       const res = await verifyCacheIntegrity("test-cache", [
         { url: "file1.bin", size: 100 }
@@ -214,7 +256,7 @@ describe("storage-utils", () => {
       const mockCaches = {
         open: vi.fn().mockResolvedValue(mockCache)
       }
-      vi.stubGlobal("window", { caches: mockCaches })
+      vi.stubGlobal("caches", mockCaches)
 
       const res = await verifyCacheIntegrity("test-cache", [
         { url: "file1.bin", size: 100 }
@@ -231,7 +273,7 @@ describe("storage-utils", () => {
       const mockCaches = {
         open: vi.fn().mockResolvedValue(mockCache)
       }
-      vi.stubGlobal("window", { caches: mockCaches })
+      vi.stubGlobal("caches", mockCaches)
 
       const res = await verifyCacheIntegrity("test-cache", [
         { url: "file1.bin", size: 100 }
