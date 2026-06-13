@@ -132,19 +132,25 @@ To ensure the Side Panel is fully functional at extremely narrow widths (minimum
 Developers must adhere to the following design and coding patterns to guarantee responsive visual stability in the side panel context:
 
 #### 1. Container Queries usage over Viewport Queries
+
 Since the side panel itself can be resized by the user, media queries based on viewport width (`@media`) may not accurately reflect the available space within individual components. Use **CSS Container Queries** (`@container`) instead:
+
 - **Container Definition**: Set `container-type: inline-size` on the parent wrapper (e.g., `.editor-container`, `.card-thumbnail-container`).
 - **Standard Breakpoints**:
   - **Width < 280px**: Collapse buttons by hiding labels and only showing icons (`.responsive-btn-text` hidden). Enable tooltips on hover (`.responsive-btn-tooltip`).
   - **Width < 150px**: Highly constrained width, such as individual cards. Hide complex operations/menus (`.hide-on-narrow`) and show simplified actions or fallback icons (`.show-on-narrow`).
 
 #### 2. Action Folding & Popup Menus
+
 When space is restricted:
+
 - **Text-to-Icon Transition**: Dynamically hide button text using `.responsive-btn-text` inside `@container` blocks while maintaining the icon and wrapping it in a container that supports standard tooltips.
 - **"More" Action Popovers**: Rather than showing 3 or more action buttons horizontally on narrow rows, group secondary actions into a single `More` action menu (e.g., using a vertical ellipsis icon) that triggers a lightweight popover or dropdown. This reduces visual clutter and prevents horizontal overflow.
 
 #### 3. Tap Target Size Constraints (Accessibility)
+
 To prevent accidental clicks and accommodate diverse user input devices:
+
 - **Minimum Click Area**: Interactive elements (buttons, inputs, select fields, links) must maintain a minimum target area of **32px x 32px** (ideally **44px x 44px**) on narrow layouts.
 - **Padding Buffer**: For links or smaller icons that need to look compact, increase their clickable boundaries using parent padding or absolute positioning of a transparent pseudo-element (`::before`/`::after` overlay with negative offsets) to expand the hit zone without changing the visual flow.
 

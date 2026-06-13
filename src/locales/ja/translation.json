@@ -610,6 +610,12 @@
     "enterFolderName": "新しいフォルダ名を入力",
     "enterAliasNamePlaceholder": "マイカスタムスタイル"
   },
+  "exportSuccessModal": {
+    "title": "カードをエクスポートしました！",
+    "message": "エクスポートされたカード画像にはプロンプトのメタデータが埋め込まれています。\n他のStyle Atelierユーザーがこの画像をそのまま読み込んでインポートすることができます。",
+    "shareText": "X (Twitter) で共有する",
+    "closeText": "閉じる"
+  },
   "historyCard": {
     "mintButton": "カード化 (Mint)"
   },

@@ -167,7 +167,12 @@ describe("ParameterArrayEditor", () => {
 
   it("handles different parameterTypes and missing thumbnailData", () => {
     const mockStyleCards = [
-      { id: "1", name: "Card 1", parameters: { p: ["val_p"] }, thumbnailData: "data:image/png;base64,xxx" },
+      {
+        id: "1",
+        name: "Card 1",
+        parameters: { p: ["val_p"] },
+        thumbnailData: "data:image/png;base64,xxx"
+      },
       { id: "2", name: "Card 2", parameters: { cref: ["val_cref"] } }, // no thumbnail
       { id: "3", name: "Card 3", parameters: { imagePrompts: ["val_img"] } }
     ] as any

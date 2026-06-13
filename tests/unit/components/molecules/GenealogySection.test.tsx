@@ -91,7 +91,10 @@ describe("GenealogySection", () => {
   })
 
   it("handles empty parentIds gracefully", () => {
-    const cardWithoutParents = { ...mockCard, genealogy: { generation: 1, parentIds: [] } }
+    const cardWithoutParents = {
+      ...mockCard,
+      genealogy: { generation: 1, parentIds: [] }
+    }
     const { container } = render(
       <GenealogySection card={cardWithoutParents} parents={[]} />
     )
@@ -101,10 +104,7 @@ describe("GenealogySection", () => {
   it("handles parent without thumbnailData", () => {
     const parentWithoutThumb = { ...mockParentCard, thumbnailData: undefined }
     render(
-      <GenealogySection
-        card={mockCard}
-        parents={[parentWithoutThumb, null]}
-      />
+      <GenealogySection card={mockCard} parents={[parentWithoutThumb, null]} />
     )
     expect(screen.getByText("🎨")).toBeInTheDocument()
   })
