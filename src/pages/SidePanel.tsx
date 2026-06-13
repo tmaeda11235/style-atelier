@@ -2,7 +2,6 @@ import React, { useEffect } from "react"
 
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
-import { NonTargetSiteView } from "../components/organisms/NonTargetSiteView"
 import { ConfirmProvider } from "../contexts/ConfirmContext"
 import { LanguageProvider } from "../contexts/LanguageContext"
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
@@ -45,21 +44,21 @@ function SidePanelInner() {
     return <div className="w-full h-screen bg-slate-950" />
   }
 
-  if (!isTargetSite) {
-    return <NonTargetSiteView onOpenMidjourney={handleOpenMidjourney} />
-  }
-
   return (
     <WorkbenchProvider>
       {isEasyMode ? (
         <EasyModeView
           isEasyMode={isEasyMode}
           onToggleEasyMode={handleToggleEasyMode}
+          isTargetSite={isTargetSite}
+          onOpenMidjourney={handleOpenMidjourney}
         />
       ) : (
         <ExpertModeView
           isEasyMode={isEasyMode}
           onToggleEasyMode={handleToggleEasyMode}
+          isTargetSite={isTargetSite}
+          onOpenMidjourney={handleOpenMidjourney}
         />
       )}
     </WorkbenchProvider>

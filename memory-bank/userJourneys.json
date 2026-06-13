@@ -490,6 +490,23 @@
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01", "@J-SET-01"],
       "viewComponents": ["src/pages/SidePanel.tsx"]
+    },
+    {
+      "id": "@J-UX-NON-TARGET-01",
+      "name": "非対象サイトでの機能制限緩和",
+      "description": "非対象サイト（Non-target site）でも、設定タブおよびライブラリタブへアクセスでき、他の対象サイト限定タブを選択した際は適切な警告を表示する",
+      "steps": [
+        "非対象サイトで拡張機能のサイドパネルを開く",
+        "設定タブを通常通り開いて操作（Easy Modeのトグルなど）できるのを確認する",
+        "かんたん・エキスパートの各モードで、対象サイト限定タブ（ライブラリ、ワークベンチ、履歴など）にアクセスした際、NonTargetSiteViewの警告が表示されることを確認する"
+      ],
+      "nextJourneys": ["@J-SET-01", "@J-ORG-EXPERT-01", "@J-ORG-EASY-01"],
+      "viewComponents": [
+        "src/pages/SidePanel.tsx",
+        "src/components/organisms/NonTargetSiteView.tsx",
+        "src/components/organisms/EasyModeView.tsx",
+        "src/components/organisms/ExpertModeView.tsx"
+      ]
     }
   ]
 }
