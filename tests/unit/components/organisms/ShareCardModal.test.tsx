@@ -83,10 +83,7 @@ describe("ShareCardModal", () => {
       expect(mockClipboardWrite).toHaveBeenCalled()
     })
 
-    expect(renderCardToCanvas).toHaveBeenCalledWith(mockCard, {
-      includeBrandLogo: true,
-      brandLogoText: "Minted with Style Atelier 🔮"
-    })
+    expect(renderCardToCanvas).toHaveBeenCalledWith(mockCard)
     expect(defaultProps.addLog).toHaveBeenCalledWith(
       'Copied card "Neon Dragon" to clipboard.'
     )
@@ -124,10 +121,7 @@ describe("ShareCardModal", () => {
       fireEvent.click(downloadButton)
     })
 
-    expect(exportCardAsImage).toHaveBeenCalledWith(mockCard, {
-      includeBrandLogo: true,
-      brandLogoText: "Minted with Style Atelier 🔮"
-    })
+    expect(exportCardAsImage).toHaveBeenCalledWith(mockCard)
     expect(defaultProps.addLog).toHaveBeenCalledWith(
       'Downloaded card "Neon Dragon" as PNG.'
     )
