@@ -37,10 +37,7 @@ fi
 echo "Running Linting..."
 npm run lint || { echo "Linting failed. Push aborted."; exit 1; }
 
-echo "Running Unit Tests with Coverage..."
-npx vitest run --coverage || { echo "Unit Tests or Coverage failed. Push aborted."; exit 1; }
-
-echo "Running E2E Tests..."
-npm run test:e2e || { echo "E2E Tests failed. Push aborted."; exit 1; }
+echo "Running Smart Incremental Tests (UT & E2E)..."
+node scripts/smart-pre-push.mjs || { echo "Smart Tests failed. Push aborted."; exit 1; }
 
 echo "All checks passed. Proceeding with push."

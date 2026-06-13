@@ -46,6 +46,8 @@ jobs:
   unit-and-build:
     needs: setup
     runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.verify_proof.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
 
@@ -67,7 +69,20 @@ jobs:
       - name: Verify ESLint Whitelist has not grown
         run: node scratch/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
 
+      - name: Verify Proof of Work
+        id: verify_proof
+        env:
+          PRIVATE_KEY: ${{ secrets.INCREMENTAL_TEST_PRIVATE_KEY }}
+        run: |
+          if [ -f artifacts/test-proof.enc ]; then
+            node scripts/verify-test-proof.mjs && echo "skip=true" >> $GITHUB_OUTPUT || echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
       - name: Run unit tests with coverage
+        if: steps.verify_proof.outputs.skip != 'true'
         run: npm test -- --coverage
 
       - name: Build extension
@@ -128,6 +143,7 @@ jobs:
           bash -c 'while true; do date; echo "=== RAM ==="; free -m; echo "=== CPU ==="; top -b -n 1 | head -n 15; echo "-------------------"; sleep 5; done' > system_metrics.log &
 
       - name: Run E2E tests
+        if: needs.unit-and-build.outputs.skip != 'true'
         run: npm run test:e2e -- --reporter=html
 
       - name: Upload System Metrics
