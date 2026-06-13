@@ -38,8 +38,103 @@ function generatePrompts(cards: any[], lang: string): PromptInfo {
   return { systemPrompt, userPrompt }
 }
 
+interface FetchAdviceParams {
+  cards: any[]
+  lang: string
+  key: string
+  setAdvice: React.Dispatch<React.SetStateAction<string | null>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  cacheRef: React.MutableRefObject<Record<string, string>>
+  runInferenceRef: React.MutableRefObject<
+    (prompt: string, systemPrompt?: string, temp?: number) => Promise<string>
+  >
+  isMounted: () => boolean
+}
+
+async function fetchAdviceHelper(params: FetchAdviceParams) {
+  const {
+    cards,
+    lang,
+    key,
+    setAdvice,
+    setError,
+    setLoading,
+    cacheRef,
+    runInferenceRef,
+    isMounted
+  } = params
+
+  setLoading(true)
+  setError(null)
+  const { systemPrompt, userPrompt } = generatePrompts(cards, lang)
+  try {
+    const res = await runInferenceRef.current(userPrompt, systemPrompt, 0.7)
+    if (isMounted()) {
+      cacheRef.current[key] = res
+      setAdvice(res)
+    }
+  } catch (err: any) {
+    if (isMounted()) setError(err.message || "Failed to generate advice")
+  } finally {
+    if (isMounted()) setLoading(false)
+  }
+}
+
+function checkAdviceCache(props: RecipeAdviceFetchProps): boolean {
+  const { cards, status, key, cacheRef, setAdvice, setError, setLoading } =
+    props
+  if (cards.length < 2 || status !== "ready") {
+    setAdvice(null)
+    setError(null)
+    setLoading(false)
+    return true
+  }
+  if (cacheRef.current[key]) {
+    setAdvice(cacheRef.current[key])
+    setError(null)
+    setLoading(false)
+    return true
+  }
+  return false
+}
+
+interface RecipeAdviceFetchProps {
+  cards: any[]
+  key: string
+  status: string
+  lang: string
+  setAdvice: React.Dispatch<React.SetStateAction<string | null>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  cacheRef: React.MutableRefObject<Record<string, string>>
+  runInferenceRef: React.MutableRefObject<
+    (prompt: string, systemPrompt?: string, temp?: number) => Promise<string>
+  >
+}
+
+function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
+  useEffect(() => {
+    if (checkAdviceCache(props)) {
+      return
+    }
+    let mounted = true
+    const isMounted = () => mounted
+    const timer = setTimeout(() => {
+      fetchAdviceHelper({
+        ...props,
+        isMounted
+      })
+    }, 500)
+    return () => {
+      mounted = false
+      clearTimeout(timer)
+    }
+  }, [props])
+}
+
 export function useAiRecipeAdvice(cards: any[]) {
-  const { status, runInference } = useWebLlm()
+  const { status, runInference, isEngineInitializing } = useWebLlm()
   const { i18n } = useTranslation()
   const [advice, setAdvice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -53,42 +148,24 @@ export function useAiRecipeAdvice(cards: any[]) {
 
   const key = getCombinationKey(cards)
 
-  useEffect(() => {
-    if (cards.length < 2 || status !== "ready") {
-      setAdvice(null)
-      setError(null)
-      setLoading(false)
-      return
-    }
-    if (cacheRef.current[key]) {
-      setAdvice(cacheRef.current[key])
-      setError(null)
-      setLoading(false)
-      return
-    }
-    let isMounted = true
-    const fetchAdvice = async () => {
-      setLoading(true)
-      setError(null)
-      const { systemPrompt, userPrompt } = generatePrompts(cards, i18n.language)
-      try {
-        const res = await runInferenceRef.current(userPrompt, systemPrompt, 0.7)
-        if (isMounted) {
-          cacheRef.current[key] = res
-          setAdvice(res)
-        }
-      } catch (err: any) {
-        if (isMounted) setError(err.message || "Failed to generate advice")
-      } finally {
-        if (isMounted) setLoading(false)
-      }
-    }
-    const timer = setTimeout(fetchAdvice, 500)
-    return () => {
-      isMounted = false
-      clearTimeout(timer)
-    }
-  }, [cards, key, status, i18n.language])
+  useAiRecipeAdviceFetch({
+    cards,
+    key,
+    status,
+    lang: i18n.language,
+    setAdvice,
+    setError,
+    setLoading,
+    cacheRef,
+    runInferenceRef
+  })
 
-  return { advice, loading, error, isModelReady: status === "ready", status }
+  return {
+    advice,
+    loading,
+    error,
+    isModelReady: status === "ready",
+    status,
+    isEngineInitializing
+  }
 }

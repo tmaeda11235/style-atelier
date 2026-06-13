@@ -134,6 +134,7 @@ interface AiReadySectionProps {
   promptText: string
   generateMetadata: (prompt: string) => void
   loading: boolean
+  isEngineInitializing?: boolean
   error: string | null
   result: any
   customTags: string[]
@@ -146,6 +147,7 @@ function AiReadySection({
   promptText,
   generateMetadata,
   loading,
+  isEngineInitializing,
   error,
   result,
   customTags,
@@ -153,6 +155,12 @@ function AiReadySection({
   handleApplySummary,
   t
 }: AiReadySectionProps) {
+  const buttonText = loading
+    ? isEngineInitializing
+      ? t.minting.aiInitializing || "Initializing AI..."
+      : t.minting.aiAnalysisLoading
+    : t.minting.aiAnalysisBtn
+
   return (
     <div className="space-y-4">
       <Button
@@ -161,7 +169,7 @@ function AiReadySection({
         disabled={loading}
         className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white flex items-center justify-center gap-2 py-2 shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition-all font-semibold">
         <Sparkles className="w-4 h-4" />
-        {loading ? t.minting.aiAnalysisLoading : t.minting.aiAnalysisBtn}
+        {buttonText}
       </Button>
 
       {error && (
@@ -252,6 +260,7 @@ export function AiStyleAnalysisSection({
           promptText={promptText}
           generateMetadata={gen.generateMetadata}
           loading={gen.loading}
+          isEngineInitializing={gen.isEngineInitializing}
           error={gen.error}
           result={gen.result}
           customTags={customTags}

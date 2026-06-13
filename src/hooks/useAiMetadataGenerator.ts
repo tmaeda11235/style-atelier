@@ -49,56 +49,52 @@ function getSystemPrompt(language: string): string {
     : 'You are an AI assistant that analyzes Midjourney prompts. Analyze the art style and output its artistic genre/style (genre), English tags (tags, up to 5 elements), and a concise summary (summary) in the following JSON format. Output ONLY pure JSON.\n\nFormat:\n{\n  "genre": "genre name",\n  "tags": ["tag1", "tag2"],\n  "summary": "concise English summary"\n}'
 }
 
-function useAiMetadataState() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<GeneratedMetadata | null>(null)
-  return { loading, setLoading, error, setError, result, setResult }
-}
-
 export function useAiMetadataGenerator() {
   const llm = useWebLlm()
   const { i18n } = useTranslation()
-  const state = useAiMetadataState()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<GeneratedMetadata | null>(null)
 
   const generateMetadata = useCallback(
     async (promptText: string) => {
       if (!promptText) return null
-      state.setLoading(true)
-      state.setError(null)
-      state.setResult(null)
+      setLoading(true)
+      setError(null)
+      setResult(null)
 
       try {
         const systemPrompt = getSystemPrompt(i18n.language)
         const response = await llm.runInference(promptText, systemPrompt, 0.2)
         const parsed = parseResponse(response)
-        state.setResult(parsed)
+        setResult(parsed)
         return parsed
       } catch (err: any) {
-        state.setError(err.message || "Failed to generate metadata")
+        setError(err.message || "Failed to generate metadata")
         return null
       } finally {
-        state.setLoading(false)
+        setLoading(false)
       }
     },
-    [llm.runInference, i18n.language]
+    [llm, i18n.language]
   )
 
   return {
     status: llm.status,
     progress: llm.progress,
     startDownload: llm.startDownload,
-    loading: state.loading,
-    error: state.error,
+    loading,
+    error,
     webLlmError: llm.error,
     speed: llm.speed,
     eta: llm.eta,
     retryCount: llm.retryCount,
     maxRetries: llm.maxRetries,
     text: llm.text,
-    result: state.result,
-    setResult: state.setResult,
+    result,
+    setResult,
     generateMetadata,
-    isModelReady: llm.status === "ready"
+    isModelReady: llm.status === "ready",
+    isEngineInitializing: llm.isEngineInitializing
   }
 }

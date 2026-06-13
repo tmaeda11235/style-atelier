@@ -9,6 +9,8 @@ export type DownloadStatus =
   | "error"
   | "insufficient-quota"
   | "retrying"
+  | "engine-initializing"
+  | "engine-ready"
 
 export function checkCurrentStateHelper(
   setStatus: (s: DownloadStatus) => void,
@@ -183,6 +185,9 @@ export function runInferenceHelper(
 
 interface Dispatchers {
   setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>
+  setEngineStatus: React.Dispatch<
+    React.SetStateAction<"idle" | "initializing" | "ready">
+  >
   setProgress: React.Dispatch<React.SetStateAction<number>>
   setError: React.Dispatch<React.SetStateAction<string | null>>
   setSpeed: React.Dispatch<React.SetStateAction<number>>
@@ -190,6 +195,32 @@ interface Dispatchers {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+}
+
+function handleEngineStatusMessage(
+  ws: string,
+  payload: { wp: number; wtxt: string },
+  dispatch: Dispatchers
+): boolean {
+  if (ws === "engine-initializing") {
+    dispatch.setEngineStatus("initializing")
+    dispatch.setProgress(payload.wp ?? 0)
+    dispatch.setSpeed(0)
+    dispatch.setEta(0)
+    dispatch.setText(payload.wtxt ?? "")
+    dispatch.setError(null)
+    return true
+  }
+  if (ws === "engine-ready") {
+    dispatch.setEngineStatus("ready")
+    dispatch.setProgress(100)
+    dispatch.setSpeed(0)
+    dispatch.setEta(0)
+    dispatch.setText("")
+    dispatch.setError(null)
+    return true
+  }
+  return false
 }
 
 function handleStatusMessage(
@@ -205,6 +236,9 @@ function handleStatusMessage(
   },
   dispatch: Dispatchers
 ) {
+  if (handleEngineStatusMessage(ws, payload, dispatch)) {
+    return
+  }
   if (ws === "downloading") {
     dispatch.setStatus("downloading")
     dispatch.setProgress(payload.wp ?? 0)
@@ -220,6 +254,7 @@ function handleStatusMessage(
     dispatch.setError(payload.we ?? "Connection lost, retrying...")
   } else if (ws === "ready") {
     dispatch.setStatus("ready")
+    dispatch.setEngineStatus("ready")
     dispatch.setProgress(100)
     dispatch.setSpeed(0)
     dispatch.setEta(0)
@@ -227,6 +262,7 @@ function handleStatusMessage(
     dispatch.setError(null)
   } else if (ws === "error") {
     dispatch.setStatus("error")
+    dispatch.setEngineStatus("idle")
     dispatch.setSpeed(0)
     dispatch.setEta(0)
     dispatch.setText("")
@@ -236,6 +272,9 @@ function handleStatusMessage(
 
 export function createMessageListener(
   setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>,
+  setEngineStatus: React.Dispatch<
+    React.SetStateAction<"idle" | "initializing" | "ready">
+  >,
   setProgress: React.Dispatch<React.SetStateAction<number>>,
   setError: React.Dispatch<React.SetStateAction<string | null>>,
   setSpeed: React.Dispatch<React.SetStateAction<number>>,
@@ -259,6 +298,7 @@ export function createMessageListener(
 
     const dispatch: Dispatchers = {
       setStatus,
+      setEngineStatus,
       setProgress,
       setError,
       setSpeed,

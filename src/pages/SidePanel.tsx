@@ -9,6 +9,7 @@ import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
 import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
+import { useWebLlm } from "../hooks/useWebLlm"
 import { initializeAutoSync } from "../lib/auto-sync"
 
 /**
@@ -19,9 +20,12 @@ function SidePanelInner() {
   const { isTargetSite, isLoading } = useActiveTabUrl()
   const { isEasyMode, toggleEasyMode } = useSettings()
 
+  const { preloadEngine } = useWebLlm()
+
   useEffect(() => {
     initializeAutoSync()
-  }, [])
+    preloadEngine()
+  }, [preloadEngine])
 
   const handleToggleEasyMode = (enabled: boolean) => {
     toggleEasyMode(enabled)
