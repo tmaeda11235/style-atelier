@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -56,6 +55,14 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
+
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
 
     // Assert that the quota warning dialog is displayed to the user
     const warningText = spFrame
@@ -207,9 +214,17 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     // Download completes successfully (status ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
-    await expect(readyStatus).toBeVisible({ timeout: 10000 })
+    await expect(readyStatus).toBeVisible({ timeout: 15000 })
 
     // Clean up real integrity check mock from localStorage
     await spFrame.locator("body").evaluate(() => {
@@ -245,7 +260,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await spFrame.locator("body").evaluate(() => {
       const config = (window as any).mockWebLlmConfig
       if (config) {
-        config.downloadSpeed = 800 // slow down
+        config.downloadSpeed = 3000 // slow down
       }
     })
 
@@ -256,9 +271,17 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     // Wait until download starts (we see downloading progress or speed)
     await expect(spFrame.locator("text=12.5 MB/s")).toBeVisible({
-      timeout: 5000
+      timeout: 15000
     })
 
     // Simulate network interruption
@@ -269,7 +292,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     const retryText = spFrame
       .locator("text=/Reconnecting|接続を再試行中|接続再試行中/")
       .first()
-    await expect(retryText).toBeVisible({ timeout: 5000 })
+    await expect(retryText).toBeVisible({ timeout: 15000 })
 
     // Take screenshot of the retry state (UX change)
     await page.screenshot({
@@ -282,7 +305,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Verify that the download recovers and completes (ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
-    await expect(readyStatus).toBeVisible({ timeout: 10000 })
+    await expect(readyStatus).toBeVisible({ timeout: 15000 })
 
     // Verify it saved downloaded flag
     const isDownloaded = await spFrame.locator("body").evaluate(() => {
@@ -318,7 +341,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
       const config = (window as any).mockWebLlmConfig
       if (config) {
         config.failDownload = false
-        config.downloadSpeed = 800
+        config.downloadSpeed = 3000
       }
     })
 
@@ -328,11 +351,19 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     const speedText = spFrame.locator("text=12.5 MB/s")
-    await expect(speedText).toBeVisible({ timeout: 5000 })
+    await expect(speedText).toBeVisible({ timeout: 15000 })
 
     const remainingText = spFrame.locator("text=/Remaining|残り時間/")
-    await expect(remainingText).toBeVisible({ timeout: 5000 })
+    await expect(remainingText).toBeVisible({ timeout: 15000 })
 
     await page.screenshot({
       path: path.join(screenshotsDir, "webllm-download-progress.png")

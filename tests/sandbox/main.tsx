@@ -329,7 +329,7 @@ if (typeof window !== "undefined") {
                           const cache = await caches.open("webllm/model_cache")
                           await cache.put(
                             "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
-                            new Response(new Uint8Array(1024 * 1024 * 1024))
+                            new Response(new Uint8Array(1024 * 1024))
                           )
                         }
                       } catch (e) {

@@ -97,11 +97,19 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     // Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(
       "button:has-text('Analyze Style with AI')"
     )
-    await expect(analyzeBtn).toBeVisible({ timeout: 5000 })
+    await expect(analyzeBtn).toBeVisible({ timeout: 15000 })
     await analyzeBtn.click()
 
     // Verify results

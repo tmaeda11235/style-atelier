@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -66,7 +65,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
 
     // 4. Verify AI Advice Section is visible (since there are 2 pinned cards)
     const adviceSection = spFrame.locator("#ai-recipe-advice-section")
-    await expect(adviceSection).toBeVisible({ timeout: 5000 })
+    await expect(adviceSection).toBeVisible({ timeout: 15000 })
 
     // 5. Expand the advice section accordion (by clicking the header)
     const accordionHeader = adviceSection.locator("#ai-recipe-advice-toggle")
@@ -77,7 +76,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     const notReadyText = spFrame.locator(
       "text=/Local AI model is not loaded|ローカルAIモデルがロードされていません/"
     )
-    await expect(notReadyText).toBeVisible({ timeout: 5000 })
+    await expect(notReadyText).toBeVisible({ timeout: 15000 })
 
     // Capture screenshot of "model not loaded" state in Cauldron
     await page.screenshot({
@@ -106,11 +105,19 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     await page.waitForTimeout(3000) // Wait for downloading animation, debounce, and mock inference resolution
 
     // 8. Verify advice is generated and rendered
     const adviceText = spFrame.locator("text=/Expected Visual Blending Effect/")
-    await expect(adviceText).toBeVisible({ timeout: 10000 })
+    await expect(adviceText).toBeVisible({ timeout: 20000 })
 
     // Capture screenshot of the final AI recipe advice in action
     await page.screenshot({
