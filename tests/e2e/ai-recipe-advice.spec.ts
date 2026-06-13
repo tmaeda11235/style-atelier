@@ -105,6 +105,14 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     await page.waitForTimeout(3000) // Wait for downloading animation, debounce, and mock inference resolution
 
     // 8. Verify advice is generated and rendered

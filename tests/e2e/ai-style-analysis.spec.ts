@@ -90,6 +90,14 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Handle large download confirmation dialog if visible
+    const startConfirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
+    )
+    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await startConfirmBtn.click()
+    }
+
     // 8. Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(
       "button:has-text('Analyze Style with AI')"
