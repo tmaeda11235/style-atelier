@@ -51,19 +51,37 @@ function applyImageColors(
   setTags(tags)
 }
 
-export function useImageColorAnalysis(
-  mintingItem: HistoryItem | null,
-  variationBase: VariationBase | null,
-  selectedRarity: RarityTier,
-  setDominant: (c: string) => void,
-  setAccent: (c: string) => void,
-  setTags: (t: string[]) => void,
+interface ImageColorAnalysisProps {
+  mintingItem: HistoryItem | null
+  variationBase: VariationBase | null
+  selectedRarity: RarityTier
+  setDominant: (c: string) => void
+  setAccent: (c: string) => void
+  setTags: (t: string[]) => void
   setFallback: (f: boolean) => void
-) {
+}
+
+export function useImageColorAnalysis(props: ImageColorAnalysisProps) {
+  const {
+    mintingItem,
+    selectedRarity,
+    setDominant,
+    setAccent,
+    setFallback,
+    setTags
+  } = props
   useEffect(() => {
     let active = true
+    const apply = () =>
+      applyFallbackColors(
+        selectedRarity,
+        setDominant,
+        setAccent,
+        setTags,
+        setFallback
+      )
 
-    if (mintingItem && mintingItem.imageUrl) {
+    if (mintingItem?.imageUrl) {
       analyzeImageColors(mintingItem.imageUrl, selectedRarity)
         .then((colors) => {
           if (active) {
@@ -78,24 +96,10 @@ export function useImageColorAnalysis(
         })
         .catch((err) => {
           console.error("Failed to analyze image colors:", err)
-          if (active) {
-            applyFallbackColors(
-              selectedRarity,
-              setDominant,
-              setAccent,
-              setTags,
-              setFallback
-            )
-          }
+          if (active) apply()
         })
     } else {
-      applyFallbackColors(
-        selectedRarity,
-        setDominant,
-        setAccent,
-        setTags,
-        setFallback
-      )
+      apply()
     }
 
     return () => {
@@ -103,7 +107,7 @@ export function useImageColorAnalysis(
     }
   }, [
     mintingItem,
-    variationBase,
+    props.variationBase,
     selectedRarity,
     setDominant,
     setAccent,
@@ -135,15 +139,15 @@ export function useMintingColors(
     }
   }, [selectedRarity, isColorFallback])
 
-  useImageColorAnalysis(
+  useImageColorAnalysis({
     mintingItem,
     variationBase,
     selectedRarity,
-    setDetectedDominantColor,
-    setDetectedAccentColor,
-    setDetectedColorTags,
-    setIsColorFallback
-  )
+    setDominant: setDetectedDominantColor,
+    setAccent: setDetectedAccentColor,
+    setTags: setDetectedColorTags,
+    setFallback: setIsColorFallback
+  })
 
   return {
     detectedDominantColor,
