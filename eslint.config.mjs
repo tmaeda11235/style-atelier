@@ -204,7 +204,10 @@ export default ts.config(
       "src/components/molecules/HistoryCard.tsx",
       "src/components/molecules/GenealogySection.tsx",
       "src/components/molecules/ConfirmationDialog.tsx",
-      "src/components/molecules/ParameterArrayEditor.tsx"
+      "src/components/molecules/ParameterArrayEditor.tsx",
+      "src/components/organisms/AiStyleAnalysisSection.tsx",
+      "src/components/organisms/AiRecipeAdviceSection.tsx",
+      "src/components/organisms/SimpleMintingView.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [

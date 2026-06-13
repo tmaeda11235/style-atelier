@@ -31,7 +31,7 @@ export function DeleteConfirmModal({
             <Trash2 className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-bold text-text-primary text-center">
-            {t("settings.deleteCardTitle", "Cardを削除しますか？")}
+            {t("settings.deleteCardTitle", "カードを削除しますか？")}
           </h3>
           <p className="text-xs text-text-secondary leading-relaxed text-center">
             {t("settings.deleteCardMessage", {
