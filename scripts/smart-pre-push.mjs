@@ -88,13 +88,13 @@ async function main() {
     }
   }
 
-  // 5. Run UTs
-  console.log('\n--- Running Unit Tests ---');
+  // 5. Run UTs with coverage
+  console.log('\n--- Running Unit Tests with Coverage ---');
   if (srcFiles.length > 0) {
     try {
-      execSync(`npx vitest related ${srcFiles.join(' ')} --run`, { stdio: 'inherit' });
+      execSync('npm test -- --coverage', { stdio: 'inherit' });
     } catch {
-      console.error('Unit tests failed.');
+      console.error('Unit tests or coverage threshold checks failed.');
       process.exit(1);
     }
   } else {
