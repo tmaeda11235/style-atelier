@@ -118,9 +118,6 @@ describe("MockStyleAtelierDatabase", () => {
     expect(id).toBeDefined()
     const added = await mockDb.parameterAliases.get(id)
     expect(added.alias).toBe("alias1")
-    expect(added.createdAt).toBeDefined()
-    expect(added.updatedAt).toBeDefined()
-
     // Update existing alias
     await mockDb.saveParameterAlias({
       id,

@@ -1,4 +1,5 @@
 import { ParameterArrayEditor } from "@/components/molecules/ParameterArrayEditor"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
@@ -113,5 +114,101 @@ describe("ParameterArrayEditor", () => {
 
     // Autocomplete dropdown selects it and updates input value
     expect((input as HTMLInputElement).value).toBe("suggested-val1")
+  })
+
+  it("renders localized alias tooltip and edit button title based on LanguageProvider", () => {
+    const mockStyleCards = [
+      {
+        id: "card-1",
+        name: "Neon Light Style",
+        parameters: { sref: ["val1"] }
+      }
+    ] as any
+
+    const { unmount } = render(
+      <LanguageProvider>
+        <ParameterArrayEditor
+          label="Test Params"
+          icon={null}
+          values={["val1"]}
+          onChange={() => {}}
+          styleCards={mockStyleCards}
+          parameterType="sref"
+        />
+      </LanguageProvider>
+    )
+
+    const editBtn = screen.getByTitle("Edit alias")
+    expect(editBtn).toBeInTheDocument()
+    expect(screen.getByText("Used in Styles:")).toBeInTheDocument()
+    unmount()
+
+    localStorage.setItem("style-atelier-language", "ja")
+    try {
+      render(
+        <LanguageProvider>
+          <ParameterArrayEditor
+            label="Test Params"
+            icon={null}
+            values={["val1"]}
+            onChange={() => {}}
+            styleCards={mockStyleCards}
+            parameterType="sref"
+          />
+        </LanguageProvider>
+      )
+      const editBtnJa = screen.getByTitle("エイリアスを編集")
+      expect(editBtnJa).toBeInTheDocument()
+      expect(screen.getByText("使用スタイル:")).toBeInTheDocument()
+    } finally {
+      localStorage.removeItem("style-atelier-language")
+    }
+  })
+
+  it("handles different parameterTypes and missing thumbnailData", () => {
+    const mockStyleCards = [
+      { id: "1", name: "Card 1", parameters: { p: ["val_p"] }, thumbnailData: "data:image/png;base64,xxx" },
+      { id: "2", name: "Card 2", parameters: { cref: ["val_cref"] } }, // no thumbnail
+      { id: "3", name: "Card 3", parameters: { imagePrompts: ["val_img"] } }
+    ] as any
+
+    const { unmount } = render(
+      <ParameterArrayEditor
+        label="Test p"
+        icon={null}
+        values={["val_p"]}
+        onChange={() => {}}
+        styleCards={mockStyleCards}
+        parameterType="p"
+      />
+    )
+    expect(screen.getByText("Card 1")).toBeInTheDocument()
+    unmount()
+
+    const { unmount: unmount2 } = render(
+      <ParameterArrayEditor
+        label="Test cref"
+        icon={null}
+        values={["val_cref"]}
+        onChange={() => {}}
+        styleCards={mockStyleCards}
+        parameterType="cref"
+      />
+    )
+    expect(screen.getByText("Card 2")).toBeInTheDocument()
+    expect(screen.getByText("🖼️")).toBeInTheDocument()
+    unmount2()
+
+    render(
+      <ParameterArrayEditor
+        label="Test img"
+        icon={null}
+        values={["val_img"]}
+        onChange={() => {}}
+        styleCards={mockStyleCards}
+        parameterType="imagePrompts"
+      />
+    )
+    expect(screen.getByText("Card 3")).toBeInTheDocument()
   })
 })

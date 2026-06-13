@@ -1,5 +1,8 @@
+/* eslint-disable max-lines-per-function */
 import { AlertTriangle, HelpCircle } from "lucide-react"
 import React, { useEffect } from "react"
+
+import { useLanguage } from "../../contexts/LanguageContext"
 
 interface ConfirmationDialogProps {
   isOpen: boolean
@@ -16,12 +19,15 @@ export function ConfirmationDialog({
   isOpen,
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   variant = "primary",
   onConfirm,
   onCancel
 }: ConfirmationDialogProps) {
+  const { t } = useLanguage()
+  const displayConfirmText = confirmText || t.confirmation?.confirm || "Confirm"
+  const displayCancelText = cancelText || t.confirmation?.cancel || "Cancel"
   // Handle escape key to close/cancel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,13 +92,13 @@ export function ConfirmationDialog({
                 ? "bg-red-600 hover:bg-red-500 active:bg-red-700 focus:ring-2 focus:ring-red-500/50"
                 : "bg-blue-600 hover:bg-blue-500 active:bg-blue-700 focus:ring-2 focus:ring-blue-500/50"
             }`}>
-            {confirmText}
+            {displayConfirmText}
           </button>
           <button
             onClick={onCancel}
             id="confirm-dialog-cancel-btn"
             className="w-full py-2 text-slate-500 hover:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer focus:outline-none">
-            {cancelText}
+            {displayCancelText}
           </button>
         </div>
       </div>
