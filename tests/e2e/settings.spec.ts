@@ -1130,6 +1130,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // Confirm download in dialog
     const downloadDialog = spFrame.locator("#confirmation-dialog-container")
     await expect(downloadDialog).toBeVisible()
+
+    // Verify updated model size values (2.0 GB / 2.5 GB) are present in the dialog description
+    await expect(downloadDialog).toContainText(/2\.0\s*GB/)
+    await expect(downloadDialog).toContainText(/2\.5\s*GB/)
+
     const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
     await expect(downloadConfirmBtn).toBeVisible()
     await downloadConfirmBtn.click()
