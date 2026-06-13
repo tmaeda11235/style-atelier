@@ -132,7 +132,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
         .locator("button:has-text('Try Again'), button:has-text('再試行')")
         .first()
 
-      const isRetryVisible = await retryBtn.isVisible().catch(() => false)
+      // Wait up to 5 seconds for the Retry button to render in the error UI
+      const isRetryVisible = await retryBtn
+        .waitFor({ state: "visible", timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)
       if (isRetryVisible) {
         await page.waitForTimeout(200)
         // Directly query and click within the iframe context to avoid Playwright's locator wait loop
