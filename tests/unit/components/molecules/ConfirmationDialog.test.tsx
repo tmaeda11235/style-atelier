@@ -113,4 +113,18 @@ describe("ConfirmationDialog", () => {
       localStorage.removeItem("style-atelier-language")
     }
   })
+
+  it("renders danger variant correctly", () => {
+    render(
+      <ConfirmationDialog
+        isOpen={true}
+        message="Danger!"
+        variant="danger"
+        onConfirm={() => {}}
+        onCancel={() => {}}
+      />
+    )
+    const btn = screen.getByText("Confirm")
+    expect(btn.className).toContain("bg-red-600")
+  })
 })

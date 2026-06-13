@@ -89,4 +89,23 @@ describe("GenealogySection", () => {
       localStorage.removeItem("style-atelier-language")
     }
   })
+
+  it("handles empty parentIds gracefully", () => {
+    const cardWithoutParents = { ...mockCard, genealogy: { generation: 1, parentIds: [] } }
+    const { container } = render(
+      <GenealogySection card={cardWithoutParents} parents={[]} />
+    )
+    expect(screen.queryByText("Parent Cards")).toBeNull()
+  })
+
+  it("handles parent without thumbnailData", () => {
+    const parentWithoutThumb = { ...mockParentCard, thumbnailData: undefined }
+    render(
+      <GenealogySection
+        card={mockCard}
+        parents={[parentWithoutThumb, null]}
+      />
+    )
+    expect(screen.getByText("🎨")).toBeInTheDocument()
+  })
 })

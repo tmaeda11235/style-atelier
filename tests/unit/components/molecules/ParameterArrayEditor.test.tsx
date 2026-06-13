@@ -164,4 +164,51 @@ describe("ParameterArrayEditor", () => {
       localStorage.removeItem("style-atelier-language")
     }
   })
+
+  it("handles different parameterTypes and missing thumbnailData", () => {
+    const mockStyleCards = [
+      { id: "1", name: "Card 1", parameters: { p: ["val_p"] }, thumbnailData: "data:image/png;base64,xxx" },
+      { id: "2", name: "Card 2", parameters: { cref: ["val_cref"] } }, // no thumbnail
+      { id: "3", name: "Card 3", parameters: { imagePrompts: ["val_img"] } }
+    ] as any
+
+    const { unmount } = render(
+      <ParameterArrayEditor
+        label="Test p"
+        icon={null}
+        values={["val_p"]}
+        onChange={() => {}}
+        styleCards={mockStyleCards}
+        parameterType="p"
+      />
+    )
+    expect(screen.getByText("Card 1")).toBeInTheDocument()
+    unmount()
+
+    const { unmount: unmount2 } = render(
+      <ParameterArrayEditor
+        label="Test cref"
+        icon={null}
+        values={["val_cref"]}
+        onChange={() => {}}
+        styleCards={mockStyleCards}
+        parameterType="cref"
+      />
+    )
+    expect(screen.getByText("Card 2")).toBeInTheDocument()
+    expect(screen.getByText("🖼️")).toBeInTheDocument()
+    unmount2()
+
+    render(
+      <ParameterArrayEditor
+        label="Test img"
+        icon={null}
+        values={["val_img"]}
+        onChange={() => {}}
+        styleCards={mockStyleCards}
+        parameterType="imagePrompts"
+      />
+    )
+    expect(screen.getByText("Card 3")).toBeInTheDocument()
+  })
 })
