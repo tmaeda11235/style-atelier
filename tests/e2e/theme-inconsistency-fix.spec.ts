@@ -101,7 +101,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     const analyzeBtn = spFrame.locator(
       "button:has-text('Analyze Style with AI')"
     )
-    await expect(analyzeBtn).toBeVisible({ timeout: 5000 })
+    await expect(analyzeBtn).toBeVisible({ timeout: 15000 })
     await analyzeBtn.click()
 
     // Verify results

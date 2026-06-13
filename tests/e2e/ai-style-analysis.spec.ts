@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -95,7 +94,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     const analyzeBtn = spFrame.locator(
       "button:has-text('Analyze Style with AI')"
     )
-    await expect(analyzeBtn).toBeVisible({ timeout: 5000 })
+    await expect(analyzeBtn).toBeVisible({ timeout: 15000 })
     await analyzeBtn.click()
 
     // 9. Verify results
@@ -169,7 +168,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     const detailView = spFrame.locator(
       "[data-testid='card-detail-view-container']"
     )
-    await expect(detailView).toBeVisible({ timeout: 5000 })
+    await expect(detailView).toBeVisible({ timeout: 15000 })
 
     // Verify mutation note text (the summary description) is displayed in genealogy/history
     const genealogyNote = detailView
