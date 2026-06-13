@@ -193,7 +193,13 @@
     "webLlmDownloadConfirmDesc": "ローカルAIモデル（約2.0GB）のダウンロードを開始します。モバイル回線や制限付き回線を使用している場合、通信量にご注意ください。ダウンロードを開始しますか？",
     "webLlmDownloadConfirmBtn": "ダウンロードを開始する",
     "webLlmCancelBtn": "キャンセル",
-    "webLlmMobileWarning": "データセーバーが有効、または低速回線が検出されました。Wi-Fi接続でのダウンロードを強く推奨します。"
+    "webLlmMobileWarning": "データセーバーが有効、または低速回線が検出されました。Wi-Fi接続でのダウンロードを強く推奨します。",
+    "includeBrandLogoLabel": "ブランドロゴの合成",
+    "includeBrandLogoDesc": "カード画像のエクスポート時に「Minted with Style Atelier 🔮」のブランドロゴを自動的に合成します。",
+    "includeBrandLogoToggleLabel": "ブランドロゴを合成する",
+    "includeBrandLogoToggleSub": "エクスポート画像にブランドバッジを含めます",
+    "alwaysEnglishLogoTextLabel": "ロゴの英語表記を強制",
+    "alwaysEnglishLogoTextSub": "日本語環境でもバッジ内テキストを「Minted with Style Atelier」にします"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
@@ -305,7 +311,9 @@
     "clipboardBlocked": "ブラウザによりクリップボード書き込みがブロックされました。画像を右クリックして「画像をコピー」を選択してください。",
     "clipboardFailed": "クリップボードへのコピーに失敗しました。",
     "downloadStarted": "ダウンロードを開始しました！",
-    "downloadFailed": "カード画像のダウンロードに失敗しました。"
+    "downloadFailed": "カード画像のダウンロードに失敗しました。",
+    "includeBrandLogoToggleLabel": "エクスポート画像にロゴを含める",
+    "brandBadgeText": "Style Atelierで生成 🔮"
   },
   "interactiveTutorial": {
     "adding": "追加中...",
@@ -331,6 +339,7 @@
     "aiSearchPlaceholder": "AIに尋ねる: 'レジェンダリーな青いサイバーパンク'...",
     "aiSearchToggle": "AIセマンティック検索",
     "aiSearchAnalyzing": "AIがクエリを解析中...",
+    "aiEngineInitializing": "AIエンジンを初期化中 (数秒かかる場合があります)...",
     "aiSearchError": "AI解析エラー",
     "aiSearchModelNotLoaded": "ローカルAIモデルがロードされていません。まず設定タブからダウンロードしてください。",
     "aiSearchActive": "AI検索が有効",
@@ -417,6 +426,7 @@
     "recent": "履歴:",
     "aiAdviceTitle": "🔮 AI調合アドバイス",
     "aiAdviceLoading": "ローカルAI大釜で調合方法を分析中...",
+    "aiEngineInitializing": "AIエンジンを初期化中 (数秒かかる場合があります)...",
     "aiAdviceError": "AIアドバイスの生成に失敗しました。",
     "aiAdviceEmpty": "調合アドバイスを受けるには、カードを2枚以上追加してください。",
     "aiAdviceModelNotReady": "ローカルAIモデルがロードされていません。設定画面からダウンロードしてください。",
@@ -536,6 +546,7 @@
     "aiDeClutterNotReady": "Gemmaモデルがロードされていません。設定でダウンロードしてください。",
     "aiAnalysis": "AIスタイル分析",
     "aiAnalysisBtn": "AIでスタイルを分析",
+    "aiInitializing": "AI初期化中...",
     "aiAnalysisLoading": "スタイル分析中...",
     "aiAnalysisError": "推論に失敗しました: {{error}}",
     "aiRecommendTags": "AIおすすめタグ",

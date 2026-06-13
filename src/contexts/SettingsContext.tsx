@@ -39,6 +39,10 @@ interface SettingsContextType {
   toggleTipsBar: (enabled: boolean) => void
   theme: Theme
   changeTheme: (theme: Theme) => void
+  includeBrandLogo: boolean
+  toggleBrandLogo: (enabled: boolean) => void
+  alwaysEnglishLogoText: boolean
+  toggleAlwaysEnglishLogoText: (enabled: boolean) => void
 }
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -55,6 +59,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   )
   const [showTipsBar, setShowTipsBar] = useState<boolean>(true)
   const [theme, setTheme] = useState<Theme>("system")
+  const [includeBrandLogo, setIncludeBrandLogo] = useState<boolean>(true)
+  const [alwaysEnglishLogoText, setAlwaysEnglishLogoText] =
+    useState<boolean>(false)
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -90,6 +97,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       setExpertFeatures(DEFAULT_EXPERT_FEATURES)
     }
+
+    const savedBrandLogo = localStorage.getItem(
+      "style-atelier-include-brand-logo"
+    )
+    setIncludeBrandLogo(savedBrandLogo !== "false")
+
+    const savedAlwaysEnglish =
+      localStorage.getItem("style-atelier-always-english-logo") === "true"
+    setAlwaysEnglishLogoText(savedAlwaysEnglish)
   }, [])
 
   const toggleEasyMode = useCallback((enabled: boolean) => {
@@ -123,6 +139,22 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     []
   )
+
+  const toggleBrandLogo = useCallback((enabled: boolean) => {
+    setIncludeBrandLogo(enabled)
+    localStorage.setItem(
+      "style-atelier-include-brand-logo",
+      enabled ? "true" : "false"
+    )
+  }, [])
+
+  const toggleAlwaysEnglishLogoText = useCallback((enabled: boolean) => {
+    setAlwaysEnglishLogoText(enabled)
+    localStorage.setItem(
+      "style-atelier-always-english-logo",
+      enabled ? "true" : "false"
+    )
+  }, [])
 
   // Effect to apply theme CSS class to document root
   useEffect(() => {
@@ -164,7 +196,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         showTipsBar,
         toggleTipsBar,
         theme,
-        changeTheme
+        changeTheme,
+        includeBrandLogo,
+        toggleBrandLogo,
+        alwaysEnglishLogoText,
+        toggleAlwaysEnglishLogoText
       }}>
       {children}
     </SettingsContext.Provider>

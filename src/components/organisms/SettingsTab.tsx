@@ -193,6 +193,12 @@ export function SettingsTab({
             t={t}
             theme={contextSettings.theme}
             changeTheme={contextSettings.changeTheme}
+            includeBrandLogo={contextSettings.includeBrandLogo}
+            toggleBrandLogo={contextSettings.toggleBrandLogo}
+            alwaysEnglishLogoText={contextSettings.alwaysEnglishLogoText}
+            toggleAlwaysEnglishLogoText={
+              contextSettings.toggleAlwaysEnglishLogoText
+            }
           />
         )}
       </div>

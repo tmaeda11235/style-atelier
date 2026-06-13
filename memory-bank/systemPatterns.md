@@ -40,7 +40,7 @@ tags: []
 - **Modular Utility & Data Access Layers**: To strictly adhere to the 300-line file limit and 50-line function limit:
   - `backup-validator.ts` is divided into a `src/lib/backup-validator/` subdirectory, splitting domain schema validations into clean, focused sub-modules.
   - `google-drive.ts` is modularized into `src/lib/google-drive/` (auth, http-client, upload/download operations), with asynchronous XMLHttpRequests and progress trackers split into functions under 50 lines.
-  - `export-utils.ts` is modularized into `src/lib/export/`, dividing the card rendering canvas pipeline (`renderCardToCanvas`) into separate background, artwork layout, info text, and QR drawing steps.
+  - `export-utils.ts` is modularized into `src/lib/export/`, dividing the card rendering canvas pipeline (`renderCardToCanvas`) into separate background, artwork layout, info text, QR drawing, and brand logo synthesis (`drawBrandLogo`) steps.
   - `card-export.ts` (`src/lib/card-export.ts`) encapsulates export data structuring for CSV and Markdown ZIP (via `fflate`), separated from the React hook layer (`useCardExport.ts`) to comply with strict function size limits.
   - `color-utils.ts` (`src/lib/color-utils.ts`) is refactored by splitting pure color conversion utilities into a new `src/lib/color-converter.ts` and delegating canvas/analysis sub-routines to satisfy the 300-line file limit and 50-line function limit.
   - `db-setup.ts` (`src/lib/db-setup.ts`) delegates its version migration configuration to the `setupMigrations` helper in `src/lib/db/migrations.ts` to keep the constructor clean and minimize class complexity.
@@ -53,7 +53,7 @@ tags: []
   - **Tooltip & Responsive Action Collapsing**: A reusable `Tooltip` atom (`src/components/atoms/Tooltip.tsx`) provides hover labels with full translation support. To prevent layout breakages on narrow screens, card action buttons dynamically collapse into a "More" action menu popover. This is achieved via CSS Container Queries and cleanly modularized sub-components (`CardThumbnailActions`, `CardThumbnailImages`, `CardThumbnailIcons`) to satisfy strict ESLint file and function length limits.
 
 - **Feature Flags & Context Patterns**:
-  - `SettingsContext` (`useSettings`): Manages theme ("system" | "light" | "dark"), "Easy Mode" state (hides all tabs except Library) and `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`). To ensure responsive design (down to 320px) and clean visual hierarchy, long text descriptions and toggles in Settings Tab utilize `HelpTooltip` elements next to headers instead of occupying vertical list space.
+  - `SettingsContext` (`useSettings`): Manages theme ("system" | "light" | "dark"), "Easy Mode" state (hides all tabs except Library), `expertFeatures` toggles (`stack`, `slot`, `rarity`, `tags`, `categories`, `multiCard`, `cardEditing`, `multiImage`), and brand logo options (`includeBrandLogo`, `alwaysEnglishLogoText`). To ensure responsive design (down to 320px) and clean visual hierarchy, long text descriptions and toggles in Settings Tab utilize `HelpTooltip` elements next to headers instead of occupying vertical list space.
   - `LanguageContext` (`useLanguage`): Manages the active translation locale (English/Japanese, stored in `localStorage` under `style-atelier-language`) and exposes a compile-time typed dictionary (`t`) to components.
   - Components subscribe to these contexts to handle feature toggling and language localization dynamically.
 - **Asynchronous State & Caching**:

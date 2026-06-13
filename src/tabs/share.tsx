@@ -7,6 +7,7 @@ import { getStyleCardById } from "../lib/style-card-store"
 import "../style.css"
 
 import { LanguageProvider, useLanguage } from "../contexts/LanguageContext"
+import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 import {
   SharePageContent,
   SharePageStatusView,
@@ -16,13 +17,21 @@ import {
 function useClipboardCopy(card: StyleCard | null, t: TranslationType) {
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { includeBrandLogo, alwaysEnglishLogoText } = useSettings()
 
   const copy = async () => {
     if (!card) return
     setSuccess(null)
     setError(null)
     try {
-      const canvas = await renderCardToCanvas(card)
+      const brandLogoText = alwaysEnglishLogoText
+        ? "Minted with Style Atelier 🔮"
+        : t.brandBadgeText || "Minted with Style Atelier 🔮"
+
+      const canvas = await renderCardToCanvas(card, {
+        includeBrandLogo,
+        brandLogoText
+      })
       canvas.toBlob(async (blob) => {
         if (!blob) {
           setError(t.failedBlob)
@@ -48,13 +57,21 @@ function useClipboardCopy(card: StyleCard | null, t: TranslationType) {
 function useDownloadCard(card: StyleCard | null, t: TranslationType) {
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { includeBrandLogo, alwaysEnglishLogoText } = useSettings()
 
   const download = async () => {
     if (!card) return
     setSuccess(null)
     setError(null)
     try {
-      await exportCardAsImage(card)
+      const brandLogoText = alwaysEnglishLogoText
+        ? "Minted with Style Atelier 🔮"
+        : t.brandBadgeText || "Minted with Style Atelier 🔮"
+
+      await exportCardAsImage(card, {
+        includeBrandLogo,
+        brandLogoText
+      })
       setSuccess(t.downloadStarted)
     } catch {
       setError(t.downloadFailed)
@@ -69,6 +86,7 @@ function useLoadCard(t: TranslationType) {
   const [loading, setLoading] = useState(true)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { includeBrandLogo, alwaysEnglishLogoText } = useSettings()
 
   useEffect(() => {
     async function loadCard() {
@@ -81,7 +99,15 @@ function useLoadCard(t: TranslationType) {
         if (!foundCard) throw new Error(t.cardNotFound)
 
         setCard(foundCard)
-        const canvas = await renderCardToCanvas(foundCard)
+
+        const brandLogoText = alwaysEnglishLogoText
+          ? "Minted with Style Atelier 🔮"
+          : t.brandBadgeText || "Minted with Style Atelier 🔮"
+
+        const canvas = await renderCardToCanvas(foundCard, {
+          includeBrandLogo,
+          brandLogoText
+        })
         setImageSrc(canvas.toDataURL("image/png"))
       } catch (err: any) {
         console.error("Error loading shared card:", err)
@@ -91,7 +117,7 @@ function useLoadCard(t: TranslationType) {
       }
     }
     loadCard()
-  }, [t])
+  }, [t, includeBrandLogo, alwaysEnglishLogoText])
 
   return { card, loading, imageSrc, error }
 }
@@ -145,7 +171,9 @@ export function SharePageInner() {
 export default function SharePage() {
   return (
     <LanguageProvider>
-      <SharePageInner />
+      <SettingsProvider>
+        <SharePageInner />
+      </SettingsProvider>
     </LanguageProvider>
   )
 }

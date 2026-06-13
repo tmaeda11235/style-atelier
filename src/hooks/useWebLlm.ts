@@ -11,16 +11,33 @@ import {
 
 export type { DownloadStatus }
 
-function useWebLlmEffect(
-  setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>,
-  setProgress: React.Dispatch<React.SetStateAction<number>>,
-  setError: React.Dispatch<React.SetStateAction<string | null>>,
-  setSpeed: React.Dispatch<React.SetStateAction<number>>,
-  setEta: React.Dispatch<React.SetStateAction<number>>,
-  setRetryCount: React.Dispatch<React.SetStateAction<number>>,
-  setMaxRetries: React.Dispatch<React.SetStateAction<number>>,
+interface WebLlmEffectProps {
+  setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>
+  setEngineStatus: React.Dispatch<
+    React.SetStateAction<"idle" | "initializing" | "ready">
+  >
+  setProgress: React.Dispatch<React.SetStateAction<number>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setSpeed: React.Dispatch<React.SetStateAction<number>>
+  setEta: React.Dispatch<React.SetStateAction<number>>
+  setRetryCount: React.Dispatch<React.SetStateAction<number>>
+  setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
-) {
+}
+
+function useWebLlmEffect(props: WebLlmEffectProps) {
+  const {
+    setStatus,
+    setEngineStatus,
+    setProgress,
+    setError,
+    setSpeed,
+    setEta,
+    setRetryCount,
+    setMaxRetries,
+    setText
+  } = props
+
   useEffect(() => {
     if (
       typeof chrome === "undefined" ||
@@ -32,6 +49,7 @@ function useWebLlmEffect(
     const port = chrome.runtime.connect({ name: "sidepanel" })
     const messageListener = createMessageListener(
       setStatus,
+      setEngineStatus,
       setProgress,
       setError,
       setSpeed,
@@ -48,6 +66,7 @@ function useWebLlmEffect(
     }
   }, [
     setStatus,
+    setEngineStatus,
     setProgress,
     setError,
     setSpeed,
@@ -60,6 +79,9 @@ function useWebLlmEffect(
 
 function useWebLlmState() {
   const [status, setStatus] = useState<DownloadStatus>("idle")
+  const [engineStatus, setEngineStatus] = useState<
+    "idle" | "initializing" | "ready"
+  >("idle")
   const [progress, setProgress] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const [speed, setSpeed] = useState<number>(0)
@@ -79,6 +101,8 @@ function useWebLlmState() {
   return {
     status,
     setStatus,
+    engineStatus,
+    setEngineStatus,
     progress,
     setProgress,
     error,
@@ -97,22 +121,37 @@ function useWebLlmState() {
   }
 }
 
+function preloadEngineHelper() {
+  if (
+    typeof chrome === "undefined" ||
+    !chrome.runtime ||
+    !chrome.runtime.sendMessage
+  ) {
+    return
+  }
+  chrome.runtime.sendMessage({ target: "offscreen", action: "preload-engine" })
+}
+
 export function useWebLlm() {
   const state = useWebLlmState()
 
-  useWebLlmEffect(
-    state.setStatus,
-    state.setProgress,
-    state.setError,
-    state.setSpeed,
-    state.setEta,
-    state.setRetryCount,
-    state.setMaxRetries,
-    state.setText
-  )
+  useWebLlmEffect({
+    setStatus: state.setStatus,
+    setEngineStatus: state.setEngineStatus,
+    setProgress: state.setProgress,
+    setError: state.setError,
+    setSpeed: state.setSpeed,
+    setEta: state.setEta,
+    setRetryCount: state.setRetryCount,
+    setMaxRetries: state.setMaxRetries,
+    setText: state.setText
+  })
 
   return {
     status: state.status,
+    engineStatus: state.engineStatus,
+    isEngineReady: state.engineStatus === "ready",
+    isEngineInitializing: state.engineStatus === "initializing",
     progress: state.progress,
     error: state.error,
     speed: state.speed,
@@ -130,10 +169,7 @@ export function useWebLlm() {
     },
     checkCurrentState: () =>
       checkCurrentStateHelper(state.setStatus, state.setProgress),
-    runInference: (
-      prompt: string,
-      systemPrompt?: string,
-      temperature?: number
-    ) => runInferenceHelper(prompt, systemPrompt, temperature)
+    preloadEngine: preloadEngineHelper,
+    runInference: runInferenceHelper
   }
 }
