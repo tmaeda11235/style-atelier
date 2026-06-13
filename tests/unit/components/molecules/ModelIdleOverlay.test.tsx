@@ -12,9 +12,9 @@ describe("ModelIdleOverlay", () => {
     webLlmDownloadBtn: "Download Model",
     webLlmDownloadConfirmTitle: "Confirm Download",
     webLlmDownloadConfirmDesc:
-      "This will download a ~980 MB model file. High data usage will occur.",
-    webLlmDownloadSize: "Download Size: ~980 MB",
-    webLlmDiskSpaceWarning: "Required space: ~1.5 GB",
+      "This will download a ~2.0 GB model file. High data usage will occur.",
+    webLlmDownloadSize: "Download Size: ~2.0 GB",
+    webLlmDiskSpaceWarning: "Required space: ~2.5 GB",
     webLlmCancelBtn: "Cancel",
     webLlmDownloadConfirmBtn: "Download"
   }
@@ -23,7 +23,7 @@ describe("ModelIdleOverlay", () => {
     render(<ModelIdleOverlay startDownload={mockStartDownload} t={mockT} />)
 
     expect(screen.getByText(/Local AI model is not loaded/i)).toBeDefined()
-    expect(screen.getByText(/Download Size: ~980 MB/i)).toBeDefined()
+    expect(screen.getByText(/Download Size: ~2\.0 GB/i)).toBeDefined()
     expect(
       screen.getByRole("button", { name: /Download Model/i })
     ).toBeDefined()
@@ -37,9 +37,9 @@ describe("ModelIdleOverlay", () => {
 
     expect(screen.getByText("Confirm Download")).toBeDefined()
     expect(
-      screen.getByText(/This will download a ~980 MB model file/i)
+      screen.getByText(/This will download a ~2\.0 GB model file/i)
     ).toBeDefined()
-    expect(screen.getByText("Required space: ~1.5 GB")).toBeDefined()
+    expect(screen.getByText("Required space: ~2.5 GB")).toBeDefined()
 
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDefined()
     expect(screen.getByRole("button", { name: "Start Download" })).toBeDefined()
