@@ -3,6 +3,7 @@ import iconUrl from "url:../../assets/icon.png"
 import type { StyleCard } from "./db-schema"
 import {
   drawArtwork,
+  drawBrandLogo,
   drawCardBackground,
   drawCardInfo,
   drawQRCode
@@ -13,7 +14,8 @@ import { compressCardData, insertMetadataToPng } from "./qr-utils"
  * Renders the card content onto a canvas.
  */
 export async function renderCardToCanvas(
-  card: StyleCard
+  card: StyleCard,
+  options?: { includeBrandLogo?: boolean; brandLogoText?: string }
 ): Promise<HTMLCanvasElement> {
   const width = 600
   const height = 850
@@ -44,14 +46,22 @@ export async function renderCardToCanvas(
   const qrY = 600
   await drawQRCode(ctx, width, qrSize, qrX, qrY, card)
 
+  // 5. Draw Brand Logo
+  if (options?.includeBrandLogo && options?.brandLogoText) {
+    drawBrandLogo(ctx, width, height, options.brandLogoText)
+  }
+
   return canvas
 }
 
 /**
  * Renders the card content onto a canvas and triggers a PNG download.
  */
-export async function exportCardAsImage(card: StyleCard): Promise<void> {
-  const canvas = await renderCardToCanvas(card)
+export async function exportCardAsImage(
+  card: StyleCard,
+  options?: { includeBrandLogo?: boolean; brandLogoText?: string }
+): Promise<void> {
+  const canvas = await renderCardToCanvas(card, options)
   const dataUrl = canvas.toDataURL("image/png")
 
   // 1. Get the payload

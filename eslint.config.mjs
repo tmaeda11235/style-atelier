@@ -137,8 +137,6 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-complexity.ts",
       "src/components/organisms/CloudSyncSection.tsx",
-      "src/lib/prompt-utils.ts",
-      "src/components/templates/SidePanelLayout.tsx",
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
