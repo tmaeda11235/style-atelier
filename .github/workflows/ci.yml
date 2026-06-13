@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: 'package.json'
+          node-version-file: '.node-version'
 
       - name: Verify Proof of Work
         id: verify
@@ -55,7 +55,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: 'package.json'
+          node-version-file: '.node-version'
 
       - name: Cache npm dependencies
         uses: actions/cache@v4
@@ -84,7 +84,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: 'package.json'
+          node-version-file: '.node-version'
 
       - name: Restore npm dependencies (No save to prevent collision)
         uses: actions/cache/restore@v4
@@ -133,7 +133,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: 'package.json'
+          node-version-file: '.node-version'
 
       - name: Restore npm dependencies (No save to prevent collision)
         uses: actions/cache/restore@v4
