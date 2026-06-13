@@ -980,6 +980,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(warningDialog).not.toBeVisible()
     console.log("Safe Merge strategy confirmed successfully.")
 
+    // Reset last-backup to >60 days ago so dialog will show up again
+    await spFrame.locator("body").evaluate((_, time) => {
+      localStorage.setItem("style-atelier-last-backup", time.toString())
+    }, sixtyOneDaysAgo)
+
     // 10. Test Local Overwrite Strategy
     await syncBtn.click()
     await expect(warningDialog).toBeVisible()
@@ -987,6 +992,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
     console.log("Local Overwrite strategy confirmed successfully.")
+
+    // Reset last-backup to >60 days ago so dialog will show up again
+    await spFrame.locator("body").evaluate((_, time) => {
+      localStorage.setItem("style-atelier-last-backup", time.toString())
+    }, sixtyOneDaysAgo)
 
     // 11. Test Cloud Overwrite Strategy
     await syncBtn.click()
