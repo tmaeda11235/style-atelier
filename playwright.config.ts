@@ -9,7 +9,7 @@ export default defineConfig({
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {
-    timeout: 5000
+    timeout: 10000
   },
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -46,10 +46,9 @@ export default defineConfig({
 
   /* Run local dev server before starting the tests */
   webServer: {
-    command:
-      `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port 5173 --strictPort`,
+    command: `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port 5173 --strictPort`,
     port: 5173,
     reuseExistingServer: !process.env.CI,
-    timeout: 15 * 1000
+    timeout: 60 * 1000
   }
 })

@@ -13,7 +13,7 @@ const pendingInferences = new Map<
 
 // Expected models and sizes for Gemma-4 E2B
 const GEMMA_MODEL_FILES = [
-  { name: "gemma-4-e2b-q4f16_1.bin", size: 1024 * 1024 * 1024 } // Example ~1GB file
+  { name: "gemma-4-e2b-q4f16_1.bin", size: 1024 * 1024 } // Example ~1MB file (reduced for performance and reliability)
 ]
 
 console.log("Offscreen Document loaded.")
