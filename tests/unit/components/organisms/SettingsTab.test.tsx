@@ -5,6 +5,7 @@ import * as backupManager from "@/lib/backup-manager"
 import { exportDatabase, importDatabase } from "@/lib/backup-manager"
 import { db } from "@/lib/db"
 import * as googleDrive from "@/lib/google-drive"
+import { i18n } from "@/lib/i18n"
 import { QueryTestProvider } from "@/test/react-query-helper"
 import {
   act,
@@ -375,6 +376,8 @@ describe("SettingsTab", () => {
   })
 
   it("shows confirmation dialog in English when language is English", async () => {
+    localStorage.setItem("style-atelier-language", "en")
+    await i18n.changeLanguage("en")
     // Override navigator.language to English
     Object.defineProperty(window.navigator, "language", {
       value: "en-US",
