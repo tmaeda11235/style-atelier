@@ -27,10 +27,10 @@ jobs:
         with:
           fetch-depth: 20
       
-      - name: Use Node.js 22.x
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: '.node-version'
 
       - name: Verify Proof of Work
         id: verify
@@ -52,10 +52,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: '.node-version'
 
       - name: Cache npm dependencies
         uses: actions/cache@v4
@@ -75,13 +75,16 @@ jobs:
   unit-and-build:
     needs: [verify-proof, setup]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: '.node-version'
 
       - name: Restore npm dependencies (No save to prevent collision)
         uses: actions/cache/restore@v4
@@ -107,6 +110,13 @@ jobs:
         if: needs.verify-proof.outputs.skip != 'true'
         run: npm test -- --coverage
 
+      - name: Report Coverage
+        if: always() && needs.verify-proof.outputs.skip != 'true'
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          json-summary-path: './coverage/coverage-summary.json'
+          json-final-path: './coverage/coverage-final.json'
+
       - name: Build extension
         run: npm run build
 
@@ -120,10 +130,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: '.node-version'
 
       - name: Restore npm dependencies (No save to prevent collision)
         uses: actions/cache/restore@v4

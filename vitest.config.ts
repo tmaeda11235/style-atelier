@@ -8,6 +8,11 @@ export default defineConfig({
     tsconfigPaths: true,
     alias: [
       {
+        find: /^url:~src\/offscreen\.html$/,
+        replacement:
+          "C:/Users/oculus/Desktop/style-atelier/tests/mocks/mockHtml.ts"
+      },
+      {
         find: /^url:(.*)$/,
         replacement: "$1"
       }
@@ -30,7 +35,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
         "dist/**",
