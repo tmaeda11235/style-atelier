@@ -3,6 +3,7 @@ import React from "react"
 import type { Theme } from "../../contexts/SettingsContext"
 import type { Language } from "../../lib/i18n"
 import { HelpTooltip } from "../atoms/HelpTooltip"
+import { BrandLogoSettings } from "./BrandLogoSettingsSection"
 import { EasyModeSection } from "./EasyModeSection"
 
 interface ThemeSettingsProps {
@@ -153,6 +154,10 @@ interface UiPreferencesSectionProps {
   t: any
   theme: Theme
   changeTheme: (theme: Theme) => void
+  includeBrandLogo: boolean
+  toggleBrandLogo: (enabled: boolean) => void
+  alwaysEnglishLogoText: boolean
+  toggleAlwaysEnglishLogoText: (enabled: boolean) => void
 }
 
 export function UiPreferencesSection({
@@ -167,7 +172,11 @@ export function UiPreferencesSection({
   onNavigateToLibrary,
   t,
   theme,
-  changeTheme
+  changeTheme,
+  includeBrandLogo,
+  toggleBrandLogo,
+  alwaysEnglishLogoText,
+  toggleAlwaysEnglishLogoText
 }: UiPreferencesSectionProps) {
   return (
     <div className="p-5 space-y-6 animate-in slide-in-from-top-2 duration-250">
@@ -178,6 +187,14 @@ export function UiPreferencesSection({
       <TipsBarSettings
         showTipsBar={showTipsBar}
         toggleTipsBar={toggleTipsBar}
+        t={t}
+      />
+
+      <BrandLogoSettings
+        includeBrandLogo={includeBrandLogo}
+        toggleBrandLogo={toggleBrandLogo}
+        alwaysEnglishLogoText={alwaysEnglishLogoText}
+        toggleAlwaysEnglishLogoText={toggleAlwaysEnglishLogoText}
         t={t}
       />
 

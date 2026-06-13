@@ -193,7 +193,13 @@
     "webLlmDownloadConfirmDesc": "You are about to download the local AI model (~980 MB). If you are using a mobile hotspot or metered connection, please be aware of potential data charges. Do you want to proceed?",
     "webLlmDownloadConfirmBtn": "Start Download",
     "webLlmCancelBtn": "Cancel",
-    "webLlmMobileWarning": "Data saver or slow connection detected. Downloading over Wi-Fi is strongly recommended."
+    "webLlmMobileWarning": "Data saver or slow connection detected. Downloading over Wi-Fi is strongly recommended.",
+    "includeBrandLogoLabel": "Include Brand Logo",
+    "includeBrandLogoDesc": "Embed 'Minted with Style Atelier 🔮' badge in exported images.",
+    "includeBrandLogoToggleLabel": "Include Brand Logo",
+    "includeBrandLogoToggleSub": "Automatically merge the brand badge when exporting card images",
+    "alwaysEnglishLogoTextLabel": "Force English Badge Logo",
+    "alwaysEnglishLogoTextSub": "Keep 'Minted with Style Atelier' text even in Japanese"
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
@@ -305,7 +311,9 @@
     "clipboardBlocked": "Browser blocked clipboard write. Right click the image and select 'Copy image'.",
     "clipboardFailed": "Failed to copy image to clipboard.",
     "downloadStarted": "Download started successfully!",
-    "downloadFailed": "Failed to download card image."
+    "downloadFailed": "Failed to download card image.",
+    "includeBrandLogoToggleLabel": "Include brand logo in exported image",
+    "brandBadgeText": "Minted with Style Atelier 🔮"
   },
   "interactiveTutorial": {
     "adding": "Adding...",

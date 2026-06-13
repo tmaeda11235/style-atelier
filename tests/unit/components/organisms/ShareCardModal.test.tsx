@@ -10,7 +10,7 @@ vi.mock("@/lib/export-utils", () => ({
 
 vi.mock("@/contexts/SettingsContext", () => ({
   useSettings: () => ({
-    includeBrandLogo: true,
+    includeBrandLogo: false,
     alwaysEnglishLogoText: false
   })
 }))
@@ -83,7 +83,10 @@ describe("ShareCardModal", () => {
       expect(mockClipboardWrite).toHaveBeenCalled()
     })
 
-    expect(renderCardToCanvas).toHaveBeenCalledWith(mockCard)
+    expect(renderCardToCanvas).toHaveBeenCalledWith(
+      mockCard,
+      expect.any(Object)
+    )
     expect(defaultProps.addLog).toHaveBeenCalledWith(
       'Copied card "Neon Dragon" to clipboard.'
     )
@@ -121,7 +124,7 @@ describe("ShareCardModal", () => {
       fireEvent.click(downloadButton)
     })
 
-    expect(exportCardAsImage).toHaveBeenCalledWith(mockCard)
+    expect(exportCardAsImage).toHaveBeenCalledWith(mockCard, expect.any(Object))
     expect(defaultProps.addLog).toHaveBeenCalledWith(
       'Downloaded card "Neon Dragon" as PNG.'
     )

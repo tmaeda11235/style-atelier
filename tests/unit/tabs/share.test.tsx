@@ -264,7 +264,10 @@ describe("SharePage i18n and functionality", () => {
     fireEvent.click(downloadBtn)
 
     await waitFor(() => {
-      expect(exportCardAsImage).toHaveBeenCalledWith(mockCard)
+      expect(exportCardAsImage).toHaveBeenCalledWith(
+        mockCard,
+        expect.any(Object)
+      )
       expect(screen.getByText("ダウンロードを開始しました！")).toBeDefined()
     })
   })
@@ -284,7 +287,10 @@ describe("SharePage i18n and functionality", () => {
     fireEvent.click(downloadBtn)
 
     await waitFor(() => {
-      expect(exportCardAsImage).toHaveBeenCalledWith(mockCard)
+      expect(exportCardAsImage).toHaveBeenCalledWith(
+        mockCard,
+        expect.any(Object)
+      )
       expect(screen.getByText("Download started successfully!")).toBeDefined()
     })
   })
