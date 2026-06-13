@@ -38,14 +38,17 @@ export function SettingsTab({
   const contextSettings = useSettings()
   const { clearHistory } = useHistory()
 
+  const isTestEnv =
+    typeof process !== "undefined" &&
+    (process.env.NODE_ENV === "test" || !!process.env.VITEST)
+
   const [openSections, setOpenSections] = React.useState<
     Record<string, boolean>
   >({
     ui: true,
-    cloud: typeof process !== "undefined" && process.env.NODE_ENV === "test",
-    maintenance:
-      typeof process !== "undefined" && process.env.NODE_ENV === "test",
-    webllm: typeof process !== "undefined" && process.env.NODE_ENV === "test"
+    cloud: isTestEnv,
+    maintenance: isTestEnv,
+    webllm: isTestEnv
   })
 
   const toggleSection = (section: string) => {
