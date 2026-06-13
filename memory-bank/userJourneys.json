@@ -4,15 +4,8 @@
       "id": "@J-MINT-EXPERT-01",
       "name": "エキスパートミント",
       "description": "エキスパートモードで画像からスタイルカードを作成する",
-      "steps": [
-        "画像上のMintボタン押下",
-        "プロンプト解析",
-        "カード保存"
-      ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-WB-EXPERT-01"
-      ],
+      "steps": ["画像上のMintボタン押下", "プロンプト解析", "カード保存"],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01"],
       "viewComponents": [
         "src/components/organisms/MintingView.tsx",
         "src/lib/mj-parser.ts"
@@ -22,17 +15,9 @@
       "id": "@J-MINT-EASY-01",
       "name": "かんたんミント",
       "description": "かんたんモードで画像からスタイルカードを作成する",
-      "steps": [
-        "画像上のMintボタン押下",
-        "簡易保存"
-      ],
-      "nextJourneys": [
-        "@J-ORG-EASY-01",
-        "@J-WB-EASY-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/SimpleMintingView.tsx"
-      ]
+      "steps": ["画像上のMintボタン押下", "簡易保存"],
+      "nextJourneys": ["@J-ORG-EASY-01", "@J-WB-EASY-01"],
+      "viewComponents": ["src/components/organisms/SimpleMintingView.tsx"]
     },
     {
       "id": "@J-ORG-EXPERT-01",
@@ -69,13 +54,8 @@
         "新規カテゴリ作成",
         "カードに割り当て"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-ORG-FOLDER-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/CategoryManagerModal.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-FOLDER-01"],
+      "viewComponents": ["src/components/organisms/CategoryManagerModal.tsx"]
     },
     {
       "id": "@J-ORG-EASY-01",
@@ -91,9 +71,7 @@
         "@J-ORG-COLOR-FILTER-01",
         "@J-ORG-QUICK-SEND-01"
       ],
-      "viewComponents": [
-        "src/components/organisms/EasyModeView.tsx"
-      ]
+      "viewComponents": ["src/components/organisms/EasyModeView.tsx"]
     },
     {
       "id": "@J-ORG-COLOR-FILTER-01",
@@ -105,22 +83,14 @@
         "色を選択",
         "絞り込まれたカードを確認"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LibraryFilterAccordion.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/LibraryFilterAccordion.tsx"]
     },
     {
       "id": "@J-WB-EXPERT-01",
       "name": "ワークベンチ（エキスパート）",
       "description": "エキスパートモードでプロンプトを構築する",
-      "steps": [
-        "Workbenchを開く",
-        "カードを選ぶ",
-        "プロンプトをマージ"
-      ],
+      "steps": ["Workbenchを開く", "カードを選ぶ", "プロンプトをマージ"],
       "nextJourneys": [
         "@J-WB-EXPERT-02",
         "@J-WB-EXPERT-03",
@@ -137,11 +107,7 @@
       "id": "@J-WB-EXPERT-02",
       "name": "ドラッグ＆ドロップ操作",
       "description": "ドラッグ＆ドロップでカードを配置する",
-      "steps": [
-        "カードをドラッグ",
-        "Handエリアにドロップ",
-        "順序入れ替え"
-      ],
+      "steps": ["カードをドラッグ", "Handエリアにドロップ", "順序入れ替え"],
       "nextJourneys": [
         "@J-WB-EXPERT-01",
         "@J-WB-EXPERT-05",
@@ -151,24 +117,15 @@
         "@J-WB-MIXING-INTELLIGENT-01",
         "@J-WB-AI-ADVICE-01"
       ],
-      "viewComponents": [
-        "src/components/organisms/HandBar.tsx"
-      ]
+      "viewComponents": ["src/components/organisms/HandBar.tsx"]
     },
     {
       "id": "@J-WB-EXPERT-03",
       "name": "プロンプトインジェクション",
       "description": "Midjourneyへのプロンプトインジェクション",
-      "steps": [
-        "Injectボタン押下",
-        "Discordの入力欄にテキスト反映"
-      ],
-      "nextJourneys": [
-        "@J-MINT-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/Workbench.tsx"
-      ]
+      "steps": ["Injectボタン押下", "Discordの入力欄にテキスト反映"],
+      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/Workbench.tsx"]
     },
     {
       "id": "@J-WB-EASY-01",
@@ -180,59 +137,32 @@
         "スロット変数を簡易編集",
         "ワンクリック合成"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/SimpleWorkbenchModal.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/SimpleWorkbenchModal.tsx"]
     },
     {
       "id": "@J-IO-QR-OUT",
       "name": "QRエクスポート",
       "description": "スタイルカードをQRコードとして出力する",
-      "steps": [
-        "カード詳細を開く",
-        "Share as QR押下",
-        "QRコード表示"
-      ],
+      "steps": ["カード詳細を開く", "Share as QR押下", "QRコード表示"],
       "nextJourneys": [],
-      "viewComponents": [
-        "src/components/organisms/ShareCardModal.tsx"
-      ]
+      "viewComponents": ["src/components/organisms/ShareCardModal.tsx"]
     },
     {
       "id": "@J-IO-QR-IN",
       "name": "QRインポート",
       "description": "QRコードを読み取ってカードをインポートする",
-      "steps": [
-        "Import via QR選択",
-        "QRスキャン",
-        "カード保存"
-      ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-ORG-EASY-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LibraryTab.tsx"
-      ]
+      "steps": ["Import via QR選択", "QRスキャン", "カード保存"],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-EASY-01"],
+      "viewComponents": ["src/components/organisms/LibraryTab.tsx"]
     },
     {
       "id": "@J-IO-BACKUP",
       "name": "データバックアップ",
       "description": "アプリケーションデータのバックアップエクスポート",
-      "steps": [
-        "Settingsを開く",
-        "Backupボタン押下",
-        "ZIPファイル保存"
-      ],
-      "nextJourneys": [
-        "@J-SET-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LocalBackupSection.tsx"
-      ]
+      "steps": ["Settingsを開く", "Backupボタン押下", "ZIPファイル保存"],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": ["src/components/organisms/LocalBackupSection.tsx"]
     },
     {
       "id": "@J-IO-RESTORE",
@@ -244,12 +174,8 @@
         "ファイル選択",
         "データ復元"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LocalBackupSection.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/LocalBackupSection.tsx"]
     },
     {
       "id": "@J-SYS-01",
@@ -260,76 +186,40 @@
         "無限スクロール",
         "過去のプロンプト再利用"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/HistoryTab.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/HistoryTab.tsx"]
     },
     {
       "id": "@J-SYS-02",
       "name": "エキスパートヘルプ",
       "description": "エキスパート向けヘルプツールチップの確認",
-      "steps": [
-        "?アイコンにホバー",
-        "ツールチップ表示",
-        "仕様の確認"
-      ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01",
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/ExpertModeView.tsx"
-      ]
+      "steps": ["?アイコンにホバー", "ツールチップ表示", "仕様の確認"],
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/ExpertModeView.tsx"]
     },
     {
       "id": "@J-SYS-03",
       "name": "Tipsバー",
       "description": "使い方Tipsバー of 操作",
-      "steps": [
-        "画面下部のTipsバーを見る",
-        "次へボタン押下",
-        "非表示にする"
-      ],
+      "steps": ["画面下部のTipsバーを見る", "次へボタン押下", "非表示にする"],
       "nextJourneys": [],
-      "viewComponents": [
-        "src/components/organisms/TipsBar.tsx"
-      ]
+      "viewComponents": ["src/components/organisms/TipsBar.tsx"]
     },
     {
       "id": "@J-SYS-04",
       "name": "言語切り替え",
       "description": "多言語（i18n）切り替えと表示",
-      "steps": [
-        "言語設定を変更",
-        "UIテキストの再描画"
-      ],
-      "nextJourneys": [
-        "@J-SET-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/UiPreferencesSection.tsx"
-      ]
+      "steps": ["言語設定を変更", "UIテキストの再描画"],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": ["src/components/organisms/UiPreferencesSection.tsx"]
     },
     {
       "id": "@J-SET-01",
       "name": "アプリ設定",
       "description": "アプリケーション設定の変更",
-      "steps": [
-        "Settingsパネルを開く",
-        "トグル変更",
-        "保存"
-      ],
-      "nextJourneys": [
-        "@J-IO-BACKUP",
-        "@J-IO-RESTORE",
-        "@J-SYS-04"
-      ],
-      "viewComponents": [
-        "src/components/organisms/SettingsTab.tsx"
-      ]
+      "steps": ["Settingsパネルを開く", "トグル変更", "保存"],
+      "nextJourneys": ["@J-IO-BACKUP", "@J-IO-RESTORE", "@J-SYS-04"],
+      "viewComponents": ["src/components/organisms/SettingsTab.tsx"]
     },
     {
       "id": "@J-WB-EXPERT-04",
@@ -340,12 +230,8 @@
         "ポップオーバーサジェスト選択",
         "カードをスロットにドラッグ＆ドロップ"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/SlotVariablesSection.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/SlotVariablesSection.tsx"]
     },
     {
       "id": "@J-ORG-SEARCH-01",
@@ -358,13 +244,8 @@
         "カラーフィルタをクリックして絞り込み",
         "「もっと読み込む」ボタンをクリックして追加表示"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-ORG-SEMANTIC-SEARCH-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LibrarySearchBar.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-SEMANTIC-SEARCH-01"],
+      "viewComponents": ["src/components/organisms/LibrarySearchBar.tsx"]
     },
     {
       "id": "@J-WB-EXPERT-05",
@@ -380,13 +261,8 @@
         "ホバー時にカードが浮き上がることを確認する",
         "左右のフェードオーバーレイと、うっすらと常時表示されるスクロールボタンまたはスクロールバーでカードリストをスクロールする"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01",
-        "@J-WB-EXPERT-02"
-      ],
-      "viewComponents": [
-        "src/components/organisms/HandBar.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-02"],
+      "viewComponents": ["src/components/organisms/HandBar.tsx"]
     },
     {
       "id": "@J-TUTORIAL-01",
@@ -397,10 +273,7 @@
         "ステップ進行（ドラッグ＆ドロップ、Mintボタンクリック、保存など）",
         "チュートリアル完了"
       ],
-      "nextJourneys": [
-        "@J-MINT-EXPERT-01",
-        "@J-WB-EXPERT-01"
-      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01", "@J-WB-EXPERT-01"],
       "viewComponents": [
         "src/components/organisms/InteractiveTutorial.tsx",
         "src/components/organisms/OnboardingGuide.tsx"
@@ -415,13 +288,8 @@
         "サイドパネル上にオーバーレイ（インディゴ/ブルー）が表示されることを確認",
         "ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"
       ],
-      "nextJourneys": [
-        "@J-SYS-01",
-        "@J-MINT-EASY-01"
-      ],
-      "viewComponents": [
-        "src/pages/SidePanel.tsx"
-      ]
+      "nextJourneys": ["@J-SYS-01", "@J-MINT-EASY-01"],
+      "viewComponents": ["src/pages/SidePanel.tsx"]
     },
     {
       "id": "@J-MINT-COLOR-FALLBACK",
@@ -433,12 +301,8 @@
         "レア度を切り替えて対応するテーマカラーに動的に変更されるのを確認",
         "カード保存"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/MintingView.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/MintingView.tsx"]
     },
     {
       "id": "@J-ORG-VERSION-01",
@@ -451,12 +315,8 @@
         "フォーム上で復元された値を確認",
         "保存して確定"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/CardDetailView.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/CardDetailView.tsx"]
     },
     {
       "id": "@J-WB-MIXING-WEIGHTS-01",
@@ -466,12 +326,8 @@
         "ワークベンチのスタイルカードのスライダーを操作する",
         "調合プロンプトのプレビューにウェイト値がリアルタイム反映されるのを確認する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-03"
-      ],
-      "viewComponents": [
-        "src/components/organisms/Cauldron.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-03"],
+      "viewComponents": ["src/components/organisms/Cauldron.tsx"]
     },
     {
       "id": "@J-WB-PORTION-EXTRACT-01",
@@ -481,28 +337,16 @@
         "ワークベンチでスタイルカードをクリックして成分抽出メニューを開く",
         "成分（スタイル/パラメータ/キーワード）を選択して抽出ボタンを押下する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/PortionExtractorOverlay.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/PortionExtractorOverlay.tsx"]
     },
     {
       "id": "@J-IO-CSV",
       "name": "CSVエクスポート",
       "description": "外部連携用のCSV形式でスタイルカードデータをエクスポートする",
-      "steps": [
-        "Settingsを開く",
-        "Export CSVボタン押下",
-        "CSVファイル保存"
-      ],
-      "nextJourneys": [
-        "@J-SET-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LocalBackupSection.tsx"
-      ]
+      "steps": ["Settingsを開く", "Export CSVボタン押下", "CSVファイル保存"],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": ["src/components/organisms/LocalBackupSection.tsx"]
     },
     {
       "id": "@J-IO-MD",
@@ -513,12 +357,8 @@
         "Export Markdownボタン押下",
         "ZIPファイル保存"
       ],
-      "nextJourneys": [
-        "@J-SET-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LocalBackupSection.tsx"
-      ]
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": ["src/components/organisms/LocalBackupSection.tsx"]
     },
     {
       "id": "@J-WB-ATELIER-EFFECTS-01",
@@ -530,12 +370,8 @@
         "パラメータ編集エリアを展開し、各種スライダーやトグルを操作する",
         "カードの進化をトリガーし、進化完了の錬金演出モーダルが表示されることを確認する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/EvolutionSuccessModal.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/EvolutionSuccessModal.tsx"]
     },
     {
       "id": "@J-ORG-FOLDER-01",
@@ -548,12 +384,8 @@
         "パンくずリストで親フォルダに戻る",
         "スタイルカードをフォルダにドラッグ＆ドロップして移動する"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/FolderExplorer.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/FolderExplorer.tsx"]
     },
     {
       "id": "@J-ORGAN-UX-PARAM-01",
@@ -566,13 +398,8 @@
         "パラメータ編集エリアを開き、パラメータ（sref等）のエイリアス新規登録・フォルダ分類を行う",
         "スタイルカードに適用されたパラメータエイリアスバッジが表示され、ホバー時にプレビュー（Tooltip）が表示されることを確認する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01",
-        "@J-ORG-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/ParameterEditor.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/ParameterEditor.tsx"]
     },
     {
       "id": "@J-WB-MIXING-INTELLIGENT-01",
@@ -582,12 +409,8 @@
         "異なる sref / cref とウェイトを持つ複数カードを Workbench に追加する",
         "インジェクションまたはプレビュー時に URL が統合され、ウェイトが加算マージされていることを確認する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-03"
-      ],
-      "viewComponents": [
-        "src/components/organisms/Cauldron.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-03"],
+      "viewComponents": ["src/components/organisms/Cauldron.tsx"]
     },
     {
       "id": "@J-ORG-QUICK-SEND-01",
@@ -598,13 +421,8 @@
         "カード上のクイック送信ボタンを押下",
         "ワークベンチに登録され自動遷移されるのを確認"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01",
-        "@J-WB-EASY-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/CardsGrid.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EASY-01"],
+      "viewComponents": ["src/components/organisms/CardsGrid.tsx"]
     },
     {
       "id": "@J-ORG-SEMANTIC-SEARCH-01",
@@ -616,13 +434,8 @@
         "自然言語クエリを入力する",
         "AIによるフィルタ自動抽出とカード絞り込み結果を確認する"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-ORG-SEARCH-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/LibrarySearchBar.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-SEARCH-01"],
+      "viewComponents": ["src/components/organisms/LibrarySearchBar.tsx"]
     },
     {
       "id": "@J-WB-AI-ADVICE-01",
@@ -634,13 +447,8 @@
         "AIによる調合アドバイス（日本語・英語）が生成・表示されるのを確認",
         "アドバイス内の推奨事項やキーワードを確認する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-01",
-        "@J-WB-EXPERT-03"
-      ],
-      "viewComponents": [
-        "src/components/organisms/AiRecipeAdviceSection.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-03"],
+      "viewComponents": ["src/components/organisms/AiRecipeAdviceSection.tsx"]
     },
     {
       "id": "@J-ORG-CARD-TOOLTIP-01",
@@ -653,13 +461,8 @@
         "アクションボタンが「もっと見る」ボタンに折りたたまれて表示されることを確認する",
         "「もっと見る」ボタンを押下してメニューを開き、折りたたまれたアクションを呼び出す"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-ORG-QUICK-SEND-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/CardsGrid.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-QUICK-SEND-01"],
+      "viewComponents": ["src/components/organisms/CardsGrid.tsx"]
     },
     {
       "id": "@J-WB-EMPTY-CAULDRON-01",
@@ -672,13 +475,8 @@
         "大釜が光る（isDragOver）などの視覚的フィードバックが発生するのを確認する",
         "ドロップしてカードが追加されるのを確認する"
       ],
-      "nextJourneys": [
-        "@J-WB-EXPERT-02",
-        "@J-WB-EXPERT-01"
-      ],
-      "viewComponents": [
-        "src/components/organisms/WorkbenchEmptyState.tsx"
-      ]
+      "nextJourneys": ["@J-WB-EXPERT-02", "@J-WB-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/WorkbenchEmptyState.tsx"]
     },
     {
       "id": "@J-UX-RESILIENCE-01",
@@ -690,14 +488,8 @@
         "主要なインタラクティブ要素が他の要素で遮蔽されずにクリック可能であることを確認する",
         "横スクロールバーが発生していないことを確認する"
       ],
-      "nextJourneys": [
-        "@J-ORG-EXPERT-01",
-        "@J-WB-EXPERT-01",
-        "@J-SET-01"
-      ],
-      "viewComponents": [
-        "src/pages/SidePanel.tsx"
-      ]
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01", "@J-SET-01"],
+      "viewComponents": ["src/pages/SidePanel.tsx"]
     }
   ]
 }

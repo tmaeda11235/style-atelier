@@ -18,7 +18,6 @@ interface UseExpertModeViewProps {
  * Custom hook encapsulating the logic and state for the Expert Mode of the Style Atelier Sidepanel.
  */
 export function useExpertModeView({
-  isEasyMode,
   onToggleEasyMode
 }: UseExpertModeViewProps) {
   const confirm = useConfirm()
