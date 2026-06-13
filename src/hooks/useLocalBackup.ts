@@ -6,12 +6,14 @@ interface UseLocalBackupProps {
   addLog: (log: string) => void
   checkStorage: () => void
   showStatus: (text: string, type: "success" | "error" | "info") => void
+  fileInputRef: React.RefObject<HTMLInputElement | null>
 }
 
 export function useLocalBackup({
   addLog,
   checkStorage,
-  showStatus
+  showStatus,
+  fileInputRef: _fileInputRef
 }: UseLocalBackupProps) {
   const confirm = useConfirm()
   const { t: i18n } = useLanguage()
