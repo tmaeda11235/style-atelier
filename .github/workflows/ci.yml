@@ -16,7 +16,34 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------
-  # Job 1: セットアップとキャッシュ作成
+  # Job 1: 爆速の証明検証（npm install不要）
+  # ---------------------------------------------------
+  verify-proof:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.verify.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v6
+      
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Verify Proof of Work
+        id: verify
+        env:
+          PRIVATE_KEY: ${{ secrets.INCREMENTAL_TEST_PRIVATE_KEY }}
+        run: |
+          if [ -f artifacts/test-proof.enc ]; then
+            node scripts/verify-test-proof.mjs && echo "skip=true" >> $GITHUB_OUTPUT || echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+  # ---------------------------------------------------
+  # Job 2: セットアップとキャッシュ作成
   # ---------------------------------------------------
   setup:
     runs-on: ubuntu-latest
@@ -44,10 +71,8 @@ jobs:
   # Job 2: ユニットテストとビルド（CPU・メモリ重視）
   # ---------------------------------------------------
   unit-and-build:
-    needs: setup
+    needs: [verify-proof, setup]
     runs-on: ubuntu-latest
-    outputs:
-      skip: ${{ steps.verify_proof.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
 
@@ -69,20 +94,8 @@ jobs:
       - name: Verify ESLint Whitelist has not grown
         run: node scratch/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
 
-      - name: Verify Proof of Work
-        id: verify_proof
-        env:
-          PRIVATE_KEY: ${{ secrets.INCREMENTAL_TEST_PRIVATE_KEY }}
-        run: |
-          if [ -f artifacts/test-proof.enc ]; then
-            node scripts/verify-test-proof.mjs && echo "skip=true" >> $GITHUB_OUTPUT || echo "skip=false" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-        continue-on-error: true
-
       - name: Run unit tests with coverage
-        if: steps.verify_proof.outputs.skip != 'true'
+        if: needs.verify-proof.outputs.skip != 'true'
         run: npm test -- --coverage
 
       - name: Build extension
@@ -92,7 +105,8 @@ jobs:
   # Job 3: E2Eテスト（ネットワーク・プロセッサ分離）
   # ---------------------------------------------------
   e2e-test:
-    needs: unit-and-build
+    needs: [verify-proof, unit-and-build]
+    if: needs.verify-proof.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -143,7 +157,6 @@ jobs:
           bash -c 'while true; do date; echo "=== RAM ==="; free -m; echo "=== CPU ==="; top -b -n 1 | head -n 15; echo "-------------------"; sleep 5; done' > system_metrics.log &
 
       - name: Run E2E tests
-        if: needs.unit-and-build.outputs.skip != 'true'
         run: npm run test:e2e -- --reporter=html
 
       - name: Upload System Metrics
