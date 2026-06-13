@@ -98,20 +98,61 @@ if (typeof window !== "undefined") {
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
   ;(window as any).checkAvailableStorage = checkAvailableStorage
 
+  const existingConfig = (window as any).mockWebLlmConfig || {}
   const mockWebLlmConfig = {
-    quotaSufficient: true,
-    integrityPassed: null as boolean | null,
+    quotaSufficient:
+      existingConfig.quotaSufficient !== undefined
+        ? existingConfig.quotaSufficient
+        : true,
+    integrityPassed:
+      existingConfig.integrityPassed !== undefined
+        ? existingConfig.integrityPassed
+        : (null as boolean | null),
     useRealIntegrity:
-      typeof localStorage !== "undefined" &&
-      localStorage.getItem("mock-webllm-use-real-integrity") === "true",
-    downloadSpeed: 100,
-    failDownload: false,
-    downloadErrorMsg: "Failed to fetch model weights: Connection lost",
-    offlineMode: false,
-    onDownloadStart: null as (() => void) | null,
-    inferenceResult: null as string | null
+      existingConfig.useRealIntegrity !== undefined
+        ? existingConfig.useRealIntegrity
+        : typeof localStorage !== "undefined" &&
+          localStorage.getItem("mock-webllm-use-real-integrity") === "true",
+    downloadSpeed:
+      existingConfig.downloadSpeed !== undefined
+        ? existingConfig.downloadSpeed
+        : 100,
+    failDownload:
+      existingConfig.failDownload !== undefined
+        ? existingConfig.failDownload
+        : false,
+    downloadErrorMsg:
+      existingConfig.downloadErrorMsg !== undefined
+        ? existingConfig.downloadErrorMsg
+        : "Failed to fetch model weights: Connection lost",
+    offlineMode:
+      existingConfig.offlineMode !== undefined
+        ? existingConfig.offlineMode
+        : false,
+    onDownloadStart:
+      existingConfig.onDownloadStart !== undefined
+        ? existingConfig.onDownloadStart
+        : (null as (() => void) | null),
+    inferenceResult:
+      existingConfig.inferenceResult !== undefined
+        ? existingConfig.inferenceResult
+        : (null as string | null)
   }
   ;(window as any).mockWebLlmConfig = mockWebLlmConfig
+
+  // Mock navigator.storage.estimate if not sufficient
+  if (navigator.storage && navigator.storage.estimate) {
+    const originalEstimate = navigator.storage.estimate.bind(navigator.storage)
+    navigator.storage.estimate = async () => {
+      if (!mockWebLlmConfig.quotaSufficient) {
+        return {
+          quota: 2.0 * 1024 * 1024 * 1024,
+          usage: 1.8 * 1024 * 1024 * 1024
+        }
+      }
+      return originalEstimate()
+    }
+  }
 
   const pendingRequests = new Map<string, (value: any) => void>()
 
