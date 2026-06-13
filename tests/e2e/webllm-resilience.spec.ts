@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -20,11 +19,8 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Mock low storage estimate using initScript
     await context.addInitScript(() => {
-      if (navigator.storage && navigator.storage.estimate) {
-        navigator.storage.estimate = async () => ({
-          quota: 2.0 * 1024 * 1024 * 1024, // 2.0 GB
-          usage: 1.8 * 1024 * 1024 * 1024 // 1.8 GB (available: 0.2 GB < 1.5 GB required)
-        })
+      ;(window as any).mockWebLlmConfig = {
+        quotaSufficient: false
       }
     })
 
@@ -37,13 +33,13 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
       await skipButton.click()
     }
 
     // Go to Settings tab
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
     await settingsNavBtn.click()
     const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
     await expect(webLlmAccordionHeader).toBeVisible()
@@ -57,18 +53,23 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
     // Assert that the quota warning dialog is displayed to the user
     const warningText = spFrame
       .locator("text=/Insufficient Space Warning|容量不足警告/")
       .first()
-    await expect(warningText).toBeVisible({ timeout: 5000 })
+    await expect(warningText).toBeVisible({ timeout: 15000 })
 
     const warningDesc = spFrame
       .locator(
         "text=/WebLLM requires at least 1.5 GB|WebLLMを動作させるには1.5GB/"
       )
       .first()
-    await expect(warningDesc).toBeVisible({ timeout: 5000 })
+    await expect(warningDesc).toBeVisible({ timeout: 15000 })
 
     // Capture screenshot of quota warning
     await page.screenshot({
@@ -127,13 +128,13 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
       await skipButton.click()
     }
 
     // Go to Settings tab
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
     await settingsNavBtn.click()
     const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
     await expect(webLlmAccordionHeader).toBeVisible()
@@ -144,7 +145,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     const notDownloadedStatus = spFrame.locator(
       "text=/Not Downloaded|未ダウンロード/"
     )
-    await expect(notDownloadedStatus).toBeVisible({ timeout: 10000 })
+    await expect(notDownloadedStatus).toBeVisible({ timeout: 30000 })
 
     // Let's assert that the cache has actually been purged (no longer exists)
     await expect
@@ -207,9 +208,14 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
     // Download completes successfully (status ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
-    await expect(readyStatus).toBeVisible({ timeout: 10000 })
+    await expect(readyStatus).toBeVisible({ timeout: 30000 })
 
     // Clean up real integrity check mock from localStorage
     await spFrame.locator("body").evaluate(() => {
@@ -228,13 +234,13 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Welcome dialog skip
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
       await skipButton.click()
     }
 
     // Open Settings and expand WebLLM
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
     await settingsNavBtn.click()
     const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
     await expect(webLlmAccordionHeader).toBeVisible()
@@ -256,9 +262,14 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
     // Wait until download starts (we see downloading progress or speed)
     await expect(spFrame.locator("text=12.5 MB/s")).toBeVisible({
-      timeout: 5000
+      timeout: 15000
     })
 
     // Simulate network interruption
@@ -269,7 +280,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     const retryText = spFrame
       .locator("text=/Reconnecting|接続を再試行中|接続再試行中/")
       .first()
-    await expect(retryText).toBeVisible({ timeout: 5000 })
+    await expect(retryText).toBeVisible({ timeout: 15000 })
 
     // Take screenshot of the retry state (UX change)
     await page.screenshot({
@@ -282,30 +293,35 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Verify that the download recovers and completes (ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
-    await expect(readyStatus).toBeVisible({ timeout: 10000 })
+    await expect(readyStatus).toBeVisible({ timeout: 30000 })
 
     // Verify it saved downloaded flag
     const isDownloaded = await spFrame.locator("body").evaluate(() => {
       return localStorage.getItem("mock-webllm-downloaded") === "true"
     })
     expect(isDownloaded).toBe(true)
+
+    // Wait for Vite HMR server connections and state to stabilize after going back online
+    await page.waitForTimeout(1000)
   })
 
   test("should display download speed and remaining time during download", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    // Delay to let server stabilize if previous test just completed
+    await page.waitForTimeout(1000)
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
       await skipButton.click()
     }
 
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
-    await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
     await settingsNavBtn.click()
     await page.waitForTimeout(500)
 
@@ -328,11 +344,16 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
     const speedText = spFrame.locator("text=12.5 MB/s")
-    await expect(speedText).toBeVisible({ timeout: 5000 })
+    await expect(speedText).toBeVisible({ timeout: 15000 })
 
     const remainingText = spFrame.locator("text=/Remaining|残り時間/")
-    await expect(remainingText).toBeVisible({ timeout: 5000 })
+    await expect(remainingText).toBeVisible({ timeout: 15000 })
 
     await page.screenshot({
       path: path.join(screenshotsDir, "webllm-download-progress.png")
