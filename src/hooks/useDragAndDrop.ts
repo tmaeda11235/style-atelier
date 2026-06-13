@@ -14,9 +14,7 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
 
   const triggerNotification = (item: DroppedItem | null) => {
     setDroppedItem(item)
-    if (item && !item.isError) {
-      setTimeout(() => setDroppedItem(null), 3000)
-    }
+    if (item && !item.isError) setTimeout(() => setDroppedItem(null), 3000)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -24,11 +22,8 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
     const types = Array.from(e.dataTransfer?.types || [])
     const isFile =
       types.includes("Files") && !types.includes("application/json")
-    if (isFile) {
-      setIsDraggingFile(true)
-    } else {
-      setIsDragging(true)
-    }
+    if (isFile) setIsDraggingFile(true)
+    else setIsDragging(true)
   }
 
   const handleDrop = async (e: React.DragEvent) => {
