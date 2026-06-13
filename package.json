@@ -18,7 +18,8 @@
     "lint": "eslint src/",
     "prepare": "husky",
     "test:mutate": "stryker run",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "preinstall": "node -e \"const v=process.versions.node.split('.').map(Number); if(v[0]<20 || (v[0]===20 && v[1]<12)) { console.error('Error: Node.js version must be >= 20.12.0. Current version is ' + process.version); process.exit(1); }\""
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.84",
@@ -109,9 +110,6 @@
         "https://www.googleapis.com/auth/drive.file"
       ]
     }
-  },
-  "engines": {
-    "node": ">=20.12.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
