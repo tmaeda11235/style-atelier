@@ -19,6 +19,38 @@ export function getFallbackColors(rarity: RarityTier) {
   }
 }
 
+function applyFallbackColors(
+  rarity: RarityTier,
+  setDominant: (c: string) => void,
+  setAccent: (c: string) => void,
+  setTags: (t: string[]) => void,
+  setFallback: (f: boolean) => void
+) {
+  const { dominantHex, accentHex, colorTags } = getFallbackColors(rarity)
+  setDominant(dominantHex)
+  setAccent(accentHex)
+  setTags(colorTags)
+  setFallback(true)
+}
+
+function applyImageColors(
+  colors: any,
+  setDominant: (c: string) => void,
+  setAccent: (c: string) => void,
+  setFallback: (f: boolean) => void,
+  setTags: (t: string[]) => void
+) {
+  setDominant(colors.dominantHex)
+  setAccent(colors.accentHex)
+  setFallback(!!colors.isFallback)
+  const tags: string[] = []
+  if (colors.dominantName) tags.push(colors.dominantName)
+  if (colors.accentName && colors.accentName !== colors.dominantName) {
+    tags.push(colors.accentName)
+  }
+  setTags(tags)
+}
+
 export function useImageColorAnalysis(
   mintingItem: HistoryItem | null,
   variationBase: VariationBase | null,
@@ -31,43 +63,53 @@ export function useImageColorAnalysis(
   useEffect(() => {
     let active = true
 
-    const applyFallback = () => {
-      if (!active) return
-      const { dominantHex, accentHex, colorTags } =
-        getFallbackColors(selectedRarity)
-      setDominant(dominantHex)
-      setAccent(accentHex)
-      setTags(colorTags)
-      setFallback(true)
-    }
-
     if (mintingItem && mintingItem.imageUrl) {
       analyzeImageColors(mintingItem.imageUrl, selectedRarity)
         .then((colors) => {
-          if (!active) return
-          setDominant(colors.dominantHex)
-          setAccent(colors.accentHex)
-          setFallback(!!colors.isFallback)
-          const tags: string[] = []
-          if (colors.dominantName) tags.push(colors.dominantName)
-          if (colors.accentName && colors.accentName !== colors.dominantName) {
-            tags.push(colors.accentName)
+          if (active) {
+            applyImageColors(
+              colors,
+              setDominant,
+              setAccent,
+              setFallback,
+              setTags
+            )
           }
-          setTags(tags)
         })
         .catch((err) => {
           console.error("Failed to analyze image colors:", err)
-          if (!active) return
-          applyFallback()
+          if (active) {
+            applyFallbackColors(
+              selectedRarity,
+              setDominant,
+              setAccent,
+              setTags,
+              setFallback
+            )
+          }
         })
     } else {
-      applyFallback()
+      applyFallbackColors(
+        selectedRarity,
+        setDominant,
+        setAccent,
+        setTags,
+        setFallback
+      )
     }
 
     return () => {
       active = false
     }
-  }, [mintingItem, variationBase, selectedRarity])
+  }, [
+    mintingItem,
+    variationBase,
+    selectedRarity,
+    setDominant,
+    setAccent,
+    setTags,
+    setFallback
+  ])
 }
 
 export function useMintingColors(
