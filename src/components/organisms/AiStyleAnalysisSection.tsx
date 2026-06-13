@@ -19,11 +19,12 @@ interface GenreBadgeProps {
 }
 
 function GenreBadge({ genre }: GenreBadgeProps) {
+  const { t } = useLanguage()
   if (!genre) return null
   return (
     <div className="flex items-center gap-2 bg-indigo-50/50 border border-indigo-100/50 dark:bg-indigo-950/30 dark:border-indigo-900/30 p-2.5 rounded-lg">
       <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
-        Genre:
+        {t.aiStyleAnalysis.genreLabel}
       </span>
       <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
         {genre}

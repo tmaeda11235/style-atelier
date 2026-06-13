@@ -165,7 +165,7 @@
     "cancelBtnText": "キャンセル",
     "cloudBackupPreview": "クラウドバックアップのプレビュー",
     "cleanupHistoryDesc": "※ ストレージの空き容量を増やすには、カード一覧から不要なスタイルカードの削除も効果的です。特に高解像度な画像が紐づくカードは容量を消費します。",
-    "deleteCardTitle": "Cardを削除しますか？",
+    "deleteCardTitle": "カードを削除しますか？",
     "deleteCardMessage": "この操作は取り消せません。\"{{cardName}}\" をライブラリから完全に削除します。",
     "deleteBtn": "削除する",
     "webLlmGroupTitle": "🤖 ローカルAIモデル (WebLLM)",
@@ -473,7 +473,7 @@
       },
       {
         "title": "⑦ カードをWorkbenchへ送る",
-        "description": "LibraryのStyleCardをクリックすると、画面下部の手札バー（HandBar）に追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。"
+        "description": "Libraryのスタイルカードをクリックすると、画面下部の手札バー（HandBar）に追加され、自動的にWorkbenchと同期します。追加できたら「次へ」を押してください。"
       },
       {
         "title": "⑧ Workbenchで編集する",
@@ -647,5 +647,17 @@
     "editAlias": "エイリアスを編集",
     "usedInStyles": "使用スタイル:",
     "imageEmoji": "🖼️"
+  },
+  "defaultCategories": {
+    "style": "スタイル",
+    "character": "キャラクター",
+    "landscape": "風景",
+    "lighting": "ライティング",
+    "camera": "カメラ",
+    "abstract": "抽象",
+    "other": "その他"
+  },
+  "aiStyleAnalysis": {
+    "genreLabel": "ジャンル:"
   }
 }

@@ -12,6 +12,7 @@
 # misc
 .DS_Store
 *.pem
+!/.github/keys/*.pem
 
 # debug
 npm-debug.log*

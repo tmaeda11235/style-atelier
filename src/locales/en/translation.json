@@ -644,5 +644,17 @@
     "editAlias": "Edit alias",
     "usedInStyles": "Used in Styles:",
     "imageEmoji": "🖼️"
+  },
+  "defaultCategories": {
+    "style": "Style",
+    "character": "Character",
+    "landscape": "Landscape",
+    "lighting": "Lighting",
+    "camera": "Camera",
+    "abstract": "Abstract",
+    "other": "Other"
+  },
+  "aiStyleAnalysis": {
+    "genreLabel": "Genre:"
   }
 }

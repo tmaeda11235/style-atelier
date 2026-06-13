@@ -49,14 +49,21 @@ function getSystemPrompt(language: string): string {
     : 'You are an AI assistant that analyzes Midjourney prompts. Analyze the art style and output its artistic genre/style (genre), English tags (tags, up to 5 elements), and a concise summary (summary) in the following JSON format. Output ONLY pure JSON.\n\nFormat:\n{\n  "genre": "genre name",\n  "tags": ["tag1", "tag2"],\n  "summary": "concise English summary"\n}'
 }
 
-export function useAiMetadataGenerator() {
-  const llm = useWebLlm()
-  const { i18n } = useTranslation()
+function useAiMetadataState() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<GeneratedMetadata | null>(null)
+  return { loading, setLoading, error, setError, result, setResult }
+}
 
-  const generateMetadata = useCallback(
+function useGenerateMetadata(
+  runInference: any,
+  language: string,
+  setLoading: (l: boolean) => void,
+  setError: (e: string | null) => void,
+  setResult: (r: GeneratedMetadata | null) => void
+) {
+  return useCallback(
     async (promptText: string) => {
       if (!promptText) return null
       setLoading(true)
@@ -64,8 +71,8 @@ export function useAiMetadataGenerator() {
       setResult(null)
 
       try {
-        const systemPrompt = getSystemPrompt(i18n.language)
-        const response = await llm.runInference(promptText, systemPrompt, 0.2)
+        const systemPrompt = getSystemPrompt(language)
+        const response = await runInference(promptText, systemPrompt, 0.2)
         const parsed = parseResponse(response)
         setResult(parsed)
         return parsed
@@ -76,25 +83,52 @@ export function useAiMetadataGenerator() {
         setLoading(false)
       }
     },
-    [llm, i18n.language]
+    [runInference, language, setLoading, setError, setResult]
+  )
+}
+
+export function useAiMetadataGenerator() {
+  const {
+    runInference,
+    status,
+    progress,
+    startDownload,
+    error: webLlmError,
+    speed,
+    eta,
+    retryCount,
+    maxRetries,
+    text,
+    isEngineInitializing
+  } = useWebLlm()
+  const { i18n } = useTranslation()
+  const { loading, setLoading, error, setError, result, setResult } =
+    useAiMetadataState()
+
+  const generateMetadata = useGenerateMetadata(
+    runInference,
+    i18n.language,
+    setLoading,
+    setError,
+    setResult
   )
 
   return {
-    status: llm.status,
-    progress: llm.progress,
-    startDownload: llm.startDownload,
+    status,
+    progress,
+    startDownload,
     loading,
     error,
-    webLlmError: llm.error,
-    speed: llm.speed,
-    eta: llm.eta,
-    retryCount: llm.retryCount,
-    maxRetries: llm.maxRetries,
-    text: llm.text,
+    webLlmError,
+    speed,
+    eta,
+    retryCount,
+    maxRetries,
+    text,
     result,
     setResult,
     generateMetadata,
-    isModelReady: llm.status === "ready",
-    isEngineInitializing: llm.isEngineInitializing
+    isModelReady: status === "ready",
+    isEngineInitializing
   }
 }
