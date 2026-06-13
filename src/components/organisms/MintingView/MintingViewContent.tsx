@@ -107,6 +107,16 @@ function RarityFrameSection({
   )
 }
 
+interface MintingViewContentProps {
+  props: MintingViewProps
+  t: any
+  expertFeatures: any
+  categoriesList: any[]
+  currentName: string
+  toggleKeyword: (kw: string) => void
+  advanceIfStep: (step: string) => void
+}
+
 export function MintingViewContent({
   props,
   t,
@@ -115,7 +125,7 @@ export function MintingViewContent({
   currentName,
   toggleKeyword,
   advanceIfStep
-}: any) {
+}: MintingViewContentProps) {
   if (!props.mintingItem) {
     return null
   }

@@ -19,7 +19,10 @@ export function useActiveTabUrl() {
     }
 
     try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      })
       const activeTab = tabs[0]
       if (!activeTab) {
         setIsTargetSite(false)
@@ -54,9 +57,9 @@ export function useActiveTabUrl() {
     }
 
     const handleUpdated = (
-      tabId: number,
+      _tabId: number,
       changeInfo: chrome.tabs.TabChangeInfo,
-      tab: chrome.tabs.Tab
+      _tab: chrome.tabs.Tab
     ) => {
       if (changeInfo.status === "complete" || changeInfo.url) {
         checkActiveTab()
