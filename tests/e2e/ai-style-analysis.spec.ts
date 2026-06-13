@@ -90,19 +90,17 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
-    // Handle large download confirmation dialog if visible
-    const startConfirmBtn = spFrame.locator(
-      "button:has-text('Start Download'), button:has-text('ダウンロードを開始')"
-    )
-    if (await startConfirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await startConfirmBtn.click()
+    // Confirm download in local overlay dialog
+    const confirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await confirmBtn.isVisible({ timeout: 3000 })) {
+      await confirmBtn.click()
     }
 
     // 8. Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(
       "button:has-text('Analyze Style with AI')"
     )
-    await expect(analyzeBtn).toBeVisible({ timeout: 15000 })
+    await expect(analyzeBtn).toBeVisible({ timeout: 5000 })
     await analyzeBtn.click()
 
     // 9. Verify results
@@ -176,7 +174,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     const detailView = spFrame.locator(
       "[data-testid='card-detail-view-container']"
     )
-    await expect(detailView).toBeVisible({ timeout: 15000 })
+    await expect(detailView).toBeVisible({ timeout: 5000 })
 
     // Verify mutation note text (the summary description) is displayed in genealogy/history
     const genealogyNote = detailView
