@@ -8,6 +8,13 @@ vi.mock("@/lib/export-utils", () => ({
   renderCardToCanvas: vi.fn()
 }))
 
+vi.mock("@/contexts/SettingsContext", () => ({
+  useSettings: () => ({
+    includeBrandLogo: true,
+    alwaysEnglishLogoText: false
+  })
+}))
+
 const mockClipboardWrite = vi.fn()
 
 const mockCard: StyleCard = {
