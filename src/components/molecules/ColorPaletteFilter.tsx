@@ -71,7 +71,7 @@ export function ScrollButton({ direction, onClick }: ScrollButtonProps) {
   )
 }
 
-function useHorizontalScroll(dependencies: any[]) {
+function useHorizontalScroll(styleCardsCount: number) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
@@ -111,7 +111,7 @@ function useHorizontalScroll(dependencies: any[]) {
         }
       }
     }
-  }, [checkScroll, ...dependencies])
+  }, [checkScroll, styleCardsCount])
 
   const scrollBy = (amount: number) => {
     const el = scrollRef.current
@@ -131,7 +131,7 @@ export function ColorPaletteFilter({
   styleCardsCount
 }: ColorPaletteFilterProps) {
   const { scrollRef, showLeftArrow, showRightArrow, scrollBy } =
-    useHorizontalScroll([styleCardsCount])
+    useHorizontalScroll(styleCardsCount)
 
   return (
     <div className="flex gap-1 items-center mt-0.5 select-none w-full">
