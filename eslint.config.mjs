@@ -10,7 +10,7 @@ import i18next from "eslint-plugin-i18next";
 
 export default ts.config(
   {
-    ignores: ["postcss.config.js", "scratch/**/*", "assets/**", "assets/"]
+    ignores: ["postcss.config.js", "scratch/**/*"]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
