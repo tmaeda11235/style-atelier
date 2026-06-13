@@ -24,6 +24,8 @@ jobs:
       skip: ${{ steps.verify.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 20
       
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
