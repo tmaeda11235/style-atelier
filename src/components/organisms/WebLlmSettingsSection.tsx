@@ -144,7 +144,7 @@ function useWebLlmSettingsHandlers(
 
     const ok = await confirm({
       title: t.webLlmDownloadConfirmTitle || "Confirm Large Download",
-      message: `${t.webLlmDownloadConfirmDesc || "You are about to download the local AI model (~980 MB). If you are using a mobile hotspot or metered connection, please be aware of potential data charges. Do you want to proceed?"}\n\n• ${t.webLlmDownloadSize || "Download Size: ~980 MB"}\n• ${t.webLlmDiskSpaceWarning || "Required space: ~1.5 GB"}${warningText}`,
+      message: `${t.webLlmDownloadConfirmDesc || "You are about to download the local AI model (~2.0 GB). If you are using a mobile hotspot or metered connection, please be aware of potential data charges. Do you want to proceed?"}\n\n• ${t.webLlmDownloadSize || "Download Size: ~2.0 GB"}\n• ${t.webLlmDiskSpaceWarning || "Required space: ~2.5 GB"}${warningText}`,
       confirmText: t.webLlmDownloadConfirmBtn || "Start Download",
       cancelText: t.webLlmCancelBtn || "Cancel",
       variant: "default"

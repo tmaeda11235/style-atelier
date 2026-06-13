@@ -90,6 +90,10 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
       )
       .first()
     await expect(confirmDownloadBtn).toBeVisible()
+
+    // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
+    await expect(spFrame.locator("body")).toContainText(/2\.0\s*GB/)
+    await expect(spFrame.locator("body")).toContainText(/2\.5\s*GB/)
     await confirmDownloadBtn.click({ force: true })
 
     // Assert that the error status UI appears
@@ -313,6 +317,10 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
       )
       .first()
     await expect(confirmDownloadBtn).toBeVisible()
+
+    // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
+    await expect(spFrame.locator("body")).toContainText(/2\.0\s*GB/)
+    await expect(spFrame.locator("body")).toContainText(/2\.5\s*GB/)
     await confirmDownloadBtn.click({ force: true })
 
     // Assert download progress UI is shown

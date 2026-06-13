@@ -19,7 +19,7 @@ function ConfirmHeader({ t }: { t: any }) {
         </h4>
         <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
           {t.settings?.webLlmDownloadConfirmDesc ||
-            "This will download a ~980 MB model file. High data usage will occur."}
+            "This will download a ~2.0 GB model file. High data usage will occur."}
         </p>
       </div>
     </div>
@@ -44,13 +44,13 @@ function SizeDetails({ t }: { t: any }) {
       <div className="flex items-center gap-1.5">
         <span className="w-1 h-1 rounded-full bg-slate-400 flex-shrink-0" />
         <span>
-          {t.settings?.webLlmDownloadSize || "Download Size: ~980 MB"}
+          {t.settings?.webLlmDownloadSize || "Download Size: ~2.0 GB"}
         </span>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="w-1 h-1 rounded-full bg-slate-400 flex-shrink-0" />
         <span>
-          {t.settings?.webLlmDiskSpaceWarning || "Required space: ~1.5 GB"}
+          {t.settings?.webLlmDiskSpaceWarning || "Required space: ~2.5 GB"}
         </span>
       </div>
     </div>
@@ -127,7 +127,7 @@ function StatusDefaultView({
 
       <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3.5 flex items-center gap-1.5">
         <span className="font-semibold">
-          {t.settings?.webLlmDownloadSize || "Download Size: ~980 MB"}
+          {t.settings?.webLlmDownloadSize || "Download Size: ~2.0 GB"}
         </span>
         <span>•</span>
         <span>Wi-Fi Recommended</span>

@@ -901,13 +901,21 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     console.log("Easy Mode back link navigation E2E test passed successfully!")
   })
 
-  test("should show sync strategy warning dialog when last sync is over 60 days ago", async ({
+  test("should show sync strategy warning dialog when last sync is over 60 days ago, suspend auto-sync, and handle all merge strategies", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    console.log(
-      "Navigating to sandbox page for Sync Strategy Warning E2E test..."
-    )
+    console.log("Setting up 60-day sync suspension localStorage state...")
+    const sixtyOneDaysAgo = Date.now() - 61 * 24 * 60 * 60 * 1000
+
+    // Initialize page with sync/auto-sync enabled but aged backup time
+    await page.addInitScript((time) => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+      localStorage.setItem("style-atelier-last-backup", time.toString())
+    }, sixtyOneDaysAgo)
+
+    console.log("Navigating to sandbox page for Sync Strategy E2E test...")
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
@@ -922,33 +930,34 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")
     await expect(settingsNavBtn).toBeVisible({ timeout: 10000 })
     await settingsNavBtn.click()
-    await spFrame.locator("body").evaluate(() => {
-      const sixtyOneDaysAgo = Date.now() - 61 * 24 * 60 * 60 * 1000
-      localStorage.setItem(
-        "style-atelier-last-backup",
-        sixtyOneDaysAgo.toString()
-      )
-    })
 
-    // 4. Expand Cloud Backup & Sync accordion
+    // 3. Expand Cloud Backup & Sync accordion
     const cloudHeader = spFrame.locator("text=Cloud Backup & Sync")
     await cloudHeader.click()
-    const gdToggle = spFrame.locator("#google-drive-toggle-btn")
-    await expect(gdToggle).toBeVisible()
-    await gdToggle.click()
+
+    // 4. Verify auto-sync has been suspended (toggle is off / bg-slate-200)
+    // The auto-sync is initialized on page load and detects >60 days sync age,
+    // which automatically triggers checkAndMergeRemoteChanges and suspends auto-sync.
+    const autoSyncBtn = spFrame.locator("#google-drive-auto-sync-btn")
+    await expect(autoSyncBtn).toBeVisible({ timeout: 10000 })
+    await expect(autoSyncBtn).toHaveClass(/bg-slate-200/)
+    console.log("Verified auto-sync is suspended and toggle is OFF.")
+
+    // 5. Trigger manual sync to show GDriveSyncStrategyDialog
     const syncBtn = spFrame.locator("#google-drive-sync-btn")
     await expect(syncBtn).toBeVisible()
     await syncBtn.click()
+
     const warningDialog = spFrame.locator("#sync-strategy-dialog-container")
     await expect(warningDialog).toBeVisible()
 
-    // 8. Capture screenshot of warning dialog
+    // 6. Capture screenshot of warning dialog
     await page.screenshot({
       path: path.join(screenshotsDir, "sync-strategy-warning-dialog.png")
     })
     console.log("Sync strategy warning dialog screenshot saved.")
 
-    // 9. Verify strategy options are present
+    // 7. Verify strategy options are present
     const mergeOption = spFrame.locator("#strategy-merge")
     const localOption = spFrame.locator("#strategy-local-overwrite")
     const cloudOption = spFrame.locator("#strategy-cloud-overwrite")
@@ -956,20 +965,50 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await expect(localOption).toBeVisible()
     await expect(cloudOption).toBeVisible()
 
-    // 10. Test Cancel button
+    const confirmBtn = spFrame.locator("#sync-strategy-dialog-ok-btn")
     const cancelBtn = spFrame.locator("#sync-strategy-dialog-cancel-btn")
+
+    // 8. Test Cancel button
     await cancelBtn.click()
     await expect(warningDialog).not.toBeVisible()
 
-    // 11. Click sync button again, select local overwrite and proceed
+    // 9. Test Safe Merge Strategy
     await syncBtn.click()
     await expect(warningDialog).toBeVisible()
-
-    await localOption.click()
-    const confirmBtn = spFrame.locator("#sync-strategy-dialog-ok-btn")
+    await mergeOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
-    console.log("Sync strategy warning E2E test passed successfully!")
+    console.log("Safe Merge strategy confirmed successfully.")
+
+    // Reset last-backup to >60 days ago so dialog will show up again
+    await spFrame.locator("body").evaluate((_, time) => {
+      localStorage.setItem("style-atelier-last-backup", time.toString())
+    }, sixtyOneDaysAgo)
+
+    // 10. Test Local Overwrite Strategy
+    await syncBtn.click()
+    await expect(warningDialog).toBeVisible()
+    await localOption.click()
+    await confirmBtn.click()
+    await expect(warningDialog).not.toBeVisible()
+    console.log("Local Overwrite strategy confirmed successfully.")
+
+    // Reset last-backup to >60 days ago so dialog will show up again
+    await spFrame.locator("body").evaluate((_, time) => {
+      localStorage.setItem("style-atelier-last-backup", time.toString())
+    }, sixtyOneDaysAgo)
+
+    // 11. Test Cloud Overwrite Strategy
+    await syncBtn.click()
+    await expect(warningDialog).toBeVisible()
+    await cloudOption.click()
+    await confirmBtn.click()
+    await expect(warningDialog).not.toBeVisible()
+    console.log("Cloud Overwrite strategy confirmed successfully.")
+
+    console.log(
+      "Sync strategy warning and suspension E2E test passed successfully!"
+    )
   })
 
   test("should allow changing display theme (Light/Dark/System) and verify dark mode stylesheet/class changes", async ({
@@ -1130,6 +1169,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     // Confirm download in dialog
     const downloadDialog = spFrame.locator("#confirmation-dialog-container")
     await expect(downloadDialog).toBeVisible()
+
+    // Verify updated model size values (2.0 GB / 2.5 GB) are present in the dialog description
+    await expect(downloadDialog).toContainText(/2\.0\s*GB/)
+    await expect(downloadDialog).toContainText(/2\.5\s*GB/)
+
     const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
     await expect(downloadConfirmBtn).toBeVisible()
     await downloadConfirmBtn.click()
