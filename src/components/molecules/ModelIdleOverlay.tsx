@@ -74,6 +74,7 @@ function ActionButtons({
         {t.settings?.webLlmCancelBtn || "Cancel"}
       </button>
       <button
+        id="confirm-dialog-ok-btn"
         type="button"
         onClick={startDownload}
         className="px-2.5 py-0.5 text-[9px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded shadow-xs active:scale-95 transition-all duration-200 cursor-pointer flex items-center gap-1 border-none">

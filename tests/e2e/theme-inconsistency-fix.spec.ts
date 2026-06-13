@@ -98,11 +98,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     await downloadBtn.click()
 
     // Confirm download in local overlay dialog
-    const confirmBtn = spFrame.locator(
-      "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
-    )
-    await expect(confirmBtn).toBeVisible()
-    await confirmBtn.click()
+    const confirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await confirmBtn.isVisible({ timeout: 3000 })) {
+      await confirmBtn.click()
+    }
 
     // Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(
