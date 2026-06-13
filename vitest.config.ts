@@ -8,6 +8,11 @@ export default defineConfig({
     tsconfigPaths: true,
     alias: [
       {
+        find: /^url:~src\/offscreen\.html$/,
+        replacement:
+          "C:/Users/oculus/Desktop/style-atelier/tests/mocks/mockHtml.ts"
+      },
+      {
         find: /^url:(.*)$/,
         replacement: "$1"
       }
