@@ -158,6 +158,7 @@ export function useExpertModeView({
     isDraggingFile,
     isImporting,
     droppedItem,
+    clearDroppedItem,
     handleDragOver,
     handleDragLeave,
     handleDrop: rawHandleDrop
@@ -248,6 +249,7 @@ export function useExpertModeView({
     isDraggingFile,
     isImporting,
     droppedItem,
+    clearDroppedItem,
     handleDragOver,
     handleDragLeave,
     handleDrop,

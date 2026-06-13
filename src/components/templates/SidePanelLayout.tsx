@@ -4,6 +4,7 @@ import React from "react"
 import { useLanguage } from "../../contexts/LanguageContext"
 import type { Tab } from "../../hooks/useTabs"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+import { ImportNotificationBanner } from "../molecules/ImportNotificationBanner"
 
 interface SidePanelLayoutProps {
   activeTab: Tab
@@ -14,6 +15,7 @@ interface SidePanelLayoutProps {
   onClearLogs: () => void
   onResetDb: () => void
   droppedItem: any
+  onClearDroppedItem?: () => void
   // New props for global error handling
   alertType?: AlertType
   onRetryConnection?: () => void
@@ -33,6 +35,7 @@ export function SidePanelLayout({
   onClearLogs,
   onResetDb,
   droppedItem,
+  onClearDroppedItem,
   alertType,
   onRetryConnection,
   onDismissAlert,
@@ -210,63 +213,11 @@ export function SidePanelLayout({
           </div>
         )}
 
-        {droppedItem && (
-          <div
-            className={`p-3 border rounded-xl bg-white dark:bg-slate-900 shadow-xl animate-in fade-in slide-in-from-top-4 duration-200 ${
-              droppedItem.isError
-                ? "ring-2 ring-red-500/80 border-red-100 dark:border-red-950 bg-red-50/10 dark:bg-red-950/10"
-                : "ring-2 ring-blue-500/80 border-blue-100 dark:border-blue-900"
-            }`}>
-            {droppedItem.isError ? (
-              <div className="flex items-center gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-950 flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-3.5 h-3.5 text-red-600 dark:text-red-400"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                </div>
-                <p className="text-xs font-bold text-red-800 dark:text-red-300 leading-tight">
-                  {droppedItem.errorMessage || "Import failed"}
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"></path>
-                  </svg>
-                </div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                  {droppedItem.isImport
-                    ? t.dragAndDrop.importSuccess.replace(
-                        "{name}",
-                        droppedItem.name || "New Card"
-                      )
-                    : droppedItem.isMerged
-                      ? t.dragAndDrop.associated.replace(
-                          "{name}",
-                          droppedItem.name || "Existing Card"
-                        )
-                      : t.dragAndDrop.historyAdded}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        <ImportNotificationBanner
+          droppedItem={droppedItem}
+          onClearDroppedItem={onClearDroppedItem}
+          t={t}
+        />
         {children}
 
         {process.env.NODE_ENV === "development" && (

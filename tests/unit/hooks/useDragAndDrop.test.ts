@@ -409,7 +409,8 @@ describe("useDragAndDrop", () => {
       expect(result.current.droppedItem).toEqual({
         isError: true,
         errorMessage:
-          "Could not detect QR code. Please try using an uncompressed image, or crop the QR code area before uploading."
+          "Could not detect QR code. Please try using an uncompressed image, or crop the QR code area before uploading.",
+        errorType: "no_metadata_or_qr"
       })
     })
 
@@ -439,7 +440,8 @@ describe("useDragAndDrop", () => {
       expect(returnVal).toBeNull()
       expect(result.current.droppedItem).toEqual({
         isError: true,
-        errorMessage: "Invalid card data in QR code or corrupted."
+        errorMessage: "Invalid card data in QR code or corrupted.",
+        errorType: "invalid_data"
       })
     })
 
@@ -468,7 +470,8 @@ describe("useDragAndDrop", () => {
       expect(result.current.droppedItem).toEqual({
         isError: true,
         errorMessage:
-          "QRコードが検出できませんでした。圧縮されていない画像を試すか、QRコード部分をトリミングしてアップロードしてください。"
+          "QRコードが検出できませんでした。圧縮されていない画像を試すか、QRコード部分をトリミングしてアップロードしてください。",
+        errorType: "no_metadata_or_qr"
       })
 
       // Restore
@@ -497,6 +500,69 @@ describe("useDragAndDrop", () => {
         name: "Imported Card",
         isImport: true
       })
+    })
+
+    it("should set errorType 'no_metadata_or_qr' when no QR code found in the image", async () => {
+      const { readQRCodeFromImage } = await import("@/lib/qr-utils")
+      vi.mocked(readQRCodeFromImage).mockResolvedValueOnce(null)
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile]
+        }
+      } as any
+
+      await act(async () => {
+        await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(result.current.droppedItem).toEqual({
+        isError: true,
+        errorMessage: expect.any(String),
+        errorType: "no_metadata_or_qr"
+      })
+    })
+
+    it("should set errorType 'invalid_or_corrupt' when QR data is invalid", async () => {
+      const { decompressCardData } = await import("@/lib/qr-utils")
+      vi.mocked(decompressCardData).mockReturnValueOnce({
+        id: "imported-card-id",
+        name: "", // empty name makes it invalid
+        promptSegments: []
+      })
+
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      const mockFile = new File(["test"], "card.png", { type: "image/png" })
+      const dummyEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          files: [mockFile]
+        }
+      } as any
+
+      await act(async () => {
+        await result.current.handleDrop(dummyEvent)
+      })
+
+      expect(result.current.droppedItem).toEqual({
+        isError: true,
+        errorMessage: expect.any(String),
+        errorType: "invalid_data"
+      })
+    })
+
+    it("should clear droppedItem when clearDroppedItem is called", () => {
+      const { result } = renderHook(() => useDragAndDrop(mockAddLog))
+
+      act(() => {
+        result.current.clearDroppedItem()
+      })
+      expect(result.current.droppedItem).toBeNull()
     })
   })
 })

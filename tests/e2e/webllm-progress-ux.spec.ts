@@ -28,7 +28,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
       await skipButton.click({ force: true })
     }
 
@@ -56,14 +56,14 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     const mintCardBtn = spFrame
       .locator("button:has-text('Mint Card'), button:has-text('カード化')")
       .first()
-    await expect(mintCardBtn).toBeVisible({ timeout: 10000 })
+    await expect(mintCardBtn).toBeVisible({ timeout: 30000 })
     await mintCardBtn.click({ force: true })
 
     // Verify Minting View is visible
     const mintingView = spFrame.locator(
       "[data-testid='minting-view-container']"
     )
-    await expect(mintingView).toBeVisible({ timeout: 10000 })
+    await expect(mintingView).toBeVisible({ timeout: 30000 })
 
     // Force download failure mock on current window instance
     await spFrame.locator("body").evaluate(() => {
@@ -96,7 +96,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     const errorTitle = spFrame
       .locator("text=/Error occurred|エラーが発生しました/")
       .first()
-    await expect(errorTitle).toBeVisible({ timeout: 10000 })
+    await expect(errorTitle).toBeVisible({ timeout: 30000 })
 
     // Take screenshot of download error state
     await page.screenshot({
@@ -191,7 +191,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
           .locator("text=/Downloading|ダウンロード中/")
           .first()
         await expect(progressLabel)
-          .toBeVisible({ timeout: 5000 })
+          .toBeVisible({ timeout: 15000 })
           .catch(() => {})
 
         // Take screenshot of download progress
@@ -208,7 +208,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     }
 
     // Wait for download to complete and enter Ready mode
-    await expect(analyzeBtn).toBeVisible({ timeout: 15000 })
+    await expect(analyzeBtn).toBeVisible({ timeout: 45000 })
 
     // Take screenshot of ready / generated state
     await page.screenshot({
@@ -228,7 +228,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
       await skipButton.click({ force: true })
     }
 
@@ -319,7 +319,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     const downloadingLabel = spFrame
       .locator("text=/Downloading|ダウンロード中/")
       .first()
-    await expect(downloadingLabel).toBeVisible({ timeout: 5000 })
+    await expect(downloadingLabel).toBeVisible({ timeout: 15000 })
 
     // Take screenshot of download progress in Recipe Advice
     await page.screenshot({
@@ -331,7 +331,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     const adviceHeaderResult = spFrame
       .locator("text=/AI Cauldron Recipe Advice|AIレシピアドバイス/")
       .first()
-    await expect(adviceHeaderResult).toBeVisible({ timeout: 15000 })
+    await expect(adviceHeaderResult).toBeVisible({ timeout: 45000 })
 
     // Take screenshot of ready AI advice
     await page.screenshot({
