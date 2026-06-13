@@ -1,4 +1,22 @@
+import { execSync } from "child_process"
 import { defineConfig, devices } from "@playwright/test"
+
+const getFreePort = () => {
+  if (process.env.TEST_PORT) return process.env.TEST_PORT
+  try {
+    const port = execSync("node scratch/get-free-port.js", {
+      encoding: "utf-8"
+    }).trim()
+    process.env.TEST_PORT = port
+    return port
+  } catch {
+    console.warn("Failed to dynamically allocate port. Falling back to 5173.")
+    process.env.TEST_PORT = "5173"
+    return "5173"
+  }
+}
+
+const PORT = getFreePort()
 
 /**
  * Playwright E2E test configuration for style-atelier Chrome Extension.
@@ -7,7 +25,7 @@ import { defineConfig, devices } from "@playwright/test"
 export default defineConfig({
   testDir: "./tests/e2e",
   /* Maximum time one test can run for. */
-  timeout: 30 * 1000,
+  timeout: 60 * 1000,
   expect: {
     timeout: 10000
   },
@@ -24,7 +42,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:5173",
+    baseURL: `http://localhost:${PORT}`,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
     /* Capture screenshot after each test. */
@@ -46,9 +64,9 @@ export default defineConfig({
 
   /* Run local dev server before starting the tests */
   webServer: {
-    command: `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port 5173 --strictPort`,
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
+    command: `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port ${PORT} --strictPort`,
+    port: Number(PORT),
+    reuseExistingServer: false,
     timeout: 60 * 1000
   }
 })
