@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -56,6 +55,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
+
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(downloadConfirmBtn).toBeVisible()
+    await downloadConfirmBtn.click()
 
     // Assert that the quota warning dialog is displayed to the user
     const warningText = spFrame
@@ -207,6 +211,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(downloadConfirmBtn).toBeVisible()
+    await downloadConfirmBtn.click()
+
     // Download completes successfully (status ready)
     const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
     await expect(readyStatus).toBeVisible({ timeout: 10000 })
@@ -255,6 +264,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
+
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(downloadConfirmBtn).toBeVisible()
+    await downloadConfirmBtn.click()
 
     // Wait until download starts (we see downloading progress or speed)
     await expect(spFrame.locator("text=12.5 MB/s")).toBeVisible({
@@ -327,6 +341,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
+
+    // Confirm download in dialog
+    const downloadConfirmBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(downloadConfirmBtn).toBeVisible()
+    await downloadConfirmBtn.click()
 
     const speedText = spFrame.locator("text=12.5 MB/s")
     await expect(speedText).toBeVisible({ timeout: 5000 })

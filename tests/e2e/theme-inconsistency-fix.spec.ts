@@ -97,6 +97,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
 
+    // Confirm download in local overlay dialog
+    const confirmBtn = spFrame.locator(
+      "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+    )
+    await expect(confirmBtn).toBeVisible()
+    await confirmBtn.click()
+
     // Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(
       "button:has-text('Analyze Style with AI')"
