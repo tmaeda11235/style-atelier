@@ -1,6 +1,8 @@
+/* eslint-disable i18next/no-literal-string, max-lines-per-function */
 import { Edit3, Plus, X } from "lucide-react"
 import React, { useState } from "react"
 
+import { useLanguage } from "../../contexts/LanguageContext"
 import { useParameterAliases } from "../../hooks/useParameterAliases"
 import { useParameterArray } from "../../hooks/useParameterArray"
 import { useParameterFolders } from "../../hooks/useParameterFolders"
@@ -43,6 +45,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
   styleCards = [],
   parameterType
 }) => {
+  const { t } = useLanguage()
   const {
     inputValue,
     setInputValue,
@@ -107,7 +110,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
               <button
                 onClick={() => handleOpenEdit(val)}
                 className="opacity-40 hover:opacity-100 transition-opacity"
-                title="Edit alias"
+                title={t.parameterArrayEditor?.editAlias || "Edit alias"}
                 type="button">
                 <Edit3 className="w-2.5 h-2.5" />
               </button>
@@ -126,7 +129,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
               {matchedCards.length > 0 && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/badge:block z-[99] bg-slate-950/95 backdrop-blur text-white text-[10px] p-2.5 rounded-lg shadow-xl border border-slate-800 w-48 pointer-events-none animate-in fade-in duration-200">
                   <div className="font-bold border-b border-slate-800 pb-1 mb-1.5 text-slate-400">
-                    Used in Styles:
+                    {t.parameterArrayEditor?.usedInStyles || "Used in Styles:"}
                   </div>
                   <div className="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto scrollbar-none">
                     {matchedCards.slice(0, 4).map((c) => (
@@ -141,7 +144,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
                           />
                         ) : (
                           <div className="w-12 h-12 rounded border border-slate-800 bg-slate-800 flex items-center justify-center text-[10px]">
-                            🖼️
+                            {t.parameterArrayEditor?.imageEmoji || "🖼️"}
                           </div>
                         )}
                         <span className="truncate w-full text-center text-[8px] font-medium text-slate-300">

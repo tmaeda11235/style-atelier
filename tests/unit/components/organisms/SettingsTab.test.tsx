@@ -458,7 +458,7 @@ describe("SettingsTab", () => {
 
     it("displays Cancel button during sync and handles manual cancellation", async () => {
       let triggerAbort: (() => void) | undefined
-      const downloadPromise = new Promise<string>((resolve, reject) => {
+      const pendingPromise = new Promise<string>((resolve, reject) => {
         triggerAbort = () => {
           const err = new DOMException(
             "The user aborted a request.",
@@ -467,7 +467,8 @@ describe("SettingsTab", () => {
           reject(err)
         }
       })
-      vi.mocked(googleDrive.downloadBackup).mockReturnValue(downloadPromise)
+      vi.mocked(googleDrive.downloadBackup).mockReturnValue(pendingPromise)
+      vi.mocked(googleDrive.uploadBackup).mockReturnValue(pendingPromise)
 
       const { container } = render(
         <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />

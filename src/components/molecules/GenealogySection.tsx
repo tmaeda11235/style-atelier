@@ -1,5 +1,7 @@
+/* eslint-disable i18next/no-literal-string, max-lines-per-function */
 import React from "react"
 
+import { useLanguage } from "../../contexts/LanguageContext"
 import type { StyleCard } from "../../lib/db-schema"
 
 interface GenealogySectionProps {
@@ -13,16 +15,19 @@ export function GenealogySection({
   parents,
   onCardSelect
 }: GenealogySectionProps) {
+  const { t } = useLanguage()
   return (
     <div className="p-4 bg-white border rounded-lg shadow-sm space-y-4">
       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-        Ancestry & Evolution
+        {t.genealogy?.title || "Ancestry & Evolution"}
       </h3>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">Generation</span>
+        <span className="text-xs font-medium text-slate-500">
+          {t.genealogy?.generation || "Generation"}
+        </span>
         <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs font-bold border border-blue-100">
-          Gen {card.genealogy?.generation || 1}
+          {t.genealogy?.genLabel || "Gen"} {card.genealogy?.generation || 1}
         </span>
       </div>
 
@@ -30,7 +35,7 @@ export function GenealogySection({
       {card.genealogy?.mutationNote && (
         <div>
           <span className="block text-xs font-medium text-slate-500 mb-1">
-            Mutation Note
+            {t.genealogy?.mutationNote || "Mutation Note"}
           </span>
           <div className="text-xs bg-slate-50 text-slate-600 p-2.5 rounded border border-slate-100 max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed">
             {card.genealogy.mutationNote}
@@ -42,7 +47,7 @@ export function GenealogySection({
       {card.genealogy?.parentIds && card.genealogy.parentIds.length > 0 && (
         <div>
           <span className="block text-xs font-medium text-slate-500 mb-2">
-            Parent Cards
+            {t.genealogy?.parentCards || "Parent Cards"}
           </span>
           <div className="grid grid-cols-2 gap-2">
             {parents.map((parent, idx) => {
@@ -52,14 +57,20 @@ export function GenealogySection({
                   <div
                     key={parentId || idx}
                     className="flex items-center gap-2 p-2 bg-slate-50 border rounded-lg text-slate-400 select-none opacity-60"
-                    title="This parent card has been deleted">
+                    title={
+                      t.genealogy?.deletedCardTitle ||
+                      "This parent card has been deleted"
+                    }>
                     <div className="w-8 h-8 rounded bg-slate-200 border flex items-center justify-center text-xs">
-                      🗑️
+                      {t.genealogy?.trashEmoji || "🗑️"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">Deleted Card</p>
+                      <p className="text-xs font-bold truncate">
+                        {t.genealogy?.deletedCard || "Deleted Card"}
+                      </p>
                       <p className="text-[10px] text-slate-400 truncate">
-                        ID: {parentId.slice(0, 8)}...
+                        {t.genealogy?.idLabel || "ID:"} {parentId.slice(0, 8)}
+                        {"..."}
                       </p>
                     </div>
                   </div>
@@ -79,7 +90,7 @@ export function GenealogySection({
                     />
                   ) : (
                     <div className="w-8 h-8 rounded bg-slate-100 border flex items-center justify-center text-xs">
-                      🎨
+                      {t.genealogy?.paletteEmoji || "🎨"}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -87,7 +98,8 @@ export function GenealogySection({
                       {parent.name}
                     </p>
                     <p className="text-[10px] text-slate-400 truncate">
-                      Gen {parent.genealogy?.generation || 1}
+                      {t.genealogy?.genLabel || "Gen"}{" "}
+                      {parent.genealogy?.generation || 1}
                     </p>
                   </div>
                 </button>

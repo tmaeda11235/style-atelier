@@ -108,4 +108,47 @@ describe("MockStyleAtelierDatabase", () => {
     expect(item1.val).toBe("new")
     expect(item2.val).toBe("old")
   })
+
+  it("should support pure CRUD saveParameterAlias", async () => {
+    const mockDb = new MockStyleAtelierDatabase()
+    const aliasData = { paramType: "type", value: "val", alias: "alias1" }
+
+    // Add new alias
+    const id = await mockDb.saveParameterAlias(aliasData)
+    expect(id).toBeDefined()
+    const added = await mockDb.parameterAliases.get(id)
+    expect(added.alias).toBe("alias1")
+    // Update existing alias
+    await mockDb.saveParameterAlias({
+      id,
+      ...aliasData,
+      alias: "updated-alias"
+    })
+    const updated = await mockDb.parameterAliases.get(id)
+    expect(updated.alias).toBe("updated-alias")
+  })
+
+  it("should support pure CRUD deleteParameterFolder without cascading side effects", async () => {
+    const mockDb = new MockStyleAtelierDatabase()
+
+    // Setup a folder and an alias pointing to it
+    await mockDb.parameterFolders.add({ id: "folder-1", name: "Folder 1" })
+    await mockDb.parameterAliases.add({
+      id: "alias-1",
+      alias: "alias1",
+      folderId: "folder-1"
+    })
+
+    // Delete folder
+    await mockDb.deleteParameterFolder("folder-1")
+
+    // The folder should be deleted
+    const folder = await mockDb.parameterFolders.get("folder-1")
+    expect(folder).toBeUndefined()
+
+    // The alias should still have folderId (no cascade update in mock)
+    const alias = await mockDb.parameterAliases.get("alias-1")
+    expect(alias).toBeDefined()
+    expect(alias.folderId).toBe("folder-1")
+  })
 })
