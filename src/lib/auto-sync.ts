@@ -257,5 +257,6 @@ export function initializeAutoSync() {
 
   if (isAutoSyncEnabled()) {
     startPolling()
+    checkAndMergeRemoteChanges()
   }
 }
