@@ -46,6 +46,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handlePurgeCache(sendResponse)
       return true
 
+    case "preload-engine":
+      handlePreloadEngine(sendResponse)
+      return true
+
     case "run-inference":
       handleRunInference(
         message.requestId ?? Math.random().toString(36).substring(7),
@@ -192,6 +196,45 @@ function handleStartDownload(sendResponse: (res: any) => void) {
       sendResponse({ status: "success", message: "Download started" })
     } else {
       sendResponse({ status: "error", error: "Failed to initialize worker" })
+    }
+  } catch (err: any) {
+    sendResponse({ status: "error", error: err.message })
+  }
+}
+
+async function handlePreloadEngine(sendResponse: (res: any) => void) {
+  try {
+    const opfsValid = await verifyOpfsIntegrity(
+      "webllm_models",
+      GEMMA_MODEL_FILES
+    )
+    const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
+      url: `https://webllm/model/${f.name}`,
+      size: f.size
+    }))
+    const cacheValid = await verifyCacheIntegrity(
+      "webllm/model_cache",
+      cacheExpected
+    )
+
+    if (opfsValid || cacheValid) {
+      if (!webLlmWorker) {
+        handleInitWorker(() => {})
+      }
+      if (webLlmWorker) {
+        webLlmWorker.postMessage({ action: "preload" })
+        sendResponse({ status: "success", message: "Preload started" })
+      } else {
+        sendResponse({
+          status: "error",
+          error: "Failed to initialize worker for preload"
+        })
+      }
+    } else {
+      sendResponse({
+        status: "success",
+        message: "Model not downloaded, skipping preload"
+      })
     }
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })

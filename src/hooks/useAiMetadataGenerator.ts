@@ -98,7 +98,8 @@ export function useAiMetadataGenerator() {
     eta,
     retryCount,
     maxRetries,
-    text
+    text,
+    isEngineInitializing
   } = useWebLlm()
   const { i18n } = useTranslation()
   const { loading, setLoading, error, setError, result, setResult } =
@@ -127,6 +128,7 @@ export function useAiMetadataGenerator() {
     result,
     setResult,
     generateMetadata,
-    isModelReady: status === "ready"
+    isModelReady: status === "ready",
+    isEngineInitializing
   }
 }
