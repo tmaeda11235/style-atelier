@@ -41,7 +41,7 @@ function resetIdleTimer() {
 
 const TOTAL_SIZE_BYTES = 1.0 * 1024 * 1024 * 1024 // Assume ~1.0 GB model size
 
-function createProgressCallback(startTime: number) {
+function createProgressCallback(startTime: number, isDownloading: boolean) {
   return (report: any) => {
     const progress = Math.round(report.progress * 100)
     const now = Date.now()
@@ -49,7 +49,7 @@ function createProgressCallback(startTime: number) {
     let speed = 0
     let eta = 0
 
-    if (elapsedMs > 500 && report.progress > 0) {
+    if (isDownloading && elapsedMs > 500 && report.progress > 0) {
       const downloadedBytes = TOTAL_SIZE_BYTES * report.progress
       const speedBps = downloadedBytes / (elapsedMs / 1000)
       speed = Number((speedBps / (1024 * 1024)).toFixed(1))
@@ -60,7 +60,7 @@ function createProgressCallback(startTime: number) {
     }
 
     self.postMessage({
-      status: "downloading",
+      status: isDownloading ? "downloading" : "engine-initializing",
       progress,
       speed,
       eta,
@@ -83,7 +83,23 @@ function waitForEngineInit(): Promise<MLCEngine> {
   })
 }
 
-async function loadEngine(): Promise<MLCEngine> {
+async function tryCreateEngine(
+  isDownloading: boolean,
+  startTime: number
+): Promise<MLCEngine> {
+  self.postMessage({
+    status: isDownloading ? "downloading" : "engine-initializing",
+    progress: 0,
+    speed: 0,
+    eta: 0
+  })
+
+  return CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", {
+    initProgressCallback: createProgressCallback(startTime, isDownloading)
+  })
+}
+
+async function loadEngine(isDownloading: boolean = false): Promise<MLCEngine> {
   if (engine) {
     resetIdleTimer()
     return engine
@@ -100,14 +116,9 @@ async function loadEngine(): Promise<MLCEngine> {
     isInitializing = true
     const startTime = Date.now()
     try {
-      self.postMessage({ status: "downloading", progress: 0, speed: 0, eta: 0 })
-
-      const engineInstance = await CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", {
-        initProgressCallback: createProgressCallback(startTime)
-      })
-
+      const engineInstance = await tryCreateEngine(isDownloading, startTime)
       engine = engineInstance
-      self.postMessage({ status: "ready" })
+      self.postMessage({ status: isDownloading ? "ready" : "engine-ready" })
       resetIdleTimer()
       return engineInstance
     } catch (err: any) {
@@ -214,43 +225,71 @@ async function processQueue() {
   }
 }
 
+async function handleStartDownload() {
+  try {
+    await loadEngine(true)
+  } catch (err) {
+    console.error("Start download trigger failed:", err)
+  }
+}
+
+async function handlePreload() {
+  try {
+    await loadEngine(false)
+  } catch (err) {
+    console.error("Preload trigger failed:", err)
+  }
+}
+
+function handleRunInference(payload: any) {
+  const { requestId, prompt, systemPrompt, temperature } = payload
+  if (!prompt || !requestId) {
+    self.postMessage({
+      status: "inference-error",
+      requestId,
+      error: "Missing prompt or requestId"
+    })
+    return
+  }
+
+  inferenceQueue.push({ requestId, prompt, systemPrompt, temperature })
+  processQueue()
+}
+
+async function handleUnload() {
+  if (engine) {
+    try {
+      await engine.unload()
+    } catch (e) {
+      console.error("Failed to unload engine:", e)
+    }
+    engine = null
+  }
+  self.postMessage({ status: "idle", info: "Engine unloaded manually" })
+}
+
 self.onmessage = async (event) => {
   console.log("WebLLM Worker received message:", event.data)
   const { action, ...payload } = event.data
 
-  if (action === "start-download") {
-    try {
-      await loadEngine()
-    } catch (err) {
-      console.error("Start download trigger failed:", err)
-    }
-  } else if (action === "run-inference") {
-    const { requestId, prompt, systemPrompt, temperature } = payload
-    if (!prompt || !requestId) {
+  switch (action) {
+    case "start-download":
+      await handleStartDownload()
+      break
+    case "preload":
+      await handlePreload()
+      break
+    case "run-inference":
+      handleRunInference(payload)
+      break
+    case "unload":
+      await handleUnload()
+      break
+    default:
       self.postMessage({
-        status: "inference-error",
-        requestId,
-        error: "Missing prompt or requestId"
+        status: "error",
+        error: `Unknown action: ${action}`
       })
-      return
-    }
-
-    inferenceQueue.push({ requestId, prompt, systemPrompt, temperature })
-    processQueue()
-  } else if (action === "unload") {
-    if (engine) {
-      try {
-        await engine.unload()
-      } catch (e) {
-        console.error("Failed to unload engine:", e)
-      }
-      engine = null
-    }
-    self.postMessage({ status: "idle", info: "Engine unloaded manually" })
-  } else {
-    self.postMessage({
-      status: "error",
-      error: `Unknown action: ${action}`
-    })
+      break
   }
 }

@@ -42,7 +42,7 @@ export const AiRecipeAdviceSection: React.FC<AiRecipeAdviceSectionProps> = ({
   t
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const { advice, loading, error, isModelReady, status } =
+  const { advice, loading, error, isModelReady, status, isEngineInitializing } =
     useAiRecipeAdvice(cards)
   const llm = useWebLlm()
 
@@ -63,6 +63,7 @@ export const AiRecipeAdviceSection: React.FC<AiRecipeAdviceSectionProps> = ({
         <div className="p-3 border-t border-slate-200 dark:border-indigo-950 bg-white/40 dark:bg-slate-950/40 text-[11px] leading-relaxed font-sans text-slate-700 dark:text-slate-300">
           <AdviceSectionContent
             isModelReady={isModelReady}
+            isEngineInitializing={isEngineInitializing}
             status={status}
             progress={llm.progress}
             speed={llm.speed}

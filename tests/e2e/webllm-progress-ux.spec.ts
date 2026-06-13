@@ -339,4 +339,103 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     })
     console.log("AI Recipe Advice ready state screenshot saved.")
   })
+
+  test("should pre-load engine on start and show initializing status during inference in AI Recipe Advice", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for AI Preload & Initializing UX test..."
+    )
+
+    // Set model as already downloaded in localStorage so preload trigger is allowed
+    await page.addInitScript(() => {
+      window.localStorage.setItem("mock-webllm-downloaded", "true")
+    })
+
+    await page.goto("/tests/sandbox/index.html")
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click({ force: true })
+    }
+
+    // Seed 2 style cards
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-p1",
+          name: "Cyberpunk Glow",
+          promptSegments: [{ type: "text", value: "neon cyberpunk city" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#3b82f6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-p2",
+          name: "Watercolor Rain",
+          promptSegments: [
+            { type: "text", value: "rainy street, watercolor style" }
+          ],
+          parameters: {},
+          masking: {},
+          tier: "Rare",
+          isPinned: true,
+          dominantColor: "#ec4899",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        }
+      ])
+    })
+
+    // Setup mock WebLLM configuration to simulate initialization phase
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.failDownload = false
+        // Simulate a slow engine compilation/initialization
+        config.initDelay = 3000
+        config.inferenceResult =
+          "### 🔮 AI Cauldron Recipe Advice\n- **Expected Visual Blending**: Blended watercolor cyberpunk style."
+      }
+    })
+
+    // Switch to Workbench tab
+    const workbenchTabBtn = spFrame
+      .locator("button:has-text('Workbench'), button:has-text('ワークベンチ')")
+      .first()
+    await workbenchTabBtn.click({ force: true })
+    await page.waitForTimeout(500)
+
+    // Expand AI Advice Section
+    const adviceSection = spFrame.locator("#ai-recipe-advice-section")
+    await expect(adviceSection).toBeVisible()
+    const accordionHeader = adviceSection.locator("#ai-recipe-advice-toggle")
+    await accordionHeader.click({ force: true })
+
+    // Since the model is already downloaded, it will automatically try to generate advice.
+    // Because initDelay is 3000ms, it should show the "Initializing AI engine..." message.
+    const initializingText = spFrame.locator(
+      "text=/Initializing AI engine|AIエンジンを初期化中/"
+    )
+    await expect(initializingText).toBeVisible({ timeout: 10000 })
+
+    // Take screenshot of AI Engine Initializing status
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-engine-initializing.png")
+    })
+    console.log("AI Engine Initializing screenshot saved.")
+
+    // Wait for advice to render
+    const adviceHeaderResult = spFrame
+      .locator("text=/AI Cauldron Recipe Advice|AIレシピアドバイス/")
+      .first()
+    await expect(adviceHeaderResult).toBeVisible({ timeout: 15000 })
+  })
 })

@@ -145,6 +145,7 @@ interface LibrarySearchBarContentProps {
   setIsFiltersExpanded: (val: boolean) => void
   extractedFilters: any
   isAiSearching: boolean
+  isEngineInitializing?: boolean
   aiSearchError: string | null
   aiWarningOpen: boolean
   setAiWarningOpen: (val: boolean) => void
@@ -228,6 +229,7 @@ function LibrarySearchBarContent(props: LibrarySearchBarContentProps) {
         <ExtractedFiltersDisplay
           extractedFilters={props.extractedFilters}
           isAiSearching={props.isAiSearching}
+          isEngineInitializing={props.isEngineInitializing}
           aiSearchError={props.aiSearchError}
           t={props.t}
         />
@@ -247,7 +249,7 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
   const { expertFeatures } = useSettings()
-  const { status: webLlmStatus } = useWebLlm()
+  const { status: webLlmStatus, isEngineInitializing } = useWebLlm()
   const {
     isAiSearch,
     aiSearchQuery,
@@ -282,6 +284,7 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
       setIsFiltersExpanded={props.setIsFiltersExpanded}
       extractedFilters={extractedFilters}
       isAiSearching={isAiSearching}
+      isEngineInitializing={isEngineInitializing}
       aiSearchError={aiSearchError}
       aiWarningOpen={aiWarningOpen}
       setAiWarningOpen={setAiWarningOpen}

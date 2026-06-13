@@ -202,6 +202,7 @@ export function ModelStatusOverlay({
 
 interface AdviceSectionContentProps {
   isModelReady: boolean
+  isEngineInitializing?: boolean
   status: string
   progress: number
   speed: number
@@ -226,7 +227,8 @@ function NotReadyWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function AdviceSectionContent(props: AdviceSectionContentProps) {
-  const { isModelReady, loading, error, advice, t } = props
+  const { isModelReady, isEngineInitializing, loading, error, advice, t } =
+    props
   if (!isModelReady) {
     return (
       <NotReadyWrapper>
@@ -246,12 +248,14 @@ export function AdviceSectionContent(props: AdviceSectionContentProps) {
     )
   }
   if (loading) {
+    const loadingText = isEngineInitializing
+      ? t.aiEngineInitializing ||
+        "Initializing AI engine (this may take a few seconds)..."
+      : t.aiAdviceLoading || "Consulting the local AI cauldron..."
     return (
       <div className="flex items-center justify-center py-6 gap-2 text-slate-500 dark:text-slate-400">
         <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-        <span>
-          {t.aiAdviceLoading || "Consulting the local AI cauldron..."}
-        </span>
+        <span>{loadingText}</span>
       </div>
     )
   }
