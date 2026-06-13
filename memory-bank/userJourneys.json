@@ -219,7 +219,11 @@
       "description": "アプリケーション設定の変更",
       "steps": ["Settingsパネルを開く", "トグル変更", "保存"],
       "nextJourneys": ["@J-IO-BACKUP", "@J-IO-RESTORE", "@J-SYS-04"],
-      "viewComponents": ["src/components/organisms/SettingsTab.tsx"]
+      "viewComponents": [
+        "src/components/organisms/SettingsTab.tsx",
+        "src/components/organisms/CloudSyncSection.tsx",
+        "src/components/molecules/GDriveSyncStrategyDialog.tsx"
+      ]
     },
     {
       "id": "@J-WB-EXPERT-04",
