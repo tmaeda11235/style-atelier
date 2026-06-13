@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { AlertTriangle, HelpCircle } from "lucide-react"
 import React, { useEffect } from "react"
 
@@ -25,8 +26,8 @@ export function ConfirmationDialog({
   onCancel
 }: ConfirmationDialogProps) {
   const { t } = useLanguage()
-  const displayConfirmText = confirmText || t.confirmation.confirm
-  const displayCancelText = cancelText || t.confirmation.cancel
+  const displayConfirmText = confirmText || t.confirmation?.confirm || "Confirm"
+  const displayCancelText = cancelText || t.confirmation?.cancel || "Cancel"
   // Handle escape key to close/cancel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

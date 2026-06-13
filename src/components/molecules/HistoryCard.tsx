@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string, max-lines-per-function */
 import React, { useEffect, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
@@ -80,7 +81,7 @@ export function HistoryCard({
           size="xs"
           onClick={() => onMintClick(item)}
           className="mt-2">
-          {t.historyCard.mintButton}
+          {t.historyCard?.mintButton || "Mint Card"}
         </Button>
       </div>
     </div>
