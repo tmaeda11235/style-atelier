@@ -25,7 +25,7 @@ tags: []
 
 ## Development Environment
 
-- **Node.js**: LTS version recommended.
+- **Node.js**: v20.12.0 or higher recommended (enforced via `.npmrc` and `.nvmrc`).
 - **Package Manager**: pnpm (preferred) or npm.
 - **Browser**: Google Chrome (Latest).
 
