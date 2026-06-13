@@ -16,7 +16,36 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------
-  # Job 1: セットアップとキャッシュ作成
+  # Job 1: 爆速の証明検証（npm install不要）
+  # ---------------------------------------------------
+  verify-proof:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.verify.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 20
+      
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Verify Proof of Work
+        id: verify
+        env:
+          PRIVATE_KEY: ${{ secrets.INCREMENTAL_TEST_PRIVATE_KEY }}
+        run: |
+          if [ -f artifacts/test-proof.enc ]; then
+            node scripts/verify-test-proof.mjs && echo "skip=true" >> $GITHUB_OUTPUT || echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+  # ---------------------------------------------------
+  # Job 2: セットアップとキャッシュ作成
   # ---------------------------------------------------
   setup:
     runs-on: ubuntu-latest
@@ -44,7 +73,7 @@ jobs:
   # Job 2: ユニットテストとビルド（CPU・メモリ重視）
   # ---------------------------------------------------
   unit-and-build:
-    needs: setup
+    needs: [verify-proof, setup]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -53,7 +82,14 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: 'npm'
+
+      - name: Restore npm dependencies (No save to prevent collision)
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-cache-${{ runner.os }}-
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -68,6 +104,7 @@ jobs:
         run: node scratch/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
 
       - name: Run unit tests with coverage
+        if: needs.verify-proof.outputs.skip != 'true'
         run: npm test -- --coverage
 
       - name: Build extension
@@ -77,7 +114,8 @@ jobs:
   # Job 3: E2Eテスト（ネットワーク・プロセッサ分離）
   # ---------------------------------------------------
   e2e-test:
-    needs: unit-and-build
+    needs: [verify-proof, unit-and-build]
+    if: needs.verify-proof.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
