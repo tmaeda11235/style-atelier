@@ -161,4 +161,10 @@ describe("extractKeywords", () => {
     const keywords = extractKeywords(prompt)
     expect(keywords).toEqual(["Hello", "world", "test"])
   })
+
+  it("should prevent duplicate keywords in Japanese segments case-insensitively", () => {
+    const prompt = "都会の少女\u3001森の少女"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["都会の", "少女", "森の"])
+  })
 })

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -90,6 +89,12 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Style Analysis @J-MINT-AI-AN
     })
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
+
+    // Confirm download in local overlay dialog
+    const confirmBtn = spFrame.locator("#confirm-dialog-ok-btn").first()
+    if (await confirmBtn.isVisible({ timeout: 3000 })) {
+      await confirmBtn.click()
+    }
 
     // 8. Click "Analyze Style with AI"
     const analyzeBtn = spFrame.locator(

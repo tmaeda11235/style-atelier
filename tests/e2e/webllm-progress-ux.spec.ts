@@ -5,6 +5,10 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
   test.slow()
 
   test.beforeEach(async ({ page }) => {
+    // Ensure mock-webllm-downloaded is cleared BEFORE React mounts on sandbox load
+    await page.addInitScript(() => {
+      window.localStorage.removeItem("mock-webllm-downloaded")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -79,6 +83,15 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click({ force: true })
 
+    // Click confirmation button
+    const confirmDownloadBtn = spFrame
+      .locator(
+        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+      )
+      .first()
+    await expect(confirmDownloadBtn).toBeVisible()
+    await confirmDownloadBtn.click({ force: true })
+
     // Assert that the error status UI appears
     const errorTitle = spFrame
       .locator("text=/Error occurred|エラーが発生しました/")
@@ -119,7 +132,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
         .locator("button:has-text('Try Again'), button:has-text('再試行')")
         .first()
 
-      const isRetryVisible = await retryBtn.isVisible().catch(() => false)
+      // Wait up to 5 seconds for the Retry button to render in the error UI
+      const isRetryVisible = await retryBtn
+        .waitFor({ state: "visible", timeout: 5000 })
+        .then(() => true)
+        .catch(() => false)
       if (isRetryVisible) {
         await page.waitForTimeout(200)
         // Directly query and click within the iframe context to avoid Playwright's locator wait loop
@@ -156,6 +173,15 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
           .first()
         await expect(downloadBtn2).toBeVisible()
         await downloadBtn2.click({ force: true })
+
+        // Click confirmation button
+        const confirmDownloadBtn2 = spFrame
+          .locator(
+            "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+          )
+          .first()
+        await expect(confirmDownloadBtn2).toBeVisible()
+        await confirmDownloadBtn2.click({ force: true })
       }
 
       // Assert that download progress shows up (only if not already ready)
@@ -279,6 +305,15 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
     await downloadBtn.click({ force: true })
+
+    // Click confirmation button
+    const confirmDownloadBtn = spFrame
+      .locator(
+        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+      )
+      .first()
+    await expect(confirmDownloadBtn).toBeVisible()
+    await confirmDownloadBtn.click({ force: true })
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame

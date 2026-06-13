@@ -7,6 +7,7 @@ import {
 } from "@/lib/auto-sync"
 import * as backupManager from "@/lib/backup-manager"
 import { db } from "@/lib/db"
+import * as purgeOps from "@/lib/db/purge-ops"
 import * as googleDrive from "@/lib/google-drive"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -20,6 +21,10 @@ vi.mock("@/lib/google-drive", () => ({
 vi.mock("@/lib/backup-manager", () => ({
   exportDatabase: vi.fn().mockResolvedValue('{"version": 1, "data": {}}'),
   importDatabase: vi.fn()
+}))
+
+vi.mock("@/lib/db/purge-ops", () => ({
+  purgeDeletedRecords: vi.fn().mockResolvedValue(undefined)
 }))
 
 // Mock db hooks
@@ -204,6 +209,53 @@ describe("auto-sync", () => {
 
       expect(googleDrive.downloadBackup).not.toHaveBeenCalled()
       expect(backupManager.importDatabase).not.toHaveBeenCalled()
+    })
+
+    it("suspends auto-sync if last sync was more than 60 days ago", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+      const sixtyOneDaysAgo = Date.now() - 61 * 24 * 60 * 60 * 1000
+      localStorage.setItem(
+        "style-atelier-last-backup",
+        sixtyOneDaysAgo.toString()
+      )
+
+      await checkAndMergeRemoteChanges()
+
+      expect(isAutoSyncEnabled()).toBe(false)
+      expect(googleDrive.authorize).not.toHaveBeenCalled()
+    })
+
+    it("handles error in purgeDeletedRecords gracefully and continues", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+
+      vi.mocked(purgeOps.purgeDeletedRecords).mockRejectedValue(
+        new Error("Purge failed")
+      )
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue({
+        id: "file-1",
+        modifiedTime: "2026-06-06T12:00:00.000Z",
+        size: "100"
+      })
+
+      // Should not throw and continue execution
+      await expect(checkAndMergeRemoteChanges()).resolves.not.toThrow()
+      expect(googleDrive.authorize).toHaveBeenCalled()
+    })
+
+    it("handles general exception in checkAndMergeRemoteChanges and catches it", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+
+      vi.mocked(purgeOps.purgeDeletedRecords).mockResolvedValue(undefined)
+      vi.mocked(googleDrive.authorize).mockRejectedValue(
+        new Error("Auth failed")
+      )
+
+      // Should catch the error and not throw it
+      await expect(checkAndMergeRemoteChanges()).resolves.not.toThrow()
     })
   })
 

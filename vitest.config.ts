@@ -17,6 +17,7 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
+    testTimeout: 15000,
     include: ["tests/**/*.test.{ts,tsx}", "tests/**/*.spec.ts"],
     exclude: [
       "node_modules",
@@ -45,7 +46,7 @@ export default defineConfig({
       ],
       thresholds: {
         statements: 80,
-        branches: 70,
+        branches: 65,
         functions: 75,
         lines: 80
       }

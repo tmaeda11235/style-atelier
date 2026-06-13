@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -105,6 +104,12 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     )
     await expect(downloadBtn).toBeVisible()
     await downloadBtn.click()
+
+    // Confirm download in local overlay dialog
+    const confirmBtn = adviceSection.locator("#confirm-dialog-ok-btn").first()
+    if (await confirmBtn.isVisible({ timeout: 3000 })) {
+      await confirmBtn.click()
+    }
 
     await page.waitForTimeout(3000) // Wait for downloading animation, debounce, and mock inference resolution
 

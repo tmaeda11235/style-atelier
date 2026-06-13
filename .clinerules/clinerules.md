@@ -46,6 +46,14 @@
 
 ## Task Management & Workflow
 
+### 0. Worktree Usage (Critical Rule)
+
+**When updating code or documentation, ALWAYS create a new `git worktree` and perform the work inside the worktree.**
+
+- **Do not** modify files directly in the main repository checkout (`style-atelier`).
+- Create worktrees in `../worktrees/<branch-name>` or a similar dedicated directory.
+- **Cleanup**: When the task is finished (e.g., PR merged), be sure to delete the worktree using `git worktree remove`.
+
 ### Case 1: When an Issue Number is Provided (New Task)
 
 When the user instructs to start working on a specific Issue number:
@@ -56,8 +64,9 @@ When the user instructs to start working on a specific Issue number:
     - Pull latest changes: `git pull`
 2.  **Check Issue**:
     - View issue details: `gh issue view <issue_number>`
-3.  **Create Branch**:
-    - Create a new branch: `git checkout -b feature/<issue_number>-<short-description>`
+3.  **Create Worktree & Branch**:
+    - Create a new branch and worktree: `git worktree add -b feature/<issue_number>-<short-description> ../worktrees/<issue_number>-<short-description> main`
+    - Move into the newly created worktree directory to continue work.
 4.  **Plan**:
     - Post the work plan to the Issue: `gh issue comment <issue_number> --body "Work Plan: ..."`
 5.  **Execute**:
@@ -70,6 +79,9 @@ When the user instructs to start working on a specific Issue number:
     - Create a PR linked with issue and request review: `gh pr create`
 8.  **Review**:
     - Check for feedback and address any review comments.
+9.  **Cleanup Worktree**:
+    - Once the work is complete and the PR is merged, remove the worktree:
+      `git worktree remove ../worktrees/<issue_number>-<short-description>`
 
 ### Case 2: When No Issue Number is Provided (Continuing Task)
 
