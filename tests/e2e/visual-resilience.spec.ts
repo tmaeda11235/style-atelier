@@ -160,7 +160,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Visual Resilience & Obstruction
       // Check key element in Settings (e.g. Easy Mode switch label)
       const easyModeToggle = spFrame.locator("#easy-mode-toggle-btn")
       if (await easyModeToggle.isVisible().catch(() => false)) {
-        await easyModeToggle.scrollIntoViewIfNeeded()
+        await easyModeToggle.evaluate((el) =>
+          el.scrollIntoView({ block: "center" })
+        )
         await expectNotObstructed(easyModeToggle, "Easy Mode Toggle Option")
       }
 
