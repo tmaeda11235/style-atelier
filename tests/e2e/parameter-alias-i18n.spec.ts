@@ -104,8 +104,11 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     await settingsNavBtn.click()
     await langSelect.selectOption("ja")
     await workbenchTab.click()
-    await expect(srefEditBtn).toBeVisible()
-    await srefEditBtn.click()
+    const srefEditBtnJa = spFrame
+      .locator("button[title='エイリアスを編集']")
+      .first()
+    await expect(srefEditBtnJa).toBeVisible()
+    await srefEditBtnJa.click()
     const modalHeaderJa = spFrame.locator(
       "h4:has-text('パラメータエイリアスの編集')"
     )
