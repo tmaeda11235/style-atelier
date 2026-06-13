@@ -61,6 +61,38 @@ interface ImageColorAnalysisProps {
   setFallback: (f: boolean) => void
 }
 
+function performImageColorAnalysis(
+  active: boolean,
+  imageUrl: string | undefined,
+  selectedRarity: RarityTier,
+  setDominant: (c: string) => void,
+  setAccent: (c: string) => void,
+  setTags: (t: string[]) => void,
+  setFallback: (f: boolean) => void
+) {
+  const apply = () =>
+    applyFallbackColors(
+      selectedRarity,
+      setDominant,
+      setAccent,
+      setTags,
+      setFallback
+    )
+  if (imageUrl) {
+    analyzeImageColors(imageUrl, selectedRarity)
+      .then((colors) => {
+        if (active)
+          applyImageColors(colors, setDominant, setAccent, setFallback, setTags)
+      })
+      .catch((err) => {
+        console.error("Failed to analyze image colors:", err)
+        if (active) apply()
+      })
+  } else {
+    apply()
+  }
+}
+
 export function useImageColorAnalysis(props: ImageColorAnalysisProps) {
   const {
     mintingItem,
@@ -72,36 +104,15 @@ export function useImageColorAnalysis(props: ImageColorAnalysisProps) {
   } = props
   useEffect(() => {
     let active = true
-    const apply = () =>
-      applyFallbackColors(
-        selectedRarity,
-        setDominant,
-        setAccent,
-        setTags,
-        setFallback
-      )
-
-    if (mintingItem?.imageUrl) {
-      analyzeImageColors(mintingItem.imageUrl, selectedRarity)
-        .then((colors) => {
-          if (active) {
-            applyImageColors(
-              colors,
-              setDominant,
-              setAccent,
-              setFallback,
-              setTags
-            )
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to analyze image colors:", err)
-          if (active) apply()
-        })
-    } else {
-      apply()
-    }
-
+    performImageColorAnalysis(
+      active,
+      mintingItem?.imageUrl,
+      selectedRarity,
+      setDominant,
+      setAccent,
+      setTags,
+      setFallback
+    )
     return () => {
       active = false
     }
