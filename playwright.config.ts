@@ -4,11 +4,14 @@ import { defineConfig, devices } from "@playwright/test"
 const getFreePort = () => {
   if (process.env.TEST_PORT) return process.env.TEST_PORT
   try {
-    return execSync("node scratch/get-free-port.js", {
+    const port = execSync("node scratch/get-free-port.js", {
       encoding: "utf-8"
     }).trim()
+    process.env.TEST_PORT = port
+    return port
   } catch {
     console.warn("Failed to dynamically allocate port. Falling back to 5173.")
+    process.env.TEST_PORT = "5173"
     return "5173"
   }
 }
