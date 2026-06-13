@@ -155,7 +155,7 @@ async function main() {
   
   // Amend the current commit to include the proof
   try {
-    execSync('git add artifacts/test-proof.enc');
+    execSync('git add -f artifacts/test-proof.enc');
     // If this is running inside pre-push, amending might be tricky because the push is already in progress with a specific commit hash.
     // Wait, pre-push hook runs BEFORE push, but AFTER the commit is created.
     // If we amend, the commit hash changes! And the push will be rejected if the remote doesn't match, unless it's a force push.
