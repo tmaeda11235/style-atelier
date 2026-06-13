@@ -210,4 +210,56 @@ describe("CardThumbnail", () => {
     fireEvent.click(shareBtn)
     expect(mockOnShareClick).toHaveBeenCalledTimes(1)
   })
+
+  it("calls onQuickSendClick when quick send button is clicked", () => {
+    const mockOnQuickSendClick = vi.fn()
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        onQuickSendClick={mockOnQuickSendClick}
+      />
+    )
+    const quickSendBtn = screen.getByTestId("quick-send-button")
+    expect(quickSendBtn).toBeDefined()
+    fireEvent.click(quickSendBtn)
+    expect(mockOnQuickSendClick).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders more menu button and shows quick send, edit, and share options when clicked", () => {
+    const mockOnQuickSendClick = vi.fn()
+    const mockOnEditClick = vi.fn()
+    const mockOnShareClick = vi.fn()
+    render(
+      <CardThumbnail
+        imageUrl="https://example.com/one.png"
+        alt="Test Card"
+        tier="Common"
+        onQuickSendClick={mockOnQuickSendClick}
+        onEditClick={mockOnEditClick}
+        onShareClick={mockOnShareClick}
+      />
+    )
+    const moreBtn = screen.getByTestId("more-actions-button")
+    expect(moreBtn).toBeDefined()
+
+    // Before click, menu items shouldn't be in document
+    expect(screen.queryByTestId("more-quick-send-button")).toBeNull()
+
+    // Click more button to open menu
+    fireEvent.click(moreBtn)
+
+    const moreQuickSendBtn = screen.getByTestId("more-quick-send-button")
+    const moreEditBtn = screen.getByTestId("more-edit-card-button")
+    const moreShareBtn = screen.getByTestId("more-share-card-button")
+
+    expect(moreQuickSendBtn).toBeDefined()
+    expect(moreEditBtn).toBeDefined()
+    expect(moreShareBtn).toBeDefined()
+
+    // Click quick send in more menu
+    fireEvent.click(moreQuickSendBtn)
+    expect(mockOnQuickSendClick).toHaveBeenCalledTimes(1)
+  })
 })

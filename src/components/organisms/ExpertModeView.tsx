@@ -10,6 +10,7 @@ import { HistoryTab } from "./HistoryTab"
 import { InteractiveTutorial } from "./InteractiveTutorial"
 import { LibraryTab } from "./LibraryTab"
 import { MintingView } from "./MintingView"
+import { NonTargetSiteView } from "./NonTargetSiteView"
 import { SettingsTab } from "./SettingsTab"
 import { TipsBar } from "./TipsBar"
 import { Workbench } from "./Workbench"
@@ -17,6 +18,8 @@ import { Workbench } from "./Workbench"
 interface ExpertModeViewProps {
   isEasyMode: boolean
   onToggleEasyMode: (enabled: boolean) => void
+  isTargetSite: boolean
+  onOpenMidjourney: () => void
 }
 
 function WelcomeDialog({
@@ -66,7 +69,9 @@ function WelcomeDialog({
  */
 export function ExpertModeView({
   isEasyMode,
-  onToggleEasyMode
+  onToggleEasyMode,
+  isTargetSite,
+  onOpenMidjourney
 }: ExpertModeViewProps) {
   const {
     activeTab,
@@ -181,24 +186,33 @@ export function ExpertModeView({
           />
         )}
 
-        {activeTab === "history" && (
-          <HistoryTab onStartMinting={handleStartMinting} />
-        )}
-        {activeTab === "library" && (
-          <LibraryTab
-            addLog={addLog}
-            setAlertType={setAlertType}
-            onOpenDetailCard={setActiveDetailCard}
-            onNavigateToWorkbench={() => setActiveTab("workbench")}
-          />
-        )}
-        {activeTab === "workbench" && (
-          <Workbench
-            onStartVariationMinting={minting.handleStartVariationMinting}
-            addLog={addLog}
-            setAlertType={setAlertType}
-          />
-        )}
+        {activeTab === "history" &&
+          (!isTargetSite ? (
+            <NonTargetSiteView onOpenMidjourney={onOpenMidjourney} isEmbedded />
+          ) : (
+            <HistoryTab onStartMinting={handleStartMinting} />
+          ))}
+        {activeTab === "library" &&
+          (!isTargetSite ? (
+            <NonTargetSiteView onOpenMidjourney={onOpenMidjourney} isEmbedded />
+          ) : (
+            <LibraryTab
+              addLog={addLog}
+              setAlertType={setAlertType}
+              onOpenDetailCard={setActiveDetailCard}
+              onNavigateToWorkbench={() => setActiveTab("workbench")}
+            />
+          ))}
+        {activeTab === "workbench" &&
+          (!isTargetSite ? (
+            <NonTargetSiteView onOpenMidjourney={onOpenMidjourney} isEmbedded />
+          ) : (
+            <Workbench
+              onStartVariationMinting={minting.handleStartVariationMinting}
+              addLog={addLog}
+              setAlertType={setAlertType}
+            />
+          ))}
         {activeTab === "settings" && (
           <SettingsTab
             addLog={addLog}

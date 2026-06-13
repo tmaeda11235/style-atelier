@@ -12,22 +12,29 @@ interface UsePromptInputProps {
   onRemoveLastSegment: () => void
 }
 
-export const usePromptInput = (props: UsePromptInputProps) => {
+function parseInputToTokens(inputValue: string): PromptSegment[] {
+  const trimmed = inputValue.trim()
+  if (!trimmed) return []
+
+  return trimmed
+    .split(PROMPT_DELIMITER_REGEX)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((value) => ({ type: "text", value }))
+}
+
+export const usePromptInput = ({
+  segments,
+  onAddSegment,
+  onRemoveLastSegment
+}: UsePromptInputProps) => {
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
   const addTokensFromInput = () => {
-    const trimmed = inputValue.trim()
-    if (!trimmed) return
-
-    const newTokens: PromptSegment[] = trimmed
-      .split(PROMPT_DELIMITER_REGEX)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .map((value) => ({ type: "text", value }))
-
+    const newTokens = parseInputToTokens(inputValue)
     if (newTokens.length > 0) {
-      props.onAddSegment(newTokens)
+      onAddSegment(newTokens)
     }
     setInputValue("")
   }
@@ -39,14 +46,22 @@ export const usePromptInput = (props: UsePromptInputProps) => {
     } else if (
       e.key === "Backspace" &&
       inputValue === "" &&
-      props.segments.length > 0
+      segments.length > 0
     ) {
-      e.preventDefault()
-      props.onRemoveLastSegment()
+      e.preventDefault() // Prevents default browser back navigation
+      onRemoveLastSegment()
     } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
       e.preventDefault()
       addTokensFromInput()
     }
+  }
+
+  const handleBlur = () => {
+    addTokensFromInput()
+  }
+
+  const focusInput = () => {
+    inputRef.current?.focus()
   }
 
   return {
@@ -54,7 +69,7 @@ export const usePromptInput = (props: UsePromptInputProps) => {
     setInputValue,
     inputRef,
     handleKeyDown,
-    handleBlur: addTokensFromInput,
-    focusInput: () => inputRef.current?.focus()
+    handleBlur,
+    focusInput
   }
 }

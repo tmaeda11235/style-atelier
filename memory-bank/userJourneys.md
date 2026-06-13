@@ -48,6 +48,7 @@ stateDiagram-v2
   _J_ORG_CARD_TOOLTIP_01 : カードアクションツールチップ＆レスポンシブメニュー
   _J_WB_EMPTY_CAULDRON_01 : 空状態の大釜アフォーダンス
   _J_UX_RESILIENCE_01 : 狭小画面ビジュアルレジリエンス
+  _J_UX_NON_TARGET_01 : 非対象サイトでの機能制限緩和
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -124,6 +125,9 @@ stateDiagram-v2
   _J_UX_RESILIENCE_01 --> _J_ORG_EXPERT_01
   _J_UX_RESILIENCE_01 --> _J_WB_EXPERT_01
   _J_UX_RESILIENCE_01 --> _J_SET_01
+  _J_UX_NON_TARGET_01 --> _J_SET_01
+  _J_UX_NON_TARGET_01 --> _J_ORG_EXPERT_01
+  _J_UX_NON_TARGET_01 --> _J_ORG_EASY_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -690,3 +694,15 @@ flowchart TD
   S3 --> S4
 ```
 
+### @J-UX-NON-TARGET-01: 非対象サイトでの機能制限緩和
+
+非対象サイト（Non-target site）でも、設定タブおよびライブラリタブへアクセスでき、他の対象サイト限定タブを選択した際は適切な警告を表示する
+
+```mermaid
+flowchart TD
+  S1["非対象サイトで拡張機能のサイドパネルを開く"]
+  S2["設定タブを通常通り開いて操作（Easy Modeのトグルなど）できるのを確認する"]
+  S1 --> S2
+  S3["かんたん・エキスパートの各モードで、対象サイト限定タブ（ライブラリ、ワークベンチ、履歴など）にアクセスした際、NonTargetSiteViewの警告が表示されることを確認する"]
+  S2 --> S3
+```

@@ -26,7 +26,7 @@ function AdviceSectionHeader({ isOpen, onClick, t }: AdviceSectionHeaderProps) {
       type="button">
       <span className="flex items-center gap-1.5 font-sans">
         <Sparkles className="w-3 h-3 text-indigo-500 animate-pulse" />
-        {t.aiAdviceTitle || "🔮 AI Recipe Advice"}
+        {t.aiAdviceTitle}
       </span>
       {isOpen ? (
         <ChevronUp className="w-3.5 h-3.5 text-slate-400" />

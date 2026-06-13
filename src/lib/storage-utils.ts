@@ -17,7 +17,6 @@ export function formatBytes(bytes: number, decimals = 1): string {
 
 export async function getStorageEstimate(): Promise<StorageEstimateResult | null> {
   if (
-    typeof window === "undefined" ||
     typeof navigator === "undefined" ||
     !navigator ||
     !navigator.storage ||
@@ -58,11 +57,11 @@ export async function verifyCacheIntegrity(
   cacheName: string,
   expectedFiles: { url: string; size: number }[]
 ): Promise<boolean> {
-  if (typeof window === "undefined" || !("caches" in window)) {
+  if (typeof caches === "undefined") {
     return true
   }
   try {
-    const cache = await window.caches.open(cacheName)
+    const cache = await caches.open(cacheName)
     let allValid = true
 
     for (const expected of expectedFiles) {

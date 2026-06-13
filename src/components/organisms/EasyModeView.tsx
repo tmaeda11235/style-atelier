@@ -5,6 +5,7 @@ import { getStyleCardById } from "../../lib/style-card-store"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
 import { CardDetailView } from "./CardDetailView"
 import { LibraryTab } from "./LibraryTab"
+import { NonTargetSiteView } from "./NonTargetSiteView"
 import { SettingsTab } from "./SettingsTab"
 import { SimpleMintingView } from "./SimpleMintingView"
 import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
@@ -12,6 +13,8 @@ import { SimpleWorkbenchModal } from "./SimpleWorkbenchModal"
 interface EasyModeViewProps {
   isEasyMode: boolean
   onToggleEasyMode: (enabled: boolean) => void
+  isTargetSite: boolean
+  onOpenMidjourney: () => void
 }
 
 /**
@@ -20,7 +23,9 @@ interface EasyModeViewProps {
  */
 export function EasyModeView({
   isEasyMode,
-  onToggleEasyMode
+  onToggleEasyMode,
+  isTargetSite,
+  onOpenMidjourney
 }: EasyModeViewProps) {
   const {
     activeTab,
@@ -126,16 +131,19 @@ export function EasyModeView({
           />
         )}
 
-        {activeTab === "library" && (
-          <LibraryTab
-            addLog={addLog}
-            setAlertType={setAlertType}
-            onOpenDetailCard={setActiveDetailCard}
-            onNavigateToWorkbench={() => {}} // Workbench navigation is disabled in Easy Mode
-            isEasyMode={isEasyMode}
-            onOpenSimpleWorkbench={setActiveSimpleWorkbenchCard}
-          />
-        )}
+        {activeTab === "library" &&
+          (!isTargetSite ? (
+            <NonTargetSiteView onOpenMidjourney={onOpenMidjourney} isEmbedded />
+          ) : (
+            <LibraryTab
+              addLog={addLog}
+              setAlertType={setAlertType}
+              onOpenDetailCard={setActiveDetailCard}
+              onNavigateToWorkbench={() => {}} // Workbench navigation is disabled in Easy Mode
+              isEasyMode={isEasyMode}
+              onOpenSimpleWorkbench={setActiveSimpleWorkbenchCard}
+            />
+          ))}
         {activeTab === "settings" && (
           <SettingsTab
             addLog={addLog}

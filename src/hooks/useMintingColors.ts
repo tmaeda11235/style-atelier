@@ -19,66 +19,106 @@ export function getFallbackColors(rarity: RarityTier) {
   }
 }
 
-function getTagsFromColors(colors: {
-  dominantHex: string
-  accentHex: string
-  dominantName?: string
-  accentName?: string
-}) {
+function applyFallbackColors(
+  rarity: RarityTier,
+  setDominant: (c: string) => void,
+  setAccent: (c: string) => void,
+  setTags: (t: string[]) => void,
+  setFallback: (f: boolean) => void
+) {
+  const { dominantHex, accentHex, colorTags } = getFallbackColors(rarity)
+  setDominant(dominantHex)
+  setAccent(accentHex)
+  setTags(colorTags)
+  setFallback(true)
+}
+
+function applyImageColors(
+  colors: any,
+  setDominant: (c: string) => void,
+  setAccent: (c: string) => void,
+  setFallback: (f: boolean) => void,
+  setTags: (t: string[]) => void
+) {
+  setDominant(colors.dominantHex)
+  setAccent(colors.accentHex)
+  setFallback(!!colors.isFallback)
   const tags: string[] = []
   if (colors.dominantName) tags.push(colors.dominantName)
   if (colors.accentName && colors.accentName !== colors.dominantName) {
     tags.push(colors.accentName)
   }
-  return tags
+  setTags(tags)
 }
 
-export function useImageColorAnalysis(
-  mintingItem: HistoryItem | null,
-  variationBase: VariationBase | null,
+interface ImageColorAnalysisProps {
+  mintingItem: HistoryItem | null
+  variationBase: VariationBase | null
+  selectedRarity: RarityTier
+  setDominant: (c: string) => void
+  setAccent: (c: string) => void
+  setTags: (t: string[]) => void
+  setFallback: (f: boolean) => void
+}
+
+function performImageColorAnalysis(
+  active: boolean,
+  imageUrl: string | undefined,
   selectedRarity: RarityTier,
   setDominant: (c: string) => void,
   setAccent: (c: string) => void,
   setTags: (t: string[]) => void,
   setFallback: (f: boolean) => void
 ) {
+  const apply = () =>
+    applyFallbackColors(
+      selectedRarity,
+      setDominant,
+      setAccent,
+      setTags,
+      setFallback
+    )
+  if (imageUrl) {
+    analyzeImageColors(imageUrl, selectedRarity)
+      .then((colors) => {
+        if (active)
+          applyImageColors(colors, setDominant, setAccent, setFallback, setTags)
+      })
+      .catch((err) => {
+        console.error("Failed to analyze image colors:", err)
+        if (active) apply()
+      })
+  } else {
+    apply()
+  }
+}
+
+export function useImageColorAnalysis(props: ImageColorAnalysisProps) {
+  const {
+    mintingItem,
+    selectedRarity,
+    setDominant,
+    setAccent,
+    setFallback,
+    setTags
+  } = props
   useEffect(() => {
     let active = true
-
-    const applyFallback = () => {
-      if (!active) return
-      const { dominantHex, accentHex, colorTags } =
-        getFallbackColors(selectedRarity)
-      setDominant(dominantHex)
-      setAccent(accentHex)
-      setTags(colorTags)
-      setFallback(true)
-    }
-
-    if (mintingItem && mintingItem.imageUrl) {
-      analyzeImageColors(mintingItem.imageUrl, selectedRarity)
-        .then((colors) => {
-          if (!active) return
-          setDominant(colors.dominantHex)
-          setAccent(colors.accentHex)
-          setFallback(!!colors.isFallback)
-          setTags(getTagsFromColors(colors))
-        })
-        .catch((err) => {
-          console.error("Failed to analyze image colors:", err)
-          if (!active) return
-          applyFallback()
-        })
-    } else {
-      applyFallback()
-    }
-
+    performImageColorAnalysis(
+      active,
+      mintingItem?.imageUrl,
+      selectedRarity,
+      setDominant,
+      setAccent,
+      setTags,
+      setFallback
+    )
     return () => {
       active = false
     }
   }, [
     mintingItem,
-    variationBase,
+    props.variationBase,
     selectedRarity,
     setDominant,
     setAccent,
@@ -110,15 +150,15 @@ export function useMintingColors(
     }
   }, [selectedRarity, isColorFallback])
 
-  useImageColorAnalysis(
+  useImageColorAnalysis({
     mintingItem,
     variationBase,
     selectedRarity,
-    setDetectedDominantColor,
-    setDetectedAccentColor,
-    setDetectedColorTags,
-    setIsColorFallback
-  )
+    setDominant: setDetectedDominantColor,
+    setAccent: setDetectedAccentColor,
+    setTags: setDetectedColorTags,
+    setFallback: setIsColorFallback
+  })
 
   return {
     detectedDominantColor,

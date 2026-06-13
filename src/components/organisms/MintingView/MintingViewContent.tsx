@@ -111,10 +111,10 @@ interface MintingViewContentProps {
   props: MintingViewProps
   t: any
   expertFeatures: any
-  categoriesList: any
+  categoriesList: any[]
   currentName: string
   toggleKeyword: (kw: string) => void
-  advanceIfStep: (step: number) => void
+  advanceIfStep: (step: string) => void
 }
 
 export function MintingViewContent({

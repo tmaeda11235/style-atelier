@@ -8,6 +8,10 @@ import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
 
+const STEP_TITLE_INPUT = "title-input"
+const DEFAULT_ICON_EMOJI = "🖼️"
+const TIER_COMMON = "Common"
+
 interface SimpleMintingViewProps {
   mintingItem: HistoryItem | null
   editedSegments: PromptSegment[]
@@ -140,7 +144,7 @@ export function SimpleMintingView({
                     value={customName}
                     onChange={(e) => {
                       setCustomName(e.target.value)
-                      advanceIfStep("title-input")
+                      advanceIfStep(STEP_TITLE_INPUT)
                     }}
                     placeholder={t.minting.enterCustomName}
                     className="h-9 text-xs focus-visible:ring-blue-600 rounded-xl"
@@ -164,7 +168,10 @@ export function SimpleMintingView({
                     className="w-full text-xs border border-slate-200 rounded-xl bg-white p-2 h-9 font-medium text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
                     {categoriesList.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.iconEmoji || "🖼️"} {cat.name}
+                        {cat.iconEmoji || DEFAULT_ICON_EMOJI}{" "}
+                        {(t.defaultCategories as Record<string, string>)[
+                          cat.id
+                        ] || cat.name}
                       </option>
                     ))}
                   </select>
@@ -180,7 +187,7 @@ export function SimpleMintingView({
                   <PromptBubbleEditor
                     initialSegments={editedSegments}
                     onChange={setEditedSegments}
-                    tier="Common"
+                    tier={TIER_COMMON}
                   />
                 </div>
               </div>

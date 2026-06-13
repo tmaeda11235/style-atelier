@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -154,5 +153,91 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
     await page.screenshot({
       path: path.join(screenshotsDir, "quick-send-detail-success.png")
     })
+  })
+
+  test("should send card to workbench via narrow viewport more menu and switch tab", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for Quick Send via narrow viewport test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Seed 1 unpinned style card
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.add({
+        id: "card-quick-narrow",
+        name: "Quick Card C",
+        promptSegments: [{ type: "text", value: "cyberpunk landscape" }],
+        parameters: {},
+        masking: {},
+        tier: "Epic",
+        isPinned: false,
+        dominantColor: "#8b5cf6",
+        thumbnailData:
+          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%238b5cf6'/></svg>"
+      })
+    })
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame
+      .locator("button:has-text('Library')")
+      .first()
+    await libraryTabButton.click()
+
+    // 4. Change viewport width to narrow (320px)
+    await page.setViewportSize({ width: 320, height: 600 })
+    await page.waitForTimeout(500)
+
+    const cardItem = spFrame.locator("div:has-text('Quick Card C')").last()
+    await expect(cardItem).toBeVisible({ timeout: 10000 })
+    await cardItem.hover()
+
+    // 5. Verify direct quick-send button is hidden
+    const quickSendBtn = spFrame.locator("[data-testid='quick-send-button']")
+    await expect(quickSendBtn).not.toBeVisible()
+
+    // 6. Click the More (ellipsis) button
+    const moreBtn = spFrame
+      .locator("[data-testid='more-actions-button']")
+      .first()
+    await expect(moreBtn).toBeVisible()
+    await moreBtn.click()
+
+    // 7. Click the Quick Send button in the More menu
+    const moreQuickSendBtn = spFrame.locator(
+      "[data-testid='more-quick-send-button']"
+    )
+    await expect(moreQuickSendBtn).toBeVisible()
+    await moreQuickSendBtn.click()
+
+    // 8. Verify automatic transition to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await expect(workbenchTabButton).toHaveClass(/border-blue-500/, {
+      timeout: 5000
+    })
+
+    // 9. Verify the card is visible in the HandBar
+    const handbarCard = spFrame.locator("#handbar-root img[alt='Quick Card C']")
+    await expect(handbarCard).toBeVisible({ timeout: 5000 })
+
+    // Take screenshot for UX verification
+    await page.screenshot({
+      path: path.join(screenshotsDir, "quick-send-narrow-success.png")
+    })
+
+    // Reset viewport size
+    await page.setViewportSize({ width: 1280, height: 720 })
   })
 })
