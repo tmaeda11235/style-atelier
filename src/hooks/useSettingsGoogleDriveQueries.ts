@@ -38,7 +38,6 @@ export function useSettingsGoogleDriveQueries(gdriveClient: GoogleDriveClient) {
       )
     }
   }, [queryClient])
-
   const syncEnabledQuery = useQuery({
     queryKey: ["gdrive", "syncEnabled"],
     queryFn: () =>
