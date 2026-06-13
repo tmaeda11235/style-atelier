@@ -13,6 +13,58 @@ interface DebouncedSemanticSearchProps {
   t: any
 }
 
+type ExtractedFiltersState = {
+  rarity: string
+  category: string
+  color: string
+  query: string
+} | null
+
+export function useDebouncedSemanticSearch(
+  props: DebouncedSemanticSearchProps
+) {
+  const [isAiSearching, setIsAiSearching] = useState(false)
+  const [aiSearchError, setAiSearchError] = useState<string | null>(null)
+  const [extractedFilters, setExtractedFilters] =
+    useState<ExtractedFiltersState>(null)
+
+  const {
+    aiSearchQuery: query,
+    isAiSearch: isSearch,
+    categories,
+    setRarityFilter: setRarity,
+    setCategoryFilter: setCategory,
+    setColorFilter: setColor,
+    setSearchTag: setTag,
+    t
+  } = props
+
+  useEffect(() => {
+    if (!isSearch) return setExtractedFilters(null)
+    if (query.trim() === "") {
+      resetFilters(setRarity, setCategory, setColor, setTag)
+      return setExtractedFilters(null)
+    }
+    const timer = setTimeout(() => {
+      executeSemanticSearch(
+        query,
+        categories,
+        setExtractedFilters,
+        setRarity,
+        setCategory,
+        setColor,
+        setTag,
+        setIsAiSearching,
+        setAiSearchError,
+        t
+      )
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [query, isSearch, categories, setCategory, setColor, setRarity, setTag, t])
+
+  return { isAiSearching, aiSearchError, extractedFilters, setExtractedFilters }
+}
+
 function resetFilters(
   setRarityFilter: (val: any) => void,
   setCategoryFilter: (val: string) => void,
@@ -68,70 +120,4 @@ async function executeSemanticSearch(
   } finally {
     setIsAiSearching(false)
   }
-}
-
-type ExtractedFiltersState = {
-  rarity: string
-  category: string
-  color: string
-  query: string
-} | null
-
-export function useDebouncedSemanticSearch(
-  props: DebouncedSemanticSearchProps
-) {
-  const [isAiSearching, setIsAiSearching] = useState(false)
-  const [aiSearchError, setAiSearchError] = useState<string | null>(null)
-  const [extractedFilters, setExtractedFilters] =
-    useState<ExtractedFiltersState>(null)
-
-  const {
-    aiSearchQuery,
-    isAiSearch,
-    categories,
-    setRarityFilter,
-    setCategoryFilter,
-    setColorFilter,
-    setSearchTag,
-    t
-  } = props
-
-  useEffect(() => {
-    if (!isAiSearch) return setExtractedFilters(null)
-    if (aiSearchQuery.trim() === "") {
-      resetFilters(
-        setRarityFilter,
-        setCategoryFilter,
-        setColorFilter,
-        setSearchTag
-      )
-      return setExtractedFilters(null)
-    }
-    const timer = setTimeout(() => {
-      executeSemanticSearch(
-        aiSearchQuery,
-        categories,
-        setExtractedFilters,
-        setRarityFilter,
-        setCategoryFilter,
-        setColorFilter,
-        setSearchTag,
-        setIsAiSearching,
-        setAiSearchError,
-        t
-      )
-    }, 600)
-    return () => clearTimeout(timer)
-  }, [
-    aiSearchQuery,
-    isAiSearch,
-    categories,
-    setCategoryFilter,
-    setColorFilter,
-    setRarityFilter,
-    setSearchTag,
-    t
-  ])
-
-  return { isAiSearching, aiSearchError, extractedFilters, setExtractedFilters }
 }

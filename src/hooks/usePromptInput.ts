@@ -12,6 +12,17 @@ interface UsePromptInputProps {
   onRemoveLastSegment: () => void
 }
 
+function parseInputToTokens(inputValue: string): PromptSegment[] {
+  const trimmed = inputValue.trim()
+  if (!trimmed) return []
+
+  return trimmed
+    .split(PROMPT_DELIMITER_REGEX)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((value) => ({ type: "text", value }))
+}
+
 export const usePromptInput = ({
   segments,
   onAddSegment,
@@ -21,15 +32,7 @@ export const usePromptInput = ({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const addTokensFromInput = () => {
-    const trimmed = inputValue.trim()
-    if (!trimmed) return
-
-    const newTokens: PromptSegment[] = trimmed
-      .split(PROMPT_DELIMITER_REGEX)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .map((value) => ({ type: "text", value }))
-
+    const newTokens = parseInputToTokens(inputValue)
     if (newTokens.length > 0) {
       onAddSegment(newTokens)
     }
