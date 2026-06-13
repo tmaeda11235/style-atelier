@@ -209,3 +209,11 @@ To maintain clean architecture and prevent technical debt, the following strict 
   - Interactive UI element visibility and safety are verified in E2E tests (e.g., [overlap-detection.spec.ts](file:///c:/Users/oculus/Desktop/style-atelier/tests/e2e/overlap-detection.spec.ts)).
   - It scrolls elements into view and uses `document.elementFromPoint(centerX, centerY)` within the browser context to ensure that the element at the center coordinates is either the target element itself, a descendant, or a container. This prevents accidental UI overlaps, layout shifts, or obscuration from overlays.
   - Interactive elements checked include: Library Tab Button, Search Input, Toggle Filters, Card hover actions (Edit, Pin, Share, Inject), Filters Accordion, Close Filters Button, Workbench Tab Button, Cauldron Dropzone, and Slot Zones.
+
+## CI/CD Pipeline & Delivery Pattern
+
+To support high-velocity AI-driven development without risking store spam or untested production regressions, the repository follows a Dual-Track Delivery pipeline:
+
+- **Daily Internal Build (Nightly / On-Merge)**: Every push to `main` (and nightly cron) triggers `internal-build.yml`. It builds the extension (`npm run package`) and uploads the ZIP as a GitHub Artifact. This allows the team to immediately test new AI-generated features locally (dogfooding) without going through Chrome Web Store review.
+- **Weekly Release Train (Store Submission)**: Triggered manually via `submit.yml` (or `release.yml` tag pushes). It first enforces a full E2E Playwright test suite. Only if E2E tests pass, the pipeline proceeds to automatically upload the extension to the Chrome Web Store dashboard using the Plasmo `bpp` action.
+- **Versioning Strategy**: The `version` in `package.json` should only be bumped prior to initiating the Weekly Release Train. Minor/patch bumps follow Semantic Versioning based on accumulated features.
