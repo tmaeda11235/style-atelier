@@ -19,6 +19,11 @@ interface ToggleProps {
   id: string
 }
 
+interface HeaderProps {
+  label: string
+  desc: string
+}
+
 function SettingsToggle({
   label,
   subLabel,
@@ -58,6 +63,22 @@ function SettingsToggle({
   )
 }
 
+function BrandLogoSettingsHeader({ label, desc }: HeaderProps) {
+  return (
+    <div className="flex items-start gap-4 mb-4">
+      <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+        <span className="text-xl">🔮</span>
+      </div>
+      <div className="space-y-1 flex-1">
+        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          {label}
+          <HelpTooltip content={desc} position="top-left" />
+        </h3>
+      </div>
+    </div>
+  )
+}
+
 export function BrandLogoSettings({
   includeBrandLogo,
   toggleBrandLogo,
@@ -68,23 +89,14 @@ export function BrandLogoSettings({
   return (
     <div className="relative overflow-hidden" id="settings-brand-logo-section">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
-      <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
-          <span className="text-xl">🔮</span>
-        </div>
-        <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-            {t.includeBrandLogoLabel || "Include Brand Logo"}
-            <HelpTooltip
-              content={
-                t.includeBrandLogoDesc ||
-                "Embed 'Minted with Style Atelier' badge in exported images."
-              }
-              position="top-left"
-            />
-          </h3>
-        </div>
-      </div>
+
+      <BrandLogoSettingsHeader
+        label={t.includeBrandLogoLabel || "Include Brand Logo"}
+        desc={
+          t.includeBrandLogoDesc ||
+          "Embed 'Minted with Style Atelier' badge in exported images."
+        }
+      />
 
       <div className="mb-3">
         <SettingsToggle
