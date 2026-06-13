@@ -43,8 +43,9 @@ export function useGDriveProgress() {
 function useAbortController() {
   const abortControllerRef = useRef<AbortController | null>(null)
   useEffect(() => {
+    const ref = abortControllerRef
     return () => {
-      abortControllerRef.current?.abort()
+      ref.current?.abort()
     }
   }, [])
   return abortControllerRef

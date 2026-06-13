@@ -15,10 +15,7 @@ interface UseEasyModeViewProps {
 /**
  * Custom hook encapsulating the logic and state for the Easy Mode of the Style Atelier Sidepanel.
  */
-export function useEasyModeView({
-  isEasyMode,
-  onToggleEasyMode
-}: UseEasyModeViewProps) {
+export function useEasyModeView({ onToggleEasyMode }: UseEasyModeViewProps) {
   const confirm = useConfirm()
   const [activeTab, setActiveTab] = useState<"library" | "settings">("library")
   const [logs, setLogs] = useState<string[]>([])
