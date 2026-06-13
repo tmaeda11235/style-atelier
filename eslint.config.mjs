@@ -10,7 +10,7 @@ import i18next from "eslint-plugin-i18next";
 
 export default ts.config(
   {
-    ignores: ["postcss.config.js", "scratch/**/*"]
+    ignores: ["postcss.config.js", "scratch/**/*", "assets/**", "assets/"]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
@@ -126,8 +126,6 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-max-lines.ts",
-      "src/components/organisms/HandBar.tsx",
-      "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/Workbench.tsx",
     ],
     rules: {
@@ -140,7 +138,6 @@ export default ts.config(
       "src/placeholder-non-existent-complexity.ts",
       "src/components/organisms/CloudSyncSection.tsx",
       "src/components/templates/SidePanelLayout.tsx",
-      "src/lib/prompt-utils.ts",
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
@@ -182,7 +179,6 @@ export default ts.config(
       "src/hooks/useEasyModeView.ts",
       "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
-      "src/lib/prompt-utils.ts",
     ],
     rules: {
       "max-lines-per-function": "warn"

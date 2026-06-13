@@ -12,7 +12,7 @@ tags: []
 - **Platform**: Chrome Extension (Manifest V3).
 - **Framework**: Plasmo.
 - **Backend**: None (Serverless Architecture).
-- **Local AI Engine**: Client-side execution of Gemma-4 E2B via WebLLM inside Web Workers.
+- **Local AI Engine**: Client-side execution of Gemma-4 E2B via LiteRT-LM inside Web Workers.
 - **Database**: Client-side IndexedDB (via Dexie.js).
 - **Data Transport**: "Memento Pattern" via Image Files (QR Code / PNG tEXt Metadata fallback).
 
@@ -21,12 +21,12 @@ tags: []
 1.  **Side Panel ("The Factory")**: The main UI for managing cards, building decks, and mixing prompts.
 2.  **Content Script**: Interacts with the Midjourney Web DOM to capture generated images and inject prompts.
 3.  **Background Service Worker**: Handles browser events and coordination.
-4.  **Offscreen Document ("The Engine Room")**: Hosts the WebLLM Worker to run GPU-accelerated model downloads and inference in a persistent background context.
+4.  **Offscreen Document ("The Engine Room")**: Hosts the LiteRT-LM Worker to run GPU-accelerated model downloads and inference in a persistent background context.
 
 ## Key Technical Patterns
 
 - **Tokenized Editor**: Treating prompt segments as draggable objects (Bubbles). Managed by `usePromptBubbleEditorState` (`src/hooks/usePromptBubbleEditorState.ts`) to handle bubble splitting, active/inactive states, custom token additions, and serialization, keeping the component lightweight and meeting ESLint constraints.
-- **Local AI Prompt De-cluttering**: Integrates local LLM-driven cleaning of prompt bubbles. Managed by the `useAiPromptDeclutter` hook (`src/hooks/useAiPromptDeclutter.ts`), which interfaces with WebLLM via Offscreen Worker messaging, handles model download progress, and falls back to regex-based segmentation in case of initialization failure.
+- **Local AI Prompt De-cluttering**: Integrates local LLM-driven cleaning of prompt bubbles. Managed by the `useAiPromptDeclutter` hook (`src/hooks/useAiPromptDeclutter.ts`), which interfaces with LiteRT-LM via Offscreen Worker messaging, handles model download progress, and falls back to regex-based segmentation in case of initialization failure.
 - **Bubble Slotting UI**: Breaking prompts into "Text" (Fixed) and "Slot" (Variable) components.
 - **Mixing Table & Intelligent Weighted Blend**: Logic to merge multiple Style Cards (parents) into a new prompt generation or Workbench environment. When merging, it aggregates sref/cref URLs with their corresponding weights (calculated by multiplying the card weight with the parameter weight, summing up occurrences, and outputting with suffix weights e.g. `::weight`). It also propagates weights to prompt text segments.
 - **Image-as-Database (PNG Metadata & QR Fallback)**: Using the exported image itself as a portable data container. During export, card data is injected as a compressed payload into a custom PNG `tEXt` metadata chunk. During import, the raw file is parsed directly via a custom CRC32 checker to retrieve the metadata, completely bypassing canvas rendering and QR scan overhead. If metadata is missing or stripped (e.g. converted or hosted on platforms that strip metadata), a canvas-based multi-stage QR scan fallback is executed (first full image, then cropped bottom-right corner, then 2x scaled crop).
@@ -73,7 +73,7 @@ tags: []
   - Implements visual scroll affordance for horizontal color filters using CSS `mask-image` linear-gradients (for smooth edge-fade indications) coupled with dynamic scroll arrow overlays.
   - Implements a collapsible accordion UI (`LibraryFilterAccordion`) for advanced filters (rarity, category, color, sorting) to maximize screen space while keeping code modularized under 50-line function limits.
   - Decouples Folder Explorer (`FolderExplorer.tsx`) and Card Items (`LibraryCardItem.tsx`) from `LibraryTab.tsx` to meet the 300-line file limit. The Folder Explorer splits breadcrumbs and subfolder grid into subcomponents (`Breadcrumbs`, `SubfolderGrid`, `SubfolderItem`) and Card Items use isolated thumbnail layout (`LibraryCardThumbnail`) to satisfy the 50-line function limit.
-  - Implements Natural Language Semantic Filtering (`useAiSearch` and `useDebouncedSemanticSearch` hooks) that uses local WebLLM Gemma model to parse user's query into structured database filters (rarity, category, color, keyword). The implementation is fully modularized by extracting components (`CardsGrid.tsx`, `EmptyState.tsx`, `ExtractedFiltersDisplay.tsx`, `AiWarningModal.tsx`) to comply with strict ESLint line count rules.
+  - Implements Natural Language Semantic Filtering (`useAiSearch` and `useDebouncedSemanticSearch` hooks) that uses local LiteRT-LM Gemma model to parse user's query into structured database filters (rarity, category, color, keyword). The implementation is fully modularized by extracting components (`CardsGrid.tsx`, `EmptyState.tsx`, `ExtractedFiltersDisplay.tsx`, `AiWarningModal.tsx`) to comply with strict ESLint line count rules.
 - **Tutorial Spotlight & Position Synchronization**:
   - Tutorial spotlight positioning, window resize/scroll event listeners, click-blocking logic, and database mock insertions are fully encapsulated in the `useSpotlight` custom hook (`src/hooks/useSpotlight.ts`).
   - Decouples DOM calculations and window event handlers from the `InteractiveTutorial` overlay component (`src/components/organisms/InteractiveTutorial.tsx`), maintaining clean separation of concerns and keeping component file size well within constraints (under 300 lines).
@@ -90,8 +90,8 @@ tags: []
       - _Safe Merge_: Performs normal LWW merge while warning the user of potential zombie resurrection.
       - _Local Overwrite_: Discards local changes and pulls clean data from the cloud backup (fully preventing resurrection).
       - _Cloud Overwrite_: Replaces the cloud backup with the current local state.
-- **Local AI Inference Pattern (WebLLM, Offscreen & Cache Resilience)**:
-  - **Offscreen Orchestration**: WebLLM runs inside a Web Worker hosted in an Offscreen Document rather than the Side Panel. This prevents execution contexts from suddenly terminating when the Side Panel is closed, ensuring long-running downloads and token generations finish safely.
+- **Local AI Inference Pattern (LiteRT-LM, Offscreen & Cache Resilience)**:
+  - **Offscreen Orchestration**: LiteRT-LM runs inside a Web Worker hosted in an Offscreen Document rather than the Side Panel. This prevents execution contexts from suddenly terminating when the Side Panel is closed, ensuring long-running downloads and token generations finish safely.
   - **Pre-download Quota Check**: Evaluates storage using `navigator.storage.estimate()` before downloading the model, preventing failures from `QuotaExceededError`.
   - **Cache Integrity Guardrails**: Validates cached files in OPFS or Cache Storage. If corruption or incomplete downloads are detected, it automatically purges and restarts the download.
   - **Non-blocking Execution**: The model is executed off the main thread, communicating with the Side Panel and Background Service Worker via Chrome extension runtime messaging.
@@ -109,7 +109,7 @@ tags: []
 2.  **Minting**: Image + Prompt Metadata saved to IndexedDB as "Style Card".
 3.  **Usage**: User selects Card from Side Panel -> Content Script injects prompt into Midjourney input.
 4.  **Export**: Card data encoded into image (QR/Metadata) for sharing.
-5.  **Local AI Inference**: User requests prompt analysis/tagging -> Side Panel / Background requests Offscreen Document -> Offscreen Document communicates with WebLLM Worker -> Worker runs inference via WebLLM (Gemma-4 E2B) -> Results updated in state stores / database.
+5.  **Local AI Inference**: User requests prompt analysis/tagging -> Side Panel / Background requests Offscreen Document -> Offscreen Document communicates with LiteRT-LM Worker -> Worker runs inference via LiteRT-LM (Gemma-4 E2B) -> Results updated in state stores / database.
 
 ## Component Development Rules (Sustainability)
 
@@ -175,3 +175,10 @@ To maintain clean architecture and prevent technical debt, the following strict 
    - Progressive localization (i18n) checks are enforced via `eslint-plugin-i18next`'s `no-literal-string` rule, targeting fully-translated files (e.g. `DeleteConfirmModal.tsx`, `HistoryTab.tsx`) to prevent future raw text/translation leaks.
    - The helper script `scratch/auto-sync-eslint.js` dynamically compiles and synchronizes these whitelists. As developers refactor legacy files, executing this script automatically removes them from exceptions, permanently locking in the strict rules.
    - The verification script `scratch/check-eslint-whitelist.js` is run during CI to ensure no new files are added to the overrides block, blocking pull requests that attempt to expand exceptions.
+
+## Testing Patterns & UX Quality Assurance:
+
+- **E2E Testing & UI Overlap Detection**:
+  - Interactive UI element visibility and safety are verified in E2E tests (e.g., [overlap-detection.spec.ts](file:///c:/Users/oculus/Desktop/style-atelier/tests/e2e/overlap-detection.spec.ts)).
+  - It scrolls elements into view and uses `document.elementFromPoint(centerX, centerY)` within the browser context to ensure that the element at the center coordinates is either the target element itself, a descendant, or a container. This prevents accidental UI overlaps, layout shifts, or obscuration from overlays.
+  - Interactive elements checked include: Library Tab Button, Search Input, Toggle Filters, Card hover actions (Edit, Pin, Share, Inject), Filters Accordion, Close Filters Button, Workbench Tab Button, Cauldron Dropzone, and Slot Zones.

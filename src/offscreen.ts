@@ -1,22 +1,26 @@
-import {
-  checkAvailableStorage,
-  verifyCacheIntegrity,
-  verifyOpfsIntegrity
-} from "./lib/storage-utils"
+import { Engine, LiteRtLm } from "@litert-lm/core"
 
-// WebLLM Worker instance
-let webLlmWorker: Worker | null = null
+import { checkAvailableStorage, verifyOpfsIntegrity } from "./lib/storage-utils"
+
+// Override WASM path to load locally from the extension, preventing CSP errors from jsdelivr
+LiteRtLm.DEFAULT_WASM_PATH = chrome.runtime.getURL("assets/wasm")
+
+// LiteRT-LM instances
+let litertEngine: any = null
+let litertChat: any = null
 const pendingInferences = new Map<
   string,
   { resolve: (res: any) => void; reject: (err: any) => void }
 >()
 
-// Expected models and sizes for Gemma-4 E2B
-const GEMMA_MODEL_FILES = [
-  { name: "gemma-4-e2b-q4f16_1.bin", size: 1024 * 1024 * 1024 } // Example ~1GB file
-]
+const MODEL_URL =
+  "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-web.litertlm"
+const MODEL_FILENAME = "gemma-4-E2B-it-web.litertlm"
 
-console.log("Offscreen Document loaded.")
+// Expected size for Gemma-4 E2B is exactly 2008432640 bytes
+const GEMMA_MODEL_FILES = [{ name: MODEL_FILENAME, size: 2008432640 }]
+
+console.log("Offscreen Document loaded for LiteRT-LM.")
 
 // Listen for messages from background service worker or sidepanel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -25,7 +29,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
     case "check-quota":
       handleCheckQuota(
-        message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024,
+        message.requiredBytes ?? 2.5 * 1024 * 1024 * 1024,
         sendResponse
       )
       return true // Async response
@@ -34,8 +38,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleVerifyIntegrity(sendResponse)
       return true
 
-    case "init-worker":
-      handleInitWorker(sendResponse)
+    case "init-worker": // Kept the same action name for compatibility
+      handleInitEngine(sendResponse)
       return true
 
     case "start-download":
@@ -51,7 +55,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         message.requestId ?? Math.random().toString(36).substring(7),
         message.prompt,
         message.systemPrompt,
-        message.temperature,
         sendResponse
       )
       return true // Async response
@@ -78,124 +81,242 @@ async function handleCheckQuota(
 
 async function handleVerifyIntegrity(sendResponse: (res: any) => void) {
   try {
-    // Check both Cache API and OPFS (we support both)
+    // Check OPFS for the downloaded model
     const opfsValid = await verifyOpfsIntegrity(
-      "webllm_models",
+      "litert_models",
       GEMMA_MODEL_FILES
-    )
-    // Cache storage verify (example cache name 'webllm/model_cache')
-    const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
-      url: `https://webllm/model/${f.name}`,
-      size: f.size
-    }))
-    const cacheValid = await verifyCacheIntegrity(
-      "webllm/model_cache",
-      cacheExpected
     )
 
     sendResponse({
       status: "success",
-      integrityPassed: opfsValid || cacheValid
+      integrityPassed: opfsValid
     })
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })
   }
 }
 
-function handleInitWorker(sendResponse: (res: any) => void) {
+async function handleInitEngine(sendResponse: (res: any) => void) {
   try {
-    if (!webLlmWorker) {
-      // In Plasmo, workers can be initialized using new URL with import.meta.url
-      webLlmWorker = new Worker(
-        new URL("./webllm.worker.ts", import.meta.url),
-        {
-          type: "module"
-        }
-      )
+    if (!litertEngine) {
+      console.log("Initializing LiteRT-LM Engine...")
 
-      webLlmWorker.onmessage = (event) => {
-        const data = event.data
-        if (
-          data &&
-          (data.status === "inference-result" ||
-            data.status === "inference-error")
-        ) {
-          const { requestId, result, error } = data
-          const pending = pendingInferences.get(requestId)
-          if (pending) {
-            pendingInferences.delete(requestId)
-            if (data.status === "inference-result") {
-              pending.resolve(result)
-            } else {
-              pending.reject(error || "Inference failed")
-            }
-          }
-        }
+      const root = await navigator.storage.getDirectory()
+      const opfsDir = await root.getDirectoryHandle("litert_models", {
+        create: true
+      })
 
-        // Forward message from Worker to Background / Side Panel
-        chrome.runtime.sendMessage({
-          source: "offscreen-worker",
-          payload: event.data
-        })
+      let fileHandle
+      try {
+        fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME)
+      } catch {
+        console.log("Model file not found. Skipping engine initialization.")
+        sendResponse({ status: "success", message: "Skipped (no file)" })
+        return
       }
+
+      const file = await fileHandle.getFile()
+
+      if (file.size !== 2008432640) {
+        console.log(
+          "Model file is incomplete or corrupted. Skipping engine initialization.",
+          file.size
+        )
+        sendResponse({
+          status: "success",
+          message: "Skipped (incomplete file)"
+        })
+        return
+      }
+
+      const localUrl = URL.createObjectURL(file)
+
+      litertEngine = await Engine.create({
+        model: localUrl,
+        mainExecutorSettings: {
+          maxNumTokens: 8192
+        }
+      })
+
+      console.log("LiteRT-LM Engine loaded. Creating Conversation...")
+
+      // Initialize a reusable chat conversation
+      litertChat = await litertEngine.createConversation()
+      console.log("LiteRT-LM Engine completely initialized.")
     }
-    sendResponse({ status: "success", message: "Worker initialized" })
+    sendResponse({ status: "success", message: "Engine initialized" })
   } catch (err: any) {
-    sendResponse({ status: "error", error: err.message })
+    console.error("Failed to initialize engine:", err.name, err.message, err)
+    sendResponse({ status: "error", error: `${err.name}: ${err.message}` })
   }
 }
 
-function handleRunInference(
+async function performLitertInference(
+  requestId: string,
+  prompt: string,
+  systemPrompt: string | undefined
+): Promise<string> {
+  const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt
+  const chat = await litertEngine.createConversation()
+  const response = await chat.sendMessage({
+    role: "user",
+    content: fullPrompt
+  })
+  return response.content[0].text
+}
+
+async function handleRunInference(
   requestId: string,
   prompt: string,
   systemPrompt: string | undefined,
-  temperature: number | undefined,
   sendResponse: (res: any) => void
 ) {
   try {
-    if (!webLlmWorker) {
-      handleInitWorker(() => {})
+    if (!litertEngine || !litertChat) {
+      await new Promise((resolve, reject) => {
+        handleInitEngine((res) => {
+          if (res.status === "error") reject(new Error(res.error))
+          else resolve(true)
+        })
+      })
     }
 
-    if (webLlmWorker) {
-      pendingInferences.set(requestId, {
-        resolve: (result) => {
-          sendResponse({ status: "success", result })
-        },
-        reject: (error) => {
-          sendResponse({ status: "error", error })
-        }
-      })
+    if (!litertChat) {
+      return sendResponse({ status: "error", error: "Failed to init" })
+    }
 
-      webLlmWorker.postMessage({
-        action: "run-inference",
+    pendingInferences.set(requestId, {
+      resolve: (result) => sendResponse({ status: "success", result }),
+      reject: (error) => sendResponse({ status: "error", error })
+    })
+
+    try {
+      const result = await performLitertInference(
         requestId,
         prompt,
-        systemPrompt,
-        temperature
-      })
-    } else {
-      sendResponse({ status: "error", error: "Failed to initialize worker" })
+        systemPrompt
+      )
+      const pending = pendingInferences.get(requestId)
+      if (pending) {
+        pendingInferences.delete(requestId)
+        pending.resolve(result)
+      }
+    } catch (err: any) {
+      console.error("Inference Error:", err)
+      const pending = pendingInferences.get(requestId)
+      if (pending) {
+        pendingInferences.delete(requestId)
+        pending.reject(err.message || String(err))
+      }
     }
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })
   }
 }
 
-function handleStartDownload(sendResponse: (res: any) => void) {
-  try {
-    if (!webLlmWorker) {
-      handleInitWorker(() => {})
-    }
-    if (webLlmWorker) {
-      webLlmWorker.postMessage({ action: "start-download" })
-      sendResponse({ status: "success", message: "Download started" })
-    } else {
-      sendResponse({ status: "error", error: "Failed to initialize worker" })
-    }
-  } catch (err: any) {
-    sendResponse({ status: "error", error: err.message })
+let isDownloading = false
+
+async function handleStartDownload(sendResponse: (res: any) => void) {
+  if (isDownloading) {
+    console.log("Download already in progress.")
+    sendResponse({ status: "success", message: "Already downloading" })
+    return
   }
+
+  try {
+    isDownloading = true
+    const root = await navigator.storage.getDirectory()
+    const opfsDir = await root.getDirectoryHandle("litert_models", {
+      create: true
+    })
+
+    // Check if file already exists and has correct size
+    try {
+      const fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME)
+      const file = await fileHandle.getFile()
+      if (file.size === 2008432640) {
+        console.log("Model already downloaded in OPFS")
+        chrome.runtime.sendMessage({
+          source: "offscreen-worker",
+          payload: { status: "ready" }
+        })
+        sendResponse({
+          status: "success",
+          message: "Download skipped (cached)"
+        })
+        return
+      }
+    } catch {
+      // file not found, proceed to download
+    }
+
+    await doModelDownload(opfsDir)
+    sendResponse({ status: "success", message: "Download finished" })
+  } catch (err: any) {
+    chrome.runtime.sendMessage({
+      source: "offscreen-worker",
+      payload: { status: "error", error: err.message }
+    })
+    sendResponse({ status: "error", error: err.message })
+  } finally {
+    isDownloading = false
+  }
+}
+
+async function doModelDownload(opfsDir: FileSystemDirectoryHandle) {
+  console.log("Starting OPFS streaming download...")
+  const response = await fetch(MODEL_URL)
+  if (!response.ok || !response.body)
+    throw new Error("Network response was not ok")
+
+  const contentLength = response.headers.get("Content-Length")
+  const totalBytes = contentLength ? parseInt(contentLength, 10) : 2147483648
+
+  let receivedBytes = 0
+  const reader = response.body.getReader()
+  const fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME, {
+    create: true
+  })
+  const writable = await fileHandle.createWritable()
+
+  const startTime = Date.now()
+  let lastProgress = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    await writable.write(value)
+    receivedBytes += value.length
+
+    const progress = Math.min(
+      99,
+      Math.round((receivedBytes / totalBytes) * 100)
+    )
+    if (progress > lastProgress) {
+      lastProgress = progress
+      const elapsedMs = Date.now() - startTime
+      const speed = Number(
+        (receivedBytes / (elapsedMs / 1000) / (1024 * 1024)).toFixed(1)
+      )
+      const eta = Math.max(
+        0,
+        Math.round(
+          (elapsedMs / (receivedBytes / totalBytes) - elapsedMs) / 1000
+        )
+      )
+      chrome.runtime.sendMessage({
+        source: "offscreen-worker",
+        payload: { status: "downloading", progress, speed, eta }
+      })
+    }
+  }
+
+  await writable.close()
+  chrome.runtime.sendMessage({
+    source: "offscreen-worker",
+    payload: { status: "ready" }
+  })
 }
 
 async function handlePurgeCache(sendResponse: (res: any) => void) {
@@ -208,15 +329,17 @@ async function handlePurgeCache(sendResponse: (res: any) => void) {
     ) {
       const root = await navigator.storage.getDirectory()
       try {
-        await root.removeEntry("webllm_models", { recursive: true })
+        await root.removeEntry("litert_models", { recursive: true })
       } catch {
         // Ignored if directory doesn't exist
       }
     }
-    // 2. Clear Cache Storage
-    if (typeof caches !== "undefined") {
-      await caches.delete("webllm/model_cache")
+
+    if (litertEngine) {
+      litertEngine = null
+      litertChat = null
     }
+
     sendResponse({ status: "success" })
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })

@@ -242,4 +242,59 @@ describe("AiStyleAnalysisSection", () => {
       "A cool retro cyberpunk style description."
     )
   })
+
+  it("renders error message when error status is present", () => {
+    vi.mocked(useAiMetadataGenerator).mockReturnValue({
+      status: "ready",
+      progress: 100,
+      startDownload: mockStartDownload,
+      loading: false,
+      error: "Some API Error",
+      result: null,
+      setResult: vi.fn(),
+      generateMetadata: mockGenerateMetadata,
+      isModelReady: true
+    })
+
+    render(
+      <AiStyleAnalysisSection
+        promptText="cyberpunk sunset"
+        customTags={[]}
+        setCustomTags={mockSetCustomTags}
+        setCustomName={mockSetCustomName}
+      />
+    )
+
+    expect(screen.getByText("Inference failed: Some API Error")).toBeDefined()
+  })
+
+  it("toggles tag when customTags is empty", () => {
+    vi.mocked(useAiMetadataGenerator).mockReturnValue({
+      status: "ready",
+      progress: 100,
+      startDownload: mockStartDownload,
+      loading: false,
+      result: {
+        genre: "Cyberpunk",
+        tags: ["Neon"],
+        summary: "A cool retro cyberpunk style description."
+      },
+      setResult: vi.fn(),
+      generateMetadata: mockGenerateMetadata,
+      isModelReady: true
+    })
+
+    render(
+      <AiStyleAnalysisSection
+        promptText="cyberpunk sunset"
+        customTags={[]}
+        setCustomTags={mockSetCustomTags}
+        setCustomName={mockSetCustomName}
+      />
+    )
+
+    const neonTagBtn = screen.getByText("Neon")
+    fireEvent.click(neonTagBtn)
+    expect(mockSetCustomTags).toHaveBeenCalledWith(["neon"])
+  })
 })
