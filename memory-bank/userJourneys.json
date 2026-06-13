@@ -14,7 +14,8 @@
         "@J-WB-EXPERT-01"
       ],
       "viewComponents": [
-        "src/components/organisms/MintingView.tsx"
+        "src/components/organisms/MintingView.tsx",
+        "src/lib/mj-parser.ts"
       ]
     },
     {
