@@ -5,7 +5,6 @@ import * as backupManager from "@/lib/backup-manager"
 import { exportDatabase, importDatabase } from "@/lib/backup-manager"
 import { db } from "@/lib/db"
 import * as googleDrive from "@/lib/google-drive"
-import { i18n } from "@/lib/i18n"
 import { QueryTestProvider } from "@/test/react-query-helper"
 import {
   act,
@@ -16,6 +15,8 @@ import {
 } from "@testing-library/react"
 import React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { i18n } from "../../../../src/lib/i18n"
 
 vi.mock("@/contexts/ConfirmContext", () => ({
   useConfirm: () => (options: any) =>
