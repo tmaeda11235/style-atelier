@@ -1,43 +1,14 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "Running Pre-Push Checks..."
+echo "? ERROR: Direct 'git push' is disabled to prevent heavy CI wait times."
+echo ""
+echo "Please use 'npm run push' to push your changes."
+echo "This command will run Smart Incremental Tests locally, generate a cryptographic"
+echo "Proof of Work, and securely bypass the heavy CI test suite."
+echo ""
+echo "If you REALLY want to bypass local testing and force full CI runs, use:"
+echo "git push --no-verify"
+echo ""
+exit 1
 
-# Determine if all commits being pushed contain ONLY documentation changes
-z40=0000000000000000000000000000000000000000
-ONLY_DOCS=1
-has_commits=0
-
-while read local_ref local_sha remote_ref remote_sha
-do
-  if [ "$local_sha" = "$z40" ]; then
-    continue
-  fi
-
-  has_commits=1
-
-  if [ "$remote_sha" = "$z40" ]; then
-    FILES=$(git diff --name-only main...$local_sha 2>/dev/null || git diff-tree -r --name-only --no-commit-id $local_sha)
-  else
-    FILES=$(git diff --name-only $remote_sha...$local_sha)
-  fi
-
-  NON_DOC_FILES=$(echo "$FILES" | grep -vE '\.md$|^docs/|^memory-bank/' || true)
-  if [ -n "$NON_DOC_FILES" ]; then
-    ONLY_DOCS=0
-    break
-  fi
-done
-
-if [ "$has_commits" -eq 1 ] && [ "$ONLY_DOCS" -eq 1 ]; then
-  echo "Only documentation files modified. Skipping pre-push checks."
-  exit 0
-fi
-
-echo "Running Linting..."
-npm run lint || { echo "Linting failed. Push aborted."; exit 1; }
-
-echo "Running Smart Incremental Tests (UT & E2E)..."
-node scripts/smart-pre-push.mjs || { echo "Smart Tests failed. Push aborted."; exit 1; }
-
-echo "All checks passed. Proceeding with push."

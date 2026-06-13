@@ -6,6 +6,17 @@ import crypto from 'crypto';
 async function main() {
   console.log('Running Smart Pre-Push...');
   
+  // 0. Ensure working directory is clean
+  const status = execSync('git status --porcelain', { encoding: 'utf8' }).trim();
+  if (status) {
+    const uncommittedFiles = status.split('\n').map(line => line.trim().split(' ').pop());
+    const nonProofFiles = uncommittedFiles.filter(f => !f.endsWith('artifacts/test-proof.enc'));
+    if (nonProofFiles.length > 0) {
+      console.error("❌ ERROR: Your working directory is not clean. Please commit your changes before running 'npm run push'.");
+      process.exit(1);
+    }
+  }
+
   // 1. Get changed files
   let diffOutput;
   try {
