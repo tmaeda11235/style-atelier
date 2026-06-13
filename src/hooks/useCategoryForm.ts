@@ -8,7 +8,7 @@ function parseEmoji(value: string): string {
     const segmenter = new Intl.Segmenter()
     const segments = [...segmenter.segment(value)]
     return segments.length > 0 ? segments[0].segment : ""
-  } catch (e) {
+  } catch {
     const chars = Array.from(value)
     return chars.length > 0 ? chars[0] : ""
   }

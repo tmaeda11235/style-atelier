@@ -136,9 +136,6 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-complexity.ts",
-      "src/components/organisms/CloudSyncSection.tsx",
-      "src/lib/prompt-utils.ts",
-      "src/components/templates/SidePanelLayout.tsx",
     ],
     rules: {
       "sonarjs/cognitive-complexity": "warn"
@@ -151,7 +148,6 @@ export default ts.config(
       "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/AutocompleteDropdown.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
-      "src/components/organisms/CloudSyncSection.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
       "src/components/organisms/EasyModeSection.tsx",
       "src/components/organisms/EasyModeView.tsx",
@@ -169,7 +165,6 @@ export default ts.config(
       "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/components/templates/SidePanelLayout.tsx",
       "src/hooks/useActiveTabUrl.ts",
       "src/hooks/useCardDetailsForm.ts",
       "src/hooks/useChromeTabConnection.ts",

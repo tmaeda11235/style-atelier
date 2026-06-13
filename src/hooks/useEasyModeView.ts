@@ -16,7 +16,7 @@ interface UseEasyModeViewProps {
  * Custom hook encapsulating the logic and state for the Easy Mode of the Style Atelier Sidepanel.
  */
 export function useEasyModeView({
-  isEasyMode,
+  isEasyMode: _isEasyMode,
   onToggleEasyMode
 }: UseEasyModeViewProps) {
   const confirm = useConfirm()

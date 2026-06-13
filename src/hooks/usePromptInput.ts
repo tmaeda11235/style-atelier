@@ -1,6 +1,10 @@
-import { useState, useRef, useEffect } from "react"
+import { useRef, useState } from "react"
+
 import type { PromptSegment } from "../lib/db-schema"
-import { PROMPT_DELIMITER_REGEX, PROMPT_DELIMITER_CHARS } from "../lib/prompt-utils"
+import {
+  PROMPT_DELIMITER_CHARS,
+  PROMPT_DELIMITER_REGEX
+} from "../lib/prompt-utils"
 
 interface UsePromptInputProps {
   segments: PromptSegment[]
@@ -8,7 +12,11 @@ interface UsePromptInputProps {
   onRemoveLastSegment: () => void
 }
 
-export const usePromptInput = ({ segments, onAddSegment, onRemoveLastSegment }: UsePromptInputProps) => {
+export const usePromptInput = ({
+  segments,
+  onAddSegment,
+  onRemoveLastSegment
+}: UsePromptInputProps) => {
   const [inputValue, setInputValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -32,7 +40,11 @@ export const usePromptInput = ({ segments, onAddSegment, onRemoveLastSegment }: 
     if (e.key === "Enter") {
       e.preventDefault()
       addTokensFromInput()
-    } else if (e.key === "Backspace" && inputValue === "" && segments.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      inputValue === "" &&
+      segments.length > 0
+    ) {
       e.preventDefault() // Prevents default browser back navigation
       onRemoveLastSegment()
     } else if (PROMPT_DELIMITER_CHARS.includes(e.key)) {
@@ -55,6 +67,6 @@ export const usePromptInput = ({ segments, onAddSegment, onRemoveLastSegment }: 
     inputRef,
     handleKeyDown,
     handleBlur,
-    focusInput,
+    focusInput
   }
 }

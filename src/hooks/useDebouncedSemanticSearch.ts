@@ -52,45 +52,57 @@ function applyFilters(
   setSearchTag(result.query)
 }
 
-function useSemanticSearchEffect(params: EffectParams) {
+function useSemanticSearchEffect({
+  isAiSearch,
+  aiSearchQuery,
+  categories,
+  setRarityFilter,
+  setCategoryFilter,
+  setColorFilter,
+  setSearchTag,
+  t,
+  setIsAiSearching,
+  setAiSearchError,
+  setExtractedFilters
+}: EffectParams) {
   useEffect(() => {
-    if (!params.isAiSearch) return params.setExtractedFilters(null)
-    if (params.aiSearchQuery.trim() === "") {
+    if (!isAiSearch) return setExtractedFilters(null)
+    if (aiSearchQuery.trim() === "") {
       resetFilters(
-        params.setRarityFilter,
-        params.setCategoryFilter,
-        params.setColorFilter,
-        params.setSearchTag
+        setRarityFilter,
+        setCategoryFilter,
+        setColorFilter,
+        setSearchTag
       )
-      return params.setExtractedFilters(null)
+      return setExtractedFilters(null)
     }
     const timer = setTimeout(() => {
       executeSemanticSearch(
-        params.aiSearchQuery,
-        params.categories,
-        params.setExtractedFilters,
-        params.setRarityFilter,
-        params.setCategoryFilter,
-        params.setColorFilter,
-        params.setSearchTag,
-        params.setIsAiSearching,
-        params.setAiSearchError,
-        params.t
+        aiSearchQuery,
+        categories,
+        setExtractedFilters,
+        setRarityFilter,
+        setCategoryFilter,
+        setColorFilter,
+        setSearchTag,
+        setIsAiSearching,
+        setAiSearchError,
+        t
       )
     }, 600)
     return () => clearTimeout(timer)
   }, [
-    params.aiSearchQuery,
-    params.isAiSearch,
-    params.categories,
-    params.setCategoryFilter,
-    params.setColorFilter,
-    params.setRarityFilter,
-    params.setSearchTag,
-    params.t,
-    params.setIsAiSearching,
-    params.setAiSearchError,
-    params.setExtractedFilters
+    aiSearchQuery,
+    isAiSearch,
+    categories,
+    setCategoryFilter,
+    setColorFilter,
+    setRarityFilter,
+    setSearchTag,
+    t,
+    setIsAiSearching,
+    setAiSearchError,
+    setExtractedFilters
   ])
 }
 

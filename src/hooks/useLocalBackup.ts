@@ -13,7 +13,7 @@ export function useLocalBackup({
   addLog,
   checkStorage,
   showStatus,
-  fileInputRef
+  fileInputRef: _fileInputRef
 }: UseLocalBackupProps) {
   const confirm = useConfirm()
   const { t: i18n } = useLanguage()

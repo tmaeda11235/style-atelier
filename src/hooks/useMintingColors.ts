@@ -19,6 +19,20 @@ export function getFallbackColors(rarity: RarityTier) {
   }
 }
 
+function getTagsFromColors(colors: {
+  dominantHex: string
+  accentHex: string
+  dominantName?: string
+  accentName?: string
+}) {
+  const tags: string[] = []
+  if (colors.dominantName) tags.push(colors.dominantName)
+  if (colors.accentName && colors.accentName !== colors.dominantName) {
+    tags.push(colors.accentName)
+  }
+  return tags
+}
+
 export function useImageColorAnalysis(
   mintingItem: HistoryItem | null,
   variationBase: VariationBase | null,
@@ -48,12 +62,7 @@ export function useImageColorAnalysis(
           setDominant(colors.dominantHex)
           setAccent(colors.accentHex)
           setFallback(!!colors.isFallback)
-          const tags: string[] = []
-          if (colors.dominantName) tags.push(colors.dominantName)
-          if (colors.accentName && colors.accentName !== colors.dominantName) {
-            tags.push(colors.accentName)
-          }
-          setTags(tags)
+          setTags(getTagsFromColors(colors))
         })
         .catch((err) => {
           console.error("Failed to analyze image colors:", err)
@@ -67,7 +76,15 @@ export function useImageColorAnalysis(
     return () => {
       active = false
     }
-  }, [mintingItem, variationBase, selectedRarity])
+  }, [
+    mintingItem,
+    variationBase,
+    selectedRarity,
+    setDominant,
+    setAccent,
+    setTags,
+    setFallback
+  ])
 }
 
 export function useMintingColors(

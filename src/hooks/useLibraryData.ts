@@ -81,7 +81,8 @@ export function useLibraryData() {
     )
   })
 
-  const categories = useLiveQuery(() => db.getAllCategories()) || []
+  const rawCategories = useLiveQuery(() => db.getAllCategories())
+  const categories = useMemo(() => rawCategories || [], [rawCategories])
 
   const flexsearchIndex = useMemo(() => {
     if (!allCardsMeta) return null
