@@ -1,5 +1,6 @@
 import type { HistoryItem, PromptSegment, StyleCard } from "./db-schema"
 import { createThumbnailDataUrl } from "./image-utils"
+import { extractKeywords } from "./nlp-utils"
 import { parsePrompt } from "./prompt-utils"
 import type { RarityTier } from "./rarity-config"
 
@@ -202,4 +203,76 @@ export function buildMintedCard(params: BuildCardParams): StyleCard {
     images,
     selectedThumbnails
   }
+}
+
+function calculateParameterScore(parameters: StyleCard["parameters"]): number {
+  if (!parameters) return 0
+  let score = 0
+
+  const checkKeys: Array<keyof NonNullable<StyleCard["parameters"]>> = [
+    "ar",
+    "stylize",
+    "chaos",
+    "weird",
+    "tile",
+    "raw",
+    "niji",
+    "version"
+  ]
+
+  for (const key of checkKeys) {
+    if (parameters[key] !== undefined && parameters[key] !== false) {
+      score += 2
+    }
+  }
+
+  if (parameters.sref && parameters.sref.length > 0) score += 2
+  if (parameters.cref && parameters.cref.length > 0) score += 2
+  if (parameters.imagePrompts && parameters.imagePrompts.length > 0) score += 2
+
+  return score
+}
+
+function calculateHighQualityKeywordScore(prompt: string): number {
+  const highQualityKeywords = [
+    "photorealistic",
+    "ultra-detailed",
+    "hyperrealistic",
+    "masterpiece",
+    "octane render",
+    "unreal engine",
+    "cinematic",
+    "4k",
+    "8k",
+    "detailed",
+    "intricate"
+  ]
+  const lowerPrompt = prompt.toLowerCase()
+  let count = 0
+  for (const kw of highQualityKeywords) {
+    if (lowerPrompt.includes(kw)) {
+      count++
+      if (count >= 3) break
+    }
+  }
+  return count * 3
+}
+
+export function determineRarity(
+  prompt: string,
+  parameters: StyleCard["parameters"],
+  generation: number = 1
+): RarityTier {
+  const paramScore = calculateParameterScore(parameters)
+  const keywordCountScore = extractKeywords(prompt).length
+  const hqKeywordScore = calculateHighQualityKeywordScore(prompt)
+  const generationBonus = (generation - 1) * 2
+
+  const totalScore =
+    paramScore + keywordCountScore + hqKeywordScore + generationBonus
+
+  if (totalScore < 6) return "Common"
+  if (totalScore < 12) return "Rare"
+  if (totalScore < 20) return "Epic"
+  return "Legendary"
 }
