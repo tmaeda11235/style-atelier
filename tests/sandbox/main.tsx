@@ -173,9 +173,29 @@ if (typeof window !== "undefined") {
     tabs: {
       query: async (queryInfo: any) => {
         // 常にアクティブなMidjourneyタブが存在するようにエミュレート
-        return [
-          { id: 1, url: "https://www.midjourney.com/imagine", active: true }
-        ]
+        // ただし、クエリパラメータに variant=non-target が指定されている場合、
+        // または window や window.parent に __mockUrl がある場合は、それを優先する
+        let targetUrl = "https://www.midjourney.com/imagine"
+        try {
+          const urlParams = new URLSearchParams(window.location.search)
+          const parentUrlParams = new URLSearchParams(
+            window.parent.location.search
+          )
+          if (
+            urlParams.get("variant")?.includes("non-target") ||
+            parentUrlParams.get("variant")?.includes("non-target") ||
+            (window as any).__mockUrl ||
+            (window.parent as any).__mockUrl
+          ) {
+            targetUrl =
+              (window as any).__mockUrl ||
+              (window.parent as any).__mockUrl ||
+              "https://example.com"
+          }
+        } catch (e) {
+          // ignore cross-origin/access errors if any
+        }
+        return [{ id: 1, url: targetUrl, active: true }]
       },
       sendMessage: (tabId: number, message: any) => {
         return new Promise((resolve) => {

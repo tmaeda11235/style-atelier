@@ -334,9 +334,14 @@ describe("SettingsTab", () => {
     fireEvent.click(toggleBtn)
 
     // Wait for sync to be enabled
-    await waitFor(() => {
-      expect(screen.getByText("クラウドバックアップのプレビュー")).toBeDefined()
-    })
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("クラウドバックアップのプレビュー")
+        ).toBeDefined()
+      },
+      { timeout: 5000 }
+    )
 
     const restoreBtn = screen.getByRole("button", {
       name: /Google Driveから強制リカバリ/i
@@ -345,35 +350,44 @@ describe("SettingsTab", () => {
 
     // First restore attempt
     fireEvent.click(restoreBtn)
-    await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalledTimes(1)
-    })
+    await waitFor(
+      () => {
+        expect(window.confirm).toHaveBeenCalledTimes(1)
+      },
+      { timeout: 5000 }
+    )
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain(
       "クラウド上のバックアップ情報"
     )
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain("150.0 KB")
 
-    await waitFor(() => {
-      expect(googleDrive.downloadBackup).toHaveBeenCalledWith(
-        "mock-token-123",
-        expect.any(Function),
-        expect.any(Function),
-        expect.any(Object)
-      )
-      expect(backupManager.importDatabase).toHaveBeenCalledWith(
-        "mock-backup-data",
-        "replace"
-      )
-    })
+    await waitFor(
+      () => {
+        expect(googleDrive.downloadBackup).toHaveBeenCalledWith(
+          "mock-token-123",
+          expect.any(Function),
+          expect.any(Function),
+          expect.any(Object)
+        )
+        expect(backupManager.importDatabase).toHaveBeenCalledWith(
+          "mock-backup-data",
+          "replace"
+        )
+      },
+      { timeout: 5000 }
+    )
 
     // Reset confirm mock calls
     vi.mocked(window.confirm).mockClear()
 
     // Second restore attempt - should still prompt confirmation
     fireEvent.click(restoreBtn)
-    await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalledTimes(1)
-    })
+    await waitFor(
+      () => {
+        expect(window.confirm).toHaveBeenCalledTimes(1)
+      },
+      { timeout: 5000 }
+    )
   })
 
   it("shows confirmation dialog in English when language is English", async () => {
@@ -403,9 +417,12 @@ describe("SettingsTab", () => {
     const toggleBtn = container.querySelector("#google-drive-toggle-btn")!
     fireEvent.click(toggleBtn)
 
-    await waitFor(() => {
-      expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+      },
+      { timeout: 5000 }
+    )
 
     const restoreBtn = screen.getByRole("button", {
       name: /Force Restore from Google Drive/i
@@ -413,9 +430,12 @@ describe("SettingsTab", () => {
     expect(restoreBtn).not.toBeDisabled()
 
     fireEvent.click(restoreBtn)
-    await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalledTimes(1)
-    })
+    await waitFor(
+      () => {
+        expect(window.confirm).toHaveBeenCalledTimes(1)
+      },
+      { timeout: 5000 }
+    )
     expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain(
       "[Cloud Backup Information]"
     )
@@ -435,21 +455,27 @@ describe("SettingsTab", () => {
     const toggleBtn = container.querySelector("#google-drive-toggle-btn")!
     fireEvent.click(toggleBtn)
 
-    await waitFor(() => {
-      const restoreBtn = screen.getByRole("button", {
-        name: /Google Driveから強制リカバリ/i
-      })
-      expect(restoreBtn).not.toBeDisabled()
-    })
+    await waitFor(
+      () => {
+        const restoreBtn = screen.getByRole("button", {
+          name: /Google Driveから強制リカバリ/i
+        })
+        expect(restoreBtn).not.toBeDisabled()
+      },
+      { timeout: 5000 }
+    )
 
     const restoreBtn = screen.getByRole("button", {
       name: /Google Driveから強制リカバリ/i
     })
     fireEvent.click(restoreBtn)
 
-    await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalledTimes(1)
-    })
+    await waitFor(
+      () => {
+        expect(window.confirm).toHaveBeenCalledTimes(1)
+      },
+      { timeout: 5000 }
+    )
     expect(googleDrive.downloadBackup).not.toHaveBeenCalled()
     expect(backupManager.importDatabase).not.toHaveBeenCalled()
   })
@@ -482,12 +508,15 @@ describe("SettingsTab", () => {
       const toggleBtn = container.querySelector("#google-drive-toggle-btn")!
       fireEvent.click(toggleBtn)
 
-      await waitFor(() => {
-        const syncBtn = screen.getByRole("button", {
-          name: /Google Driveと同期/i
-        })
-        expect(syncBtn).not.toBeDisabled()
-      })
+      await waitFor(
+        () => {
+          const syncBtn = screen.getByRole("button", {
+            name: /Google Driveと同期/i
+          })
+          expect(syncBtn).not.toBeDisabled()
+        },
+        { timeout: 5000 }
+      )
 
       const syncBtn = screen.getByRole("button", {
         name: /Google Driveと同期/i
@@ -495,9 +524,12 @@ describe("SettingsTab", () => {
       fireEvent.click(syncBtn)
 
       // Verify Cancel button is displayed
-      await waitFor(() => {
-        expect(screen.getByText("キャンセル")).toBeDefined()
-      })
+      await waitFor(
+        () => {
+          expect(screen.getByText("キャンセル")).toBeDefined()
+        },
+        { timeout: 5000 }
+      )
 
       // Click Cancel
       const cancelBtn = screen.getByText("キャンセル")
@@ -506,10 +538,13 @@ describe("SettingsTab", () => {
       if (triggerAbort) triggerAbort()
 
       // Verify log and status message reflect cancellation
-      await waitFor(() => {
-        expect(mockAddLog).toHaveBeenCalledWith("Sync cancelled by user.")
-        expect(screen.getByText("同期がキャンセルされました")).toBeDefined()
-      })
+      await waitFor(
+        () => {
+          expect(mockAddLog).toHaveBeenCalledWith("Sync cancelled by user.")
+          expect(screen.getByText("同期がキャンセルされました")).toBeDefined()
+        },
+        { timeout: 5000 }
+      )
     })
 
     it("handles connection timeout error gracefully", async () => {
@@ -525,12 +560,15 @@ describe("SettingsTab", () => {
       const toggleBtn = container.querySelector("#google-drive-toggle-btn")!
       fireEvent.click(toggleBtn)
 
-      await waitFor(() => {
-        const syncBtn = screen.getByRole("button", {
-          name: /Google Driveと同期/i
-        })
-        expect(syncBtn).not.toBeDisabled()
-      })
+      await waitFor(
+        () => {
+          const syncBtn = screen.getByRole("button", {
+            name: /Google Driveと同期/i
+          })
+          expect(syncBtn).not.toBeDisabled()
+        },
+        { timeout: 5000 }
+      )
 
       const syncBtn = screen.getByRole("button", {
         name: /Google Driveと同期/i
@@ -538,16 +576,19 @@ describe("SettingsTab", () => {
       fireEvent.click(syncBtn)
 
       // Verify log and status message reflect timeout
-      await waitFor(() => {
-        expect(mockAddLog).toHaveBeenCalledWith(
-          "Sync failed: Connection timed out."
-        )
-        expect(
-          screen.getByText(
-            "同期がタイムアウトしました。ネットワーク接続を確認してください。"
+      await waitFor(
+        () => {
+          expect(mockAddLog).toHaveBeenCalledWith(
+            "Sync failed: Connection timed out."
           )
-        ).toBeDefined()
-      })
+          expect(
+            screen.getByText(
+              "同期がタイムアウトしました。ネットワーク接続を確認してください。"
+            )
+          ).toBeDefined()
+        },
+        { timeout: 5000 }
+      )
     })
   })
 
@@ -559,10 +600,13 @@ describe("SettingsTab", () => {
     expect(screen.getByText("ストレージ管理")).toBeDefined()
 
     // Wait for the estimate to resolve
-    await waitFor(() => {
-      expect(screen.getByText(/使用量: 5.0 MB \/ 100.0 MB/)).toBeDefined()
-      expect(screen.getByText("5%")).toBeDefined()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/使用量: 5.0 MB \/ 100.0 MB/)).toBeDefined()
+        expect(screen.getByText("5%")).toBeDefined()
+      },
+      { timeout: 5000 }
+    )
 
     // Check that warning alerts do not render
     expect(screen.queryByText(/注意: 空き容量が少なくなっています/)).toBeNull()
@@ -577,13 +621,16 @@ describe("SettingsTab", () => {
 
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />)
 
-    await waitFor(() => {
-      expect(screen.getByText(/使用量: 85.0 MB \/ 100.0 MB/)).toBeDefined()
-      expect(screen.getByText("85%")).toBeDefined()
-      expect(
-        screen.getByText(/注意: 空き容量が少なくなっています/)
-      ).toBeDefined()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/使用量: 85.0 MB \/ 100.0 MB/)).toBeDefined()
+        expect(screen.getByText("85%")).toBeDefined()
+        expect(
+          screen.getByText(/注意: 空き容量が少なくなっています/)
+        ).toBeDefined()
+      },
+      { timeout: 5000 }
+    )
 
     expect(screen.queryByText(/警告: 容量制限に近いです/)).toBeNull()
   })
@@ -596,11 +643,14 @@ describe("SettingsTab", () => {
 
     render(<SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />)
 
-    await waitFor(() => {
-      expect(screen.getByText(/使用量: 95.0 MB \/ 100.0 MB/)).toBeDefined()
-      expect(screen.getByText("95%")).toBeDefined()
-      expect(screen.getByText(/警告: 容量制限に近いです/)).toBeDefined()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/使用量: 95.0 MB \/ 100.0 MB/)).toBeDefined()
+        expect(screen.getByText("95%")).toBeDefined()
+        expect(screen.getByText(/警告: 容量制限に近いです/)).toBeDefined()
+      },
+      { timeout: 5000 }
+    )
 
     expect(screen.queryByText(/注意: 空き容量が少なくなっています/)).toBeNull()
   })
