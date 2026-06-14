@@ -379,3 +379,31 @@ export class MockStyleAtelierDatabase {
 }
 
 export const db = new MockStyleAtelierDatabase()
+
+export let mockDbError: Error | null = null
+const mockDbErrorListeners = new Set<(err: Error) => void>()
+
+export function addDbErrorListener(listener: (err: Error) => void) {
+  mockDbErrorListeners.add(listener)
+  if (mockDbError) {
+    listener(mockDbError)
+  }
+  return () => {
+    mockDbErrorListeners.delete(listener)
+  }
+}
+
+export function getDbError(): Error | null {
+  return mockDbError
+}
+
+export function clearDbErrorForTest(): void {
+  mockDbError = null
+}
+
+export function setMockDbError(err: Error | null): void {
+  mockDbError = err
+  if (err) {
+    mockDbErrorListeners.forEach((listener) => listener(err))
+  }
+}

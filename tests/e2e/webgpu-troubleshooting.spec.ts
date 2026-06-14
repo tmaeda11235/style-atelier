@@ -61,6 +61,15 @@ test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
     await expect(openBtn).toBeVisible()
     await openBtn.click({ force: true })
 
+    // Verify Download button is disabled and displays unsupported message
+    const downloadBtn = spFrame
+      .locator(
+        "button:has-text('WebGPU Not Supported'), button:has-text('WebGPU非対応のためダウンロード不可')"
+      )
+      .first()
+    await expect(downloadBtn).toBeVisible()
+    await expect(downloadBtn).toBeDisabled()
+
     await page.screenshot({
       path: path.join(screenshotsDir, "webgpu-troubleshooting-settings.png")
     })
@@ -106,5 +115,14 @@ test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
       .locator("text=/WebGPU is disabled|WebGPUが無効です/")
       .first()
     await expect(warningTitle).not.toBeVisible({ timeout: 5000 })
+
+    // Verify Download button is enabled and displays default text
+    const downloadBtn = spFrame
+      .locator(
+        "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+      )
+      .first()
+    await expect(downloadBtn).toBeVisible()
+    await expect(downloadBtn).not.toBeDisabled()
   })
 })

@@ -544,7 +544,9 @@
       "viewComponents": [
         "src/components/organisms/CategoryManagerModal.tsx",
         "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
-        "src/components/organisms/FolderExplorer.tsx"
+        "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
+        "src/components/organisms/FolderExplorer.tsx",
+        "src/lib/image-utils.ts"
       ]
     },
     {

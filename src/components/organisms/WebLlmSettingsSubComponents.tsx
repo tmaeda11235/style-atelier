@@ -71,7 +71,6 @@ const getProgressValueText = (
     eta > 0 ? `${t.webLlmRemaining || "Remaining"}: ${formatEta(eta)}` : ""
   return `${progress}%${speedText ? `, ${speedText}` : ""}${remainingText ? `, ${remainingText}` : ""}`
 }
-
 function ProgressBar({
   progress,
   valueText,
@@ -229,12 +228,14 @@ export function WebLlmActionButtons({
   status,
   startDownload,
   handlePurge,
-  t
+  t,
+  isSupported = true
 }: {
   status: string
   startDownload: () => void
   handlePurge: () => void
   t: Record<string, string>
+  isSupported?: boolean
 }) {
   return (
     <div className="flex items-center gap-2 pt-1">
@@ -245,10 +246,12 @@ export function WebLlmActionButtons({
           <button
             type="button"
             onClick={startDownload}
-            disabled={status === "checking"}
+            disabled={status === "checking" || !isSupported}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-xs transition-all duration-200 shadow-sm shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 disabled:opacity-50 cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            {t.webLlmDownloadBtn || "Download Model"}
+            {!isSupported
+              ? t.webLlmDownloadBtnUnsupported || "WebGPU Not Supported"
+              : t.webLlmDownloadBtn || "Download Model"}
           </button>
         )}
 

@@ -208,7 +208,8 @@
     "webLlmWebGpuStep1": "1. Open the following address in your browser: chrome://settings/system",
     "webLlmWebGpuStep2": "2. Turn on \"Use graphics acceleration when available\".",
     "webLlmWebGpuStep3": "3. Relaunch your browser to apply the changes.",
-    "webLlmWebGpuOpenSettingsBtn": "Open Chrome Settings"
+    "webLlmWebGpuOpenSettingsBtn": "Open Chrome Settings",
+    "webLlmDownloadBtnUnsupported": "WebGPU Not Supported (Download Disabled)"
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
@@ -689,5 +690,17 @@
   },
   "aiStyleAnalysis": {
     "genreLabel": "Genre:"
+  },
+  "dbError": {
+    "title": "Database Initialization Error",
+    "message": "Failed to initialize the database (IndexedDB). The application cannot start.",
+    "reasons": "Possible causes:",
+    "reason1": "Restrictions due to Incognito/Private Browsing mode",
+    "reason2": "Insufficient disk space on your browser or device",
+    "reason3": "Browser permission settings restricting database usage",
+    "solutions": "Suggested solutions:",
+    "solution1": "Turn off Incognito/Private mode and try again in a normal window.",
+    "solution2": "Free up disk space on your device and try again.",
+    "solution3": "Allow the site to save data (Cookies and site data) in your browser settings."
   }
 }
