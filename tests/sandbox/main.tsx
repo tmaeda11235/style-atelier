@@ -172,10 +172,10 @@ if (typeof window !== "undefined") {
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
-        // 常にアクティブなMidjourneyタブが存在するようにエミュレート
-        return [
-          { id: 1, url: "https://www.midjourney.com/imagine", active: true }
-        ]
+        const urlParams = new URLSearchParams(window.location.search)
+        const mockUrl =
+          urlParams.get("mockUrl") || "https://www.midjourney.com/imagine"
+        return [{ id: 1, url: mockUrl, active: true }]
       },
       sendMessage: (tabId: number, message: any) => {
         return new Promise((resolve) => {
