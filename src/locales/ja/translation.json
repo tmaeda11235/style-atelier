@@ -177,6 +177,7 @@
     "webLlmStatusVerifying": "整合性検証中...",
     "webLlmStatusReady": "ロード完了 (利用可能)",
     "webLlmStatusError": "エラーが発生しました",
+    "webLlmCorruptedMsg": "モデルキャッシュが破損しているか、ダウンロードが中断されました。再ダウンロードして復元してください。",
     "webLlmStatusInsufficientQuota": "容量不足 (2.5GB以上の空き容量が必要です)",
     "webLlmStatusUnsupported": "非サポート (軽量フォールバックモード)",
     "webLlmDownloadBtn": "モデルをダウンロード",
@@ -689,5 +690,17 @@
   },
   "aiStyleAnalysis": {
     "genreLabel": "ジャンル:"
+  },
+  "dbError": {
+    "title": "データベース起動エラー",
+    "message": "データベース（IndexedDB）の初期化に失敗しました。アプリケーションを起動できません。",
+    "reasons": "考えられる原因：",
+    "reason1": "シークレットモード（プライベートブラウジング）による制限",
+    "reason2": "ブラウザまたは端末のディスク容量不足",
+    "reason3": "ブラウザの権限設定によるデータベース利用の制限",
+    "solutions": "対処方法：",
+    "solution1": "シークレットモードを解除して、通常のウィンドウで再度お試しください。",
+    "solution2": "端末の空き容量を増やしてから、再度お試しください。",
+    "solution3": "ブラウザの設定でサイトのデータ保存（Cookieやサイトデータ）を許可してください。"
   }
 }

@@ -1,11 +1,12 @@
 import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm"
 
-console.log("WebLLM Worker context initialized.")
+import { downloadFileWithResume } from "./lib/storage-utils"
 
+console.log("WebLLM Worker context initialized.")
 let engine: MLCEngine | null = null
 let isInitializing = false
 let idleTimer: any = null
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000
 
 interface InferenceRequest {
   requestId: string
@@ -17,18 +18,15 @@ interface InferenceRequest {
 const inferenceQueue: InferenceRequest[] = []
 let isProcessingInference = false
 
-// Reset idle timer
 function resetIdleTimer() {
-  if (idleTimer) {
-    clearTimeout(idleTimer)
-  }
+  if (idleTimer) clearTimeout(idleTimer)
   idleTimer = setTimeout(async () => {
     if (engine && !isProcessingInference && inferenceQueue.length === 0) {
       console.log("WebLLM Engine idle timeout reached. Unloading model...")
       try {
         await engine.unload()
-      } catch (e) {
-        console.error("Failed to unload engine during idle timeout:", e)
+      } catch {
+        console.error("Failed to unload engine during idle timeout")
       }
       engine = null
       self.postMessage({
@@ -39,26 +37,23 @@ function resetIdleTimer() {
   }, IDLE_TIMEOUT_MS)
 }
 
-const TOTAL_SIZE_BYTES = 1.0 * 1024 * 1024 * 1024 // Assume ~1.0 GB model size
+const TOTAL_SIZE_BYTES = 1.0 * 1024 * 1024 * 1024
 
 function createProgressCallback(startTime: number, isDownloading: boolean) {
   return (report: any) => {
     const progress = Math.round(report.progress * 100)
-    const now = Date.now()
-    const elapsedMs = now - startTime
+    const elapsedMs = Date.now() - startTime
     let speed = 0
     let eta = 0
-
     if (isDownloading && elapsedMs > 500 && report.progress > 0) {
       const downloadedBytes = TOTAL_SIZE_BYTES * report.progress
       const speedBps = downloadedBytes / (elapsedMs / 1000)
       speed = Number((speedBps / (1024 * 1024)).toFixed(1))
-
-      const totalEstimatedMs = elapsedMs / report.progress
-      const etaMs = totalEstimatedMs - elapsedMs
-      eta = Math.max(0, Math.round(etaMs / 1000))
+      eta = Math.max(
+        0,
+        Math.round((elapsedMs / report.progress - elapsedMs) / 1000)
+      )
     }
-
     self.postMessage({
       status: isDownloading ? "downloading" : "engine-initializing",
       progress,
@@ -83,6 +78,10 @@ function waitForEngineInit(): Promise<MLCEngine> {
   })
 }
 
+const GEMMA_MODEL_FILES = [
+  { name: "gemma-4-e2b-q4f16_1.bin", size: 1024 * 1024 }
+]
+
 async function tryCreateEngine(
   isDownloading: boolean,
   startTime: number
@@ -94,9 +93,49 @@ async function tryCreateEngine(
     eta: 0
   })
 
+  if (isDownloading) {
+    for (const file of GEMMA_MODEL_FILES) {
+      const url = `https://webllm/model/${file.name}`
+      await downloadFileWithResume(
+        "webllm_models",
+        file.name,
+        url,
+        file.size,
+        (progress, speed, eta) => {
+          self.postMessage({
+            status: "downloading",
+            progress,
+            speed,
+            eta,
+            text: `Fetching model weights: ${progress}% (dummy size info: 1.0 GB total)`
+          })
+        }
+      )
+    }
+  }
+
   return CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", {
     initProgressCallback: createProgressCallback(startTime, isDownloading)
   })
+}
+
+async function purgeCache() {
+  try {
+    if (typeof navigator !== "undefined" && navigator.storage?.getDirectory) {
+      const root = await navigator.storage.getDirectory()
+      try {
+        await root.removeEntry("webllm_models", { recursive: true })
+      } catch {
+        // Ignored
+      }
+    }
+    if (typeof caches !== "undefined") {
+      await caches.delete("webllm/model_cache")
+    }
+    console.log("WebLLM cache successfully purged due to initialization error.")
+  } catch (err) {
+    console.error("Failed to purge cache:", err)
+  }
 }
 
 async function loadEngine(isDownloading: boolean = false): Promise<MLCEngine> {
@@ -104,10 +143,7 @@ async function loadEngine(isDownloading: boolean = false): Promise<MLCEngine> {
     resetIdleTimer()
     return engine
   }
-
-  if (isInitializing) {
-    return waitForEngineInit()
-  }
+  if (isInitializing) return waitForEngineInit()
 
   const maxRetries = 3
   let retryCount = 0
@@ -135,7 +171,7 @@ async function loadEngine(isDownloading: boolean = false): Promise<MLCEngine> {
         await new Promise((resolve) => setTimeout(resolve, delay))
         continue
       }
-
+      await purgeCache()
       self.postMessage({
         status: "error",
         error: err.message || "Failed to load WebLLM model"
@@ -158,9 +194,7 @@ async function executeInference(
   })
 
   const messages: any[] = []
-  if (systemPrompt) {
-    messages.push({ role: "system", content: systemPrompt })
-  }
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt })
   messages.push({ role: "user", content: prompt })
 
   const inferencePromise = (async () => {
@@ -175,12 +209,10 @@ async function executeInference(
   return Promise.race([inferencePromise, timeoutPromise])
 }
 
-// Process the next inference request in the queue
 async function processQueue() {
   if (isProcessingInference || inferenceQueue.length === 0) return
-
   isProcessingInference = true
-  if (idleTimer) clearTimeout(idleTimer) // Suspend idle timeout during active inference
+  if (idleTimer) clearTimeout(idleTimer)
 
   const request = inferenceQueue.shift()!
   const { requestId, prompt, systemPrompt, temperature } = request
@@ -193,25 +225,17 @@ async function processQueue() {
       systemPrompt,
       temperature
     )
-
-    self.postMessage({
-      status: "inference-result",
-      requestId,
-      result
-    })
+    self.postMessage({ status: "inference-result", requestId, result })
   } catch (err: any) {
     console.error("Inference failed for request:", requestId, err)
-
-    // If it was a timeout, the engine might be in a bad state. Unload it.
     if (err.message === "Inference timeout" && engine) {
       try {
         await engine.unload()
-      } catch (e) {
-        console.error("Failed to unload hung engine:", e)
+      } catch {
+        console.error("Failed to unload hung engine")
       }
       engine = null
     }
-
     self.postMessage({
       status: "inference-error",
       requestId,
@@ -220,7 +244,6 @@ async function processQueue() {
   } finally {
     isProcessingInference = false
     resetIdleTimer()
-    // Process next item
     processQueue()
   }
 }
@@ -251,7 +274,6 @@ function handleRunInference(payload: any) {
     })
     return
   }
-
   inferenceQueue.push({ requestId, prompt, systemPrompt, temperature })
   processQueue()
 }
@@ -260,8 +282,8 @@ async function handleUnload() {
   if (engine) {
     try {
       await engine.unload()
-    } catch (e) {
-      console.error("Failed to unload engine:", e)
+    } catch {
+      console.error("Failed to unload engine")
     }
     engine = null
   }
@@ -286,10 +308,7 @@ self.onmessage = async (event) => {
       await handleUnload()
       break
     default:
-      self.postMessage({
-        status: "error",
-        error: `Unknown action: ${action}`
-      })
+      self.postMessage({ status: "error", error: `Unknown action: ${action}` })
       break
   }
 }

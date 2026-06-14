@@ -177,6 +177,7 @@
     "webLlmStatusVerifying": "Verifying...",
     "webLlmStatusReady": "Loaded (Ready to Use)",
     "webLlmStatusError": "Error occurred",
+    "webLlmCorruptedMsg": "Model cache corrupted or interrupted. Please re-download to restore function.",
     "webLlmStatusInsufficientQuota": "Insufficient Space",
     "webLlmStatusUnsupported": "Unsupported (Lightweight Fallback)",
     "webLlmDownloadBtn": "Download Model",
@@ -689,5 +690,17 @@
   },
   "aiStyleAnalysis": {
     "genreLabel": "Genre:"
+  },
+  "dbError": {
+    "title": "Database Initialization Error",
+    "message": "Failed to initialize the database (IndexedDB). The application cannot start.",
+    "reasons": "Possible causes:",
+    "reason1": "Restrictions due to Incognito/Private Browsing mode",
+    "reason2": "Insufficient disk space on your browser or device",
+    "reason3": "Browser permission settings restricting database usage",
+    "solutions": "Suggested solutions:",
+    "solution1": "Turn off Incognito/Private mode and try again in a normal window.",
+    "solution2": "Free up disk space on your device and try again.",
+    "solution3": "Allow the site to save data (Cookies and site data) in your browser settings."
   }
 }

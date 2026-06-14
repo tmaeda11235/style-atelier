@@ -1,4 +1,5 @@
 import { SidePanelLayout } from "@/components/templates/SidePanelLayout"
+import { clearDbErrorForTest, setMockDbError } from "@/lib/db"
 import { render, screen } from "@testing-library/react"
 import React from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -8,6 +9,7 @@ describe("SidePanelLayout", () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv
+    clearDbErrorForTest()
   })
 
   it("should render debug logs when NODE_ENV is development", () => {
@@ -132,5 +134,31 @@ describe("SidePanelLayout", () => {
     expect(
       screen.queryByText("Drop QR Card Image to Import")
     ).not.toBeInTheDocument()
+  })
+
+  it("should render DbErrorOverlay and not render child content when database initialization fails", () => {
+    setMockDbError(new Error("IndexedDB initialization failed: VersionError"))
+
+    render(
+      <SidePanelLayout
+        activeTab="history"
+        onTabChange={vi.fn()}
+        isDragging={false}
+        logs={[]}
+        onClearLogs={vi.fn()}
+        onResetDb={vi.fn()}
+        droppedItem={null}
+        onOpenGuide={vi.fn()}>
+        <div>Test Child Content</div>
+      </SidePanelLayout>
+    )
+
+    expect(
+      screen.getByText("Database Initialization Error")
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/IndexedDB initialization failed: VersionError/)
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Test Child Content")).not.toBeInTheDocument()
   })
 })

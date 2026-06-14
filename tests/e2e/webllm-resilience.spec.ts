@@ -370,4 +370,62 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
       path: path.join(screenshotsDir, "webllm-download-progress.png")
     })
   })
+
+  test("should display re-download advice message on download failure", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.failDownload = true
+        config.downloadErrorMsg =
+          "Failed to fetch model weights: Connection lost"
+      }
+    })
+
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
+    const errorStatus = spFrame.locator(
+      "text=/Error occurred|エラーが発生しました/"
+    )
+    await expect(errorStatus).toBeVisible({ timeout: 15000 })
+
+    const adviceText = spFrame.locator(
+      "text=/Model cache corrupted or interrupted|モデルキャッシュが破損しているか/"
+    )
+    await expect(adviceText).toBeVisible({ timeout: 15000 })
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "webllm-download-error-advice.png")
+    })
+    console.log("Screenshot for download error advice UI saved.")
+  })
 })
