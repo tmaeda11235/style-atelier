@@ -119,7 +119,18 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     await expect(spFrame.locator("text=Category: Style")).toBeVisible()
     await expect(spFrame.locator('text=Keyword: "anime"')).toBeVisible()
 
-    // Take screenshot of successful parsing UI
+    // Click Filters toggle button to expand the accordion and verify category is applied
+    const toggleFiltersBtn = spFrame.locator("#toggle-filters-btn")
+    await expect(toggleFiltersBtn).toBeVisible()
+    await toggleFiltersBtn.click()
+    await page.waitForTimeout(500)
+
+    // Verify "Style" category button (matches ID "category-1") is selected (has bg-blue-600 class)
+    const styleCategoryBtn = spFrame.locator("button:has-text('Style')")
+    await expect(styleCategoryBtn).toBeVisible()
+    await expect(styleCategoryBtn).toHaveClass(/bg-blue-600/)
+
+    // Take screenshot of successful parsing UI with expanded filters
     await page.screenshot({
       path: path.join(screenshotsDir, "library-semantic-search-success.png")
     })
