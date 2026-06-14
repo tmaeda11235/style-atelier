@@ -9,32 +9,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Non-Target Site Accessibility @
     page.on("pageerror", (err) => {
       console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`)
     })
-
-    // Simulate a non-target site by mocking chrome.tabs.query
-    await page.addInitScript(() => {
-      let _chrome: any = null
-      Object.defineProperty(window, "chrome", {
-        configurable: true,
-        get() {
-          return _chrome
-        },
-        set(val) {
-          if (val && val.tabs) {
-            val.tabs.query = async () => [
-              { id: 1, url: "https://example.com", active: true }
-            ]
-          }
-          _chrome = val
-        }
-      })
-    })
   })
 
   test("should allow accessing Settings while showing warning in other tabs", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?mockUrl=https://example.com")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
