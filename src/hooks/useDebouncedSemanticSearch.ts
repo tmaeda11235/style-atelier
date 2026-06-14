@@ -41,13 +41,25 @@ function resetFilters(
 
 function applyFilters(
   result: { rarity: string; category: string; color: string; query: string },
+  categories: { id: string; name: string }[],
   setRarityFilter: (val: any) => void,
   setCategoryFilter: (val: string) => void,
   setColorFilter: (val: any) => void,
   setSearchTag: (val: string) => void
 ) {
   setRarityFilter(result.rarity)
-  setCategoryFilter(result.category)
+
+  let targetCategoryId = "All"
+  if (result.category !== "All") {
+    const found = categories.find(
+      (c) => c.name.toLowerCase() === result.category.toLowerCase()
+    )
+    if (found) {
+      targetCategoryId = found.id
+    }
+  }
+  setCategoryFilter(targetCategoryId)
+
   setColorFilter(result.color)
   setSearchTag(result.query)
 }
@@ -114,6 +126,7 @@ async function executeSemanticSearch(
     setExtractedFilters(result)
     applyFilters(
       result,
+      categories,
       setRarityFilter,
       setCategoryFilter,
       setColorFilter,
