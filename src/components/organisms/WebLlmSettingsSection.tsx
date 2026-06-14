@@ -2,8 +2,10 @@ import React from "react"
 
 import { useConfirm } from "../../contexts/ConfirmContext"
 import { useLanguage } from "../../contexts/LanguageContext"
+import { useWebGpu } from "../../hooks/useWebGpu"
 import { useWebLlm } from "../../hooks/useWebLlm"
 import { isMobileConnection } from "../../lib/network-utils"
+import { WebGpuWarning } from "../molecules/WebGpuWarning"
 import {
   WebLlmActionButtons,
   WebLlmError,
@@ -97,8 +99,10 @@ function WebLlmSettingsContent({
   t,
   disp
 }: WebLlmSettingsContentProps) {
+  const { isSupported } = useWebGpu()
   return (
     <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 rounded-xl p-4 space-y-4">
+      {isSupported === false && <WebGpuWarning t={t} />}
       <WebLlmStatusRow
         status={status}
         statusColorClass={disp.colorClass}
