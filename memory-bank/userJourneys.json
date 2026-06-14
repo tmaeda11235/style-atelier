@@ -38,7 +38,8 @@
         "@J-ORG-SEARCH-01",
         "@J-ORG-VERSION-01",
         "@J-ORG-FOLDER-01",
-        "@J-ORG-QUICK-SEND-01"
+        "@J-ORG-QUICK-SEND-01",
+        "@J-ORG-CARD-HOLO-EFFECT-01"
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
@@ -510,6 +511,21 @@
         "src/components/organisms/NonTargetSiteView.tsx",
         "src/components/organisms/EasyModeView.tsx",
         "src/components/organisms/ExpertModeView.tsx"
+      ]
+    },
+    {
+      "id": "@J-ORG-CARD-HOLO-EFFECT-01",
+      "name": "高レアリティカードプレミアムエフェクト",
+      "description": "EpicまたはLegendaryカードにホバーした際に3D Tiltとホログラム/グリッター効果が適用されることを確認する",
+      "steps": [
+        "ライブラリでEpicまたはLegendaryカードを表示",
+        "カードにホバーする",
+        "3D Tiltの傾きとホログラム/グリッター効果が描画されるのを確認"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": [
+        "src/components/molecules/CardThumbnail.tsx",
+        "src/style.css"
       ]
     }
   ]
