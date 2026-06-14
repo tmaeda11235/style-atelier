@@ -177,6 +177,7 @@
     "webLlmStatusVerifying": "整合性検証中...",
     "webLlmStatusReady": "ロード完了 (利用可能)",
     "webLlmStatusError": "エラーが発生しました",
+    "webLlmCorruptedMsg": "モデルキャッシュが破損しているか、ダウンロードが中断されました。再ダウンロードして復元してください。",
     "webLlmStatusInsufficientQuota": "容量不足 (2.5GB以上の空き容量が必要です)",
     "webLlmDownloadBtn": "モデルをダウンロード",
     "webLlmPurgeBtn": "キャッシュを削除",

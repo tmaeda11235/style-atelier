@@ -121,7 +121,7 @@ function WebLlmSettingsContent({
           t={t}
         />
       )}
-      {error && status !== "retrying" && <WebLlmError error={error} />}
+      {error && status !== "retrying" && <WebLlmError error={error} t={t} />}
       {status === "insufficient-quota" && <WebLlmQuotaWarning t={t} />}
 
       <WebLlmActionButtons
