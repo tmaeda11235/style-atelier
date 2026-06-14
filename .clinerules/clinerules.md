@@ -65,8 +65,15 @@ When the user instructs to start working on a specific Issue number:
 2.  **Check Issue**:
     - View issue details: `gh issue view <issue_number>`
 3.  **Create Worktree & Branch**:
-    - Create a new branch and worktree: `git worktree add -b feature/<issue_number>-<short-description> ../worktrees/<issue_number>-<short-description> main`
-    - Move into the newly created worktree directory to continue work.
+    - Create a new branch and worktree in the `../worktrees/` directory:
+      ```bash
+      git worktree add -b feature/<issue-number>-<short-desc> ../worktrees/<issue-number>-<short-desc> main
+      ```
+    - Move into the worktree directory and install dependencies to activate Husky hooks:
+      ```bash
+      cd ../worktrees/<issue-number>-<short-desc>
+      npm ci
+      ```
 4.  **Plan**:
     - Post the work plan to the Issue: `gh issue comment <issue_number> --body "Work Plan: ..."`
 5.  **Execute**:
