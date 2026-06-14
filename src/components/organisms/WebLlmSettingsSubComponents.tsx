@@ -65,7 +65,8 @@ export function WebLlmProgress({
 }) {
   const { isSupported } = useWebGpu()
   const speedText = speed > 0 ? `${speed.toFixed(1)} MB/s` : ""
-  const remainingText = eta > 0 ? `${t.webLlmRemaining || "Remaining"}: ${formatEta(eta)}` : ""
+  const remainingText =
+    eta > 0 ? `${t.webLlmRemaining || "Remaining"}: ${formatEta(eta)}` : ""
   const valueText = `${progress}%${speedText ? `, ${speedText}` : ""}${remainingText ? `, ${remainingText}` : ""}`
 
   return (
@@ -83,10 +84,17 @@ export function WebLlmProgress({
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono" aria-live="polite" aria-atomic="true">
+      <div
+        className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono"
+        aria-live="polite"
+        aria-atomic="true">
         <span>{progress}%</span>
         {speed > 0 && <span>{speed.toFixed(1)} MB/s</span>}
-        {eta > 0 && <span>{t.webLlmRemaining || "Remaining"}: {formatEta(eta)}</span>}
+        {eta > 0 && (
+          <span>
+            {t.webLlmRemaining || "Remaining"}: {formatEta(eta)}
+          </span>
+        )}
         <span>1.0 GB total</span>
       </div>
       {isSupported === false && (
