@@ -88,9 +88,15 @@
     // クエリパラメータからバリエーションのファイルを読み込み
     const urlParams = new URLSearchParams(window.location.search);
     let variantFile = urlParams.get('variant') || 'index.html';
+    const mockUrl = urlParams.get('mockUrl');
     
     const mjFrame = document.getElementById('midjourney-frame');
+    const spFrame = document.getElementById('sidepanel-frame');
     const selectEl = document.getElementById('variant-select');
+    
+    if (mockUrl && spFrame) {
+      spFrame.src = `/tests/sandbox/sidepanel.html?mockUrl=${encodeURIComponent(mockUrl)}`;
+    }
     
     // iframe の URL を更新
     function updateIframe(file) {
