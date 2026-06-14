@@ -81,9 +81,19 @@ describe("SettingsTab", () => {
   const mockAddLog = vi.fn()
   const mockResetDb = vi.fn()
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     localStorage.clear()
+    await i18n.changeLanguage("ja")
+
+    // Provide default mock implementations for googleDrive
+    vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123")
+    vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null)
+    vi.mocked(googleDrive.clearCachedToken).mockResolvedValue(undefined)
+    vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data")
+    vi.mocked(googleDrive.uploadBackup).mockResolvedValue({
+      id: "new-file-123"
+    })
 
     // Reset window.confirm to default true to avoid leakage from other tests
     window.confirm = vi.fn().mockReturnValue(true)

@@ -1,8 +1,10 @@
 import { AlertCircle, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import React from "react"
 
+import { useWebGpu } from "../../hooks/useWebGpu"
 import { Button } from "../atoms/Button"
 import { StatusIdle } from "./StatusIdle"
+import { WebGpuWarning } from "./WebGpuWarning"
 
 interface AiDownloadStatusProps {
   status: string
@@ -171,7 +173,7 @@ function StatusDownloading({
   )
 }
 
-export function AiDownloadStatus({
+function renderAiDownloadStatusContent({
   status,
   progress,
   speed,
@@ -217,4 +219,16 @@ export function AiDownloadStatus({
     )
   }
   return <StatusIdle startDownload={startDownload} t={t} />
+}
+
+export function AiDownloadStatus(props: AiDownloadStatusProps) {
+  const { isSupported } = useWebGpu()
+  const { t } = props
+
+  return (
+    <div className="space-y-3">
+      {renderAiDownloadStatusContent(props)}
+      {isSupported === false && <WebGpuWarning t={t} />}
+    </div>
+  )
 }

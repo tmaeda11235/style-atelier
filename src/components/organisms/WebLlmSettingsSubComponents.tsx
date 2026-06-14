@@ -8,7 +8,9 @@ import {
 } from "lucide-react"
 import React from "react"
 
+import { useWebGpu } from "../../hooks/useWebGpu"
 import { HelpTooltip } from "../atoms/HelpTooltip"
+import { WebGpuWarning } from "../molecules/WebGpuWarning"
 
 export function WebLlmStatusRow({
   status,
@@ -61,6 +63,7 @@ export function WebLlmProgress({
   eta: number
   t: Record<string, string>
 }) {
+  const { isSupported } = useWebGpu()
   const speedText = speed > 0 ? `${speed.toFixed(1)} MB/s` : ""
   const remainingText =
     eta > 0 ? `${t.webLlmRemaining || "Remaining"}: ${formatEta(eta)}` : ""
@@ -94,6 +97,11 @@ export function WebLlmProgress({
         )}
         <span>1.0 GB total</span>
       </div>
+      {isSupported === false && (
+        <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+          <WebGpuWarning t={t} />
+        </div>
+      )}
     </div>
   )
 }

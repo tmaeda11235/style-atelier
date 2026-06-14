@@ -17,6 +17,7 @@ interface LibraryCardItemProps {
   setSharingCard: (card: StyleCard | null) => void
   categories: Array<{ id: string; name: string }>
   onQuickSend?: (card: StyleCard, e: React.MouseEvent) => void
+  cardSlotThemeClass?: string
 }
 
 const CardFooter = ({
@@ -126,9 +127,11 @@ export function LibraryCardItem(props: LibraryCardItemProps) {
           props.onOpenSimpleWorkbench
         )
       }
-      className={`group bg-white border-2 rounded-lg shadow-sm cursor-grab active:cursor-grabbing overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 hover:shadow-md active:scale-[0.98] ${
-        config?.borderClass || "border-slate-200"
-      } ${config?.glowClass || ""}`}>
+      className={`group bg-white border-2 rounded-lg shadow-sm cursor-grab active:cursor-grabbing overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98] ${
+        props.cardSlotThemeClass
+          ? props.cardSlotThemeClass
+          : `${config?.borderClass || "border-slate-200"} ${config?.glowClass || ""}`
+      }`}>
       <LibraryCardThumbnail
         card={props.card}
         cardCategory={cardCategory}

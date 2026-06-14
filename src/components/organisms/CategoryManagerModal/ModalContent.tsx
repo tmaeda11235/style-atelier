@@ -20,11 +20,13 @@ export function ModalContent({
   systemCategoryIds
 }: ModalContentProps) {
   if (manager.isSelectingCard) {
+    const iconCardId =
+      manager.selectionType === "cover" ? "" : manager.iconCardId
     return (
       <CardSelectionView
         t={manager.t}
         libraryCards={manager.libraryCards}
-        iconCardId={manager.iconCardId}
+        iconCardId={iconCardId}
         handleSelectCard={manager.handleSelectCard}
       />
     )
@@ -32,20 +34,8 @@ export function ModalContent({
   if (activeTab === "create") {
     return (
       <CategoryForm
-        t={manager.t}
-        name={manager.name}
-        setName={manager.setName}
-        parentId={manager.parentId}
-        setParentId={manager.setParentId}
-        emoji={manager.emoji}
-        handleEmojiChange={manager.handleEmojiChange}
-        iconUrl={manager.iconUrl}
-        setIsSelectingCard={manager.setIsSelectingCard}
+        {...manager}
         parentOptions={parentOptions}
-        editingCategory={manager.editingCategory}
-        handleCancelEdit={manager.handleCancelEdit}
-        handleClearImage={manager.handleClearImage}
-        handleSave={manager.handleSave}
         onClose={onClose}
       />
     )
