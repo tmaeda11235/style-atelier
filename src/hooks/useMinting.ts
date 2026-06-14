@@ -5,6 +5,7 @@ import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
 import {
   buildMintedCard,
   createBuildCardParams,
+  determineRarity,
   getThumbnailData
 } from "../lib/minting-helper"
 import { extractKeywords } from "../lib/nlp-utils"
@@ -180,12 +181,34 @@ export function useMinting(
   )
 
   useEffect(() => {
-    const cmd = state.mintingItem?.fullCommand
+    let detectedRarity: RarityTier = "Common"
+    let editedSegments: PromptSegment[] = []
+
+    if (state.mintingItem) {
+      const parsed = parsePrompt(state.mintingItem.fullCommand)
+      editedSegments = parsed.promptSegments
+      detectedRarity = determineRarity(
+        state.mintingItem.fullCommand,
+        parsed.parameters,
+        1
+      )
+    } else if (state.variationBase) {
+      editedSegments = state.variationBase.promptSegments
+      const gen = state.variationBase.genealogy?.generation || 1
+      const fullPrompt = state.variationBase.promptSegments
+        .map((seg) => seg.value)
+        .join(" ")
+      detectedRarity = determineRarity(
+        fullPrompt,
+        state.variationBase.parameters,
+        gen
+      )
+    }
+
     setState((s) => ({
       ...s,
-      editedSegments: cmd
-        ? parsePrompt(cmd).promptSegments
-        : s.variationBase?.promptSegments || []
+      editedSegments,
+      selectedRarity: detectedRarity
     }))
   }, [state.mintingItem, state.variationBase])
 
