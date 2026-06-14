@@ -10,7 +10,7 @@ import i18next from "eslint-plugin-i18next";
 
 export default ts.config(
   {
-    ignores: ["postcss.config.js", "scratch/**/*"]
+    ignores: ["postcss.config.js", "scratch/**/*", "assets/**/*"]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
@@ -127,6 +127,7 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-max-lines.ts",
       "src/components/organisms/Workbench.tsx",
+      "src/litert.worker.ts",
     ],
     rules: {
       "max-lines": "warn"
