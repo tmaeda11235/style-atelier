@@ -177,6 +177,7 @@
     "webLlmStatusVerifying": "Verifying...",
     "webLlmStatusReady": "Loaded (Ready to Use)",
     "webLlmStatusError": "Error occurred",
+    "webLlmCorruptedMsg": "Model cache corrupted or interrupted. Please re-download to restore function.",
     "webLlmStatusInsufficientQuota": "Insufficient Space",
     "webLlmStatusUnsupported": "Unsupported (Lightweight Fallback)",
     "webLlmDownloadBtn": "Download Model",
