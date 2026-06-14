@@ -93,6 +93,18 @@ seedSandboxData()
 
 // chrome API モックの定義
 if (typeof window !== "undefined") {
+  // Mock navigator.gpu for sandbox / E2E tests
+  if (typeof navigator !== "undefined" && !navigator.gpu) {
+    const mockGpu = {
+      requestAdapter: async () => ({ name: "MockGPU" })
+    }
+    Object.defineProperty(navigator, "gpu", {
+      value: mockGpu,
+      writable: true,
+      configurable: true
+    })
+  }
+
   ;(window as any).db = db
   ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
