@@ -52,17 +52,19 @@ const formatEta = (seconds: number) => {
   return m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
+interface WebLlmProgressProps {
+  progress: number
+  speed: number
+  eta: number
+  t: Record<string, string>
+}
+
 export function WebLlmProgress({
   progress,
   speed,
   eta,
   t
-}: {
-  progress: number
-  speed: number
-  eta: number
-  t: Record<string, string>
-}) {
+}: WebLlmProgressProps) {
   const { isSupported } = useWebGpu()
   const speedText = speed > 0 ? `${speed.toFixed(1)} MB/s` : ""
   const remainingText =

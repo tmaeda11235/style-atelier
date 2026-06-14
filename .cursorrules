@@ -1,0 +1,44 @@
+# Style Atelier Development Rules
+
+This file defines the project constraints, architectural guidelines, and workflows for all AI coding assistants (e.g., Cursor, Antigravity) and human developers.
+
+## 1. ESLint Constraints & Code Limits
+
+- **File Size Limit**: No source file (especially components) should exceed **300 lines** (excluding blank lines and comments).
+- **Function Size Limit**: No function should exceed **50 lines**.
+- **Rule Violations**: If a component or function exceeds these limits, decompose and refactor it into smaller sub-components or utility hooks.
+- **ESLint Whitelist Guardrail**: Do not manually expand the ESLint exception list (`eslint.config.mjs` overrides). If you refactor a file and resolve ESLint errors, run the sync script to automatically update the exception list:
+  ```bash
+  node scratch/auto-sync-eslint.js
+  ```
+- **No Empty Blocks**: Avoid empty `catch` blocks. Add `/* ignore error */` comments or `console.debug` statements.
+
+## 2. UI Component Architecture (Atomic Design)
+
+- **Presentation vs. Logic**: Separate business logic, state management, and side effects into custom hooks.
+- **Molecules and Atoms**: Keep them as pure presentation components. They must not contain business logic, direct API/database calls, or state mutations.
+- **No Direct DB Queries in UI**: Do not import `src/lib/db.ts` or database utilities directly inside UI components. Use services, store/context, or hooks.
+- **Test Mock Purity**: Do not embed business logic or database state transitions in test mocks (e.g., `tests/mocks/db.ts`).
+
+## 3. i18n Translation Integrity
+
+- **Key Synchronization**: Keys in `src/locales/ja/translation.json` and `src/locales/en/translation.json` must be strictly synchronized and kept identical.
+- **No Missing Translations**: When introducing new UI text, always add corresponding keys to both English and Japanese dictionaries. Never let the raw translation key (e.g., `minting.aiDeClutterBtn`) leak into the UI.
+
+## 4. Testing & Quality Assurance
+
+- **Unit Tests**: Pull requests must include unit tests alongside the implementation code.
+- **UX Changes & E2E Tests**: If you make any UX/UI changes, you MUST add/modify E2E tests covering those flows.
+- **E2E Test Tagging**: Tag your E2E tests with the corresponding User Journey ID (e.g., `@J-XXX`).
+- **Screenshots**: Run Playwright E2E tests, take screenshots, and attach them to the PR.
+- **Husky & Pushing**: Always use `npm run push` to push your changes. Direct `git push` is blocked by husky and will fail.
+- **3-Strike Fail-Safe**: If you fail to fix E2E tests or compilation errors after **3 attempts**, unassign yourself, comment a Handout detailing the issue, and stop.
+
+## 5. Memory Bank Synchronization
+
+- **Sync Rule**: When introducing new features, library dependencies, or architectural adjustments, you MUST update the Memory Bank files (`systemPatterns.md`, `techContext.md`).
+- **ADR Pattern**: Major structural decisions must be documented using the Architecture Decision Record (ADR) pattern in the Memory Bank.
+
+## 6. Worktree Usage
+
+- **Rule**: ALWAYS create a new `git worktree` and perform your work inside it. Never modify files directly in the main repository checkout directory.
