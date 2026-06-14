@@ -1,8 +1,10 @@
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
+import { useDbError } from "../../hooks/useDbError"
 import type { Tab } from "../../hooks/useTabs"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+import { DbErrorOverlay } from "../organisms/DbErrorOverlay"
 import { SidePanelDebugLogs } from "./SidePanelDebugLogs"
 import { SidePanelHeader } from "./SidePanelHeader"
 import { SidePanelOverlays } from "./SidePanelOverlays"
@@ -28,6 +30,11 @@ interface SidePanelLayoutProps {
 
 export function SidePanelLayout(props: SidePanelLayoutProps) {
   const { t } = useLanguage()
+  const dbError = useDbError()
+
+  if (dbError) {
+    return <DbErrorOverlay error={dbError} />
+  }
 
   return (
     <div
