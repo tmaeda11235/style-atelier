@@ -172,16 +172,18 @@ if (typeof window !== "undefined") {
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
-        // 常にアクティブなMidjourneyタブが存在するようにエミュレート
-        // ただし、クエリパラメータに variant=non-target が指定されている場合、
-        // または window や window.parent に __mockUrl がある場合は、それを優先する
         let targetUrl = "https://www.midjourney.com/imagine"
         try {
           const urlParams = new URLSearchParams(window.location.search)
           const parentUrlParams = new URLSearchParams(
             window.parent.location.search
           )
-          if (
+          const mockUrlParam =
+            urlParams.get("mockUrl") || parentUrlParams.get("mockUrl")
+
+          if (mockUrlParam) {
+            targetUrl = mockUrlParam
+          } else if (
             urlParams.get("variant")?.includes("non-target") ||
             parentUrlParams.get("variant")?.includes("non-target") ||
             (window as any).__mockUrl ||

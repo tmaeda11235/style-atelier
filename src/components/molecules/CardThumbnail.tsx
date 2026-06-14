@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useState } from "react"
 
 import type { RarityTier } from "../../lib/rarity-config"
 import { RarityBadge } from "../atoms/RarityBadge"
@@ -51,7 +51,77 @@ function CategoryIcon({
   )
 }
 
+function useCardTilt(
+  isHighRarity: boolean,
+  cardRef: React.RefObject<HTMLDivElement | null>
+) {
+  const [tiltStyle, setTiltStyle] = useState<React.CSSProperties>({})
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isHighRarity || !cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const w = rect.width
+    const h = rect.height
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    // Calculate percentage (0-100)
+    const px = Math.min(Math.max((x / w) * 100, 0), 100)
+    const py = Math.min(Math.max((y / h) * 100, 0), 100)
+
+    // Tilt angle (max tilt 15 degrees)
+    const maxRotate = 15
+    const rx = (0.5 - y / h) * maxRotate
+    const ry = (x / w - 0.5) * maxRotate
+
+    setTiltStyle({
+      transform: `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02, 1.02, 1.02)`,
+      transition: "transform 0.1s ease-out",
+      ["--mouse-x" as any]: px.toFixed(2),
+      ["--mouse-y" as any]: py.toFixed(2)
+    })
+  }
+
+  const handleMouseLeave = () => {
+    if (!isHighRarity) return
+    setTiltStyle({
+      transform:
+        "perspective(600px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)",
+      transition: "transform 0.5s ease",
+      ["--mouse-x" as any]: "50",
+      ["--mouse-y" as any]: "50"
+    })
+  }
+
+  return { tiltStyle, handleMouseMove, handleMouseLeave }
+}
+
+function CardRarityOverlays({
+  tier,
+  isHighRarity
+}: {
+  tier: RarityTier
+  isHighRarity: boolean
+}) {
+  if (!isHighRarity) return null
+  return (
+    <>
+      <div
+        className={`holo-card-overlay ${tier === "Epic" ? "holo-epic" : "holo-legendary"}`}
+      />
+      {tier === "Legendary" && <div className="glitter-overlay" />}
+    </>
+  )
+}
+
 export function CardThumbnail(props: CardThumbnailProps) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const isHighRarity = props.tier === "Epic" || props.tier === "Legendary"
+  const { tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt(
+    isHighRarity,
+    cardRef
+  )
+
   const sizeClasses = {
     sm: "w-12 h-12",
     md: "w-full aspect-square",
@@ -61,16 +131,21 @@ export function CardThumbnail(props: CardThumbnailProps) {
 
   return (
     <div
+      ref={cardRef}
       draggable={props.draggable}
       onDragStart={props.onDragStart}
       onDragEnd={props.onDragEnd}
-      className={`relative overflow-hidden rounded-lg group card-thumbnail-container ${sizeClasses[size]} ${props.className || ""}`}>
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={tiltStyle}
+      className={`relative overflow-hidden rounded-lg group card-thumbnail-container tilt-container ${sizeClasses[size]} ${props.className || ""}`}>
       <CategoryIcon category={props.category} />
       <CardThumbnailImages
         imageUrl={props.imageUrl}
         thumbnailImages={props.thumbnailImages}
         alt={props.alt}
       />
+      <CardRarityOverlays tier={props.tier} isHighRarity={isHighRarity} />
       <RarityBadge tier={props.tier} className="absolute top-1 right-1" />
       {props.usageCount !== undefined && (
         <div

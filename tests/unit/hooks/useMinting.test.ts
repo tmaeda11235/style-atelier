@@ -248,4 +248,39 @@ describe("useMinting hook", () => {
     expect(result.current.detectedDominantColor).toBe("#ff0000")
     expect(result.current.detectedAccentColor).toBe("#00ff00")
   })
+
+  it("should auto-determine and select card rarity based on prompt complexity on start", async () => {
+    const { result } = renderHook(() =>
+      useMinting(mockAddLog, mockSetActiveTab)
+    )
+
+    // Common prompt case (low score)
+    const mockCommonItem = {
+      id: "job-common",
+      fullCommand: "dog",
+      imageUrl: "https://example.com/dog.png",
+      timestamp: Date.now()
+    }
+
+    act(() => {
+      result.current.handleStartMinting(mockCommonItem)
+    })
+
+    expect(result.current.selectedRarity).toBe("Common")
+
+    // Legendary prompt case: complex with parameters, keywords, and high quality prompts
+    const mockLegendaryItem = {
+      id: "job-legendary",
+      fullCommand:
+        "a hyperrealistic photorealistic masterpiece of a cyberpunk street, ultra-detailed, cinematic, octane render, neon glow --ar 16:9 --stylize 750 --chaos 50 --weird 10 --sref https://sref.url/1 https://sref.url/2 --cref https://cref.url/1 --v 6.0",
+      imageUrl: "https://example.com/cyberpunk.png",
+      timestamp: Date.now()
+    }
+
+    act(() => {
+      result.current.handleStartMinting(mockLegendaryItem)
+    })
+
+    expect(result.current.selectedRarity).toBe("Legendary")
+  })
 })

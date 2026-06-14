@@ -54,19 +54,41 @@
 - Create worktrees in `../worktrees/<branch-name>` or a similar dedicated directory.
 - **Cleanup**: When the task is finished (e.g., PR merged), be sure to delete the worktree using `git worktree remove`.
 
+### 0.1 Wait Commands & Anti-Polling (Critical Rule)
+
+**NEVER use loop polling (`manage_task(status)`) to check the status of long-running CI or background commands.**
+
+- Instead of manually checking if CI has finished, you MUST run blocking commands natively in the background using `run_command` and wait for the system to wake you up.
+- To wait for CI tests to finish on a Pull Request, use:
+  ```bash
+  gh pr checks <PR_NUMBER> --watch
+  ```
+  This command will block until CI completes and seamlessly notify you without wasting tokens.
+
 ### Case 1: When an Issue Number is Provided (New Task)
 
 When the user instructs to start working on a specific Issue number:
 
 1.  **Reset Environment**:
-    - Stash current changes: `git stash`
+    - Force clean untracked files and hard reset:
+      ```bash
+      git reset --hard origin/main
+      git clean -fd
+      ```
     - Switch to main: `git checkout main`
     - Pull latest changes: `git pull`
 2.  **Check Issue**:
     - View issue details: `gh issue view <issue_number>`
 3.  **Create Worktree & Branch**:
-    - Create a new branch and worktree: `git worktree add -b feature/<issue_number>-<short-description> ../worktrees/<issue_number>-<short-description> main`
-    - Move into the newly created worktree directory to continue work.
+    - Create a new branch and worktree in the `../worktrees/` directory:
+      ```bash
+      git worktree add -b feature/<issue-number>-<short-desc> ../worktrees/<issue-number>-<short-desc> main
+      ```
+    - Move into the worktree directory and install dependencies to activate Husky hooks:
+      ```bash
+      cd ../worktrees/<issue-number>-<short-desc>
+      npm ci
+      ```
 4.  **Plan**:
     - Post the work plan to the Issue: `gh issue comment <issue_number> --body "Work Plan: ..."`
 5.  **Execute**:

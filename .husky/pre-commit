@@ -1,3 +1,22 @@
+#!/bin/sh
+
+# ==========================================
+# MAIN REPOSITORY COMMIT PROTECTION
+# ==========================================
+GIT_DIR=$(git rev-parse --git-dir)
+CURRENT_BRANCH=$(git branch --show-current)
+
+if [ "$GIT_DIR" = ".git" ] && [ "$CURRENT_BRANCH" != "main" ] && [ -n "$CURRENT_BRANCH" ]; then
+  echo ""
+  echo "================================================================"
+  echo "🚫 ILLEGAL COMMIT DETECTED: MAIN REPOSITORY PROTECTION 🚫"
+  echo "================================================================"
+  echo "You attempted to commit to '$CURRENT_BRANCH' in the main repository."
+  echo "This is strictly forbidden. All non-main branch work MUST be done in a git worktree."
+  echo "================================================================"
+  exit 1
+fi
+
 # Check if all staged files are documentation files
 STAGED_FILES=$(git diff --cached --name-only)
 
