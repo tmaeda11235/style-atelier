@@ -43,6 +43,13 @@ test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
       .first()
     await expect(warningTitle).toBeVisible({ timeout: 10000 })
 
+    const statusText = spFrame
+      .locator(
+        "text=/Unsupported \\(Lightweight Fallback\\)|非サポート \\(軽量フォールバックモード\\)/"
+      )
+      .first()
+    await expect(statusText).toBeVisible({ timeout: 10000 })
+
     const step1 = spFrame.locator("text=/chrome:\\/\\/settings\\/system/")
     await expect(step1).toBeVisible()
 
