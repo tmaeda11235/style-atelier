@@ -9,6 +9,17 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     page.on("pageerror", (err) => {
       console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`)
     })
+    // Mock WebGPU support by default to prevent Download Model button from being disabled
+    await page.addInitScript(() => {
+      const mockGpu = {
+        requestAdapter: async () => ({ name: "MockGPU" })
+      }
+      Object.defineProperty(navigator, "gpu", {
+        value: mockGpu,
+        writable: true,
+        configurable: true
+      })
+    })
   })
 
   test("should display quota warning UI if storage is insufficient (mocked via navigator.storage.estimate)", async ({
