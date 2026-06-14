@@ -91,7 +91,6 @@ async function seedSandboxData() {
 
 seedSandboxData()
 
-// chrome API モックの定義
 if (typeof window !== "undefined") {
   // Mock navigator.gpu for sandbox / E2E tests
   if (typeof navigator !== "undefined") {
