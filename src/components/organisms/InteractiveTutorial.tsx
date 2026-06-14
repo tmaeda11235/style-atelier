@@ -5,7 +5,7 @@ import {
   Sparkles,
   X
 } from "lucide-react"
-import React from "react"
+import React, { useEffect, useRef } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useTutorial } from "../../contexts/TutorialContext"
@@ -49,6 +49,75 @@ export function InteractiveTutorial() {
     isMockLoading,
     handleMockDrop
   } = useSpotlight()
+
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+
+  // 1. チュートリアル開始時の activeElement を記録し、終了時に戻す
+  useEffect(() => {
+    if (isActive) {
+      returnFocusRef.current = document.activeElement as HTMLElement | null
+    } else {
+      if (returnFocusRef.current) {
+        const elementToFocus = returnFocusRef.current
+        setTimeout(() => {
+          elementToFocus.focus()
+        }, 50)
+        returnFocusRef.current = null
+      }
+    }
+  }, [isActive])
+
+  // 2. ステップ切り替え時に見出し（h3）または最初のボタンにフォーカスを当てる
+  useEffect(() => {
+    if (isActive && currentStepIndex !== undefined) {
+      const timer = setTimeout(() => {
+        if (titleRef.current) {
+          titleRef.current.focus()
+        } else if (tooltipRef.current) {
+          const focusables = tooltipRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          )
+          if (focusables.length > 0) {
+            focusables[0].focus()
+          }
+        }
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [isActive, currentStepIndex])
+
+  // 3. Tabキーによるループ (Focus Trap)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab") return
+    if (!tooltipRef.current) return
+
+    const focusableSelector =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const focusables = Array.from(
+      tooltipRef.current.querySelectorAll<HTMLElement>(focusableSelector)
+    )
+
+    if (focusables.length === 0) return
+
+    const firstElement = focusables[0]
+    const lastElement = focusables[focusables.length - 1]
+    const activeElement = document.activeElement
+
+    if (e.shiftKey) {
+      // Shift + Tab: firstElement から lastElement へ
+      if (activeElement === firstElement) {
+        lastElement.focus()
+        e.preventDefault()
+      }
+    } else {
+      // Tab: lastElement から firstElement へ
+      if (activeElement === lastElement) {
+        firstElement.focus()
+        e.preventDefault()
+      }
+    }
+  }
 
   if (!isActive || !currentConfig) return null
 
@@ -116,6 +185,7 @@ export function InteractiveTutorial() {
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
+        onKeyDown={handleKeyDown}
         className="fixed pointer-events-auto z-[101] animate-in fade-in zoom-in-95 duration-200"
         style={tooltipStyle}>
         <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
@@ -147,7 +217,10 @@ export function InteractiveTutorial() {
 
           {/* Content */}
           <div className="px-4 py-3">
-            <h3 className="text-sm font-bold text-white mb-1.5">
+            <h3
+              ref={titleRef}
+              tabIndex={-1}
+              className="text-sm font-bold text-white mb-1.5 focus:outline-none">
               {currentConfig.title}
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">

@@ -26,50 +26,52 @@ function getStatusDisplay(
   progress: number,
   t: Record<string, string>
 ): StatusDisplay {
-  switch (status) {
-    case "checking":
-      return {
-        colorClass: "text-blue-500 animate-pulse",
-        text: t.webLlmStatusChecking || "Checking..."
-      }
-    case "downloading":
-      return {
-        colorClass: "text-amber-500 font-semibold",
-        text: (
-          t.webLlmStatusDownloading || "Downloading ({{progress}}%)"
-        ).replace("{{progress}}", String(progress))
-      }
-    case "retrying":
-      return {
-        colorClass: "text-amber-600 animate-pulse font-semibold",
-        text: t.webLlmStatusRetrying || "Reconnecting..."
-      }
-    case "verifying":
-      return {
-        colorClass: "text-indigo-500 animate-pulse",
-        text: t.webLlmStatusVerifying || "Verifying..."
-      }
-    case "ready":
-      return {
-        colorClass: "text-emerald-500 font-bold",
-        text: t.webLlmStatusReady || "Loaded (Ready to Use)"
-      }
-    case "error":
-      return {
-        colorClass: "text-rose-500 font-semibold",
-        text: t.webLlmStatusError || "Error occurred"
-      }
-    case "insufficient-quota":
-      return {
-        colorClass: "text-rose-600 font-semibold",
-        text: t.webLlmStatusInsufficientQuota || "Insufficient Space"
-      }
-    default:
-      return {
-        colorClass: "text-slate-500",
-        text: t.webLlmStatusIdle || "Not Downloaded"
-      }
+  if (status === "downloading") {
+    return {
+      colorClass: "text-amber-500 font-semibold",
+      text: (
+        t.webLlmStatusDownloading || "Downloading ({{progress}}%)"
+      ).replace("{{progress}}", String(progress))
+    }
   }
+
+  const map: Record<string, { colorClass: string; text: string }> = {
+    checking: {
+      colorClass: "text-blue-500 animate-pulse",
+      text: t.webLlmStatusChecking || "Checking..."
+    },
+    retrying: {
+      colorClass: "text-amber-600 animate-pulse font-semibold",
+      text: t.webLlmStatusRetrying || "Reconnecting..."
+    },
+    verifying: {
+      colorClass: "text-indigo-500 animate-pulse",
+      text: t.webLlmStatusVerifying || "Verifying..."
+    },
+    ready: {
+      colorClass: "text-emerald-500 font-bold",
+      text: t.webLlmStatusReady || "Loaded (Ready to Use)"
+    },
+    error: {
+      colorClass: "text-rose-500 font-semibold",
+      text: t.webLlmStatusError || "Error occurred"
+    },
+    "insufficient-quota": {
+      colorClass: "text-rose-600 font-semibold",
+      text: t.webLlmStatusInsufficientQuota || "Insufficient Space"
+    },
+    unsupported: {
+      colorClass: "text-slate-500 font-semibold",
+      text: t.webLlmStatusUnsupported || "Unsupported (Lightweight Fallback)"
+    }
+  }
+
+  return (
+    map[status] || {
+      colorClass: "text-slate-500",
+      text: t.webLlmStatusIdle || "Not Downloaded"
+    }
+  )
 }
 
 interface WebLlmSettingsContentProps {
@@ -121,7 +123,7 @@ function WebLlmSettingsContent({
           t={t}
         />
       )}
-      {error && status !== "retrying" && <WebLlmError error={error} />}
+      {error && status !== "retrying" && <WebLlmError error={error} t={t} />}
       {status === "insufficient-quota" && <WebLlmQuotaWarning t={t} />}
 
       <WebLlmActionButtons

@@ -177,7 +177,9 @@
     "webLlmStatusVerifying": "Verifying...",
     "webLlmStatusReady": "Loaded (Ready to Use)",
     "webLlmStatusError": "Error occurred",
+    "webLlmCorruptedMsg": "Model cache corrupted or interrupted. Please re-download to restore function.",
     "webLlmStatusInsufficientQuota": "Insufficient Space",
+    "webLlmStatusUnsupported": "Unsupported (Lightweight Fallback)",
     "webLlmDownloadBtn": "Download Model",
     "webLlmPurgeBtn": "Delete Cache",
     "webLlmPurgeConfirm": "Are you sure you want to delete the local AI model cache? This will free up storage but you will need to re-download the model to use local AI functions again.",
@@ -570,7 +572,10 @@
     "aiSummary": "AI Summary Description",
     "aiSummaryPlaceholder": "AI summary will appear here...",
     "aiUseSummary": "Use as Card Note/Description",
-    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations",
+    "aiDeClutterBtn": "AI De-clutter",
+    "aiDeClutterLoading": "De-cluttering...",
+    "aiDeClutterNotReady": "Gemma model is not loaded. Please download it in settings."
   },
   "cardDetail": {
     "title": "Card Details",

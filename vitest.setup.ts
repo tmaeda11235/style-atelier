@@ -52,6 +52,17 @@ Object.defineProperty(window.navigator, "language", {
 })
 
 // ==========================================
+// 3.5 navigator.gpu Mock (Default Supported)
+// ==========================================
+Object.defineProperty(window.navigator, "gpu", {
+  value: {
+    requestAdapter: vi.fn().mockResolvedValue({ name: "MockGPU" })
+  },
+  configurable: true,
+  writable: true
+})
+
+// ==========================================
 // 4. window.confirm Mock
 // ==========================================
 window.confirm = vi.fn().mockReturnValue(true)
