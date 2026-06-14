@@ -1,6 +1,7 @@
 import { Image as ImageIcon } from "lucide-react"
 import React from "react"
 
+import { compressCategoryCoverImage } from "../../../lib/image-utils"
 import { Button } from "../../atoms/Button"
 
 interface CoverSettingsFieldsProps {
@@ -19,16 +20,23 @@ function CoverUploadButton({
   t: any
   setCoverImageUrl: (v: string) => void
 }) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCoverImageUrl(event.target.result as string)
+      try {
+        const compressedDataUrl = await compressCategoryCoverImage(file)
+        setCoverImageUrl(compressedDataUrl)
+      } catch (err) {
+        console.error("Failed to compress category cover image:", err)
+        // Fallback: load uncompressed base64 if compression errors out completely
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setCoverImageUrl(event.target.result as string)
+          }
         }
+        reader.readAsDataURL(file)
       }
-      reader.readAsDataURL(file)
     }
   }
 

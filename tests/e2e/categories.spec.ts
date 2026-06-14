@@ -718,4 +718,194 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       throw error
     }
   })
+
+  test("should compress uploaded category cover image to maximum 1000px and save as JPEG @J-ORG-BINDER-CUSTOMIZE-01", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    page.on("console", (msg) => {
+      console.log(`[COMPRESSION TEST CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+
+    try {
+      console.log("1. Navigating to sandbox page...")
+      await page.goto("/tests/sandbox/index.html")
+
+      const spFrame = page.frameLocator("#sidepanel-frame")
+
+      // Skip welcome
+      const skipButton = spFrame.locator("#welcome-skip-btn")
+      if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await skipButton.click()
+      }
+
+      // Switch to Library tab
+      console.log("2. Switching to Library tab...")
+      const libraryTabButton = spFrame.locator("button:has-text('Library')")
+      await expect(libraryTabButton).toBeVisible({ timeout: 15000 })
+      await libraryTabButton.click()
+
+      // Clear DB categories
+      await spFrame.locator("body").evaluate(async () => {
+        const database = (window as any).db
+        await database.categories.clear()
+      })
+
+      // Expand filters accordion
+      const filterToggleBtn = spFrame
+        .locator("[data-testid='toggle-filters-btn']")
+        .first()
+      await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
+      await filterToggleBtn.click()
+
+      console.log("3. Opening category modal...")
+      const addCategoryBtn = spFrame.locator(
+        "button[title='Manage Categories']"
+      )
+      await expect(addCategoryBtn).toBeVisible({ timeout: 15000 })
+      await addCategoryBtn.click()
+
+      console.log("4. Filling category form fields...")
+      const nameInput = spFrame.locator(
+        "input[placeholder='e.g. Cyberpunk, Retro']"
+      )
+      await expect(nameInput).toBeVisible({ timeout: 10000 })
+      await nameInput.fill("Compressed Binder")
+
+      const emojiInput = spFrame.locator("input[placeholder='e.g. 🎨, 🛸']")
+      await emojiInput.fill("📦")
+
+      // Upload huge image via browser evaluate to simulate file selection
+      console.log("5. Uploading large 1200x1200px image...")
+      const fileInput = spFrame.locator(
+        "input[data-testid='category-cover-file-input']"
+      )
+      await expect(fileInput).toBeAttached()
+
+      await fileInput.evaluate(async (input: HTMLInputElement) => {
+        const canvas = document.createElement("canvas")
+        canvas.width = 1200
+        canvas.height = 1200
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.fillStyle = "blue"
+          ctx.fillRect(0, 0, 1200, 1200)
+          ctx.fillStyle = "white"
+          ctx.font = "48px sans-serif"
+          ctx.fillText("Huge Test Image for Compression", 50, 600)
+        }
+
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.95)
+        })
+
+        const file = new File([blob], "huge-cover.jpg", { type: "image/jpeg" })
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(file)
+        input.files = dataTransfer.files
+        input.dispatchEvent(new Event("change", { bubbles: true }))
+      })
+
+      // Wait for cover preview image to appear
+      console.log("6. Waiting for cover preview to render...")
+      const previewImg = spFrame.locator("img[alt='Cover Preview']")
+      await expect(previewImg).toBeVisible({ timeout: 10000 })
+
+      // Get the preview image src (base64 Data URL)
+      const previewSrc = await previewImg.getAttribute("src")
+      expect(previewSrc).not.toBeNull()
+      expect(previewSrc!.startsWith("data:image/jpeg;base64,")).toBe(true)
+
+      // Verify dimensions of the preview image
+      console.log("7. Verifying dimensions of compressed image...")
+      const dimensions = await previewImg.evaluate(
+        async (img: HTMLImageElement) => {
+          return {
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight
+          }
+        }
+      )
+      console.log(
+        `[COMPRESSION TEST] Compressed image dimensions: ${dimensions.naturalWidth}x${dimensions.naturalHeight}`
+      )
+      expect(dimensions.naturalWidth).toBeLessThanOrEqual(1000)
+      expect(dimensions.naturalHeight).toBeLessThanOrEqual(1000)
+
+      // Submit form to create category
+      console.log("8. Submitting form to create category...")
+      const submitBtn = spFrame.locator("button:has-text('Create Category')")
+      await submitBtn.click()
+
+      // Query IndexedDB directly to ensure the category is saved with compressed cover image
+      console.log("9. Verifying saved category cover image in IndexedDB...")
+      await expect
+        .poll(
+          async () => {
+            return await spFrame.locator("body").evaluate(async () => {
+              const database = (window as any).db
+              return await database.categories.get("compressed-binder")
+            })
+          },
+          {
+            timeout: 10000
+          }
+        )
+        .toBeDefined()
+
+      const savedCategory = await spFrame.locator("body").evaluate(async () => {
+        const database = (window as any).db
+        return await database.categories.get("compressed-binder")
+      })
+      expect(savedCategory.coverImageUrl).toBeDefined()
+      expect(
+        savedCategory.coverImageUrl.startsWith("data:image/jpeg;base64,")
+      ).toBe(true)
+      console.log(
+        `[COMPRESSION TEST] Saved coverImageUrl length: ${savedCategory.coverImageUrl.length}`
+      )
+
+      // Verify saved coverImageUrl dimensions
+      const savedDimensions = await spFrame
+        .locator("body")
+        .evaluate(async (body, src) => {
+          return new Promise<{ width: number; height: number }>(
+            (resolve, reject) => {
+              const img = new Image()
+              img.onload = () =>
+                resolve({ width: img.naturalWidth, height: img.naturalHeight })
+              img.onerror = () => reject(new Error("Failed to load image"))
+              img.src = src
+            }
+          )
+        }, savedCategory.coverImageUrl)
+
+      expect(savedDimensions.width).toBeLessThanOrEqual(1000)
+      expect(savedDimensions.height).toBeLessThanOrEqual(1000)
+      console.log(
+        `[COMPRESSION TEST] Saved image dimensions: ${savedDimensions.width}x${savedDimensions.height}`
+      )
+
+      console.log(
+        "Category cover image compression E2E test passed successfully!"
+      )
+      await page.screenshot({
+        path: path.join(
+          screenshotsDir,
+          "category-cover-compression-success.png"
+        )
+      })
+    } catch (error) {
+      console.error(
+        "Category cover image compression E2E test failed, capturing screenshot..."
+      )
+      await page.screenshot({
+        path: path.join(
+          screenshotsDir,
+          "category-cover-compression-failure.png"
+        )
+      })
+      throw error
+    }
+  })
 })
