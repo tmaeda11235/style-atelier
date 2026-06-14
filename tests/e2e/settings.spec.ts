@@ -989,6 +989,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await mergeOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
+    await expect(syncBtn).toBeEnabled({ timeout: 10000 })
     console.log("Safe Merge strategy confirmed successfully.")
 
     // Reset last-backup to >60 days ago so dialog will show up again
@@ -1007,6 +1008,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await localOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
+    await expect(syncBtn).toBeEnabled({ timeout: 10000 })
     console.log("Local Overwrite strategy confirmed successfully.")
 
     // Reset last-backup to >60 days ago so dialog will show up again

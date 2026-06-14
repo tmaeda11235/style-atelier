@@ -92,8 +92,6 @@ async function seedSandboxData() {
 seedSandboxData()
 
 if (typeof window !== "undefined") {
-  ;(window as any).queryClient = queryClient
-
   // Mock navigator.gpu for sandbox / E2E tests
   if (typeof navigator !== "undefined") {
     // If it's already set to undefined by a test script (like in troubleshooting E2E), respect it.
@@ -116,6 +114,8 @@ if (typeof window !== "undefined") {
       }
     }
   }
+
+  ;(window as any).queryClient = queryClient
   ;(window as any).db = db
   ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
@@ -195,32 +195,13 @@ if (typeof window !== "undefined") {
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
-        let targetUrl = "https://www.midjourney.com/imagine"
-        try {
-          const urlParams = new URLSearchParams(window.location.search)
-          const parentUrlParams = new URLSearchParams(
-            window.parent.location.search
-          )
-          const mockUrlParam =
-            urlParams.get("mockUrl") || parentUrlParams.get("mockUrl")
-
-          if (mockUrlParam) {
-            targetUrl = mockUrlParam
-          } else if (
-            urlParams.get("variant")?.includes("non-target") ||
-            parentUrlParams.get("variant")?.includes("non-target") ||
-            (window as any).__mockUrl ||
-            (window.parent as any).__mockUrl
-          ) {
-            targetUrl =
-              (window as any).__mockUrl ||
-              (window.parent as any).__mockUrl ||
-              "https://example.com"
-          }
-        } catch (e) {
-          // ignore cross-origin/access errors if any
-        }
-        return [{ id: 1, url: targetUrl, active: true }]
+        const urlParams = new URLSearchParams(window.location.search)
+        const mockUrl =
+          (window as any).__mockUrl ||
+          (window.parent && (window.parent as any).__mockUrl) ||
+          urlParams.get("mockUrl") ||
+          "https://www.midjourney.com/imagine"
+        return [{ id: 1, url: mockUrl, active: true }]
       },
       sendMessage: (tabId: number, message: any) => {
         return new Promise((resolve) => {

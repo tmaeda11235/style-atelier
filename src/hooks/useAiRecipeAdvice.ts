@@ -113,7 +113,6 @@ interface RecipeAdviceFetchProps {
   >
 }
 
-/* eslint-disable-next-line max-lines-per-function */
 function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
   const {
     cards,
@@ -128,30 +127,14 @@ function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
   } = props
 
   useEffect(() => {
-    if (cards.length < 2 || status !== "ready") {
-      setAdvice(null)
-      setError(null)
-      setLoading(false)
-      return
-    }
-    if (cacheRef.current[key]) {
-      setAdvice(cacheRef.current[key])
-      setError(null)
-      setLoading(false)
+    if (checkAdviceCache(props)) {
       return
     }
     let mounted = true
     const isMounted = () => mounted
     const timer = setTimeout(() => {
       fetchAdviceHelper({
-        cards,
-        lang,
-        key,
-        setAdvice,
-        setError,
-        setLoading,
-        cacheRef,
-        runInferenceRef,
+        ...props,
         isMounted
       })
     }, 500)
