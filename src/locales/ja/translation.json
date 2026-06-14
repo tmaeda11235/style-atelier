@@ -178,6 +178,7 @@
     "webLlmStatusReady": "ロード完了 (利用可能)",
     "webLlmStatusError": "エラーが発生しました",
     "webLlmStatusInsufficientQuota": "容量不足 (2.5GB以上の空き容量が必要です)",
+    "webLlmStatusUnsupported": "非サポート (軽量フォールバックモード)",
     "webLlmDownloadBtn": "モデルをダウンロード",
     "webLlmPurgeBtn": "キャッシュを削除",
     "webLlmPurgeConfirm": "ローカルAIモデルのキャッシュを削除しますか？これにより空き容量は増えますが、ローカルAI機能を使用する際は再度モデルをダウンロードする必要があります。",

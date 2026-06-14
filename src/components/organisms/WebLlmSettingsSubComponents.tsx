@@ -39,6 +39,7 @@ export function WebLlmStatusRow({
         {status === "insufficient-quota" && (
           <AlertTriangle className="w-3.5 h-3.5" />
         )}
+        {status === "unsupported" && <AlertTriangle className="w-3.5 h-3.5" />}
         {statusText}
       </span>
     </div>
@@ -182,7 +183,8 @@ export function WebLlmActionButtons({
     <div className="flex items-center gap-2 pt-1">
       {status !== "ready" &&
         status !== "downloading" &&
-        status !== "retrying" && (
+        status !== "retrying" &&
+        status !== "unsupported" && (
           <button
             type="button"
             onClick={startDownload}
