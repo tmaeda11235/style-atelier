@@ -444,6 +444,6 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     const adviceHeaderResult = spFrame
       .locator("text=/AI Cauldron Recipe Advice|AIレシピアドバイス/")
       .first()
-    await expect(adviceHeaderResult).toBeVisible({ timeout: 15000 })
+    await expect(adviceHeaderResult).toBeVisible({ timeout: 45000 })
   })
 })

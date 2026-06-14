@@ -13,6 +13,7 @@ interface FolderExplorerProps {
     cardId: string,
     categoryId: string | null
   ) => Promise<void>
+  subfoldersGridClass?: string
 }
 
 interface BreadcrumbsProps {
@@ -141,6 +142,7 @@ interface SubfolderGridProps {
     cardId: string,
     categoryId: string | null
   ) => Promise<void>
+  subfoldersGridClass?: string
 }
 
 function SubfolderGrid({
@@ -148,14 +150,17 @@ function SubfolderGrid({
   dragOverFolderId,
   setDragOverFolderId,
   setCurrentFolderId,
-  moveCardToCategory
+  moveCardToCategory,
+  subfoldersGridClass
 }: SubfolderGridProps) {
   if (currentSubfolders.length === 0) return null
 
   return (
     <div
       data-testid="subfolders-grid"
-      className="grid grid-cols-3 gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-200 border-dashed">
+      className={`grid grid-cols-3 gap-2 p-2 rounded-lg border border-dashed ${
+        subfoldersGridClass || "bg-slate-50/50 border-slate-200"
+      }`}>
       {currentSubfolders.map((folder) => {
         const isOver = dragOverFolderId === folder.id
         const handleDrop = async (e: React.DragEvent) => {
@@ -189,7 +194,8 @@ export function FolderExplorer({
   breadcrumbs,
   currentSubfolders,
   setCurrentFolderId,
-  moveCardToCategory
+  moveCardToCategory,
+  subfoldersGridClass
 }: FolderExplorerProps) {
   const [dragOverFolderId, setDragOverFolderId] = useState<
     string | null | undefined
@@ -210,6 +216,7 @@ export function FolderExplorer({
         setDragOverFolderId={setDragOverFolderId}
         setCurrentFolderId={setCurrentFolderId}
         moveCardToCategory={moveCardToCategory}
+        subfoldersGridClass={subfoldersGridClass}
       />
     </>
   )

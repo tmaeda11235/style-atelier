@@ -4,6 +4,8 @@ import React from "react"
 import type { CustomCategory } from "../../../lib/db-schema"
 import { Button } from "../../atoms/Button"
 import { Input } from "../../atoms/Input"
+import { CoverSettingsFields } from "./CoverSettingsFields"
+import { ThemeSelectionField } from "./ThemeSelectionField"
 
 interface CategoryFormProps {
   t: any
@@ -21,6 +23,12 @@ interface CategoryFormProps {
   handleClearImage: () => void
   handleSave: (e: React.FormEvent) => void
   onClose: () => void
+  coverImageUrl: string
+  setCoverImageUrl: (v: string) => void
+  theme: string
+  setTheme: (v: string) => void
+  setSelectionType: (v: "icon" | "cover" | null) => void
+  handleClearCoverImage: () => void
 }
 
 function CategoryNameField({
@@ -181,7 +189,8 @@ function IconSettingsFields({
   handleEmojiChange,
   iconUrl,
   setIsSelectingCard,
-  handleClearImage
+  handleClearImage,
+  setSelectionType
 }: {
   t: any
   emoji: string
@@ -189,6 +198,7 @@ function IconSettingsFields({
   iconUrl: string
   setIsSelectingCard: (v: boolean) => void
   handleClearImage: () => void
+  setSelectionType: (v: "icon" | "cover" | null) => void
 }) {
   return (
     <>
@@ -202,7 +212,10 @@ function IconSettingsFields({
         <LibraryIconButton
           t={t}
           iconUrl={iconUrl}
-          onClick={() => setIsSelectingCard(true)}
+          onClick={() => {
+            setSelectionType("icon")
+            setIsSelectingCard(true)
+          }}
         />
       </div>
 
@@ -263,6 +276,8 @@ export function CategoryForm(props: CategoryFormProps) {
       <CategoryNameField {...props} />
       <ParentCategoryField {...props} />
       <IconSettingsFields {...props} />
+      <CoverSettingsFields {...props} />
+      <ThemeSelectionField {...props} />
       <FormActionButtons {...props} />
     </form>
   )

@@ -246,7 +246,20 @@
     "logUpdated": "Updated category \"{name}\"",
     "errUpdateFailed": "Failed to update category. Please try again.",
     "logCreated": "Created category \"{name}\"",
-    "errAddFailed": "Failed to add category. Please try again."
+    "errAddFailed": "Failed to add category. Please try again.",
+    "coverImage": "Cover Image",
+    "selectCoverImage": "Select Cover Image",
+    "uploadLocalImage": "Upload Local Image",
+    "clearCoverImage": "Clear Cover Image",
+    "coverPreview": "Cover Preview",
+    "skinTheme": "Skin Theme",
+    "selectFromLibrary": "Select from Library",
+    "themes": {
+      "classic": "Classic Atelier (Antique)",
+      "magic": "Magic Library (Magic Book)",
+      "cyberpunk": "Cyberpunk Synth (Neon)",
+      "minimal": "Minimal Dark (Modern Flat)"
+    }
   },
   "simpleWorkbench": {
     "title": "Simple Workbench",
