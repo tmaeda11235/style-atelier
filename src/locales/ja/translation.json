@@ -208,7 +208,8 @@
     "webLlmWebGpuStep1": "1. ブラウザで次のアドレスを開きます: chrome://settings/system",
     "webLlmWebGpuStep2": "2. 「グラフィック アクセラレーションが使用可能な場合は使用する」をオンにします。",
     "webLlmWebGpuStep3": "3. ブラウザを再起動して変更を適用します。",
-    "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く"
+    "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く",
+    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",

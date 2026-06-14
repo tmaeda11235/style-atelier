@@ -131,6 +131,7 @@ function WebLlmSettingsContent({
         startDownload={startDownload}
         handlePurge={handlePurge}
         t={t}
+        isSupported={isSupported}
       />
     </div>
   )
