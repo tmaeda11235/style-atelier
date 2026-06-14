@@ -51,6 +51,7 @@ Style Atelier is a Chrome Extension designed to transform Midjourney prompt mana
 ### Development
 
 Start the local development server:
+
 ```bash
 npm run dev
 ```
@@ -77,18 +78,23 @@ For detailed guidelines on our collaborative development process (including Git 
 ## Running Tests
 
 ### Unit Tests
+
 Run unit tests with Vitest:
+
 ```bash
 npm run test
 ```
 
 For the Vitest UI dashboard:
+
 ```bash
 npm run test:ui
 ```
 
 ### End-to-End Tests
+
 Run integration/E2E tests using Playwright:
+
 ```bash
 npm run test:e2e
 ```
@@ -98,12 +104,15 @@ npm run test:e2e
 ## Production Build
 
 Create a production-ready package:
+
 ```bash
 npm run build
 ```
+
 This output is saved to `build/chrome-mv3-prod`.
 
 To bundle the production build into a `.zip` file for web store submission:
+
 ```bash
 npm run package
 ```

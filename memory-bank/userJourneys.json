@@ -546,6 +546,23 @@
         "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
         "src/components/organisms/FolderExplorer.tsx"
       ]
+    },
+    {
+      "id": "@J-SET-WEBGPU-TROUBLESHOOT-01",
+      "name": "WebGPUトラブルシューティング",
+      "description": "WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く",
+      "steps": [
+        "WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）",
+        "WebGPU無効警告とステップバイステップガイドが表示されることを確認",
+        "「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/components/molecules/WebGpuWarning.tsx",
+        "src/components/organisms/WebLlmSettingsSection.tsx",
+        "src/components/organisms/WebLlmSettingsSubComponents.tsx",
+        "src/components/molecules/AiDownloadStatus.tsx"
+      ]
     }
   ]
 }
