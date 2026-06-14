@@ -93,6 +93,7 @@ seedSandboxData()
 
 // chrome API モックの定義
 if (typeof window !== "undefined") {
+  ;(window as any).queryClient = queryClient
   ;(window as any).db = db
   ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
