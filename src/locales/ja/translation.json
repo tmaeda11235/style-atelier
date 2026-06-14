@@ -246,7 +246,20 @@
     "logUpdated": "カテゴリ \"{name}\" を更新しました",
     "errUpdateFailed": "カテゴリの更新に失敗しました。もう一度お試しください。",
     "logCreated": "カテゴリ \"{name}\" を作成しました",
-    "errAddFailed": "カテゴリの追加に失敗しました。もう一度お試しください。"
+    "errAddFailed": "カテゴリの追加に失敗しました。もう一度お試しください。",
+    "coverImage": "カバー画像",
+    "selectCoverImage": "カバー画像を選択",
+    "uploadLocalImage": "ローカル画像をアップロード",
+    "clearCoverImage": "カバー画像をクリア",
+    "coverPreview": "カバープレビュー",
+    "skinTheme": "スキンテーマ",
+    "selectFromLibrary": "ライブラリから選択",
+    "themes": {
+      "classic": "Classic Atelier (アンティーク調)",
+      "magic": "Magic Library (魔導書風)",
+      "cyberpunk": "Cyberpunk Synth (ネオン調)",
+      "minimal": "Minimal Dark (現代的フラット)"
+    }
   },
   "simpleWorkbench": {
     "title": "簡易ワークベンチ",

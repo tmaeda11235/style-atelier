@@ -18,6 +18,7 @@ interface CardsGridProps {
   hasMore: boolean
   loadMore: () => void
   t: any
+  cardSlotThemeClass?: string
 }
 
 export function CardsGrid(props: CardsGridProps) {
@@ -41,6 +42,7 @@ export function CardsGrid(props: CardsGridProps) {
             categories={props.categories}
             onQuickSend={props.handleQuickSend}
             moveCardToCategory={props.moveCardToCategory}
+            cardSlotThemeClass={props.cardSlotThemeClass}
           />
         ))}
       </div>
