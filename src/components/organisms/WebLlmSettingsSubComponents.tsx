@@ -43,6 +43,13 @@ export function WebLlmStatusRow({
   )
 }
 
+const formatEta = (seconds: number) => {
+  if (seconds <= 0) return "--"
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
 export function WebLlmProgress({
   progress,
   speed,
@@ -54,22 +61,30 @@ export function WebLlmProgress({
   eta: number
   t: Record<string, string>
 }) {
-  const formatEta = (seconds: number) => {
-    if (seconds <= 0) return "--"
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return m > 0 ? `${m}m ${s}s` : `${s}s`
-  }
+  const speedText = speed > 0 ? `${speed.toFixed(1)} MB/s` : ""
+  const remainingText =
+    eta > 0 ? `${t.webLlmRemaining || "Remaining"}: ${formatEta(eta)}` : ""
+  const valueText = `${progress}%${speedText ? `, ${speedText}` : ""}${remainingText ? `, ${remainingText}` : ""}`
 
   return (
     <div className="space-y-1.5 animate-in fade-in duration-200">
-      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+      <div
+        className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden"
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={t.webLlmStatusLabel || "Download Progress"}
+        aria-valuetext={valueText}>
         <div
           className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-300 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+      <div
+        className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono"
+        aria-live="polite"
+        aria-atomic="true">
         <span>{progress}%</span>
         {speed > 0 && <span>{speed.toFixed(1)} MB/s</span>}
         {eta > 0 && (
@@ -95,7 +110,10 @@ export function WebLlmRetryingInfo({
   t: Record<string, string>
 }) {
   return (
-    <div className="text-[11px] text-amber-600 dark:text-amber-500 bg-amber-500/5 border border-amber-500/10 rounded-lg p-2.5 space-y-1.5 animate-in shake duration-300">
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="text-[11px] text-amber-600 dark:text-amber-500 bg-amber-500/5 border border-amber-500/10 rounded-lg p-2.5 space-y-1.5 animate-in shake duration-300">
       <div className="flex items-center gap-1.5 font-bold">
         <RefreshCw className="w-4 h-4 animate-spin shrink-0 text-amber-600 dark:text-amber-500" />
         <span>
@@ -113,7 +131,10 @@ export function WebLlmRetryingInfo({
 
 export function WebLlmError({ error }: { error: string }) {
   return (
-    <div className="text-[11px] text-rose-500 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-lg p-2.5 flex items-start gap-2">
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="text-[11px] text-rose-500 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-lg p-2.5 flex items-start gap-2">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>{error}</span>
     </div>
@@ -122,7 +143,10 @@ export function WebLlmError({ error }: { error: string }) {
 
 export function WebLlmQuotaWarning({ t }: { t: Record<string, string> }) {
   return (
-    <div className="text-[11px] text-rose-500 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-lg p-2.5 space-y-1">
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="text-[11px] text-rose-500 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-lg p-2.5 space-y-1">
       <div className="flex items-center gap-1.5 font-bold">
         <AlertTriangle className="w-4 h-4 shrink-0" />
         <span>{t.webLlmQuotaWarningTitle || "Insufficient Space"}</span>

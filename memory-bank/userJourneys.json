@@ -222,7 +222,8 @@
       "viewComponents": [
         "src/components/organisms/SettingsTab.tsx",
         "src/components/organisms/CloudSyncSection.tsx",
-        "src/components/molecules/GDriveSyncStrategyDialog.tsx"
+        "src/components/molecules/GDriveSyncStrategyDialog.tsx",
+        "src/components/organisms/StorageManagerSection.tsx"
       ]
     },
     {
