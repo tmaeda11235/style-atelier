@@ -11,6 +11,7 @@ describe("useWebGpu", () => {
       }
     })
     vi.stubGlobal("navigator", {
+      ...window.navigator,
       gpu: undefined,
       clipboard: {
         writeText: vi.fn().mockResolvedValue(undefined)
@@ -35,6 +36,7 @@ describe("useWebGpu", () => {
   it("should return true if navigator.gpu.requestAdapter returns an adapter", async () => {
     const requestAdapterMock = vi.fn().mockResolvedValue({ name: "MockGPU" })
     vi.stubGlobal("navigator", {
+      ...window.navigator,
       gpu: {
         requestAdapter: requestAdapterMock
       }
@@ -53,6 +55,7 @@ describe("useWebGpu", () => {
   it("should return false if requestAdapter returns null", async () => {
     const requestAdapterMock = vi.fn().mockResolvedValue(null)
     vi.stubGlobal("navigator", {
+      ...window.navigator,
       gpu: {
         requestAdapter: requestAdapterMock
       }
