@@ -90,6 +90,55 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     await libraryTabButton.click()
     await page.waitForTimeout(1000)
 
+    // Seed mock cards into IndexedDB styleCards table after initial sandbox seeding is completed
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      if (!database) {
+        throw new Error("Database instance not found on window")
+      }
+      await database.styleCards.clear()
+
+      const mockCards = [
+        {
+          id: "card-style-1",
+          name: "Style Card 1",
+          tags: ["anime"],
+          tier: "Legendary",
+          category: "style", // "Style"
+          dominantColor: "#3b82f6", // Blue
+          parameters: { sref: [] },
+          promptSegments: [{ type: "text", value: "anime" }],
+          createdAt: Date.now(),
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        },
+        {
+          id: "card-effect-1",
+          name: "Effect Card 1",
+          tags: ["anime"],
+          tier: "Common",
+          category: "other", // "Other"
+          dominantColor: "#ef4444", // Red
+          parameters: { sref: [] },
+          promptSegments: [{ type: "text", value: "anime" }],
+          createdAt: Date.now() - 1000,
+          isPinned: false,
+          usageCount: 0,
+          isVariable: false,
+          isDeleted: 0,
+          masking: {},
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
+        }
+      ]
+      await database.styleCards.bulkAdd(mockCards)
+    })
+
     // Click AI Semantic Search Toggle
     const aiToggleBtn = spFrame.locator("#ai-search-toggle-btn")
     await expect(aiToggleBtn).toBeVisible()
@@ -119,18 +168,11 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     await expect(spFrame.locator("text=Category: Style")).toBeVisible()
     await expect(spFrame.locator('text=Keyword: "anime"')).toBeVisible()
 
-    // Click Filters toggle button to expand the accordion and verify category is applied
-    const toggleFiltersBtn = spFrame.locator("#toggle-filters-btn")
-    await expect(toggleFiltersBtn).toBeVisible()
-    await toggleFiltersBtn.click()
-    await page.waitForTimeout(500)
+    // Verify that only the card matching Style category, Legendary rarity, Blue color is shown
+    await expect(spFrame.locator("text=Style Card 1")).toBeVisible()
+    await expect(spFrame.locator("text=Effect Card 1")).not.toBeVisible()
 
-    // Verify "Style" category button (matches ID "category-1") is selected (has bg-blue-600 class)
-    const styleCategoryBtn = spFrame.locator("button:has-text('Style')")
-    await expect(styleCategoryBtn).toBeVisible()
-    await expect(styleCategoryBtn).toHaveClass(/bg-blue-600/)
-
-    // Take screenshot of successful parsing UI with expanded filters
+    // Take screenshot of successful parsing UI
     await page.screenshot({
       path: path.join(screenshotsDir, "library-semantic-search-success.png")
     })
