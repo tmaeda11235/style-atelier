@@ -165,8 +165,7 @@ Object.defineProperty(global, "triggerChromeEvent", {
 // 6. Global Database Mock
 // ==========================================
 vi.mock("./src/lib/db", async () => {
-  const { db } = await import("./tests/mocks/db")
-  return { db }
+  return await import("./tests/mocks/db")
 })
 
 // ==========================================

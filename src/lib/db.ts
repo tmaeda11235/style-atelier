@@ -260,6 +260,45 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
 
 export const db = new StyleAtelierDatabase()
 
+let dbError: Error | null = null
+const dbErrorListeners = new Set<(err: Error) => void>()
+
+export function addDbErrorListener(listener: (err: Error) => void) {
+  dbErrorListeners.add(listener)
+  if (dbError) {
+    listener(dbError)
+  }
+  return () => {
+    dbErrorListeners.delete(listener)
+  }
+}
+
+export function getDbError(): Error | null {
+  return dbError
+}
+
+export function clearDbErrorForTest(): void {
+  dbError = null
+}
+
+if (typeof window !== "undefined") {
+  ;(window as any).__triggerDbErrorForTest = (message: string) => {
+    dbError = new Error(message)
+    dbErrorListeners.forEach((listener) => listener(dbError!))
+  }
+  ;(window as any).__clearDbErrorForTest = () => {
+    dbError = null
+    dbErrorListeners.forEach((listener) => listener(null as any))
+  }
+}
+
+// 明示的なオープン処理とエラーキャッチ
+db.open().catch((err) => {
+  console.error("Failed to open IndexedDB:", err)
+  dbError = err instanceof Error ? err : new Error(String(err))
+  dbErrorListeners.forEach((listener) => listener(dbError!))
+})
+
 // Register startup hook for purging deleted records older than 60 days
 db.on("ready", () => {
   // Run asynchronously without blocking the database open operation (avoids deadlock in tests)
