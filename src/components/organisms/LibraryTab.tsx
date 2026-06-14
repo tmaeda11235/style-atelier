@@ -5,13 +5,13 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"
+import { THEME_STYLES } from "../../lib/theme-config"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import { CardsGrid } from "./CardsGrid"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 import { EmptyState } from "./EmptyState"
 import { FolderExplorer } from "./FolderExplorer"
-import { LibraryFilterAccordion } from "./LibraryFilterAccordion"
-import { LibrarySearchBar } from "./LibrarySearchBar"
+import { SearchAndFilterSection } from "./LibraryTab/SearchAndFilterSection"
 import { ShareCardModal } from "./ShareCardModal"
 
 interface LibraryTabProps {
@@ -23,92 +23,6 @@ interface LibraryTabProps {
   onOpenSimpleWorkbench?: (card: StyleCard) => void
 }
 
-function buildFilterProps(
-  lib: any,
-  isFiltersExpanded: boolean,
-  setIsFiltersExpanded: (v: boolean) => void,
-  expertFeatures: boolean,
-  setIsCategoryModalOpen: (v: boolean) => void,
-  t: any
-) {
-  return {
-    isFiltersExpanded,
-    setIsFiltersExpanded,
-    expertFeatures,
-    rarityFilter: lib.rarityFilter,
-    setRarityFilter: lib.setRarityFilter,
-    modelFilter: lib.modelFilter,
-    setModelFilter: lib.setModelFilter,
-    sortBy: lib.sortBy,
-    setSortBy: lib.setSortBy,
-    colorFilter: lib.colorFilter,
-    setColorFilter: lib.setColorFilter,
-    colorHueFilter: lib.colorHueFilter,
-    setColorHueFilter: lib.setColorHueFilter,
-    colorLabel: t.colorLabel,
-    modelLabel: t.modelLabel,
-    modelOptions: t.models,
-    styleCardsCount: lib.styleCards?.length || 0,
-    categoryFilter: lib.categoryFilter,
-    setCategoryFilter: lib.setCategoryFilter,
-    categories: lib.categories,
-    setIsCategoryModalOpen,
-    allCategoriesLabel: t.allCategories,
-    manageCategoriesTitle: t.manageCategories,
-    allRaritiesLabel: t.allRarities,
-    sortByNewestLabel: t.sortBy?.newest,
-    sortByOldestLabel: t.sortBy?.oldest,
-    sortByRarityLabel: t.sortBy?.rarity,
-    sortByUsageLabel: t.sortBy?.usage,
-    sortByColorLabel: t.sortBy?.color
-  }
-}
-
-function SearchAndFilterSection({
-  lib,
-  isFiltersExpanded,
-  setIsFiltersExpanded,
-  expertFeatures,
-  setIsCategoryModalOpen,
-  t
-}: {
-  lib: any
-  isFiltersExpanded: boolean
-  setIsFiltersExpanded: (v: boolean) => void
-  expertFeatures: boolean
-  setIsCategoryModalOpen: (v: boolean) => void
-  t: any
-}) {
-  const filterProps = buildFilterProps(
-    lib,
-    isFiltersExpanded,
-    setIsFiltersExpanded,
-    expertFeatures,
-    setIsCategoryModalOpen,
-    t
-  )
-
-  return (
-    <>
-      <LibrarySearchBar
-        categories={lib.categories}
-        allSrefs={lib.allSrefs}
-        searchTag={lib.searchTag}
-        setSearchTag={lib.setSearchTag}
-        setRarityFilter={lib.setRarityFilter}
-        setCategoryFilter={lib.setCategoryFilter}
-        setColorFilter={lib.setColorFilter}
-        isFiltersExpanded={isFiltersExpanded}
-        setIsFiltersExpanded={setIsFiltersExpanded}
-        activeFiltersCount={lib.activeFiltersCount}
-        sortBy={lib.sortBy}
-        setSortBy={lib.setSortBy}
-      />
-      <LibraryFilterAccordion {...filterProps} />
-    </>
-  )
-}
-
 interface GridOrEmptySectionProps {
   lib: any
   isEasyMode?: boolean
@@ -117,41 +31,10 @@ interface GridOrEmptySectionProps {
   onNavigateToWorkbench?: () => void
   setSharingCard: (card: StyleCard | null) => void
   t: any
+  cardSlotThemeClass?: string
 }
 
-function GridOrEmptySection({
-  lib,
-  isEasyMode,
-  onOpenSimpleWorkbench,
-  onOpenDetailCard,
-  onNavigateToWorkbench,
-  setSharingCard,
-  t
-}: GridOrEmptySectionProps) {
-  const { advanceIfStep } = useTutorial()
-  if (lib.styleCards.length > 0) {
-    return (
-      <CardsGrid
-        styleCards={lib.styleCards}
-        isEasyMode={isEasyMode}
-        onOpenSimpleWorkbench={onOpenSimpleWorkbench}
-        togglePin={lib.togglePin}
-        advanceIfStep={advanceIfStep}
-        onOpenDetailCard={onOpenDetailCard}
-        handleCardClick={lib.handleCardClick}
-        setSharingCard={setSharingCard}
-        categories={lib.categories}
-        handleQuickSend={async (card, e) => {
-          if (!card.isPinned) await lib.togglePin(card, e)
-          onNavigateToWorkbench?.()
-        }}
-        moveCardToCategory={lib.moveCardToCategory}
-        hasMore={lib.hasMore}
-        loadMore={lib.loadMore}
-        t={t}
-      />
-    )
-  }
+function RenderEmptyState(lib: any, t: any) {
   return (
     <EmptyState
       allCards={lib.allCards}
@@ -166,6 +49,44 @@ function GridOrEmptySection({
       setCategoryFilter={lib.setCategoryFilter}
       setColorFilter={lib.setColorFilter}
       t={t}
+    />
+  )
+}
+
+function GridOrEmptySection({
+  lib,
+  isEasyMode,
+  onOpenSimpleWorkbench,
+  onOpenDetailCard,
+  onNavigateToWorkbench,
+  setSharingCard,
+  t,
+  cardSlotThemeClass
+}: GridOrEmptySectionProps) {
+  const { advanceIfStep } = useTutorial()
+  if (lib.styleCards.length === 0) {
+    return RenderEmptyState(lib, t)
+  }
+  return (
+    <CardsGrid
+      styleCards={lib.styleCards}
+      isEasyMode={isEasyMode}
+      onOpenSimpleWorkbench={onOpenSimpleWorkbench}
+      togglePin={lib.togglePin}
+      advanceIfStep={advanceIfStep}
+      onOpenDetailCard={onOpenDetailCard}
+      handleCardClick={lib.handleCardClick}
+      setSharingCard={setSharingCard}
+      categories={lib.categories}
+      handleQuickSend={async (card, e) => {
+        if (!card.isPinned) await lib.togglePin(card, e)
+        onNavigateToWorkbench?.()
+      }}
+      moveCardToCategory={lib.moveCardToCategory}
+      hasMore={lib.hasMore}
+      loadMore={lib.loadMore}
+      t={t}
+      cardSlotThemeClass={cardSlotThemeClass}
     />
   )
 }
@@ -204,6 +125,97 @@ function ModalsSection({
   )
 }
 
+function BinderThemeHeader({
+  currentCategory,
+  activeTheme,
+  themeStyles
+}: {
+  currentCategory: any
+  activeTheme: string
+  themeStyles: any
+}) {
+  const themeClasses: Record<string, string> = {
+    magic:
+      "bg-gradient-to-r from-purple-900 to-indigo-900 border-purple-500/40 text-purple-100",
+    cyberpunk: "bg-black border-cyan-400 text-cyan-300",
+    minimal: "bg-zinc-800 border-zinc-700 text-zinc-100"
+  }
+  const defaultBg = "bg-amber-100/50 border-amber-700/30 text-amber-900"
+  const bgClass = themeClasses[activeTheme] || defaultBg
+
+  return (
+    <div
+      className={`p-4 rounded-xl border flex flex-col justify-center relative overflow-hidden transition-all duration-300 min-h-[4rem] ${bgClass}`}>
+      {currentCategory.coverImageUrl && (
+        <div className="absolute inset-0 z-0">
+          <img
+            src={currentCategory.coverImageUrl}
+            className="w-full h-full object-cover opacity-45"
+            alt="Category Cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        </div>
+      )}
+      <div className="relative z-10 flex flex-col">
+        <span className="text-[9px] uppercase tracking-wider font-extrabold opacity-60">
+          {activeTheme ? `${activeTheme} theme binder` : "binder"}
+        </span>
+        <h2
+          className={`text-base font-extrabold truncate ${themeStyles?.title || "text-slate-800"}`}>
+          {currentCategory.name}
+        </h2>
+      </div>
+    </div>
+  )
+}
+
+function LibraryContentSection({
+  lib,
+  themeStyles,
+  props,
+  setSharingCard,
+  t
+}: {
+  lib: any
+  themeStyles: any
+  props: LibraryTabProps
+  setSharingCard: (card: StyleCard | null) => void
+  t: any
+}) {
+  return (
+    <div className={themeStyles ? themeStyles.container : ""}>
+      <FolderExplorer
+        breadcrumbs={lib.breadcrumbs}
+        currentSubfolders={lib.currentSubfolders}
+        setCurrentFolderId={lib.setCurrentFolderId}
+        moveCardToCategory={lib.moveCardToCategory}
+        subfoldersGridClass={themeStyles?.subfoldersGrid}
+      />
+      <div className="mt-4">
+        <GridOrEmptySection
+          lib={lib}
+          isEasyMode={props.isEasyMode}
+          onOpenSimpleWorkbench={props.onOpenSimpleWorkbench}
+          onOpenDetailCard={props.onOpenDetailCard}
+          onNavigateToWorkbench={props.onNavigateToWorkbench}
+          setSharingCard={setSharingCard}
+          t={t}
+          cardSlotThemeClass={themeStyles?.cardSlot}
+        />
+      </div>
+    </div>
+  )
+}
+
+function useLibraryTheme(lib: any) {
+  const currentCategory = lib.currentFolderId
+    ? lib.categories.find((c: any) => c.id === lib.currentFolderId)
+    : undefined
+  const activeTheme = currentCategory?.theme || ""
+  const themeStyles = activeTheme ? THEME_STYLES[activeTheme] : undefined
+  return { currentCategory, activeTheme, themeStyles }
+}
+
 export function LibraryTab(props: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
@@ -216,6 +228,7 @@ export function LibraryTab(props: LibraryTabProps) {
     props.setAlertType,
     props.onNavigateToWorkbench
   )
+  const { currentCategory, activeTheme, themeStyles } = useLibraryTheme(lib)
 
   return (
     <div className="flex flex-col gap-4">
@@ -227,18 +240,17 @@ export function LibraryTab(props: LibraryTabProps) {
         setIsCategoryModalOpen={setIsCategoryModalOpen}
         t={t}
       />
-      <FolderExplorer
-        breadcrumbs={lib.breadcrumbs}
-        currentSubfolders={lib.currentSubfolders}
-        setCurrentFolderId={lib.setCurrentFolderId}
-        moveCardToCategory={lib.moveCardToCategory}
-      />
-      <GridOrEmptySection
+      {currentCategory && (
+        <BinderThemeHeader
+          currentCategory={currentCategory}
+          activeTheme={activeTheme}
+          themeStyles={themeStyles}
+        />
+      )}
+      <LibraryContentSection
         lib={lib}
-        isEasyMode={props.isEasyMode}
-        onOpenSimpleWorkbench={props.onOpenSimpleWorkbench}
-        onOpenDetailCard={props.onOpenDetailCard}
-        onNavigateToWorkbench={props.onNavigateToWorkbench}
+        themeStyles={themeStyles}
+        props={props}
         setSharingCard={setSharingCard}
         t={t}
       />
