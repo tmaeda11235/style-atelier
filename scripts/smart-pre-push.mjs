@@ -101,6 +101,17 @@ async function main() {
     console.log('No src/ or unit test files changed. Skipping Vitest.');
   }
 
+  // 5.5 Build extension before E2E tests if we are running any E2E tests
+  if (testedJourneys.length > 0 || srcFiles.length > 0) {
+    console.log('\n--- Building Extension for E2E ---');
+    try {
+      execSync('npm run build', { stdio: 'inherit' });
+    } catch {
+      console.error('Failed to build extension.');
+      process.exit(1);
+    }
+  }
+
   // 6. Run E2E
   const testedJourneys = Array.from(affectedJourneys);
   console.log('\n--- Running E2E Tests ---');
