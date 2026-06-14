@@ -1,20 +1,16 @@
-import {
-  checkAvailableStorage,
-  verifyCacheIntegrity,
-  verifyOpfsIntegrity
-} from "./lib/storage-utils"
+import { checkAvailableStorage, verifyOpfsIntegrity } from "./lib/storage-utils"
 
-// WebLLM Worker instance
-let webLlmWorker: Worker | null = null
+// LiteRT Worker instance
+let litertWorker: Worker | null = null
 const pendingInferences = new Map<
   string,
   { resolve: (res: any) => void; reject: (err: any) => void }
 >()
 
-// Expected models and sizes for Gemma-4 E2B
-const GEMMA_MODEL_FILES = [
-  { name: "gemma-4-e2b-q4f16_1.bin", size: 1024 * 1024 } // Example ~1MB file (reduced for performance and reliability)
-]
+const MODEL_FILENAME = "gemma-4-E2B-it-web.litertlm"
+
+// Expected size for Gemma-4 E2B is exactly 2008432640 bytes
+const GEMMA_MODEL_FILES = [{ name: MODEL_FILENAME, size: 2008432640 }]
 
 console.log("Offscreen Document loaded.")
 
@@ -25,7 +21,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
     case "check-quota":
       handleCheckQuota(
-        message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024,
+        message.requiredBytes ?? 2.5 * 1024 * 1024 * 1024,
         sendResponse
       )
       return true // Async response
@@ -55,7 +51,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         message.requestId ?? Math.random().toString(36).substring(7),
         message.prompt,
         message.systemPrompt,
-        message.temperature,
         sendResponse
       )
       return true // Async response
@@ -82,24 +77,15 @@ async function handleCheckQuota(
 
 async function handleVerifyIntegrity(sendResponse: (res: any) => void) {
   try {
-    // Check both Cache API and OPFS (we support both)
+    // Check OPFS for the downloaded model
     const opfsValid = await verifyOpfsIntegrity(
-      "webllm_models",
+      "litert_models",
       GEMMA_MODEL_FILES
-    )
-    // Cache storage verify (example cache name 'webllm/model_cache')
-    const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
-      url: `https://webllm/model/${f.name}`,
-      size: f.size
-    }))
-    const cacheValid = await verifyCacheIntegrity(
-      "webllm/model_cache",
-      cacheExpected
     )
 
     sendResponse({
       status: "success",
-      integrityPassed: opfsValid || cacheValid
+      integrityPassed: opfsValid
     })
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })
@@ -108,16 +94,15 @@ async function handleVerifyIntegrity(sendResponse: (res: any) => void) {
 
 function handleInitWorker(sendResponse: (res: any) => void) {
   try {
-    if (!webLlmWorker) {
-      // In Plasmo, workers can be initialized using new URL with import.meta.url
-      webLlmWorker = new Worker(
-        new URL("./webllm.worker.ts", import.meta.url),
+    if (!litertWorker) {
+      litertWorker = new Worker(
+        new URL("./litert.worker.ts", import.meta.url),
         {
           type: "module"
         }
       )
 
-      webLlmWorker.onmessage = (event) => {
+      litertWorker.onmessage = (event) => {
         const data = event.data
         if (
           data &&
@@ -142,6 +127,13 @@ function handleInitWorker(sendResponse: (res: any) => void) {
           payload: event.data
         })
       }
+
+      // Send init configuration to worker (wasm path)
+      const wasmPath = chrome.runtime.getURL("assets/wasm")
+      litertWorker.postMessage({
+        action: "init",
+        wasmPath
+      })
     }
     sendResponse({ status: "success", message: "Worker initialized" })
   } catch (err: any) {
@@ -153,15 +145,14 @@ function handleRunInference(
   requestId: string,
   prompt: string,
   systemPrompt: string | undefined,
-  temperature: number | undefined,
   sendResponse: (res: any) => void
 ) {
   try {
-    if (!webLlmWorker) {
+    if (!litertWorker) {
       handleInitWorker(() => {})
     }
 
-    if (webLlmWorker) {
+    if (litertWorker) {
       pendingInferences.set(requestId, {
         resolve: (result) => {
           sendResponse({ status: "success", result })
@@ -171,12 +162,11 @@ function handleRunInference(
         }
       })
 
-      webLlmWorker.postMessage({
+      litertWorker.postMessage({
         action: "run-inference",
         requestId,
         prompt,
-        systemPrompt,
-        temperature
+        systemPrompt
       })
     } else {
       sendResponse({ status: "error", error: "Failed to initialize worker" })
@@ -188,11 +178,11 @@ function handleRunInference(
 
 function handleStartDownload(sendResponse: (res: any) => void) {
   try {
-    if (!webLlmWorker) {
+    if (!litertWorker) {
       handleInitWorker(() => {})
     }
-    if (webLlmWorker) {
-      webLlmWorker.postMessage({ action: "start-download" })
+    if (litertWorker) {
+      litertWorker.postMessage({ action: "start-download" })
       sendResponse({ status: "success", message: "Download started" })
     } else {
       sendResponse({ status: "error", error: "Failed to initialize worker" })
@@ -205,24 +195,16 @@ function handleStartDownload(sendResponse: (res: any) => void) {
 async function handlePreloadEngine(sendResponse: (res: any) => void) {
   try {
     const opfsValid = await verifyOpfsIntegrity(
-      "webllm_models",
+      "litert_models",
       GEMMA_MODEL_FILES
     )
-    const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
-      url: `https://webllm/model/${f.name}`,
-      size: f.size
-    }))
-    const cacheValid = await verifyCacheIntegrity(
-      "webllm/model_cache",
-      cacheExpected
-    )
 
-    if (opfsValid || cacheValid) {
-      if (!webLlmWorker) {
+    if (opfsValid) {
+      if (!litertWorker) {
         handleInitWorker(() => {})
       }
-      if (webLlmWorker) {
-        webLlmWorker.postMessage({ action: "preload" })
+      if (litertWorker) {
+        litertWorker.postMessage({ action: "preload" })
         sendResponse({ status: "success", message: "Preload started" })
       } else {
         sendResponse({
@@ -243,7 +225,13 @@ async function handlePreloadEngine(sendResponse: (res: any) => void) {
 
 async function handlePurgeCache(sendResponse: (res: any) => void) {
   try {
-    // 1. Clear OPFS
+    if (litertWorker) {
+      litertWorker.postMessage({ action: "unload" })
+      litertWorker.terminate()
+      litertWorker = null
+    }
+
+    // Clear OPFS
     if (
       typeof navigator !== "undefined" &&
       navigator.storage &&
@@ -251,15 +239,12 @@ async function handlePurgeCache(sendResponse: (res: any) => void) {
     ) {
       const root = await navigator.storage.getDirectory()
       try {
-        await root.removeEntry("webllm_models", { recursive: true })
+        await root.removeEntry("litert_models", { recursive: true })
       } catch {
         // Ignored if directory doesn't exist
       }
     }
-    // 2. Clear Cache Storage
-    if (typeof caches !== "undefined") {
-      await caches.delete("webllm/model_cache")
-    }
+
     sendResponse({ status: "success" })
   } catch (err: any) {
     sendResponse({ status: "error", error: err.message })

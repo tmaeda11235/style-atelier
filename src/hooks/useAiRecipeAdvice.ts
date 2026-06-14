@@ -113,6 +113,7 @@ interface RecipeAdviceFetchProps {
   >
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
   const {
     cards,
@@ -158,7 +159,17 @@ function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
       mounted = false
       clearTimeout(timer)
     }
-  }, [key, status, lang])
+  }, [
+    cards,
+    key,
+    status,
+    lang,
+    setAdvice,
+    setError,
+    setLoading,
+    cacheRef,
+    runInferenceRef
+  ])
 }
 
 export function useAiRecipeAdvice(cards: any[]) {
