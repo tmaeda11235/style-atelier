@@ -179,6 +179,7 @@
     "webLlmStatusError": "Error occurred",
     "webLlmCorruptedMsg": "Model cache corrupted or interrupted. Please re-download to restore function.",
     "webLlmStatusInsufficientQuota": "Insufficient Space",
+    "webLlmStatusUnsupported": "Unsupported (Lightweight Fallback)",
     "webLlmDownloadBtn": "Download Model",
     "webLlmPurgeBtn": "Delete Cache",
     "webLlmPurgeConfirm": "Are you sure you want to delete the local AI model cache? This will free up storage but you will need to re-download the model to use local AI functions again.",

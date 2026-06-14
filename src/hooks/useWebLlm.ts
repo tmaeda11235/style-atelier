@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 
+import { createMessageListener } from "./webLlmMessageListener"
 import {
   checkCurrentStateHelper,
-  createMessageListener,
   purgeCacheHelper,
   runInferenceHelper,
   startDownloadHelper,

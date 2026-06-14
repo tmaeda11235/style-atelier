@@ -39,6 +39,7 @@ export function WebLlmStatusRow({
         {status === "insufficient-quota" && (
           <AlertTriangle className="w-3.5 h-3.5" />
         )}
+        {status === "unsupported" && <AlertTriangle className="w-3.5 h-3.5" />}
         {statusText}
       </span>
     </div>
@@ -50,6 +51,13 @@ const formatEta = (seconds: number) => {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
   return m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
+interface WebLlmProgressProps {
+  progress: number
+  speed: number
+  eta: number
+  t: Record<string, string>
 }
 
 const getProgressValueText = (
@@ -64,7 +72,33 @@ const getProgressValueText = (
   return `${progress}%${speedText ? `, ${speedText}` : ""}${remainingText ? `, ${remainingText}` : ""}`
 }
 
-export function WebLlmProgress({
+function ProgressBar({
+  progress,
+  valueText,
+  label
+}: {
+  progress: number
+  valueText: string
+  label: string
+}) {
+  return (
+    <div
+      className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden"
+      role="progressbar"
+      aria-valuenow={progress}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label}
+      aria-valuetext={valueText}>
+      <div
+        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-300 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  )
+}
+
+function ProgressMeta({
   progress,
   speed,
   eta,
@@ -75,37 +109,40 @@ export function WebLlmProgress({
   eta: number
   t: Record<string, string>
 }) {
+  return (
+    <div
+      className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono"
+      aria-live="polite"
+      aria-atomic="true">
+      <span>{progress}%</span>
+      {speed > 0 && <span>{speed.toFixed(1)} MB/s</span>}
+      {eta > 0 && (
+        <span>
+          {t.webLlmRemaining || "Remaining"}: {formatEta(eta)}
+        </span>
+      )}
+      <span>1.0 GB total</span>
+    </div>
+  )
+}
+
+export function WebLlmProgress({
+  progress,
+  speed,
+  eta,
+  t
+}: WebLlmProgressProps) {
   const { isSupported } = useWebGpu()
   const valueText = getProgressValueText(progress, speed, eta, t)
 
   return (
     <div className="space-y-1.5 animate-in fade-in duration-200">
-      <div
-        className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden"
-        role="progressbar"
-        aria-valuenow={progress}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={t.webLlmStatusLabel || "Download Progress"}
-        aria-valuetext={valueText}>
-        <div
-          className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <div
-        className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono"
-        aria-live="polite"
-        aria-atomic="true">
-        <span>{progress}%</span>
-        {speed > 0 && <span>{speed.toFixed(1)} MB/s</span>}
-        {eta > 0 && (
-          <span>
-            {t.webLlmRemaining || "Remaining"}: {formatEta(eta)}
-          </span>
-        )}
-        <span>1.0 GB total</span>
-      </div>
+      <ProgressBar
+        progress={progress}
+        valueText={valueText}
+        label={t.webLlmStatusLabel || "Download Progress"}
+      />
+      <ProgressMeta progress={progress} speed={speed} eta={eta} t={t} />
       {isSupported === false && (
         <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800">
           <WebGpuWarning t={t} />
@@ -203,7 +240,8 @@ export function WebLlmActionButtons({
     <div className="flex items-center gap-2 pt-1">
       {status !== "ready" &&
         status !== "downloading" &&
-        status !== "retrying" && (
+        status !== "retrying" &&
+        status !== "unsupported" && (
           <button
             type="button"
             onClick={startDownload}
