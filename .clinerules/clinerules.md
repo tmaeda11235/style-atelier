@@ -69,7 +69,11 @@
 When the user instructs to start working on a specific Issue number:
 
 1.  **Reset Environment**:
-    - Stash current changes: `git stash`
+    - Force clean untracked files and hard reset:
+      ```bash
+      git reset --hard origin/main
+      git clean -fd
+      ```
     - Switch to main: `git checkout main`
     - Pull latest changes: `git pull`
 2.  **Check Issue**:
