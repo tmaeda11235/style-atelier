@@ -127,7 +127,6 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-max-lines.ts",
       "src/components/organisms/Workbench.tsx",
-      "src/litert.worker.ts",
     ],
     rules: {
       "max-lines": "warn"
