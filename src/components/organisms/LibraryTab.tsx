@@ -207,6 +207,15 @@ function LibraryContentSection({
   )
 }
 
+function useLibraryTheme(lib: any) {
+  const currentCategory = lib.currentFolderId
+    ? lib.categories.find((c: any) => c.id === lib.currentFolderId)
+    : undefined
+  const activeTheme = currentCategory?.theme || ""
+  const themeStyles = activeTheme ? THEME_STYLES[activeTheme] : undefined
+  return { currentCategory, activeTheme, themeStyles }
+}
+
 export function LibraryTab(props: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
@@ -219,12 +228,7 @@ export function LibraryTab(props: LibraryTabProps) {
     props.setAlertType,
     props.onNavigateToWorkbench
   )
-
-  const currentCategory = lib.currentFolderId
-    ? lib.categories.find((c) => c.id === lib.currentFolderId)
-    : undefined
-  const activeTheme = currentCategory?.theme || ""
-  const themeStyles = activeTheme ? THEME_STYLES[activeTheme] : undefined
+  const { currentCategory, activeTheme, themeStyles } = useLibraryTheme(lib)
 
   return (
     <div className="flex flex-col gap-4">
