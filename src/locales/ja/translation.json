@@ -199,7 +199,14 @@
     "includeBrandLogoToggleLabel": "ブランドロゴを合成する",
     "includeBrandLogoToggleSub": "エクスポート画像にブランドバッジを含めます",
     "alwaysEnglishLogoTextLabel": "ロゴの英語表記を強制",
-    "alwaysEnglishLogoTextSub": "日本語環境でもバッジ内テキストを「Minted with Style Atelier」にします"
+    "alwaysEnglishLogoTextSub": "日本語環境でもバッジ内テキストを「Minted with Style Atelier」にします",
+    "webLlmWebGpuDisabledTitle": "WebGPUが無効です",
+    "webLlmWebGpuDisabledDesc": "お使いのブラウザでWebGPUが利用できないか、またはハードウェアアクセラレーションが無効になっているため、ローカルAI（WebLLM）を高速に実行できません。Wasmフォールバックで実行されますが、極めて低速になるか動作しない場合があります。",
+    "webLlmWebGpuTroubleshootingTitle": "WebGPU トラブルシューティングガイド",
+    "webLlmWebGpuStep1": "1. ブラウザで次のアドレスを開きます: chrome://settings/system",
+    "webLlmWebGpuStep2": "2. 「グラフィック アクセラレーションが使用可能な場合は使用する」をオンにします。",
+    "webLlmWebGpuStep3": "3. ブラウザを再起動して変更を適用します。",
+    "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
