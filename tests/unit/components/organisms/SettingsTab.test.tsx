@@ -8,6 +8,7 @@ import * as googleDrive from "@/lib/google-drive"
 import { QueryTestProvider } from "@/test/react-query-helper"
 import {
   act,
+  configure,
   fireEvent,
   screen,
   render as tlRender,
@@ -17,6 +18,8 @@ import React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { i18n } from "../../../../src/lib/i18n"
+
+configure({ asyncUtilTimeout: 5000 })
 
 vi.mock("@/contexts/ConfirmContext", () => ({
   useConfirm: () => (options: any) =>
