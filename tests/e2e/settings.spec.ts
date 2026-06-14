@@ -28,6 +28,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
         console.error(`[HTTP ERROR] ${response.url()}: ${response.status()}`)
       }
     })
+    // Mock WebGPU support by default to prevent Download Model button from being disabled in Settings tests
+    await page.addInitScript(() => {
+      const mockGpu = {
+        requestAdapter: async () => ({ name: "MockGPU" })
+      }
+      Object.defineProperty(navigator, "gpu", {
+        value: mockGpu,
+        writable: true,
+        configurable: true
+      })
+    })
   })
 
   test("should allow selecting restore mode and verify replace/merge behavior", async ({

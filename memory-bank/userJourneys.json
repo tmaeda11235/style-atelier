@@ -528,6 +528,43 @@
         "src/components/molecules/CardThumbnail.tsx",
         "src/style.css"
       ]
+    },
+    {
+      "id": "@J-ORG-BINDER-CUSTOMIZE-01",
+      "name": "バインダーのカスタマイズ（カバー画像とテーマ設定）",
+      "description": "バインダー（フォルダ）ごとに、カスタム表紙画像の設定とスキンテーマ選択を行い、バインダー詳細表示画面のスタイリングを動的に切り替える",
+      "steps": [
+        "バインダー（カテゴリ）編集画面を開く",
+        "カスタムカバー画像を設定する",
+        "スキンテーマを選択する",
+        "保存して適用する",
+        "テーマに応じたスタイリングが適用されていることを確認する"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/CategoryManagerModal.tsx",
+        "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
+        "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
+        "src/components/organisms/FolderExplorer.tsx",
+        "src/lib/image-utils.ts"
+      ]
+    },
+    {
+      "id": "@J-SET-WEBGPU-TROUBLESHOOT-01",
+      "name": "WebGPUトラブルシューティング",
+      "description": "WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く",
+      "steps": [
+        "WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）",
+        "WebGPU無効警告とステップバイステップガイドが表示されることを確認",
+        "「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/components/molecules/WebGpuWarning.tsx",
+        "src/components/organisms/WebLlmSettingsSection.tsx",
+        "src/components/organisms/WebLlmSettingsSubComponents.tsx",
+        "src/components/molecules/AiDownloadStatus.tsx"
+      ]
     }
   ]
 }

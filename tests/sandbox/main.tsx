@@ -91,9 +91,31 @@ async function seedSandboxData() {
 
 seedSandboxData()
 
-// chrome API モックの定義
 if (typeof window !== "undefined") {
   ;(window as any).queryClient = queryClient
+
+  // Mock navigator.gpu for sandbox / E2E tests
+  if (typeof navigator !== "undefined") {
+    // If it's already set to undefined by a test script (like in troubleshooting E2E), respect it.
+    // Otherwise, override requestAdapter to always return a mock adapter.
+    if (navigator.gpu !== undefined) {
+      try {
+        const mockGpu = {
+          requestAdapter: async () => ({ name: "MockGPU" })
+        }
+        Object.defineProperty(navigator, "gpu", {
+          value: mockGpu,
+          writable: true,
+          configurable: true
+        })
+      } catch (e) {
+        console.error(
+          "[Sandbox GPU Mock] Failed to inject navigator.gpu mock:",
+          e
+        )
+      }
+    }
+  }
   ;(window as any).db = db
   ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
@@ -173,10 +195,32 @@ if (typeof window !== "undefined") {
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
-        const urlParams = new URLSearchParams(window.location.search)
-        const mockUrl =
-          urlParams.get("mockUrl") || "https://www.midjourney.com/imagine"
-        return [{ id: 1, url: mockUrl, active: true }]
+        let targetUrl = "https://www.midjourney.com/imagine"
+        try {
+          const urlParams = new URLSearchParams(window.location.search)
+          const parentUrlParams = new URLSearchParams(
+            window.parent.location.search
+          )
+          const mockUrlParam =
+            urlParams.get("mockUrl") || parentUrlParams.get("mockUrl")
+
+          if (mockUrlParam) {
+            targetUrl = mockUrlParam
+          } else if (
+            urlParams.get("variant")?.includes("non-target") ||
+            parentUrlParams.get("variant")?.includes("non-target") ||
+            (window as any).__mockUrl ||
+            (window.parent as any).__mockUrl
+          ) {
+            targetUrl =
+              (window as any).__mockUrl ||
+              (window.parent as any).__mockUrl ||
+              "https://example.com"
+          }
+        } catch (e) {
+          // ignore cross-origin/access errors if any
+        }
+        return [{ id: 1, url: targetUrl, active: true }]
       },
       sendMessage: (tabId: number, message: any) => {
         return new Promise((resolve) => {

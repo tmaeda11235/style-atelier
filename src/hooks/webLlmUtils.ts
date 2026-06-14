@@ -1,4 +1,4 @@
-import type React from "react"
+import { checkWebGpuSupport } from "../lib/gpu-utils"
 
 export type DownloadStatus =
   | "idle"
@@ -11,12 +11,20 @@ export type DownloadStatus =
   | "retrying"
   | "engine-initializing"
   | "engine-ready"
+  | "unsupported"
 
-export function checkCurrentStateHelper(
+export async function checkCurrentStateHelper(
   setStatus: (s: DownloadStatus) => void,
   setProgress: (p: number) => void
 ) {
   setStatus("checking")
+  const gpuSupported = await checkWebGpuSupport()
+  if (!gpuSupported) {
+    setStatus("unsupported")
+    setProgress(0)
+    return
+  }
+
   if (
     typeof chrome === "undefined" ||
     !chrome.runtime ||
@@ -82,21 +90,30 @@ function runInitWorker(
   )
 }
 
-export function startDownloadHelper(
+export async function startDownloadHelper(
   setStatus: (s: DownloadStatus) => void,
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
+  setStatus("checking")
+  setError(null)
+
+  const gpuSupported = await checkWebGpuSupport()
+  if (!gpuSupported) {
+    setStatus("unsupported")
+    setProgress(0)
+    return
+  }
+
   if (
     typeof chrome === "undefined" ||
     !chrome.runtime ||
     !chrome.runtime.sendMessage
   ) {
     setError("Extension environment not available")
+    setStatus("error")
     return
   }
-  setStatus("checking")
-  setError(null)
 
   chrome.runtime.sendMessage(
     {
@@ -181,132 +198,4 @@ export function runInferenceHelper(
       }
     )
   })
-}
-
-interface Dispatchers {
-  setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>
-  setEngineStatus: React.Dispatch<
-    React.SetStateAction<"idle" | "initializing" | "ready">
-  >
-  setProgress: React.Dispatch<React.SetStateAction<number>>
-  setError: React.Dispatch<React.SetStateAction<string | null>>
-  setSpeed: React.Dispatch<React.SetStateAction<number>>
-  setEta: React.Dispatch<React.SetStateAction<number>>
-  setRetryCount: React.Dispatch<React.SetStateAction<number>>
-  setMaxRetries: React.Dispatch<React.SetStateAction<number>>
-  setText: React.Dispatch<React.SetStateAction<string>>
-}
-
-function handleEngineStatusMessage(
-  ws: string,
-  payload: { wp: number; wtxt: string },
-  dispatch: Dispatchers
-): boolean {
-  if (ws === "engine-initializing") {
-    dispatch.setEngineStatus("initializing")
-    dispatch.setProgress(payload.wp ?? 0)
-    dispatch.setSpeed(0)
-    dispatch.setEta(0)
-    dispatch.setText(payload.wtxt ?? "")
-    dispatch.setError(null)
-    return true
-  }
-  if (ws === "engine-ready") {
-    dispatch.setEngineStatus("ready")
-    dispatch.setProgress(100)
-    dispatch.setSpeed(0)
-    dispatch.setEta(0)
-    dispatch.setText("")
-    dispatch.setError(null)
-    return true
-  }
-  return false
-}
-
-function handleStatusMessage(
-  ws: string,
-  payload: {
-    wp: number
-    we: string | null
-    wsp: number
-    weta: number
-    wrc: number
-    wmr: number
-    wtxt: string
-  },
-  dispatch: Dispatchers
-) {
-  if (handleEngineStatusMessage(ws, payload, dispatch)) {
-    return
-  }
-  if (ws === "downloading") {
-    dispatch.setStatus("downloading")
-    dispatch.setProgress(payload.wp ?? 0)
-    dispatch.setSpeed(payload.wsp ?? 0)
-    dispatch.setEta(payload.weta ?? 0)
-    dispatch.setText(payload.wtxt ?? "")
-    dispatch.setError(null)
-  } else if (ws === "retrying") {
-    dispatch.setStatus("retrying")
-    dispatch.setRetryCount(payload.wrc ?? 0)
-    dispatch.setMaxRetries(payload.wmr ?? 0)
-    dispatch.setText("")
-    dispatch.setError(payload.we ?? "Connection lost, retrying...")
-  } else if (ws === "ready") {
-    dispatch.setStatus("ready")
-    dispatch.setEngineStatus("ready")
-    dispatch.setProgress(100)
-    dispatch.setSpeed(0)
-    dispatch.setEta(0)
-    dispatch.setText("")
-    dispatch.setError(null)
-  } else if (ws === "error") {
-    dispatch.setStatus("error")
-    dispatch.setEngineStatus("idle")
-    dispatch.setSpeed(0)
-    dispatch.setEta(0)
-    dispatch.setText("")
-    dispatch.setError(payload.we ?? "Unknown worker error")
-  }
-}
-
-export function createMessageListener(
-  setStatus: React.Dispatch<React.SetStateAction<DownloadStatus>>,
-  setEngineStatus: React.Dispatch<
-    React.SetStateAction<"idle" | "initializing" | "ready">
-  >,
-  setProgress: React.Dispatch<React.SetStateAction<number>>,
-  setError: React.Dispatch<React.SetStateAction<string | null>>,
-  setSpeed: React.Dispatch<React.SetStateAction<number>>,
-  setEta: React.Dispatch<React.SetStateAction<number>>,
-  setRetryCount: React.Dispatch<React.SetStateAction<number>>,
-  setMaxRetries: React.Dispatch<React.SetStateAction<number>>,
-  setText: React.Dispatch<React.SetStateAction<string>>
-) {
-  return (message: any) => {
-    if (message.source !== "offscreen-worker") return
-    const {
-      status: ws,
-      progress: wp,
-      error: we,
-      speed: wsp,
-      eta: weta,
-      retryCount: wrc,
-      maxRetries: wmr,
-      text: wtxt
-    } = message.payload || {}
-
-    const dispatch: Dispatchers = {
-      setStatus,
-      setEngineStatus,
-      setProgress,
-      setError,
-      setSpeed,
-      setEta,
-      setRetryCount,
-      setMaxRetries,
-      setText
-    }
-    handleStatusMessage(ws, { wp, we, wsp, weta, wrc, wmr, wtxt }, dispatch)
-  }
 }

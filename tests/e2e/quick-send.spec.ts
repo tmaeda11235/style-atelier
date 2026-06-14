@@ -196,7 +196,13 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       .first()
     await libraryTabButton.click()
 
-    // 4. Change viewport width to narrow (320px)
+    // 4. Change viewport width to narrow (320px) and hide midjourney-frame to prevent squishing the sidepanel
+    await page.evaluate(() => {
+      const mjFrame = document.getElementById("midjourney-frame")
+      if (mjFrame) mjFrame.style.display = "none"
+      const spFrame = document.getElementById("sidepanel-frame")
+      if (spFrame) spFrame.style.width = "100%"
+    })
     await page.setViewportSize({ width: 320, height: 600 })
     await page.waitForTimeout(500)
 
@@ -214,16 +220,19 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       .first()
     await expect(moreBtn).toBeVisible()
     await moreBtn.click()
+    await page.waitForTimeout(250)
 
     // 7. Click the Quick Send button in the More menu
     const moreQuickSendBtn = spFrame.locator(
       "[data-testid='more-quick-send-button']"
     )
     await expect(moreQuickSendBtn).toBeVisible()
-    await moreQuickSendBtn.click()
+    await moreQuickSendBtn.click({ force: true })
 
     // 8. Verify automatic transition to Workbench tab
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    const workbenchTabButton = spFrame.locator(
+      "[data-tutorial='workbench-tab']"
+    )
     await expect(workbenchTabButton).toHaveClass(/border-blue-500/, {
       timeout: 5000
     })
@@ -237,7 +246,13 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       path: path.join(screenshotsDir, "quick-send-narrow-success.png")
     })
 
-    // Reset viewport size
+    // Reset viewport size and frame styles
+    await page.evaluate(() => {
+      const mjFrame = document.getElementById("midjourney-frame")
+      if (mjFrame) mjFrame.style.display = ""
+      const spFrame = document.getElementById("sidepanel-frame")
+      if (spFrame) spFrame.style.width = ""
+    })
     await page.setViewportSize({ width: 1280, height: 720 })
   })
 })

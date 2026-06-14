@@ -52,6 +52,17 @@ Object.defineProperty(window.navigator, "language", {
 })
 
 // ==========================================
+// 3.5 navigator.gpu Mock (Default Supported)
+// ==========================================
+Object.defineProperty(window.navigator, "gpu", {
+  value: {
+    requestAdapter: vi.fn().mockResolvedValue({ name: "MockGPU" })
+  },
+  configurable: true,
+  writable: true
+})
+
+// ==========================================
 // 4. window.confirm Mock
 // ==========================================
 window.confirm = vi.fn().mockReturnValue(true)
@@ -165,8 +176,7 @@ Object.defineProperty(global, "triggerChromeEvent", {
 // 6. Global Database Mock
 // ==========================================
 vi.mock("./src/lib/db", async () => {
-  const { db } = await import("./tests/mocks/db")
-  return { db }
+  return await import("./tests/mocks/db")
 })
 
 // ==========================================

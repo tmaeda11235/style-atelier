@@ -1,8 +1,10 @@
 import { AlertCircle, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import React from "react"
 
+import { useWebGpu } from "../../hooks/useWebGpu"
 import { Button } from "../atoms/Button"
 import { StatusIdle } from "./StatusIdle"
+import { WebGpuWarning } from "./WebGpuWarning"
 
 interface AiDownloadStatusProps {
   status: string
@@ -39,6 +41,22 @@ function StatusQuotaWarning({ t }: { t: any }) {
       <p className="text-[10px] text-slate-500 text-center leading-relaxed">
         {t.settings?.webLlmQuotaWarningDesc ||
           "At least 2.5 GB of free space is required."}
+      </p>
+    </div>
+  )
+}
+
+function StatusUnsupported({ t }: { t: any }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200">
+      <AlertTriangle className="w-6 h-6 text-slate-500 mb-2 animate-pulse" />
+      <p className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+        {t.settings?.webLlmStatusUnsupported ||
+          "Unsupported (Lightweight Fallback)"}
+      </p>
+      <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+        {t.settings?.webLlmWebGpuDisabledDesc ||
+          "WebGPU is not available. Using lightweight fallback mode."}
       </p>
     </div>
   )
@@ -171,7 +189,7 @@ function StatusDownloading({
   )
 }
 
-export function AiDownloadStatus({
+function renderAiDownloadStatusContent({
   status,
   progress,
   speed,
@@ -185,6 +203,8 @@ export function AiDownloadStatus({
 }: AiDownloadStatusProps) {
   if (status === "checking") return <StatusChecking t={t} />
   if (status === "insufficient-quota") return <StatusQuotaWarning t={t} />
+  if (status === "unsupported") return <StatusUnsupported t={t} />
+
   if (status === "error" || webLlmError) {
     return (
       <StatusError
@@ -217,4 +237,16 @@ export function AiDownloadStatus({
     )
   }
   return <StatusIdle startDownload={startDownload} t={t} />
+}
+
+export function AiDownloadStatus(props: AiDownloadStatusProps) {
+  const { isSupported } = useWebGpu()
+  const { t } = props
+
+  return (
+    <div className="space-y-3">
+      {renderAiDownloadStatusContent(props)}
+      {isSupported === false && <WebGpuWarning t={t} />}
+    </div>
+  )
 }

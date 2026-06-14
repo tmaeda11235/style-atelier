@@ -177,7 +177,9 @@
     "webLlmStatusVerifying": "Verifying...",
     "webLlmStatusReady": "Loaded (Ready to Use)",
     "webLlmStatusError": "Error occurred",
+    "webLlmCorruptedMsg": "Model cache corrupted or interrupted. Please re-download to restore function.",
     "webLlmStatusInsufficientQuota": "Insufficient Space",
+    "webLlmStatusUnsupported": "Unsupported (Lightweight Fallback)",
     "webLlmDownloadBtn": "Download Model",
     "webLlmPurgeBtn": "Delete Cache",
     "webLlmPurgeConfirm": "Are you sure you want to delete the local AI model cache? This will free up storage but you will need to re-download the model to use local AI functions again.",
@@ -199,7 +201,15 @@
     "includeBrandLogoToggleLabel": "Include Brand Logo",
     "includeBrandLogoToggleSub": "Automatically merge the brand badge when exporting card images",
     "alwaysEnglishLogoTextLabel": "Force English Badge Logo",
-    "alwaysEnglishLogoTextSub": "Keep 'Minted with Style Atelier' text even in Japanese"
+    "alwaysEnglishLogoTextSub": "Keep 'Minted with Style Atelier' text even in Japanese",
+    "webLlmWebGpuDisabledTitle": "WebGPU is disabled",
+    "webLlmWebGpuDisabledDesc": "WebGPU is not available in your browser or hardware acceleration is disabled. Local AI (WebLLM) cannot run fast and will fallback to Wasm, which might be extremely slow or fail to run.",
+    "webLlmWebGpuTroubleshootingTitle": "WebGPU Troubleshooting Guide",
+    "webLlmWebGpuStep1": "1. Open the following address in your browser: chrome://settings/system",
+    "webLlmWebGpuStep2": "2. Turn on \"Use graphics acceleration when available\".",
+    "webLlmWebGpuStep3": "3. Relaunch your browser to apply the changes.",
+    "webLlmWebGpuOpenSettingsBtn": "Open Chrome Settings",
+    "webLlmDownloadBtnUnsupported": "WebGPU Not Supported (Download Disabled)"
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
@@ -246,7 +256,20 @@
     "logUpdated": "Updated category \"{name}\"",
     "errUpdateFailed": "Failed to update category. Please try again.",
     "logCreated": "Created category \"{name}\"",
-    "errAddFailed": "Failed to add category. Please try again."
+    "errAddFailed": "Failed to add category. Please try again.",
+    "coverImage": "Cover Image",
+    "selectCoverImage": "Select Cover Image",
+    "uploadLocalImage": "Upload Local Image",
+    "clearCoverImage": "Clear Cover Image",
+    "coverPreview": "Cover Preview",
+    "skinTheme": "Skin Theme",
+    "selectFromLibrary": "Select from Library",
+    "themes": {
+      "classic": "Classic Atelier (Antique)",
+      "magic": "Magic Library (Magic Book)",
+      "cyberpunk": "Cyberpunk Synth (Neon)",
+      "minimal": "Minimal Dark (Modern Flat)"
+    }
   },
   "simpleWorkbench": {
     "title": "Simple Workbench",
@@ -550,7 +573,10 @@
     "aiSummary": "AI Summary Description",
     "aiSummaryPlaceholder": "AI summary will appear here...",
     "aiUseSummary": "Use as Card Note/Description",
-    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations",
+    "aiDeClutterBtn": "AI De-clutter",
+    "aiDeClutterLoading": "De-cluttering...",
+    "aiDeClutterNotReady": "Gemma model is not loaded. Please download it in settings."
   },
   "cardDetail": {
     "title": "Card Details",
@@ -664,5 +690,17 @@
   },
   "aiStyleAnalysis": {
     "genreLabel": "Genre:"
+  },
+  "dbError": {
+    "title": "Database Initialization Error",
+    "message": "Failed to initialize the database (IndexedDB). The application cannot start.",
+    "reasons": "Possible causes:",
+    "reason1": "Restrictions due to Incognito/Private Browsing mode",
+    "reason2": "Insufficient disk space on your browser or device",
+    "reason3": "Browser permission settings restricting database usage",
+    "solutions": "Suggested solutions:",
+    "solution1": "Turn off Incognito/Private mode and try again in a normal window.",
+    "solution2": "Free up disk space on your device and try again.",
+    "solution3": "Allow the site to save data (Cookies and site data) in your browser settings."
   }
 }

@@ -204,6 +204,12 @@ describe("useWebLlm", () => {
     )
 
     const { result } = renderHook(() => useWebLlm())
+
+    // Wait for the async initialization check to settle
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    })
+
     expect(result.current.status).toBe("ready")
 
     vi.mocked(chrome.runtime.sendMessage).mockClear()
@@ -286,5 +292,56 @@ describe("useWebLlm", () => {
         await result.current.runInference("Generate a style")
       })
     ).rejects.toThrow("Inference failed error")
+  })
+
+  it("should set status to unsupported on initialization if WebGPU is not supported", async () => {
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      gpu: undefined
+    })
+
+    const { result } = renderHook(() => useWebLlm())
+
+    // Wait for async checks to complete
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    })
+
+    expect(result.current.status).toBe("unsupported")
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(
+      { target: "offscreen", action: "verify-integrity" },
+      expect.any(Function)
+    )
+    vi.unstubAllGlobals()
+  })
+
+  it("should set status to unsupported when startDownload is called if WebGPU is not supported", async () => {
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      gpu: undefined
+    })
+
+    const { result } = renderHook(() => useWebLlm())
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    })
+    expect(result.current.status).toBe("unsupported")
+
+    // Try to trigger startDownload
+    await act(async () => {
+      await result.current.startDownload()
+    })
+
+    expect(result.current.status).toBe("unsupported")
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(
+      {
+        target: "offscreen",
+        action: "check-quota",
+        requiredBytes: expect.any(Number)
+      },
+      expect.any(Function)
+    )
+    vi.unstubAllGlobals()
   })
 })
