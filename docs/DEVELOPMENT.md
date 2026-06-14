@@ -30,6 +30,7 @@ To avoid conflicts and maintain clean development environments, **always** use G
 ### Cleaning Up after Merging / マージ後のクリーンアップ
 
 Once the PR is merged, remove the worktree / PRがマージされたら、Worktree を削除します:
+
 ```bash
 git worktree remove ../worktrees/<issue-no>-<desc>
 git branch -d feature/<issue-no>-<desc>
@@ -64,6 +65,7 @@ If you refactor legacy code and resolve ESLint warnings, do not manually edit `e
 レガシーコードのリファクタリングによりESLintの警告を解消した場合、`eslint.config.mjs` の例外（override）ルールを手動で編集しないでください。代わりに、自動同期スクリプトを実行します。
 
 Run the sync script to optimize the whitelist/exception list / 同期スクリプトを実行して例外リストを最適化します:
+
 ```bash
 node scratch/auto-sync-eslint.js
 ```

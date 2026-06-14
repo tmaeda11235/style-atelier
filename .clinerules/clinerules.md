@@ -57,6 +57,7 @@
 ### 0.1 Wait Commands & Anti-Polling (Critical Rule)
 
 **NEVER use loop polling (`manage_task(status)`) to check the status of long-running CI or background commands.**
+
 - Instead of manually checking if CI has finished, you MUST run blocking commands natively in the background using `run_command` and wait for the system to wake you up.
 - To wait for CI tests to finish on a Pull Request, use:
   ```bash

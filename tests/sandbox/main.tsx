@@ -172,10 +172,32 @@ if (typeof window !== "undefined") {
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
-        const urlParams = new URLSearchParams(window.location.search)
-        const mockUrl =
-          urlParams.get("mockUrl") || "https://www.midjourney.com/imagine"
-        return [{ id: 1, url: mockUrl, active: true }]
+        let targetUrl = "https://www.midjourney.com/imagine"
+        try {
+          const urlParams = new URLSearchParams(window.location.search)
+          const parentUrlParams = new URLSearchParams(
+            window.parent.location.search
+          )
+          const mockUrlParam =
+            urlParams.get("mockUrl") || parentUrlParams.get("mockUrl")
+
+          if (mockUrlParam) {
+            targetUrl = mockUrlParam
+          } else if (
+            urlParams.get("variant")?.includes("non-target") ||
+            parentUrlParams.get("variant")?.includes("non-target") ||
+            (window as any).__mockUrl ||
+            (window.parent as any).__mockUrl
+          ) {
+            targetUrl =
+              (window as any).__mockUrl ||
+              (window.parent as any).__mockUrl ||
+              "https://example.com"
+          }
+        } catch (e) {
+          // ignore cross-origin/access errors if any
+        }
+        return [{ id: 1, url: targetUrl, active: true }]
       },
       sendMessage: (tabId: number, message: any) => {
         return new Promise((resolve) => {
