@@ -102,7 +102,7 @@ export function startDownloadHelper(
     {
       target: "offscreen",
       action: "check-quota",
-      requiredBytes: 1.5 * 1024 * 1024 * 1024
+      requiredBytes: 2.5 * 1024 * 1024 * 1024
     },
     (quotaRes) => {
       if (!quotaRes || quotaRes.status === "error") {

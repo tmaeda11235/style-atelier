@@ -114,6 +114,18 @@ interface RecipeAdviceFetchProps {
 }
 
 function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
+  const {
+    cards,
+    key,
+    status,
+    lang,
+    setAdvice,
+    setError,
+    setLoading,
+    cacheRef,
+    runInferenceRef
+  } = props
+
   useEffect(() => {
     if (checkAdviceCache(props)) {
       return
@@ -130,7 +142,17 @@ function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
       mounted = false
       clearTimeout(timer)
     }
-  }, [props])
+  }, [
+    cards,
+    key,
+    status,
+    lang,
+    setAdvice,
+    setError,
+    setLoading,
+    cacheRef,
+    runInferenceRef
+  ])
 }
 
 export function useAiRecipeAdvice(cards: any[]) {

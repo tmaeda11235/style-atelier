@@ -23,7 +23,7 @@
     "preinstall": "node -e \"const v=process.versions.node.split('.').map(Number); if(v[0]<20 || (v[0]===20 && v[1]<12)) { console.error('Error: Node.js version must be >= 20.12.0. Current version is ' + process.version); process.exit(1); }\""
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.84",
+    "@litert-lm/core": "^0.13.1",
     "@tanstack/query-async-storage-persister": "^5.101.0",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-query-persist-client": "^5.101.0",
@@ -105,6 +105,19 @@
       "https://*.discord.com/*",
       "https://*.discordapp.com/*",
       "https://*.discordapp.net/*"
+    ],
+    "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    },
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "assets/wasm/*"
+        ],
+        "matches": [
+          "<all_urls>"
+        ]
+      }
     ],
     "oauth2": {
       "client_id": "81426269486-2pi6vl3bqhdr6l9tn1pddv6vh2mu3u0t.apps.googleusercontent.com",

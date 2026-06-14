@@ -153,7 +153,7 @@ export function WebLlmQuotaWarning({ t }: { t: Record<string, string> }) {
       </div>
       <p className="leading-relaxed">
         {t.webLlmQuotaWarningDesc ||
-          "Insufficient storage space. WebLLM requires at least 1.5 GB of free space."}
+          "Insufficient storage space. WebLLM requires at least 2.5 GB of free space."}
       </p>
     </div>
   )

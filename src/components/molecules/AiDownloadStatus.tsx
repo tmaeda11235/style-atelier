@@ -38,7 +38,7 @@ function StatusQuotaWarning({ t }: { t: any }) {
       </p>
       <p className="text-[10px] text-slate-500 text-center leading-relaxed">
         {t.settings?.webLlmQuotaWarningDesc ||
-          "At least 1.5 GB of free space is required."}
+          "At least 2.5 GB of free space is required."}
       </p>
     </div>
   )

@@ -81,35 +81,20 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
   test("should detect corrupted cache file on startup, purge it, and trigger a clean download recovery", async ({
     page
   }) => {
-    console.log("Pre-injecting corrupted dummy cache / OPFS files...")
+    console.log("Pre-injecting corrupted dummy OPFS files...")
     await page.goto("/tests/sandbox/index.html")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
-    // Injected corrupted file (size 100 bytes instead of 1GB) into Cache Storage
-    await spFrame.locator("body").evaluate(async () => {
-      if (typeof window !== "undefined" && "caches" in window) {
-        const cache = await window.caches.open("webllm/model_cache")
-        await cache.put(
-          "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
-          new Response(
-            new Blob([new Uint8Array(100)], {
-              type: "application/octet-stream"
-            })
-          )
-        )
-      }
-    })
-
-    // Also inject corrupted file in OPFS if supported
+    // Inject corrupted file in OPFS if supported (size 100 bytes instead of 2.0GB)
     await spFrame.locator("body").evaluate(async () => {
       if (navigator.storage && navigator.storage.getDirectory) {
         const root = await navigator.storage.getDirectory()
-        const dirHandle = await root.getDirectoryHandle("webllm_models", {
+        const dirHandle = await root.getDirectoryHandle("litert_models", {
           create: true
         })
         const fileHandle = await dirHandle.getFileHandle(
-          "gemma-4-e2b-q4f16_1.bin",
+          "gemma-4-E2B-it-web.litertlm",
           { create: true }
         )
         const writable = await fileHandle.createWritable()
@@ -147,28 +132,6 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     )
     await expect(notDownloadedStatus).toBeVisible({ timeout: 30000 })
 
-    // Let's assert that the cache has actually been purged (no longer exists)
-    await expect
-      .poll(
-        async () => {
-          return await spFrame.locator("body").evaluate(async () => {
-            if (typeof window !== "undefined" && "caches" in window) {
-              const cache = await window.caches.open("webllm/model_cache")
-              const res = await cache.match(
-                "https://webllm/model/gemma-4-e2b-q4f16_1.bin"
-              )
-              return !res // Should be deleted!
-            }
-            return true
-          })
-        },
-        {
-          message: "Cache storage was not purged after integrity failure",
-          timeout: 10000
-        }
-      )
-      .toBe(true)
-
     // Verify OPFS is also purged if supported
     await expect
       .poll(
@@ -178,12 +141,12 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
               try {
                 const root = await navigator.storage.getDirectory()
                 const dirHandle = await root.getDirectoryHandle(
-                  "webllm_models",
+                  "litert_models",
                   {
                     create: false
                   }
                 )
-                await dirHandle.getFileHandle("gemma-4-e2b-q4f16_1.bin", {
+                await dirHandle.getFileHandle("gemma-4-E2B-it-web.litertlm", {
                   create: false
                 })
                 return false // Still exists
