@@ -147,4 +147,51 @@ describe("parseSemanticQuery", () => {
       query: ""
     })
   })
+
+  it("should parse Japanese query when language is 'ja'", async () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "run-inference") {
+          if (callback) {
+            callback({
+              status: "success",
+              result: JSON.stringify({
+                rarity: "Legendary",
+                color: "Blue",
+                category: "All",
+                query: "cyberpunk"
+              })
+            })
+          }
+        }
+      }
+    )
+
+    const categories = [{ id: "cat-1", name: "Cyberpunk" }]
+    const result = await parseSemanticQuery(
+      "伝説の青い目のサイバーパンク",
+      categories,
+      "ja"
+    )
+
+    expect(result).toEqual({
+      rarity: "Legendary",
+      color: "Blue",
+      category: "All",
+      query: "cyberpunk"
+    })
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+      {
+        target: "offscreen",
+        action: "run-inference",
+        requestId: expect.any(String),
+        prompt: "伝説の青い目のサイバーパンク",
+        systemPrompt: expect.stringContaining(
+          "あなたはスタイル検索クエリの解析器です"
+        ),
+        temperature: 0.1
+      },
+      expect.any(Function)
+    )
+  })
 })
