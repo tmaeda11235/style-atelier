@@ -186,34 +186,22 @@ function processEnglishSegment(
   }
 }
 
-/**
- * プロンプトからキーワード（カード名やタグの候補）を抽出する
- * 1. カンマで分割
- * 2. 各要素を言語に応じて適切に分割（日本語ならBudouX、英語ならスペース分割＋ストップワード除去）
- * 3. 不要な空白や記号をクリーンアップ
- */
 export function extractKeywords(prompt: string): string[] {
   if (!prompt) return []
 
   const cleanPrompt = cleanPromptText(prompt)
   const segments = cleanPrompt
-    .split(/[,\u3001\uFF0C]+/)
+    .split(/[,\u3001\uFF0C.!?;]+/)
     .map((s) => s.trim())
     .filter(Boolean)
   const keywords: string[] = []
   const seen = new Set<string>()
 
   for (const segment of segments) {
-    const subSegments = segment
-      .split(/[.!?;]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-    for (const sub of subSegments) {
-      if (containsJapanese(sub)) {
-        processJapaneseSegment(sub, seen, keywords)
-      } else {
-        processEnglishSegment(sub, seen, keywords)
-      }
+    if (containsJapanese(segment)) {
+      processJapaneseSegment(segment, seen, keywords)
+    } else {
+      processEnglishSegment(segment, seen, keywords)
     }
   }
 

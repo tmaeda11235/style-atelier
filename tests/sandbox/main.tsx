@@ -7,6 +7,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 
 import "../../src/style.css" // スタイルの読み込み
 
+import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -225,6 +226,7 @@ if (typeof window !== "undefined") {
       }
     },
     runtime: {
+      id: "mock-extension-id",
       onMessage: {
         addListener: (fn: any) => {
           ;(window as any).chromeMessageListeners =
@@ -463,7 +465,9 @@ if (typeof window !== "undefined") {
             const systemPrompt = (message.systemPrompt || "").toLowerCase()
             const isSemanticSearch =
               systemPrompt.includes("search query parser") ||
-              systemPrompt.includes("style search")
+              systemPrompt.includes("style search") ||
+              systemPrompt.includes("解析器") ||
+              systemPrompt.includes("スタイル検索")
 
             const runActualInference = () => {
               if (isSemanticSearch) {
@@ -497,14 +501,18 @@ if (typeof window !== "undefined") {
                   color = "Red"
                 }
 
-                if (promptLower.includes("style")) {
+                if (
+                  promptLower.includes("style") ||
+                  promptLower.includes("スタイル") ||
+                  promptLower.includes("風")
+                ) {
                   category = "Style"
                 }
 
                 // Clean up query mock keywords
                 query = query
                   .replace(
-                    /legendary|伝説|rare|レア|blue|青|red|赤|style/gi,
+                    /legendary|伝説|rare|レア|blue|青|red|赤|style|スタイル|風|の/gi,
                     ""
                   )
                   .replace(/\s+/g, " ")
@@ -597,13 +605,34 @@ if (typeof window !== "undefined") {
   }
 }
 
+function SandboxWrapper() {
+  const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
+
+  return (
+    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 relative">
+      <SidePanelPage />
+
+      {/* Test helper button for Onboarding Guide E2E validation */}
+      <button
+        id="test-open-onboarding-btn"
+        onClick={() => setIsOnboardingOpen(true)}
+        className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity">
+        TEST: Open Onboarding Guide
+      </button>
+
+      <OnboardingGuide
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+      />
+    </div>
+  )
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50">
-        <SidePanelPage />
-      </div>
+      <SandboxWrapper />
     </QueryClientProvider>
   </React.StrictMode>
 )

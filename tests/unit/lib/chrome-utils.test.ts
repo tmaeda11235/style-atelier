@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   isExtensionContextValid,
   safeQueryTabs,
+  safeReloadTab,
   safeSendMessage,
-  safeSendTabMessage
+  safeSendTabMessage,
+  safeUpdateTab
 } from "../../../src/lib/chrome-utils"
 
 describe("chrome-utils", () => {
@@ -212,6 +214,85 @@ describe("chrome-utils", () => {
       safeQueryTabs({ active: true }, callback)
       expect(querySpy).toHaveBeenCalledWith({ active: true }, callback)
       expect(callback).toHaveBeenCalledWith(mockTabs)
+    })
+  })
+
+  describe("safeReloadTab", () => {
+    it("should reload active tab if context is valid", () => {
+      const reloadSpy = vi.fn()
+      vi.stubGlobal("chrome", {
+        runtime: { id: "mock-id" },
+        tabs: { reload: reloadSpy }
+      })
+
+      safeReloadTab()
+      expect(reloadSpy).toHaveBeenCalled()
+    })
+
+    it("should reload specific tab if context is valid", () => {
+      const reloadSpy = vi.fn()
+      vi.stubGlobal("chrome", {
+        runtime: { id: "mock-id" },
+        tabs: { reload: reloadSpy }
+      })
+
+      safeReloadTab(123)
+      expect(reloadSpy).toHaveBeenCalledWith(123)
+    })
+
+    it("should fallback to window.location.reload if context is invalid", () => {
+      vi.stubGlobal("chrome", undefined)
+      const locationReloadSpy = vi.fn()
+      vi.stubGlobal("window", {
+        location: { reload: locationReloadSpy }
+      })
+
+      safeReloadTab()
+      expect(locationReloadSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe("safeUpdateTab", () => {
+    it("should reject if context is invalid (promise path)", async () => {
+      vi.stubGlobal("chrome", undefined)
+      await expect(
+        safeUpdateTab(123, { url: "http://example.com" })
+      ).rejects.toThrow("Extension context invalidated")
+    })
+
+    it("should resolve when chrome.tabs.update succeeds (promise path)", async () => {
+      const mockTab = { id: 123, url: "http://example.com" }
+      const updateSpy = vi.fn((tabId, props, cb) => cb(mockTab))
+      vi.stubGlobal("chrome", {
+        runtime: { id: "mock-id" },
+        tabs: { update: updateSpy }
+      })
+
+      const result = await safeUpdateTab(123, { url: "http://example.com" })
+      expect(updateSpy).toHaveBeenCalledWith(
+        123,
+        { url: "http://example.com" },
+        expect.any(Function)
+      )
+      expect(result).toEqual(mockTab)
+    })
+
+    it("should trigger callback when context is valid (callback path)", () => {
+      const mockTab = { id: 123, url: "http://example.com" }
+      const callback = vi.fn()
+      const updateSpy = vi.fn((tabId, props, cb) => cb(mockTab))
+      vi.stubGlobal("chrome", {
+        runtime: { id: "mock-id" },
+        tabs: { update: updateSpy }
+      })
+
+      safeUpdateTab(123, { url: "http://example.com" }, callback)
+      expect(updateSpy).toHaveBeenCalledWith(
+        123,
+        { url: "http://example.com" },
+        callback
+      )
+      expect(callback).toHaveBeenCalledWith(mockTab)
     })
   })
 })
