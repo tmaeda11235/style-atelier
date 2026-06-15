@@ -112,13 +112,20 @@ describe("useHistory hook", () => {
     // count (60) is now <= limit (100), so hasMore should be false
     expect(result.current.hasMore).toBe(false)
   })
-
   it("should call put on db when addHistoryItem is called", async () => {
     mockPut.mockResolvedValue("new-id")
     const { result } = renderHook(() => useHistory())
 
+    // Wait for initial query
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
     const item = { id: "1", timestamp: Date.now(), prompt: "test" } as any
-    const res = await result.current.addHistoryItem(item)
+    let res: string | undefined
+    await act(async () => {
+      res = await result.current.addHistoryItem(item)
+    })
 
     expect(res).toBe("new-id")
     expect(mockPut).toHaveBeenCalledWith(item)
@@ -128,7 +135,14 @@ describe("useHistory hook", () => {
     mockClear.mockResolvedValue(undefined)
     const { result } = renderHook(() => useHistory())
 
-    await result.current.clearHistory()
+    // Wait for initial query
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    await act(async () => {
+      await result.current.clearHistory()
+    })
 
     expect(mockClear).toHaveBeenCalled()
   })
@@ -137,7 +151,14 @@ describe("useHistory hook", () => {
     mockUpdate.mockResolvedValue(1)
     const { result } = renderHook(() => useHistory())
 
-    await result.current.updateHistoryItem("1", { rating: 5 })
+    // Wait for initial query
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    await act(async () => {
+      await result.current.updateHistoryItem("1", { rating: 5 })
+    })
 
     expect(mockUpdate).toHaveBeenCalledWith("1", { rating: 5 })
   })

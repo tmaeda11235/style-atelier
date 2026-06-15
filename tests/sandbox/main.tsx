@@ -464,7 +464,9 @@ if (typeof window !== "undefined") {
             const systemPrompt = (message.systemPrompt || "").toLowerCase()
             const isSemanticSearch =
               systemPrompt.includes("search query parser") ||
-              systemPrompt.includes("style search")
+              systemPrompt.includes("style search") ||
+              systemPrompt.includes("解析器") ||
+              systemPrompt.includes("スタイル検索")
 
             const runActualInference = () => {
               if (isSemanticSearch) {
@@ -498,14 +500,18 @@ if (typeof window !== "undefined") {
                   color = "Red"
                 }
 
-                if (promptLower.includes("style")) {
+                if (
+                  promptLower.includes("style") ||
+                  promptLower.includes("スタイル") ||
+                  promptLower.includes("風")
+                ) {
                   category = "Style"
                 }
 
                 // Clean up query mock keywords
                 query = query
                   .replace(
-                    /legendary|伝説|rare|レア|blue|青|red|赤|style/gi,
+                    /legendary|伝説|rare|レア|blue|青|red|赤|style|スタイル|風|の/gi,
                     ""
                   )
                   .replace(/\s+/g, " ")
