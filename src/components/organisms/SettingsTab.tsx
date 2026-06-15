@@ -24,6 +24,7 @@ interface SettingsTabProps {
   isEasyMode?: boolean
   onToggleEasyMode?: (checked: boolean) => void
   onNavigateToLibrary?: () => void
+  onReplayTutorial?: () => void
 }
 
 export function SettingsTab({
@@ -31,7 +32,8 @@ export function SettingsTab({
   onResetDb,
   isEasyMode = false,
   onToggleEasyMode = () => {},
-  onNavigateToLibrary
+  onNavigateToLibrary,
+  onReplayTutorial
 }: SettingsTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { estimate, checkStorage } = useStorageEstimate()
@@ -196,6 +198,7 @@ export function SettingsTab({
             onNavigateToLibrary={onNavigateToLibrary}
             t={t}
             {...contextSettings}
+            onReplayTutorial={onReplayTutorial}
           />
         )}
       </div>
