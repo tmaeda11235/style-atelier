@@ -1,10 +1,12 @@
-import type Dexie from "dexie"
+import Dexie from "dexie"
 
 import { createThumbnailDataUrl } from "../image-utils"
+import { deleteOpfsFile, saveBase64ToOpfs } from "./migration-helpers"
 
 export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)
   setupVersions10To13(db)
+  setupVersion14(db)
 }
 
 function setupVersions5To9(db: Dexie) {
@@ -101,6 +103,22 @@ function setupVersions10To13(db: Dexie) {
     parameterAliases: "id, paramType, value, alias, folderId",
     parameterFolders: "id, name, parentId"
   })
+}
+
+function setupVersion14(db: Dexie) {
+  // Version 14: Migrate styleCard thumbnailData and category coverImageUrl to OPFS
+  db.version(14)
+    .stores({
+      styleCards:
+        "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+      historyItems: "id, timestamp",
+      userSettings: "userId",
+      categories: "id, name, createdAt, isDeleted, parentId",
+      slotHistory: "label",
+      parameterAliases: "id, paramType, value, alias, folderId",
+      parameterFolders: "id, name, parentId"
+    })
+    .upgrade(upgradeToVersion14)
 }
 
 export function upgradeToVersion6(tx: any) {
@@ -232,5 +250,69 @@ export async function upgradeToVersion10(tx: any) {
   const categories = await categoriesTable.toArray()
   for (const category of categories) {
     await compressCategoryIcon(category, categoriesTable)
+  }
+}
+
+export async function upgradeToVersion14(tx: any) {
+  const cardsTable = tx.table("styleCards")
+  const categoriesTable = tx.table("categories")
+
+  const cards = await cardsTable.toArray()
+  const categories = await categoriesTable.toArray()
+
+  const writtenOpfsPaths: string[] = []
+
+  try {
+    // 1. Style cards migration
+    for (const card of cards) {
+      if (card.thumbnailData && !card.thumbnailPath) {
+        const thumbnailPath = `images/cards/${card.id}.png`
+
+        // Save to OPFS
+        await Dexie.waitFor(saveBase64ToOpfs(thumbnailPath, card.thumbnailData))
+        writtenOpfsPaths.push(thumbnailPath)
+
+        card.thumbnailPath = thumbnailPath
+        delete card.thumbnailData
+        card.updatedAt = Date.now()
+        await cardsTable.put(card)
+      }
+    }
+
+    // 2. Categories migration
+    for (const category of categories) {
+      if (category.coverImageUrl && !category.coverImagePath) {
+        const coverImagePath = `images/categories/${category.id}.png`
+
+        // Save to OPFS
+        await Dexie.waitFor(
+          saveBase64ToOpfs(coverImagePath, category.coverImageUrl)
+        )
+        writtenOpfsPaths.push(coverImagePath)
+
+        category.coverImagePath = coverImagePath
+        delete category.coverImageUrl
+        category.updatedAt = Date.now()
+        await categoriesTable.put(category)
+      }
+    }
+  } catch (err) {
+    console.error(
+      "Migration to version 14 failed, rolling back written OPFS files:",
+      err
+    )
+    // Rollback: Delete all files written during this migration attempt
+    for (const filePath of writtenOpfsPaths) {
+      try {
+        await Dexie.waitFor(deleteOpfsFile(filePath))
+      } catch (cleanupErr) {
+        console.warn(
+          `Failed to delete OPFS file during rollback: ${filePath}`,
+          cleanupErr
+        )
+      }
+    }
+    // Re-throw to abort Dexie transaction
+    throw err
   }
 }
