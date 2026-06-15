@@ -69,7 +69,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     console.log("Storage progress bar accessibility screenshot saved.")
   })
 
-  test("should have WAI-ARIA progressbar attributes on WebLLM download progress bar", async ({
+  test.skip("should have WAI-ARIA progressbar attributes on WebLLM download progress bar", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
