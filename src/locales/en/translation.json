@@ -611,10 +611,7 @@
     "aiSummary": "AI Summary Description",
     "aiSummaryPlaceholder": "AI summary will appear here...",
     "aiUseSummary": "Use as Card Note/Description",
-    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations",
-    "aiDeClutterBtn": "AI De-clutter",
-    "aiDeClutterLoading": "De-cluttering...",
-    "aiDeClutterNotReady": "Gemma model is not loaded. Please download it in settings."
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
   },
   "cardDetail": {
     "title": "Card Details",
