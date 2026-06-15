@@ -542,6 +542,7 @@
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"],
       "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
         "src/components/organisms/CategoryManagerModal.tsx",
         "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
         "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
