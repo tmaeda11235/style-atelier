@@ -69,9 +69,9 @@ The popup, option pages, or side panels will auto-reload as you make changes to 
 
 #### Development Guidelines
 
-For detailed guidelines on our collaborative development process (including Git Worktree setup, ESLint limitations, and testing workflows), please refer to the [Development Guide](docs/DEVELOPMENT.md).
+For detailed guidelines on our collaborative development process (including Git Worktree setup, ESLint and i18n rules, and testing workflows), please refer to the [Development Guide](docs/DEVELOPMENT.md).
 
-開発プロセス、Git Worktree のセットアップ、ESLint の行数制限、テスト手順などの詳細なガイドラインについては、[開発ガイドライン](docs/DEVELOPMENT.md) を参照してください。
+開発プロセス、Git Worktree のセットアップ、ESLint の行数・複雑度制限、多言語対応（i18n）ルール、テスト手順などの詳細なガイドラインについては、[開発ガイドライン](docs/DEVELOPMENT.md) を参照してください。
 
 ---
 

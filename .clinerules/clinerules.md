@@ -29,12 +29,13 @@
    - Major structural decisions must be documented using the Architecture Decision Record (ADR) pattern in the Memory Bank.
    - Always ensure that the documentation in the Memory Bank matches the actual implementation.
 
-6. **Layer Boundaries & File Size Rules**
+6. **Layer Boundaries, File Size & i18n Rules**
    - **No direct database queries inside UI components**: Files in `src/components/` must not import `src/lib/db.ts` directly. Always use hooks or services.
    - **Maintain test mock purity**: Do not place business logic or simulate database state transition logic in test mocks (e.g. `tests/mocks/db.ts`).
-   - **File and Function Limits**: Keep components under 300 lines (excluding blank lines and comments) and functions under 50 lines. Refactor when limits are exceeded.
+   - **File, Function & Complexity Limits**: Keep components under 300 lines (excluding blank lines and comments) and functions under 50 lines. Cognitive complexity limit is 15. Refactor when limits are exceeded.
    - **Atomic Design Principles (Hooks and Molecules Separation)**: When implementing UI components, always separate business logic and side effects into custom hooks. Molecules must remain pure presentation components without business logic or raw state mutation handlers.
    - **ESLint Whitelist Guardrail**: Do not expand the ESLint exception lists (`eslint.config.mjs` overrides). The CI pipeline blocks PRs adding new exception files. If you refactor legacy files to satisfy ESLint rules, run `node scratch/auto-sync-eslint.js` to automatically clean up and synchronize the exception list.
+   - **i18n Literal String Rule**: Fully-translated UI components must pass the `i18next/no-literal-string` check. Avoid hardcoded literal strings. Non-translatable brand names, size units, or uppercase acronyms are automatically exempt or can be bypassed using `{/* eslint-disable-next-line i18next/no-literal-string */}` or `/* eslint-disable i18next/no-literal-string */`.
 
 ## Style
 
