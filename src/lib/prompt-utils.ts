@@ -149,11 +149,11 @@ export function buildSegmentString(
           return w !== undefined && w !== 1.0
             ? `{{${seg.label}}}::${w}`
             : `{{${seg.label}}}`
-        case "chip":
-          return ``
+        default:
+          return undefined
       }
     })
-    .filter((val) => !!val && val.trim() !== "")
+    .filter((val): val is string => !!val && val.trim() !== "")
     .join(", ")
 }
 
@@ -218,14 +218,15 @@ export function buildParamParts(
 export const buildPromptString = (
   segments: PromptSegment[],
   params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[] = [],
+  maskedKeys?: (keyof StyleCard["parameters"])[],
   cardWeight?: number
 ): string => {
+  const keysToMask = maskedKeys || []
   const segmentString = buildSegmentString(segments, cardWeight)
-  const paramParts = buildParamParts(params, maskedKeys)
+  const paramParts = buildParamParts(params, keysToMask)
 
   const prefix =
-    params.imagePrompts?.length && !maskedKeys.includes("imagePrompts")
+    params.imagePrompts?.length && !keysToMask.includes("imagePrompts")
       ? params.imagePrompts.join(" ")
       : ""
 

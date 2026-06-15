@@ -9,15 +9,17 @@ export const extractJobIdFromUrl = (url: string): string | undefined => {
   }
 
   // 2. Check for MJ CDN URL host
+  let parsedUrl: URL
   try {
-    const parsedUrl = new URL(url)
-    const allowedHosts = ["cdn.midjourney.com"]
-    if (allowedHosts.includes(parsedUrl.hostname.toLowerCase())) {
-      const match = url.match(uuidPattern)
-      if (match) return match[1]
-    }
+    parsedUrl = new URL(url)
   } catch {
-    // Ignore invalid URLs and fall through
+    return undefined
+  }
+
+  const allowedHosts = ["cdn.midjourney.com"]
+  if (allowedHosts.includes(parsedUrl.hostname.toLowerCase())) {
+    const match = url.match(uuidPattern)
+    if (match) return match[1]
   }
 
   return undefined
@@ -36,21 +38,23 @@ export const extractParameters = (text: string): string[] => {
   const paramMap = new Map<string, string[]>()
 
   matches.forEach((match) => {
-    const rawParam = match[0].trim()
+    const rawParam = match[0]
 
-    // Split into key and value
-    // key is --name, value is the rest
-    const parts = rawParam.split(/\s+/)
-    const fullKey = parts[0] // e.g. --sref
+    // Split into key and value by the first space
+    const spaceIndex = rawParam.indexOf(" ")
+    const fullKey =
+      spaceIndex === -1 ? rawParam : rawParam.substring(0, spaceIndex)
     const keyName = fullKey.substring(2) // e.g. sref
 
     let value = ""
-    if (parts.length > 1) {
-      value = rawParam.substring(fullKey.length)
+    if (spaceIndex !== -1) {
+      value = rawParam.substring(spaceIndex + 1).trim()
 
-      // Clean up repetition
-      const repetitionRegex = new RegExp(`\\s+${keyName}\\b.*$`, "i")
-      value = value.replace(repetitionRegex, "").trim()
+      if (value) {
+        // Clean up repetition
+        const repetitionRegex = new RegExp(`\\s+${keyName}\\b.*$`, "i")
+        value = value.replace(repetitionRegex, "").trim()
+      }
     }
 
     if (!paramMap.has(fullKey)) {
