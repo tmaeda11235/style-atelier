@@ -188,24 +188,39 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
         <RecipeSection {...props} />
       </div>
       {props.evolvedCardData && (
-        <EvolutionSuccessModal
+        <EvolutionSuccessModalContainer
           isOpen={props.isEvolutionSuccessOpen}
           onClose={() => props.setIsEvolutionSuccessOpen(false)}
-          cardName={props.evolvedCardData.name}
-          thumbnailData={
-            props.evolvedCardData.thumbnailPath ||
-            props.evolvedCardData.thumbnailData
-          }
-          selectedThumbnails={props.evolvedCardData.selectedThumbnails}
-          oldTier={props.evolvedCardData.oldTier}
-          newTier={props.evolvedCardData.newTier}
-          translation={{
-            title: props.i18n.workbench.evolutionSuccessTitle,
-            desc: props.i18n.workbench.evolutionSuccessDesc,
-            close: props.i18n.workbench.close
-          }}
+          evolvedCardData={props.evolvedCardData}
+          i18n={props.i18n}
         />
       )}
     </div>
+  )
+}
+
+const EvolutionSuccessModalContainer: React.FC<{
+  isOpen: boolean
+  onClose: () => void
+  evolvedCardData: any
+  i18n: any
+}> = ({ isOpen, onClose, evolvedCardData, i18n }) => {
+  return (
+    <EvolutionSuccessModal
+      isOpen={isOpen}
+      onClose={onClose}
+      cardName={evolvedCardData.name}
+      thumbnailData={
+        evolvedCardData.thumbnailPath || evolvedCardData.thumbnailData
+      }
+      selectedThumbnails={evolvedCardData.selectedThumbnails}
+      oldTier={evolvedCardData.oldTier}
+      newTier={evolvedCardData.newTier}
+      translation={{
+        title: i18n.workbench.evolutionSuccessTitle,
+        desc: i18n.workbench.evolutionSuccessDesc,
+        close: i18n.workbench.close
+      }}
+    />
   )
 }
