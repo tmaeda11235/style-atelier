@@ -122,6 +122,7 @@ const chromeMock = {
     }
   },
   runtime: {
+    id: "mock-id",
     getURL: vi.fn((path) => `chrome-extension://mock-id/${path}`),
     lastError: undefined,
     onMessage: {
