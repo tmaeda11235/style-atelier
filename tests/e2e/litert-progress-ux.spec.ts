@@ -69,7 +69,9 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     await historyTabBtn.click({ force: true })
 
     const mintCardBtn = spFrame
-      .locator("button:has-text('Mint Card'), button:has-text('カード化')")
+      .locator(
+        "button:has-text('Mint Card'), button:has-text('カードをミント')"
+      )
       .first()
     await expect(mintCardBtn).toBeVisible({ timeout: 30000 })
     await mintCardBtn.click({ force: true })

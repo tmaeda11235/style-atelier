@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -283,7 +282,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
     })
 
     const mintCardBtn = spFrame
-      .locator("button:has-text('Mint Card'), button:has-text('カード化')")
+      .locator(
+        "button:has-text('Mint Card'), button:has-text('カードをミント')"
+      )
       .first()
     await expect(mintCardBtn).toBeVisible({ timeout: 10000 })
     await mintCardBtn.click()
