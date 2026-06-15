@@ -45,7 +45,9 @@ function StrategyOption({
           onChange={() => onChange(strategyValue)}
           className="accent-blue-500 cursor-pointer"
         />
-        <span className="text-xs font-black">{label}</span>
+        <label htmlFor={id} className="text-xs font-black cursor-pointer">
+          {label}
+        </label>
       </div>
       <p className="text-[10px] text-slate-400 mt-1 pl-5 leading-normal">
         {desc}
@@ -69,17 +71,17 @@ function StrategyContent({ t, strategy, setStrategy }: StrategyContentProps) {
         </div>
         <div>
           <h2 className="text-sm font-black text-white tracking-wide">
-            {t.syncWarningTitle || "長期オフライン警告"}
+            {t.syncWarningTitle}
           </h2>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            {t.syncWarningMessage || "最後の同期から60日以上経過しています。"}
+            {t.syncWarningMessage}
           </p>
         </div>
       </div>
 
       <div className="space-y-3">
         <label className="text-xs font-bold text-slate-300 block">
-          {t.strategyLabel || "マージ戦略を選択してください："}
+          {t.strategyLabel}
         </label>
 
         <div className="space-y-2.5">
@@ -88,7 +90,7 @@ function StrategyContent({ t, strategy, setStrategy }: StrategyContentProps) {
             strategyValue="merge"
             currentStrategy={strategy}
             onChange={setStrategy}
-            label={t.strategyMergeLabel || "安全マージ（推奨）"}
+            label={t.strategyMergeLabel}
             desc={t.strategyMergeDesc}
           />
           <StrategyOption
@@ -96,7 +98,7 @@ function StrategyContent({ t, strategy, setStrategy }: StrategyContentProps) {
             strategyValue="local-overwrite"
             currentStrategy={strategy}
             onChange={setStrategy}
-            label={t.strategyLocalOverwriteLabel || "ローカル強制上書き"}
+            label={t.strategyLocalOverwriteLabel}
             desc={t.strategyLocalOverwriteDesc}
           />
           <StrategyOption
@@ -104,7 +106,7 @@ function StrategyContent({ t, strategy, setStrategy }: StrategyContentProps) {
             strategyValue="cloud-overwrite"
             currentStrategy={strategy}
             onChange={setStrategy}
-            label={t.strategyCloudOverwriteLabel || "クラウド強制上書き"}
+            label={t.strategyCloudOverwriteLabel}
             desc={t.strategyCloudOverwriteDesc}
           />
         </div>
@@ -149,13 +151,13 @@ export function GDriveSyncStrategyDialog({
             onClick={() => onConfirm(strategy)}
             id="sync-strategy-dialog-ok-btn"
             className="w-full py-2.5 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer bg-blue-600 hover:bg-blue-500 active:bg-blue-700 focus:ring-2 focus:ring-blue-500/50">
-            {t.syncConfirmBtn || "同期を実行"}
+            {t.syncConfirmBtn}
           </button>
           <button
             onClick={onCancel}
             id="sync-strategy-dialog-cancel-btn"
             className="w-full py-2 text-slate-500 hover:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer focus:outline-none">
-            {t.cancelBtn || "キャンセル"}
+            {t.cancelBtn}
           </button>
         </div>
       </div>

@@ -9,7 +9,7 @@ const pendingInferences = new Map<
 
 const MODEL_FILENAME = "gemma-4-E2B-it-web.litertlm"
 
-// Expected size for Gemma-4 E2B is exactly 2008432640 bytes
+// Expected size for Gemma-2 2B is exactly 2008432640 bytes
 const GEMMA_MODEL_FILES = [{ name: MODEL_FILENAME, size: 2008432640 }]
 
 console.log("Offscreen Document loaded.")
