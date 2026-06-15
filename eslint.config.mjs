@@ -202,7 +202,11 @@ export default ts.config(
       "src/components/molecules/ParameterArrayEditor.tsx",
       "src/components/organisms/AiStyleAnalysisSection.tsx",
       "src/components/organisms/AiRecipeAdviceSection.tsx",
-      "src/components/organisms/SimpleMintingView.tsx"
+      "src/components/organisms/SimpleMintingView.tsx",
+      "src/components/organisms/LibraryFilterAccordion.tsx",
+      "src/components/organisms/LibrarySearchBar.tsx",
+      "src/components/organisms/OnboardingGuide.tsx",
+      "src/components/molecules/GDriveSyncStrategyDialog.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [
@@ -229,7 +233,9 @@ export default ts.config(
               "position",
               "advanceIfStep",
               "title",
-              "aria-label"
+              "aria-label",
+              "value",
+              "strategyValue"
             ]
           },
           words: {

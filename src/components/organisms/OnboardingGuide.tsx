@@ -1,17 +1,18 @@
-import React, { useState } from "react"
 import {
-  X,
-  ChevronRight,
   ChevronLeft,
-  Move,
-  Zap,
-  Type,
-  Layers,
+  ChevronRight,
   Gem,
-  MousePointerClick,
   Hammer,
-  Sparkles
+  Layers,
+  MousePointerClick,
+  Move,
+  Sparkles,
+  Type,
+  X,
+  Zap
 } from "lucide-react"
+import React, { useState } from "react"
+
 import { useLanguage } from "../../contexts/LanguageContext"
 
 interface OnboardingGuideProps {
@@ -29,6 +30,7 @@ interface Step {
 
 export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
   const { t } = useLanguage()
+  const mockT = t.onboarding.mock
   const [currentStep, setCurrentStep] = useState(0)
 
   if (!isOpen) return null
@@ -41,17 +43,23 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       color: "from-blue-500/20 to-indigo-500/20 border-blue-500/30",
       illustration: (
         <div className="relative w-full h-32 bg-slate-900/50 rounded-lg flex items-center justify-center border border-slate-700/50 overflow-hidden">
-          <div className="absolute top-2 left-2 text-[10px] text-slate-500 font-mono">Midjourney Web UI</div>
-          <div className="absolute top-2 right-2 text-[10px] text-slate-500 font-mono">Side Panel</div>
+          <div className="absolute top-2 left-2 text-[10px] text-slate-500 font-mono">
+            {mockT.midjourneyWebUi}
+          </div>
+          <div className="absolute top-2 right-2 text-[10px] text-slate-500 font-mono">
+            {mockT.sidePanel}
+          </div>
           <div className="w-16 h-16 bg-slate-800 rounded border border-slate-700 flex items-center justify-center shadow-lg animate-pulse">
-            <span className="text-xl">🖼️</span>
+            <span className="text-xl">{t.parameterArrayEditor.imageEmoji}</span>
           </div>
           <div className="mx-4 flex items-center justify-center text-slate-400 animate-bounce">
             <ChevronRight className="w-8 h-8 text-blue-400" />
           </div>
           <div className="w-20 h-20 bg-slate-800/80 rounded border-2 border-dashed border-blue-500/50 flex flex-col items-center justify-center p-1">
             <div className="w-full h-full bg-blue-500/10 rounded flex items-center justify-center">
-              <span className="text-xs text-blue-400 font-bold font-sans">Drop Here</span>
+              <span className="text-xs text-blue-400 font-bold font-sans">
+                {mockT.dropHere}
+              </span>
             </div>
           </div>
         </div>
@@ -66,11 +74,15 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
         <div className="w-full h-32 bg-slate-900/50 rounded-lg flex flex-col items-center justify-center border border-slate-700/50 p-4">
           <div className="bg-slate-800 p-2 rounded-lg border border-slate-700 w-full max-w-[200px] flex justify-between items-center shadow-md">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🖼️</span>
-              <span className="text-[10px] text-slate-400 font-mono">#1234</span>
+              <span className="text-lg">
+                {t.parameterArrayEditor.imageEmoji}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {"#1234"}
+              </span>
             </div>
             <button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold py-1 px-3 rounded shadow-lg shadow-orange-500/20 flex items-center gap-1 animate-pulse">
-              <Sparkles className="w-3 h-3" /> Mint
+              <Sparkles className="w-3 h-3" /> {mockT.mint}
             </button>
           </div>
         </div>
@@ -83,15 +95,19 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       color: "from-purple-500/20 to-pink-500/20 border-purple-500/30",
       illustration: (
         <div className="w-full h-32 bg-slate-900/50 rounded-lg flex flex-col items-center justify-center border border-slate-700/50 p-4 gap-2">
-          <label className="text-xs text-purple-300 font-bold self-start pl-4">Card Name</label>
+          <label className="text-xs text-purple-300 font-bold self-start pl-4">
+            {mockT.cardName}
+          </label>
           <div className="relative w-full max-w-[220px]">
             <input
               type="text"
               readOnly
-              value="Neon Cyberpunk Samurai"
+              value={mockT.neonCyberpunkSamurai}
               className="w-full bg-slate-800 border border-purple-500/50 rounded px-3 py-1.5 text-xs text-white shadow-inner focus:outline-none"
             />
-            <span className="absolute right-2 top-2 text-[10px] text-purple-400 font-bold animate-pulse">Title</span>
+            <span className="absolute right-2 top-2 text-[10px] text-purple-400 font-bold animate-pulse">
+              {mockT.title}
+            </span>
           </div>
         </div>
       )
@@ -103,13 +119,19 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30",
       illustration: (
         <div className="w-full h-32 bg-slate-900/50 rounded-lg flex flex-col items-center justify-center border border-slate-700/50 p-3 gap-2">
-          <div className="text-[10px] text-slate-400 font-bold self-start">Prompt Bubbles</div>
+          <div className="text-[10px] text-slate-400 font-bold self-start">
+            {mockT.promptBubbles}
+          </div>
           <div className="flex flex-wrap gap-1.5 justify-center">
-            <span className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-[10px] text-slate-300">A samurai</span>
-            <span className="bg-emerald-500/20 border-2 border-emerald-400 px-2 py-0.5 rounded text-[10px] text-emerald-300 font-bold animate-pulse flex items-center gap-0.5">
-              [Slot: neon hair] ✏️
+            <span className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-[10px] text-slate-300">
+              {mockT.aSamurai}
             </span>
-            <span className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-[10px] text-slate-300">detailed illustration</span>
+            <span className="bg-emerald-500/20 border-2 border-emerald-400 px-2 py-0.5 rounded text-[10px] text-emerald-300 font-bold animate-pulse flex items-center gap-0.5">
+              {mockT.slotNeonHair}
+            </span>
+            <span className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-[10px] text-slate-300">
+              {mockT.detailedIllustration}
+            </span>
           </div>
         </div>
       )
@@ -122,11 +144,15 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
       illustration: (
         <div className="w-full h-32 bg-slate-900/50 rounded-lg flex items-center justify-center border border-slate-700/50 p-4 gap-2">
           <div className="flex gap-2">
-            <span className="opacity-40 scale-90 border border-slate-700 bg-slate-800 text-[10px] font-bold px-2.5 py-1 rounded">Common</span>
-            <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-black px-3.5 py-1.5 rounded-full shadow-lg shadow-cyan-500/30 animate-bounce ring-2 ring-cyan-300 flex items-center gap-1">
-              <Gem className="w-3 h-3 text-cyan-200" /> Rare
+            <span className="opacity-40 scale-90 border border-slate-700 bg-slate-800 text-[10px] font-bold px-2.5 py-1 rounded">
+              {mockT.common}
             </span>
-            <span className="opacity-40 scale-90 border border-purple-900/50 bg-purple-950/30 text-purple-400 text-[10px] font-bold px-2.5 py-1 rounded">Epic</span>
+            <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-black px-3.5 py-1.5 rounded-full shadow-lg shadow-cyan-500/30 animate-bounce ring-2 ring-cyan-300 flex items-center gap-1">
+              <Gem className="w-3 h-3 text-cyan-200" /> {mockT.rare}
+            </span>
+            <span className="opacity-40 scale-90 border border-purple-900/50 bg-purple-950/30 text-purple-400 text-[10px] font-bold px-2.5 py-1 rounded">
+              {mockT.epic}
+            </span>
           </div>
         </div>
       )
@@ -140,14 +166,18 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
         <div className="relative w-full h-32 bg-slate-900/50 rounded-lg flex flex-col items-center justify-end border border-slate-700/50 p-2 overflow-hidden">
           <div className="w-16 h-20 bg-gradient-to-b from-slate-800 to-slate-950 border border-rose-500/50 rounded p-1 shadow-lg flex flex-col justify-between absolute top-2 animate-pulse cursor-pointer">
             <div className="w-full h-8 bg-slate-700 rounded-sm"></div>
-            <div className="text-[7px] text-center text-rose-400 font-bold">Click Card</div>
+            <div className="text-[7px] text-center text-rose-400 font-bold">
+              {mockT.clickCard}
+            </div>
           </div>
           <div className="w-full bg-slate-950/80 border border-slate-800 rounded p-1.5 flex gap-2 justify-center z-10">
             <div className="w-10 h-6 bg-rose-500/10 border border-rose-500/40 rounded flex items-center justify-center">
-              <span className="text-[8px] text-rose-400 font-bold">Active Card</span>
+              <span className="text-[8px] text-rose-400 font-bold">
+                {mockT.activeCard}
+              </span>
             </div>
             <div className="w-10 h-6 bg-slate-800 border border-slate-700 rounded flex items-center justify-center">
-              <span className="text-[8px] text-slate-500">+</span>
+              <span className="text-[8px] text-slate-500">{"+"}</span>
             </div>
           </div>
         </div>
@@ -163,14 +193,19 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
           <div className="w-full max-w-[240px] bg-slate-800 border border-indigo-500/30 rounded p-2 flex flex-col gap-1.5 shadow-md">
             <div className="flex justify-between items-center border-b border-slate-700 pb-1">
               <span className="text-[10px] text-slate-300 font-bold flex items-center gap-1">
-                <Hammer className="w-3 h-3 text-indigo-400" /> Workbench Editor
+                <Hammer className="w-3 h-3 text-indigo-400" />{" "}
+                {mockT.workbenchEditor}
               </span>
-              <span className="text-[8px] bg-indigo-500/20 text-indigo-400 font-mono px-1 rounded">Active</span>
+              <span className="text-[8px] bg-indigo-500/20 text-indigo-400 font-mono px-1 rounded">
+                {mockT.active}
+              </span>
             </div>
             <div className="flex items-center gap-1 bg-slate-900/60 p-1.5 rounded border border-slate-700">
-              <span className="text-[9px] text-slate-400">Hair Color:</span>
+              <span className="text-[9px] text-slate-400">
+                {mockT.hairColor}
+              </span>
               <span className="text-[9px] text-white font-bold bg-indigo-500/20 border border-indigo-500/50 px-1.5 py-0.5 rounded animate-pulse">
-                neon cyan ✏️
+                {mockT.neonCyan}
               </span>
             </div>
           </div>
@@ -196,10 +231,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-slate-950/80 backdrop-blur-sm p-4 font-sans select-none animate-in fade-in duration-200"
-      data-testid="onboarding-modal"
-    >
+      data-testid="onboarding-modal">
       <div className="w-full max-w-sm max-h-[calc(100vh-2rem)] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200">
-        
         {/* Header */}
         <div className="p-4 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/40">
           <div className="flex items-center gap-2">
@@ -211,8 +244,7 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all"
-            aria-label="Close Guide"
-          >
+            aria-label="Close Guide">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -220,7 +252,8 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
         {/* Content */}
         <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-4">
           {/* Main Card Graphic */}
-          <div className={`p-4 rounded-xl border bg-gradient-to-br ${steps[currentStep].color} flex flex-col gap-3 transition-all duration-300 shadow-inner`}>
+          <div
+            className={`p-4 rounded-xl border bg-gradient-to-br ${steps[currentStep].color} flex flex-col gap-3 transition-all duration-300 shadow-inner`}>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-slate-900/80 border border-slate-700/50 rounded-lg shadow-md">
                 {steps[currentStep].icon}
@@ -229,7 +262,7 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
                 {steps[currentStep].title}
               </h3>
             </div>
-            
+
             {steps[currentStep].illustration}
           </div>
 
@@ -247,7 +280,9 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
                 key={index}
                 onClick={() => setCurrentStep(index)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === currentStep ? "w-5 bg-blue-500" : "w-1.5 bg-slate-700 hover:bg-slate-600"
+                  index === currentStep
+                    ? "w-5 bg-blue-500"
+                    : "w-1.5 bg-slate-700 hover:bg-slate-600"
                 }`}
                 aria-label={`Go to step ${index + 1}`}
               />
@@ -264,18 +299,21 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
               currentStep === 0
                 ? "border-slate-800 text-slate-600 cursor-not-allowed"
                 : "border-slate-800 text-slate-300 bg-slate-900 hover:bg-slate-800 hover:border-slate-700"
-            }`}
-          >
+            }`}>
             <ChevronLeft className="w-4 h-4" /> {t.onboarding.back}
           </button>
           <button
             onClick={handleNext}
-            className="flex-1 flex items-center justify-center gap-1 py-2 px-4 text-xs font-bold text-white rounded-lg bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-900/30 transition-all"
-          >
+            className="flex-1 flex items-center justify-center gap-1 py-2 px-4 text-xs font-bold text-white rounded-lg bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-900/30 transition-all">
             {currentStep === steps.length - 1 ? (
-              <>{t.onboarding.letsStart} <Sparkles className="w-3.5 h-3.5 ml-1" /></>
+              <>
+                {t.onboarding.letsStart}{" "}
+                <Sparkles className="w-3.5 h-3.5 ml-1" />
+              </>
             ) : (
-              <>{t.onboarding.next} <ChevronRight className="w-4 h-4 ml-0.5" /></>
+              <>
+                {t.onboarding.next} <ChevronRight className="w-4 h-4 ml-0.5" />
+              </>
             )}
           </button>
         </div>

@@ -39,7 +39,29 @@
         "title": "7. Workbenchで編集する",
         "description": "Workbenchタブでカードの変数をカスタマイズし、複数のスタイルを組み合わせ、最終的なプロンプトを生成します。"
       }
-    ]
+    ],
+    "mock": {
+      "midjourneyWebUi": "Midjourney Web UI",
+      "sidePanel": "サイドパネル",
+      "dropHere": "ここにドロップ",
+      "mint": "カード化 (Mint)",
+      "cardName": "カード名",
+      "neonCyberpunkSamurai": "Neon Cyberpunk Samurai",
+      "title": "タイトル",
+      "promptBubbles": "プロンプト要素",
+      "aSamurai": "A samurai",
+      "slotNeonHair": "[Slot: neon hair] ✏️",
+      "detailedIllustration": "detailed illustration",
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "clickCard": "カードをクリック",
+      "activeCard": "選択中のカード",
+      "workbenchEditor": "ワークベンチエディタ",
+      "active": "有効",
+      "hairColor": "髪色 (Hair Color):",
+      "neonCyan": "neon cyan ✏️"
+    }
   },
   "settings": {
     "title": "設定",
@@ -411,6 +433,16 @@
       "pin": "ワークベンチに送る",
       "unpin": "ワークベンチから外す",
       "more": "その他のアクション"
+    },
+    "filtersTitle": "詳細フィルター",
+    "filtersToggleLabel": "フィルター",
+    "rarity": "レア度",
+    "category": "カテゴリー",
+    "rarities": {
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "legendary": "レジェンダリー"
     }
   },
   "workbench": {
