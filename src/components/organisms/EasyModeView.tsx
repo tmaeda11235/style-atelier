@@ -27,92 +27,113 @@ export function EasyModeView({
   isTargetSite,
   onOpenMidjourney
 }: EasyModeViewProps) {
-  const {
-    activeTab,
-    setActiveTab,
-    logs,
-    alertType,
-    setAlertType,
-    activeDetailCard,
-    setActiveDetailCard,
-    isDragging,
-    isDraggingFile,
-    isImporting,
-    droppedItem,
-    clearDroppedItem,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    minting,
-    addLog,
-    handleSaveCardDetails,
-    handleDeleteCard,
-    handleInjectPrompt,
-    handleResetDb,
-    handleClearLogs,
-    handleRetryConnection,
-    handleDismissAlert,
-    handleToggleEasyMode,
-    activeSimpleWorkbenchCard,
-    setActiveSimpleWorkbenchCard
-  } = useEasyModeView({ isEasyMode, onToggleEasyMode })
+  const state = useEasyModeView({ isEasyMode, onToggleEasyMode })
+  return (
+    <EasyModeLayoutWrapper
+      state={state}
+      isEasyMode={isEasyMode}
+      isTargetSite={isTargetSite}
+      onOpenMidjourney={onOpenMidjourney}
+    />
+  )
+}
 
+interface EasyModeLayoutWrapperProps {
+  state: any
+  isEasyMode: boolean
+  isTargetSite: boolean
+  onOpenMidjourney: () => void
+}
+
+function handleEasyModeTabChange(tab: any, state: any) {
+  state.setActiveTab(tab)
+  state.minting.setMintingItem(null)
+  state.minting.setVariationBase(null)
+  state.setActiveDetailCard(null)
+  state.setActiveSimpleWorkbenchCard(null)
+}
+
+interface EasyModeChildrenProps {
+  state: any
+  isEasyMode: boolean
+  isTargetSite: boolean
+  onOpenMidjourney: () => void
+}
+
+function EasyModeChildren({
+  state,
+  isEasyMode,
+  isTargetSite,
+  onOpenMidjourney
+}: EasyModeChildrenProps) {
+  return (
+    <>
+      <EasyModeMintingWrapper minting={state.minting} />
+      <EasyModeDetailWrapper
+        activeDetailCard={state.activeDetailCard}
+        setActiveDetailCard={state.setActiveDetailCard}
+        handleInjectPrompt={state.handleInjectPrompt}
+        handleSaveCardDetails={state.handleSaveCardDetails}
+        handleDeleteCard={state.handleDeleteCard}
+        setAlertType={state.setAlertType}
+        addLog={state.addLog}
+      />
+      <EasyModeWorkbenchWrapper
+        activeSimpleWorkbenchCard={state.activeSimpleWorkbenchCard}
+        setActiveSimpleWorkbenchCard={state.setActiveSimpleWorkbenchCard}
+        addLog={state.addLog}
+        setAlertType={state.setAlertType}
+      />
+      <EasyModeTabContent
+        activeTab={state.activeTab}
+        isTargetSite={isTargetSite}
+        onOpenMidjourney={onOpenMidjourney}
+        addLog={state.addLog}
+        setAlertType={state.setAlertType}
+        setActiveDetailCard={state.setActiveDetailCard}
+        setActiveSimpleWorkbenchCard={state.setActiveSimpleWorkbenchCard}
+        isEasyMode={isEasyMode}
+        handleToggleEasyMode={state.handleToggleEasyMode}
+        setActiveTab={state.setActiveTab}
+        handleResetDb={state.handleResetDb}
+      />
+    </>
+  )
+}
+
+function EasyModeLayoutWrapper({
+  state,
+  isEasyMode,
+  isTargetSite,
+  onOpenMidjourney
+}: EasyModeLayoutWrapperProps) {
   return (
     <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragOver={state.handleDragOver}
+      onDragLeave={state.handleDragLeave}
+      onDrop={state.handleDrop}
       className="h-full relative overflow-hidden">
       <SidePanelLayout
-        activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab as any)
-          minting.setMintingItem(null)
-          minting.setVariationBase(null)
-          setActiveDetailCard(null)
-          setActiveSimpleWorkbenchCard(null)
-        }}
-        isDragging={isDragging}
-        isDraggingFile={isDraggingFile}
-        isImporting={isImporting}
-        logs={logs}
-        onClearLogs={handleClearLogs}
-        onResetDb={handleResetDb}
-        droppedItem={droppedItem}
-        onClearDroppedItem={clearDroppedItem}
-        alertType={alertType}
-        onRetryConnection={handleRetryConnection}
-        onDismissAlert={handleDismissAlert}
+        activeTab={state.activeTab}
+        onTabChange={(tab) => handleEasyModeTabChange(tab, state)}
+        isDragging={state.isDragging}
+        isDraggingFile={state.isDraggingFile}
+        isImporting={state.isImporting}
+        logs={state.logs}
+        onClearLogs={state.handleClearLogs}
+        onResetDb={state.handleResetDb}
+        droppedItem={state.droppedItem}
+        onClearDroppedItem={state.clearDroppedItem}
+        alertType={state.alertType}
+        onRetryConnection={state.handleRetryConnection}
+        onDismissAlert={state.handleDismissAlert}
         onOpenGuide={() => {}}
         isEasyMode={isEasyMode}>
-        <EasyModeMintingWrapper minting={minting} />
-        <EasyModeDetailWrapper
-          activeDetailCard={activeDetailCard}
-          setActiveDetailCard={setActiveDetailCard}
-          handleInjectPrompt={handleInjectPrompt}
-          handleSaveCardDetails={handleSaveCardDetails}
-          handleDeleteCard={handleDeleteCard}
-          setAlertType={setAlertType}
-          addLog={addLog}
-        />
-        <EasyModeWorkbenchWrapper
-          activeSimpleWorkbenchCard={activeSimpleWorkbenchCard}
-          setActiveSimpleWorkbenchCard={setActiveSimpleWorkbenchCard}
-          addLog={addLog}
-          setAlertType={setAlertType}
-        />
-        <EasyModeTabContent
-          activeTab={activeTab}
+        <EasyModeChildren
+          state={state}
+          isEasyMode={isEasyMode}
           isTargetSite={isTargetSite}
           onOpenMidjourney={onOpenMidjourney}
-          addLog={addLog}
-          setAlertType={setAlertType}
-          setActiveDetailCard={setActiveDetailCard}
-          setActiveSimpleWorkbenchCard={setActiveSimpleWorkbenchCard}
-          isEasyMode={isEasyMode}
-          handleToggleEasyMode={handleToggleEasyMode}
-          setActiveTab={setActiveTab}
-          handleResetDb={handleResetDb}
         />
       </SidePanelLayout>
     </div>
