@@ -32,8 +32,23 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
       await skipButton.click({ force: true })
     }
 
-    // 1. Seed history item
+    // 1. Seed history item (wait for db to be initialized on window first)
     await spFrame.locator("body").evaluate(async () => {
+      const waitForDb = () =>
+        new Promise<void>((resolve) => {
+          if ((window as any).db) {
+            resolve()
+          } else {
+            const interval = setInterval(() => {
+              if ((window as any).db) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 50)
+          }
+        })
+      await waitForDb()
+
       localStorage.removeItem("mock-webllm-downloaded")
       const database = (window as any).db
       await database.historyItems.clear()
@@ -236,8 +251,23 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
       await skipButton.click({ force: true })
     }
 
-    // Clear db and seed 2 cards
+    // Clear db and seed 2 cards (wait for db to be initialized on window first)
     await spFrame.locator("body").evaluate(async () => {
+      const waitForDb = () =>
+        new Promise<void>((resolve) => {
+          if ((window as any).db) {
+            resolve()
+          } else {
+            const interval = setInterval(() => {
+              if ((window as any).db) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 50)
+          }
+        })
+      await waitForDb()
+
       localStorage.removeItem("mock-webllm-downloaded")
       const database = (window as any).db
       await database.styleCards.clear()
@@ -370,8 +400,23 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
       await skipButton.click({ force: true })
     }
 
-    // Seed 2 style cards
+    // Seed 2 style cards (wait for db to be initialized on window first)
     await spFrame.locator("body").evaluate(async () => {
+      const waitForDb = () =>
+        new Promise<void>((resolve) => {
+          if ((window as any).db) {
+            resolve()
+          } else {
+            const interval = setInterval(() => {
+              if ((window as any).db) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 50)
+          }
+        })
+      await waitForDb()
+
       const database = (window as any).db
       await database.styleCards.clear()
       await database.styleCards.bulkAdd([
