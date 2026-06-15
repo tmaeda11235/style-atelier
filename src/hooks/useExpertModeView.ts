@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useConfirm } from "../contexts/ConfirmContext"
@@ -14,9 +14,246 @@ interface UseExpertModeViewProps {
   onToggleEasyMode: (enabled: boolean) => void
 }
 
-/**
- * Custom hook encapsulating the logic and state for the Expert Mode of the Style Atelier Sidepanel.
- */
+function openMidjourney() {
+  if (typeof chrome !== "undefined" && chrome.tabs?.update) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id)
+        chrome.tabs.update(tabs[0].id, {
+          url: "https://www.midjourney.com/imagine"
+        })
+    })
+  } else {
+    window.open("https://www.midjourney.com/imagine", "_blank")
+  }
+}
+
+async function saveCardDetails(
+  updatedCard: StyleCard,
+  addLog: (log: string) => void
+) {
+  try {
+    await db.styleCards.put(updatedCard)
+    addLog(`StyleCard "${updatedCard.name}" updated successfully!`)
+  } catch (err) {
+    console.error("Failed to save style card updates:", err)
+    addLog("Error: Failed to save style card updates.")
+  }
+}
+
+async function deleteCard(cardId: string, addLog: (log: string) => void) {
+  try {
+    await db.deleteStyleCardAndCleanup(cardId)
+    addLog("StyleCard deleted successfully.")
+  } catch (err) {
+    console.error("Failed to delete style card:", err)
+    addLog("Error: Failed to delete style card.")
+  }
+}
+
+async function sendToWorkbench(
+  card: StyleCard,
+  addLog: (log: string) => void,
+  setAlertType: (type: AlertType) => void
+) {
+  try {
+    if (!card.isPinned) {
+      const pinnedCount = await db.styleCards
+        .filter((c) => !!c.isPinned)
+        .count()
+      if (pinnedCount >= 5) {
+        setAlertType("hand_full")
+        return false
+      }
+      await db.updateCard(card.id, {
+        isPinned: true,
+        usageCount: (card.usageCount || 0) + 1
+      })
+      addLog(`Added ${card.name} to Workbench.`)
+    }
+    return true
+  } catch (err) {
+    console.error("Failed to send card to workbench:", err)
+    addLog("Error: Failed to send card to workbench.")
+    return false
+  }
+}
+
+async function injectPrompt(
+  prompt: string,
+  addLog: (log: string) => void,
+  setAlertType: (type: AlertType) => void,
+  activeDetailCard: StyleCard | null
+) {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+    const activeTabEl = tabs[0]
+    if (!activeTabEl?.id) throw new Error("No active tab found")
+    const response = await chrome.tabs.sendMessage(activeTabEl.id, {
+      type: "INJECT_PROMPT",
+      prompt
+    })
+    if (response?.status === "error") {
+      const isChatInput = response.message?.includes(
+        "Could not find chat input"
+      )
+      setAlertType(isChatInput ? "no_input" : "disconnected")
+    } else {
+      addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
+      if (activeDetailCard) {
+        db.styleCards
+          .update(activeDetailCard.id, {
+            usageCount: (activeDetailCard.usageCount || 0) + 1
+          })
+          .catch((err) =>
+            console.error(
+              "Failed to update usage count on details inject:",
+              err
+            )
+          )
+      }
+    }
+  } catch (err: any) {
+    console.error("Injection failed:", err)
+    setAlertType("disconnected")
+    addLog(`Note: ${err.message || "Could not send to tab"}`)
+  }
+}
+
+async function performDbReset(addLog: (log: string) => void) {
+  await db.historyItems.clear()
+  await db.styleCards.clear()
+  await db.userSettings.clear()
+  await db.categories.clear()
+  await seedDefaultCategories()
+  localStorage.removeItem("style-atelier-onboarding-seen")
+  addLog("All data cleared.")
+}
+
+export function useExpertLogs() {
+  const [logs, setLogs] = useState<string[]>([])
+  const addLog = useCallback(
+    (log: string) => setLogs((prev) => [log, ...prev].slice(0, 20)),
+    []
+  )
+  const handleClearLogs = useCallback(() => setLogs([]), [])
+  return { logs, addLog, handleClearLogs }
+}
+
+export function useExpertTutorial(
+  setActiveTab: (tab: string) => void,
+  startTutorial: () => void
+) {
+  const [showWelcome, setShowWelcome] = useState(false)
+  useEffect(() => {
+    if (!localStorage.getItem("style-atelier-onboarding-seen"))
+      setShowWelcome(true)
+  }, [])
+  const handleStartTutorial = useCallback(() => {
+    localStorage.setItem("style-atelier-onboarding-seen", "true")
+    setShowWelcome(false)
+    setActiveTab("history")
+    startTutorial()
+  }, [setActiveTab, startTutorial])
+  const handleSkipTutorial = useCallback(() => {
+    localStorage.setItem("style-atelier-onboarding-seen", "true")
+    setShowWelcome(false)
+  }, [])
+  const handleOpenGuide = useCallback(() => {
+    setActiveTab("history")
+    startTutorial()
+  }, [setActiveTab, startTutorial])
+  return {
+    showWelcome,
+    setShowWelcome,
+    handleStartTutorial,
+    handleSkipTutorial,
+    handleOpenGuide
+  }
+}
+
+export function useExpertCardOperations(
+  addLog: (log: string) => void,
+  setAlertType: (type: AlertType) => void,
+  setActiveTab: (tab: string) => void
+) {
+  const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(
+    null
+  )
+  const handleSaveCardDetails = useCallback(
+    async (updatedCard: StyleCard) => {
+      await saveCardDetails(updatedCard, addLog)
+      setActiveDetailCard(null)
+    },
+    [addLog]
+  )
+  const handleDeleteCard = useCallback(
+    async (cardId: string) => {
+      await deleteCard(cardId, addLog)
+      setActiveDetailCard(null)
+    },
+    [addLog]
+  )
+  const handleSendToWorkbench = useCallback(
+    async (card: StyleCard) => {
+      const ok = await sendToWorkbench(card, addLog, setAlertType)
+      if (ok) {
+        setActiveDetailCard(null)
+        setActiveTab("workbench")
+      }
+    },
+    [addLog, setAlertType, setActiveTab]
+  )
+  return {
+    activeDetailCard,
+    setActiveDetailCard,
+    handleSaveCardDetails,
+    handleDeleteCard,
+    handleSendToWorkbench
+  }
+}
+
+export function useExpertPromptInjection(
+  addLog: (log: string) => void,
+  setAlertType: (type: AlertType) => void,
+  activeDetailCard: StyleCard | null
+) {
+  const handleInjectPrompt = useCallback(
+    async (prompt: string) => {
+      setAlertType(null)
+      await injectPrompt(prompt, addLog, setAlertType, activeDetailCard)
+    },
+    [addLog, setAlertType, activeDetailCard]
+  )
+  return { handleInjectPrompt }
+}
+
+export function useExpertDragAndMint(
+  addLog: (log: string) => void,
+  setActiveTab: (tab: string) => void,
+  advanceIfStep: (stepId: string) => void
+) {
+  const { handleDrop: rawHandleDrop, ...dragProps } = useDragAndDrop(addLog)
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      const result = (await rawHandleDrop(e)) as any
+      if (result) {
+        if (result.isImport) setActiveTab("library")
+        else advanceIfStep("drop-history")
+      }
+    },
+    [rawHandleDrop, setActiveTab, advanceIfStep]
+  )
+  const minting = useMinting(addLog, setActiveTab)
+  const handleStartMinting = useCallback(
+    (historyItem: any) => {
+      minting.handleStartMinting(historyItem)
+      advanceIfStep("mint-button")
+    },
+    [minting, advanceIfStep]
+  )
+  return { ...dragProps, handleDrop, minting, handleStartMinting }
+}
+
 export function useExpertModeView({
   isEasyMode: _isEasyMode,
   onToggleEasyMode
@@ -24,250 +261,56 @@ export function useExpertModeView({
   const confirm = useConfirm()
   const { startTutorial, advanceIfStep } = useTutorial()
   const { activeTab, setActiveTab } = useTabs()
-  const [logs, setLogs] = useState<string[]>([])
   const [alertType, setAlertType] = useState<AlertType>(null)
-  const [activeDetailCard, setActiveDetailCard] = useState<StyleCard | null>(
-    null
+
+  const { logs, addLog, handleClearLogs } = useExpertLogs()
+  const tutorial = useExpertTutorial(setActiveTab, startTutorial)
+  const cardOps = useExpertCardOperations(addLog, setAlertType, setActiveTab)
+  const { handleInjectPrompt } = useExpertPromptInjection(
+    addLog,
+    setAlertType,
+    cardOps.activeDetailCard
   )
-  const [showWelcome, setShowWelcome] = useState(false)
-
-  useEffect(() => {
-    const seen = localStorage.getItem("style-atelier-onboarding-seen")
-    if (!seen) {
-      setShowWelcome(true)
-    }
-  }, [])
-
-  const addLog = (log: string) => {
-    setLogs((prev) => [log, ...prev].slice(0, 20))
-  }
-
-  const handleToggleEasyModeInternal = (enabled: boolean) => {
-    onToggleEasyMode(enabled)
-    if (enabled) {
-      setActiveTab("library")
-    }
-  }
-
-  const handleStartTutorial = () => {
-    localStorage.setItem("style-atelier-onboarding-seen", "true")
-    setShowWelcome(false)
-    setActiveTab("history")
-    startTutorial()
-  }
-
-  const handleSkipTutorial = () => {
-    localStorage.setItem("style-atelier-onboarding-seen", "true")
-    setShowWelcome(false)
-  }
-
-  const handleSaveCardDetails = async (updatedCard: StyleCard) => {
-    try {
-      await db.styleCards.put(updatedCard)
-      addLog(`StyleCard "${updatedCard.name}" updated successfully!`)
-      setActiveDetailCard(null)
-    } catch (err) {
-      console.error("Failed to save style card updates:", err)
-      addLog("Error: Failed to save style card updates.")
-    }
-  }
-
-  const handleDeleteCard = async (cardId: string) => {
-    try {
-      await db.deleteStyleCardAndCleanup(cardId)
-      addLog("StyleCard deleted successfully.")
-      setActiveDetailCard(null)
-    } catch (err) {
-      console.error("Failed to delete style card:", err)
-      addLog("Error: Failed to delete style card.")
-    }
-  }
-
-  const handleSendToWorkbench = async (card: StyleCard) => {
-    try {
-      if (!card.isPinned) {
-        const pinnedCount = await db.styleCards
-          .filter((c) => !!c.isPinned)
-          .count()
-        if (pinnedCount >= 5) {
-          setAlertType("hand_full")
-          return
-        }
-        await db.updateCard(card.id, {
-          isPinned: true,
-          usageCount: (card.usageCount || 0) + 1
-        })
-        addLog(`Added ${card.name} to Workbench.`)
-      }
-      setActiveDetailCard(null)
-      setActiveTab("workbench")
-    } catch (err) {
-      console.error("Failed to send card to workbench:", err)
-      addLog("Error: Failed to send card to workbench.")
-    }
-  }
-
-  const handleInjectPrompt = async (prompt: string) => {
-    setAlertType(null)
-    try {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true
+  const dragMint = useExpertDragAndMint(addLog, setActiveTab, advanceIfStep)
+  const handleToggleEasyModeInternal = useCallback(
+    (enabled: boolean) => {
+      onToggleEasyMode(enabled)
+      if (enabled) setActiveTab("library")
+    },
+    [onToggleEasyMode, setActiveTab]
+  )
+  const handleResetDb = useCallback(async () => {
+    if (
+      await confirm({
+        title: "Reset Database",
+        message: "Are you sure you want to delete ALL DATA?",
+        confirmText: "Reset",
+        cancelText: "Cancel",
+        variant: "danger"
       })
-      const activeTabEl = tabs[0]
-      if (!activeTabEl?.id) {
-        throw new Error("No active tab found")
-      }
-      const response = await chrome.tabs.sendMessage(activeTabEl.id, {
-        type: "INJECT_PROMPT",
-        prompt: prompt
-      })
-      if (response && response.status === "error") {
-        if (
-          response.message &&
-          response.message.includes("Could not find chat input")
-        ) {
-          setAlertType("no_input")
-        } else {
-          setAlertType("disconnected")
-        }
-      } else {
-        addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
-        if (activeDetailCard) {
-          db.styleCards
-            .update(activeDetailCard.id, {
-              usageCount: (activeDetailCard.usageCount || 0) + 1
-            })
-            .catch((err) =>
-              console.error(
-                "Failed to update usage count on details inject:",
-                err
-              )
-            )
-        }
-      }
-    } catch (err: any) {
-      console.error("Injection failed:", err)
-      setAlertType("disconnected")
-      addLog(`Note: ${err.message || "Could not send to tab"}`)
+    ) {
+      await performDbReset(addLog)
     }
-  }
-
-  const {
-    isDragging,
-    isDraggingFile,
-    isImporting,
-    droppedItem,
-    clearDroppedItem,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop: rawHandleDrop
-  } = useDragAndDrop(addLog)
-
-  const handleDrop = async (e: React.DragEvent) => {
-    const result = (await rawHandleDrop(e)) as any
-    if (result) {
-      if (result.isImport) {
-        setActiveTab("library")
-      } else {
-        advanceIfStep("drop-history")
-      }
-    }
-  }
-
-  const minting = useMinting(addLog, setActiveTab)
-
-  const handleStartMinting = (historyItem: any) => {
-    minting.handleStartMinting(historyItem)
-    advanceIfStep("mint-button")
-  }
-
-  const handleResetDb = async () => {
-    const ok = await confirm({
-      title: "Reset Database",
-      message: "Are you sure you want to delete ALL DATA?",
-      confirmText: "Reset",
-      cancelText: "Cancel",
-      variant: "danger"
-    })
-    if (ok) {
-      await Promise.all([
-        db.historyItems.clear(),
-        db.styleCards.clear(),
-        db.userSettings.clear(),
-        db.categories.clear()
-      ])
-      await seedDefaultCategories()
-      localStorage.removeItem("style-atelier-onboarding-seen")
-      addLog("All data cleared.")
-    }
-  }
-
-  const handleClearLogs = () => {
-    setLogs([])
-  }
-
-  const handleRetryConnection = () => {
-    chrome.tabs.reload()
-    setAlertType(null)
-  }
-
-  const handleDismissAlert = () => {
-    setAlertType(null)
-  }
-
-  const handleOpenMidjourney = () => {
-    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.id) {
-          chrome.tabs.update(tabs[0].id, {
-            url: "https://www.midjourney.com/imagine"
-          })
-        }
-      })
-    } else {
-      window.open("https://www.midjourney.com/imagine", "_blank")
-    }
-  }
-
-  const handleOpenGuide = () => {
-    setActiveTab("history")
-    startTutorial()
-  }
-
+  }, [confirm, addLog])
   return {
     activeTab,
     setActiveTab,
     logs,
     alertType,
     setAlertType,
-    activeDetailCard,
-    setActiveDetailCard,
-    showWelcome,
-    setShowWelcome,
-    isDragging,
-    isDraggingFile,
-    isImporting,
-    droppedItem,
-    clearDroppedItem,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    minting,
+    ...cardOps,
+    ...tutorial,
+    ...dragMint,
     addLog,
-    handleStartMinting,
-    handleSaveCardDetails,
-    handleDeleteCard,
     handleInjectPrompt,
     handleResetDb,
     handleClearLogs,
-    handleRetryConnection,
-    handleDismissAlert,
-    handleOpenMidjourney,
-    handleOpenGuide,
-    handleStartTutorial,
-    handleSkipTutorial,
-    handleSendToWorkbench,
+    handleRetryConnection: () => {
+      chrome.tabs.reload()
+      setAlertType(null)
+    },
+    handleDismissAlert: () => setAlertType(null),
+    handleOpenMidjourney: openMidjourney,
     handleToggleEasyMode: handleToggleEasyModeInternal
   }
 }

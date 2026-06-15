@@ -165,11 +165,8 @@ export default ts.config(
       "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/hooks/useActiveTabUrl.ts",
       "src/hooks/useCardDetailsForm.ts",
-      "src/hooks/useChromeTabConnection.ts",
       "src/hooks/useEasyModeView.ts",
-      "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
     ],
     rules: {
