@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "lint": "eslint src/",
+    "lint": "eslint src/ && node scripts/check-i18n-keys.mjs",
     "prepare": "husky",
     "test:mutate": "stryker run",
     "push": "npm run lint && node scripts/smart-pre-push.mjs && git commit -am \"chore: update test proof for CI verification\" && git push origin HEAD --no-verify",
