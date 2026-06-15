@@ -140,7 +140,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
       const config = (window as any).mockWebLlmConfig
       if (config) {
         config.failDownload = false
-        config.downloadSpeed = 50 // slower download speed to capture progressbar state
+        config.downloadSpeed = 800 // slower download speed to capture progressbar state
       }
     })
 
