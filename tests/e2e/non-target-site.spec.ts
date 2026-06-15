@@ -40,7 +40,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Non-Target Site Accessibility @
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?nonTarget=true")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 

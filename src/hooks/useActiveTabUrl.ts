@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { useEffect, useState } from "react"
 
 const TARGET_DOMAINS = [
@@ -12,6 +13,28 @@ export function useActiveTabUrl() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const checkActiveTab = async () => {
+    const hasNonTargetParam = () => {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get("nonTarget") === "true") return true
+        if (window.parent && window.parent !== window) {
+          const parentParams = new URLSearchParams(
+            window.parent.location.search
+          )
+          if (parentParams.get("nonTarget") === "true") return true
+        }
+      } catch {
+        /* ignore */
+      }
+      return false
+    }
+
+    if (hasNonTargetParam()) {
+      setIsTargetSite(false)
+      setIsLoading(false)
+      return
+    }
+
     if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) {
       setIsTargetSite(true)
       setIsLoading(false)
