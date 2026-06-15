@@ -1,6 +1,5 @@
-import { checkWebGpuSupport } from "../lib/gpu-utils"
-
 import { safeSendMessage } from "../lib/chrome-utils"
+import { checkWebGpuSupport } from "../lib/gpu-utils"
 
 export type DownloadStatus =
   | "idle"
