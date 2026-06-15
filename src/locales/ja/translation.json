@@ -3,7 +3,7 @@
     "title": "Style Atelierへようこそ！",
     "description": "実際に操作しながら使い方を覚える\nインタラクティブなガイドを開始しますか？",
     "start": "ガイドを開始する",
-    "skip": "スキップ（あとでGuideボタンから開始できます）"
+    "skip": "スキップ（あとで設定画面から再実行できます）"
   },
   "onboarding": {
     "quickGuide": "クイックガイド",
@@ -54,6 +54,9 @@
     "themeSystem": "システム設定",
     "languageLabel": "表示言語",
     "languageDesc": "インターフェースの表示言語を切り替えます。",
+    "replayTutorialLabel": "インタラクティブチュートリアル",
+    "replayTutorialDesc": "操作方法を説明するガイド（チュートリアル）を最初から実行します。",
+    "replayTutorialBtn": "チュートリアルを再実行する",
     "easyModeLabel": "かんたんモード (Easy Mode)",
     "easyModeDesc": "UIをシンプルにし、Libraryタブのみを表示します。設定には右上の歯車アイコンからいつでも戻ることができます。",
     "easyModeToggleLabel": "かんたんモードを有効にする",

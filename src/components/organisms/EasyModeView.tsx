@@ -57,6 +57,12 @@ export function EasyModeView({
     setActiveSimpleWorkbenchCard
   } = useEasyModeView({ isEasyMode, onToggleEasyMode })
 
+  const handleReplayTutorial = () => {
+    localStorage.removeItem("style-atelier-onboarding-seen")
+    localStorage.setItem("style-atelier-onboarding-replay-trigger", "true")
+    handleToggleEasyMode(false)
+  }
+
   return (
     <div
       onDragOver={handleDragOver}
@@ -151,6 +157,7 @@ export function EasyModeView({
             isEasyMode={isEasyMode}
             onToggleEasyMode={handleToggleEasyMode}
             onNavigateToLibrary={() => setActiveTab("library")}
+            onReplayTutorial={handleReplayTutorial}
           />
         )}
       </SidePanelLayout>

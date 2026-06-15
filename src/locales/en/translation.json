@@ -3,7 +3,7 @@
     "title": "Welcome to Style Atelier!",
     "description": "Would you like to start the interactive guide to learn how to use it?",
     "start": "Start Guide",
-    "skip": "Skip (You can start it later from the Guide button)"
+    "skip": "Skip (You can start it later from Settings)"
   },
   "onboarding": {
     "quickGuide": "Quick Guide",
@@ -54,6 +54,9 @@
     "themeSystem": "System Settings",
     "languageLabel": "Language",
     "languageDesc": "Switch the interface display language.",
+    "replayTutorialLabel": "Interactive Tutorial",
+    "replayTutorialDesc": "Run the step-by-step interactive guide explaining how to use the app from the beginning.",
+    "replayTutorialBtn": "Replay Tutorial",
     "easyModeLabel": "Easy Mode",
     "easyModeDesc": "Simplifies the UI by showing only the Library tab. You can return to Settings anytime via the gear icon.",
     "easyModeToggleLabel": "Enable Easy Mode",
