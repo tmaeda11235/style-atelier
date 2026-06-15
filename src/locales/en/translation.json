@@ -456,7 +456,10 @@
     "aiAdviceLoadingModel": "Loading local AI model...",
     "webllmQuotaWarningTitle": "Storage Quota Exceeded",
     "webllmQuotaWarningDesc": "Not enough storage to cache the AI model. Please free up some disk space.",
-    "aiAdviceDownloadBtn": "Download Model"
+    "aiAdviceDownloadBtn": "Download Model",
+    "recipeHistory": "History",
+    "pastRecipes": "Past Recipes",
+    "noRecipes": "No history yet"
   },
   "mergeStack": {
     "title": "Merge Card Stack",

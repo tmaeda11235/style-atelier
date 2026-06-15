@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { useCallback, useMemo, useState } from "react"
 
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
+import type { RecipeHistoryItem, StyleCard } from "../lib/db-schema"
 import { buildMergedPromptString } from "../lib/prompt-reference-utils"
 
 export async function toggleCardSelection(cardId: string) {
@@ -156,6 +156,42 @@ async function performShuffleAndPick(
   }
 }
 
+export async function restoreRecipe(recipe: RecipeHistoryItem) {
+  try {
+    const allCards = await db.styleCards.toArray()
+    const pinnedCards = allCards.filter((c) => c.isPinned)
+    await Promise.all(
+      pinnedCards.map((card) =>
+        card.isVariable
+          ? db.styleCards.delete(card.id)
+          : db.styleCards.update(card.id, { isPinned: false })
+      )
+    )
+
+    await Promise.all(
+      recipe.cards.map(async (rc) => {
+        const card = await db.styleCards.get(rc.id)
+        if (card && !card.isDeleted) {
+          await db.styleCards.update(rc.id, {
+            isPinned: true,
+            weight: rc.weight
+          })
+        }
+      })
+    )
+  } catch (err) {
+    console.error("Failed to restore recipe:", err)
+  }
+}
+
+export async function deleteRecipeHistory(id: string) {
+  try {
+    await db.deleteRecipeHistory(id)
+  } catch (err) {
+    console.error("Failed to delete recipe history:", err)
+  }
+}
+
 export function useWorkbench() {
   const [isShuffling, setIsShuffling] = useState(false)
   const [shuffleCards, setShuffleCards] = useState<StyleCard[] | null>(null)
@@ -200,6 +236,9 @@ export function useWorkbench() {
     saveSlotHistory,
     addCard,
     incrementCardUsage,
-    updateCardWeight
+    updateCardWeight,
+    recipeHistory: useLiveQuery(() => db.getRecipeHistory()) || [],
+    restoreRecipe,
+    deleteRecipeHistory
   }
 }
