@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import { isExtensionContextValid, safeSendMessage } from "../lib/chrome-utils"
 import { createMessageListener } from "./webLlmMessageListener"
 import {
   checkCurrentStateHelper,
@@ -25,55 +26,67 @@ interface WebLlmEffectProps {
   setText: React.Dispatch<React.SetStateAction<string>>
 }
 
-function useWebLlmEffect(props: WebLlmEffectProps) {
-  const {
-    setStatus,
-    setEngineStatus,
-    setProgress,
-    setError,
-    setSpeed,
-    setEta,
-    setRetryCount,
-    setMaxRetries,
-    setText
-  } = props
-
-  useEffect(() => {
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.runtime ||
-      !chrome.runtime.sendMessage
-    ) {
-      return
-    }
-    const port = chrome.runtime.connect({ name: "sidepanel" })
-    const messageListener = createMessageListener(
-      setStatus,
-      setEngineStatus,
-      setProgress,
-      setError,
-      setSpeed,
-      setEta,
-      setRetryCount,
-      setMaxRetries,
-      setText
-    )
+function setupWebLlmConnection(
+  props: WebLlmEffectProps
+): (() => void) | undefined {
+  if (!isExtensionContextValid()) {
+    props.setError("接続が切断されました。ページをリロードしてください。")
+    return
+  }
+  let port: chrome.runtime.Port | undefined
+  try {
+    port = chrome.runtime.connect({ name: "sidepanel" })
+  } catch (err) {
+    console.error("Failed to connect port:", err)
+    props.setError("接続が切断されました。ページをリロードしてください。")
+    return
+  }
+  const messageListener = createMessageListener(
+    props.setStatus,
+    props.setEngineStatus,
+    props.setProgress,
+    props.setError,
+    props.setSpeed,
+    props.setEta,
+    props.setRetryCount,
+    props.setMaxRetries,
+    props.setText
+  )
+  try {
     chrome.runtime.onMessage.addListener(messageListener)
-    checkCurrentStateHelper(setStatus, setProgress)
-    return () => {
-      port.disconnect()
-      chrome.runtime.onMessage.removeListener(messageListener)
+  } catch (err) {
+    console.error("Failed to add message listener:", err)
+  }
+  checkCurrentStateHelper(props.setStatus, props.setProgress, props.setError)
+  return () => {
+    if (port) {
+      try {
+        port.disconnect()
+      } catch {
+        // ignore
+      }
     }
+    try {
+      chrome.runtime.onMessage.removeListener(messageListener)
+    } catch {
+      // ignore
+    }
+  }
+}
+
+function useWebLlmEffect(props: WebLlmEffectProps) {
+  useEffect(() => {
+    return setupWebLlmConnection(props)
   }, [
-    setStatus,
-    setEngineStatus,
-    setProgress,
-    setError,
-    setSpeed,
-    setEta,
-    setRetryCount,
-    setMaxRetries,
-    setText
+    props.setStatus,
+    props.setEngineStatus,
+    props.setProgress,
+    props.setError,
+    props.setSpeed,
+    props.setEta,
+    props.setRetryCount,
+    props.setMaxRetries,
+    props.setText
   ])
 }
 
@@ -122,14 +135,11 @@ function useWebLlmState() {
 }
 
 function preloadEngineHelper() {
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    return
-  }
-  chrome.runtime.sendMessage({ target: "offscreen", action: "preload-engine" })
+  safeSendMessage({ target: "offscreen", action: "preload-engine" }).catch(
+    (err) => {
+      console.error("preloadEngineHelper error:", err)
+    }
+  )
 }
 
 export function useWebLlm() {
@@ -168,7 +178,11 @@ export function useWebLlm() {
       purgeCacheHelper(state.setStatus, state.setProgress, state.setError)
     },
     checkCurrentState: () =>
-      checkCurrentStateHelper(state.setStatus, state.setProgress),
+      checkCurrentStateHelper(
+        state.setStatus,
+        state.setProgress,
+        state.setError
+      ),
     preloadEngine: preloadEngineHelper,
     runInference: runInferenceHelper
   }

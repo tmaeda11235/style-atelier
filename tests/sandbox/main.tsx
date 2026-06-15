@@ -193,6 +193,9 @@ if (typeof window !== "undefined") {
     }
   })
   ;(window as any).chrome = {
+    runtime: {
+      id: "mock-extension-id"
+    },
     tabs: {
       query: async (queryInfo: any) => {
         const urlParams = new URLSearchParams(window.location.search)
