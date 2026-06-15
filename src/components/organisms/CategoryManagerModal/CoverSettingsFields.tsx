@@ -3,6 +3,7 @@ import React from "react"
 
 import { compressCategoryCoverImage } from "../../../lib/image-utils"
 import { Button } from "../../atoms/Button"
+import { OpfsImage } from "../../atoms/OpfsImage"
 
 interface CoverSettingsFieldsProps {
   t: any
@@ -75,7 +76,7 @@ function CoverPreview({
         {t.coverPreview || "Preview"}
       </span>
       <div className="w-full h-20 rounded-md bg-slate-200 border border-slate-300 overflow-hidden shadow-inner relative">
-        <img
+        <OpfsImage
           src={coverImageUrl}
           className="w-full h-full object-cover"
           alt="Cover Preview"

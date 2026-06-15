@@ -49,6 +49,9 @@ stateDiagram-v2
   _J_WB_EMPTY_CAULDRON_01 : 空状態の大釜アフォーダンス
   _J_UX_RESILIENCE_01 : 狭小画面ビジュアルレジリエンス
   _J_UX_NON_TARGET_01 : 非対象サイトでの機能制限緩和
+  _J_ORG_CARD_HOLO_EFFECT_01 : 高レアリティカードプレミアムエフェクト
+  _J_ORG_BINDER_CUSTOMIZE_01 : バインダーのカスタマイズ（カバー画像とテーマ設定）
+  _J_SET_WEBGPU_TROUBLESHOOT_01 : WebGPUトラブルシューティング
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -61,6 +64,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_VERSION_01
   _J_ORG_EXPERT_01 --> _J_ORG_FOLDER_01
   _J_ORG_EXPERT_01 --> _J_ORG_QUICK_SEND_01
+  _J_ORG_EXPERT_01 --> _J_ORG_CARD_HOLO_EFFECT_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EXPERT_02 --> _J_ORG_FOLDER_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
@@ -128,6 +132,9 @@ stateDiagram-v2
   _J_UX_NON_TARGET_01 --> _J_SET_01
   _J_UX_NON_TARGET_01 --> _J_ORG_EXPERT_01
   _J_UX_NON_TARGET_01 --> _J_ORG_EASY_01
+  _J_ORG_CARD_HOLO_EFFECT_01 --> _J_ORG_EXPERT_01
+  _J_ORG_BINDER_CUSTOMIZE_01 --> _J_ORG_EXPERT_01
+  _J_SET_WEBGPU_TROUBLESHOOT_01 --> _J_SET_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -704,5 +711,48 @@ flowchart TD
   S2["設定タブを通常通り開いて操作（Easy Modeのトグルなど）できるのを確認する"]
   S1 --> S2
   S3["かんたん・エキスパートの各モードで、対象サイト限定タブ（ライブラリ、ワークベンチ、履歴など）にアクセスした際、NonTargetSiteViewの警告が表示されることを確認する"]
+  S2 --> S3
+```
+
+### @J-ORG-CARD-HOLO-EFFECT-01: 高レアリティカードプレミアムエフェクト
+
+EpicまたはLegendaryカードにホバーした際に3D Tiltとホログラム/グリッター効果が適用されることを確認する
+
+```mermaid
+flowchart TD
+  S1["ライブラリでEpicまたはLegendaryカードを表示"]
+  S2["カードにホバーする"]
+  S1 --> S2
+  S3["3D Tiltの傾きとホログラム/グリッター効果が描画されるのを確認"]
+  S2 --> S3
+```
+
+### @J-ORG-BINDER-CUSTOMIZE-01: バインダーのカスタマイズ（カバー画像とテーマ設定）
+
+バインダー（フォルダ）ごとに、カスタム表紙画像の設定とスキンテーマ選択を行い、バインダー詳細表示画面のスタイリングを動的に切り替える
+
+```mermaid
+flowchart TD
+  S1["バインダー（カテゴリ）編集画面を開く"]
+  S2["カスタムカバー画像を設定する"]
+  S1 --> S2
+  S3["スキンテーマを選択する"]
+  S2 --> S3
+  S4["保存して適用する"]
+  S3 --> S4
+  S5["テーマに応じたスタイリングが適用されていることを確認する"]
+  S4 --> S5
+```
+
+### @J-SET-WEBGPU-TROUBLESHOOT-01: WebGPUトラブルシューティング
+
+WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く
+
+```mermaid
+flowchart TD
+  S1["WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）"]
+  S2["WebGPU無効警告とステップバイステップガイドが表示されることを確認"]
+  S1 --> S2
+  S3["「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"]
   S2 --> S3
 ```

@@ -182,7 +182,7 @@ function HandBarScrollArea({
               style={{ zIndex: index, position: "relative" }}
               className={`cursor-pointer flex-shrink-0 transition-all duration-200 hover:-translate-y-1 hover:scale-105 hover:z-30 ${stackClass}`}>
               <CardThumbnail
-                imageUrl={card.thumbnailData}
+                imageUrl={card.thumbnailPath || card.thumbnailData}
                 thumbnailImages={card.selectedThumbnails}
                 alt={card.name}
                 tier={card.tier}

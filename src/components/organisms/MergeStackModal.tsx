@@ -1,10 +1,10 @@
 import { Layers, X } from "lucide-react"
 import React, { useEffect, useState } from "react"
-import iconUrl from "url:../../../assets/icon.png"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import type { StyleCard } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
+import { OpfsImage } from "../atoms/OpfsImage"
 
 /**
  * Props for the MergeStackModal component.
@@ -133,12 +133,11 @@ export const MergeStackModal: React.FC<MergeStackModalProps> = ({
                         : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30"
                     }`}>
                     <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border dark:border-slate-700 bg-white dark:bg-slate-800">
-                      <img
+                      <OpfsImage
                         src={
-                          !c.thumbnailData ||
-                          c.thumbnailData === "assets/icon.png"
-                            ? iconUrl
-                            : c.thumbnailData
+                          c.thumbnailPath ||
+                          c.thumbnailData ||
+                          "assets/icon.png"
                         }
                         className="w-full h-full object-cover"
                         alt={c.name}
@@ -185,12 +184,11 @@ export const MergeStackModal: React.FC<MergeStackModalProps> = ({
                         className="flex items-center justify-between p-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-800/20 gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 border bg-white">
-                            <img
+                            <OpfsImage
                               src={
-                                !c.thumbnailData ||
-                                c.thumbnailData === "assets/icon.png"
-                                  ? iconUrl
-                                  : c.thumbnailData
+                                c.thumbnailPath ||
+                                c.thumbnailData ||
+                                "assets/icon.png"
                               }
                               className="w-full h-full object-cover"
                               alt={c.name}
@@ -249,7 +247,8 @@ export const MergeStackModal: React.FC<MergeStackModalProps> = ({
                     String(
                       workbenchCards.reduce((acc, c) => {
                         const urls = [...(c.images || [])]
-                        if (c.thumbnailData) urls.push(c.thumbnailData)
+                        const pathOrData = c.thumbnailPath || c.thumbnailData
+                        if (pathOrData) urls.push(pathOrData)
                         urls.forEach((u) => acc.add(u))
                         return acc
                       }, new Set<string>()).size

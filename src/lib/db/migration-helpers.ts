@@ -121,3 +121,34 @@ export async function deleteOpfsFile(filePath: string): Promise<void> {
     }
   }
 }
+
+/**
+ * Helper to read a Blob from OPFS.
+ */
+export async function readBlobFromOpfs(filePath: string): Promise<Blob> {
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.storage ||
+    !navigator.storage.getDirectory
+  ) {
+    throw new Error("OPFS is not supported in this environment")
+  }
+
+  const root = await navigator.storage.getDirectory()
+  const pathParts = filePath.split("/")
+  const fileName = pathParts.pop()
+  if (!fileName) {
+    throw new Error(`Invalid file path: ${filePath}`)
+  }
+
+  let currentDir = root
+  for (const part of pathParts) {
+    if (part) {
+      currentDir = await currentDir.getDirectoryHandle(part, { create: false })
+    }
+  }
+
+  const fileHandle = await currentDir.getFileHandle(fileName, { create: false })
+  const file = await fileHandle.getFile()
+  return file
+}

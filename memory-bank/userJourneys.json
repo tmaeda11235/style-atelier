@@ -43,7 +43,10 @@
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
-        "src/components/organisms/CardsGrid.tsx"
+        "src/components/organisms/CardsGrid.tsx",
+        "src/components/molecules/CardThumbnailImages.tsx",
+        "src/components/atoms/OpfsImage.tsx",
+        "src/hooks/useOpfsImage.ts"
       ]
     },
     {
