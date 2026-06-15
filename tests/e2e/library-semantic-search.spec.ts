@@ -11,7 +11,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     })
   })
 
-  test("should show warning modal when AI model is not downloaded", async ({
+  test("should toggle AI search and run in fallback mode when AI model is not downloaded", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -45,28 +45,41 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     await aiToggleBtn.click()
     await page.waitForTimeout(500)
 
-    // Check if Model Not Loaded warning modal is visible
-    const warningModal = spFrame.locator(
-      "text=/Local AI Model not loaded|ローカルAIモデルがロードされていません/"
+    // Verify status badge is visible
+    const statusBadge = spFrame.locator(
+      "text=/AI Fallback|AI軽量フォールバック/"
     )
-    await expect(warningModal).toBeVisible()
+    await expect(statusBadge).toBeVisible()
 
-    // Take screenshot of warning modal
+    // Verify AI placeholder is active
+    const searchField = spFrame.locator("#library-search-input")
+    const placeholder = await searchField.getAttribute("placeholder")
+    expect(placeholder).toMatch(/Ask AI:|AIに尋ねる:/)
+
+    // Fill query
+    await searchField.fill("Legendary blue anime style")
+
+    // Wait for debounce and processing
+    await page.waitForTimeout(1500)
+
+    // Extracted filter badge should be displayed using fallback parser
+    const extractedFiltersBadge = spFrame.locator(
+      "text=/Extracted Filters|抽出されたフィルター/"
+    )
+    await expect(extractedFiltersBadge).toBeVisible()
+
+    // Check specific filter items extracted by fallback
+    await expect(spFrame.locator("text=Rarity: Legendary")).toBeVisible()
+    await expect(spFrame.locator("text=Color: Blue")).toBeVisible()
+    await expect(spFrame.locator("text=Category: Style")).toBeVisible()
+
+    // Take screenshot of fallback search UI
     await page.screenshot({
       path: path.join(
         screenshotsDir,
-        "library-semantic-search-model-warning.png"
+        "library-semantic-search-fallback-success.png"
       )
     })
-
-    // Close modal
-    const cancelBtn = spFrame.locator(
-      "button:has-text('Cancel'), button:has-text('キャンセル')"
-    )
-    await expect(cancelBtn).toBeVisible()
-    await cancelBtn.click()
-    await page.waitForTimeout(300)
-    await expect(warningModal).not.toBeVisible()
   })
 
   test("should parse query and apply filters dynamically", async ({ page }) => {

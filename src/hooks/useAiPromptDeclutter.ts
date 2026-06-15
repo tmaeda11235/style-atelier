@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react"
 
+import { declutterPromptFallback } from "../lib/ai/declutter-fallback"
 import type { PromptSegment } from "../lib/db-schema"
 import { useWebLlm } from "./useWebLlm"
 
@@ -61,10 +62,32 @@ function parseDeclutterResponse(response: string): DeclutterResult {
   return { segments: [] }
 }
 
+async function runDeclutterInference(
+  rawPromptText: string,
+  runInference: (
+    prompt: string,
+    systemPrompt?: string,
+    temp?: number
+  ) => Promise<string>
+): Promise<PromptSegment[]> {
+  const response = await runInference(rawPromptText, SYSTEM_PROMPT, 0.1)
+  const parsed = parseDeclutterResponse(response)
+
+  if (parsed.segments.length === 0) {
+    throw new Error("No segments extracted by the model")
+  }
+
+  return parsed.segments.map((val) => ({
+    type: "text" as const,
+    value: val
+  }))
+}
+
 export function useAiPromptDeclutter() {
   const { status, progress, startDownload, runInference } = useWebLlm()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isFallbackMode, setIsFallbackMode] = useState(false)
 
   const declutterPrompt = useCallback(
     async (rawPromptText: string): Promise<PromptSegment[] | null> => {
@@ -72,26 +95,30 @@ export function useAiPromptDeclutter() {
       setLoading(true)
       setError(null)
 
-      try {
-        const response = await runInference(rawPromptText, SYSTEM_PROMPT, 0.1)
-        const parsed = parseDeclutterResponse(response)
-
-        if (parsed.segments.length === 0) {
-          throw new Error("No segments extracted by the model")
-        }
-
-        return parsed.segments.map((val) => ({
+      if (status !== "ready") {
+        setIsFallbackMode(true)
+        setLoading(false)
+        return declutterPromptFallback(rawPromptText).map((val) => ({
           type: "text" as const,
           value: val
         }))
+      }
+
+      try {
+        setIsFallbackMode(false)
+        return await runDeclutterInference(rawPromptText, runInference)
       } catch (err: any) {
-        setError(err.message || "Failed to de-clutter prompt")
-        return null
+        console.warn("AI prompt decluttering failed, using fallback:", err)
+        setIsFallbackMode(true)
+        return declutterPromptFallback(rawPromptText).map((val) => ({
+          type: "text" as const,
+          value: val
+        }))
       } finally {
         setLoading(false)
       }
     },
-    [runInference]
+    [runInference, status]
   )
 
   return {
@@ -101,6 +128,7 @@ export function useAiPromptDeclutter() {
     loading,
     error,
     declutterPrompt,
-    isModelReady: status === "ready"
+    isModelReady: status === "ready",
+    isFallbackMode
   }
 }

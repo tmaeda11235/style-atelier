@@ -168,6 +168,38 @@ export function createMintingHandlers(
   }
 }
 
+interface DetectedInitState {
+  detectedRarity: RarityTier
+  editedSegments: PromptSegment[]
+}
+
+function detectInitialState(
+  mintingItem: HistoryItem | null,
+  variationBase: VariationBase | null
+): DetectedInitState {
+  let detectedRarity: RarityTier = "Common"
+  let editedSegments: PromptSegment[] = []
+
+  if (mintingItem) {
+    const parsed = parsePrompt(mintingItem.fullCommand)
+    editedSegments = parsed.promptSegments
+    detectedRarity = determineRarity(
+      mintingItem.fullCommand,
+      parsed.parameters,
+      1
+    )
+  } else if (variationBase) {
+    editedSegments = variationBase.promptSegments
+    const gen = variationBase.genealogy?.generation || 1
+    const fullPrompt = variationBase.promptSegments
+      .map((seg) => seg.value)
+      .join(" ")
+    detectedRarity = determineRarity(fullPrompt, variationBase.parameters, gen)
+  }
+
+  return { detectedRarity, editedSegments }
+}
+
 export function useMinting(
   addLog: (msg: string) => void,
   setActiveTab: (tab: "history" | "library" | "workbench") => void
@@ -181,30 +213,10 @@ export function useMinting(
   )
 
   useEffect(() => {
-    let detectedRarity: RarityTier = "Common"
-    let editedSegments: PromptSegment[] = []
-
-    if (state.mintingItem) {
-      const parsed = parsePrompt(state.mintingItem.fullCommand)
-      editedSegments = parsed.promptSegments
-      detectedRarity = determineRarity(
-        state.mintingItem.fullCommand,
-        parsed.parameters,
-        1
-      )
-    } else if (state.variationBase) {
-      editedSegments = state.variationBase.promptSegments
-      const gen = state.variationBase.genealogy?.generation || 1
-      const fullPrompt = state.variationBase.promptSegments
-        .map((seg) => seg.value)
-        .join(" ")
-      detectedRarity = determineRarity(
-        fullPrompt,
-        state.variationBase.parameters,
-        gen
-      )
-    }
-
+    const { detectedRarity, editedSegments } = detectInitialState(
+      state.mintingItem,
+      state.variationBase
+    )
     setState((s) => ({
       ...s,
       editedSegments,

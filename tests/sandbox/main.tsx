@@ -138,7 +138,11 @@ if (typeof window !== "undefined") {
         ? existingConfig.inferenceResult
         : (null as string | null),
     initDelay:
-      existingConfig.initDelay !== undefined ? existingConfig.initDelay : 0
+      existingConfig.initDelay !== undefined ? existingConfig.initDelay : 0,
+    supportWebGpu:
+      existingConfig.supportWebGpu !== undefined
+        ? existingConfig.supportWebGpu
+        : true
   }
   ;(window as any).mockWebLlmConfig = mockWebLlmConfig
 

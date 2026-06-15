@@ -10,6 +10,13 @@ vi.mock("@/hooks/useWebLlm", () => {
   }
 })
 
+// Mock useWebGpuCheck
+vi.mock("@/hooks/useWebGpuCheck", () => {
+  return {
+    useWebGpuCheck: () => ({ hasWebGpu: true, isChecking: false })
+  }
+})
+
 // Mock react-i18next
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -69,7 +76,8 @@ describe("useAiRecipeAdvice", () => {
       vi.advanceTimersByTime(1500)
     })
 
-    expect(result.current.advice).toBeNull()
+    expect(result.current.advice).not.toBeNull()
+    expect(result.current.isFallbackMode).toBe(true)
     expect(result.current.loading).toBe(false)
     expect(mockRunInference).not.toHaveBeenCalled()
   })
@@ -151,7 +159,7 @@ describe("useAiRecipeAdvice", () => {
     })
 
     expect(result.current.loading).toBe(false)
-    expect(result.current.advice).toBeNull()
-    expect(result.current.error).toBe("Inference failed")
+    expect(result.current.advice).not.toBeNull()
+    expect(result.current.isFallbackMode).toBe(true)
   })
 })

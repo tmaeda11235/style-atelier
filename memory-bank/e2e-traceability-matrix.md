@@ -45,9 +45,11 @@
 | **@J-WB-EMPTY-CAULDRON-01**     | 空状態の大釜アフォーダンス                                                       | ✔️ `tests\e2e\workbench-empty-cauldron.spec.ts`                                                                                           |
 | **@J-UX-RESILIENCE-01**         | 狭小画面ビジュアルレジリエンス                                                   | ✔️ `tests\e2e\visual-resilience.spec.ts`                                                                                                  |
 | **@J-UX-NON-TARGET-01**         | 非対象サイトでの機能制限緩和                                                     | ✔️ `tests\e2e\non-target-site.spec.ts`                                                                                                    |
+| **@J-AI-DECLUTTER-01**          | AIプロンプトクリーンアップ（整理・分割）                                         | ✔️ `tests\e2e\prompt-declutter.spec.ts`                                                                                                   |
+| **@J-AI-DECLUTTER-02**          | AIプロンプトクリーンアップ軽量フォールバック                                     | ✔️ `tests\e2e\prompt-declutter.spec.ts`                                                                                                   |
 
 ## サマリー
 
-- 全ジャーニー数: 41
-- カバー済み: 41
+- 全ジャーニー数: 43
+- カバー済み: 43
 - 未カバー: 0

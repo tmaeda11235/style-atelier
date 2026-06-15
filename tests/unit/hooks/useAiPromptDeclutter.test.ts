@@ -99,7 +99,7 @@ describe("useAiPromptDeclutter", () => {
       segments = await result.current.declutterPrompt("test prompt")
     })
 
-    expect(segments).toBeNull()
-    expect(result.current.error).toBe("Failed to allocate memory")
+    expect(segments).toEqual([{ type: "text", value: "test prompt" }])
+    expect(result.current.isFallbackMode).toBe(true)
   })
 })

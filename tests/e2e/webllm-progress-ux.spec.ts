@@ -285,6 +285,10 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await accordionHeader.click({ force: true })
     await page.waitForTimeout(500)
 
+    // Scroll advice section to top of viewport to prevent fixed HandBar overlay issues
+    await adviceSection.evaluate((el) => el.scrollIntoView({ block: "start" }))
+    await page.waitForTimeout(500)
+
     // Verify not loaded status
     const notReadyText = spFrame.locator(
       "text=/Local AI model is not loaded|ローカルAIモデルがロードされていません/"
@@ -308,7 +312,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     )
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
-    await downloadBtn.click({ force: true })
+    await downloadBtn.dispatchEvent("click")
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame
@@ -321,7 +325,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
     await expect(spFrame.locator("body")).toContainText(/2\.0\s*GB/)
     await expect(spFrame.locator("body")).toContainText(/2\.5\s*GB/)
-    await confirmDownloadBtn.click({ force: true })
+    await confirmDownloadBtn.dispatchEvent("click")
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame
@@ -426,6 +430,11 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await expect(adviceSection).toBeVisible()
     const accordionHeader = adviceSection.locator("#ai-recipe-advice-toggle")
     await accordionHeader.click({ force: true })
+    await page.waitForTimeout(500)
+
+    // Scroll advice section to top of viewport to prevent fixed HandBar overlay issues
+    await adviceSection.evaluate((el) => el.scrollIntoView({ block: "start" }))
+    await page.waitForTimeout(500)
 
     // Since the model is already downloaded, it will automatically try to generate advice.
     // Because initDelay is 3000ms, it should show the "Initializing AI engine..." message.

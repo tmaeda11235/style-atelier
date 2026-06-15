@@ -57,3 +57,125 @@ Example output: {"rarity": "Legendary", "color": "Blue", "category": "All", "que
     throw err
   }
 }
+
+const rarityMapJa: Record<string, string> = {
+  コモン: "Common",
+  アンコモン: "Uncommon",
+  レア: "Rare",
+  エピック: "Epic",
+  レジェンダリー: "Legendary",
+  伝説: "Legendary"
+}
+
+const colorMapJa: Record<string, string> = {
+  赤: "Red",
+  青: "Blue",
+  黄: "Yellow",
+  緑: "Green",
+  紫: "Purple",
+  黒: "Black",
+  白: "White",
+  ピンク: "Pink",
+  オレンジ: "Orange",
+  茶: "Brown",
+  灰: "Gray"
+}
+
+function extractRarity(userQuery: string): string {
+  const queryLower = userQuery.toLowerCase()
+  const rarities = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+  for (const r of rarities) {
+    if (queryLower.includes(r.toLowerCase())) return r
+  }
+  for (const [ja, en] of Object.entries(rarityMapJa)) {
+    if (userQuery.includes(ja)) return en
+  }
+  return "All"
+}
+
+function extractColor(userQuery: string): string {
+  const queryLower = userQuery.toLowerCase()
+  const colors = [
+    "Red",
+    "Orange",
+    "Yellow",
+    "Green",
+    "Blue",
+    "Purple",
+    "Pink",
+    "Brown",
+    "White",
+    "Black",
+    "Gray"
+  ]
+  for (const c of colors) {
+    if (queryLower.includes(c.toLowerCase())) return c
+  }
+  for (const [ja, en] of Object.entries(colorMapJa)) {
+    if (userQuery.includes(ja)) return en
+  }
+  return "All"
+}
+
+function extractCategory(
+  userQuery: string,
+  categories: { name: string }[]
+): string {
+  const queryLower = userQuery.toLowerCase()
+  for (const cat of categories) {
+    if (queryLower.includes(cat.name.toLowerCase())) return cat.name
+  }
+  return "All"
+}
+
+function cleanQueryText(userQuery: string, category: string): string {
+  let remainingQuery = userQuery
+
+  const rarityWords = [
+    "common",
+    "uncommon",
+    "rare",
+    "epic",
+    "legendary",
+    ...Object.keys(rarityMapJa)
+  ]
+  for (const word of rarityWords) {
+    remainingQuery = remainingQuery.replace(new RegExp(word, "gi"), "")
+  }
+
+  const colorWords = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "pink",
+    "brown",
+    "white",
+    "black",
+    "gray",
+    ...Object.keys(colorMapJa)
+  ]
+  for (const word of colorWords) {
+    remainingQuery = remainingQuery.replace(new RegExp(word, "gi"), "")
+  }
+
+  if (category !== "All") {
+    remainingQuery = remainingQuery.replace(new RegExp(category, "gi"), "")
+  }
+
+  return remainingQuery.replace(/\s+/g, " ").trim()
+}
+
+export function parseSemanticQueryFallback(
+  userQuery: string,
+  categories: { id: string; name: string }[]
+): SemanticFilterResult {
+  const rarity = extractRarity(userQuery)
+  const color = extractColor(userQuery)
+  const category = extractCategory(userQuery, categories)
+  const query = cleanQueryText(userQuery, category)
+
+  return { rarity, category, color, query }
+}
