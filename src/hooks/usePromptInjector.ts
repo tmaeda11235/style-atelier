@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
+import { safeQueryTabs, safeSendTabMessage } from "../lib/chrome-utils"
 import { db } from "../lib/db"
 import type { PromptSegment, StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
@@ -105,17 +106,20 @@ function resolvePromptSegments(
 }
 
 async function performPromptInjection(fullPrompt: string) {
-  const tabs = await chrome.tabs.query({
+  const tabs = await safeQueryTabs({
     active: true,
     currentWindow: true
   })
+  if (!tabs || tabs.length === 0) {
+    throw new Error("No active tab found")
+  }
   const activeTab = tabs[0]
 
   if (!activeTab?.id) {
     throw new Error("No active tab found")
   }
 
-  return await chrome.tabs.sendMessage(activeTab.id, {
+  return await safeSendTabMessage(activeTab.id, {
     type: "INJECT_PROMPT",
     prompt: fullPrompt
   })
