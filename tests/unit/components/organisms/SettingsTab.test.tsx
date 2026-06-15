@@ -404,7 +404,7 @@ describe("SettingsTab", () => {
     fireEvent.click(toggleBtn)
 
     await waitFor(() => {
-      expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+      expect(screen.getByText(/Cloud Backup:/i)).toBeDefined()
     })
 
     const restoreBtn = screen.getByRole("button", {
