@@ -76,9 +76,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(warningText).toBeVisible({ timeout: 15000 })
 
     const warningDesc = spFrame
-      .locator(
-        "text=/WebLLM requires at least 1.5 GB|最低1.5GBの空き領域が必要です/"
-      )
+      .locator("text=/at least 1.5 GB|1.5GB以上の空き容量/")
       .first()
     await expect(warningDesc).toBeVisible({ timeout: 15000 })
 
