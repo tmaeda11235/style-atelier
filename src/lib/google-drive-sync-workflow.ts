@@ -648,6 +648,7 @@ export interface SyncImagesParams {
   overwriteMode?: "local" | "cloud" | "merge"
 }
 
+// eslint-disable-next-line max-lines-per-function
 export async function syncImages(params: SyncImagesParams): Promise<void> {
   const {
     token,
