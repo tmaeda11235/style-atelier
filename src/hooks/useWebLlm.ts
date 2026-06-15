@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
+import { WebLlmContext } from "../contexts/WebLlmContext"
 import { isExtensionContextValid, safeSendMessage } from "../lib/chrome-utils"
 import { createMessageListener } from "./webLlmMessageListener"
 import {
@@ -24,6 +25,14 @@ interface WebLlmEffectProps {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+}
+
+function preloadEngineHelper() {
+  safeSendMessage({ target: "offscreen", action: "preload-engine" }).catch(
+    (err) => {
+      console.error("preloadEngineHelper error:", err)
+    }
+  )
 }
 
 function setupWebLlmConnection(
@@ -90,7 +99,7 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
   ])
 }
 
-function useWebLlmState() {
+function useWebLlmStates() {
   const [status, setStatus] = useState<DownloadStatus>("idle")
   const [engineStatus, setEngineStatus] = useState<
     "idle" | "initializing" | "ready"
@@ -102,14 +111,6 @@ function useWebLlmState() {
   const [retryCount, setRetryCount] = useState<number>(0)
   const [maxRetries, setMaxRetries] = useState<number>(0)
   const [text, setText] = useState<string>("")
-
-  const resetStats = () => {
-    setSpeed(0)
-    setEta(0)
-    setRetryCount(0)
-    setMaxRetries(0)
-    setText("")
-  }
 
   return {
     status,
@@ -129,61 +130,55 @@ function useWebLlmState() {
     maxRetries,
     setMaxRetries,
     text,
-    setText,
-    resetStats
+    setText
   }
 }
 
-function preloadEngineHelper() {
-  safeSendMessage({ target: "offscreen", action: "preload-engine" }).catch(
-    (err) => {
-      console.error("preloadEngineHelper error:", err)
-    }
-  )
-}
+function useLocalWebLlm() {
+  const states = useWebLlmStates()
+  useWebLlmEffect(states)
 
-export function useWebLlm() {
-  const state = useWebLlmState()
-
-  useWebLlmEffect({
-    setStatus: state.setStatus,
-    setEngineStatus: state.setEngineStatus,
-    setProgress: state.setProgress,
-    setError: state.setError,
-    setSpeed: state.setSpeed,
-    setEta: state.setEta,
-    setRetryCount: state.setRetryCount,
-    setMaxRetries: state.setMaxRetries,
-    setText: state.setText
-  })
+  const resetStats = () => {
+    states.setSpeed(0)
+    states.setEta(0)
+    states.setRetryCount(0)
+    states.setMaxRetries(0)
+    states.setText("")
+  }
 
   return {
-    status: state.status,
-    engineStatus: state.engineStatus,
-    isEngineReady: state.engineStatus === "ready",
-    isEngineInitializing: state.engineStatus === "initializing",
-    progress: state.progress,
-    error: state.error,
-    speed: state.speed,
-    eta: state.eta,
-    retryCount: state.retryCount,
-    maxRetries: state.maxRetries,
-    text: state.text,
+    status: states.status,
+    engineStatus: states.engineStatus,
+    isEngineReady: states.engineStatus === "ready",
+    isEngineInitializing: states.engineStatus === "initializing",
+    progress: states.progress,
+    error: states.error,
+    speed: states.speed,
+    eta: states.eta,
+    retryCount: states.retryCount,
+    maxRetries: states.maxRetries,
+    text: states.text,
     startDownload: () => {
-      state.resetStats()
-      startDownloadHelper(state.setStatus, state.setProgress, state.setError)
+      resetStats()
+      startDownloadHelper(states.setStatus, states.setProgress, states.setError)
     },
     purgeCache: () => {
-      state.resetStats()
-      purgeCacheHelper(state.setStatus, state.setProgress, state.setError)
+      resetStats()
+      purgeCacheHelper(states.setStatus, states.setProgress, states.setError)
     },
     checkCurrentState: () =>
       checkCurrentStateHelper(
-        state.setStatus,
-        state.setProgress,
-        state.setError
+        states.setStatus,
+        states.setProgress,
+        states.setError
       ),
     preloadEngine: preloadEngineHelper,
     runInference: runInferenceHelper
   }
+}
+
+export function useWebLlm() {
+  const context = useContext(WebLlmContext)
+  const local = useLocalWebLlm()
+  return context !== undefined ? context : local
 }

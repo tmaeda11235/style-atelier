@@ -39,7 +39,29 @@
         "title": "7. Edit in Workbench",
         "description": "Navigate to the Workbench tab to customize the variables of your cards, combine different styles, and generate final prompt strings."
       }
-    ]
+    ],
+    "mock": {
+      "midjourneyWebUi": "Midjourney Web UI",
+      "sidePanel": "Side Panel",
+      "dropHere": "Drop Here",
+      "mint": "Mint",
+      "cardName": "Card Name",
+      "neonCyberpunkSamurai": "Neon Cyberpunk Samurai",
+      "title": "Title",
+      "promptBubbles": "Prompt Bubbles",
+      "aSamurai": "A samurai",
+      "slotNeonHair": "[Slot: neon hair] ✏️",
+      "detailedIllustration": "detailed illustration",
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "clickCard": "Click Card",
+      "activeCard": "Active Card",
+      "workbenchEditor": "Workbench Editor",
+      "active": "Active",
+      "hairColor": "Hair Color:",
+      "neonCyan": "neon cyan ✏️"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -209,7 +231,10 @@
     "webLlmWebGpuStep2": "2. Turn on \"Use graphics acceleration when available\".",
     "webLlmWebGpuStep3": "3. Relaunch your browser to apply the changes.",
     "webLlmWebGpuOpenSettingsBtn": "Open Chrome Settings",
-    "webLlmDownloadBtnUnsupported": "WebGPU Not Supported (Download Disabled)"
+    "webLlmDownloadBtnUnsupported": "WebGPU Not Supported (Download Disabled)",
+    "webLlmGlobalAnxietyMicrocopy": "Downloading safely in the background. You can navigate away from this screen.",
+    "webLlmGlobalQuotaWarning": "Insufficient space (Minimum 2GB required)",
+    "webLlmGlobalCleanupBtn": "Clean up storage"
   },
   "helpTooltips": {
     "stack": "Stack: Merge two or more style cards from your hand. You can choose a representative card and combine their usage counts to evolve your styles.",
@@ -411,6 +436,16 @@
       "pin": "Send to Workbench",
       "unpin": "Remove from Workbench",
       "more": "More Actions"
+    },
+    "filtersTitle": "Detailed Filters",
+    "filtersToggleLabel": "Filters",
+    "rarity": "Rarity",
+    "category": "Category",
+    "rarities": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
     }
   },
   "workbench": {
