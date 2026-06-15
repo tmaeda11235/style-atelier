@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom"
 import "vitest-canvas-mock"
 import "fake-indexeddb/auto"
+import "./src/lib/i18n"
 
 import { vi } from "vitest"
 
