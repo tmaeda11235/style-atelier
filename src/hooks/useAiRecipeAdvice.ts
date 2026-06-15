@@ -127,30 +127,14 @@ function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
   } = props
 
   useEffect(() => {
-    if (cards.length < 2 || status !== "ready") {
-      setAdvice(null)
-      setError(null)
-      setLoading(false)
-      return
-    }
-    if (cacheRef.current[key]) {
-      setAdvice(cacheRef.current[key])
-      setError(null)
-      setLoading(false)
+    if (checkAdviceCache(props)) {
       return
     }
     let mounted = true
     const isMounted = () => mounted
     const timer = setTimeout(() => {
       fetchAdviceHelper({
-        cards,
-        lang,
-        key,
-        setAdvice,
-        setError,
-        setLoading,
-        cacheRef,
-        runInferenceRef,
+        ...props,
         isMounted
       })
     }, 500)
@@ -158,7 +142,17 @@ function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
       mounted = false
       clearTimeout(timer)
     }
-  }, [key, status, lang])
+  }, [
+    cards,
+    key,
+    status,
+    lang,
+    setAdvice,
+    setError,
+    setLoading,
+    cacheRef,
+    runInferenceRef
+  ])
 }
 
 export function useAiRecipeAdvice(cards: any[]) {

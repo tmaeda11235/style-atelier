@@ -34,7 +34,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Minting Color Fallback", () => 
       await database.historyItems.clear()
       await database.historyItems.add({
         id: "mock-history-item-invalid-color",
-        fullCommand: "fails color extraction",
+        fullCommand: "invalid color",
         imageUrl: "https://example.com/invalid-image-for-cors-failure.png",
         timestamp: Date.now()
       })

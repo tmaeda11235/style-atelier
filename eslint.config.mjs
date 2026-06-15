@@ -10,7 +10,7 @@ import i18next from "eslint-plugin-i18next";
 
 export default ts.config(
   {
-    ignores: ["postcss.config.js", "scratch/**/*"]
+    ignores: ["postcss.config.js", "scratch/**/*", "assets/**/*"]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
@@ -149,19 +149,14 @@ export default ts.config(
       "src/components/molecules/AutocompleteDropdown.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
-      "src/components/organisms/EasyModeSection.tsx",
-      "src/components/organisms/EasyModeView.tsx",
       "src/components/organisms/EvolutionSuccessModal.tsx",
       "src/components/organisms/ExpertModeView.tsx",
-      "src/components/organisms/HandBar.tsx",
       "src/components/organisms/HistoryTab.tsx",
       "src/components/organisms/InteractiveTutorial.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/MergeStackModal.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/PromptBubbleEditor.tsx",
       "src/components/organisms/SettingsTab.tsx",
-      "src/components/organisms/ShareCardModal.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",

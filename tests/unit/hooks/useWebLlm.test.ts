@@ -1,5 +1,5 @@
 import { useWebLlm } from "@/hooks/useWebLlm"
-import { act, renderHook } from "@testing-library/react"
+import { act, renderHook, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Helper to trigger runtime.onMessage event
@@ -119,7 +119,7 @@ describe("useWebLlm", () => {
       {
         target: "offscreen",
         action: "check-quota",
-        requiredBytes: 2.0 * 1024 * 1024 * 1024
+        requiredBytes: 2.5 * 1024 * 1024 * 1024
       },
       expect.any(Function)
     )
@@ -249,14 +249,11 @@ describe("useWebLlm", () => {
       }
     )
 
-    let inferenceResult = ""
-    await act(async () => {
-      inferenceResult = await result.current.runInference(
-        "Generate a style",
-        "You are an artist",
-        0.5
-      )
-    })
+    const inferenceResult = await result.current.runInference(
+      "Generate a style",
+      "You are an artist",
+      0.5
+    )
 
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
       {
@@ -288,9 +285,7 @@ describe("useWebLlm", () => {
     )
 
     await expect(
-      act(async () => {
-        await result.current.runInference("Generate a style")
-      })
+      result.current.runInference("Generate a style")
     ).rejects.toThrow("Inference failed error")
   })
 

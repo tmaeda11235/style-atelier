@@ -133,7 +133,7 @@ function ModelQuotaWarningOverlay({ t }: { t: any }) {
       </p>
       <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs text-center font-sans">
         {t.webLlmQuotaWarningDesc ||
-          "At least 1.5 GB of free space is required."}
+          "At least 2.5 GB of free space is required."}
       </p>
     </div>
   )

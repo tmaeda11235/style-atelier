@@ -989,11 +989,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await mergeOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
+    await expect(syncBtn).toBeEnabled({ timeout: 10000 })
     console.log("Safe Merge strategy confirmed successfully.")
 
     // Reset last-backup to >60 days ago so dialog will show up again
     await spFrame.locator("body").evaluate((_, time) => {
       localStorage.setItem("style-atelier-last-backup", time.toString())
+      if ((window as any).queryClient) {
+        ;(window as any).queryClient.invalidateQueries({
+          queryKey: ["gdrive", "lastBackup"]
+        })
+      }
     }, sixtyOneDaysAgo)
 
     // 10. Test Local Overwrite Strategy
@@ -1002,11 +1008,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await localOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
+    await expect(syncBtn).toBeEnabled({ timeout: 10000 })
     console.log("Local Overwrite strategy confirmed successfully.")
 
     // Reset last-backup to >60 days ago so dialog will show up again
     await spFrame.locator("body").evaluate((_, time) => {
       localStorage.setItem("style-atelier-last-backup", time.toString())
+      if ((window as any).queryClient) {
+        ;(window as any).queryClient.invalidateQueries({
+          queryKey: ["gdrive", "lastBackup"]
+        })
+      }
     }, sixtyOneDaysAgo)
 
     // 11. Test Cloud Overwrite Strategy
