@@ -4,202 +4,293 @@ import { useCallback, useMemo, useState } from "react"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { buildMergedPromptString } from "../lib/prompt-reference-utils"
+import {
+  addCard,
+  clearWorkbench,
+  incrementCardUsage,
+  performShuffleAndPick,
+  saveSlotHistory,
+  toggleCardSelection,
+  updateCardWeight
+} from "../lib/workbench-db-utils"
 
-export async function toggleCardSelection(cardId: string) {
-  try {
-    const card = await db.styleCards.get(cardId)
-    if (card) {
+interface PinnedCardState {
+  id: string
+  weight: number
+  isVariable: boolean
+  cardData?: any
+}
+
+interface WorkbenchSnapshot {
+  pinnedCards: PinnedCardState[]
+}
+
+const pastStack: WorkbenchSnapshot[] = []
+const futureStack: WorkbenchSnapshot[] = []
+
+function isSameSnapshot(a: WorkbenchSnapshot, b: WorkbenchSnapshot): boolean {
+  if (a.pinnedCards.length !== b.pinnedCards.length) return false
+  return a.pinnedCards.every((ca, i) => {
+    const cb = b.pinnedCards[i]
+    return ca.id === cb.id && ca.weight === cb.weight
+  })
+}
+
+async function takeSnapshot(): Promise<WorkbenchSnapshot> {
+  const pinned = await db.styleCards
+    .filter((c) => !c.isDeleted && !!c.isPinned)
+    .toArray()
+  return {
+    pinnedCards: pinned.map((c) => ({
+      id: c.id,
+      weight: c.weight !== undefined ? c.weight : 1.0,
+      isVariable: !!c.isVariable,
+      cardData: c.isVariable ? { ...c } : undefined
+    }))
+  }
+}
+
+async function pushSnapshot() {
+  const current = await takeSnapshot()
+  const last = pastStack[pastStack.length - 1]
+  if (last && isSameSnapshot(last, current)) {
+    return
+  }
+  pastStack.push(current)
+  futureStack.length = 0
+}
+
+async function removeUnneededCards(
+  currentPinned: StyleCard[],
+  snapshot: WorkbenchSnapshot
+) {
+  for (const card of currentPinned) {
+    const target = snapshot.pinnedCards.find((c) => c.id === card.id)
+    if (!target) {
       if (card.isVariable) {
-        await db.styleCards.delete(cardId)
+        await db.deleteCard(card.id)
       } else {
-        await db.styleCards.update(cardId, { isPinned: !card.isPinned })
+        await db.styleCards.update(card.id, { isPinned: false })
       }
     }
-  } catch (err) {
-    console.error("Failed to toggle card selection:", err)
   }
 }
 
-export async function clearWorkbench(handCards: StyleCard[]) {
-  try {
-    await Promise.all(
-      handCards.map((card) =>
-        card.isVariable
-          ? db.styleCards.delete(card.id)
-          : db.styleCards.update(card.id, { isPinned: false })
-      )
-    )
-  } catch (err) {
-    console.error("Failed to clear workbench:", err)
-  }
-}
-
-export async function saveSlotHistory(label: string, values: string[]) {
-  try {
-    await db.saveSlotHistory(label, values)
-  } catch (err) {
-    console.error("Failed to save slot history:", err)
-  }
-}
-
-export async function addCard(card: any) {
-  try {
-    return await db.addCard(card)
-  } catch (err) {
-    console.error("Failed to add card:", err)
-    throw err
-  }
-}
-
-export async function incrementCardUsage(cardId: string) {
-  try {
-    const card = await db.styleCards.get(cardId)
-    if (card) {
-      await db.styleCards.update(cardId, {
-        usageCount: (card.usageCount || 0) + 1
+async function restorePinnedState(state: PinnedCardState) {
+  if (state.isVariable) {
+    const existing = await db.styleCards.get(state.id)
+    if (!existing && state.cardData) {
+      await db.styleCards.put({
+        ...state.cardData,
+        isPinned: true,
+        weight: state.weight
+      })
+    } else {
+      await db.styleCards.update(state.id, {
+        isPinned: true,
+        weight: state.weight
       })
     }
-  } catch (err) {
-    console.error("Failed to increment card usage:", err)
+  } else {
+    await db.styleCards.update(state.id, {
+      isPinned: true,
+      weight: state.weight
+    })
   }
 }
 
-export async function updateCardWeight(cardId: string, weight: number) {
-  try {
-    await db.styleCards.update(cardId, { weight })
-  } catch (err) {
-    console.error("Failed to update card weight:", err)
+async function applySnapshot(snapshot: WorkbenchSnapshot) {
+  const currentPinned = await db.styleCards
+    .filter((c) => !c.isDeleted && !!c.isPinned)
+    .toArray()
+
+  await removeUnneededCards(currentPinned, snapshot)
+
+  for (const state of snapshot.pinnedCards) {
+    await restorePinnedState(state)
   }
 }
 
-export async function pickRandomCards(handCards: StyleCard[]) {
-  try {
-    await clearWorkbench(handCards)
-    const allCards = await db.getAllCards()
-    const validCards = allCards.filter((c) => !c.isDeleted && !c.isVariable)
-    if (validCards.length === 0) return
-
-    // Pick 1 to 3 random cards
-    const count = Math.min(validCards.length, Math.floor(Math.random() * 3) + 1)
-    const selected: StyleCard[] = []
-    const temp = [...validCards]
-    for (let i = 0; i < count; i++) {
-      const idx = Math.floor(Math.random() * temp.length)
-      selected.push(temp[idx])
-      temp.splice(idx, 1)
-    }
-
-    await Promise.all(
-      selected.map((c) => db.styleCards.update(c.id, { isPinned: true }))
-    )
-  } catch (err) {
-    console.error("Failed to pick random cards:", err)
-  }
+async function undo() {
+  if (pastStack.length === 0) return
+  const current = await takeSnapshot()
+  const previous = pastStack.pop()!
+  futureStack.push(current)
+  await applySnapshot(previous)
 }
 
-async function performShuffleAndPick(
-  handCards: StyleCard[],
-  setIsShuffling: (shuffling: boolean) => void,
-  setShuffleCards: (cards: StyleCard[] | null) => void
+async function redo() {
+  if (futureStack.length === 0) return
+  const current = await takeSnapshot()
+  const next = futureStack.pop()!
+  pastStack.push(current)
+  await applySnapshot(next)
+}
+
+function useWorkbenchUndoRedo(
+  setHistoryVersion: React.Dispatch<React.SetStateAction<number>>
 ) {
-  setIsShuffling(true)
-  try {
-    await clearWorkbench(handCards)
-    const allCards = await db.getAllCards()
-    const validCards = allCards.filter((c) => !c.isDeleted && !c.isVariable)
+  const handleUndo = useCallback(async () => {
+    await undo()
+    setHistoryVersion((v) => v + 1)
+  }, [setHistoryVersion])
 
-    if (validCards.length > 0) {
-      const duration = 400
+  const handleRedo = useCallback(async () => {
+    await redo()
+    setHistoryVersion((v) => v + 1)
+  }, [setHistoryVersion])
 
-      // 50msごとにランダムなカードをセットしてシャッフルアニメーションを表現
-      const intervalId = setInterval(() => {
-        const count = Math.min(
-          validCards.length,
-          Math.floor(Math.random() * 3) + 1
-        )
-        const selected: StyleCard[] = []
-        const temp = [...validCards]
-        for (let i = 0; i < count; i++) {
-          const idx = Math.floor(Math.random() * temp.length)
-          selected.push(temp[idx])
-          temp.splice(idx, 1)
-        }
-        setShuffleCards(selected)
-      }, 60)
+  return { undo: handleUndo, redo: handleRedo }
+}
 
-      await new Promise((resolve) => setTimeout(resolve, duration))
-      clearInterval(intervalId)
+function useWorkbenchMutations(
+  setHistoryVersion: React.Dispatch<React.SetStateAction<number>>
+) {
+  const handleToggleCardSelection = useCallback(
+    async (cardId: string) => {
+      await pushSnapshot()
+      await toggleCardSelection(cardId)
+      setHistoryVersion((v) => v + 1)
+    },
+    [setHistoryVersion]
+  )
 
-      // 最終的なピック結果を決定
-      const count = Math.min(
-        validCards.length,
-        Math.floor(Math.random() * 3) + 1
-      )
-      const selected: StyleCard[] = []
-      const temp = [...validCards]
-      for (let i = 0; i < count; i++) {
-        const idx = Math.floor(Math.random() * temp.length)
-        selected.push(temp[idx])
-        temp.splice(idx, 1)
-      }
+  const handleClearWorkbench = useCallback(
+    async (handCards: StyleCard[]) => {
+      await pushSnapshot()
+      await clearWorkbench(handCards)
+      setHistoryVersion((v) => v + 1)
+    },
+    [setHistoryVersion]
+  )
 
-      // DBを更新
-      await Promise.all(
-        selected.map((c) => db.styleCards.update(c.id, { isPinned: true }))
-      )
-    }
-  } catch (err) {
-    console.error("Failed to pick random cards with shuffle:", err)
-  } finally {
-    setIsShuffling(false)
-    setShuffleCards(null)
+  const pickRandomCardsWithShuffle = useCallback(
+    async (
+      handCards: StyleCard[],
+      setIsShuffling: (s: boolean) => void,
+      setShuffleCards: (c: StyleCard[] | null) => void
+    ) => {
+      await pushSnapshot()
+      await performShuffleAndPick(handCards, setIsShuffling, setShuffleCards)
+      setHistoryVersion((v) => v + 1)
+    },
+    [setHistoryVersion]
+  )
+
+  const handleStartWeightAdjustment = useCallback(async () => {
+    await pushSnapshot()
+    setHistoryVersion((v) => v + 1)
+  }, [setHistoryVersion])
+
+  return {
+    toggleCardSelection: handleToggleCardSelection,
+    clearWorkbench: handleClearWorkbench,
+    pickRandomCards: pickRandomCardsWithShuffle,
+    startWeightAdjustment: handleStartWeightAdjustment
   }
 }
 
-export function useWorkbench() {
-  const [isShuffling, setIsShuffling] = useState(false)
-  const [shuffleCards, setShuffleCards] = useState<StyleCard[] | null>(null)
-
+function useWorkbenchCards(
+  isShuffling: boolean,
+  shuffleCards: StyleCard[] | null
+) {
   const handCardsList = useLiveQuery(() =>
     db.styleCards.filter((c) => !!c.isPinned).toArray()
   )
   const handCards = useMemo(() => handCardsList || [], [handCardsList])
 
   const workbenchCards = useMemo(() => {
-    if (isShuffling && shuffleCards) {
-      return shuffleCards
-    }
+    if (isShuffling && shuffleCards) return shuffleCards
     return handCards
   }, [isShuffling, shuffleCards, handCards])
 
-  const selectedCardIds = useMemo(() => {
-    return workbenchCards.map((c) => c.id)
-  }, [workbenchCards])
-
-  const mergedPrompt = useMemo(() => {
-    return buildMergedPromptString(workbenchCards)
-  }, [workbenchCards])
+  const selectedCardIds = useMemo(
+    () => workbenchCards.map((c) => c.id),
+    [workbenchCards]
+  )
+  const mergedPrompt = useMemo(
+    () => buildMergedPromptString(workbenchCards),
+    [workbenchCards]
+  )
 
   const rawSlotHistory = useLiveQuery(() => db.getAllSlotHistory())
   const slotHistory = useMemo(() => rawSlotHistory || {}, [rawSlotHistory])
 
-  const pickRandomCardsWithShuffle = useCallback(async () => {
-    await performShuffleAndPick(handCards, setIsShuffling, setShuffleCards)
-  }, [handCards])
+  return {
+    handCards,
+    workbenchCards,
+    selectedCardIds,
+    mergedPrompt,
+    slotHistory
+  }
+}
+
+function useWorkbenchHistoryStatus(historyVersion: number) {
+  const canUndo = useMemo(() => {
+    // Reference historyVersion to force re-evaluation of this memo when history version updates
+    const _dummy = historyVersion
+    return pastStack.length > 0
+  }, [historyVersion])
+
+  const canRedo = useMemo(() => {
+    // Reference historyVersion to force re-evaluation of this memo when history version updates
+    const _dummy = historyVersion
+    return futureStack.length > 0
+  }, [historyVersion])
+
+  return { canUndo, canRedo }
+}
+
+export function useWorkbench() {
+  const [isShuffling, setIsShuffling] = useState(false)
+  const [shuffleCards, setShuffleCards] = useState<StyleCard[] | null>(null)
+  const [historyVersion, setHistoryVersion] = useState(0)
+
+  const {
+    handCards,
+    workbenchCards,
+    selectedCardIds,
+    mergedPrompt,
+    slotHistory
+  } = useWorkbenchCards(isShuffling, shuffleCards)
+
+  const { undo: historyUndo, redo: historyRedo } =
+    useWorkbenchUndoRedo(setHistoryVersion)
+  const {
+    toggleCardSelection: mutateToggle,
+    clearWorkbench: mutateClear,
+    pickRandomCards: mutatePick,
+    startWeightAdjustment: mutateStartWeight
+  } = useWorkbenchMutations(setHistoryVersion)
+
+  const { canUndo, canRedo } = useWorkbenchHistoryStatus(historyVersion)
 
   return {
     handCards,
     workbenchCards,
     isShuffling,
     selectedCardIds,
-    toggleCardSelection,
-    clearWorkbench: () => clearWorkbench(handCards),
-    pickRandomCards: pickRandomCardsWithShuffle,
+    toggleCardSelection: mutateToggle,
+    clearWorkbench: useCallback(
+      () => mutateClear(handCards),
+      [mutateClear, handCards]
+    ),
+    pickRandomCards: useCallback(
+      () => mutatePick(handCards, setIsShuffling, setShuffleCards),
+      [mutatePick, handCards, setIsShuffling, setShuffleCards]
+    ),
     mergedPrompt,
     slotHistory,
     saveSlotHistory,
     addCard,
     incrementCardUsage,
-    updateCardWeight
+    updateCardWeight: useCallback(async (cardId: string, weight: number) => {
+      await updateCardWeight(cardId, weight)
+    }, []),
+    startWeightAdjustment: mutateStartWeight,
+    undo: historyUndo,
+    redo: historyRedo,
+    canUndo,
+    canRedo
   }
 }

@@ -7,8 +7,8 @@ import { useEvolution } from "../../hooks/useEvolution"
 import { usePromptInjector } from "../../hooks/usePromptInjector"
 import { useWorkbench } from "../../hooks/useWorkbench"
 import type { PromptSegment } from "../../lib/db-schema"
-import { mergePromptSegments } from "../../lib/prompt-utils"
 import { mergeReferences } from "../../lib/prompt-reference-utils"
+import { mergePromptSegments } from "../../lib/prompt-utils"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import {
   evolveTargetCard,
@@ -357,5 +357,44 @@ function useWorkbenchCore({
 
 export const Workbench: React.FC<WorkbenchProps> = (props) => {
   const data = useWorkbenchCore(props)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement
+      if (activeEl) {
+        const tagName = activeEl.tagName.toLowerCase()
+        if (
+          tagName === "input" ||
+          tagName === "textarea" ||
+          activeEl.getAttribute("contenteditable") === "true"
+        ) {
+          // Allow Undo/Redo shortcuts for slider inputs (type range) but ignore for text editing inputs
+          if ((activeEl as HTMLInputElement).type !== "range") {
+            return
+          }
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (e.key.toLowerCase() === "z") {
+          e.preventDefault()
+          if (e.shiftKey) {
+            data.redo()
+          } else {
+            data.undo()
+          }
+        } else if (e.key.toLowerCase() === "y") {
+          e.preventDefault()
+          data.redo()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [data.undo, data.redo])
+
   return <WorkbenchView {...data} addLog={props.addLog} />
 }

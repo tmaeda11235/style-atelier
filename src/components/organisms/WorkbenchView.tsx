@@ -1,4 +1,4 @@
-import { BookUp2, Dices } from "lucide-react"
+import { BookUp2, Dices, Redo, Undo } from "lucide-react"
 import React from "react"
 
 import type { PromptSegment, StyleCard } from "../../lib/db-schema"
@@ -14,14 +14,59 @@ interface WorkbenchHeaderProps {
   pickRandomCards: () => void
   isShuffling?: boolean
   t: any
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 }
+
+interface HistoryControlsProps {
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
+}
+
+const HistoryControls: React.FC<HistoryControlsProps> = ({
+  undo,
+  redo,
+  canUndo,
+  canRedo
+}) => (
+  <div className="flex items-center gap-1 border-r border-slate-200 dark:border-slate-800 pr-2">
+    <button
+      onClick={undo}
+      disabled={!canUndo}
+      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition-colors cursor-pointer"
+      title="Undo (Ctrl+Z)"
+      id="workbench-undo-btn"
+      data-testid="workbench-undo-btn"
+      type="button">
+      <Undo className="w-3.5 h-3.5" />
+    </button>
+    <button
+      onClick={redo}
+      disabled={!canRedo}
+      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition-colors cursor-pointer"
+      title="Redo (Ctrl+Y / Ctrl+Shift+Z)"
+      id="workbench-redo-btn"
+      data-testid="workbench-redo-btn"
+      type="button">
+      <Redo className="w-3.5 h-3.5" />
+    </button>
+  </div>
+)
 
 const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
   workbenchCards,
   clearWorkbench,
   pickRandomCards,
   isShuffling,
-  t
+  t,
+  undo,
+  redo,
+  canUndo,
+  canRedo
 }) => (
   <div className="flex items-center justify-between">
     <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
@@ -29,6 +74,12 @@ const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
       Workbench
     </h2>
     <div className="flex items-center gap-2">
+      <HistoryControls
+        undo={undo}
+        redo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      />
       <button
         onClick={pickRandomCards}
         disabled={isShuffling}
@@ -120,6 +171,11 @@ interface WorkbenchViewProps {
   pickRandomCards: () => void
   toggleCardSelection: (id: string) => Promise<void> | void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
+  startWeightAdjustment?: () => Promise<void> | void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
   handleExtract: (
     name: string,
     segments: PromptSegment[],
@@ -158,6 +214,38 @@ interface WorkbenchViewProps {
   addLog?: (msg: string) => void
 }
 
+interface WorkbenchEvolutionModalProps {
+  evolvedCardData: any
+  isOpen: boolean
+  onClose: () => void
+  i18n: any
+}
+
+const WorkbenchEvolutionModal: React.FC<WorkbenchEvolutionModalProps> = ({
+  evolvedCardData,
+  isOpen,
+  onClose,
+  i18n
+}) => {
+  if (!evolvedCardData) return null
+  return (
+    <EvolutionSuccessModal
+      isOpen={isOpen}
+      onClose={onClose}
+      cardName={evolvedCardData.name}
+      thumbnailData={evolvedCardData.thumbnailData}
+      selectedThumbnails={evolvedCardData.selectedThumbnails}
+      oldTier={evolvedCardData.oldTier}
+      newTier={evolvedCardData.newTier}
+      translation={{
+        title: i18n.workbench.evolutionSuccessTitle,
+        desc: i18n.workbench.evolutionSuccessDesc,
+        close: i18n.workbench.close
+      }}
+    />
+  )
+}
+
 export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 space-y-4">
@@ -167,6 +255,10 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
         pickRandomCards={props.pickRandomCards}
         isShuffling={props.isShuffling}
         t={props.t}
+        undo={props.undo}
+        redo={props.redo}
+        canUndo={props.canUndo}
+        canRedo={props.canRedo}
       />
       <Cauldron
         workbenchCards={props.workbenchCards}
@@ -180,6 +272,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
         setSelectedCardId={props.setSelectedCardId}
         toggleCardSelection={props.toggleCardSelection}
         updateCardWeight={props.updateCardWeight}
+        onStartWeightAdjustment={props.startWeightAdjustment}
         handleExtractPortion={props.handleExtract}
         addLog={props.addLog}
         t={props.t}
@@ -187,22 +280,12 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
       <div className="flex-1 overflow-y-auto">
         <RecipeSection {...props} />
       </div>
-      {props.evolvedCardData && (
-        <EvolutionSuccessModal
-          isOpen={props.isEvolutionSuccessOpen}
-          onClose={() => props.setIsEvolutionSuccessOpen(false)}
-          cardName={props.evolvedCardData.name}
-          thumbnailData={props.evolvedCardData.thumbnailData}
-          selectedThumbnails={props.evolvedCardData.selectedThumbnails}
-          oldTier={props.evolvedCardData.oldTier}
-          newTier={props.evolvedCardData.newTier}
-          translation={{
-            title: props.i18n.workbench.evolutionSuccessTitle,
-            desc: props.i18n.workbench.evolutionSuccessDesc,
-            close: props.i18n.workbench.close
-          }}
-        />
-      )}
+      <WorkbenchEvolutionModal
+        evolvedCardData={props.evolvedCardData}
+        isOpen={props.isEvolutionSuccessOpen}
+        onClose={() => props.setIsEvolutionSuccessOpen(false)}
+        i18n={props.i18n}
+      />
     </div>
   )
 }
