@@ -219,6 +219,7 @@ function ModelErrorOverlay({
   )
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function ModelStatusOverlay({
   status,
   progress,
