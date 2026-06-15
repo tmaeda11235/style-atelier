@@ -5,7 +5,6 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useAiSearch } from "../../hooks/useAiSearch"
 import { useWebLlm } from "../../hooks/useWebLlm"
-import { AiWarningModal } from "../molecules/AiWarningModal"
 import { ExtractedFiltersDisplay } from "../molecules/ExtractedFiltersDisplay"
 import { SearchField } from "../molecules/SearchField"
 import { SortSelector } from "../molecules/SortSelector"
@@ -147,8 +146,6 @@ interface LibrarySearchBarContentProps {
   isAiSearching: boolean
   isEngineInitializing?: boolean
   aiSearchError: string | null
-  aiWarningOpen: boolean
-  setAiWarningOpen: (val: boolean) => void
   t: any
   i18nSettings: any
   sortBy: string
@@ -234,18 +231,16 @@ function LibrarySearchBarContent(props: LibrarySearchBarContentProps) {
           t={props.t}
         />
       )}
-      {props.aiWarningOpen && (
-        <AiWarningModal
-          onClose={() => props.setAiWarningOpen(false)}
-          t={props.t}
-          i18nSettings={props.i18nSettings}
-        />
-      )}
     </div>
   )
 }
 
-export function LibrarySearchBar(props: LibrarySearchBarProps) {
+interface ExtendedLibrarySearchBarProps extends LibrarySearchBarProps {
+  isAiSearch: boolean
+  setIsAiSearch: (val: boolean) => void
+}
+
+export function LibrarySearchBar(props: ExtendedLibrarySearchBarProps) {
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
   const { expertFeatures } = useSettings()
@@ -256,8 +251,6 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
     setAiSearchQuery,
     isAiSearching,
     aiSearchError,
-    aiWarningOpen,
-    setAiWarningOpen,
     extractedFilters,
     handleToggleAiSearch
   } = useAiSearch({
@@ -267,7 +260,9 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
     setColorFilter: props.setColorFilter,
     setSearchTag: props.setSearchTag,
     webLlmStatus,
-    t
+    t,
+    isAiSearch: props.isAiSearch,
+    setIsAiSearch: props.setIsAiSearch
   })
 
   return (
@@ -286,8 +281,6 @@ export function LibrarySearchBar(props: LibrarySearchBarProps) {
       isAiSearching={isAiSearching}
       isEngineInitializing={isEngineInitializing}
       aiSearchError={aiSearchError}
-      aiWarningOpen={aiWarningOpen}
-      setAiWarningOpen={setAiWarningOpen}
       t={t}
       i18nSettings={i18n.settings}
       sortBy={props.sortBy}

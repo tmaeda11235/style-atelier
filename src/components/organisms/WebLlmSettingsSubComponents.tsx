@@ -243,6 +243,7 @@ export function WebLlmActionButtons({
         status !== "downloading" &&
         status !== "retrying" && (
           <button
+            id="webllm-download-btn"
             type="button"
             onClick={startDownload}
             disabled={status === "checking" || !isSupported}

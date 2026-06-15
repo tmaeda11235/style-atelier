@@ -11,7 +11,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     })
   })
 
-  test("should show warning modal when AI model is not downloaded", async ({
+  test("should transition to settings tab and focus download button when local AI is not set up", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -45,28 +45,35 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     await aiToggleBtn.click()
     await page.waitForTimeout(500)
 
-    // Check if Model Not Loaded warning modal is visible
-    const warningModal = spFrame.locator(
-      "text=/Local AI Model not loaded|ローカルAIモデルがロードされていません/"
-    )
-    await expect(warningModal).toBeVisible()
+    // Check if LocalAiSetupPlaceholder is visible
+    const placeholder = spFrame.locator("#local-ai-setup-placeholder")
+    await expect(placeholder).toBeVisible()
 
-    // Take screenshot of warning modal
+    // Take screenshot of the inline placeholder
     await page.screenshot({
       path: path.join(
         screenshotsDir,
-        "library-semantic-search-model-warning.png"
+        "library-semantic-search-setup-placeholder.png"
       )
     })
 
-    // Close modal
-    const cancelBtn = spFrame.locator(
-      "button:has-text('Cancel'), button:has-text('キャンセル')"
-    )
-    await expect(cancelBtn).toBeVisible()
-    await cancelBtn.click()
-    await page.waitForTimeout(300)
-    await expect(warningModal).not.toBeVisible()
+    // Click "Set Up" button
+    const setupBtn = spFrame.locator("#local-ai-setup-start-btn")
+    await expect(setupBtn).toBeVisible()
+    await setupBtn.click()
+    await page.waitForTimeout(500)
+
+    // Now Settings tab should be active, and WebLLM download button should be focused
+    const downloadBtn = spFrame.locator("#webllm-download-btn")
+    await expect(downloadBtn).toBeVisible()
+
+    // Take screenshot of the transition to settings
+    await page.screenshot({
+      path: path.join(
+        screenshotsDir,
+        "library-semantic-search-transition-to-settings.png"
+      )
+    })
   })
 
   test("should parse query and apply filters dynamically", async ({ page }) => {

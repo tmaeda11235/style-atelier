@@ -72,17 +72,25 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     await accordionHeader.click()
     await page.waitForTimeout(500)
 
-    // 6. When model is not loaded, it should show "Local AI model is not loaded" message
-    const notReadyText = spFrame.locator(
-      "text=/Local AI model is not loaded|ローカルAIモデルがロードされていません/"
-    )
-    await expect(notReadyText).toBeVisible({ timeout: 5000 })
+    // 6. When model is not loaded, it should show LocalAiSetupPlaceholder
+    const placeholder = spFrame.locator("#local-ai-setup-placeholder")
+    await expect(placeholder).toBeVisible({ timeout: 5000 })
 
-    // Capture screenshot of "model not loaded" state in Cauldron
+    // Capture screenshot of placeholder state in Cauldron
     await page.screenshot({
-      path: path.join(screenshotsDir, "ai-recipe-advice-not-loaded.png")
+      path: path.join(screenshotsDir, "ai-recipe-advice-placeholder.png")
     })
-    console.log("AI Recipe Advice not loaded state screenshot saved.")
+    console.log("AI Recipe Advice placeholder state screenshot saved.")
+
+    // Click Setup button inside placeholder to transition to settings
+    const setupBtn = spFrame.locator("#local-ai-setup-start-btn")
+    await expect(setupBtn).toBeVisible()
+    await setupBtn.click()
+    await page.waitForTimeout(500)
+
+    // Now Settings tab should be active, and WebLLM download button should be focused
+    const downloadBtn = spFrame.locator("#webllm-download-btn")
+    await expect(downloadBtn).toBeVisible()
 
     // 7. Mock WebLLM downloaded/integrityPassed to true to make model "ready"
     // Also mock custom inferenceResult
@@ -98,21 +106,22 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
       localStorage.setItem("mock-webllm-downloaded", "true")
     })
 
-    // Click "Download Model" button to trigger transition to ready state
-    const downloadBtn = adviceSection.locator(
-      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
-    )
-    await expect(downloadBtn).toBeVisible()
-    await downloadBtn.click()
+    // Switch back to Workbench tab to trigger loading
+    await workbenchTabButton.click()
+    await page.waitForTimeout(1000)
 
-    // Click inline "Start Download" button in the confirm view
-    const startDownloadBtn = spFrame.locator(
-      "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+    // Expand accordion if not open (it should be open or we toggle it)
+    const newAdviceSection = spFrame.locator("#ai-recipe-advice-section")
+    const newAccordionHeader = newAdviceSection.locator(
+      "#ai-recipe-advice-toggle"
     )
-    await expect(startDownloadBtn).toBeVisible()
-    await startDownloadBtn.click()
+    const isExpanded = await newAccordionHeader.getAttribute("aria-expanded")
+    if (isExpanded !== "true") {
+      await newAccordionHeader.click()
+      await page.waitForTimeout(500)
+    }
 
-    await page.waitForTimeout(3000) // Wait for downloading animation, debounce, and mock inference resolution
+    await page.waitForTimeout(3000) // Wait for mock inference resolution
 
     // 8. Verify advice is generated and rendered
     const adviceText = spFrame.locator("text=/Expected Visual Blending Effect/")

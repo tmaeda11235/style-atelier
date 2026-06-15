@@ -1,9 +1,10 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines, max-lines-per-function */
 import { AlertTriangle, Loader2 } from "lucide-react"
 import React from "react"
 
+import { useSettings } from "../../contexts/SettingsContext"
 import { AdviceViewer } from "../atoms/AdviceViewer"
-import { ModelIdleOverlay } from "./ModelIdleOverlay"
+import { LocalAiSetupPlaceholder } from "./LocalAiSetupPlaceholder"
 
 interface ModelStatusOverlayProps {
   status: string
@@ -201,18 +202,19 @@ function ModelErrorOverlay({
   )
 }
 
-export function ModelStatusOverlay({
-  status,
-  progress,
-  speed,
-  eta,
-  retryCount,
-  maxRetries,
-  text,
-  webLlmError,
-  startDownload,
-  t
-}: ModelStatusOverlayProps) {
+function getStatusOverlay(
+  status: string,
+  progress: number,
+  speed: number,
+  eta: number,
+  retryCount: number,
+  maxRetries: number,
+  text: string,
+  webLlmError: string | null,
+  startDownload: () => void,
+  t: any,
+  setAutoOpenSection: (section: string | null) => void
+) {
   const isDownloading =
     status === "checking" || status === "downloading" || status === "verifying"
 
@@ -248,7 +250,33 @@ export function ModelStatusOverlay({
       />
     )
   }
-  return <ModelIdleOverlay startDownload={startDownload} t={t} />
+  return (
+    <LocalAiSetupPlaceholder
+      onSetupStart={() => {
+        window.dispatchEvent(
+          new CustomEvent("change-expert-tab", { detail: "settings" })
+        )
+        setAutoOpenSection("local-ai")
+      }}
+    />
+  )
+}
+
+export function ModelStatusOverlay(props: ModelStatusOverlayProps) {
+  const { setAutoOpenSection } = useSettings()
+  return getStatusOverlay(
+    props.status,
+    props.progress,
+    props.speed,
+    props.eta,
+    props.retryCount,
+    props.maxRetries,
+    props.text,
+    props.webLlmError,
+    props.startDownload,
+    props.t,
+    setAutoOpenSection
+  )
 }
 
 interface AdviceSectionContentProps {

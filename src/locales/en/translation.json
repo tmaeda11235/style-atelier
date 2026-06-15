@@ -365,6 +365,11 @@
     "aiEngineInitializing": "Initializing AI engine (this may take a few seconds)...",
     "aiSearchError": "AI parsing error",
     "aiSearchModelNotLoaded": "Local AI Model not loaded. Please download it from the Settings tab first.",
+    "localAiPlaceholder": {
+      "title": "Use Advanced Features with Local AI",
+      "desc": "To use natural language search, AI recipe advice, and other smart features, you need to download a local AI model (~2.0 GB). You can start the setup with one click from the Settings tab.",
+      "startBtn": "Start Setup"
+    },
     "aiSearchActive": "AI Search Active",
     "aiSearchExtractedFilters": "Extracted Filters",
     "showMore": "Show More",

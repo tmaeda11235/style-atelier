@@ -365,6 +365,11 @@
     "aiEngineInitializing": "AIエンジンを初期化中 (数秒かかる場合があります)...",
     "aiSearchError": "AI解析エラー",
     "aiSearchModelNotLoaded": "ローカルAIモデルがロードされていません。まず設定タブからダウンロードしてください。",
+    "localAiPlaceholder": {
+      "title": "ローカルAIで高度な機能を使用する",
+      "desc": "自然言語によるカード検索やAIレシピ提案などを利用するには、ローカルAIモデル（約2.0GB）のダウンロードが必要です。セットアップは設定画面からワンクリックで開始できます。",
+      "startBtn": "セットアップを開始する"
+    },
     "aiSearchActive": "AI検索が有効",
     "aiSearchExtractedFilters": "抽出されたフィルター",
     "showMore": "もっと見る",

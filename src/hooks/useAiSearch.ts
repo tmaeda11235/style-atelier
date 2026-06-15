@@ -10,12 +10,14 @@ interface UseAiSearchProps {
   setSearchTag: (val: string) => void
   webLlmStatus: string
   t: any
+  isAiSearch: boolean
+  setIsAiSearch: (val: boolean) => void
 }
 
 export function useAiSearch(props: UseAiSearchProps) {
-  const [isAiSearch, setIsAiSearch] = useState(false)
+  const { isAiSearch, setIsAiSearch } = props
   const [aiSearchQuery, setAiSearchQuery] = useState("")
-  const [aiWarningOpen, setAiWarningOpen] = useState(false)
+
   const {
     isAiSearching,
     aiSearchError,
@@ -31,6 +33,7 @@ export function useAiSearch(props: UseAiSearchProps) {
     setSearchTag: props.setSearchTag,
     t: props.t
   })
+
   const handleToggleAiSearch = () => {
     if (isAiSearch) {
       setIsAiSearch(false)
@@ -41,18 +44,16 @@ export function useAiSearch(props: UseAiSearchProps) {
       props.setSearchTag("")
       setExtractedFilters(null)
     } else {
-      if (props.webLlmStatus !== "ready") setAiWarningOpen(true)
-      else setIsAiSearch(true)
+      setIsAiSearch(true)
     }
   }
+
   return {
     isAiSearch,
     aiSearchQuery,
     setAiSearchQuery,
     isAiSearching,
     aiSearchError,
-    aiWarningOpen,
-    setAiWarningOpen,
     extractedFilters,
     handleToggleAiSearch
   }

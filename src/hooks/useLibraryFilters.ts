@@ -41,6 +41,7 @@ export function useLibraryFilterStates(pageSize = 12) {
   const [currentFolderId, setCurrentFolderIdState] = useState<string | null>(
     null
   )
+  const [isAiSearch, setIsAiSearchState] = useState(false)
 
   const resetPagination = () => setVisibleCount(pageSize)
   const wrap =
@@ -68,7 +69,9 @@ export function useLibraryFilterStates(pageSize = 12) {
     visibleCount,
     setVisibleCount,
     currentFolderId,
-    setCurrentFolderId: wrap(setCurrentFolderIdState)
+    setCurrentFolderId: wrap(setCurrentFolderIdState),
+    isAiSearch,
+    setIsAiSearch: wrap(setIsAiSearchState)
   }
 }
 

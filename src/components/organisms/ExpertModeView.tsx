@@ -107,6 +107,20 @@ export function ExpertModeView({
     handleToggleEasyMode
   } = useExpertModeView({ isEasyMode, onToggleEasyMode })
 
+  React.useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail) {
+        setActiveTab(customEvent.detail)
+        setActiveDetailCard(null)
+      }
+    }
+    window.addEventListener("change-expert-tab", handleTabChange)
+    return () => {
+      window.removeEventListener("change-expert-tab", handleTabChange)
+    }
+  }, [setActiveTab, setActiveDetailCard])
+
   return (
     <div
       onDragOver={handleDragOver}
@@ -201,6 +215,7 @@ export function ExpertModeView({
               setAlertType={setAlertType}
               onOpenDetailCard={setActiveDetailCard}
               onNavigateToWorkbench={() => setActiveTab("workbench")}
+              onSetActiveTab={setActiveTab}
             />
           ))}
         {activeTab === "workbench" &&

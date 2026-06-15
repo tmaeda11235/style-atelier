@@ -1,14 +1,7 @@
 import { ChevronDown, ChevronUp, Settings2 } from "lucide-react"
-import React, { useRef } from "react"
+import React from "react"
 
-import { useConfirm } from "../../contexts/ConfirmContext"
-import { useLanguage } from "../../contexts/LanguageContext"
-import { useSettings } from "../../contexts/SettingsContext"
-import { useCardExport } from "../../hooks/useCardExport"
-import { useHistory } from "../../hooks/useHistory"
-import { useLocalBackup } from "../../hooks/useLocalBackup"
-import { useSettingsGoogleDrive } from "../../hooks/useSettingsGoogleDrive"
-import { useStorageEstimate } from "../../hooks/useStorageEstimate"
+import { useSettingsTab } from "../../hooks/useSettingsTab"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { CloudSyncSection } from "./CloudSyncSection"
 import { DangerZoneSection } from "./DangerZoneSection"
@@ -25,45 +18,20 @@ interface SettingsTabProps {
   onNavigateToLibrary?: () => void
 }
 
-export function SettingsTab({
-  addLog,
-  onResetDb,
-  isEasyMode = false,
-  onToggleEasyMode = () => {},
-  onNavigateToLibrary
-}: SettingsTabProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const { estimate, checkStorage } = useStorageEstimate()
-  const confirm = useConfirm()
-  const contextSettings = useSettings()
-  const { clearHistory } = useHistory()
-
-  const isTestEnv =
-    typeof process !== "undefined" &&
-    (process.env.NODE_ENV === "test" || !!process.env.VITEST)
-
-  const [openSections, setOpenSections] = React.useState<
-    Record<string, boolean>
-  >({
-    ui: true,
-    cloud: isTestEnv,
-    maintenance: isTestEnv,
-    webllm: isTestEnv
-  })
-
-  const toggleSection = (section: string) => {
-    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }))
-  }
-
-  const currentEasyMode = isEasyMode || contextSettings.isEasyMode
-  const currentToggleEasyMode =
-    onToggleEasyMode || contextSettings.toggleEasyMode
-  const { expertFeatures, updateExpertFeature } = contextSettings
-
-  const { lang, changeLanguage, t: i18n } = useLanguage()
-  const t = i18n.settings
-
+export function SettingsTab(props: SettingsTabProps) {
   const {
+    fileInputRef,
+    estimate,
+    contextSettings,
+    openSections,
+    toggleSection,
+    currentEasyMode,
+    currentToggleEasyMode,
+    expertFeatures,
+    updateExpertFeature,
+    t,
+    lang,
+    changeLanguage,
     isSyncEnabled,
     isAutoSyncEnabled,
     isSyncing,
@@ -74,85 +42,21 @@ export function SettingsTab({
     syncProgress,
     restoreProgress,
     statusMessage,
-    showStatus,
     handleCancelSync,
     handleToggleSync,
     handleToggleAutoSync,
-    handleSync,
-    handleForceRecovery
-  } = useSettingsGoogleDrive({ addLog, checkStorage })
-
-  const [isWarningOpen, setIsWarningOpen] = React.useState(false)
-
-  const handleSyncWithWarning = () => {
-    const lastSyncStr = localStorage.getItem("style-atelier-last-backup")
-    const lastSyncTime = lastSyncStr ? parseInt(lastSyncStr, 10) : null
-    const threshold = 60 * 24 * 60 * 60 * 1000 // 60 days
-
-    if (lastSyncTime && Date.now() - lastSyncTime > threshold) {
-      setIsWarningOpen(true)
-    } else {
-      handleSync("merge")
-    }
-  }
-
-  const handleConfirmSyncStrategy = (
-    strategy: "merge" | "local-overwrite" | "cloud-overwrite"
-  ) => {
-    setIsWarningOpen(false)
-    handleSync(strategy)
-  }
-
-  const { handleLocalExport, handleLocalImport } = useLocalBackup({
-    addLog,
-    checkStorage,
-    showStatus,
-    fileInputRef
-  })
-
-  const { handleExportCSV, handleExportMarkdown } = useCardExport({
-    addLog,
-    showStatus
-  })
-
-  const handleResetDbClick = async () => {
-    const ok = await confirm({
-      title: t.confirmTitle,
-      message: t.resetConfirm,
-      confirmText: t.confirmBtn,
-      cancelText: t.cancelBtn,
-      variant: "danger"
-    })
-    if (!ok) return
-    await onResetDb()
-    showStatus(t.resetSuccess, "success")
-    checkStorage()
-  }
-
-  const handleClearHistory = async () => {
-    const ok = await confirm({
-      title: t.confirmTitle,
-      message: t.clearHistoryConfirm,
-      confirmText: t.confirmBtn,
-      cancelText: t.cancelBtn,
-      variant: "danger"
-    })
-    if (!ok) return
-
-    try {
-      await clearHistory()
-      addLog("Prompt history cleared successfully.")
-      showStatus(t.clearHistorySuccess, "success")
-      checkStorage()
-    } catch (err: any) {
-      console.error(err)
-      addLog(`Failed to clear history: ${err.message || err}`)
-      showStatus(
-        `${t.clearHistoryFailed}: ${err.message || "Unknown error"}`,
-        "error"
-      )
-    }
-  }
+    handleForceRecovery,
+    isWarningOpen,
+    setIsWarningOpen,
+    handleSyncWithWarning,
+    handleConfirmSyncStrategy,
+    handleLocalExport,
+    handleLocalImport,
+    handleExportCSV,
+    handleExportMarkdown,
+    handleResetDbClick,
+    handleClearHistory
+  } = useSettingsTab(props)
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -192,7 +96,7 @@ export function SettingsTab({
             currentToggleEasyMode={currentToggleEasyMode}
             expertFeatures={expertFeatures}
             updateExpertFeature={updateExpertFeature}
-            onNavigateToLibrary={onNavigateToLibrary}
+            onNavigateToLibrary={props.onNavigateToLibrary}
             t={t}
             theme={contextSettings.theme}
             changeTheme={contextSettings.changeTheme}

@@ -43,6 +43,8 @@ interface SettingsContextType {
   toggleBrandLogo: (enabled: boolean) => void
   alwaysEnglishLogoText: boolean
   toggleAlwaysEnglishLogoText: (enabled: boolean) => void
+  autoOpenSection: string | null
+  setAutoOpenSection: (section: string | null) => void
 }
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -62,6 +64,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [includeBrandLogo, setIncludeBrandLogo] = useState<boolean>(true)
   const [alwaysEnglishLogoText, setAlwaysEnglishLogoText] =
     useState<boolean>(false)
+  const [autoOpenSection, setAutoOpenSection] = useState<string | null>(null)
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -200,7 +203,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         includeBrandLogo,
         toggleBrandLogo,
         alwaysEnglishLogoText,
-        toggleAlwaysEnglishLogoText
+        toggleAlwaysEnglishLogoText,
+        autoOpenSection,
+        setAutoOpenSection
       }}>
       {children}
     </SettingsContext.Provider>
