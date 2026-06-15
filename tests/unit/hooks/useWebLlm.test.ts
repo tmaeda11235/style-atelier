@@ -119,7 +119,7 @@ describe("useWebLlm", () => {
       {
         target: "offscreen",
         action: "check-quota",
-        requiredBytes: 1.5 * 1024 * 1024 * 1024
+        requiredBytes: 2.0 * 1024 * 1024 * 1024
       },
       expect.any(Function)
     )

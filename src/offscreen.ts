@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
     case "check-quota":
       handleCheckQuota(
-        message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024,
+        message.requiredBytes ?? 2.0 * 1024 * 1024 * 1024,
         sendResponse
       )
       return true // Async response

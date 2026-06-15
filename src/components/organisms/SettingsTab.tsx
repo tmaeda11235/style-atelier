@@ -8,6 +8,7 @@ import { useCardExport } from "../../hooks/useCardExport"
 import { useHistory } from "../../hooks/useHistory"
 import { useLocalBackup } from "../../hooks/useLocalBackup"
 import { useSettingsGoogleDrive } from "../../hooks/useSettingsGoogleDrive"
+import { useSettingsTabFocus } from "../../hooks/useSettingsTabFocus"
 import { useStorageEstimate } from "../../hooks/useStorageEstimate"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { CloudSyncSection } from "./CloudSyncSection"
@@ -83,6 +84,8 @@ export function SettingsTab({
   } = useSettingsGoogleDrive({ addLog, checkStorage })
 
   const [isWarningOpen, setIsWarningOpen] = React.useState(false)
+
+  useSettingsTabFocus(setOpenSections)
 
   const handleSyncWithWarning = () => {
     const lastSyncStr = localStorage.getItem("style-atelier-last-backup")
@@ -186,22 +189,13 @@ export function SettingsTab({
           <UiPreferencesSection
             lang={lang}
             changeLanguage={changeLanguage}
-            showTipsBar={contextSettings.showTipsBar}
-            toggleTipsBar={contextSettings.toggleTipsBar}
             currentEasyMode={currentEasyMode}
             currentToggleEasyMode={currentToggleEasyMode}
             expertFeatures={expertFeatures}
             updateExpertFeature={updateExpertFeature}
             onNavigateToLibrary={onNavigateToLibrary}
             t={t}
-            theme={contextSettings.theme}
-            changeTheme={contextSettings.changeTheme}
-            includeBrandLogo={contextSettings.includeBrandLogo}
-            toggleBrandLogo={contextSettings.toggleBrandLogo}
-            alwaysEnglishLogoText={contextSettings.alwaysEnglishLogoText}
-            toggleAlwaysEnglishLogoText={
-              contextSettings.toggleAlwaysEnglishLogoText
-            }
+            {...contextSettings}
           />
         )}
       </div>
@@ -263,11 +257,13 @@ export function SettingsTab({
         </button>
         {openSections.maintenance && (
           <div className="p-5 space-y-6 animate-in slide-in-from-top-2 duration-250">
-            <StorageManagerSection
-              estimate={estimate}
-              handleClearHistory={handleClearHistory}
-              t={t}
-            />
+            <div id="storage-manager-section-wrapper">
+              <StorageManagerSection
+                estimate={estimate}
+                handleClearHistory={handleClearHistory}
+                t={t}
+              />
+            </div>
             <LocalBackupSection
               fileInputRef={fileInputRef}
               isSyncing={isSyncing}
@@ -308,7 +304,11 @@ export function SettingsTab({
             <ChevronDown className="w-4 h-4 text-text-secondary" />
           )}
         </button>
-        {openSections.webllm && <WebLlmSettingsSection />}
+        {openSections.webllm && (
+          <div id="webllm-settings-section-wrapper">
+            <WebLlmSettingsSection />
+          </div>
+        )}
       </div>
 
       <GDriveSyncStrategyDialog

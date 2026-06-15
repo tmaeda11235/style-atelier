@@ -319,7 +319,7 @@ if (typeof window !== "undefined") {
             }
           } else if (message.action === "check-quota") {
             const requiredBytes =
-              message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024
+              message.requiredBytes ?? 2.0 * 1024 * 1024 * 1024
             ;(async () => {
               try {
                 // If config explicitly says not sufficient, fail immediately.
