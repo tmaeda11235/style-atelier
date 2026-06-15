@@ -168,6 +168,7 @@ export function createMintingHandlers(
   }
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useMinting(
   addLog: (msg: string) => void,
   setActiveTab: (tab: "history" | "library" | "workbench") => void
