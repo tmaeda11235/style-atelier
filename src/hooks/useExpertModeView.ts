@@ -3,6 +3,12 @@ import { useEffect, useState } from "react"
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useConfirm } from "../contexts/ConfirmContext"
 import { useTutorial } from "../contexts/TutorialContext"
+import {
+  safeQueryTabs,
+  safeReloadTab,
+  safeSendTabMessage,
+  safeUpdateTab
+} from "../lib/chrome-utils"
 import { db, seedDefaultCategories } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { useDragAndDrop } from "./useDragAndDrop"
@@ -121,15 +127,15 @@ export function useExpertModeView({
   const handleInjectPrompt = async (prompt: string) => {
     setAlertType(null)
     try {
-      const tabs = await chrome.tabs.query({
+      const tabs = await safeQueryTabs({
         active: true,
         currentWindow: true
       })
-      const activeTabEl = tabs[0]
+      const activeTabEl = tabs ? tabs[0] : undefined
       if (!activeTabEl?.id) {
         throw new Error("No active tab found")
       }
-      const response = await chrome.tabs.sendMessage(activeTabEl.id, {
+      const response = await safeSendTabMessage(activeTabEl.id, {
         type: "INJECT_PROMPT",
         prompt: prompt
       })
@@ -219,7 +225,7 @@ export function useExpertModeView({
   }
 
   const handleRetryConnection = () => {
-    chrome.tabs.reload()
+    safeReloadTab()
     setAlertType(null)
   }
 
@@ -228,17 +234,20 @@ export function useExpertModeView({
   }
 
   const handleOpenMidjourney = () => {
-    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.id) {
-          chrome.tabs.update(tabs[0].id, {
+    safeQueryTabs({ active: true, currentWindow: true })
+      .then((tabs) => {
+        if (tabs && tabs[0]?.id) {
+          safeUpdateTab(tabs[0].id, {
             url: "https://www.midjourney.com/imagine"
           })
+        } else {
+          window.open("https://www.midjourney.com/imagine", "_blank")
         }
       })
-    } else {
-      window.open("https://www.midjourney.com/imagine", "_blank")
-    }
+      .catch((err) => {
+        console.error("Failed to query tabs for Midjourney redirection:", err)
+        window.open("https://www.midjourney.com/imagine", "_blank")
+      })
   }
 
   const handleOpenGuide = () => {
