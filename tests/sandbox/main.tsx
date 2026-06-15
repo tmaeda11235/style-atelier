@@ -225,6 +225,7 @@ if (typeof window !== "undefined") {
       }
     },
     runtime: {
+      id: "mock-extension-id",
       onMessage: {
         addListener: (fn: any) => {
           ;(window as any).chromeMessageListeners =
