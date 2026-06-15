@@ -11,6 +11,8 @@
   "scripts": {
     "dev": "plasmo dev",
     "dev:harness": "vite src/test/harness",
+    "dev:cached": "cross-env PLASMO_PUBLIC_USE_LOCAL_CACHE=true plasmo dev",
+    "serve:cache": "node scripts/serve-cache.mjs",
     "build": "plasmo build",
     "package": "plasmo package",
     "test": "vitest run",
@@ -21,7 +23,7 @@
     "test:mutate": "stryker run",
     "push": "npm run lint && node scripts/smart-pre-push.mjs && git commit -am \"chore: update test proof for CI verification\" && git push origin HEAD --no-verify",
     "setup-wasm": "node scripts/download-assets.mjs",
-    "postinstall": "patch-package && npm run setup-wasm",
+    "postinstall": "patch-package && npm run setup-wasm && node scripts/setup-env.mjs",
     "preinstall": "node -e \"const v=process.versions.node.split('.').map(Number); if(v[0]<20 || (v[0]===20 && v[1]<12)) { console.error('Error: Node.js version must be >= 20.12.0. Current version is ' + process.version); process.exit(1); }\""
   },
   "dependencies": {
@@ -66,6 +68,8 @@
     "@vitest/coverage-v8": "^4.1.8",
     "@vitest/ui": "^4.1.8",
     "autoprefixer": "^10.4.23",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.4.2",
     "eslint": "^10.4.1",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^6.0.2",
@@ -75,10 +79,12 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-sonarjs": "^4.0.3",
     "fake-indexeddb": "^6.2.5",
+    "http-server": "^14.1.1",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
     "madge": "^8.0.0",
+    "msw": "^2.14.6",
     "patch-package": "^8.0.1",
     "postcss": "^8.5.6",
     "prettier": "3.8.3",
@@ -135,6 +141,11 @@
     ],
     "*.{css,md,json}": [
       "prettier --write"
+    ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "assets"
     ]
   }
 }

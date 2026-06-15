@@ -5,11 +5,9 @@ import {
   downloadFileWithResume,
   getStorageEstimate
 } from "../../lib/storage-utils"
+import { initHarnessCache, mockState, setupMockListeners } from "./mockSetup"
 
 // State variables
-let mockWebGpuUnsupported = false
-let mockQuotaExceeded = false
-let mockCorrupted = false
 let engine: Engine | null = null
 
 const MODEL_FILENAME = "gemma-4-E2B-it-web.litertlm"
@@ -20,15 +18,6 @@ const EXPECTED_SIZE = 2008432640
 // Elements
 const webgpuStatus = document.getElementById("webgpu-status")!
 const opfsCapacity = document.getElementById("opfs-capacity")!
-const mockWebgpuToggle = document.getElementById(
-  "mock-webgpu-toggle"
-) as HTMLInputElement
-const mockQuotaToggle = document.getElementById(
-  "mock-quota-toggle"
-) as HTMLInputElement
-const mockCorruptToggle = document.getElementById(
-  "mock-corrupt-toggle"
-) as HTMLInputElement
 const btnDownload = document.getElementById("btn-download") as HTMLButtonElement
 const btnPurge = document.getElementById("btn-purge") as HTMLButtonElement
 const btnRun = document.getElementById("btn-run") as HTMLButtonElement
@@ -44,6 +33,7 @@ const userPromptInput = document.getElementById(
 const engineStatusText = document.getElementById("engine-status-text")!
 const outputArea = document.getElementById("output")!
 const toast = document.getElementById("toast")!
+const mswStatus = document.getElementById("msw-status")!
 
 function log(msg: string, isError = false) {
   const timestamp = new Date().toLocaleTimeString()
@@ -58,11 +48,11 @@ function showToast(message: string) {
   setTimeout(() => toast.classList.remove("show"), 3000)
 }
 
-// 1. WebGPU Check & Mocking
-const originalGpu = navigator.gpu
-
+// 1. WebGPU Check
 async function updateWebGpuStatus() {
-  const supported = mockWebGpuUnsupported ? false : await checkWebGpuSupport()
+  const supported = mockState.webGpuUnsupported
+    ? false
+    : await checkWebGpuSupport()
 
   if (supported) {
     webgpuStatus.textContent = "Supported"
@@ -73,36 +63,9 @@ async function updateWebGpuStatus() {
   }
 }
 
-mockWebgpuToggle.addEventListener("change", (e) => {
-  mockWebGpuUnsupported = (e.target as HTMLInputElement).checked
-  if (mockWebGpuUnsupported) {
-    if (navigator.gpu) {
-      Object.defineProperty(navigator, "gpu", {
-        value: undefined,
-        writable: true,
-        configurable: true
-      })
-    }
-    log("WebGPU mocked as NOT supported.")
-  } else {
-    Object.defineProperty(navigator, "gpu", {
-      value: originalGpu,
-      writable: true,
-      configurable: true
-    })
-    log("WebGPU restored to native support status.")
-  }
-  updateWebGpuStatus()
-})
-
-// 2. OPFS Capacity & Quota Mocking
-let originalEstimate: any = null
-if (navigator.storage) {
-  originalEstimate = navigator.storage.estimate?.bind(navigator.storage)
-}
-
+// 2. OPFS Capacity Check
 async function updateStorageEstimate() {
-  if (mockQuotaExceeded) {
+  if (mockState.quotaExceeded) {
     opfsCapacity.textContent = "0 Bytes / 100 GB (0%)"
     return
   }
@@ -114,41 +77,9 @@ async function updateStorageEstimate() {
   }
 }
 
-mockQuotaToggle.addEventListener("change", (e) => {
-  mockQuotaExceeded = (e.target as HTMLInputElement).checked
-  if (mockQuotaExceeded) {
-    if (navigator.storage) {
-      Object.defineProperty(navigator.storage, "estimate", {
-        value: async () => ({
-          usage: 100 * 1024 * 1024 * 1024,
-          quota: 100 * 1024 * 1024 * 1024
-        }),
-        writable: true,
-        configurable: true
-      })
-    }
-    log("OPFS Quota mocked as EXCEEDED (Free space: 0 Bytes).")
-  } else {
-    if (navigator.storage) {
-      Object.defineProperty(navigator.storage, "estimate", {
-        value: originalEstimate,
-        writable: true,
-        configurable: true
-      })
-    }
-    log("OPFS Storage Estimate restored.")
-  }
-  updateStorageEstimate()
-})
-
-mockCorruptToggle.addEventListener("change", (e) => {
-  mockCorrupted = (e.target as HTMLInputElement).checked
-  log(`Model corruption mock: ${mockCorrupted ? "ENABLED" : "DISABLED"}`)
-})
-
 // 3. Download Model with Mocking
 btnDownload.addEventListener("click", async () => {
-  if (mockQuotaExceeded) {
+  if (mockState.quotaExceeded) {
     log("Simulating QuotaExceededError...", true)
     statusMessage.textContent = "Error: QuotaExceededError"
     showToast("Storage quota exceeded!")
@@ -234,7 +165,7 @@ async function loadOrVerifyModelFile(): Promise<File> {
   const fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME)
   let file = await fileHandle.getFile()
 
-  if (mockCorrupted) {
+  if (mockState.corrupted) {
     file = new File(["corrupted content"], MODEL_FILENAME, {
       type: "application/octet-stream"
     })
@@ -306,6 +237,8 @@ btnRun.addEventListener("click", async () => {
 
 // Init
 async function init() {
+  setupMockListeners(log, updateWebGpuStatus, updateStorageEstimate)
+  await initHarnessCache(mswStatus, log)
   await updateWebGpuStatus()
   await updateStorageEstimate()
 

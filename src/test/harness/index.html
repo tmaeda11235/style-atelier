@@ -113,6 +113,8 @@
     .status-badge.unknown { background: #475569; color: #f1f5f9; }
     .status-badge.supported { background: rgba(52, 211, 153, 0.2); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
     .status-badge.unsupported { background: rgba(248, 113, 113, 0.2); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .status-badge.active { background: rgba(52, 211, 153, 0.2); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .status-badge.failed { background: rgba(248, 113, 113, 0.2); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
 
     .form-group {
       display: flex;
@@ -268,7 +270,7 @@
 
     .info-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 1rem;
     }
 
@@ -331,6 +333,10 @@
         <div class="info-item">
           <div class="info-label">OPFS Capacity</div>
           <div class="info-value" id="opfs-capacity">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">MSW Local Cache</div>
+          <div class="info-value"><span id="msw-status" class="status-badge unknown">Initializing...</span></div>
         </div>
       </div>
 
