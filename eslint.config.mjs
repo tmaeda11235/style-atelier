@@ -145,7 +145,6 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-func-lines.ts",
-      "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/AutocompleteDropdown.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
@@ -156,7 +155,6 @@ export default ts.config(
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/MergeStackModal.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/SettingsTab.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
