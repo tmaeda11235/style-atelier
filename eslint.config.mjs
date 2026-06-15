@@ -163,7 +163,6 @@ export default ts.config(
       "src/hooks/useChromeTabConnection.ts",
       "src/hooks/useEasyModeView.ts",
       "src/hooks/useExpertModeView.ts",
-      "src/hooks/useLocalBackup.ts",
     ],
     rules: {
       "max-lines-per-function": "warn"
