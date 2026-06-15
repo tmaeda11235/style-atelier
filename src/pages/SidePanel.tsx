@@ -6,6 +6,7 @@ import { ConfirmProvider } from "../contexts/ConfirmContext"
 import { LanguageProvider } from "../contexts/LanguageContext"
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
+import { WebLlmProvider } from "../contexts/WebLlmContext"
 import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
 import { useWebLlm } from "../hooks/useWebLlm"
@@ -77,11 +78,13 @@ function SidePanelPage() {
   return (
     <LanguageProvider>
       <SettingsProvider>
-        <TutorialProvider>
-          <ConfirmProvider>
-            <SidePanelInner />
-          </ConfirmProvider>
-        </TutorialProvider>
+        <WebLlmProvider>
+          <TutorialProvider>
+            <ConfirmProvider>
+              <SidePanelInner />
+            </ConfirmProvider>
+          </TutorialProvider>
+        </WebLlmProvider>
       </SettingsProvider>
     </LanguageProvider>
   )

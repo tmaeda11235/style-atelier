@@ -231,7 +231,10 @@
     "webLlmWebGpuStep2": "2. 「グラフィック アクセラレーションが使用可能な場合は使用する」をオンにします。",
     "webLlmWebGpuStep3": "3. ブラウザを再起動して変更を適用します。",
     "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く",
-    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可"
+    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可",
+    "webLlmGlobalAnxietyMicrocopy": "バックグラウンドで安全に進行中。別の画面へ移動しても問題ありません",
+    "webLlmGlobalQuotaWarning": "空き容量が不足しています（最低2GB必要）",
+    "webLlmGlobalCleanupBtn": "ストレージを整理する"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
