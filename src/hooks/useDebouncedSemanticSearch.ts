@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { parseSemanticQuery } from "../lib/ai-search-utils"
 
@@ -25,6 +26,7 @@ interface EffectParams {
   setIsAiSearching: (val: boolean) => void
   setAiSearchError: (val: string | null) => void
   setExtractedFilters: (val: any) => void
+  language: string
 }
 
 function resetFilters(
@@ -87,7 +89,8 @@ function useSemanticSearchEffect(params: EffectParams) {
         params.setSearchTag,
         params.setIsAiSearching,
         params.setAiSearchError,
-        params.t
+        params.t,
+        params.language
       )
     }, 600)
     return () => clearTimeout(timer)
@@ -103,7 +106,8 @@ function useSemanticSearchEffect(params: EffectParams) {
     params.t,
     params.setIsAiSearching,
     params.setAiSearchError,
-    params.setExtractedFilters
+    params.setExtractedFilters,
+    params.language
   ])
 }
 
@@ -117,12 +121,13 @@ async function executeSemanticSearch(
   setSearchTag: (val: string) => void,
   setIsAiSearching: (val: boolean) => void,
   setAiSearchError: (val: string | null) => void,
-  t: any
+  t: any,
+  language: string
 ) {
   setIsAiSearching(true)
   setAiSearchError(null)
   try {
-    const result = await parseSemanticQuery(query, categories)
+    const result = await parseSemanticQuery(query, categories, language)
     setExtractedFilters(result)
     applyFilters(
       result,
@@ -152,6 +157,9 @@ export function useDebouncedSemanticSearch(
     query: string
   } | null>(null)
 
+  const { i18n } = useTranslation()
+  const currentLanguage = i18n.language
+
   useSemanticSearchEffect({
     isAiSearch: props.isAiSearch,
     aiSearchQuery: props.aiSearchQuery,
@@ -163,7 +171,8 @@ export function useDebouncedSemanticSearch(
     t: props.t,
     setIsAiSearching,
     setAiSearchError,
-    setExtractedFilters
+    setExtractedFilters,
+    language: currentLanguage
   })
 
   return { isAiSearching, aiSearchError, extractedFilters, setExtractedFilters }
