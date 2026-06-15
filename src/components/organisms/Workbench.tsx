@@ -357,6 +357,7 @@ function useWorkbenchCore({
 
 export const Workbench: React.FC<WorkbenchProps> = (props) => {
   const data = useWorkbenchCore(props)
+  const { undo, redo } = data
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -379,13 +380,13 @@ export const Workbench: React.FC<WorkbenchProps> = (props) => {
         if (e.key.toLowerCase() === "z") {
           e.preventDefault()
           if (e.shiftKey) {
-            data.redo()
+            redo()
           } else {
-            data.undo()
+            undo()
           }
         } else if (e.key.toLowerCase() === "y") {
           e.preventDefault()
-          data.redo()
+          redo()
         }
       }
     }
@@ -394,7 +395,7 @@ export const Workbench: React.FC<WorkbenchProps> = (props) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [data.undo, data.redo])
+  }, [undo, redo])
 
   return <WorkbenchView {...data} addLog={props.addLog} />
 }
