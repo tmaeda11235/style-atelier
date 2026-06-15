@@ -7,6 +7,13 @@ vi.mock("@/lib/ai-search-utils", () => ({
   parseSemanticQuery: vi.fn()
 }))
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en" }
+  })
+}))
+
 describe("useDebouncedSemanticSearch", () => {
   const categories = [
     { id: "cat-cyberpunk", name: "Cyberpunk" },
@@ -55,7 +62,8 @@ describe("useDebouncedSemanticSearch", () => {
 
     expect(parseSemanticQuery).toHaveBeenCalledWith(
       "Legendary blue cyberpunk character",
-      categories
+      categories,
+      "en"
     )
 
     // applyFilters should have been called, setting category to ID "cat-cyberpunk"
