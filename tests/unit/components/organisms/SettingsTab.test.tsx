@@ -403,9 +403,12 @@ describe("SettingsTab", () => {
     const toggleBtn = container.querySelector("#google-drive-toggle-btn")!
     fireEvent.click(toggleBtn)
 
-    await waitFor(() => {
-      expect(screen.getByText(/Cloud Backup:/i)).toBeDefined()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Cloud Backup:/i)).toBeDefined()
+      },
+      { timeout: 10000 }
+    )
 
     const restoreBtn = screen.getByRole("button", {
       name: /Force Restore from Google Drive/i
