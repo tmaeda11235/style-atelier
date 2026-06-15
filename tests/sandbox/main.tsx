@@ -94,24 +94,23 @@ seedSandboxData()
 if (typeof window !== "undefined") {
   // Mock navigator.gpu for sandbox / E2E tests
   if (typeof navigator !== "undefined") {
-    // If it's already set to undefined by a test script (like in troubleshooting E2E), respect it.
-    // Otherwise, override requestAdapter to always return a mock adapter.
-    if (navigator.gpu !== undefined) {
-      try {
-        const mockGpu = {
-          requestAdapter: async () => ({ name: "MockGPU" })
-        }
-        Object.defineProperty(navigator, "gpu", {
-          value: mockGpu,
-          writable: true,
-          configurable: true
-        })
-      } catch (e) {
-        console.error(
-          "[Sandbox GPU Mock] Failed to inject navigator.gpu mock:",
-          e
-        )
-      }
+    try {
+      Object.defineProperty(navigator, "gpu", {
+        get: () => {
+          if (mockWebLlmConfig && mockWebLlmConfig.gpuEnabled === false) {
+            return undefined
+          }
+          return {
+            requestAdapter: async () => ({ name: "MockGPU" })
+          }
+        },
+        configurable: true
+      })
+    } catch (e) {
+      console.error(
+        "[Sandbox GPU Mock] Failed to inject dynamic navigator.gpu mock:",
+        e
+      )
     }
   }
 
@@ -121,16 +120,30 @@ if (typeof window !== "undefined") {
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
   ;(window as any).checkAvailableStorage = checkAvailableStorage
 
+  const parentUrlParams =
+    typeof window !== "undefined" && window.parent
+      ? new URLSearchParams(window.parent.location.search)
+      : null
   const existingConfig = (window as any).mockWebLlmConfig || {}
   const mockWebLlmConfig = {
+    gpuEnabled:
+      existingConfig.gpuEnabled !== undefined
+        ? existingConfig.gpuEnabled
+        : parentUrlParams && parentUrlParams.get("gpu") !== null
+          ? parentUrlParams.get("gpu") === "enabled"
+          : true,
     quotaSufficient:
       existingConfig.quotaSufficient !== undefined
         ? existingConfig.quotaSufficient
-        : true,
+        : parentUrlParams && parentUrlParams.get("quota") !== null
+          ? parentUrlParams.get("quota") === "sufficient"
+          : true,
     integrityPassed:
       existingConfig.integrityPassed !== undefined
         ? existingConfig.integrityPassed
-        : (null as boolean | null),
+        : parentUrlParams && parentUrlParams.get("integrity") !== null
+          ? parentUrlParams.get("integrity") === "normal"
+          : (null as boolean | null),
     useRealIntegrity:
       existingConfig.useRealIntegrity !== undefined
         ? existingConfig.useRealIntegrity
@@ -139,11 +152,17 @@ if (typeof window !== "undefined") {
     downloadSpeed:
       existingConfig.downloadSpeed !== undefined
         ? existingConfig.downloadSpeed
-        : 100,
+        : parentUrlParams && parentUrlParams.get("network") !== null
+          ? parentUrlParams.get("network") === "slow"
+            ? 800
+            : 100
+          : 100,
     failDownload:
       existingConfig.failDownload !== undefined
         ? existingConfig.failDownload
-        : false,
+        : parentUrlParams && parentUrlParams.get("network") !== null
+          ? parentUrlParams.get("network") === "fail"
+          : false,
     downloadErrorMsg:
       existingConfig.downloadErrorMsg !== undefined
         ? existingConfig.downloadErrorMsg
@@ -151,7 +170,9 @@ if (typeof window !== "undefined") {
     offlineMode:
       existingConfig.offlineMode !== undefined
         ? existingConfig.offlineMode
-        : false,
+        : parentUrlParams && parentUrlParams.get("network") !== null
+          ? parentUrlParams.get("network") === "offline"
+          : false,
     onDownloadStart:
       existingConfig.onDownloadStart !== undefined
         ? existingConfig.onDownloadStart
@@ -164,6 +185,20 @@ if (typeof window !== "undefined") {
       existingConfig.initDelay !== undefined ? existingConfig.initDelay : 0
   }
   ;(window as any).mockWebLlmConfig = mockWebLlmConfig
+
+  // Boot-time cache clearing check
+  if (parentUrlParams && parentUrlParams.get("clearCache") === "true") {
+    console.log(
+      "[Sandbox Sidepanel Boot] clearCache=true detected, resetting WebLLM state..."
+    )
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("mock-webllm-downloaded")
+      localStorage.removeItem("mock-webllm-download-in-progress")
+    }
+    if (typeof window !== "undefined" && window.indexedDB) {
+      window.indexedDB.deleteDatabase("webllm-db")
+    }
+  }
 
   // Mock navigator.storage.estimate if not sufficient
   if (navigator.storage && navigator.storage.estimate) {
@@ -189,6 +224,41 @@ if (typeof window !== "undefined") {
       if (resolve) {
         resolve(data.payload)
         pendingRequests.delete(data.messageId)
+      }
+    }
+
+    // Handle configuration update messages from parent index page
+    if (data && data.source === "chrome-api-mock-config-update") {
+      const config = data.payload
+      console.log("[Sandbox Sidepanel] Received config update:", config)
+
+      if (config.clearDownloadedState) {
+        console.log("[Sandbox Sidepanel] Clearing WebLLM downloaded state...")
+        localStorage.removeItem("mock-webllm-downloaded")
+        localStorage.removeItem("mock-webllm-download-in-progress")
+        if (window.indexedDB) {
+          window.indexedDB.deleteDatabase("webllm-db")
+        }
+      }
+
+      mockWebLlmConfig.gpuEnabled = config.gpuEnabled
+      mockWebLlmConfig.quotaSufficient = config.quotaSufficient
+      mockWebLlmConfig.integrityPassed = config.integrityPassed
+
+      if (config.networkStatus === "online") {
+        mockWebLlmConfig.offlineMode = false
+        mockWebLlmConfig.failDownload = false
+        mockWebLlmConfig.downloadSpeed = 100
+      } else if (config.networkStatus === "offline") {
+        mockWebLlmConfig.offlineMode = true
+        mockWebLlmConfig.failDownload = false
+      } else if (config.networkStatus === "fail") {
+        mockWebLlmConfig.offlineMode = false
+        mockWebLlmConfig.failDownload = true
+      } else if (config.networkStatus === "slow") {
+        mockWebLlmConfig.offlineMode = false
+        mockWebLlmConfig.failDownload = false
+        mockWebLlmConfig.downloadSpeed = 800 // Slow down
       }
     }
   })
@@ -255,7 +325,12 @@ if (typeof window !== "undefined") {
               localStorage.getItem("mock-webllm-downloaded") === "true"
             const passed = mockWebLlmConfig.integrityPassed
 
-            if (passed !== null) {
+            if (!isDownloaded) {
+              setTimeout(() => {
+                if (callback)
+                  callback({ status: "success", integrityPassed: false })
+              }, 50)
+            } else if (passed !== null) {
               setTimeout(() => {
                 if (callback)
                   callback({ status: "success", integrityPassed: passed })

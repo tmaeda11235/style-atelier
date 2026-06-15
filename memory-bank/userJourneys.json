@@ -558,13 +558,26 @@
         "WebGPU無効警告とステップバイステップガイドが表示されることを確認",
         "「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"
       ],
-      "nextJourneys": ["@J-SET-01"],
+      "nextJourneys": ["@J-SET-01", "@J-SANDBOX-CONTROLLER-01"],
       "viewComponents": [
         "src/components/molecules/WebGpuWarning.tsx",
         "src/components/organisms/WebLlmSettingsSection.tsx",
         "src/components/organisms/WebLlmSettingsSubComponents.tsx",
         "src/components/molecules/AiDownloadStatus.tsx"
       ]
+    },
+    {
+      "id": "@J-SANDBOX-CONTROLLER-01",
+      "name": "サンドボックスコントローラーによる異常系シミュレーション",
+      "description": "テストハーネス上でWebGPU無効化や容量制限などのエラー状態を模擬し、フォールバック挙動を確認する",
+      "steps": [
+        "テストハーネスを開く",
+        "サンドボックスコントローラーでWebGPU StatusをDisabledに切り替える",
+        "WebGPU無効警告が表示されるのを確認する",
+        "容量制限やネットワークオフラインなどの他のシミュレーション条件を選択して挙動を確認する"
+      ],
+      "nextJourneys": ["@J-SET-WEBGPU-TROUBLESHOOT-01"],
+      "viewComponents": ["tests/sandbox/index.html", "tests/sandbox/main.tsx"]
     }
   ]
 }

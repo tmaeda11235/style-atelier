@@ -31,55 +31,175 @@
       top: 12px;
       left: 12px;
       z-index: 1000;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 6px 12px;
+      border-radius: 12px;
+      padding: 12px 16px;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #94a3b8;
-      font-family: ui-sans-serif, system-ui, sans-serif;
+      flex-direction: column;
+      gap: 12px;
+      color: #e2e8f0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       font-size: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      transition: all 0.2s ease-in-out;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+      width: 240px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .sandbox-controls:hover {
       border-color: rgba(255, 255, 255, 0.25);
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.85);
     }
-    .sandbox-controls label {
-      font-weight: 500;
-      color: #cbd5e1;
+    .controls-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
     }
-    .sandbox-controls select {
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    .controls-title {
+      font-weight: 600;
+      font-size: 13px;
+      background: linear-gradient(to right, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
       color: #f8fafc;
+    }
+    .controls-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+      max-height: 400px;
+      transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+    }
+    .controls-body.collapsed {
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      margin: 0;
+      padding: 0;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .control-group select {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 6px 10px;
       font-size: 12px;
       cursor: pointer;
       outline: none;
       transition: all 0.2s;
     }
-    .sandbox-controls select:hover {
-      border-color: rgba(255, 255, 255, 0.4);
+    .control-group select:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: #1e293b;
     }
-    .sandbox-controls select:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    .control-group select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2), 0 2px 4px -1px rgba(239, 68, 68, 0.1);
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 12px -1px rgba(239, 68, 68, 0.4), 0 2px 6px -1px rgba(239, 68, 68, 0.2);
+    }
+    .btn-danger:active {
+      transform: scale(0.95);
     }
   </style>
 </head>
 <body>
   <div class="sandbox-controls">
-    <label for="variant-select">Midjourney Mock:</label>
-    <select id="variant-select">
-      <option value="index.html">Default Mock (index.html)</option>
-      <option value="pattern2.html">Pattern 2 (pattern2.html)</option>
-    </select>
+    <div class="controls-header">
+      <span class="controls-title">🛠️ Sandbox Controller</span>
+      <button id="toggle-panel-btn" class="icon-btn">⚙️</button>
+    </div>
+    <div id="controls-body" class="controls-body">
+      <div class="control-group">
+        <label for="variant-select">Midjourney Mock:</label>
+        <select id="variant-select">
+          <option value="index.html">Default Mock (index.html)</option>
+          <option value="pattern2.html">Pattern 2 (pattern2.html)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="gpu-select">WebGPU Status:</label>
+        <select id="gpu-select">
+          <option value="enabled">Enabled (Mock GPU)</option>
+          <option value="disabled">Disabled (No GPU)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="quota-select">OPFS Storage Quota:</label>
+        <select id="quota-select">
+          <option value="sufficient">Sufficient (&gt; 2.5 GB)</option>
+          <option value="insufficient">Insufficient (&lt; 1.5 GB)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="network-select">Download Network:</label>
+        <select id="network-select">
+          <option value="online">Online (Normal)</option>
+          <option value="offline">Offline (Interrupted)</option>
+          <option value="fail">Fail Immediately</option>
+          <option value="slow">Slow Download</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="integrity-select">Model Integrity:</label>
+        <select id="integrity-select">
+          <option value="normal">Passed</option>
+          <option value="corrupted">Failed (Corrupted)</option>
+        </select>
+      </div>
+
+      <button id="clear-cache-btn" class="btn-danger">Reset Model Cache</button>
+    </div>
   </div>
   <iframe id="midjourney-frame" src="about:blank"></iframe>
   <iframe id="sidepanel-frame" src="/tests/sandbox/sidepanel.html"></iframe>
@@ -90,12 +210,26 @@
     let variantFile = urlParams.get('variant') || 'index.html';
     const mockUrl = urlParams.get('mockUrl');
     
+    // 他のモックパラメータもURLから取得
+    const gpuParam = urlParams.get('gpu') || 'enabled';
+    const quotaParam = urlParams.get('quota') || 'sufficient';
+    const networkParam = urlParams.get('network') || 'online';
+    const integrityParam = urlParams.get('integrity') || 'normal';
+    
     const mjFrame = document.getElementById('midjourney-frame');
     const spFrame = document.getElementById('sidepanel-frame');
     const selectEl = document.getElementById('variant-select');
     
-    if (mockUrl && spFrame) {
-      spFrame.src = `/tests/sandbox/sidepanel.html?mockUrl=${encodeURIComponent(mockUrl)}`;
+    let spSrc = '/tests/sandbox/sidepanel.html';
+    const spParams = new URLSearchParams();
+    if (mockUrl) spParams.set('mockUrl', mockUrl);
+    if (urlParams.get('clearCache') === 'true') {
+      spParams.set('clearCache', 'true');
+    }
+    
+    const spParamStr = spParams.toString();
+    if (spParamStr && spFrame) {
+      spFrame.src = `${spSrc}?${spParamStr}`;
     }
     
     // iframe の URL を更新
@@ -112,16 +246,104 @@
       const selected = e.target.value;
       updateIframe(selected);
       
-      // URLのクエリパラメータを書き換えて状態保持
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('variant', selected);
       window.history.pushState({}, '', newUrl);
     });
 
+    // モック設定の同期
+    const gpuSelect = document.getElementById('gpu-select');
+    const quotaSelect = document.getElementById('quota-select');
+    const networkSelect = document.getElementById('network-select');
+    const integritySelect = document.getElementById('integrity-select');
+    const togglePanelBtn = document.getElementById('toggle-panel-btn');
+    const controlsBody = document.getElementById('controls-body');
+
+    // 初期値をセット
+    gpuSelect.value = gpuParam;
+    quotaSelect.value = quotaParam;
+    networkSelect.value = networkParam;
+    integritySelect.value = integrityParam;
+
+    togglePanelBtn.addEventListener('click', () => {
+      controlsBody.classList.toggle('collapsed');
+    });
+
+    function syncMockConfig() {
+      if (!spFrame || !spFrame.contentWindow) return;
+
+      const payload = {
+        gpuEnabled: gpuSelect.value === 'enabled',
+        quotaSufficient: quotaSelect.value === 'sufficient',
+        networkStatus: networkSelect.value,
+        integrityPassed: integritySelect.value === 'normal' ? true : false
+      };
+
+      console.log('[Sandbox Parent] Syncing mock config to sidepanel:', payload);
+      spFrame.contentWindow.postMessage({
+        source: 'chrome-api-mock-config-update',
+        payload: payload
+      }, '*');
+    }
+
+    // パラメータが変更されたらURLを更新する関数
+    function updateUrlParam(name, value) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set(name, value);
+      window.history.pushState({}, '', newUrl);
+    }
+
+    gpuSelect.addEventListener('change', () => {
+      updateUrlParam('gpu', gpuSelect.value);
+      syncMockConfig();
+      console.log('[Sandbox Parent] WebGPU status changed. Reloading sidepanel...');
+      if (spFrame && spFrame.contentWindow) {
+        spFrame.contentWindow.location.reload();
+      }
+    });
+
+    quotaSelect.addEventListener('change', () => {
+      updateUrlParam('quota', quotaSelect.value);
+      syncMockConfig();
+    });
+
+    networkSelect.addEventListener('change', () => {
+      updateUrlParam('network', networkSelect.value);
+      syncMockConfig();
+    });
+
+    integritySelect.addEventListener('change', () => {
+      updateUrlParam('integrity', integritySelect.value);
+      syncMockConfig();
+      if (spFrame && spFrame.contentWindow) {
+        spFrame.contentWindow.location.reload();
+      }
+    });
+
+    spFrame.addEventListener('load', () => {
+      setTimeout(syncMockConfig, 300);
+    });
+
+    const clearCacheBtn = document.getElementById('clear-cache-btn');
+    clearCacheBtn.addEventListener('click', () => {
+      console.log('[Sandbox Parent] Clearing WebLLM Cache...');
+      if (spFrame && spFrame.contentWindow) {
+        // Send clear command
+        spFrame.contentWindow.postMessage({
+          source: 'chrome-api-mock-config-update',
+          payload: { clearDownloadedState: true }
+        }, '*');
+        
+        // Trigger reload to apply clean state
+        setTimeout(() => {
+          console.log('[Sandbox Parent] Reloading sidepanel after cache reset...');
+          spFrame.contentWindow.location.reload();
+        }, 100);
+      }
+    });
+
     // chrome API メッセージ中継ハブ (Chrome API Mock Bridge)
     window.addEventListener('message', (event) => {
-      const spFrame = document.getElementById('sidepanel-frame');
-
       if (!mjFrame || !spFrame) return;
 
       // 送信元がサイドパネル iframe の場合
