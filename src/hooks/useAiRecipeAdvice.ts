@@ -81,9 +81,19 @@ async function fetchAdviceHelper(params: FetchAdviceParams) {
   }
 }
 
-function checkAdviceCache(props: RecipeAdviceFetchProps): boolean {
+interface CacheCheckParams {
+  cards: any[]
+  status: string
+  key: string
+  cacheRef: React.MutableRefObject<Record<string, string>>
+  setAdvice: React.Dispatch<React.SetStateAction<string | null>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+function processCache(params: CacheCheckParams): boolean {
   const { cards, status, key, cacheRef, setAdvice, setError, setLoading } =
-    props
+    params
   if (cards.length < 2 || status !== "ready") {
     setAdvice(null)
     setError(null)
@@ -127,14 +137,31 @@ function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
   } = props
 
   useEffect(() => {
-    if (checkAdviceCache(props)) {
+    if (
+      processCache({
+        cards,
+        status,
+        key,
+        cacheRef,
+        setAdvice,
+        setError,
+        setLoading
+      })
+    ) {
       return
     }
     let mounted = true
     const isMounted = () => mounted
     const timer = setTimeout(() => {
       fetchAdviceHelper({
-        ...props,
+        cards,
+        key,
+        lang,
+        setAdvice,
+        setError,
+        setLoading,
+        cacheRef,
+        runInferenceRef,
         isMounted
       })
     }, 500)
