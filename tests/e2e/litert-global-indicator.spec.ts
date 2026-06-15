@@ -1,7 +1,7 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier Sandbox E2E Tests - WebLLM Global Indicator & Quota Warning @J-MB-E2E-GLOBAL-INDICATOR", () => {
+test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Global Indicator & Quota Warning @J-MB-E2E-GLOBAL-INDICATOR", () => {
   test.slow()
 
   test.beforeEach(async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Global Indicator & Quota
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log(
-      "Navigating to sandbox page for WebLLM Global Indicator test..."
+      "Navigating to sandbox page for LiteRT-LM Global Indicator test..."
     )
     await page.goto("/tests/sandbox/index.html")
 
@@ -89,7 +89,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Global Indicator & Quota
 
     // Capture screenshot of global progress bar at the bottom
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-global-progress-indicator.png")
+      path: path.join(screenshotsDir, "litert-global-progress-indicator.png")
     })
     console.log("Global progress indicator screenshot saved.")
 
@@ -101,7 +101,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Global Indicator & Quota
     const webllmWrapper = spFrame.locator("#webllm-settings-section-wrapper")
     await expect(webllmWrapper).toBeVisible()
     console.log(
-      "Redirected to WebLLM settings successfully on progress indicator click."
+      "Redirected to LiteRT-LM settings successfully on progress indicator click."
     )
 
     // 4. Test Quota limit warning behavior
@@ -167,7 +167,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Global Indicator & Quota
 
     // Take screenshot of global quota warning state
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-global-quota-warning.png")
+      path: path.join(screenshotsDir, "litert-global-quota-warning.png")
     })
     console.log("Global quota warning screenshot saved.")
 
