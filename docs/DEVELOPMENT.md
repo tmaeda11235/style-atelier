@@ -112,3 +112,50 @@ To simplify the check-in process, a unified `npm run push` command is available.
 ```bash
 npm run push
 ```
+
+---
+
+## 6. Internationalization (i18n) Rules / 多言語化（i18n）コーディング規約
+
+To prevent untranslated UI text, we enforce the `i18next/no-literal-string` ESLint rule. Additionally, translation keys must be completely synchronized between languages.
+
+コードベース内での未翻訳テキストの混入を防ぐため、`i18next/no-literal-string` ESLint ルールを適用しています。また、言語間で翻訳キーが完全に同期している必要があります。
+
+### Wrap User-Facing Text / ユーザー表示テキストの翻訳
+
+Always wrap user-facing text using the `useTranslation` hook:
+ユーザーに表示されるテキストは、必ず `useTranslation` フックを使用して翻訳してください。
+
+```tsx
+const { t } = useTranslation()
+// ...
+<span>{t('common.save')}</span>
+```
+
+### Exempting Attributes / 翻訳除外属性
+
+Structural attributes such as `id`, `className`, `testId`, `data-testid`, `color`, `size`, `type` are automatically ignored. However, visual props like `title`, `placeholder`, or `label` must be localized:
+`id`, `className`, `testId`, `data-testid`, `color`, `size`, `type` などの構造的な属性は自動的に翻訳除外対象となりますが、`title`, `placeholder`, `label` などの表示用属性に渡す文字列は翻訳が必要です。
+
+```tsx
+{/* Bad / 悪い例 */}
+<input placeholder="Search prompts..." />
+
+{/* Good / 良い例 */}
+<input placeholder={t('library.searchPlaceholder')} />
+```
+
+### Bypassing Checks / 一時的なチェック回避
+
+If a literal string is absolutely required (e.g. mock data in test files, specific debug constants), disable the line check:
+テストファイルのモックデータやデバッグ用の定数など、どうしてもリテラル文字列が必要な場合は、以下のコメントでチェックを回避できます：
+
+```tsx
+const devUrl = "http://localhost:3000" // eslint-disable-line i18next/no-literal-string
+```
+
+### Translation Key Synchronization Check / 翻訳キーの同期検証
+
+Our linter automatically runs `node scripts/check-i18n-keys.mjs` as part of `npm run lint`. This script ensures that all keys present in `src/locales/ja/translation.json` exist in `src/locales/en/translation.json` and vice versa. If there is a mismatch, the linter (and the CI pipeline) will fail.
+リンター（`npm run lint`）を実行すると、自動的に `node scripts/check-i18n-keys.mjs` が実行されます。このスクリプトは、日本語（`ja/translation.json`）と英語（`en/translation.json`）の間でキーに差分がないかをチェックします。差分がある場合、リンターおよび CI パイプラインは失敗します。
+
