@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiteRT-LM Offline Debug Harness</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #818cf8;
+      --primary-hover: #6366f1;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      box-sizing: border-box;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #a5b4fc, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0 0 0.5rem 0;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 2rem;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--glass-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      margin: 0;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-badge.unknown { background: #475569; color: #f1f5f9; }
+    .status-badge.supported { background: rgba(52, 211, 153, 0.2); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .status-badge.unsupported { background: rgba(248, 113, 113, 0.2); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    input[type="text"], textarea {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #475569;
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      background: #475569;
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .progress-bar-container {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 9999px;
+      height: 10px;
+      width: 100%;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .status-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-height: 20px;
+    }
+
+    .output-area {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 300px;
+      flex-grow: 1;
+      color: #38bdf8;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .info-item {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+
+    .info-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid var(--card-border);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: var(--glass-shadow);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transform: translateY(150%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LiteRT-LM Offline Debug Harness</h1>
+    <p class="subtitle">LiteRT-LM & WebGPU / OPFS Environment Verification & Simulation</p>
+  </header>
+
+  <main class="dashboard">
+    <!-- Left Column: Controls & Environment Status -->
+    <div class="card">
+      <h2>🌐 Environment Status</h2>
+      
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">WebGPU Support</div>
+          <div class="info-value"><span id="webgpu-status" class="status-badge unknown">Unknown</span></div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">OPFS Capacity</div>
+          <div class="info-value" id="opfs-capacity">-</div>
+        </div>
+      </div>
+
+      <h2>🛠️ Simulation Modifiers</h2>
+      
+      <div class="toggle-container">
+        <div>
+          <strong>Mock WebGPU Not Supported</strong>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Force WebGPU check to fail</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="mock-webgpu-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-container">
+        <div>
+          <strong>Mock OPFS Quota Exceeded</strong>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Simulate QuotaExceededError on download</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="mock-quota-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-container">
+        <div>
+          <strong>Mock Model File Corrupted</strong>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Simulate verification/checksum failure</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="mock-corrupt-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <h2>📦 Model Operations</h2>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btn-download" style="flex: 1;">📥 Download Model</button>
+        <button id="btn-purge" class="danger" style="background: rgba(248, 113, 113, 0.2); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); flex: 1;">🗑️ Purge OPFS</button>
+      </div>
+      <div class="progress-bar-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="status-text" id="status-message">Ready</div>
+    </div>
+
+    <!-- Right Column: Inference Test Harness -->
+    <div class="card">
+      <h2>🧠 Local Inference Execution</h2>
+
+      <div class="form-group">
+        <label for="system-prompt">System Prompt</label>
+        <input type="text" id="system-prompt" value="You are a helpful assistant. Keep answers brief.">
+      </div>
+
+      <div class="form-group">
+        <label for="user-prompt">User Prompt</label>
+        <textarea id="user-prompt" placeholder="Type a message to prompt the local model..."></textarea>
+      </div>
+
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <button id="btn-run" disabled>⚡ Run Inference</button>
+        <div id="engine-status-text" style="color: var(--text-muted); font-size: 0.9rem;">Engine Status: Unloaded</div>
+      </div>
+
+      <div class="form-group" style="flex-grow: 1; min-height: 200px; display: flex; flex-direction: column;">
+        <label>Console & Inference Output</label>
+        <div class="output-area" id="output">Welcome to the LiteRT-LM Debug Harness. Initializing logs...</div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="./harness.ts"></script>
+</body>
+</html>
