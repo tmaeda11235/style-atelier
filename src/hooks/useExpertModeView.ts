@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useConfirm } from "../contexts/ConfirmContext"
 import { useTutorial } from "../contexts/TutorialContext"
-import { db, seedDefaultCategories } from "../lib/db"
+import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { useDragAndDrop } from "./useDragAndDrop"
+import { useExpertLogs } from "./useExpertLogs"
+import { useExpertTutorial } from "./useExpertTutorial"
 import { useMinting } from "./useMinting"
 import { useTabs } from "./useTabs"
 
@@ -119,58 +121,6 @@ async function injectPrompt(
   }
 }
 
-async function performDbReset(addLog: (log: string) => void) {
-  await db.historyItems.clear()
-  await db.styleCards.clear()
-  await db.userSettings.clear()
-  await db.categories.clear()
-  await seedDefaultCategories()
-  localStorage.removeItem("style-atelier-onboarding-seen")
-  addLog("All data cleared.")
-}
-
-export function useExpertLogs() {
-  const [logs, setLogs] = useState<string[]>([])
-  const addLog = useCallback(
-    (log: string) => setLogs((prev) => [log, ...prev].slice(0, 20)),
-    []
-  )
-  const handleClearLogs = useCallback(() => setLogs([]), [])
-  return { logs, addLog, handleClearLogs }
-}
-
-export function useExpertTutorial(
-  setActiveTab: (tab: string) => void,
-  startTutorial: () => void
-) {
-  const [showWelcome, setShowWelcome] = useState(false)
-  useEffect(() => {
-    if (!localStorage.getItem("style-atelier-onboarding-seen"))
-      setShowWelcome(true)
-  }, [])
-  const handleStartTutorial = useCallback(() => {
-    localStorage.setItem("style-atelier-onboarding-seen", "true")
-    setShowWelcome(false)
-    setActiveTab("history")
-    startTutorial()
-  }, [setActiveTab, startTutorial])
-  const handleSkipTutorial = useCallback(() => {
-    localStorage.setItem("style-atelier-onboarding-seen", "true")
-    setShowWelcome(false)
-  }, [])
-  const handleOpenGuide = useCallback(() => {
-    setActiveTab("history")
-    startTutorial()
-  }, [setActiveTab, startTutorial])
-  return {
-    showWelcome,
-    setShowWelcome,
-    handleStartTutorial,
-    handleSkipTutorial,
-    handleOpenGuide
-  }
-}
-
 export function useExpertCardOperations(
   addLog: (log: string) => void,
   setAlertType: (type: AlertType) => void,
@@ -263,8 +213,13 @@ export function useExpertModeView({
   const { activeTab, setActiveTab } = useTabs()
   const [alertType, setAlertType] = useState<AlertType>(null)
 
-  const { logs, addLog, handleClearLogs } = useExpertLogs()
-  const tutorial = useExpertTutorial(setActiveTab, startTutorial)
+  const { logs, addLog, handleClearLogs, handleResetDb } =
+    useExpertLogs(confirm)
+  const tutorial = useExpertTutorial(
+    setActiveTab,
+    startTutorial,
+    onToggleEasyMode
+  )
   const cardOps = useExpertCardOperations(addLog, setAlertType, setActiveTab)
   const { handleInjectPrompt } = useExpertPromptInjection(
     addLog,
@@ -272,26 +227,7 @@ export function useExpertModeView({
     cardOps.activeDetailCard
   )
   const dragMint = useExpertDragAndMint(addLog, setActiveTab, advanceIfStep)
-  const handleToggleEasyModeInternal = useCallback(
-    (enabled: boolean) => {
-      onToggleEasyMode(enabled)
-      if (enabled) setActiveTab("library")
-    },
-    [onToggleEasyMode, setActiveTab]
-  )
-  const handleResetDb = useCallback(async () => {
-    if (
-      await confirm({
-        title: "Reset Database",
-        message: "Are you sure you want to delete ALL DATA?",
-        confirmText: "Reset",
-        cancelText: "Cancel",
-        variant: "danger"
-      })
-    ) {
-      await performDbReset(addLog)
-    }
-  }, [confirm, addLog])
+
   return {
     activeTab,
     setActiveTab,
@@ -310,7 +246,6 @@ export function useExpertModeView({
       setAlertType(null)
     },
     handleDismissAlert: () => setAlertType(null),
-    handleOpenMidjourney: openMidjourney,
-    handleToggleEasyMode: handleToggleEasyModeInternal
+    handleOpenMidjourney: openMidjourney
   }
 }
