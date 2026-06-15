@@ -3,6 +3,7 @@ import Dexie, { type Table } from "dexie"
 import type {
   CustomCategory,
   HistoryItem,
+  ImageSyncState,
   ParameterAlias,
   ParameterFolder,
   SlotHistoryItem,
@@ -26,6 +27,7 @@ export class StyleAtelierDatabaseBase extends Dexie {
   slotHistory!: Table<SlotHistoryItem, string>
   parameterAliases!: Table<ParameterAlias, string>
   parameterFolders!: Table<ParameterFolder, string>
+  imageSyncStates!: Table<ImageSyncState, string>
 
   constructor() {
     super("StyleAtelierDatabase")
