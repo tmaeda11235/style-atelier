@@ -1,12 +1,11 @@
-import React, { useRef } from "react"
+import React from "react"
 
-import { useConfirm } from "../contexts/ConfirmContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import { useSettings } from "../contexts/SettingsContext"
-import { useCardExport } from "./useCardExport"
-import { useHistory } from "./useHistory"
-import { useLocalBackup } from "./useLocalBackup"
-import { useSettingsGoogleDrive } from "./useSettingsGoogleDrive"
+import { useCloudSyncHandlers, useCloudSyncState } from "./useSettingsCloudSync"
+import { useMaintenanceState } from "./useSettingsMaintenance"
+import { useSettingsTabFocus } from "./useSettingsTabFocus"
+import { useStorageEstimate } from "./useStorageEstimate"
 
 const SECTION_UI = "ui"
 const SECTION_CLOUD = "cloud"
@@ -54,101 +53,6 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
   }
 }
 
-export function useCloudSyncHandlers(
-  gdrive: ReturnType<typeof useSettingsGoogleDrive>,
-  setIsWarningOpen: React.Dispatch<React.SetStateAction<boolean>>
-) {
-  const handleSyncWithWarning = React.useCallback(() => {
-    const lastSyncStr = localStorage.getItem("style-atelier-last-backup")
-    const lastSyncTime = lastSyncStr ? parseInt(lastSyncStr, 10) : null
-    const threshold = 60 * 24 * 60 * 60 * 1000 // 60 days
-
-    if (lastSyncTime && Date.now() - lastSyncTime > threshold) {
-      setIsWarningOpen(true)
-    } else {
-      gdrive.handleSync("merge")
-    }
-  }, [gdrive, setIsWarningOpen])
-
-  const handleConfirmSyncStrategy = React.useCallback(
-    (strategy: "merge" | "local-overwrite" | "cloud-overwrite") => {
-      setIsWarningOpen(false)
-      gdrive.handleSync(strategy)
-    },
-    [gdrive, setIsWarningOpen]
-  )
-
-  return { handleSyncWithWarning, handleConfirmSyncStrategy }
-}
-
-export function useResetDbHandler({
-  confirm,
-  onResetDb,
-  showStatus,
-  checkStorage,
-  t
-}: {
-  confirm: ReturnType<typeof useConfirm>
-  onResetDb: () => void
-  showStatus: (msg: string, type: "success" | "error") => void
-  checkStorage: () => void
-  t: any
-}) {
-  return React.useCallback(async () => {
-    const ok = await confirm({
-      title: t.confirmTitle,
-      message: t.resetConfirm,
-      confirmText: t.confirmBtn,
-      cancelText: t.cancelBtn,
-      variant: "danger"
-    })
-    if (!ok) return
-    await onResetDb()
-    showStatus(t.resetSuccess, "success")
-    checkStorage()
-  }, [confirm, onResetDb, showStatus, checkStorage, t])
-}
-
-export function useClearHistoryHandler({
-  confirm,
-  clearHistory,
-  addLog,
-  showStatus,
-  checkStorage,
-  t
-}: {
-  confirm: ReturnType<typeof useConfirm>
-  clearHistory: () => Promise<void>
-  addLog: (log: string) => void
-  showStatus: (msg: string, type: "success" | "error") => void
-  checkStorage: () => void
-  t: any
-}) {
-  return React.useCallback(async () => {
-    const ok = await confirm({
-      title: t.confirmTitle,
-      message: t.clearHistoryConfirm,
-      confirmText: t.confirmBtn,
-      cancelText: t.cancelBtn,
-      variant: "danger"
-    })
-    if (!ok) return
-    try {
-      await clearHistory()
-      addLog("Prompt history cleared successfully.")
-      showStatus(t.clearHistorySuccess, "success")
-      checkStorage()
-    } catch (err: any) {
-      console.error(err)
-      addLog(`Failed to clear history: ${err.message || err}`)
-      showStatus(
-        `${t.clearHistoryFailed}: ${err.message || "Unknown error"}`,
-        "error"
-      )
-    }
-  }, [confirm, clearHistory, addLog, showStatus, checkStorage, t])
-}
-
 export function useUiPreferencesState({
   isEasyMode,
   onToggleEasyMode,
@@ -185,130 +89,94 @@ export function useUiPreferencesState({
   return { currentEasyMode, uiProps }
 }
 
-export function useCloudSyncState({
-  addLog,
-  checkStorage,
-  setIsWarningOpen,
-  t
-}: {
-  addLog: (log: string) => void
-  checkStorage: () => void
-  setIsWarningOpen: React.Dispatch<React.SetStateAction<boolean>>
-  t: any
-}) {
-  const gdrive = useSettingsGoogleDrive({ addLog, checkStorage })
-  const lastSyncStr = localStorage.getItem("style-atelier-last-backup")
-  const lastSyncTime = lastSyncStr ? parseInt(lastSyncStr, 10) : null
-  const threshold = 60 * 24 * 60 * 60 * 1000 // 60 days
-
-  const handleSyncWithWarning = React.useCallback(() => {
-    if (lastSyncTime && Date.now() - lastSyncTime > threshold) {
-      setIsWarningOpen(true)
-    } else {
-      gdrive.handleSync("merge")
-    }
-  }, [gdrive, lastSyncTime, threshold, setIsWarningOpen])
-
-  const cloudProps = {
-    isSyncEnabled: gdrive.isSyncEnabled,
-    isAutoSyncEnabled: gdrive.isAutoSyncEnabled,
-    isSyncing: gdrive.isSyncing,
-    isRestoring: gdrive.isRestoring,
-    lastBackup: gdrive.lastBackup,
-    cloudBackup: gdrive.cloudBackup,
-    isLoadingCloudBackup: gdrive.isLoadingCloudBackup,
-    syncProgress: gdrive.syncProgress,
-    restoreProgress: gdrive.restoreProgress,
-    statusMessage: gdrive.statusMessage,
-    handleCancelSync: gdrive.handleCancelSync,
-    handleToggleSync: gdrive.handleToggleSync,
-    handleToggleAutoSync: gdrive.handleToggleAutoSync,
-    handleSync: handleSyncWithWarning,
-    t
-  }
-
-  return { gdrive, cloudProps }
-}
-
-function useLocalBackupState({ addLog, checkStorage, gdriveShowStatus }: any) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const localBackup = useLocalBackup({
-    addLog,
-    checkStorage,
-    showStatus: gdriveShowStatus,
-    fileInputRef
-  })
-  return { fileInputRef, localBackup }
-}
-
-interface UseMaintenanceStateProps {
+interface SettingsTabHooksProps {
   addLog: (log: string) => void
   onResetDb: () => void
-  checkStorage: () => void
-  gdriveShowStatus: (msg: string, type: "success" | "error") => void
-  gdriveSyncState: any
-  estimate: any
-  t: any
+  isEasyMode?: boolean
+  onToggleEasyMode?: (checked: boolean) => void
+  onNavigateToLibrary?: () => void
+  onReplayTutorial?: () => void
 }
 
-export function useMaintenanceState(props: UseMaintenanceStateProps) {
-  const {
-    addLog,
-    onResetDb,
+function buildSettingsTabResult(
+  t: any,
+  currentEasyMode: any,
+  accordion: any,
+  uiProps: any,
+  cloudProps: any,
+  maintenanceProps: any,
+  isWarningOpen: boolean,
+  handleConfirmSyncStrategy: any,
+  setIsWarningOpen: any
+) {
+  return {
+    t,
+    currentEasyMode,
+    openSections: accordion.openSections,
+    onToggleUi: accordion.handleToggleUi,
+    onToggleCloud: accordion.handleToggleCloud,
+    onToggleMaintenance: accordion.handleToggleMaintenance,
+    onToggleWebLlm: accordion.handleToggleWebLlm,
+    uiProps,
+    cloudProps,
+    maintenanceProps,
+    isWarningOpen,
+    handleConfirmSyncStrategy,
+    setIsWarningOpen
+  }
+}
+
+export function useSettingsTab(props: SettingsTabHooksProps) {
+  const { estimate, checkStorage } = useStorageEstimate()
+  const isTest =
+    typeof process !== "undefined" &&
+    (!!process.env.VITEST || process.env.NODE_ENV === "test")
+
+  const accordion = useSettingsAccordionState(isTest)
+  const t = useLanguage().t.settings
+  const [isWarningOpen, setIsWarningOpen] = React.useState(false)
+
+  const { currentEasyMode, uiProps } = useUiPreferencesState({
+    isEasyMode: !!props.isEasyMode,
+    onToggleEasyMode: props.onToggleEasyMode || (() => {}),
+    onNavigateToLibrary: props.onNavigateToLibrary,
+    onReplayTutorial: props.onReplayTutorial,
+    t
+  })
+
+  const { gdrive, cloudProps } = useCloudSyncState({
+    addLog: props.addLog,
     checkStorage,
-    gdriveShowStatus,
-    gdriveSyncState,
+    setIsWarningOpen,
+    t
+  })
+
+  const { handleConfirmSyncStrategy } = useCloudSyncHandlers(
+    gdrive,
+    setIsWarningOpen
+  )
+
+  const { maintenanceProps } = useMaintenanceState({
+    addLog: props.addLog,
+    onResetDb: props.onResetDb,
+    checkStorage,
+    gdriveShowStatus: gdrive.showStatus,
+    gdriveSyncState: gdrive,
     estimate,
     t
-  } = props
-  const confirm = useConfirm()
-  const { clearHistory } = useHistory()
-
-  const { fileInputRef, localBackup } = useLocalBackupState({
-    addLog,
-    checkStorage,
-    gdriveShowStatus
   })
 
-  const cardExport = useCardExport({
-    addLog,
-    showStatus: gdriveShowStatus
-  })
+  useSettingsTabFocus(accordion.setOpenSections)
 
-  const handleResetDbClick = useResetDbHandler({
-    confirm,
-    onResetDb,
-    showStatus: gdriveShowStatus,
-    checkStorage,
-    t
-  })
-
-  const handleClearHistory = useClearHistoryHandler({
-    confirm,
-    clearHistory,
-    addLog,
-    showStatus: gdriveShowStatus,
-    checkStorage,
-    t
-  })
-
-  return {
-    maintenanceProps: {
-      t,
-      estimate,
-      handleClearHistory,
-      fileInputRef,
-      isSyncing: gdriveSyncState.isSyncing,
-      isRestoring: gdriveSyncState.isRestoring,
-      handleLocalExport: localBackup.handleLocalExport,
-      handleLocalImport: localBackup.handleLocalImport,
-      handleExportCSV: cardExport.handleExportCSV,
-      handleExportMarkdown: cardExport.handleExportMarkdown,
-      isSyncEnabled: gdriveSyncState.isSyncEnabled,
-      isLoadingCloudBackup: gdriveSyncState.isLoadingCloudBackup,
-      cloudBackup: gdriveSyncState.cloudBackup,
-      handleResetDbClick,
-      handleForceRecovery: gdriveSyncState.handleForceRecovery
-    }
-  }
+  return buildSettingsTabResult(
+    t,
+    currentEasyMode,
+    accordion,
+    uiProps,
+    cloudProps,
+    maintenanceProps,
+    isWarningOpen,
+    handleConfirmSyncStrategy,
+    setIsWarningOpen
+  )
 }
