@@ -155,7 +155,6 @@ export default ts.config(
       "src/components/organisms/ExpertModeView.tsx",
       "src/components/organisms/HandBar.tsx",
       "src/components/organisms/HistoryTab.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/MergeStackModal.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
