@@ -3,7 +3,7 @@
     "title": "Style Atelierへようこそ！",
     "description": "実際に操作しながら使い方を覚える\nインタラクティブなガイドを開始しますか？",
     "start": "ガイドを開始する",
-    "skip": "スキップ（あとでGuideボタンから開始できます）"
+    "skip": "スキップ（あとで設定画面から再実行できます）"
   },
   "onboarding": {
     "quickGuide": "クイックガイド",
@@ -39,7 +39,29 @@
         "title": "7. Workbenchで編集する",
         "description": "Workbenchタブでカードの変数をカスタマイズし、複数のスタイルを組み合わせ、最終的なプロンプトを生成します。"
       }
-    ]
+    ],
+    "mock": {
+      "midjourneyWebUi": "Midjourney Web UI",
+      "sidePanel": "サイドパネル",
+      "dropHere": "ここにドロップ",
+      "mint": "カード化 (Mint)",
+      "cardName": "カード名",
+      "neonCyberpunkSamurai": "Neon Cyberpunk Samurai",
+      "title": "タイトル",
+      "promptBubbles": "プロンプト要素",
+      "aSamurai": "A samurai",
+      "slotNeonHair": "[Slot: neon hair] ✏️",
+      "detailedIllustration": "detailed illustration",
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "clickCard": "カードをクリック",
+      "activeCard": "選択中のカード",
+      "workbenchEditor": "ワークベンチエディタ",
+      "active": "有効",
+      "hairColor": "髪色 (Hair Color):",
+      "neonCyan": "neon cyan ✏️"
+    }
   },
   "settings": {
     "title": "設定",
@@ -54,6 +76,9 @@
     "themeSystem": "システム設定",
     "languageLabel": "表示言語",
     "languageDesc": "インターフェースの表示言語を切り替えます。",
+    "replayTutorialLabel": "インタラクティブチュートリアル",
+    "replayTutorialDesc": "操作方法を説明するガイド（チュートリアル）を最初から実行します。",
+    "replayTutorialBtn": "チュートリアルを再実行する",
     "easyModeLabel": "かんたんモード (Easy Mode)",
     "easyModeDesc": "UIをシンプルにし、Libraryタブのみを表示します。設定には右上の歯車アイコンからいつでも戻ることができます。",
     "easyModeToggleLabel": "かんたんモードを有効にする",
@@ -209,7 +234,10 @@
     "webLlmWebGpuStep2": "2. 「グラフィック アクセラレーションが使用可能な場合は使用する」をオンにします。",
     "webLlmWebGpuStep3": "3. ブラウザを再起動して変更を適用します。",
     "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く",
-    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可"
+    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可",
+    "webLlmGlobalAnxietyMicrocopy": "バックグラウンドで安全に進行中。別の画面へ移動しても問題ありません",
+    "webLlmGlobalQuotaWarning": "空き容量が不足しています（最低2GB必要）",
+    "webLlmGlobalCleanupBtn": "ストレージを整理する"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
@@ -411,6 +439,16 @@
       "pin": "ワークベンチに送る",
       "unpin": "ワークベンチから外す",
       "more": "その他のアクション"
+    },
+    "filtersTitle": "詳細フィルター",
+    "filtersToggleLabel": "フィルター",
+    "rarity": "レア度",
+    "category": "カテゴリー",
+    "rarities": {
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "legendary": "レジェンダリー"
     }
   },
   "workbench": {
@@ -564,9 +602,6 @@
     "aiDeclutterDownload": "モデル(1.5GB)をダウンロードしてAI整理を有効化",
     "aiDeclutterDownloading": "モデルダウンロード中... {{progress}}%",
     "aiDeclutterError": "モデル読み込みエラー。クリックして再試行。",
-    "aiDeClutterBtn": "AIプロンプト整理",
-    "aiDeClutterLoading": "整理中...",
-    "aiDeClutterNotReady": "Gemmaモデルがロードされていません。設定でダウンロードしてください。",
     "aiAnalysis": "AIスタイル分析",
     "aiAnalysisBtn": "AIでスタイルを分析",
     "aiInitializing": "AI初期化中...",

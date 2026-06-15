@@ -167,4 +167,62 @@ describe("extractKeywords", () => {
     const keywords = extractKeywords(prompt)
     expect(keywords).toEqual(["都会の", "少女", "森の"])
   })
+
+  // 10. Kill targeted mutants for nlp-utils
+  it("should filter out Japanese chunks of length 1 or less (BudouX parsing boundary)", () => {
+    // "と" is length 1 and should be filtered out by trimmed.length > 1.
+    // "少女" is length 2 and should be kept.
+    const prompt = "と、少女"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["少女"])
+  })
+
+  it("should eliminate duplicate English words within Japanese segments case-insensitively", () => {
+    // "都会のiPhone、都会のiphone" -> containsJapanese is true for both segments.
+    // The English words "iPhone" and "iphone" are parsed as separate chunks.
+    // Duplicate check must be case-insensitive, returning only "iPhone" once.
+    const prompt = "都会のiPhone、都会のiphone"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["都会の", "iPhone"])
+  })
+
+  it("should route to else branch and preserve the whole segment even when intermediate words become empty after cleaning", () => {
+    // "cute : cat" has words ["cute", ":", "cat"].
+    // After cleanWord, it becomes ["cute", "", "cat"].
+    // filter(Boolean) makes it ["cute", "cat"] (length 2, no stopwords), routing to else branch -> returns ["cute : cat"].
+    // If filter(Boolean) is mutated (removed), length remains 3, routing to then branch -> returns ["cute", "cat"].
+    const prompt = "cute : cat"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["cute : cat"])
+  })
+
+  // 11. Kill more surviving mutants in cleanPromptText and cleanWord
+  it("should clean leading URLs even when there are leading spaces", () => {
+    // If the initial trim() is removed from cleanPromptText, the URL will not match ^https? and won't be cleaned.
+    const prompt = "  https://s.mj.run/abc  majestic lion"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["majestic lion"])
+  })
+
+  it("should clean leading HTTP URLs in addition to HTTPS URLs", () => {
+    // If https? is mutated to https, http URLs will not be cleaned.
+    const prompt = "http://s.mj.run/abc majestic lion"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["majestic lion"])
+  })
+
+  it("should not stop parameter cleaning at a non-spaced double-hyphen unless mutated", () => {
+    // If \s in (?=\s--|$|[\r\n]) is mutated to \S, it will match the non-spaced "-- majestic lion" boundary,
+    // causing parameter removal to stop early and leak the remaining un-parsed parameter.
+    const prompt = "cute cat --ar 16:9-- majestic lion"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["cute cat"])
+  })
+
+  it("should remove multiple nested leading and trailing punctuation from words", () => {
+    // If + is mutated/removed from cleanWord's regex, only a single punctuation mark is removed, leaving "(hello)".
+    const prompt = "((hello))"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["hello"])
+  })
 })

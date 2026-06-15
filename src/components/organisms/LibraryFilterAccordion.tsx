@@ -65,22 +65,24 @@ export function RaritySortFilters({
   setRarityFilter,
   allRaritiesLabel
 }: RaritySortFiltersProps) {
+  const { t: i18n } = useLanguage()
+  const t = i18n.libraryTab
   if (!expertFeatures.rarity) return null
 
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        Rarity
+        {t.rarity}
       </span>
       <select
         value={rarityFilter}
         onChange={(e) => setRarityFilter(e.target.value as any)}
         className="w-full px-2 py-1.5 text-[11px] font-bold border rounded bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer">
-        <option value="All">{allRaritiesLabel}</option>
-        <option value="Common">Common</option>
-        <option value="Rare">Rare</option>
-        <option value="Epic">Epic</option>
-        <option value="Legendary">Legendary</option>
+        <option value={"All"}>{allRaritiesLabel}</option>
+        <option value={"Common"}>{t.rarities?.common}</option>
+        <option value={"Rare"}>{t.rarities?.rare}</option>
+        <option value={"Epic"}>{t.rarities?.epic}</option>
+        <option value={"Legendary"}>{t.rarities?.legendary}</option>
       </select>
     </div>
   )
@@ -115,7 +117,7 @@ export function CategoryFilterButton({
         />
       ) : (
         <span className="text-[11px] leading-none">
-          {cat.iconEmoji || "🖼️"}
+          {cat.iconEmoji || t.parameterArrayEditor.imageEmoji}
         </span>
       )}
       <span>{displayName}</span>
@@ -138,10 +140,13 @@ interface CategoryFiltersRowProps {
 }
 
 export function CategoryFiltersRow(props: CategoryFiltersRowProps) {
+  const { t: i18n } = useLanguage()
+  const t = i18n.libraryTab
+
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        Category
+        {t.category}
       </span>
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mt-0.5 scrollbar-none">
         <button
@@ -242,21 +247,21 @@ function getColorOptions(t: any) {
   return [
     {
       value: "All",
-      label: t.colors?.all || "All Colors",
+      label: t.colors?.all,
       bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)"
     },
-    { value: "Red", label: t.colors?.red || "Red", bg: "#ef4444" },
-    { value: "Orange", label: t.colors?.orange || "Orange", bg: "#f97316" },
-    { value: "Yellow", label: t.colors?.yellow || "Yellow", bg: "#eab308" },
-    { value: "Green", label: t.colors?.green || "Green", bg: "#22c55e" },
-    { value: "Cyan", label: t.colors?.cyan || "Cyan", bg: "#06b6d4" },
-    { value: "Blue", label: t.colors?.blue || "Blue", bg: "#3b82f6" },
-    { value: "Purple", label: t.colors?.purple || "Purple", bg: "#a855f7" },
-    { value: "Pink", label: t.colors?.pink || "Pink", bg: "#ec4899" },
-    { value: "Brown", label: t.colors?.brown || "Brown", bg: "#78350f" },
-    { value: "White", label: t.colors?.white || "White", bg: "#ffffff" },
-    { value: "Gray", label: t.colors?.gray || "Gray", bg: "#6b7280" },
-    { value: "Black", label: t.colors?.black || "Black", bg: "#09090b" }
+    { value: "Red", label: t.colors?.red, bg: "#ef4444" },
+    { value: "Orange", label: t.colors?.orange, bg: "#f97316" },
+    { value: "Yellow", label: t.colors?.yellow, bg: "#eab308" },
+    { value: "Green", label: t.colors?.green, bg: "#22c55e" },
+    { value: "Cyan", label: t.colors?.cyan, bg: "#06b6d4" },
+    { value: "Blue", label: t.colors?.blue, bg: "#3b82f6" },
+    { value: "Purple", label: t.colors?.purple, bg: "#a855f7" },
+    { value: "Pink", label: t.colors?.pink, bg: "#ec4899" },
+    { value: "Brown", label: t.colors?.brown, bg: "#78350f" },
+    { value: "White", label: t.colors?.white, bg: "#ffffff" },
+    { value: "Gray", label: t.colors?.gray, bg: "#6b7280" },
+    { value: "Black", label: t.colors?.black, bg: "#09090b" }
   ]
 }
 
@@ -295,7 +300,7 @@ export function LibraryFilterAccordion(props: LibraryFilterAccordionProps) {
         <div className="flex items-center justify-between px-4 pb-3 border-b border-slate-100 dark:border-slate-850 flex-shrink-0">
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
-            {t.filtersTitle || "Detailed Filters"}
+            {t.filtersTitle}
           </h3>
           <button
             onClick={() => setIsFiltersExpanded(false)}
