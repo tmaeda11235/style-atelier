@@ -12,7 +12,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Non-Target Site Accessibility @
 
     // Simulate a non-target site by mocking chrome.tabs.query
     await page.addInitScript(() => {
-      let _chrome: any = null
+      let _chrome: any = {
+        tabs: {
+          query: async () => [
+            { id: 1, url: "https://example.com", active: true }
+          ]
+        }
+      }
       Object.defineProperty(window, "chrome", {
         configurable: true,
         get() {
