@@ -117,6 +117,7 @@ test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORG
     })
 
     // 4. Test Parameter Editor - open alias editing modal
+    await page.waitForTimeout(500)
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
     await expect(srefEditBtn).toBeVisible({ timeout: 5000 })
     await srefEditBtn.click()
