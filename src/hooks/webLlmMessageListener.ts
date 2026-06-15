@@ -14,6 +14,7 @@ interface Dispatchers {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+  setWebGpuFallback?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function handleEngineStatusMessage(
@@ -58,7 +59,11 @@ function handleStatusMessage(
   if (handleEngineStatusMessage(ws, payload, dispatch)) {
     return
   }
-  if (ws === "downloading") {
+  if (ws === "webgpu-fallback-warn") {
+    if (dispatch.setWebGpuFallback) {
+      dispatch.setWebGpuFallback(true)
+    }
+  } else if (ws === "downloading") {
     dispatch.setStatus("downloading")
     dispatch.setProgress(payload.wp ?? 0)
     dispatch.setSpeed(payload.wsp ?? 0)
@@ -100,7 +105,8 @@ export function createMessageListener(
   setEta: React.Dispatch<React.SetStateAction<number>>,
   setRetryCount: React.Dispatch<React.SetStateAction<number>>,
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>,
-  setText: React.Dispatch<React.SetStateAction<string>>
+  setText: React.Dispatch<React.SetStateAction<string>>,
+  setWebGpuFallback?: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   return (message: any) => {
     if (message.source !== "offscreen-worker") return
@@ -124,7 +130,8 @@ export function createMessageListener(
       setEta,
       setRetryCount,
       setMaxRetries,
-      setText
+      setText,
+      setWebGpuFallback
     }
     handleStatusMessage(ws, { wp, we, wsp, weta, wrc, wmr, wtxt }, dispatch)
   }

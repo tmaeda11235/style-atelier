@@ -26,6 +26,7 @@ interface ActionAreaProps {
   status: string
   progress: number
   loading: boolean
+  webLlmError: string | null
   onDeclutter: () => void
   onDownload: () => void
   t: Record<string, any>
@@ -159,11 +160,11 @@ function DeclutterActionArea({
     )
   }
 
-  if (status === "insufficient-quota") {
+  if (status === "insufficient-quota" || webLlmError === "QuotaExceededError") {
     return (
       <span className="text-red-500 font-bold flex items-center gap-1">
         <AlertCircle className="w-3.5 h-3.5" />
-        Insufficient Space (1.5GB required)
+        {t.settings?.webLlmQuotaWarningTitle || "Insufficient Space"}
       </span>
     )
   }
@@ -194,8 +195,15 @@ function AiDeclutterControl({
   onChange
 }: AiDeclutterProps) {
   const { t } = useLanguage()
-  const { status, progress, startDownload, loading, error, declutterPrompt } =
-    useAiPromptDeclutter()
+  const {
+    status,
+    progress,
+    startDownload,
+    loading,
+    error,
+    webLlmError,
+    declutterPrompt
+  } = useAiPromptDeclutter()
 
   const handleDeclutter = async () => {
     const combinedText = getCombinedText(segments, inputValue)
@@ -217,6 +225,7 @@ function AiDeclutterControl({
           status={status}
           progress={progress}
           loading={loading}
+          webLlmError={webLlmError}
           onDeclutter={handleDeclutter}
           onDownload={startDownload}
           t={t}

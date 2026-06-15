@@ -23,8 +23,10 @@ interface WebLlmEffectProps {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+  setWebGpuFallback: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+// eslint-disable-next-line max-lines-per-function
 function useWebLlmEffect(props: WebLlmEffectProps) {
   const {
     setStatus,
@@ -35,7 +37,8 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
     setEta,
     setRetryCount,
     setMaxRetries,
-    setText
+    setText,
+    setWebGpuFallback
   } = props
 
   useEffect(() => {
@@ -56,10 +59,11 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
       setEta,
       setRetryCount,
       setMaxRetries,
-      setText
+      setText,
+      setWebGpuFallback
     )
     chrome.runtime.onMessage.addListener(messageListener)
-    checkCurrentStateHelper(setStatus, setProgress)
+    checkCurrentStateHelper(setStatus, setProgress, setWebGpuFallback, setError)
     return () => {
       port.disconnect()
       chrome.runtime.onMessage.removeListener(messageListener)
@@ -73,7 +77,8 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
     setEta,
     setRetryCount,
     setMaxRetries,
-    setText
+    setText,
+    setWebGpuFallback
   ])
 }
 
@@ -89,6 +94,7 @@ function useWebLlmState() {
   const [retryCount, setRetryCount] = useState<number>(0)
   const [maxRetries, setMaxRetries] = useState<number>(0)
   const [text, setText] = useState<string>("")
+  const [webGpuFallback, setWebGpuFallback] = useState<boolean>(false)
 
   const resetStats = () => {
     setSpeed(0)
@@ -96,6 +102,7 @@ function useWebLlmState() {
     setRetryCount(0)
     setMaxRetries(0)
     setText("")
+    setWebGpuFallback(false)
   }
 
   return {
@@ -117,6 +124,8 @@ function useWebLlmState() {
     setMaxRetries,
     text,
     setText,
+    webGpuFallback,
+    setWebGpuFallback,
     resetStats
   }
 }
@@ -144,7 +153,8 @@ export function useWebLlm() {
     setEta: state.setEta,
     setRetryCount: state.setRetryCount,
     setMaxRetries: state.setMaxRetries,
-    setText: state.setText
+    setText: state.setText,
+    setWebGpuFallback: state.setWebGpuFallback
   })
 
   return {
@@ -159,16 +169,27 @@ export function useWebLlm() {
     retryCount: state.retryCount,
     maxRetries: state.maxRetries,
     text: state.text,
+    webGpuFallback: state.webGpuFallback,
     startDownload: () => {
       state.resetStats()
-      startDownloadHelper(state.setStatus, state.setProgress, state.setError)
+      startDownloadHelper(
+        state.setStatus,
+        state.setProgress,
+        state.setError,
+        state.setWebGpuFallback
+      )
     },
     purgeCache: () => {
       state.resetStats()
       purgeCacheHelper(state.setStatus, state.setProgress, state.setError)
     },
     checkCurrentState: () =>
-      checkCurrentStateHelper(state.setStatus, state.setProgress),
+      checkCurrentStateHelper(
+        state.setStatus,
+        state.setProgress,
+        state.setWebGpuFallback,
+        state.setError
+      ),
     preloadEngine: preloadEngineHelper,
     runInference: runInferenceHelper
   }

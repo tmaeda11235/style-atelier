@@ -132,8 +132,26 @@ function ModelQuotaWarningOverlay({ t }: { t: any }) {
         {t.webLlmQuotaWarningTitle || "Insufficient Space"}
       </p>
       <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs text-center font-sans">
-        {t.webLlmQuotaWarningDesc ||
-          "At least 2.5 GB of free space is required."}
+        {t.webLlmQuotaExceededDesc ||
+          "Storage space is insufficient. Please ensure at least 1.5 GB of free space."}
+      </p>
+    </div>
+  )
+}
+
+function ModelUnsupportedOverlay({ t }: { t: any }) {
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="flex flex-col items-center gap-1.5 text-center px-4">
+      <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
+      <p className="font-bold text-red-600 dark:text-red-500">
+        {t.settings?.webLlmBothUnsupportedTitle || "AI Environment Unsupported"}
+      </p>
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs font-sans leading-normal">
+        {t.settings?.webLlmBothUnsupportedDesc ||
+          "Both WebGPU and Wasm (CPU) are unavailable on your environment. Please update your browser or check your settings."}
       </p>
     </div>
   )
@@ -228,7 +246,10 @@ export function ModelStatusOverlay({
       />
     )
   }
-  if (status === "insufficient-quota") return <ModelQuotaWarningOverlay t={t} />
+  if (status === "insufficient-quota" || webLlmError === "QuotaExceededError")
+    return <ModelQuotaWarningOverlay t={t} />
+  if (status === "unsupported" || webLlmError === "both-unsupported")
+    return <ModelUnsupportedOverlay t={t} />
   if (status === "retrying") {
     return (
       <ModelRetryingOverlay

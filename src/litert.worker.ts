@@ -1,4 +1,5 @@
-import { Engine, LiteRtLm } from "@litert-lm/core"
+/* eslint-disable max-lines */
+import { Backend, Engine, LiteRtLm } from "@litert-lm/core"
 
 console.log("LiteRT Worker context initialized.")
 
@@ -68,27 +69,68 @@ async function getModelFile(): Promise<File> {
   return file
 }
 
+// eslint-disable-next-line max-lines-per-function
 async function instantiateEngine(file: File): Promise<Engine> {
-  self.postMessage({
-    status: "engine-initializing",
-    progress: 30,
-    speed: 0,
-    slate: 0,
-    text: "Loading Wasm module and compiling WebGPU shaders..."
-  } as any)
   const localUrl = URL.createObjectURL(file)
-  const engineInstance = await Engine.create({
-    model: localUrl,
-    mainExecutorSettings: { maxNumTokens: 8192 }
-  })
-  self.postMessage({
-    status: "engine-initializing",
-    progress: 80,
-    speed: 0,
-    slate: 0,
-    text: "Creating conversation context..."
-  } as any)
-  return engineInstance
+  try {
+    self.postMessage({
+      status: "engine-initializing",
+      progress: 30,
+      speed: 0,
+      slate: 0,
+      text: "Loading Wasm module and compiling WebGPU shaders..."
+    } as any)
+    const engineInstance = await Engine.create({
+      model: localUrl,
+      mainExecutorSettings: { maxNumTokens: 8192 }
+    })
+    self.postMessage({
+      status: "engine-initializing",
+      progress: 80,
+      speed: 0,
+      slate: 0,
+      text: "Creating conversation context..."
+    } as any)
+    return engineInstance
+  } catch (gpuError: any) {
+    console.warn(
+      "WebGPU initialization failed, falling back to CPU (Wasm) mode:",
+      gpuError
+    )
+
+    // Notify UI of the WebGPU fallback
+    self.postMessage({
+      status: "webgpu-fallback-warn",
+      error: gpuError.message || "WebGPU load failed"
+    } as any)
+
+    self.postMessage({
+      status: "engine-initializing",
+      progress: 30,
+      speed: 0,
+      slate: 0,
+      text: "WebGPU unsupported. Falling back to CPU (Wasm) mode..."
+    } as any)
+
+    try {
+      const engineInstance = await Engine.create({
+        model: localUrl,
+        backend: Backend.CPU,
+        mainExecutorSettings: { maxNumTokens: 8192 }
+      })
+      self.postMessage({
+        status: "engine-initializing",
+        progress: 80,
+        speed: 0,
+        slate: 0,
+        text: "Creating conversation context (CPU Mode)..."
+      } as any)
+      return engineInstance
+    } catch (cpuError: any) {
+      console.error("CPU (Wasm) fallback initialization failed:", cpuError)
+      throw new Error("both-unsupported")
+    }
+  }
 }
 
 async function loadEngine(): Promise<Engine> {
@@ -207,9 +249,15 @@ async function doModelDownload() {
     await streamDownload(response, fileHandle)
     self.postMessage({ status: "ready" })
   } catch (err: any) {
+    const isQuotaError =
+      err.name === "QuotaExceededError" ||
+      err.message?.includes("QuotaExceededError") ||
+      err.message?.includes("quota")
     self.postMessage({
       status: "error",
-      error: err.message || "Download failed"
+      error: isQuotaError
+        ? "QuotaExceededError"
+        : err.message || "Download failed"
     })
   }
 }
