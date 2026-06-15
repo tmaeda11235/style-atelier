@@ -66,6 +66,7 @@ export function SettingsTab({
   const {
     isSyncEnabled,
     isAutoSyncEnabled,
+    autoSyncSuspendedByAge,
     isSyncing,
     isRestoring,
     lastBackup,
@@ -240,6 +241,7 @@ export function SettingsTab({
               handleToggleAutoSync={handleToggleAutoSync}
               handleSync={handleSyncWithWarning}
               t={t}
+              autoSyncSuspendedByAge={autoSyncSuspendedByAge}
             />
           </div>
         )}

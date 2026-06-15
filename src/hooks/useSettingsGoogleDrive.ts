@@ -82,6 +82,7 @@ export function useSettingsGoogleDrive({
   })
   return {
     ...q,
+    autoSyncSuspendedByAge: q.autoSyncSuspendedByAge,
     ...meta,
     ...progress,
     isSyncing: mutations.syncMutation.isPending,
