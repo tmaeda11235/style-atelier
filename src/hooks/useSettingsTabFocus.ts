@@ -7,7 +7,6 @@ export function useSettingsTabFocus(
     if (typeof window === "undefined") return
     const focusSection = (window as any).__focusSettingsSection
     if (!focusSection) return
-
     ;(window as any).__focusSettingsSection = null
 
     if (focusSection === "maintenance") {

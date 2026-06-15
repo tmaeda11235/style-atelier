@@ -104,7 +104,8 @@ export function ExpertModeView({
     handleStartTutorial,
     handleSkipTutorial,
     handleSendToWorkbench,
-    handleToggleEasyMode
+    handleToggleEasyMode,
+    handleReplayTutorial
   } = useExpertModeView({ isEasyMode, onToggleEasyMode })
 
   return (
@@ -220,6 +221,7 @@ export function ExpertModeView({
             isEasyMode={isEasyMode}
             onToggleEasyMode={handleToggleEasyMode}
             onNavigateToLibrary={() => setActiveTab("library")}
+            onReplayTutorial={handleReplayTutorial}
           />
         )}
 

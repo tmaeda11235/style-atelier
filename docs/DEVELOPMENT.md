@@ -138,11 +138,15 @@ Structural attributes such as `id`, `className`, `testId`, `data-testid`, `color
 `id`, `className`, `testId`, `data-testid`, `color`, `size`, `type` などの構造的な属性は自動的に翻訳除外対象となりますが、`title`, `placeholder`, `label` などの表示用属性に渡す文字列は翻訳が必要です。
 
 ```tsx
-{/* Bad / 悪い例 */}
-<input placeholder="Search prompts..." />
+{
+  /* Bad / 悪い例 */
+}
+;<input placeholder="Search prompts..." />
 
-{/* Good / 良い例 */}
-<input placeholder={t('library.searchPlaceholder')} />
+{
+  /* Good / 良い例 */
+}
+;<input placeholder={t("library.searchPlaceholder")} />
 ```
 
 ### Bypassing Checks / 一時的なチェック回避
@@ -158,4 +162,3 @@ const devUrl = "http://localhost:3000" // eslint-disable-line i18next/no-literal
 
 Our linter automatically runs `node scripts/check-i18n-keys.mjs` as part of `npm run lint`. This script ensures that all keys present in `src/locales/ja/translation.json` exist in `src/locales/en/translation.json` and vice versa. If there is a mismatch, the linter (and the CI pipeline) will fail.
 リンター（`npm run lint`）を実行すると、自動的に `node scripts/check-i18n-keys.mjs` が実行されます。このスクリプトは、日本語（`ja/translation.json`）と英語（`en/translation.json`）の間でキーに差分がないかをチェックします。差分がある場合、リンターおよび CI パイプラインは失敗します。
-

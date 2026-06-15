@@ -38,11 +38,22 @@ export function useExpertModeView({
   const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
+    const replayTrigger = localStorage.getItem(
+      "style-atelier-onboarding-replay-trigger"
+    )
+    if (replayTrigger === "true") {
+      localStorage.removeItem("style-atelier-onboarding-replay-trigger")
+      setActiveTab("history")
+      startTutorial()
+      setShowWelcome(false)
+      return
+    }
+
     const seen = localStorage.getItem("style-atelier-onboarding-seen")
     if (!seen) {
       setShowWelcome(true)
     }
-  }, [])
+  }, [startTutorial, setActiveTab])
 
   const addLog = (log: string) => {
     setLogs((prev) => [log, ...prev].slice(0, 20))
@@ -244,6 +255,12 @@ export function useExpertModeView({
     startTutorial()
   }
 
+  const handleReplayTutorial = () => {
+    localStorage.removeItem("style-atelier-onboarding-seen")
+    setActiveTab("history")
+    startTutorial()
+  }
+
   return {
     activeTab,
     setActiveTab,
@@ -277,6 +294,7 @@ export function useExpertModeView({
     handleStartTutorial,
     handleSkipTutorial,
     handleSendToWorkbench,
-    handleToggleEasyMode: handleToggleEasyModeInternal
+    handleToggleEasyMode: handleToggleEasyModeInternal,
+    handleReplayTutorial
   }
 }
