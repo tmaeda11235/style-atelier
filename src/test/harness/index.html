@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiteRT-LM Offline Debug Dashboard & Profiler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="harness.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="dashboard-header">
+      <div class="header-logo">
+        <span class="logo-glow"></span>
+        <div class="logo-text">
+          <h1>LiteRT-LM</h1>
+          <span class="badge badge-primary">Offline Debugger</span>
+        </div>
+      </div>
+      <div class="header-controls">
+        <div class="mode-selector">
+          <span class="mode-label">Mode:</span>
+          <div class="toggle-container">
+            <button id="btn-mode-mock" class="toggle-btn active" data-mode="mock">Mock Mode</button>
+            <button id="btn-mode-real" class="toggle-btn" data-mode="real">Real Mode</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Left Column: Control Panel & Status -->
+      <section class="grid-column">
+        <div class="card glass">
+          <div class="card-header">
+            <h2>Model Status & Controls</h2>
+            <div id="status-indicator" class="status-badge state-unloaded">
+              <span class="pulse-dot"></span>
+              <span id="status-text">UNLOADED</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="control-actions">
+              <button id="btn-start-download" class="btn btn-gradient">Start Download</button>
+              <button id="btn-preload" class="btn btn-secondary">Preload Engine</button>
+              <button id="btn-unload" class="btn btn-danger">Unload Engine</button>
+              <button id="btn-purge" class="btn btn-outline-danger">Purge OPFS Cache</button>
+            </div>
+
+            <div class="status-details">
+              <div class="status-row">
+                <span class="label">Progress:</span>
+                <div class="progress-container">
+                  <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                  <span id="progress-val" class="progress-text">0%</span>
+                </div>
+              </div>
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Download Speed</span>
+                  <span id="metric-speed" class="metric-value">-</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">ETA</span>
+                  <span id="metric-eta" class="metric-value">-</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">VRAM Usage</span>
+                  <span id="metric-vram" class="metric-value">-</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Memory</span>
+                  <span id="metric-memory" class="metric-value">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card glass">
+          <div class="card-header">
+            <h2>OPFS Storage Info</h2>
+          </div>
+          <div class="card-body">
+            <div class="opfs-info">
+              <div class="info-row">
+                <span class="label">Storage Quota:</span>
+                <span id="opfs-quota" class="value">Checking...</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Model File:</span>
+                <span id="opfs-model-exists" class="value badge badge-error">Not Found</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Path:</span>
+                <span class="value code">opfs://litert_models/gemma-4-E2B-it-web.litertlm</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Size:</span>
+                <span id="opfs-model-size" class="value">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="mock-controls-card" class="card glass">
+          <div class="card-header">
+            <h2>Mock Controls</h2>
+            <span class="badge badge-warning">Testing Only</span>
+          </div>
+          <div class="card-body">
+            <div class="mock-sliders">
+              <div class="slider-group">
+                <label for="slider-progress">Simulate Progress: <span id="lbl-mock-progress">0%</span></label>
+                <input type="range" id="slider-progress" min="0" max="100" value="0">
+              </div>
+            </div>
+            <div class="mock-actions">
+              <button id="btn-mock-downloading" class="btn btn-xs btn-outline">Simulate Downloading</button>
+              <button id="btn-mock-initializing" class="btn btn-xs btn-outline">Simulate Loading</button>
+              <button id="btn-mock-ready" class="btn btn-xs btn-outline">Simulate Ready</button>
+              <button id="btn-mock-error-vram" class="btn btn-xs btn-outline-danger">Simulate VRAM Error</button>
+              <button id="btn-mock-error-net" class="btn btn-xs btn-outline-danger">Simulate Net Error</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Inference Tester & Stream Log -->
+      <section class="grid-column">
+        <div class="card glass flex-fill">
+          <div class="card-header">
+            <h2>Inference Console</h2>
+            <div class="preset-selector">
+              <label for="select-preset">Preset:</label>
+              <select id="select-preset">
+                <option value="recipe">Atelier Recipe Helper</option>
+                <option value="midjourney">Midjourney Style Generator</option>
+                <option value="qa">Simple QA</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body flex-column">
+            <div class="form-group">
+              <label for="input-system-prompt">System Prompt</label>
+              <textarea id="input-system-prompt" rows="3" placeholder="Enter system instructions..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="input-prompt">Prompt</label>
+              <textarea id="input-prompt" rows="4" placeholder="Enter user prompt..."></textarea>
+            </div>
+            <div class="inference-actions">
+              <button id="btn-run-inference" class="btn btn-gradient">Run Inference</button>
+              <button id="btn-cancel-inference" class="btn btn-secondary" disabled>Cancel</button>
+              <div id="inference-time-badge" class="time-badge hide">
+                Time: <span id="inference-time">-</span>s
+              </div>
+            </div>
+            <div class="form-group flex-fill">
+              <label>Inference Output</label>
+              <div id="inference-output" class="console-output placeholder">
+                Inference output will be displayed here...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card glass">
+          <div class="card-header">
+            <h2>Event Logs</h2>
+            <button id="btn-clear-logs" class="btn btn-xs btn-outline">Clear Logs</button>
+          </div>
+          <div class="card-body">
+            <div id="event-logs" class="log-console">
+              <!-- Logs will be populated here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="harness.presets.js" type="module"></script>
+  <script src="harness.mock.js" type="module"></script>
+  <script src="harness.js" type="module"></script>
+</body>
+</html>
