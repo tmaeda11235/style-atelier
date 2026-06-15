@@ -156,7 +156,6 @@ export default ts.config(
       "src/components/organisms/InteractiveTutorial.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/MergeStackModal.tsx",
-      "src/components/organisms/OnboardingGuide.tsx",
       "src/components/organisms/PromptBubbleEditor.tsx",
       "src/components/organisms/SettingsTab.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
