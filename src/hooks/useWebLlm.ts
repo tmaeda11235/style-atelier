@@ -141,6 +141,7 @@ function preloadEngineHelper() {
   chrome.runtime.sendMessage({ target: "offscreen", action: "preload-engine" })
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useWebLlm() {
   const state = useWebLlmState()
 
