@@ -124,62 +124,35 @@ interface RecipeAdviceFetchProps {
 }
 
 function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
-  const {
-    cards,
-    key,
-    status,
-    lang,
-    setAdvice,
-    setError,
-    setLoading,
-    cacheRef,
-    runInferenceRef
-  } = props
+  const propsRef = useRef(props)
+  useEffect(() => {
+    propsRef.current = props
+  })
 
   useEffect(() => {
-    if (
-      processCache({
-        cards,
-        status,
-        key,
-        cacheRef,
-        setAdvice,
-        setError,
-        setLoading
-      })
-    ) {
+    const p = propsRef.current
+    if (processCache(p)) {
       return
     }
     let mounted = true
-    const isMounted = () => mounted
     const timer = setTimeout(() => {
       fetchAdviceHelper({
-        cards,
-        key,
-        lang,
-        setAdvice,
-        setError,
-        setLoading,
-        cacheRef,
-        runInferenceRef,
-        isMounted
+        cards: p.cards,
+        key: p.key,
+        lang: p.lang,
+        setAdvice: p.setAdvice,
+        setError: p.setError,
+        setLoading: p.setLoading,
+        cacheRef: p.cacheRef,
+        runInferenceRef: p.runInferenceRef,
+        isMounted: () => mounted
       })
     }, 500)
     return () => {
       mounted = false
       clearTimeout(timer)
     }
-  }, [
-    cards,
-    key,
-    status,
-    lang,
-    setAdvice,
-    setError,
-    setLoading,
-    cacheRef,
-    runInferenceRef
-  ])
+  }, [props.cards, props.key, props.status, props.lang])
 }
 
 export function useAiRecipeAdvice(cards: any[]) {
