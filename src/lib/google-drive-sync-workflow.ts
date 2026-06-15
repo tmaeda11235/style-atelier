@@ -288,6 +288,33 @@ async function getRequiredPaths(): Promise<Set<string>> {
   return requiredPaths
 }
 
+async function updateDownloadedState(
+  path: string,
+  fileName: string,
+  hash: string,
+  cloudFileId: string
+): Promise<void> {
+  let cardId: string | undefined
+  let categoryId: string | undefined
+  const pathParts = path.split("/")
+  if (pathParts.length >= 3) {
+    const type = pathParts[1]
+    const id = fileName.replace(/\.[^/.]+$/, "")
+    if (type === "cards") cardId = id
+    else if (type === "categories") categoryId = id
+  }
+
+  await db.imageSyncStates.put({
+    filePath: path,
+    cardId,
+    categoryId,
+    hash,
+    cloudFileId,
+    syncStatus: "synced",
+    updatedAt: Date.now()
+  })
+}
+
 function createDownloadTask(params: {
   path: string
   fileName: string
@@ -321,25 +348,7 @@ function createDownloadTask(params: {
     const arrayBuf = await blob.arrayBuffer()
     const hash = await computeHash(arrayBuf)
 
-    let cardId: string | undefined
-    let categoryId: string | undefined
-    const pathParts = path.split("/")
-    if (pathParts.length >= 3) {
-      const type = pathParts[1]
-      const id = fileName.replace(/\.[^/.]+$/, "")
-      if (type === "cards") cardId = id
-      else if (type === "categories") categoryId = id
-    }
-
-    await db.imageSyncStates.put({
-      filePath: path,
-      cardId,
-      categoryId,
-      hash,
-      cloudFileId: remoteInfo.id,
-      syncStatus: "synced",
-      updatedAt: Date.now()
-    })
+    await updateDownloadedState(path, fileName, hash, remoteInfo.id)
     addLog(`Downloaded and saved: ${fileName}`)
   }
 }
@@ -573,6 +582,20 @@ async function buildDeleteTasks(params: {
   return deleteTasks
 }
 
+async function runSyncTasks(
+  tasks: Array<() => Promise<void>>,
+  taskType: "upload" | "delete",
+  addLog: (log: string) => void
+): Promise<void> {
+  if (tasks.length > 0) {
+    addLog(
+      `Executing ${tasks.length} ${taskType} tasks with concurrency limit of ${CONCURRENCY_LIMIT}...`
+    )
+    await runWithConcurrencyLimit(tasks, CONCURRENCY_LIMIT)
+    addLog(`All image ${taskType}s completed.`)
+  }
+}
+
 async function uploadAndDeleteRemoteImages(
   token: string,
   gdriveClient: GoogleDriveClient,
@@ -612,31 +635,20 @@ async function uploadAndDeleteRemoteImages(
     addLog
   })
 
-  if (uploadTasks.length > 0) {
-    addLog(
-      `Executing ${uploadTasks.length} upload tasks with concurrency limit of ${CONCURRENCY_LIMIT}...`
-    )
-    await runWithConcurrencyLimit(uploadTasks, CONCURRENCY_LIMIT)
-    addLog("All image uploads completed.")
-  }
-
-  if (deleteTasks.length > 0) {
-    addLog(
-      `Executing ${deleteTasks.length} delete tasks with concurrency limit of ${CONCURRENCY_LIMIT}...`
-    )
-    await runWithConcurrencyLimit(deleteTasks, CONCURRENCY_LIMIT)
-    addLog("All image deletions completed.")
-  }
+  await runSyncTasks(uploadTasks, "upload", addLog)
+  await runSyncTasks(deleteTasks, "delete", addLog)
 }
 
-export async function syncImages(params: {
+export interface SyncImagesParams {
   token: string
   gdriveClient: GoogleDriveClient
   onTokenUpdated: (newToken: string) => void
   signal?: AbortSignal
   addLog: (log: string) => void
   overwriteMode?: "local" | "cloud" | "merge"
-}): Promise<void> {
+}
+
+export async function syncImages(params: SyncImagesParams): Promise<void> {
   const {
     token,
     gdriveClient,

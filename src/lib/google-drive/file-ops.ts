@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { fetchWithReauth } from "./http-client"
 import type { BackupMetadata, ReauthContext } from "./types"
 
@@ -153,21 +154,11 @@ export async function createFolder(
   return data.id
 }
 
-async function createNewImageFile(
-  ctx: ReauthContext,
-  folderId: string,
-  fileName: string,
+async function buildMultipartBody(
+  metadata: any,
   blob: Blob,
-  onTokenUpdated?: (newToken: string) => void,
-  options?: { signal?: AbortSignal }
-): Promise<string> {
-  const boundary = "style_atelier_image_boundary"
-  const metadata = {
-    name: fileName,
-    mimeType: blob.type || "image/png",
-    parents: [folderId]
-  }
-
+  boundary: string
+): Promise<Uint8Array> {
   const delimiter = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${blob.type || "image/png"}\r\n\r\n`
   const closeDelimiter = `\r\n--${boundary}--`
 
@@ -186,6 +177,25 @@ async function createNewImageFile(
     closeDelimiterBytes,
     delimiterBytes.length + contentBytes.length
   )
+  return multipartBody
+}
+
+async function createNewImageFile(
+  ctx: ReauthContext,
+  folderId: string,
+  fileName: string,
+  blob: Blob,
+  onTokenUpdated?: (newToken: string) => void,
+  options?: { signal?: AbortSignal }
+): Promise<string> {
+  const boundary = "style_atelier_image_boundary"
+  const metadata = {
+    name: fileName,
+    mimeType: blob.type || "image/png",
+    parents: [folderId]
+  }
+
+  const multipartBody = await buildMultipartBody(metadata, blob, boundary)
 
   const url =
     "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
