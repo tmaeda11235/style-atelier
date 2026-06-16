@@ -181,6 +181,7 @@ export default ts.config(
       "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/TagEditor.tsx",
       "src/components/molecules/HistoryCard.tsx",
+      "src/components/molecules/HistoryEmptyState.tsx",
       "src/components/molecules/GenealogySection.tsx",
       "src/components/molecules/ConfirmationDialog.tsx",
       "src/components/molecules/ParameterArrayEditor.tsx",
