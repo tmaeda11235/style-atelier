@@ -6,7 +6,7 @@ import { useChromeTabConnection } from "../../hooks/useChromeTabConnection"
 import { useEvolution } from "../../hooks/useEvolution"
 import { usePromptInjector } from "../../hooks/usePromptInjector"
 import { useWorkbench } from "../../hooks/useWorkbench"
-import type { PromptSegment } from "../../lib/db-schema"
+import type { PromptSegment, RecipeHistoryItem } from "../../lib/db-schema"
 import { mergeReferences } from "../../lib/prompt-reference-utils"
 import { mergePromptSegments } from "../../lib/prompt-utils"
 import { type AlertType } from "../molecules/ConnectionAlert"
@@ -28,7 +28,9 @@ function usePromptSegmentsSync(
   workbenchCards: any[],
   setEditedSegments: (seg: PromptSegment[]) => void,
   setEditedParams: (p: any) => void,
-  setSlotValues: (vals: Record<string, string>) => void
+  setSlotValues: (vals: Record<string, string>) => void,
+  restoredRecipe: RecipeHistoryItem | null,
+  setRestoredRecipe: (recipe: RecipeHistoryItem | null) => void
 ) {
   useEffect(() => {
     if (workbenchCards.length === 0) {
@@ -37,6 +39,30 @@ function usePromptSegmentsSync(
       setSlotValues({})
       return
     }
+
+    if (restoredRecipe) {
+      setRestoredRecipe(null)
+      setEditedParams(restoredRecipe.parameters || {})
+      if (restoredRecipe.slotValues) {
+        setSlotValues(restoredRecipe.slotValues)
+      }
+
+      const segmentsWithWeights = workbenchCards.flatMap((card) => {
+        const segs = card.promptSegments || []
+        const cardWeight = card.weight !== undefined ? card.weight : 1.0
+        return segs.map((seg: any) => {
+          const segWeight = seg.weight !== undefined ? seg.weight : 1.0
+          const finalWeight = parseFloat((segWeight * cardWeight).toFixed(2))
+          return {
+            ...seg,
+            weight: finalWeight !== 1.0 ? finalWeight : undefined
+          }
+        })
+      })
+      setEditedSegments(mergePromptSegments(segmentsWithWeights))
+      return
+    }
+
     let nextSegments: PromptSegment[]
     let nextParams: any = {}
     if (workbenchCards.length === 1) {
@@ -305,12 +331,17 @@ function useWorkbenchCore({
     [workbenchCards]
   )
 
+  const [restoredRecipe, setRestoredRecipe] =
+    useState<RecipeHistoryItem | null>(null)
+
   useChromeTabConnection({ workbenchCardsDependency, setAlertType, addLog })
   usePromptSegmentsSync(
     workbenchCards,
     setEditedSegments,
     setEditedParams,
-    setSlotValues
+    setSlotValues,
+    restoredRecipe,
+    setRestoredRecipe
   )
 
   const handlers = useWorkbenchHandlers({
@@ -342,6 +373,15 @@ function useWorkbenchCore({
     [editedSegments]
   )
 
+  const handleRestoreRecipe = useCallback(
+    async (recipe: RecipeHistoryItem) => {
+      setRestoredRecipe(recipe)
+      await base.restoreRecipe(recipe)
+      addLog?.(`Recipe restored: ${recipe.name}`)
+    },
+    [base.restoreRecipe, addLog]
+  )
+
   return {
     ...base,
     targetCard,
@@ -351,7 +391,8 @@ function useWorkbenchCore({
     canEvolveTarget,
     slots,
     ...states,
-    ...handlers
+    ...handlers,
+    handleRestoreRecipe
   }
 }
 

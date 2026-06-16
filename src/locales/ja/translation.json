@@ -501,7 +501,10 @@
     "aiAdviceLoadingModel": "ローカルAIモデルをロード中...",
     "webllmQuotaWarningTitle": "ストレージ容量不足",
     "webllmQuotaWarningDesc": "AIモデルのキャッシュに必要なストレージ容量が不足しています。ディスク空き容量を増やしてください。",
-    "aiAdviceDownloadBtn": "モデルをダウンロード"
+    "aiAdviceDownloadBtn": "モデルをダウンロード",
+    "recipeHistory": "履歴",
+    "pastRecipes": "過去の調合レシピ",
+    "noRecipes": "まだ調合履歴はありません"
   },
   "mergeStack": {
     "title": "カードスタックの統合",

@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { useCallback, useMemo, useState } from "react"
 
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
+import type { RecipeHistoryItem, StyleCard } from "../lib/db-schema"
 import { buildMergedPromptString } from "../lib/prompt-reference-utils"
 import {
   addCard,
@@ -144,7 +144,10 @@ function useWorkbenchUndoRedo(
 }
 
 function useWorkbenchMutations(
-  setHistoryVersion: React.Dispatch<React.SetStateAction<number>>
+  setHistoryVersion: React.Dispatch<React.SetStateAction<number>>,
+  handCards: StyleCard[],
+  setIsShuffling: (s: boolean) => void,
+  setShuffleCards: (c: StyleCard[] | null) => void
 ) {
   const handleToggleCardSelection = useCallback(
     async (cardId: string) => {
@@ -155,38 +158,72 @@ function useWorkbenchMutations(
     [setHistoryVersion]
   )
 
-  const handleClearWorkbench = useCallback(
-    async (handCards: StyleCard[]) => {
-      await pushSnapshot()
-      await clearWorkbench(handCards)
-      setHistoryVersion((v) => v + 1)
-    },
-    [setHistoryVersion]
-  )
+  const handleClearWorkbench = useCallback(async () => {
+    await pushSnapshot()
+    await clearWorkbench(handCards)
+    setHistoryVersion((v) => v + 1)
+  }, [setHistoryVersion, handCards])
 
-  const pickRandomCardsWithShuffle = useCallback(
-    async (
-      handCards: StyleCard[],
-      setIsShuffling: (s: boolean) => void,
-      setShuffleCards: (c: StyleCard[] | null) => void
-    ) => {
-      await pushSnapshot()
-      await performShuffleAndPick(handCards, setIsShuffling, setShuffleCards)
-      setHistoryVersion((v) => v + 1)
-    },
-    [setHistoryVersion]
-  )
+  const pickRandomCardsWithShuffle = useCallback(async () => {
+    await pushSnapshot()
+    await performShuffleAndPick(handCards, setIsShuffling, setShuffleCards)
+    setHistoryVersion((v) => v + 1)
+  }, [setHistoryVersion, handCards, setIsShuffling, setShuffleCards])
 
   const handleStartWeightAdjustment = useCallback(async () => {
     await pushSnapshot()
     setHistoryVersion((v) => v + 1)
   }, [setHistoryVersion])
 
+  const handleUpdateCardWeight = useCallback(
+    async (cardId: string, weight: number) => {
+      await updateCardWeight(cardId, weight)
+    },
+    []
+  )
+
   return {
     toggleCardSelection: handleToggleCardSelection,
     clearWorkbench: handleClearWorkbench,
     pickRandomCards: pickRandomCardsWithShuffle,
-    startWeightAdjustment: handleStartWeightAdjustment
+    startWeightAdjustment: handleStartWeightAdjustment,
+    updateCardWeight: handleUpdateCardWeight
+  }
+}
+
+export async function restoreRecipe(recipe: RecipeHistoryItem) {
+  try {
+    const allCards = await db.styleCards.toArray()
+    const pinnedCards = allCards.filter((c) => c.isPinned)
+    await Promise.all(
+      pinnedCards.map((card) =>
+        card.isVariable
+          ? db.styleCards.delete(card.id)
+          : db.styleCards.update(card.id, { isPinned: false })
+      )
+    )
+
+    await Promise.all(
+      recipe.cards.map(async (rc) => {
+        const card = await db.styleCards.get(rc.id)
+        if (card && !card.isDeleted) {
+          await db.styleCards.update(rc.id, {
+            isPinned: true,
+            weight: rc.weight
+          })
+        }
+      })
+    )
+  } catch (err) {
+    console.error("Failed to restore recipe:", err)
+  }
+}
+
+export async function deleteRecipeHistory(id: string) {
+  try {
+    await db.deleteRecipeHistory(id)
+  } catch (err) {
+    console.error("Failed to delete recipe history:", err)
   }
 }
 
@@ -260,8 +297,14 @@ export function useWorkbench() {
     toggleCardSelection: mutateToggle,
     clearWorkbench: mutateClear,
     pickRandomCards: mutatePick,
-    startWeightAdjustment: mutateStartWeight
-  } = useWorkbenchMutations(setHistoryVersion)
+    startWeightAdjustment: mutateStartWeight,
+    updateCardWeight: mutateUpdateWeight
+  } = useWorkbenchMutations(
+    setHistoryVersion,
+    handCards,
+    setIsShuffling,
+    setShuffleCards
+  )
 
   const { canUndo, canRedo } = useWorkbenchHistoryStatus(historyVersion)
 
@@ -271,26 +314,21 @@ export function useWorkbench() {
     isShuffling,
     selectedCardIds,
     toggleCardSelection: mutateToggle,
-    clearWorkbench: useCallback(
-      () => mutateClear(handCards),
-      [mutateClear, handCards]
-    ),
-    pickRandomCards: useCallback(
-      () => mutatePick(handCards, setIsShuffling, setShuffleCards),
-      [mutatePick, handCards, setIsShuffling, setShuffleCards]
-    ),
+    clearWorkbench: mutateClear,
+    pickRandomCards: mutatePick,
     mergedPrompt,
     slotHistory,
     saveSlotHistory,
     addCard,
     incrementCardUsage,
-    updateCardWeight: useCallback(async (cardId: string, weight: number) => {
-      await updateCardWeight(cardId, weight)
-    }, []),
+    updateCardWeight: mutateUpdateWeight,
     startWeightAdjustment: mutateStartWeight,
     undo: historyUndo,
     redo: historyRedo,
     canUndo,
-    canRedo
+    canRedo,
+    recipeHistory: useLiveQuery(() => db.getRecipeHistory()) || [],
+    restoreRecipe,
+    deleteRecipeHistory
   }
 }

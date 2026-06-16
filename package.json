@@ -11,8 +11,10 @@
   "scripts": {
     "dev": "plasmo dev",
     "dev:cached": "cross-env PLASMO_PUBLIC_USE_LOCAL_CACHE=true plasmo dev",
+    "dev:mobile": "vite --config vite.config.mobile.ts",
     "serve:cache": "node scripts/serve-cache.mjs",
     "build": "plasmo build",
+    "build:mobile": "vite build --config vite.config.mobile.ts",
     "package": "plasmo package",
     "test": "vitest run",
     "test:ui": "vitest --ui",
