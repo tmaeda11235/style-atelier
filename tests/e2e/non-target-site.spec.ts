@@ -10,29 +10,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Non-Target Site Accessibility @
       console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`)
     })
 
-    // Simulate a non-target site by mocking chrome.tabs.query
+    // Simulate a non-target site by setting __mockUrl on window/parent
     await page.addInitScript(() => {
-      let _chrome: any = {
-        tabs: {
-          query: async () => [
-            { id: 1, url: "https://example.com", active: true }
-          ]
-        }
-      }
-      Object.defineProperty(window, "chrome", {
-        configurable: true,
-        get() {
-          return _chrome
-        },
-        set(val) {
-          if (val && val.tabs) {
-            val.tabs.query = async () => [
-              { id: 1, url: "https://example.com", active: true }
-            ]
-          }
-          _chrome = val
-        }
-      })
+      ;(window as any).__mockUrl = "https://example.com"
     })
   })
 
@@ -40,19 +20,22 @@ test.describe("Style Atelier Sandbox E2E Tests - Non-Target Site Accessibility @
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
-    await page.goto("/tests/sandbox/index.html?nonTarget=true")
+    await page.goto("/tests/sandbox/index.html?variant=non-target")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
     // 1. Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await expect(skipButton).toBeVisible({ timeout: 5000 })
       await skipButton.click()
+    } catch (e) {
+      // Skip if welcome dialog is not shown or already skipped
     }
 
     // 2. We should be on history tab by default, showing NonTargetSiteView warning
-    const warningText = spFrame.locator(
-      "text=本拡張機能は Midjourney または Discord のページでのみご利用いただけます。"
+    const warningText = spFrame.getByText(
+      /本拡張機能は Midjourney または Discord のページでのみご利用いただけます。|This extension is only available on Midjourney or Discord pages/i
     )
     await expect(warningText).toBeVisible({ timeout: 10000 })
 

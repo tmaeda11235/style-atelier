@@ -168,19 +168,10 @@ export function createMintingHandlers(
   }
 }
 
-// eslint-disable-next-line max-lines-per-function
-export function useMinting(
-  addLog: (msg: string) => void,
-  setActiveTab: (tab: "history" | "library" | "workbench") => void
+function useMintingInitialization(
+  state: MintingState,
+  setState: React.Dispatch<React.SetStateAction<MintingState>>
 ) {
-  const [state, setState] = useState<MintingState>(INITIAL_MINTING_STATE)
-  const meta = useMintingMetadata(state.mintingItem, state.variationBase)
-  const colors = useMintingColors(
-    state.mintingItem,
-    state.variationBase,
-    state.selectedRarity
-  )
-
   useEffect(() => {
     let detectedRarity: RarityTier = "Common"
     let editedSegments: PromptSegment[] = []
@@ -212,6 +203,21 @@ export function useMinting(
       selectedRarity: detectedRarity
     }))
   }, [state.mintingItem, state.variationBase])
+}
+
+export function useMinting(
+  addLog: (msg: string) => void,
+  setActiveTab: (tab: "history" | "library" | "workbench") => void
+) {
+  const [state, setState] = useState<MintingState>(INITIAL_MINTING_STATE)
+  const meta = useMintingMetadata(state.mintingItem, state.variationBase)
+  const colors = useMintingColors(
+    state.mintingItem,
+    state.variationBase,
+    state.selectedRarity
+  )
+
+  useMintingInitialization(state, setState)
 
   const handleSaveMintedCard = useSaveMintedCard({
     ...state,

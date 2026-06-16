@@ -15,12 +15,80 @@ interface CardsGridProps {
   categories: any[]
   handleQuickSend: (card: StyleCard, e: React.MouseEvent) => void
   moveCardToCategory: any
+  onCardReorder?: (draggedId: string, targetId: string) => void
   hasMore: boolean
   loadMore: () => void
   t: any
+  cardSlotThemeClass?: string
+}
+
+function useCardsDragAndDrop(
+  onCardReorder?: (draggedId: string, targetId: string) => void
+) {
+  const [draggedCardId, setDraggedCardId] = React.useState<string | null>(null)
+  const [dragOverCardId, setDragOverCardId] = React.useState<string | null>(
+    null
+  )
+
+  const handleDragStartGlobal = (e: React.DragEvent, cardId: string) => {
+    setDraggedCardId(cardId)
+    e.dataTransfer.setData("cardId", cardId)
+  }
+
+  const handleDragOverGlobal = (e: React.DragEvent, cardId: string) => {
+    e.preventDefault()
+    if (draggedCardId && draggedCardId !== cardId) {
+      setDragOverCardId(cardId)
+    }
+  }
+
+  const handleDragLeaveGlobal = (e: React.DragEvent, cardId: string) => {
+    if (dragOverCardId === cardId) {
+      setDragOverCardId(null)
+    }
+  }
+
+  const handleDropGlobal = (e: React.DragEvent, targetCardId: string) => {
+    e.preventDefault()
+    const draggedId = e.dataTransfer.getData("cardId") || draggedCardId
+    if (draggedId && draggedId !== targetCardId) {
+      onCardReorder?.(draggedId, targetCardId)
+    }
+    setDraggedCardId(null)
+    setDragOverCardId(null)
+  }
+
+  const handleDragEndGlobal = () => {
+    setDraggedCardId(null)
+    setDragOverCardId(null)
+  }
+
+  return {
+    draggedCardId,
+    dragOverCardId,
+    handleDragStartGlobal,
+    handleDragOverGlobal,
+    handleDragLeaveGlobal,
+    handleDropGlobal,
+    handleDragEndGlobal
+  }
+}
+
+function buildDragAndDropPropsForCard(cardId: string, dnd: any) {
+  return {
+    onDragStartGlobal: dnd.handleDragStartGlobal,
+    onDragOverGlobal: dnd.handleDragOverGlobal,
+    onDragLeaveGlobal: dnd.handleDragLeaveGlobal,
+    onDropGlobal: dnd.handleDropGlobal,
+    onDragEndGlobal: dnd.handleDragEndGlobal,
+    isDragged: dnd.draggedCardId === cardId,
+    isDragOver: dnd.dragOverCardId === cardId
+  }
 }
 
 export function CardsGrid(props: CardsGridProps) {
+  const dnd = useCardsDragAndDrop(props.onCardReorder)
+
   return (
     <div className="flex flex-col gap-4">
       <div
@@ -41,6 +109,8 @@ export function CardsGrid(props: CardsGridProps) {
             categories={props.categories}
             onQuickSend={props.handleQuickSend}
             moveCardToCategory={props.moveCardToCategory}
+            cardSlotThemeClass={props.cardSlotThemeClass}
+            {...buildDragAndDropPropsForCard(card.id, dnd)}
           />
         ))}
       </div>

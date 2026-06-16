@@ -8,6 +8,8 @@ export interface CustomCategory {
   updatedAt?: number // Timestamp for versioning/sync
   isDeleted?: boolean // Soft delete flag (Tombstone). Synchronizes deletions across devices. Subject to a 60-day sync window, after which it is purged.
   parentId?: string // Parent category ID for hierarchical folders
+  coverImageUrl?: string // Custom cover image URL
+  theme?: string // Skin theme (e.g., classic, magic, cyberpunk, minimal)
 }
 
 export interface CardVersion {
@@ -80,6 +82,7 @@ export interface StyleCard {
   selectedThumbnails?: string[] // Selected image URLs for thumbnail display (up to 2)
   versionHistory?: CardVersion[] // 過去のプロンプト・パラメータ変更履歴（最大10件）
   weight?: number // 調合割合の重み (0.1 - 2.0)
+  sortIndex?: number // バインダー内での並び順インデックス
 }
 
 // プロンプトの構成要素（バブル）
@@ -129,4 +132,30 @@ export interface ParameterFolder {
   name: string
   parentId?: string // null / undefined for root
   createdAt: number
+}
+
+export interface RecipeHistoryItem {
+  id: string
+  name: string
+  timestamp: number
+  cards: {
+    id: string
+    name: string
+    weight: number
+  }[]
+  parameters: {
+    ar?: string
+    sref?: string[]
+    cref?: string[]
+    p?: string[]
+    imagePrompts?: string[]
+    stylize?: number
+    chaos?: number
+    weird?: number
+    tile?: boolean
+    raw?: boolean
+    version?: string
+    niji?: string
+  }
+  slotValues?: Record<string, string>
 }

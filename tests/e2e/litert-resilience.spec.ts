@@ -1,0 +1,394 @@
+import path from "path"
+import { expect, test } from "@playwright/test"
+
+test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Resilience @J-SET-01", () => {
+  test.beforeEach(async ({ page }) => {
+    page.on("console", (msg) => {
+      console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
+    })
+    page.on("pageerror", (err) => {
+      console.error(`[BROWSER ERROR] ${err.message}\n${err.stack}`)
+    })
+    // Mock WebGPU support by default to prevent Download Model button from being disabled
+    await page.addInitScript(() => {
+      const mockGpu = {
+        requestAdapter: async () => ({ name: "MockGPU" })
+      }
+      Object.defineProperty(navigator, "gpu", {
+        value: mockGpu,
+        writable: true,
+        configurable: true
+      })
+    })
+  })
+
+  test("should display quota warning UI if storage is insufficient (mocked via navigator.storage.estimate)", async ({
+    context,
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    // Mock low storage estimate using initScript
+    await context.addInitScript(() => {
+      ;(window as any).mockWebLlmConfig = {
+        quotaSufficient: false
+      }
+    })
+
+    console.log(
+      "Navigating to sandbox page with low storage estimate mocked..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Go to Settings tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
+    await settingsNavBtn.click()
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    // Click Download Model button
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
+    // Assert that the quota warning dialog is displayed to the user
+    const warningText = spFrame
+      .locator("text=/Insufficient Space Warning|容量不足警告/")
+      .first()
+    await expect(warningText).toBeVisible({ timeout: 15000 })
+
+    const warningDesc = spFrame
+      .locator(
+        "text=/WebLLM requires at least 2.5 GB|WebLLMを動作させるには2.5GB/"
+      )
+      .first()
+    await expect(warningDesc).toBeVisible({ timeout: 15000 })
+
+    // Capture screenshot of quota warning
+    await page.screenshot({
+      path: path.join(screenshotsDir, "litert-quota-warning-actual.png")
+    })
+    console.log("LiteRT-LM low quota warning screenshot saved.")
+  })
+
+  test("should detect corrupted cache file on startup, purge it, and trigger a clean download recovery", async ({
+    page
+  }) => {
+    console.log("Pre-injecting corrupted dummy OPFS files...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Inject corrupted file in OPFS if supported (size 100 bytes instead of 2.0GB)
+    await spFrame.locator("body").evaluate(async () => {
+      if (navigator.storage && navigator.storage.getDirectory) {
+        const root = await navigator.storage.getDirectory()
+        const dirHandle = await root.getDirectoryHandle("litert_models", {
+          create: true
+        })
+        const fileHandle = await dirHandle.getFileHandle(
+          "gemma-4-E2B-it-web.litertlm",
+          { create: true }
+        )
+        const writable = await fileHandle.createWritable()
+        await writable.write(new Uint8Array(100)) // Corrupted file
+        await writable.close()
+      }
+    })
+
+    // Enable real integrity check mock via localStorage so it persists across reload
+    await spFrame.locator("body").evaluate(() => {
+      localStorage.setItem("mock-webllm-use-real-integrity", "true")
+    })
+
+    // Now reload the page to trigger integrity check
+    await page.reload()
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Go to Settings tab
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
+    await settingsNavBtn.click()
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    // The system should detect corruption and purge it, meaning the state is "Not Downloaded" (idle)
+    const notDownloadedStatus = spFrame.locator(
+      "text=/Not Downloaded|未ダウンロード/"
+    )
+    await expect(notDownloadedStatus).toBeVisible({ timeout: 30000 })
+
+    // Verify OPFS is also purged if supported
+    await expect
+      .poll(
+        async () => {
+          return await spFrame.locator("body").evaluate(async () => {
+            if (navigator.storage && navigator.storage.getDirectory) {
+              try {
+                const root = await navigator.storage.getDirectory()
+                const dirHandle = await root.getDirectoryHandle(
+                  "litert_models",
+                  {
+                    create: false
+                  }
+                )
+                await dirHandle.getFileHandle("gemma-4-E2B-it-web.litertlm", {
+                  create: false
+                })
+                return false // Still exists
+              } catch {
+                return true // Purged successfully!
+              }
+            }
+            return true
+          })
+        },
+        {
+          message: "OPFS model file was not purged after integrity failure",
+          timeout: 10000
+        }
+      )
+      .toBe(true)
+
+    // Trigger clean download
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
+    // Download completes successfully (status ready)
+    const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
+    await expect(readyStatus).toBeVisible({ timeout: 30000 })
+
+    // Clean up real integrity check mock from localStorage
+    await spFrame.locator("body").evaluate(() => {
+      localStorage.removeItem("mock-webllm-use-real-integrity")
+    })
+  })
+
+  test("should handle network interruption and automatically retry then recover", async ({
+    context,
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Welcome dialog skip
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Open Settings and expand WebLLM
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
+    await settingsNavBtn.click()
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    // Set slow download to give us time to toggle offline
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.downloadSpeed = 800 // slow down
+      }
+    })
+
+    // Click Download Model
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
+    // Wait until download starts (we see downloading progress or speed)
+    await expect(spFrame.locator("text=12.5 MB/s")).toBeVisible({
+      timeout: 15000
+    })
+
+    // Simulate network interruption
+    await context.setOffline(true)
+    console.log("Simulating network offline...")
+
+    // Verify retry UI shows up
+    const retryText = spFrame
+      .locator("text=/Reconnecting|接続を再試行中|接続再試行中/")
+      .first()
+    await expect(retryText).toBeVisible({ timeout: 15000 })
+
+    // Take screenshot of the retry state (UX change)
+    await page.screenshot({
+      path: path.join(screenshotsDir, "litert-download-interruption-retry.png")
+    })
+
+    // Restore network connection
+    await context.setOffline(false)
+    console.log("Simulating network online...")
+
+    // Verify that the download recovers and completes (ready)
+    const readyStatus = spFrame.locator("text=/Loaded|利用可能|Ready/")
+    await expect(readyStatus).toBeVisible({ timeout: 30000 })
+
+    // Verify it saved downloaded flag
+    const isDownloaded = await spFrame.locator("body").evaluate(() => {
+      return localStorage.getItem("mock-webllm-downloaded") === "true"
+    })
+    expect(isDownloaded).toBe(true)
+
+    // Wait for Vite HMR server connections and state to stabilize after going back online
+    await page.waitForTimeout(1000)
+  })
+
+  test("should display download speed and remaining time during download", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    // Delay to let server stabilize if previous test just completed
+    await page.waitForTimeout(1000)
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.failDownload = false
+        config.downloadSpeed = 800
+      }
+    })
+
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    // Accept confirm dialog
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
+    const speedText = spFrame.locator("text=12.5 MB/s")
+    await expect(speedText).toBeVisible({ timeout: 15000 })
+
+    const remainingText = spFrame.locator("text=/Remaining|残り時間/")
+    await expect(remainingText).toBeVisible({ timeout: 15000 })
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "litert-download-progress.png")
+    })
+  })
+
+  test("should display re-download advice message on download failure", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible({ timeout: 30000 })
+    await settingsNavBtn.click()
+    await page.waitForTimeout(500)
+
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click()
+    await page.waitForTimeout(300)
+
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.failDownload = true
+        config.downloadErrorMsg =
+          "Failed to fetch model weights: Connection lost"
+      }
+    })
+
+    const downloadBtn = spFrame.locator(
+      "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
+    )
+    await expect(downloadBtn).toBeVisible()
+    await downloadBtn.click()
+
+    const okBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await expect(okBtn).toBeVisible({ timeout: 15000 })
+    await okBtn.click()
+
+    const errorStatus = spFrame.locator(
+      "text=/Error occurred|エラーが発生しました/"
+    )
+    await expect(errorStatus).toBeVisible({ timeout: 15000 })
+
+    const adviceText = spFrame.locator(
+      "text=/Model cache corrupted or interrupted|モデルキャッシュが破損しているか/"
+    )
+    await expect(adviceText).toBeVisible({ timeout: 15000 })
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "litert-download-error-advice.png")
+    })
+    console.log("Screenshot for download error advice UI saved.")
+  })
+})

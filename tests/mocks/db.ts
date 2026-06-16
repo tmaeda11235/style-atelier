@@ -179,6 +179,7 @@ export class MockStyleAtelierDatabase {
   slotHistory = new MockTable<any>()
   parameterAliases = new MockTable<any>()
   parameterFolders = new MockTable<any>()
+  recipeHistory = new MockTable<any>()
 
   constructor() {
     this.reset()
@@ -220,6 +221,7 @@ export class MockStyleAtelierDatabase {
     this.slotHistory = new MockTable<any>([])
     this.parameterAliases = new MockTable<any>([])
     this.parameterFolders = new MockTable<any>([])
+    this.recipeHistory = new MockTable<any>([])
   }
 
   // StyleCard Operations
@@ -376,6 +378,50 @@ export class MockStyleAtelierDatabase {
   deleteParameterFolder = vi.fn().mockImplementation(async (id: string) => {
     await this.parameterFolders.delete(id)
   })
+
+  addRecipeHistory = vi.fn().mockImplementation(async (recipe: any) => {
+    return this.recipeHistory.add({
+      id: Math.random().toString(),
+      timestamp: Date.now(),
+      ...recipe
+    })
+  })
+
+  getRecipeHistory = vi.fn().mockImplementation(async () => {
+    return this.recipeHistory.orderBy("timestamp").reverse().toArray()
+  })
+
+  clearRecipeHistory = vi.fn().mockImplementation(async () => {
+    await this.recipeHistory.clear()
+  })
 }
 
 export const db = new MockStyleAtelierDatabase()
+
+export let mockDbError: Error | null = null
+const mockDbErrorListeners = new Set<(err: Error) => void>()
+
+export function addDbErrorListener(listener: (err: Error) => void) {
+  mockDbErrorListeners.add(listener)
+  if (mockDbError) {
+    listener(mockDbError)
+  }
+  return () => {
+    mockDbErrorListeners.delete(listener)
+  }
+}
+
+export function getDbError(): Error | null {
+  return mockDbError
+}
+
+export function clearDbErrorForTest(): void {
+  mockDbError = null
+}
+
+export function setMockDbError(err: Error | null): void {
+  mockDbError = err
+  if (err) {
+    mockDbErrorListeners.forEach((listener) => listener(err))
+  }
+}

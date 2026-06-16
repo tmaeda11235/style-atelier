@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react"
 
+import { declutterFallback } from "../lib/ai/declutter-fallback"
 import type { PromptSegment } from "../lib/db-schema"
 import { useWebLlm } from "./useWebLlm"
 
@@ -72,6 +73,11 @@ export function useAiPromptDeclutter() {
       setLoading(true)
       setError(null)
 
+      if (status !== "ready") {
+        setLoading(false)
+        return declutterFallback(rawPromptText)
+      }
+
       try {
         const response = await runInference(rawPromptText, SYSTEM_PROMPT, 0.1)
         const parsed = parseDeclutterResponse(response)
@@ -86,12 +92,12 @@ export function useAiPromptDeclutter() {
         }))
       } catch (err: any) {
         setError(err.message || "Failed to de-clutter prompt")
-        return null
+        return declutterFallback(rawPromptText)
       } finally {
         setLoading(false)
       }
     },
-    [runInference]
+    [runInference, status]
   )
 
   return {

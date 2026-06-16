@@ -118,10 +118,21 @@ test.describe("Style Atelier Sandbox E2E Tests - Responsive Panels & Accordion @
 
     // 7. Locate responsive buttons
     // The main Try on Midjourney button should be visible with text initially (width 380px)
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "420px"
+      }
+    })
     const tryOnMidjourneyBtn = spFrame.locator(
       "button:has-text('Try on Midjourney')"
     )
     const btnText = spFrame.locator(".responsive-btn-text").first()
+    const containerWidth = await spFrame
+      .locator(".editor-container")
+      .first()
+      .evaluate((el) => el.clientWidth)
+    console.log("CRITICAL: .editor-container clientWidth is:", containerWidth)
     await expect(tryOnMidjourneyBtn).toBeVisible()
     await expect(btnText).toBeVisible()
 

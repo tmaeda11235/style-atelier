@@ -172,4 +172,73 @@ describe("InteractiveTutorial", () => {
     const tooltip = screen.getByText("① HistoryにD&Dする")
     expect(tooltip).toBeDefined()
   })
+
+  it("focuses on the heading when starting, traps focus with Tab, and returns focus when stopped", async () => {
+    vi.useFakeTimers()
+
+    render(
+      <TutorialHarness>
+        <TriggerButton />
+        <InteractiveTutorial />
+      </TutorialHarness>
+    )
+
+    const startBtn = screen.getByRole("button", { name: "Start" })
+    startBtn.focus()
+    expect(document.activeElement).toBe(startBtn)
+
+    // チュートリアルを開始
+    await act(async () => {
+      fireEvent.click(startBtn)
+    })
+
+    // タイマーを進める（setTimeoutで50ms後にフォーカスが当たるため）
+    await act(async () => {
+      vi.advanceTimersByTime(50)
+    })
+
+    // 1. 初期フォーカスがタイトル（h3）に当たっていることを確認
+    const heading = screen.getByRole("heading", { name: "① HistoryにD&Dする" })
+    expect(document.activeElement).toBe(heading)
+
+    // 2. フォーカストラップのテスト (Tab)
+    const closeBtn = screen.getByRole("button", { name: /Close tutorial/i })
+    const nextBtn = screen.getByRole("button", { name: /次へ/i })
+
+    // 最後の要素（nextBtn）にフォーカスを当てて Tab を押す
+    nextBtn.focus()
+    expect(document.activeElement).toBe(nextBtn)
+
+    // keydownイベントを発火
+    const tooltipCard = screen
+      .getByTestId("interactive-tutorial")
+      .querySelector(".fixed.pointer-events-auto")!
+    fireEvent.keyDown(tooltipCard, { key: "Tab" })
+
+    // Tab後は最初の要素（closeBtn）にフォーカスが移るはず
+    expect(document.activeElement).toBe(closeBtn)
+
+    // 最初の要素（closeBtn）にフォーカスを当てて Shift+Tab を押す
+    closeBtn.focus()
+    expect(document.activeElement).toBe(closeBtn)
+
+    fireEvent.keyDown(tooltipCard, { key: "Tab", shiftKey: true })
+
+    // Shift+Tab後は最後の要素（nextBtn）にフォーカスが移るはず
+    expect(document.activeElement).toBe(nextBtn)
+
+    // 3. 終了時にフォーカスが戻るテスト
+    await act(async () => {
+      fireEvent.click(closeBtn)
+    })
+
+    await act(async () => {
+      vi.advanceTimersByTime(50)
+    })
+
+    // チュートリアルを起動した元のボタンにフォーカスが戻るはず
+    expect(document.activeElement).toBe(startBtn)
+
+    vi.useRealTimers()
+  })
 })

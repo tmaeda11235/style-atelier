@@ -3,10 +3,17 @@ import type {
   HistoryItem,
   ParameterAlias,
   ParameterFolder,
+  RecipeHistoryItem,
   StyleCard,
   UserSettings
 } from "./db-schema"
 import { StyleAtelierDatabaseBase } from "./db-setup"
+import {
+  addParameterFolder,
+  deleteParameterFolder,
+  generateUUID,
+  saveParameterAlias
+} from "./db/alias-ops"
 import { importBackupData } from "./db/import-ops"
 import {
   deleteCategory,
@@ -15,19 +22,6 @@ import {
 } from "./db/merge-ops"
 
 export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
-
-function generateUUID(): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID()
-  }
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
-  )
-}
 
 export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   // --- StyleCard Operations ---
@@ -184,33 +178,7 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
       id?: string
     }
   ): Promise<string> {
-    const now = Date.now()
-    if (alias.id) {
-      await this.parameterAliases.update(alias.id, {
-        ...alias,
-        updatedAt: now
-      })
-      return alias.id
-    } else {
-      const existing = await this.getAliasByValue(alias.paramType, alias.value)
-      if (existing) {
-        await this.parameterAliases.update(existing.id, {
-          alias: alias.alias,
-          folderId: alias.folderId,
-          updatedAt: now
-        })
-        return existing.id
-      } else {
-        const id = generateUUID()
-        await this.parameterAliases.add({
-          ...alias,
-          id,
-          createdAt: now,
-          updatedAt: now
-        } as ParameterAlias)
-        return id
-      }
-    }
+    return saveParameterAlias(this, alias)
   }
 
   async deleteParameterAlias(id: string): Promise<void> {
@@ -226,13 +194,7 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   async addParameterFolder(
     folder: Omit<ParameterFolder, "id" | "createdAt"> & { id?: string }
   ): Promise<string> {
-    const id = folder.id || generateUUID()
-    await this.parameterFolders.add({
-      ...folder,
-      id,
-      createdAt: Date.now()
-    } as ParameterFolder)
-    return id
+    return addParameterFolder(this, folder)
   }
 
   async updateParameterFolder(
@@ -244,21 +206,86 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   }
 
   async deleteParameterFolder(id: string): Promise<void> {
-    await this.parameterAliases
-      .where("folderId")
-      .equals(id)
-      .modify({ folderId: undefined })
-    const folder = await this.parameterFolders.get(id)
-    const newParentId = folder?.parentId
-    await this.parameterFolders
-      .where("parentId")
-      .equals(id)
-      .modify({ parentId: newParentId })
-    await this.parameterFolders.delete(id)
+    return deleteParameterFolder(this, id)
+  }
+
+  // --- RecipeHistory Operations ---
+
+  async getRecipeHistory(): Promise<RecipeHistoryItem[]> {
+    return this.recipeHistory.orderBy("timestamp").reverse().toArray()
+  }
+
+  async addRecipeHistory(
+    recipe: Omit<RecipeHistoryItem, "id" | "timestamp"> & {
+      id?: string
+      timestamp?: number
+    }
+  ): Promise<string> {
+    const id = recipe.id || generateUUID()
+    const timestamp = recipe.timestamp || Date.now()
+
+    // Enforce max 50 items
+    const count = await this.recipeHistory.count()
+    if (count >= 50) {
+      const oldest = await this.recipeHistory.orderBy("timestamp").first()
+      if (oldest) {
+        await this.recipeHistory.delete(oldest.id)
+      }
+    }
+
+    await this.recipeHistory.add({
+      ...recipe,
+      id,
+      timestamp
+    } as RecipeHistoryItem)
+    return id
+  }
+
+  async deleteRecipeHistory(id: string): Promise<void> {
+    await this.recipeHistory.delete(id)
   }
 }
 
 export const db = new StyleAtelierDatabase()
+
+let dbError: Error | null = null
+const dbErrorListeners = new Set<(err: Error) => void>()
+
+export function addDbErrorListener(listener: (err: Error) => void) {
+  dbErrorListeners.add(listener)
+  if (dbError) {
+    listener(dbError)
+  }
+  return () => {
+    dbErrorListeners.delete(listener)
+  }
+}
+
+export function getDbError(): Error | null {
+  return dbError
+}
+
+export function clearDbErrorForTest(): void {
+  dbError = null
+}
+
+if (typeof window !== "undefined") {
+  ;(window as any).__triggerDbErrorForTest = (message: string) => {
+    dbError = new Error(message)
+    dbErrorListeners.forEach((listener) => listener(dbError!))
+  }
+  ;(window as any).__clearDbErrorForTest = () => {
+    dbError = null
+    dbErrorListeners.forEach((listener) => listener(null as any))
+  }
+}
+
+// 明示的なオープン処理とエラーキャッチ
+db.open().catch((err) => {
+  console.error("Failed to open IndexedDB:", err)
+  dbError = err instanceof Error ? err : new Error(String(err))
+  dbErrorListeners.forEach((listener) => listener(dbError!))
+})
 
 // Register startup hook for purging deleted records older than 60 days
 db.on("ready", () => {

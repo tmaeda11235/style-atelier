@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Get the current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
+# Check if we are in the main worktree. 
+# git rev-parse --git-dir returns '.git' in the main repository, 
+# and '.git/worktrees/...' in a worktree.
+GIT_DIR=$(git rev-parse --git-dir)
+
+if [ "$GIT_DIR" = ".git" ] && [ "$CURRENT_BRANCH" != "main" ] && [ -n "$CURRENT_BRANCH" ]; then
+  echo ""
+  echo "================================================================"
+  echo "🚫 ILLEGAL CHECKOUT DETECTED: MAIN REPOSITORY PROTECTION 🚫"
+  echo "================================================================"
+  echo "You attempted to checkout or switch to '$CURRENT_BRANCH' in the main repository."
+  echo "This is strictly forbidden. All non-main branch work MUST be done in a git worktree."
+  echo "Reverting immediately..."
+  echo ""
+  
+  # Force reset and switch back to main
+  git reset --hard origin/main
+  git clean -fd
+  git checkout main
+  
+  echo ""
+  echo "SUCCESSFULLY REVERTED TO MAIN."
+  echo "Please use 'git worktree add' to work on your branch."
+  echo "================================================================"
+  exit 1
+fi
+
+exit 0

@@ -7,6 +7,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 
 import "../../src/style.css" // スタイルの読み込み
 
+import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -89,10 +90,38 @@ async function seedSandboxData() {
   }
 }
 
-seedSandboxData()
+const urlParams = new URLSearchParams(
+  typeof window !== "undefined" ? window.location.search : ""
+)
+if (urlParams.get("noseed") !== "true") {
+  seedSandboxData()
+}
 
-// chrome API モックの定義
 if (typeof window !== "undefined") {
+  // Mock navigator.gpu for sandbox / E2E tests
+  if (typeof navigator !== "undefined") {
+    // If it's already set to undefined by a test script (like in troubleshooting E2E), respect it.
+    // Otherwise, override requestAdapter to always return a mock adapter.
+    if (navigator.gpu !== undefined) {
+      try {
+        const mockGpu = {
+          requestAdapter: async () => ({ name: "MockGPU" })
+        }
+        Object.defineProperty(navigator, "gpu", {
+          value: mockGpu,
+          writable: true,
+          configurable: true
+        })
+      } catch (e) {
+        console.error(
+          "[Sandbox GPU Mock] Failed to inject navigator.gpu mock:",
+          e
+        )
+      }
+    }
+  }
+
+  ;(window as any).queryClient = queryClient
   ;(window as any).db = db
   ;(window as any).verifyCacheIntegrity = verifyCacheIntegrity
   ;(window as any).verifyOpfsIntegrity = verifyOpfsIntegrity
@@ -172,10 +201,13 @@ if (typeof window !== "undefined") {
   ;(window as any).chrome = {
     tabs: {
       query: async (queryInfo: any) => {
-        // 常にアクティブなMidjourneyタブが存在するようにエミュレート
-        return [
-          { id: 1, url: "https://www.midjourney.com/imagine", active: true }
-        ]
+        const urlParams = new URLSearchParams(window.location.search)
+        const mockUrl =
+          (window as any).__mockUrl ||
+          (window.parent && (window.parent as any).__mockUrl) ||
+          urlParams.get("mockUrl") ||
+          "https://www.midjourney.com/imagine"
+        return [{ id: 1, url: mockUrl, active: true }]
       },
       sendMessage: (tabId: number, message: any) => {
         return new Promise((resolve) => {
@@ -199,6 +231,7 @@ if (typeof window !== "undefined") {
       }
     },
     runtime: {
+      id: "mock-extension-id",
       onMessage: {
         addListener: (fn: any) => {
           ;(window as any).chromeMessageListeners =
@@ -240,23 +273,15 @@ if (typeof window !== "undefined") {
                 try {
                   const GEMMA_MODEL_FILES = [
                     {
-                      name: "gemma-4-e2b-q4f16_1.bin",
-                      size: 1024 * 1024 * 1024
+                      name: "gemma-4-E2B-it-web.litertlm",
+                      size: 2008432640
                     }
                   ]
                   const opfsValid = await verifyOpfsIntegrity(
-                    "webllm_models",
+                    "litert_models",
                     GEMMA_MODEL_FILES
                   )
-                  const cacheExpected = GEMMA_MODEL_FILES.map((f) => ({
-                    url: `https://webllm/model/${f.name}`,
-                    size: f.size
-                  }))
-                  const cacheValid = await verifyCacheIntegrity(
-                    "webllm/model_cache",
-                    cacheExpected
-                  )
-                  const integrityPassed = opfsValid || cacheValid
+                  const integrityPassed = opfsValid
 
                   if (callback) {
                     callback({ status: "success", integrityPassed })
@@ -274,7 +299,7 @@ if (typeof window !== "undefined") {
             }
           } else if (message.action === "check-quota") {
             const requiredBytes =
-              message.requiredBytes ?? 1.5 * 1024 * 1024 * 1024
+              message.requiredBytes ?? 2.5 * 1024 * 1024 * 1024
             ;(async () => {
               try {
                 // If config explicitly says not sufficient, fail immediately.
@@ -364,19 +389,33 @@ if (typeof window !== "undefined") {
                   clearInterval(intervalId)
                   localStorage.setItem("mock-webllm-downloaded", "true")
 
-                  // Seed actual cache on successful download finish to satisfy integrity check
+                  // Seed actual OPFS file on successful download finish to satisfy integrity check
                   if (mockWebLlmConfig.useRealIntegrity) {
                     ;(async () => {
                       try {
-                        if (typeof caches !== "undefined") {
-                          const cache = await caches.open("webllm/model_cache")
-                          await cache.put(
-                            "https://webllm/model/gemma-4-e2b-q4f16_1.bin",
-                            new Response(new Uint8Array(1024 * 1024))
+                        if (
+                          navigator.storage &&
+                          navigator.storage.getDirectory
+                        ) {
+                          const root = await navigator.storage.getDirectory()
+                          const dirHandle = await root.getDirectoryHandle(
+                            "litert_models",
+                            {
+                              create: true
+                            }
                           )
+                          const fileHandle = await dirHandle.getFileHandle(
+                            "gemma-4-E2B-it-web.litertlm",
+                            { create: true }
+                          )
+                          const writable = await fileHandle.createWritable()
+                          // Write correct size
+                          const dummyContent = new Uint8Array(2008432640)
+                          await writable.write(dummyContent)
+                          await writable.close()
                         }
                       } catch (e) {
-                        console.error("Failed to seed dummy cache file", e)
+                        console.error("Failed to seed dummy OPFS file", e)
                       }
                     })()
                   }
@@ -396,7 +435,7 @@ if (typeof window !== "undefined") {
                         progress,
                         speed: 12.5,
                         eta: Math.round((100 - progress) / 10),
-                        text: `Fetching model weights: ${progress}% (dummy size info: 1.0 GB total)`
+                        text: `Fetching model weights: ${progress}% (dummy size info: 2.0 GB total)`
                       }
                     })
                   )
@@ -431,7 +470,9 @@ if (typeof window !== "undefined") {
             const systemPrompt = (message.systemPrompt || "").toLowerCase()
             const isSemanticSearch =
               systemPrompt.includes("search query parser") ||
-              systemPrompt.includes("style search")
+              systemPrompt.includes("style search") ||
+              systemPrompt.includes("解析器") ||
+              systemPrompt.includes("スタイル検索")
 
             const runActualInference = () => {
               if (isSemanticSearch) {
@@ -465,14 +506,18 @@ if (typeof window !== "undefined") {
                   color = "Red"
                 }
 
-                if (promptLower.includes("style")) {
+                if (
+                  promptLower.includes("style") ||
+                  promptLower.includes("スタイル") ||
+                  promptLower.includes("風")
+                ) {
                   category = "Style"
                 }
 
                 // Clean up query mock keywords
                 query = query
                   .replace(
-                    /legendary|伝説|rare|レア|blue|青|red|赤|style/gi,
+                    /legendary|伝説|rare|レア|blue|青|red|赤|style|スタイル|風|の/gi,
                     ""
                   )
                   .replace(/\s+/g, " ")
@@ -565,13 +610,34 @@ if (typeof window !== "undefined") {
   }
 }
 
+function SandboxWrapper() {
+  const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
+
+  return (
+    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 relative">
+      <SidePanelPage />
+
+      {/* Test helper button for Onboarding Guide E2E validation */}
+      <button
+        id="test-open-onboarding-btn"
+        onClick={() => setIsOnboardingOpen(true)}
+        className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity">
+        TEST: Open Onboarding Guide
+      </button>
+
+      <OnboardingGuide
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+      />
+    </div>
+  )
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50">
-        <SidePanelPage />
-      </div>
+      <SandboxWrapper />
     </QueryClientProvider>
   </React.StrictMode>
 )

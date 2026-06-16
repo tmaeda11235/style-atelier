@@ -210,7 +210,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useSettings = () => {
   const context = useContext(SettingsContext)
   if (context === undefined) {
-    throw new Error("useSettings must be used within a SettingsProvider")
+    return {
+      isEasyMode: false,
+      toggleEasyMode: () => {},
+      expertFeatures: {
+        declutter: false,
+        recipeAdvice: false,
+        themeConsistency: false,
+        webllmInference: false
+      },
+      updateExpertFeature: () => {},
+      showTipsBar: true,
+      toggleTipsBar: () => {},
+      theme: "system" as const,
+      changeTheme: () => {},
+      includeBrandLogo: true,
+      toggleBrandLogo: () => {},
+      alwaysEnglishLogoText: false,
+      toggleAlwaysEnglishLogoText: () => {}
+    }
   }
   return context
 }

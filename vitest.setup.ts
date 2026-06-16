@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom"
 import "vitest-canvas-mock"
 import "fake-indexeddb/auto"
+import "./src/lib/i18n"
 
 import { vi } from "vitest"
 
@@ -47,6 +48,17 @@ Object.defineProperty(window.navigator, "storage", {
 
 Object.defineProperty(window.navigator, "language", {
   value: "en-US",
+  configurable: true,
+  writable: true
+})
+
+// ==========================================
+// 3.5 navigator.gpu Mock (Default Supported)
+// ==========================================
+Object.defineProperty(window.navigator, "gpu", {
+  value: {
+    requestAdapter: vi.fn().mockResolvedValue({ name: "MockGPU" })
+  },
   configurable: true,
   writable: true
 })
@@ -110,6 +122,7 @@ const chromeMock = {
     }
   },
   runtime: {
+    id: "mock-id",
     getURL: vi.fn((path) => `chrome-extension://mock-id/${path}`),
     lastError: undefined,
     onMessage: {
@@ -165,8 +178,7 @@ Object.defineProperty(global, "triggerChromeEvent", {
 // 6. Global Database Mock
 // ==========================================
 vi.mock("./src/lib/db", async () => {
-  const { db } = await import("./tests/mocks/db")
-  return { db }
+  return await import("./tests/mocks/db")
 })
 
 // ==========================================

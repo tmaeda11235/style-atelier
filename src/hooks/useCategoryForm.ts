@@ -19,16 +19,35 @@ function resetFormState(
   setParentId: (v: string) => void,
   setEmoji: (v: string) => void,
   setIconUrl: (v: string) => void,
-  setIconCardId: (v: string) => void
+  setIconCardId: (v: string) => void,
+  setCoverImageUrl: (v: string) => void,
+  setTheme: (v: string) => void,
+  setSelectionType: (v: "icon" | "cover" | null) => void
 ) {
   setName("")
   setParentId("")
   setEmoji("")
   setIconUrl("")
   setIconCardId("")
+  setCoverImageUrl("")
+  setTheme("")
+  setSelectionType(null)
 }
 
-export function useCategoryForm() {
+function triggerReset(states: any) {
+  resetFormState(
+    states.setName,
+    states.setParentId,
+    states.setEmoji,
+    states.setIconUrl,
+    states.setIconCardId,
+    states.setCoverImageUrl,
+    states.setTheme,
+    states.setSelectionType
+  )
+}
+
+function useCategoryFormStates() {
   const [name, setName] = useState("")
   const [parentId, setParentId] = useState("")
   const [emoji, setEmoji] = useState("")
@@ -39,21 +58,11 @@ export function useCategoryForm() {
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(
     null
   )
-
-  const handleEmojiChange = (val: string) => setEmoji(parseEmoji(val))
-  const handleSelectCard = (cardId: string, thumb: string) => {
-    setIconCardId(cardId)
-    setIconUrl(thumb)
-    setIsSelectingCard(false)
-  }
-  const handleClearImage = () => {
-    setIconUrl("")
-    setIconCardId("")
-  }
-  const handleCancelEdit = () => {
-    setEditingCategory(null)
-    resetFormState(setName, setParentId, setEmoji, setIconUrl, setIconCardId)
-  }
+  const [coverImageUrl, setCoverImageUrl] = useState("")
+  const [theme, setTheme] = useState("")
+  const [selectionType, setSelectionType] = useState<"icon" | "cover" | null>(
+    null
+  )
 
   return {
     name,
@@ -72,11 +81,45 @@ export function useCategoryForm() {
     setActiveTab,
     editingCategory,
     setEditingCategory,
+    coverImageUrl,
+    setCoverImageUrl,
+    theme,
+    setTheme,
+    selectionType,
+    setSelectionType
+  }
+}
+
+export function useCategoryForm() {
+  const states = useCategoryFormStates()
+
+  const handleEmojiChange = (val: string) => states.setEmoji(parseEmoji(val))
+  const handleSelectCard = (cardId: string, thumb: string) => {
+    if (states.selectionType === "cover") {
+      states.setCoverImageUrl(thumb)
+    } else {
+      states.setIconCardId(cardId)
+      states.setIconUrl(thumb)
+    }
+    states.setIsSelectingCard(false)
+    states.setSelectionType(null)
+  }
+  const handleClearImage = () => {
+    states.setIconUrl("")
+    states.setIconCardId("")
+  }
+  const handleCancelEdit = () => {
+    states.setEditingCategory(null)
+    triggerReset(states)
+  }
+
+  return {
+    ...states,
     handleEmojiChange,
     handleSelectCard,
     handleClearImage,
+    handleClearCoverImage: () => states.setCoverImageUrl(""),
     handleCancelEdit,
-    resetForm: () =>
-      resetFormState(setName, setParentId, setEmoji, setIconUrl, setIconCardId)
+    resetForm: () => triggerReset(states)
   }
 }
