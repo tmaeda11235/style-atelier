@@ -78,6 +78,11 @@ interface WorkbenchViewProps {
   pickRandomCards: () => void
   toggleCardSelection: (id: string) => Promise<void> | void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
+  startWeightAdjustment?: () => Promise<void> | void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
   handleExtract: (
     name: string,
     segments: PromptSegment[],

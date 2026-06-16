@@ -1,4 +1,4 @@
-import { BookUp2, Clock, Dices, Trash2 } from "lucide-react"
+import { BookUp2, Clock, Dices, Redo, Trash2, Undo } from "lucide-react"
 import React, { useEffect, useRef, useState } from "react"
 
 import type { RecipeHistoryItem, StyleCard } from "../../lib/db-schema"
@@ -12,6 +12,10 @@ export interface WorkbenchHeaderProps {
   recipeHistory: RecipeHistoryItem[]
   handleRestoreRecipe: (recipe: RecipeHistoryItem) => void
   deleteRecipeHistory: (id: string) => void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
   t: any
 }
 
@@ -35,6 +39,13 @@ interface HistoryMenuProps {
   handleRestoreRecipe: (recipe: RecipeHistoryItem) => void
   deleteRecipeHistory: (id: string) => void
   t: any
+}
+
+interface HistoryControlsProps {
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 }
 
 function useOutsideClick(
@@ -164,9 +175,74 @@ const HistoryMenu: React.FC<HistoryMenuProps> = ({
   )
 }
 
+const HistoryControls: React.FC<HistoryControlsProps> = ({
+  undo,
+  redo,
+  canUndo,
+  canRedo
+}) => (
+  <div className="flex items-center gap-1 border-r border-slate-200 dark:border-slate-800 pr-2">
+    <button
+      onClick={undo}
+      disabled={!canUndo}
+      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition-colors cursor-pointer"
+      title="Undo (Ctrl+Z)"
+      id="workbench-undo-btn"
+      data-testid="workbench-undo-btn"
+      type="button">
+      <Undo className="w-3.5 h-3.5" />
+    </button>
+    <button
+      onClick={redo}
+      disabled={!canRedo}
+      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition-colors cursor-pointer"
+      title="Redo (Ctrl+Y / Ctrl+Shift+Z)"
+      id="workbench-redo-btn"
+      data-testid="workbench-redo-btn"
+      type="button">
+      <Redo className="w-3.5 h-3.5" />
+    </button>
+  </div>
+)
+
+interface GachaButtonProps {
+  pickRandomCards: () => void
+  isShuffling?: boolean
+  t: any
+}
+
+const GachaButton: React.FC<GachaButtonProps> = ({
+  pickRandomCards,
+  isShuffling,
+  t
+}) => (
+  <button
+    onClick={pickRandomCards}
+    disabled={isShuffling}
+    className={`flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full text-[10px] font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer ${
+      isShuffling ? "opacity-50 cursor-not-allowed" : ""
+    }`}
+    title="Pick 1-3 random styles from library"
+    id="workbench-gacha-btn"
+    data-testid="workbench-gacha-btn"
+    type="button">
+    <Dices className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`} />
+    <span>{t.gachaPick || "Gacha Pick"}</span>
+  </button>
+)
+
 export const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = (props) => {
-  const { workbenchCards, clearWorkbench, pickRandomCards, isShuffling, t } =
-    props
+  const {
+    workbenchCards,
+    clearWorkbench,
+    pickRandomCards,
+    isShuffling,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    t
+  } = props
 
   return (
     <div className="flex items-center justify-between">
@@ -175,22 +251,18 @@ export const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = (props) => {
         Workbench
       </h2>
       <div className="flex items-center gap-2">
+        <HistoryControls
+          undo={undo}
+          redo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+        />
         <HistoryMenu {...props} />
-        <button
-          onClick={pickRandomCards}
-          disabled={isShuffling}
-          className={`flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full text-[10px] font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer ${
-            isShuffling ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          title="Pick 1-3 random styles from library"
-          id="workbench-gacha-btn"
-          data-testid="workbench-gacha-btn"
-          type="button">
-          <Dices
-            className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`}
-          />
-          <span>{t.gachaPick || "Gacha Pick"}</span>
-        </button>
+        <GachaButton
+          pickRandomCards={pickRandomCards}
+          isShuffling={isShuffling}
+          t={t}
+        />
         {workbenchCards.length > 0 && (
           <Button
             variant="ghost"

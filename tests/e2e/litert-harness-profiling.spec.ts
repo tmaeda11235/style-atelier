@@ -43,7 +43,6 @@ test("LiteRT Harness Profiling Dashboard End-to-End Simulation", async ({
       configurable: true,
       writable: true
     })
-
     ;(window as any).__setMockFile = (val: boolean) => {
       hasFile = val
     }
