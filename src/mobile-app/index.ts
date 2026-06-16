@@ -183,14 +183,7 @@ function resetHologram(cardContainer: HTMLElement) {
   })
 }
 
-function setupEventHandlers() {
-  const cardContainer = document.getElementById("cardContainer") as HTMLElement
-  const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement
-  const promptText = document.getElementById("promptText") as HTMLElement
-  const saveCloudBtn = document.getElementById(
-    "saveCloudBtn"
-  ) as HTMLButtonElement
-
+function setupCardContainerEvents(cardContainer: HTMLElement) {
   cardContainer.addEventListener("click", (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (target.closest(".action-btn")) return
@@ -224,7 +217,13 @@ function setupEventHandlers() {
   cardContainer.addEventListener("touchend", () => {
     resetHologram(cardContainer)
   })
+}
 
+function setupButtonEvents(
+  copyBtn: HTMLButtonElement,
+  promptText: HTMLElement,
+  saveCloudBtn: HTMLButtonElement
+) {
   copyBtn.addEventListener("click", async () => {
     const textToCopy = promptText.textContent?.trim() || ""
     try {
@@ -248,6 +247,18 @@ function setupEventHandlers() {
   saveCloudBtn.addEventListener("click", () => {
     showToast("クラウドに一時保存しました")
   })
+}
+
+function setupEventHandlers() {
+  const cardContainer = document.getElementById("cardContainer") as HTMLElement
+  const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement
+  const promptText = document.getElementById("promptText") as HTMLElement
+  const saveCloudBtn = document.getElementById(
+    "saveCloudBtn"
+  ) as HTMLButtonElement
+
+  setupCardContainerEvents(cardContainer)
+  setupButtonEvents(copyBtn, promptText, saveCloudBtn)
 }
 
 document.addEventListener("DOMContentLoaded", () => {
