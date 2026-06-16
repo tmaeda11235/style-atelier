@@ -10,7 +10,7 @@ export default defineConfig({
     }),
     tsconfigPaths()
   ],
-  base: "/style-atelier/",
+  base: "/mobile/",
   root: path.resolve(__dirname, "src/mobile-app"),
   build: {
     outDir: path.resolve(__dirname, "dist-mobile"),
