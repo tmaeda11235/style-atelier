@@ -9,10 +9,13 @@ describe("GDriveClient", () => {
 
   beforeEach(() => {
     client = new GDriveClient(mockClientId, mockApiKey)
-    // モックのリセット
     vi.clearAllMocks()
+    vi.restoreAllMocks()
 
-    // グローバルな window.google のモック設定
+    // Mock global fetch
+    vi.stubGlobal("fetch", vi.fn())
+
+    // Mock window.google
     global.window = Object.create(window)
     global.window.google = {
       accounts: {
@@ -28,7 +31,6 @@ describe("GDriveClient", () => {
   })
 
   it("should throw error if google identity services is not loaded", async () => {
-    // 意図的に google オブジェクトを未定義に設定
     ;(window as any).google = undefined
 
     await expect(client.requestAccessToken()).rejects.toThrow(
@@ -37,7 +39,6 @@ describe("GDriveClient", () => {
   })
 
   it("should return access token if already authenticated", async () => {
-    // 内部状態を強制的に書き換え（テスト用）
     ;(client as any).accessToken = "existing-token"
     const token = await client.requestAccessToken()
     expect(token).toBe("existing-token")
@@ -50,25 +51,45 @@ describe("GDriveClient", () => {
     })
     global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
 
-    // 非同期でリクエストを投げる
     const tokenPromise = client.requestAccessToken()
 
-    // initTokenClientが呼ばれたことを確認
     expect(mockInitTokenClient).toHaveBeenCalledWith({
       client_id: mockClientId,
       scope: "https://www.googleapis.com/auth/drive.file",
       callback: expect.any(Function)
     })
 
-    // requestAccessTokenが呼ばれたことを確認
     expect(mockRequestAccessToken).toHaveBeenCalledWith({ prompt: "consent" })
 
-    // コールバックをシミュレート
     const initArgs = mockInitTokenClient.mock.calls[0][0]
     initArgs.callback({ access_token: "new-mock-token" })
 
     const token = await tokenPromise
     expect(token).toBe("new-mock-token")
+  })
+
+  it("should reject requestAccessToken if callback returns error", async () => {
+    const mockRequestAccessToken = vi.fn()
+    const mockInitTokenClient = vi.fn().mockReturnValue({
+      requestAccessToken: mockRequestAccessToken
+    })
+    global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
+
+    const tokenPromise = client.requestAccessToken()
+
+    const initArgs = mockInitTokenClient.mock.calls[0][0]
+    initArgs.callback({ error: "access_denied" })
+
+    await expect(tokenPromise).rejects.toThrow("access_denied")
+  })
+
+  it("should reject requestAccessToken if requesting token throws", async () => {
+    const mockInitTokenClient = vi.fn().mockImplementation(() => {
+      throw new Error("Init failed")
+    })
+    global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
+
+    await expect(client.requestAccessToken()).rejects.toThrow("Init failed")
   })
 
   describe("saveCardData", () => {
@@ -259,6 +280,34 @@ describe("GDriveClient", () => {
 
       expect(payload.version).toBe(1)
       expect(payload.data.styleCards).toEqual([existingCard, newCard])
+    })
+
+    it("should return success false if findExistingTempFile fails", async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false
+      })
+
+      const result = await client.saveCardData({ id: "card-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBeInstanceOf(Error)
+      expect(result.error?.message).toBe("Failed to search existing file.")
+    })
+
+    it("should return success false if upload fails", async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ files: [] })
+      })
+      fetchMock.mockResolvedValueOnce({
+        ok: false
+      })
+
+      const result = await client.saveCardData({ id: "card-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBeInstanceOf(Error)
+      expect(result.error?.message).toBe("Failed to upload to Google Drive")
     })
   })
 })

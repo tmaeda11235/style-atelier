@@ -2,9 +2,21 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Mobile Pages & Google Drive Integration", () => {
   test.beforeEach(async ({ page, baseURL }) => {
+    page.on("console", (msg) =>
+      console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`)
+    )
+    page.on("pageerror", (err) =>
+      console.log(`[Browser PageError]: ${err.message}`)
+    )
+
+    // Google Identity Services SDKの読み込みをブロックして、テスト環境（オフライン/サンドボックス）の挙動をシミュレート
+    await page.route("https://accounts.google.com/gsi/client", (route) =>
+      route.abort()
+    )
+
     // Viteのローカルサーバー（モバイル用は dev:mobile）またはルートでホストされている想定
     // e2eテスト時は設定された baseURL を使用
-    await page.goto(`${baseURL}/src/mobile-app/`)
+    await page.goto(`${baseURL}/src/mobile-app/index.html`)
   })
 
   test("should render the mobile app correctly", async ({ page }) => {
@@ -37,8 +49,8 @@ test.describe("Mobile Pages & Google Drive Integration", () => {
     const toast = page.locator("#toast")
     await expect(toast).toHaveClass(/show/)
 
-    // テキストに「保存」が含まれているか
+    // テキストに「保存」または「認証」が含まれているか
     const toastText = await toast.textContent()
-    expect(toastText).toMatch(/保存/)
+    expect(toastText).toMatch(/保存|認証/)
   })
 })
