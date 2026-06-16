@@ -69,6 +69,7 @@ function HandBarContent({
         unpinCard={s.unpinCard}
         onOpenDetailCard={onOpenDetailCard}
         onNavigateToWorkbench={onNavigateToWorkbench}
+        t={s.t}
       />
     </div>
   )

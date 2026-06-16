@@ -30,12 +30,12 @@ export function useLocalBackupExport({
       URL.revokeObjectURL(url)
 
       addLog("Database exported to local JSON file successfully.")
-      showStatus(t.importSuccess, "success")
+      showStatus(t.exportSuccess, "success")
     } catch (err: any) {
       console.error(err)
       addLog(`Export failed: ${err.message || err}`)
       showStatus(
-        `${t.importFailed}: ${err.message || "Unknown error"}`,
+        `${t.exportFailed}: ${err.message || "Unknown error"}`,
         "error"
       )
     }

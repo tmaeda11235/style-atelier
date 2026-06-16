@@ -90,7 +90,12 @@ async function seedSandboxData() {
   }
 }
 
-seedSandboxData()
+const urlParams = new URLSearchParams(
+  typeof window !== "undefined" ? window.location.search : ""
+)
+if (urlParams.get("noseed") !== "true") {
+  seedSandboxData()
+}
 
 if (typeof window !== "undefined") {
   // Mock navigator.gpu for sandbox / E2E tests

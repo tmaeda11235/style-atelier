@@ -1,17 +1,17 @@
-# ADR 005: Migration from WebLLM to LiteRT-LM (Gemma 4 E2B) for Local AI Inference
+# ADR 005: Migration from WebLLM to LiteRT-LM (Gemma-2 2B) for Local AI Inference
 
 ## Context
 
 The application relies on local, offline AI inference for analyzing prompts and categorizing styles. Historically, this was implemented using `@mlc-ai/web-llm` and the Llama-3-8B-Instruct model. However, recent developments highlighted significant drawbacks with WebLLM:
 
 1. **CSP and `importScripts` Restrictions in Manifest V3**: WebLLM's internal dependencies often attempt to dynamically load scripts or fetch assets in ways that violate Chrome Extension MV3 strict `script-src` Content Security Policies (CSP), causing frequent crashes or requiring complex workarounds.
-2. **Model Weight Optimization**: Llama-3-8B is large and heavy for a browser extension. Google's LiteRT-LM combined with the highly optimized Gemma 4 E2B model offers superior performance, smaller VRAM footprint, and faster time-to-first-token in browser environments.
+2. **Model Weight Optimization**: Llama-3-8B is large and heavy for a browser extension. Google's LiteRT-LM combined with the highly optimized Gemma-2 2B model offers superior performance, smaller VRAM footprint, and faster time-to-first-token in browser environments.
 
-A technical spike (Issue #785) was conducted to verify the feasibility of replacing WebLLM with `@litert-lm/core` running the Gemma 4 E2B model.
+A technical spike (Issue #785) was conducted to verify the feasibility of replacing WebLLM with `@litert-lm/core` running the Gemma-2 2B model.
 
 ## Decision
 
-We will migrate the primary local AI inference engine from `@mlc-ai/web-llm` to `@litert-lm/core` using the Gemma 4 E2B model.
+We will migrate the primary local AI inference engine from `@mlc-ai/web-llm` to `@litert-lm/core` using the Gemma-2 2B model.
 
 ## Design Points & Caveats (Learnings from the Spike)
 
