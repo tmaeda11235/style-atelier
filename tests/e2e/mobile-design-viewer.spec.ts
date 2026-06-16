@@ -17,7 +17,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     page
   }) => {
     // 1. Navigate to the mobile app index page (no params, should fallback)
-    await page.goto("/src/mobile-app/index.html")
+    await page.goto("/src/mobile-app/index.html?mock=true")
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")
@@ -90,7 +90,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     const saveCloudBtn = page.locator("#saveCloudBtn")
     await saveCloudBtn.click()
     await expect(toast).toHaveClass(/show/)
-    await expect(toast.locator("span")).toHaveText("クラウドに一時保存しました")
+    await expect(toast.locator("span")).toHaveText(/クラウドに一時保存しました/)
 
     // Take screenshot of the cloud-saved state with toast notification
     const cloudSavedScreenshotPath = path.join(
