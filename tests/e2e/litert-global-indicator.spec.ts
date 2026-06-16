@@ -62,7 +62,8 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Global Indicator & Qu
         "#webllm-settings-section-wrapper button:has-text('Download Model'), #webllm-settings-section-wrapper button:has-text('モデルをダウンロード')"
       )
       .first()
-    await downloadBtn.click({ force: true })
+    await downloadBtn.waitFor({ state: "visible" })
+    await downloadBtn.click()
 
     // Click confirm download
     const confirmDownloadBtn = spFrame
@@ -70,7 +71,8 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Global Indicator & Qu
         "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
       )
       .first()
-    await confirmDownloadBtn.click({ force: true })
+    await confirmDownloadBtn.waitFor({ state: "visible" })
+    await confirmDownloadBtn.click()
     await page.waitForTimeout(500)
 
     // 2. Navigate away to History tab and check global progress bar
