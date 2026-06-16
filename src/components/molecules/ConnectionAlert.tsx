@@ -24,8 +24,6 @@ export const ConnectionAlert = ({
 }: ConnectionAlertProps) => {
   const context = useLanguage()
   const { t } = context
-  console.log("DEBUG_LOG: lang is", context.lang)
-  console.log("DEBUG_LOG: alerts is", (t as any).alerts)
   if (!type) return null
 
   const DismissButton = () =>
