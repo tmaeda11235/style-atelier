@@ -159,7 +159,6 @@ export default ts.config(
       "src/components/organisms/Workbench.tsx",
       "src/hooks/useCardDetailsForm.ts",
       "src/hooks/useEasyModeView.ts",
-      "src/hooks/useLocalBackup.ts",
     ],
     rules: {
       "max-lines-per-function": "warn"
