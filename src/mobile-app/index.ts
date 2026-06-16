@@ -25,10 +25,8 @@ function applyCardColors(
   rarityClass: string
 ) {
   if (!element) return
-  const base = element.classList.contains("card-front")
-    ? "card-front"
-    : "card-back"
-  element.className = `${base} ${rarityClass}`
+  const isFront = element.classList.contains("card-front")
+  element.className = (isFront ? "card-front" : "card-back") + " " + rarityClass
   if (card.dominantColor) {
     element.style.setProperty(
       "--color-accent-card",
@@ -42,25 +40,23 @@ function applyCardColors(
 }
 
 function renderParameterBadges(parameters: Record<string, any> | undefined) {
-  const el = document.getElementById("parameterBadges")
-  if (!el) return
-  el.innerHTML = ""
+  const parameterBadgesEl = document.getElementById("parameterBadges")
+  if (!parameterBadgesEl) return
+  parameterBadgesEl.innerHTML = ""
   Object.entries(parameters || {}).forEach(([key, val]) => {
     if (val !== undefined && val !== null && val !== "") {
       const badge = document.createElement("span")
       badge.className = "parameter-badge"
       badge.textContent = `--${key} ${val}`
-      el.appendChild(badge)
+      parameterBadgesEl.appendChild(badge)
     }
   })
 }
+
 function renderCardImage(card: Partial<StyleCard>) {
   const container = document.getElementById("cardImageContainer")
   if (!container) return
-
-  // Use thumbnailData if available, otherwise fallback to local image
   const src = card.thumbnailData || "./cyber_samurai.png"
-
   container.innerHTML = `
     <img src="${src}" alt="${card.name || "Card Image"}" class="card-image">
     <div class="card-image-overlay">Tap to reveal Prompt</div>
@@ -73,7 +69,9 @@ function renderCard(card: Partial<StyleCard>) {
   const titleBack = document.getElementById("cardTitleBack")
   const rarityFront = document.getElementById("cardRarityFront")
   const rarityBack = document.getElementById("cardRarityBack")
-  const promptEl = document.getElementById("promptText")
+  const promptTextEl = document.getElementById("promptText")
+  const cardFront = document.getElementById("cardFront")
+  const cardBack = document.getElementById("cardBack")
 
   if (titleFront) titleFront.textContent = card.name || "Unnamed Card"
   if (titleBack) titleBack.textContent = card.name || "Unnamed Card"
@@ -83,16 +81,15 @@ function renderCard(card: Partial<StyleCard>) {
   if (rarityBack) rarityBack.textContent = rarity
 
   const rarityClass = `rarity-${(card.tier || "common").toLowerCase()}`
-  applyCardColors(card, document.getElementById("cardFront"), rarityClass)
-  applyCardColors(card, document.getElementById("cardBack"), rarityClass)
+  applyCardColors(card, cardFront, rarityClass)
+  applyCardColors(card, cardBack, rarityClass)
 
-  if (promptEl) {
-    promptEl.textContent = buildPromptString(
+  if (promptTextEl) {
+    promptTextEl.textContent = buildPromptString(
       card.promptSegments || [],
       card.parameters || {}
     )
   }
-
 
   renderCardImage(card)
   renderParameterBadges(card.parameters)
@@ -101,7 +98,7 @@ function renderCard(card: Partial<StyleCard>) {
 function loadFallbackCard() {
   const fallback: Partial<StyleCard> = {
     name: "Cyber Samurai",
-    tier: "Legendary",
+    tier: "legendary",
     accentColor: "#fbbf24",
     dominantColor: "#1e293b",
     promptSegments: [
@@ -123,8 +120,7 @@ function loadCardFromUrl() {
   const rawParam = params.get("p") || params.get("data")
   if (rawParam) {
     try {
-      const normalizedData = rawParam.replace(/ /g, "+")
-      const cardData = decompressCardData(normalizedData)
+      const cardData = decompressCardData(rawParam.replace(/ /g, "+"))
       currentCardData = cardData
       renderCard(cardData)
     } catch (err) {
@@ -144,15 +140,17 @@ function updateHologramProperties(
   y: number,
   cardContainer: HTMLElement
 ) {
-  const front = cardContainer.querySelector(".card-front") as HTMLElement
-  const back = cardContainer.querySelector(".card-back") as HTMLElement
-  if (front && back) {
-    ;[front, back].forEach((el) => {
+  const frontCard = cardContainer.querySelector(".card-front") as HTMLElement
+  const backCard = cardContainer.querySelector(".card-back") as HTMLElement
+  if (frontCard && backCard) {
+    const setHolo = (el: HTMLElement) => {
       el.style.setProperty("--glow-x", `${x}%`)
       el.style.setProperty("--glow-y", `${y}%`)
       el.style.setProperty("--holo-x", `${x}%`)
       el.style.setProperty("--holo-y", `${y}%`)
-    })
+    }
+    setHolo(frontCard)
+    setHolo(backCard)
   }
 }
 
@@ -171,19 +169,16 @@ function handleHologramMove(e: MouseEvent, cardContainer: HTMLElement) {
 
 function handleHologramTouchMove(e: TouchEvent, cardContainer: HTMLElement) {
   if (e.touches.length === 0) return
-  const touch = e.touches[0]
   const rect = cardContainer.getBoundingClientRect()
-  const px = Math.max(
-    0,
-    Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100)
-  )
-  const py = Math.max(
-    0,
-    Math.min(100, ((touch.clientY - rect.top) / rect.height) * 100)
-  )
+  const px = ((e.touches[0].clientX - rect.left) / rect.width) * 100
+  const py = ((e.touches[0].clientY - rect.top) / rect.height) * 100
   if (!ticking) {
     requestAnimationFrame(() => {
-      updateHologramProperties(px, py, cardContainer)
+      updateHologramProperties(
+        Math.max(0, Math.min(100, px)),
+        Math.max(0, Math.min(100, py)),
+        cardContainer
+      )
       ticking = false
     })
     ticking = true
@@ -205,16 +200,15 @@ function setupCardContainerEvents(cardContainer: HTMLElement) {
   cardContainer.addEventListener("mouseleave", () =>
     resetHologram(cardContainer)
   )
-  const opts = { passive: true }
   cardContainer.addEventListener(
     "touchstart",
     (e) => handleHologramTouchMove(e, cardContainer),
-    opts
+    { passive: true }
   )
   cardContainer.addEventListener(
     "touchmove",
     (e) => handleHologramTouchMove(e, cardContainer),
-    opts
+    { passive: true }
   )
   cardContainer.addEventListener("touchend", () => resetHologram(cardContainer))
 }
@@ -278,20 +272,19 @@ async function handleSaveCloudClick() {
   }
 }
 
-
 function setupButtonEvents(
   copyBtn: HTMLButtonElement,
   promptText: HTMLElement,
   saveCloudBtn: HTMLButtonElement
 ) {
   copyBtn.addEventListener("click", async () => {
-    const text = promptText.textContent?.trim() || ""
+    const textToCopy = promptText.textContent?.trim() || ""
     try {
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text)
+        await navigator.clipboard.writeText(textToCopy)
       } else {
         const textarea = document.createElement("textarea")
-        textarea.value = text
+        textarea.value = textToCopy
         document.body.appendChild(textarea)
         textarea.select()
         document.execCommand("copy")
@@ -320,10 +313,4 @@ function setupEventHandlers() {
 document.addEventListener("DOMContentLoaded", () => {
   loadCardFromUrl()
   setupEventHandlers()
-  if (!isMock) {
-    initGisClient(
-      () => {},
-      () => {}
-    )
-  }
 })
