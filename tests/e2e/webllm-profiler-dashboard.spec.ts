@@ -24,7 +24,20 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Developer Profiler Da
     console.log("Navigating to sandbox page for Developer Profiler test...")
     await page.goto("/tests/sandbox/index.html")
 
+    // Resize sidepanel frame to show the developer dashboard
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "1200px"
+      }
+    })
+
     const spFrame = page.frameLocator("#sidepanel-frame")
+
+    const width = await spFrame
+      .locator("html")
+      .evaluate(() => window.innerWidth)
+    console.log(`Iframe window.innerWidth after resize: ${width}`)
 
     // Ensure the title is visible
     const title = spFrame
