@@ -16,17 +16,26 @@ interface UseExpertModeViewProps {
   onToggleEasyMode: (enabled: boolean) => void
 }
 
-function openMidjourney() {
-  if (typeof chrome !== "undefined" && chrome.tabs?.update) {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id)
-        chrome.tabs.update(tabs[0].id, {
-          url: "https://www.midjourney.com/imagine"
-        })
-    })
-  } else {
-    window.open("https://www.midjourney.com/imagine", "_blank")
+async function openMidjourney() {
+  if (typeof chrome !== "undefined" && chrome.tabs?.query) {
+    try {
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      })
+      if (tabs?.[0]?.id) {
+        chrome.tabs.update(
+          tabs[0].id,
+          { url: "https://www.midjourney.com/imagine" },
+          () => {}
+        )
+        return
+      }
+    } catch (err) {
+      console.error("Failed to query tabs:", err)
+    }
   }
+  window.open("https://www.midjourney.com/imagine", "_blank")
 }
 
 async function saveCardDetails(
@@ -221,6 +230,7 @@ export function useExpertModeView({
     onToggleEasyMode
   )
   const cardOps = useExpertCardOperations(addLog, setAlertType, setActiveTab)
+  const { setActiveDetailCard } = cardOps
   const { handleInjectPrompt } = useExpertPromptInjection(
     addLog,
     setAlertType,
@@ -228,9 +238,48 @@ export function useExpertModeView({
   )
   const dragMint = useExpertDragAndMint(addLog, setActiveTab, advanceIfStep)
 
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      setActiveTab(tab)
+      dragMint.minting.setMintingItem(null)
+      dragMint.minting.setVariationBase(null)
+      setActiveDetailCard(null)
+    },
+    [setActiveTab, dragMint.minting, setActiveDetailCard]
+  )
+
+  const handleRetryConnection = useCallback(() => {
+    if (typeof chrome !== "undefined" && chrome.tabs?.reload) {
+      chrome.tabs.reload()
+    } else {
+      window.location.reload()
+    }
+    setAlertType(null)
+  }, [])
+
+  const sidePanelLayoutProps = {
+    activeTab,
+    onTabChange: handleTabChange,
+    isDragging: dragMint.isDragging,
+    isDraggingFile: dragMint.isDraggingFile,
+    isImporting: dragMint.isImporting,
+    logs,
+    onClearLogs: handleClearLogs,
+    onResetDb: handleResetDb,
+    droppedItem: dragMint.droppedItem,
+    onClearDroppedItem: dragMint.clearDroppedItem,
+    alertType,
+    onRetryConnection: handleRetryConnection,
+    onDismissAlert: () => setAlertType(null),
+    onOpenGuide: tutorial.handleOpenGuide,
+    isEasyMode: _isEasyMode
+  }
+
   return {
     activeTab,
     setActiveTab,
+    handleTabChange,
+    sidePanelLayoutProps,
     logs,
     alertType,
     setAlertType,
@@ -241,10 +290,7 @@ export function useExpertModeView({
     handleInjectPrompt,
     handleResetDb,
     handleClearLogs,
-    handleRetryConnection: () => {
-      chrome.tabs.reload()
-      setAlertType(null)
-    },
+    handleRetryConnection,
     handleDismissAlert: () => setAlertType(null),
     handleOpenMidjourney: openMidjourney
   }

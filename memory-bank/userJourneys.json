@@ -125,7 +125,7 @@
       "name": "プロンプトインジェクション",
       "description": "Midjourneyへのプロンプトインジェクション",
       "steps": ["Injectボタン押下", "Discordの入力欄にテキスト反映"],
-      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "nextJourneys": ["@J-MINT-EXPERT-01", "@J-UX-DISCONNECTED-ALERT"],
       "viewComponents": ["src/components/organisms/Workbench.tsx"]
     },
     {
@@ -196,7 +196,10 @@
       "description": "エキスパート向けヘルプツールチップの確認",
       "steps": ["?アイコンにホバー", "ツールチップ表示", "仕様の確認"],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"],
-      "viewComponents": ["src/components/organisms/ExpertModeView.tsx"]
+      "viewComponents": [
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/WelcomeDialog.tsx"
+      ]
     },
     {
       "id": "@J-SYS-03",
@@ -511,7 +514,9 @@
         "src/pages/SidePanel.tsx",
         "src/components/organisms/NonTargetSiteView.tsx",
         "src/components/organisms/EasyModeView.tsx",
-        "src/components/organisms/ExpertModeView.tsx"
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeTabContainer.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeOverlayManager.tsx"
       ]
     },
     {
@@ -564,6 +569,21 @@
         "src/components/organisms/WebLlmSettingsSection.tsx",
         "src/components/organisms/WebLlmSettingsSubComponents.tsx",
         "src/components/molecules/AiDownloadStatus.tsx"
+      ]
+    },
+    {
+      "id": "@J-UX-DISCONNECTED-ALERT",
+      "name": "接続切断時のエラーハンドリングとリカバリ",
+      "description": "拡張機能コンテキスト無効化などの接続切断時、親切な警告（Connection Lost）を表示し、ページのリロードを促す",
+      "steps": [
+        "切断状態（invalidated）を検知",
+        "画面上部に「接続が切断されました（Connection Lost）」の警告が表示されることを確認",
+        "「ページをリロード（Reload Page）」ボタンを押下してリカバリを試みる"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01"],
+      "viewComponents": [
+        "src/components/molecules/ConnectionAlert.tsx",
+        "src/lib/chrome-utils.ts"
       ]
     }
   ]

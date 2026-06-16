@@ -28,7 +28,6 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
 
     // 2. Seed database with a style card
     await spFrame.locator("body").evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
 
       await database.styleCards.clear()
@@ -75,9 +74,10 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await expect(editBtn).toBeVisible()
     await editBtn.click()
     await spFrame.locator("body").evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
       win.chrome = win.chrome || {}
+      win.chrome.runtime = win.chrome.runtime || {}
+      win.chrome.runtime.id = "mock-extension-id"
       win.chrome.tabs = win.chrome.tabs || {}
       win.chrome.tabs.sendMessage = async () => {
         throw new Error("Could not establish connection")
@@ -115,8 +115,11 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await expect(dismissBtn).toBeVisible()
     await dismissBtn.click()
     await spFrame.locator("body").evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
+      win.chrome = win.chrome || {}
+      win.chrome.runtime = win.chrome.runtime || {}
+      win.chrome.runtime.id = "mock-extension-id"
+      win.chrome.tabs = win.chrome.tabs || {}
       win.chrome.tabs.sendMessage = async () => {
         return {
           status: "error",
@@ -163,8 +166,11 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     await expect(editBtn).toBeVisible()
     await editBtn.click()
     await spFrame.locator("body").evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
+      win.chrome = win.chrome || {}
+      win.chrome.runtime = win.chrome.runtime || {}
+      win.chrome.runtime.id = "mock-extension-id"
+      win.chrome.tabs = win.chrome.tabs || {}
       win.chrome.tabs.sendMessage = async () => {
         throw new Error("Could not establish connection")
       }
@@ -192,8 +198,11 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     // Dismiss Alert
     await dismissBtn.click()
     await spFrame.locator("body").evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any
+      win.chrome = win.chrome || {}
+      win.chrome.runtime = win.chrome.runtime || {}
+      win.chrome.runtime.id = "mock-extension-id"
+      win.chrome.tabs = win.chrome.tabs || {}
       win.chrome.tabs.sendMessage = async () => {
         return {
           status: "error",

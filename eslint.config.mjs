@@ -145,28 +145,21 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-func-lines.ts",
-      "src/components/molecules/AssociatedImageGallery.tsx",
       "src/components/molecules/AutocompleteDropdown.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
-      "src/components/organisms/EasyModeSection.tsx",
-      "src/components/organisms/EasyModeView.tsx",
       "src/components/organisms/EvolutionSuccessModal.tsx",
-      "src/components/organisms/ExpertModeView.tsx",
-      "src/components/organisms/HandBar.tsx",
       "src/components/organisms/HistoryTab.tsx",
       "src/components/organisms/InteractiveTutorial.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/MergeStackModal.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/PromptBubbleEditor.tsx",
-      "src/components/organisms/SettingsTab.tsx",
-      "src/components/organisms/ShareCardModal.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/hooks/useCardDetailsForm.ts",
       "src/hooks/useEasyModeView.ts",
+      "src/hooks/useExpertModeView.ts",
       "src/hooks/useLocalBackup.ts",
     ],
     rules: {
@@ -199,7 +192,12 @@ export default ts.config(
       "src/components/molecules/ParameterArrayEditor.tsx",
       "src/components/organisms/AiStyleAnalysisSection.tsx",
       "src/components/organisms/AiRecipeAdviceSection.tsx",
-      "src/components/organisms/SimpleMintingView.tsx"
+      "src/components/organisms/SimpleMintingView.tsx",
+      "src/components/organisms/LibraryFilterAccordion.tsx",
+      "src/components/organisms/LibrarySearchBar.tsx",
+      "src/components/organisms/OnboardingGuide.tsx",
+      "src/components/organisms/OnboardingGuideComponents.tsx",
+      "src/components/molecules/GDriveSyncStrategyDialog.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [
@@ -226,7 +224,9 @@ export default ts.config(
               "position",
               "advanceIfStep",
               "title",
-              "aria-label"
+              "aria-label",
+              "value",
+              "strategyValue"
             ]
           },
           words: {

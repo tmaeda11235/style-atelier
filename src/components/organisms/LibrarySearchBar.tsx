@@ -51,9 +51,7 @@ function FilterToggleBtn({
       data-testid="toggle-filters-btn"
       disabled={disabled}>
       <SlidersHorizontal className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">
-        {t.filtersToggleLabel || "Filters"}
-      </span>
+      <span className="hidden sm:inline">{t.filtersToggleLabel}</span>
       {activeFiltersCount > 0 && (
         <span className="flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-extrabold text-white bg-indigo-600 dark:bg-indigo-500 rounded-full">
           {activeFiltersCount}

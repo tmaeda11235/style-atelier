@@ -81,9 +81,19 @@ async function fetchAdviceHelper(params: FetchAdviceParams) {
   }
 }
 
-function checkAdviceCache(props: RecipeAdviceFetchProps): boolean {
+interface CacheCheckParams {
+  cards: any[]
+  status: string
+  key: string
+  cacheRef: React.MutableRefObject<Record<string, string>>
+  setAdvice: React.Dispatch<React.SetStateAction<string | null>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+function processCache(params: CacheCheckParams): boolean {
   const { cards, status, key, cacheRef, setAdvice, setError, setLoading } =
-    props
+    params
   if (cards.length < 2 || status !== "ready") {
     setAdvice(null)
     setError(null)
@@ -114,45 +124,35 @@ interface RecipeAdviceFetchProps {
 }
 
 function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
-  const {
-    cards,
-    key,
-    status,
-    lang,
-    setAdvice,
-    setError,
-    setLoading,
-    cacheRef,
-    runInferenceRef
-  } = props
+  const propsRef = useRef(props)
+  useEffect(() => {
+    propsRef.current = props
+  })
 
   useEffect(() => {
-    if (checkAdviceCache(props)) {
+    const p = propsRef.current
+    if (processCache(p)) {
       return
     }
     let mounted = true
-    const isMounted = () => mounted
     const timer = setTimeout(() => {
       fetchAdviceHelper({
-        ...props,
-        isMounted
+        cards: p.cards,
+        key: p.key,
+        lang: p.lang,
+        setAdvice: p.setAdvice,
+        setError: p.setError,
+        setLoading: p.setLoading,
+        cacheRef: p.cacheRef,
+        runInferenceRef: p.runInferenceRef,
+        isMounted: () => mounted
       })
     }, 500)
     return () => {
       mounted = false
       clearTimeout(timer)
     }
-  }, [
-    cards,
-    key,
-    status,
-    lang,
-    setAdvice,
-    setError,
-    setLoading,
-    cacheRef,
-    runInferenceRef
-  ])
+  }, [props.cards, props.key, props.status, props.lang])
 }
 
 export function useAiRecipeAdvice(cards: any[]) {
