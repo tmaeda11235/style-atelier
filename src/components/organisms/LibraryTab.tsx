@@ -86,6 +86,7 @@ function GridOrEmptySection({
         onNavigateToWorkbench?.()
       }}
       moveCardToCategory={lib.moveCardToCategory}
+      onCardReorder={lib.handleCardReorder}
       hasMore={lib.hasMore}
       loadMore={lib.loadMore}
       t={t}
@@ -160,11 +161,16 @@ function BinderThemeHeader({
         </div>
       )}
       <div className="relative z-10 flex flex-col">
-        <span className="text-[9px] uppercase tracking-wider font-extrabold opacity-60">
+        <span
+          className={`text-[9px] uppercase tracking-wider font-extrabold ${currentCategory.coverImageUrl ? "text-white/70" : "opacity-60"}`}>
           {activeTheme ? `${activeTheme} theme binder` : "binder"}
         </span>
         <h2
-          className={`text-base font-extrabold truncate ${themeStyles?.title || "text-slate-800"}`}>
+          className={`text-base font-extrabold truncate ${
+            currentCategory.coverImageUrl
+              ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              : themeStyles?.title || "text-slate-800"
+          }`}>
           {currentCategory.name}
         </h2>
       </div>

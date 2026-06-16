@@ -43,7 +43,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     const aiToggleBtn = spFrame.locator("#ai-search-toggle-btn")
     await expect(aiToggleBtn).toBeVisible()
     await aiToggleBtn.click()
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1000)
 
     // Check if LocalAiSetupPlaceholder is visible
     const placeholder = spFrame.locator("#local-ai-setup-placeholder")

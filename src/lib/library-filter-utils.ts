@@ -84,12 +84,26 @@ export function compareByColor(
   return keyB.l - keyA.l
 }
 
+export function compareByCustom(
+  a: StyleCardMetadata,
+  b: StyleCardMetadata
+): number {
+  const sortA = a.sortIndex ?? 0
+  const sortB = b.sortIndex ?? 0
+  if (sortA !== sortB) {
+    return sortA - sortB
+  }
+  return b.createdAt - a.createdAt
+}
+
 export function sortCards(
   cards: StyleCardMetadata[],
   sortBy: SortOption
 ): StyleCardMetadata[] {
   return [...cards].sort((a, b) => {
     switch (sortBy) {
+      case "custom":
+        return compareByCustom(a, b)
       case "newest":
         return b.createdAt - a.createdAt
       case "oldest":

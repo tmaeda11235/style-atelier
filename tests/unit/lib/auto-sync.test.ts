@@ -1,5 +1,6 @@
 import {
   autoSyncConfig,
+  checkAndMergeMobileTempData,
   checkAndMergeRemoteChanges,
   initializeAutoSync,
   isAutoSyncEnabled,
@@ -15,7 +16,10 @@ vi.mock("@/lib/google-drive", () => ({
   authorize: vi.fn(),
   getBackupMetadata: vi.fn(),
   downloadBackup: vi.fn(),
-  uploadBackup: vi.fn()
+  uploadBackup: vi.fn(),
+  searchTempSharedCardsFile: vi.fn(),
+  downloadTempSharedCards: vi.fn(),
+  deleteFile: vi.fn()
 }))
 
 vi.mock("@/lib/backup-manager", () => ({
@@ -303,6 +307,56 @@ describe("auto-sync", () => {
       }
 
       expect(googleDrive.uploadBackup).toHaveBeenCalled()
+    })
+  })
+
+  describe("Mobile Temp Data Syncing", () => {
+    it("skips if sync is disabled", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "false")
+      await checkAndMergeMobileTempData()
+      expect(googleDrive.searchTempSharedCardsFile).not.toHaveBeenCalled()
+    })
+
+    it("checks, downloads, merges and deletes temp file if found", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
+      vi.mocked(googleDrive.searchTempSharedCardsFile).mockResolvedValue(
+        "temp-file-id"
+      )
+      vi.mocked(googleDrive.downloadTempSharedCards).mockResolvedValue(
+        '{"temp": true}'
+      )
+
+      await checkAndMergeMobileTempData()
+
+      expect(googleDrive.authorize).toHaveBeenCalledWith(false)
+      expect(googleDrive.searchTempSharedCardsFile).toHaveBeenCalledWith(
+        "mock-token"
+      )
+      expect(googleDrive.downloadTempSharedCards).toHaveBeenCalledWith(
+        "mock-token"
+      )
+      expect(backupManager.importDatabase).toHaveBeenCalledWith(
+        '{"temp": true}',
+        "merge"
+      )
+      expect(googleDrive.deleteFile).toHaveBeenCalledWith(
+        "mock-token",
+        "temp-file-id"
+      )
+    })
+
+    it("does not merge or delete if temp file is not found", async () => {
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
+      vi.mocked(googleDrive.searchTempSharedCardsFile).mockResolvedValue(null)
+
+      await checkAndMergeMobileTempData()
+
+      expect(googleDrive.searchTempSharedCardsFile).toHaveBeenCalled()
+      expect(googleDrive.downloadTempSharedCards).not.toHaveBeenCalled()
+      expect(backupManager.importDatabase).not.toHaveBeenCalled()
+      expect(googleDrive.deleteFile).not.toHaveBeenCalled()
     })
   })
 })

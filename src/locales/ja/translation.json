@@ -3,7 +3,7 @@
     "title": "Style Atelierへようこそ！",
     "description": "実際に操作しながら使い方を覚える\nインタラクティブなガイドを開始しますか？",
     "start": "ガイドを開始する",
-    "skip": "スキップ（あとでGuideボタンから開始できます）"
+    "skip": "スキップ（あとで設定画面から再実行できます）"
   },
   "onboarding": {
     "quickGuide": "クイックガイド",
@@ -17,7 +17,7 @@
       },
       {
         "title": "2. カードをミントする",
-        "description": "インポートされた履歴アイテムの「Mint」ボタンをクリックして、カスタムスタイルカードの作成を開始します。"
+        "description": "インポートされた履歴アイテムの「Mint」ボタンをクリックして、カスタムスタイルカードのミント（作成）を開始します。"
       },
       {
         "title": "3. カード名を入力する",
@@ -39,7 +39,29 @@
         "title": "7. Workbenchで編集する",
         "description": "Workbenchタブでカードの変数をカスタマイズし、複数のスタイルを組み合わせ、最終的なプロンプトを生成します。"
       }
-    ]
+    ],
+    "mock": {
+      "midjourneyWebUi": "Midjourney Web UI",
+      "sidePanel": "サイドパネル",
+      "dropHere": "ここにドロップ",
+      "mint": "ミント (Mint)",
+      "cardName": "カード名",
+      "neonCyberpunkSamurai": "Neon Cyberpunk Samurai",
+      "title": "タイトル",
+      "promptBubbles": "プロンプト要素",
+      "aSamurai": "A samurai",
+      "slotNeonHair": "[Slot: neon hair] ✏️",
+      "detailedIllustration": "detailed illustration",
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "clickCard": "カードをクリック",
+      "activeCard": "選択中のカード",
+      "workbenchEditor": "ワークベンチエディタ",
+      "active": "有効",
+      "hairColor": "髪色 (Hair Color):",
+      "neonCyan": "neon cyan ✏️"
+    }
   },
   "settings": {
     "title": "設定",
@@ -54,6 +76,9 @@
     "themeSystem": "システム設定",
     "languageLabel": "表示言語",
     "languageDesc": "インターフェースの表示言語を切り替えます。",
+    "replayTutorialLabel": "インタラクティブチュートリアル",
+    "replayTutorialDesc": "操作方法を説明するガイド（チュートリアル）を最初から実行します。",
+    "replayTutorialBtn": "チュートリアルを再実行する",
     "easyModeLabel": "かんたんモード (Easy Mode)",
     "easyModeDesc": "UIをシンプルにし、Libraryタブのみを表示します。設定には右上の歯車アイコンからいつでも戻ることができます。",
     "easyModeToggleLabel": "かんたんモードを有効にする",
@@ -86,7 +111,7 @@
     "strategyCloudOverwriteLabel": "クラウド強制上書き",
     "strategyCloudOverwriteDesc": "クラウド上のバックアップデータを、現在のローカルデータで完全に上書きします。",
     "syncConfirmBtn": "選択した戦略で同期を実行",
-    "restoreConfirmMsg": "Google Driveからデータを強制リカバリ（ロード）し、現在のローカルデータを完全に削除してバックアップの内容で置き換えます。\n現在のローカルデータ（この端末で新規作成したカードも含む）はすべて失われます。この操作は取り消せません。本当によろしいですか？",
+    "restoreConfirmMsg": "Google Driveからデータを強制リカバリ（ロード）し、現在のローカルデータを完全に削除してバックアップの内容で置き換えます。\n現在のローカルデータ（この端末で新規にミントしたカードも含む）はすべて失われます。この操作は取り消せません。本当によろしいですか？",
     "restoreConfirmHeader": "【クラウド上のバックアップ情報】",
     "restoreConfirmTime": "更新日時: ",
     "restoreConfirmSize": "サイズ: ",
@@ -109,7 +134,7 @@
     "storageWarning80Title": "注意: 空き容量が少なくなっています (使用率 80% 超)",
     "storageWarning80Desc": "容量に余裕を持たせるため、不要な履歴の削除や、外部バックアップのエクスポートをご検討ください。",
     "cleanupHistoryLabel": "プロンプト履歴のクリーンアップ",
-    "clearHistoryConfirm": "プロンプト履歴データをすべて削除します。よろしいですか？\n(※作成したスタイルカードやカテゴリーは削除されません)",
+    "clearHistoryConfirm": "プロンプト履歴データをすべて削除します。よろしいですか？\n(※ミントしたスタイルカードやカテゴリーは削除されません)",
     "clearHistorySuccess": "履歴データを削除しました",
     "clearHistoryFailed": "履歴データの削除に失敗しました",
     "localBackupTitle": "ローカルバックアップ (オフライン)",
@@ -119,7 +144,7 @@
     "exportMdBtn": "Markdownエクスポート",
     "importBtn": "JSONインポート",
     "importConfirm": "ローカルファイルからデータを復元（マージ）します。\n競合するデータは更新日時が新しい方が優先されますがよろしいですか？",
-    "resetConfirm": "データベースを完全に初期化します。作成したすべてのスタイルカードや履歴が削除されます。本当によろしいですか？",
+    "resetConfirm": "データベースを完全に初期化します。ミントしたすべてのスタイルカードや履歴が削除されます。本当によろしいですか？",
     "confirmBtn": "確認",
     "cancelBtn": "キャンセル",
     "confirmTitle": "実行の確認",
@@ -140,7 +165,7 @@
     "groupOrganization": "管理・整理機能",
     "groupWorkbench": "ワークベンチ機能",
     "featureStackLabel": "Stack（カード統合）",
-    "featureStackSub": "手札のカードを統合して新しいカードを作成します",
+    "featureStackSub": "手札のカードを統合して新しいカードをミントします",
     "featureSlotLabel": "Slot（変数穴あけ）",
     "featureSlotSub": "プロンプト内の単語を変数化し、動的に入力します",
     "featureRarityLabel": "レアリティ選択",
@@ -152,7 +177,7 @@
     "featureMultiCardLabel": "複数カード同時使用",
     "featureMultiCardSub": "手札に複数のカードを配置してプロンプトを合成します",
     "featureCardEditingLabel": "カード編集機能",
-    "featureCardEditingSub": "作成済みのカード名やプロンプト内容を後から編集します",
+    "featureCardEditingSub": "ミント済みのカード名やプロンプト内容を後から編集します",
     "featureMultiImageLabel": "複数画像選択（サムネイル）",
     "featureMultiImageSub": "カードに複数の画像を登録し、スライド表示します",
     "tipsBarToggleLabel": "Tipsバーを表示する",
@@ -169,7 +194,7 @@
     "deleteCardMessage": "この操作は取り消せません。\"{{cardName}}\" をライブラリから完全に削除します。",
     "deleteBtn": "削除する",
     "webLlmGroupTitle": "🤖 ローカルAIモデル (WebLLM)",
-    "webLlmDesc": "ローカルAI機能（Gemma-4 E2Bモデル）の管理を行います。モデルをローカルストレージ（OPFS）に保存し、ブラウザ内で推論を実行できます。",
+    "webLlmDesc": "ローカルAI機能（Gemma-2 2Bモデル）の管理を行います。モデルをローカルストレージ（OPFS）に保存し、ブラウザ内で推論を実行できます。",
     "webLlmStatusLabel": "ステータス",
     "webLlmStatusIdle": "未ダウンロード",
     "webLlmStatusChecking": "確認中...",
@@ -209,7 +234,10 @@
     "webLlmWebGpuStep2": "2. 「グラフィック アクセラレーションが使用可能な場合は使用する」をオンにします。",
     "webLlmWebGpuStep3": "3. ブラウザを再起動して変更を適用します。",
     "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く",
-    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可"
+    "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可",
+    "webLlmGlobalAnxietyMicrocopy": "バックグラウンドで安全に進行中。別の画面へ移動しても問題ありません",
+    "webLlmGlobalQuotaWarning": "空き容量が不足しています（最低2GB必要）",
+    "webLlmGlobalCleanupBtn": "ストレージを整理する"
   },
   "helpTooltips": {
     "stack": "Stack（カード統合）: 手札にある複数のカードを統合します。ベースとなるレシピを選択し、使用回数を合算してカードを進化させることができます。",
@@ -218,7 +246,7 @@
     "tags": "タグ: 検索用のタグを付与し、ライブラリでカードを絞り込みやすくします。",
     "categories": "カテゴリ: バインダー内のカードを分類して管理します。カテゴリの設定は設定タブから行えます。",
     "multiCard": "複数カード同時使用: ワークベンチに複数のカードを配置し、プロンプトセグメントやパラメータを自動で合成・調合します。",
-    "cardEditing": "カード編集: 作成済みのカード名やプロンプト内容、パラメータ設定などを後から編集できるようにします。",
+    "cardEditing": "カード編集: ミント済みのカード名やプロンプト内容、パラメータ設定などを後から編集できるようにします。",
     "multiImage": "複数画像選択: カードに最大4枚の画像を登録し、サムネイルグリッドとして表示します。"
   },
   "categoryManager": {
@@ -299,7 +327,8 @@
     "errorNoMetadataActionTitle": "解決のための3つのステップ：",
     "errorNoMetadataStep1": "元画像をインポートする：SNS等を経由していない、カメラで撮影したか直接保存したオリジナルのPNG画像ファイルをドラッグ＆ドロップしてください。",
     "errorNoMetadataStep2": "QRコード部分をトリミングしてインポートする：画像内のQRコード部分だけを切り抜いた（トリミングした）画像をドロップしてみてください。",
-    "errorNoMetadataStep3": "プロンプトを手動で登録する：カード画像を見ながら、「ワークベンチ」タブから手動でプロンプトを入力して新規作成してください。"
+    "errorNoMetadataStep3": "プロンプトを手動で登録する：カード画像を見ながら、「ワークベンチ」タブから手動でプロンプトを入力して新規ミントしてください。",
+    "restoreSuccess": "モバイルのお試し保存カードを復元しました！"
   },
   "share": {
     "shareTitle": "スタイルカードの共有",
@@ -354,7 +383,7 @@
   },
   "libraryTab": {
     "emptyTitle": "スタイルカードがありません",
-    "emptyDesc": "Historyタブから画像をドラッグ＆ドロップして、あなただけの特別なスタイルカードを作成しましょう！",
+    "emptyDesc": "Historyタブから画像をドラッグ＆ドロップして、あなただけの特別なスタイルカードをミントしましょう！",
     "notFoundTitle": "カードが見つかりません",
     "notFoundDesc": "検索キーワードやフィルターの条件を変更するか、クリアしてください。",
     "clearFilters": "フィルターをクリア",
@@ -387,8 +416,9 @@
     "manageCategories": "カテゴリ管理",
     "loadMore": "さらに読み込む",
     "sortBy": {
-      "newest": "作成日が新しい順",
-      "oldest": "作成日が古い順",
+      "custom": "並び替え",
+      "newest": "ミント日が新しい順",
+      "oldest": "ミント日が古い順",
       "rarity": "レア度順",
       "usage": "使用回数順",
       "color": "カラー順"
@@ -416,10 +446,25 @@
       "pin": "ワークベンチに送る",
       "unpin": "ワークベンチから外す",
       "more": "その他のアクション"
+    },
+    "filtersTitle": "詳細フィルター",
+    "filtersToggleLabel": "フィルター",
+    "rarity": "レア度",
+    "category": "カテゴリー",
+    "rarities": {
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "legendary": "レジェンダリー"
     }
   },
   "workbench": {
     "clearAll": "すべてクリア",
+    "expand": "展開",
+    "collapse": "最小化",
+    "scrollLeft": "左へスクロール",
+    "scrollRight": "右へスクロール",
+    "openWorkbench": "Workbenchを開く",
     "gachaPick": "ガチャピック",
     "addPromptDesc": "LibraryからスタイルカードをWorkbenchに追加してください",
     "evolution": "進化",
@@ -428,7 +473,7 @@
     "uses": "回使用",
     "evolveBtn": "次のランクへ進化",
     "evolveNeedMore": "カードを進化させるにはさらに使用回数が必要です",
-    "mintBlended": "調合したカードを作成する",
+    "mintBlended": "調合したカードをミントする",
     "tryOnMidjourney": "Try on Midjourney",
     "injecting": "Injecting...",
     "emptyTitle": "Workbench は空です",
@@ -461,7 +506,10 @@
     "aiAdviceLoadingModel": "ローカルAIモデルをロード中...",
     "webllmQuotaWarningTitle": "ストレージ容量不足",
     "webllmQuotaWarningDesc": "AIモデルのキャッシュに必要なストレージ容量が不足しています。ディスク空き容量を増やしてください。",
-    "aiAdviceDownloadBtn": "モデルをダウンロード"
+    "aiAdviceDownloadBtn": "モデルをダウンロード",
+    "recipeHistory": "履歴",
+    "pastRecipes": "過去の調合レシピ",
+    "noRecipes": "まだ調合履歴はありません"
   },
   "mergeStack": {
     "title": "カードスタックの統合",
@@ -489,7 +537,7 @@
       },
       {
         "title": "② Mintボタンを押す",
-        "description": "追加されたHistoryアイテムの「Mint」ボタンを押して、カードの作成を開始してください。"
+        "description": "追加されたHistoryアイテムの「Mint」ボタンを押して、カードのミントを開始してください。"
       },
       {
         "title": "③ タイトルを入れる",
@@ -522,10 +570,10 @@
     "💡 プロンプトの単語をクリックしてSlot（変数）にすると、動的に値を入力できます。",
     "💡 カードにカスタムタグを設定すると、ライブラリで簡単に検索できます。",
     "💡 高いレアリティを設定すると、特別なホログラムフレームなどの視覚効果が有効になります。",
-    "💡 Midjourneyの画像をHistoryへドラッグ＆ドロップすると、簡単にカードを作成できます。"
+    "💡 Midjourneyの画像をHistoryへドラッグ＆ドロップすると、簡単にスタイルカードをミントできます。"
   ],
   "minting": {
-    "title": "新規カード作成",
+    "title": "新規カードをミント",
     "associatedImages": "関連画像 ({0})",
     "selectedCount": "選択済み: {0} / 4",
     "galleryTip": "画像をクリックしてカードのサムネイルとして使用する画像（最大4枚）を選択します。選択した順番がレイアウトの表示順になります。",
@@ -553,8 +601,8 @@
     "hideP": "共有時に --p を非表示にする",
     "cancel": "キャンセル",
     "saveCard": "カードを保存",
-    "quickCardCreator": "クイックカード作成",
-    "mintInstantly": "スタイルをすぐにカード化",
+    "quickCardCreator": "クイックミント",
+    "mintInstantly": "スタイルをすぐにミント",
     "easyMode": "かんたんモード",
     "enterCustomName": "カード名を入力...",
     "preview": "プレビュー",
@@ -569,9 +617,6 @@
     "aiDeclutterDownload": "モデル(1.5GB)をダウンロードしてAI整理を有効化",
     "aiDeclutterDownloading": "モデルダウンロード中... {{progress}}%",
     "aiDeclutterError": "モデル読み込みエラー。クリックして再試行。",
-    "aiDeClutterBtn": "AIプロンプト整理",
-    "aiDeClutterLoading": "整理中...",
-    "aiDeClutterNotReady": "Gemmaモデルがロードされていません。設定でダウンロードしてください。",
     "aiAnalysis": "AIスタイル分析",
     "aiAnalysisBtn": "AIでスタイルを分析",
     "aiInitializing": "AI初期化中...",
@@ -661,7 +706,7 @@
     "closeText": "閉じる"
   },
   "historyCard": {
-    "mintButton": "カード化 (Mint)"
+    "mintButton": "カードをミント"
   },
   "genealogy": {
     "title": "系統と進化",

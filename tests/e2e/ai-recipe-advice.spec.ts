@@ -11,7 +11,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     })
   })
 
-  test("should display AI recipe advice when model is loaded and multiple cards are in workbench", async ({
+  test("should display static fallback recipe advice when model is not loaded", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -72,28 +72,68 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
     await accordionHeader.click()
     await page.waitForTimeout(500)
 
-    // 6. When model is not loaded, it should show LocalAiSetupPlaceholder
-    const placeholder = spFrame.locator("#local-ai-setup-placeholder")
-    await expect(placeholder).toBeVisible({ timeout: 5000 })
+    // 6. When model is not loaded, it should show fallback static rules advice instead of loading error
+    const fallbackAdviceContent = adviceSection.locator(".prose")
+    await expect(fallbackAdviceContent).toBeVisible({ timeout: 5000 })
+    await expect(fallbackAdviceContent).toContainText(
+      /(Recipe Advice|レシピ調合アドバイス)/
+    )
 
-    // Capture screenshot of placeholder state in Cauldron
+    // Capture screenshot of fallback advice in Cauldron
     await page.screenshot({
-      path: path.join(screenshotsDir, "ai-recipe-advice-placeholder.png")
+      path: path.join(screenshotsDir, "ai-recipe-advice-fallback.png")
     })
-    console.log("AI Recipe Advice placeholder state screenshot saved.")
+    console.log("AI Recipe Advice fallback state screenshot saved.")
+  })
 
-    // Click Setup button inside placeholder to transition to settings
-    const setupBtn = spFrame.locator("#local-ai-setup-start-btn")
-    await expect(setupBtn).toBeVisible()
-    await setupBtn.click()
-    await page.waitForTimeout(500)
+  test("should display AI recipe advice when model is loaded and multiple cards are in workbench", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page with ready model...")
+    await page.goto("/tests/sandbox/index.html")
 
-    // Now Settings tab should be active, and WebLLM download button should be focused
-    const downloadBtn = spFrame.locator("#webllm-download-btn")
-    await expect(downloadBtn).toBeVisible()
+    const spFrame = page.frameLocator("#sidepanel-frame")
 
-    // 7. Mock WebLLM downloaded/integrityPassed to true to make model "ready"
-    // Also mock custom inferenceResult
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Clear db and seed 2 pinned cards
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.styleCards.bulkAdd([
+        {
+          id: "card-ai-1",
+          name: "Cyberpunk Glow",
+          promptSegments: [{ type: "text", value: "neon cyberpunk city" }],
+          parameters: {},
+          masking: {},
+          tier: "Common",
+          isPinned: true,
+          dominantColor: "#3b82f6",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        },
+        {
+          id: "card-ai-2",
+          name: "Watercolor Rain",
+          promptSegments: [
+            { type: "text", value: "rainy street, watercolor style" }
+          ],
+          parameters: {},
+          masking: {},
+          tier: "Rare",
+          isPinned: true,
+          dominantColor: "#ec4899",
+          thumbnailData: "data:image/svg+xml;utf8,<svg></svg>"
+        }
+      ])
+    })
+
+    // 3. Mock WebLLM to be "ready" and set mock inference result
     await spFrame.locator("body").evaluate(async () => {
       const config = (window as any).mockWebLlmConfig
       if (config) {
@@ -106,24 +146,19 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
       localStorage.setItem("mock-webllm-downloaded", "true")
     })
 
-    // Switch back to Workbench tab to trigger loading
+    // 4. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await workbenchTabButton.click()
     await page.waitForTimeout(1000)
 
-    // Expand accordion if not open (it should be open or we toggle it)
-    const newAdviceSection = spFrame.locator("#ai-recipe-advice-section")
-    const newAccordionHeader = newAdviceSection.locator(
-      "#ai-recipe-advice-toggle"
-    )
-    const isExpanded = await newAccordionHeader.getAttribute("aria-expanded")
-    if (isExpanded !== "true") {
-      await newAccordionHeader.click()
-      await page.waitForTimeout(500)
-    }
+    // 5. Expand the advice section accordion
+    const adviceSection = spFrame.locator("#ai-recipe-advice-section")
+    await expect(adviceSection).toBeVisible({ timeout: 5000 })
+    const accordionHeader = adviceSection.locator("#ai-recipe-advice-toggle")
+    await accordionHeader.click()
+    await page.waitForTimeout(1000)
 
-    await page.waitForTimeout(3000) // Wait for mock inference resolution
-
-    // 8. Verify advice is generated and rendered
+    // 6. Verify AI-generated advice is rendered
     const adviceText = spFrame.locator("text=/Expected Visual Blending Effect/")
     await expect(adviceText).toBeVisible({ timeout: 10000 })
 

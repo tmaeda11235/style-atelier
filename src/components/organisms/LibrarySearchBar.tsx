@@ -5,6 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useAiSearch } from "../../hooks/useAiSearch"
 import { useWebLlm } from "../../hooks/useWebLlm"
+import { AiStatusBadge } from "../atoms/AiStatusBadge"
 import { ExtractedFiltersDisplay } from "../molecules/ExtractedFiltersDisplay"
 import { SearchField } from "../molecules/SearchField"
 import { SortSelector } from "../molecules/SortSelector"
@@ -50,9 +51,7 @@ function FilterToggleBtn({
       data-testid="toggle-filters-btn"
       disabled={disabled}>
       <SlidersHorizontal className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">
-        {t.filtersToggleLabel || "Filters"}
-      </span>
+      <span className="hidden sm:inline">{t.filtersToggleLabel}</span>
       {activeFiltersCount > 0 && (
         <span className="flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-extrabold text-white bg-indigo-600 dark:bg-indigo-500 rounded-full">
           {activeFiltersCount}
@@ -151,6 +150,7 @@ interface LibrarySearchBarContentProps {
   sortBy: string
   setSortBy: (val: any) => void
   expertFeatures: { rarity?: boolean }
+  webLlmStatus: string
 }
 
 interface SearchInputRowProps {
@@ -164,17 +164,26 @@ interface SearchInputRowProps {
   isFiltersExpanded: boolean
   activeFiltersCount: number
   setIsFiltersExpanded: (val: boolean) => void
+  webLlmStatus: string
   t: any
 }
 
 function SearchInputRow(props: SearchInputRowProps) {
   return (
     <div className="flex gap-2 items-center">
-      <AiSearchToggleBtn
-        isAiSearch={props.isAiSearch}
-        onClick={props.handleToggleAiSearch}
-        title={props.t.aiSearchToggle || "AI Semantic Search"}
-      />
+      <div className="flex items-center gap-1.5 shrink-0">
+        <AiSearchToggleBtn
+          isAiSearch={props.isAiSearch}
+          onClick={props.handleToggleAiSearch}
+          title={props.t.aiSearchToggle || "AI Semantic Search"}
+        />
+        {props.isAiSearch && (
+          <AiStatusBadge
+            status={props.webLlmStatus}
+            className="shrink-0 animate-in fade-in zoom-in-95 duration-200"
+          />
+        )}
+      </div>
       <SearchInputWrapper
         isAiSearch={props.isAiSearch}
         aiSearchQuery={props.aiSearchQuery}
@@ -209,6 +218,7 @@ function LibrarySearchBarContent(props: LibrarySearchBarContentProps) {
         isFiltersExpanded={props.isFiltersExpanded}
         activeFiltersCount={props.activeFiltersCount}
         setIsFiltersExpanded={props.setIsFiltersExpanded}
+        webLlmStatus={props.webLlmStatus}
         t={props.t}
       />
       {!props.isAiSearch && (
@@ -245,15 +255,7 @@ export function LibrarySearchBar(props: ExtendedLibrarySearchBarProps) {
   const t = i18n.libraryTab
   const { expertFeatures } = useSettings()
   const { status: webLlmStatus, isEngineInitializing } = useWebLlm()
-  const {
-    isAiSearch,
-    aiSearchQuery,
-    setAiSearchQuery,
-    isAiSearching,
-    aiSearchError,
-    extractedFilters,
-    handleToggleAiSearch
-  } = useAiSearch({
+  const ai = useAiSearch({
     categories: props.categories,
     setRarityFilter: props.setRarityFilter,
     setCategoryFilter: props.setCategoryFilter,
@@ -267,25 +269,28 @@ export function LibrarySearchBar(props: ExtendedLibrarySearchBarProps) {
 
   return (
     <LibrarySearchBarContent
-      isAiSearch={isAiSearch}
-      handleToggleAiSearch={handleToggleAiSearch}
-      aiSearchQuery={aiSearchQuery}
+      isAiSearch={ai.isAiSearch}
+      handleToggleAiSearch={ai.handleToggleAiSearch}
+      aiSearchQuery={ai.aiSearchQuery}
       searchTag={props.searchTag}
       allSrefs={props.allSrefs}
-      setAiSearchQuery={setAiSearchQuery}
+      setAiSearchQuery={ai.setAiSearchQuery}
       setSearchTag={props.setSearchTag}
       isFiltersExpanded={props.isFiltersExpanded}
       activeFiltersCount={props.activeFiltersCount}
       setIsFiltersExpanded={props.setIsFiltersExpanded}
-      extractedFilters={extractedFilters}
-      isAiSearching={isAiSearching}
+      extractedFilters={ai.extractedFilters}
+      isAiSearching={ai.isAiSearching}
       isEngineInitializing={isEngineInitializing}
-      aiSearchError={aiSearchError}
+      aiSearchError={ai.aiSearchError}
+      aiWarningOpen={ai.aiWarningOpen}
+      setAiWarningOpen={ai.setAiWarningOpen}
       t={t}
       i18nSettings={i18n.settings}
       sortBy={props.sortBy}
       setSortBy={props.setSortBy}
       expertFeatures={expertFeatures}
+      webLlmStatus={webLlmStatus}
     />
   )
 }

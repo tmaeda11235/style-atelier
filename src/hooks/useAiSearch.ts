@@ -31,7 +31,8 @@ export function useAiSearch(props: UseAiSearchProps) {
     setCategoryFilter: props.setCategoryFilter,
     setColorFilter: props.setColorFilter,
     setSearchTag: props.setSearchTag,
-    t: props.t
+    t: props.t,
+    webLlmStatus: props.webLlmStatus
   })
 
   const handleToggleAiSearch = () => {

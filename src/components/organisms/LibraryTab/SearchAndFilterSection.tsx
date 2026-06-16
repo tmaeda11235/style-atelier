@@ -49,7 +49,8 @@ function buildFilterProps(
     sortByOldestLabel: t.sortBy?.oldest,
     sortByRarityLabel: t.sortBy?.rarity,
     sortByUsageLabel: t.sortBy?.usage,
-    sortByColorLabel: t.sortBy?.color
+    sortByColorLabel: t.sortBy?.color,
+    moveCardToCategory: lib.moveCardToCategory
   }
 }
 
