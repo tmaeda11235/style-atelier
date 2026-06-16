@@ -902,7 +902,6 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
-
   const [windowWidth, setWindowWidth] = React.useState(
     typeof window !== "undefined" ? window.innerWidth : 1024
   )
@@ -914,6 +913,7 @@ function SandboxWrapper() {
   }, [])
 
   const isWide = windowWidth >= 1024
+  const isNarrow = !isWide
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -1188,6 +1188,15 @@ function SandboxWrapper() {
         className="h-full shadow-2xl flex-shrink-0">
         <SidePanelPage />
       </div>
+
+      {isNarrow && (
+        <button
+          id="test-open-onboarding-btn"
+          onClick={() => setIsOnboardingOpen(true)}
+          className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
+          💡 Open Onboarding Guide
+        </button>
+      )}
 
       <OnboardingGuide
         isOpen={isOnboardingOpen}

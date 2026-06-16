@@ -40,6 +40,21 @@ if (typeof window !== "undefined") {
   ;(window as any).autoSyncConfig = autoSyncConfig
 }
 
+export function setAutoSyncSuspendedByAge(suspended: boolean) {
+  if (suspended) {
+    localStorage.setItem("style-atelier-auto-sync-suspended-by-age", "true")
+  } else {
+    localStorage.removeItem("style-atelier-auto-sync-suspended-by-age")
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("style-atelier-auto-sync-suspended-by-age-changed", {
+        detail: suspended
+      })
+    )
+  }
+}
+
 export function isAutoSyncEnabled(): boolean {
   const syncEnabled =
     localStorage.getItem("style-atelier-sync-enabled") === "true"
@@ -53,6 +68,9 @@ export function setAutoSyncEnabled(enabled: boolean) {
     "style-atelier-auto-sync-enabled",
     enabled ? "true" : "false"
   )
+  if (enabled) {
+    setAutoSyncSuspendedByAge(false)
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(
       new CustomEvent("style-atelier-auto-sync-toggled", { detail: enabled })
@@ -95,6 +113,7 @@ async function performAutoBackup() {
     console.warn(
       "Auto-sync suspended: last sync was more than 60 days ago. Manual sync required."
     )
+    setAutoSyncSuspendedByAge(true)
     setAutoSyncEnabled(false)
     return
   }
@@ -115,6 +134,7 @@ async function performAutoBackup() {
     await uploadBackup(token, jsonData)
     const now = Date.now()
     localStorage.setItem("style-atelier-last-backup", now.toString())
+    setAutoSyncSuspendedByAge(false)
 
     // Retrieve metadata immediately after backup to avoid self-triggered download in next poll
     const meta = await getBackupMetadata(token)
@@ -165,6 +185,7 @@ async function performDatabaseMerge(
       "style-atelier-last-backup",
       remoteModifiedTime.toString()
     )
+    setAutoSyncSuspendedByAge(false)
     lastCheckedRemoteTime = modifiedTime
   } finally {
     isInternalChange = false
@@ -172,6 +193,7 @@ async function performDatabaseMerge(
 }
 
 export async function checkAndMergeRemoteChanges() {
+  if (!isAutoSyncEnabled()) return
   if (isSyncing) return
   isSyncing = true
   try {
@@ -179,6 +201,7 @@ export async function checkAndMergeRemoteChanges() {
       console.warn(
         "Auto-sync suspended: last sync was more than 60 days ago. Manual sync required."
       )
+      setAutoSyncSuspendedByAge(true)
       setAutoSyncEnabled(false)
       return
     }
