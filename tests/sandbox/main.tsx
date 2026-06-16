@@ -902,18 +902,18 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
-  const [isNarrow, setIsNarrow] = React.useState(() => {
-    return typeof window !== "undefined" && window.innerWidth <= 600
-  })
+  const [windowWidth, setWindowWidth] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  )
 
   React.useEffect(() => {
-    const checkSize = () => {
-      setIsNarrow(window.innerWidth <= 600)
-    }
-    checkSize()
-    window.addEventListener("resize", checkSize)
-    return () => window.removeEventListener("resize", checkSize)
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  const isWide = windowWidth >= 1024
+  const isNarrow = !isWide
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -991,7 +991,7 @@ function SandboxWrapper() {
   return (
     <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
       {/* 左半分: プロファイリング＆デバッグダッシュボード */}
-      {!isNarrow && (
+      {isWide && (
         <div className="flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex flex-col justify-between">
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
@@ -1184,7 +1184,8 @@ function SandboxWrapper() {
 
       {/* 右半分: 実際の拡張機能サイドパネル */}
       <div
-        className={`${isNarrow ? "w-full" : "w-[380px]"} h-full shadow-2xl flex-shrink-0`}>
+        style={{ width: isWide ? "380px" : "100%" }}
+        className="h-full shadow-2xl flex-shrink-0">
         <SidePanelPage />
       </div>
 
