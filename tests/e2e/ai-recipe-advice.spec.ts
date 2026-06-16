@@ -89,9 +89,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Recipe Advice @J-WB-AI-ADVIC
 
     const fallbackAdviceContent = adviceSection.locator(".prose")
     await expect(fallbackAdviceContent).toBeVisible({ timeout: 5000 })
-    await expect(fallbackAdviceContent).toContainText(
-      /(Recipe|レシピ)/
-    )
+    await expect(fallbackAdviceContent).toContainText(/(Recipe|レシピ)/)
 
     // Capture screenshot of fallback advice in Cauldron
     await page.screenshot({

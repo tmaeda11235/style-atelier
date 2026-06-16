@@ -48,13 +48,9 @@ export const extractParameters = (text: string): string[] => {
 
     let value = ""
     if (spaceIndex !== -1) {
-      value = rawParam.substring(spaceIndex + 1).trim()
-
-      if (value) {
-        // Clean up repetition
-        const repetitionRegex = new RegExp(`\\s+${keyName}\\b.*$`, "i")
-        value = value.replace(repetitionRegex, "").trim()
-      }
+      const rawValue = rawParam.substring(spaceIndex + 1)
+      const repetitionRegex = new RegExp(`\\s+${keyName}\\b.*$`, "i")
+      value = rawValue.replace(repetitionRegex, "").trim()
     }
 
     if (!paramMap.has(fullKey)) {
