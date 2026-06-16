@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { db } from "../lib/db"
 import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
 import {
@@ -73,24 +74,26 @@ export interface SaveMintedCardParams {
   addLog: (msg: string) => void
   dispatchState: React.Dispatch<React.SetStateAction<MintingState>>
   setActiveTab: (tab: "history" | "library" | "workbench") => void
+  setAlertType?: (type: AlertType) => void
 }
 
 export function useSaveMintedCard(params: SaveMintedCardParams) {
-  const {
-    mintingItem,
-    variationBase,
-    editedSegments,
-    meta,
-    colors,
-    selectedRarity,
-    isSrefHidden,
-    isPHidden,
-    addLog,
-    dispatchState,
-    setActiveTab
-  } = params
-
   return async () => {
+    const {
+      mintingItem,
+      variationBase,
+      editedSegments,
+      meta,
+      colors,
+      selectedRarity,
+      isSrefHidden,
+      isPHidden,
+      addLog,
+      dispatchState,
+      setActiveTab,
+      setAlertType
+    } = params
+
     if (!mintingItem && !variationBase) return
     addLog(
       mintingItem
@@ -123,6 +126,7 @@ export function useSaveMintedCard(params: SaveMintedCardParams) {
     } catch (err) {
       console.error("Failed to mint StyleCard:", err)
       addLog("Error: Failed to mint StyleCard.")
+      setAlertType?.("db_error")
     }
   }
 }
@@ -207,7 +211,8 @@ function useMintingInitialization(
 
 export function useMinting(
   addLog: (msg: string) => void,
-  setActiveTab: (tab: "history" | "library" | "workbench") => void
+  setActiveTab: (tab: "history" | "library" | "workbench") => void,
+  setAlertType?: (type: AlertType) => void
 ) {
   const [state, setState] = useState<MintingState>(INITIAL_MINTING_STATE)
   const meta = useMintingMetadata(state.mintingItem, state.variationBase)
@@ -225,7 +230,8 @@ export function useMinting(
     colors,
     addLog,
     dispatchState: setState,
-    setActiveTab
+    setActiveTab,
+    setAlertType
   })
 
   return {

@@ -7,8 +7,8 @@ import { useEvolution } from "../../hooks/useEvolution"
 import { usePromptInjector } from "../../hooks/usePromptInjector"
 import { useWorkbench } from "../../hooks/useWorkbench"
 import type { PromptSegment } from "../../lib/db-schema"
-import { mergePromptSegments } from "../../lib/prompt-utils"
 import { mergeReferences } from "../../lib/prompt-reference-utils"
+import { mergePromptSegments } from "../../lib/prompt-utils"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import {
   evolveTargetCard,
@@ -238,14 +238,16 @@ function useWorkbenchHandlers({
         evolveCard,
         setEvolvedCardData,
         setIsEvolutionSuccessOpen,
-        addLog
+        addLog,
+        setAlertType
       ),
     [
       targetCard,
       evolveCard,
       setEvolvedCardData,
       setIsEvolutionSuccessOpen,
-      addLog
+      addLog,
+      setAlertType
     ]
   )
 

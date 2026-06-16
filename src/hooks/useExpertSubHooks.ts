@@ -10,24 +10,35 @@ import { useMinting } from "./useMinting"
 
 async function saveCardDetails(
   updatedCard: StyleCard,
-  addLog: (log: string) => void
+  addLog: (log: string) => void,
+  setAlertType: (type: AlertType) => void
 ) {
   try {
     await db.styleCards.put(updatedCard)
     addLog(`StyleCard "${updatedCard.name}" updated successfully!`)
+    return true
   } catch (err) {
     console.error("Failed to save style card updates:", err)
     addLog("Error: Failed to save style card updates.")
+    setAlertType("db_error")
+    return false
   }
 }
 
-async function deleteCard(cardId: string, addLog: (log: string) => void) {
+async function deleteCard(
+  cardId: string,
+  addLog: (log: string) => void,
+  setAlertType: (type: AlertType) => void
+) {
   try {
     await db.deleteStyleCardAndCleanup(cardId)
     addLog("StyleCard deleted successfully.")
+    return true
   } catch (err) {
     console.error("Failed to delete style card:", err)
     addLog("Error: Failed to delete style card.")
+    setAlertType("db_error")
+    return false
   }
 }
 
@@ -110,17 +121,21 @@ export function useExpertCardOperations(
   )
   const handleSaveCardDetails = useCallback(
     async (updatedCard: StyleCard) => {
-      await saveCardDetails(updatedCard, addLog)
-      setActiveDetailCard(null)
+      const ok = await saveCardDetails(updatedCard, addLog, setAlertType)
+      if (ok) {
+        setActiveDetailCard(null)
+      }
     },
-    [addLog]
+    [addLog, setAlertType]
   )
   const handleDeleteCard = useCallback(
     async (cardId: string) => {
-      await deleteCard(cardId, addLog)
-      setActiveDetailCard(null)
+      const ok = await deleteCard(cardId, addLog, setAlertType)
+      if (ok) {
+        setActiveDetailCard(null)
+      }
     },
-    [addLog]
+    [addLog, setAlertType]
   )
   const handleSendToWorkbench = useCallback(
     async (card: StyleCard) => {
@@ -159,7 +174,8 @@ export function useExpertPromptInjection(
 export function useExpertDragAndMint(
   addLog: (log: string) => void,
   setActiveTab: (tab: string) => void,
-  advanceIfStep: (stepId: string) => void
+  advanceIfStep: (stepId: string) => void,
+  setAlertType: (type: AlertType) => void
 ) {
   const { handleDrop: rawHandleDrop, ...dragProps } = useDragAndDrop(addLog)
   const handleDrop = useCallback(
@@ -172,7 +188,7 @@ export function useExpertDragAndMint(
     },
     [rawHandleDrop, setActiveTab, advanceIfStep]
   )
-  const minting = useMinting(addLog, setActiveTab)
+  const minting = useMinting(addLog, setActiveTab, setAlertType)
   const handleStartMinting = useCallback(
     (historyItem: any) => {
       minting.handleStartMinting(historyItem)
@@ -245,7 +261,12 @@ export function useExpertSubHooks(
     startTutorial,
     onToggleEasyMode
   )
-  const dragMint = useExpertDragAndMint(addLog, setActiveTab, advanceIfStep)
+  const dragMint = useExpertDragAndMint(
+    addLog,
+    setActiveTab,
+    advanceIfStep,
+    setAlertType
+  )
   const { cardOps, setActiveDetailCard, handleInjectPrompt } =
     useExpertCardOpsHelper(addLog, setAlertType, setActiveTab)
 

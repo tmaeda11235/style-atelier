@@ -78,7 +78,11 @@ export function useLibrary(
     onNavigateToWorkbench
   )
 
-  const moveCardToCategory = useMoveCardToCategory(categories, addLog)
+  const moveCardToCategory = useMoveCardToCategory(
+    categories,
+    addLog,
+    setAlertType
+  )
   const handleCardReorder = useCardReorder(
     addLog,
     filterStates.categoryFilter,

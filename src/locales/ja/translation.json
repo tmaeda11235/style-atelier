@@ -676,7 +676,9 @@
     "disconnectedBtn": "ページをリロード",
     "noInputTitle": "入力エリアが見つかりません",
     "noInputDesc": "チャット入力エリアが見つかりませんでした。現在「Create」ページ、またはMidjourneyギャラリーの詳細表示画面を開いていることを確認してください。",
-    "noInputBtn": "接続を再試行"
+    "noInputBtn": "接続を再試行",
+    "dbErrorTitle": "データベース書き込みエラー",
+    "dbErrorDesc": "データベースの書き込みに失敗しました。容量制限等をご確認ください。"
   },
   "aliasEdit": {
     "editTitle": "パラメータエイリアスの編集",
