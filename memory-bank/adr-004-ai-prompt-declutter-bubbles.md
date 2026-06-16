@@ -14,7 +14,7 @@ Users of Midjourney and similar text-to-image generators often craft long, compl
 
 ## Decision
 
-We decide to implement a local AI-powered prompt de-cluttering and segmentation system using Gemma-4 E2B via WebLLM inside the Chrome Offscreen Document, structured around custom React hooks and subcomponents.
+We decide to implement a local AI-powered prompt de-cluttering and segmentation system using Gemma-2 2B via WebLLM inside the Chrome Offscreen Document, structured around custom React hooks and subcomponents.
 
 ### 1. Offscreen WebLLM Messaging
 

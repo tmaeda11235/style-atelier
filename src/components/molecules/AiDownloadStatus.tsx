@@ -15,6 +15,7 @@ interface AiDownloadStatusProps {
   maxRetries: number
   text: string
   webLlmError: string | null
+  webGpuFallback: boolean
   startDownload: () => void
   t: any
 }
@@ -39,8 +40,8 @@ function StatusQuotaWarning({ t }: { t: any }) {
         {t.settings?.webLlmQuotaWarningTitle || "Insufficient Space"}
       </p>
       <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-        {t.settings?.webLlmQuotaWarningDesc ||
-          "At least 2.5 GB of free space is required."}
+        {t.settings?.webLlmQuotaExceededDesc ||
+          "Storage space is insufficient. Please ensure at least 1.5 GB of free space."}
       </p>
     </div>
   )
@@ -48,15 +49,14 @@ function StatusQuotaWarning({ t }: { t: any }) {
 
 function StatusUnsupported({ t }: { t: any }) {
   return (
-    <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200">
-      <AlertTriangle className="w-6 h-6 text-slate-500 mb-2 animate-pulse" />
-      <p className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-        {t.settings?.webLlmStatusUnsupported ||
-          "Unsupported (Lightweight Fallback)"}
+    <div className="flex flex-col items-center justify-center p-4 bg-red-50 dark:bg-red-950/10 rounded-xl border border-red-200">
+      <AlertCircle className="w-6 h-6 text-red-500 mb-2" />
+      <p className="text-xs font-bold text-red-600 mb-1">
+        {t.settings?.webLlmBothUnsupportedTitle || "AI Environment Unsupported"}
       </p>
       <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-        {t.settings?.webLlmWebGpuDisabledDesc ||
-          "WebGPU is not available. Using lightweight fallback mode."}
+        {t.settings?.webLlmBothUnsupportedDesc ||
+          "Both WebGPU and Wasm (CPU) are unavailable on your environment. Please update your browser or check your settings."}
       </p>
     </div>
   )
@@ -202,8 +202,10 @@ function renderAiDownloadStatusContent({
   t
 }: AiDownloadStatusProps) {
   if (status === "checking") return <StatusChecking t={t} />
-  if (status === "insufficient-quota") return <StatusQuotaWarning t={t} />
-  if (status === "unsupported") return <StatusUnsupported t={t} />
+  if (status === "insufficient-quota" || webLlmError === "QuotaExceededError")
+    return <StatusQuotaWarning t={t} />
+  if (status === "unsupported" || webLlmError === "both-unsupported")
+    return <StatusUnsupported t={t} />
 
   if (status === "error" || webLlmError) {
     return (
@@ -241,10 +243,19 @@ function renderAiDownloadStatusContent({
 
 export function AiDownloadStatus(props: AiDownloadStatusProps) {
   const { isSupported } = useWebGpu()
-  const { t } = props
+  const { t, webGpuFallback } = props
 
   return (
     <div className="space-y-3">
+      {webGpuFallback && (
+        <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/10 rounded-xl border border-amber-200 text-amber-700 text-[10px] leading-normal font-medium">
+          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <span>
+            {t.settings?.webLlmWebGpuFallbackInfo ||
+              "WebGPU not supported: Switching to CPU (Wasm) mode. (Inference might be slower)"}
+          </span>
+        </div>
+      )}
       {renderAiDownloadStatusContent(props)}
       {isSupported === false && <WebGpuWarning t={t} />}
     </div>

@@ -1,6 +1,7 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import type { StyleCard } from "../lib/db-schema"
 import {
+  useCardReorder,
   useHandleCardClick,
   useMoveCardToCategory,
   useTogglePin
@@ -12,7 +13,13 @@ import {
   useLibraryFilterStates
 } from "./useLibraryFilters"
 
-export type SortOption = "newest" | "oldest" | "rarity" | "usage" | "color"
+export type SortOption =
+  | "newest"
+  | "oldest"
+  | "rarity"
+  | "usage"
+  | "color"
+  | "custom"
 export type RarityFilter = "All" | StyleCard["tier"]
 export type ModelFilter = "All" | "V6" | "V5" | "Niji 6" | "Niji 5"
 export type ColorFilter =
@@ -30,6 +37,45 @@ export type ColorFilter =
   | "Black"
   | "Gray"
 
+export function calculateActiveFiltersCount(states: any) {
+  return [
+    states.rarityFilter !== "All",
+    states.modelFilter !== "All",
+    states.categoryFilter !== "All",
+    states.colorFilter !== "All" || states.colorHueFilter !== null,
+    states.sortBy !== "newest" && states.sortBy !== "custom"
+  ].filter(Boolean).length
+}
+
+function useLibraryOperations(
+  allCardsMeta: any,
+  categories: any,
+  addLog: any,
+  setAlertType: any,
+  onNavigateToWorkbench: any,
+  filterStates: any
+) {
+  const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
+  const handleCardClick = useHandleCardClick(
+    allCardsMeta,
+    addLog,
+    setAlertType,
+    onNavigateToWorkbench
+  )
+  const moveCardToCategory = useMoveCardToCategory(
+    categories,
+    addLog,
+    setAlertType
+  )
+  const handleCardReorder = useCardReorder(
+    addLog,
+    filterStates.categoryFilter,
+    filterStates.currentFolderId,
+    filterStates.setSortBy
+  )
+  return { togglePin, handleCardClick, moveCardToCategory, handleCardReorder }
+}
+
 export function useLibrary(
   addLog: (msg: string) => void,
   setAlertType: (type: AlertType) => void,
@@ -37,7 +83,6 @@ export function useLibrary(
 ) {
   const { allCardsMeta, categories, flexsearchIndex, allSrefs } =
     useLibraryData()
-
   const filterStates = useLibraryFilterStates()
   const { breadcrumbs, currentSubfolders } = useLibraryBreadcrumbs(
     filterStates.currentFolderId,
@@ -46,39 +91,27 @@ export function useLibrary(
     filterStates.rarityFilter,
     filterStates.colorFilter
   )
-
   const filtered = useLibraryFilteredCards(
     allCardsMeta,
     flexsearchIndex,
     filterStates
   )
-
-  const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
-  const handleCardClick = useHandleCardClick(
+  const ops = useLibraryOperations(
     allCardsMeta,
+    categories,
     addLog,
     setAlertType,
-    onNavigateToWorkbench
+    onNavigateToWorkbench,
+    filterStates
   )
-
-  const moveCardToCategory = useMoveCardToCategory(categories, addLog)
-
-  const activeFiltersCount = [
-    filterStates.rarityFilter !== "All",
-    filterStates.modelFilter !== "All",
-    filterStates.categoryFilter !== "All",
-    filterStates.colorFilter !== "All" || filterStates.colorHueFilter !== null,
-    filterStates.sortBy !== "newest"
-  ].filter(Boolean).length
+  const activeFiltersCount = calculateActiveFiltersCount(filterStates)
 
   return {
     ...filterStates,
     ...filtered,
     breadcrumbs,
     currentSubfolders,
-    moveCardToCategory,
-    togglePin,
-    handleCardClick,
+    ...ops,
     allCards: allCardsMeta,
     categories,
     allSrefs,

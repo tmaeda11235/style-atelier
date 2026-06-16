@@ -14,6 +14,7 @@ interface Dispatchers {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+  setWebGpuFallback?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function handleEngineStatusMessage(
@@ -27,7 +28,9 @@ function handleEngineStatusMessage(
     dispatch.setSpeed(0)
     dispatch.setEta(0)
     dispatch.setText(payload.wtxt ?? "")
-    dispatch.setError(null)
+    dispatch.setError((prev) =>
+      prev === "both-unsupported" ? "both-unsupported" : null
+    )
     return true
   }
   if (ws === "engine-ready") {
@@ -36,12 +39,15 @@ function handleEngineStatusMessage(
     dispatch.setSpeed(0)
     dispatch.setEta(0)
     dispatch.setText("")
-    dispatch.setError(null)
+    dispatch.setError((prev) =>
+      prev === "both-unsupported" ? "both-unsupported" : null
+    )
     return true
   }
   return false
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 function handleStatusMessage(
   ws: string,
   payload: {
@@ -58,34 +64,58 @@ function handleStatusMessage(
   if (handleEngineStatusMessage(ws, payload, dispatch)) {
     return
   }
-  if (ws === "downloading") {
-    dispatch.setStatus("downloading")
+  if (ws === "webgpu-fallback-warn") {
+    if (dispatch.setWebGpuFallback) {
+      dispatch.setWebGpuFallback(true)
+    }
+  } else if (ws === "downloading") {
+    dispatch.setStatus((prev) =>
+      prev === "unsupported" ? "unsupported" : "downloading"
+    )
     dispatch.setProgress(payload.wp ?? 0)
     dispatch.setSpeed(payload.wsp ?? 0)
     dispatch.setEta(payload.weta ?? 0)
     dispatch.setText(payload.wtxt ?? "")
-    dispatch.setError(null)
+    dispatch.setError((prev) =>
+      prev === "both-unsupported" ? "both-unsupported" : null
+    )
   } else if (ws === "retrying") {
-    dispatch.setStatus("retrying")
+    dispatch.setStatus((prev) =>
+      prev === "unsupported" ? "unsupported" : "retrying"
+    )
     dispatch.setRetryCount(payload.wrc ?? 0)
     dispatch.setMaxRetries(payload.wmr ?? 0)
     dispatch.setText("")
-    dispatch.setError(payload.we ?? "Connection lost, retrying...")
+    dispatch.setError((prev) =>
+      prev === "both-unsupported"
+        ? "both-unsupported"
+        : (payload.we ?? "Connection lost, retrying...")
+    )
   } else if (ws === "ready") {
-    dispatch.setStatus("ready")
+    dispatch.setStatus((prev) =>
+      prev === "unsupported" ? "unsupported" : "ready"
+    )
     dispatch.setEngineStatus("ready")
     dispatch.setProgress(100)
     dispatch.setSpeed(0)
     dispatch.setEta(0)
     dispatch.setText("")
-    dispatch.setError(null)
+    dispatch.setError((prev) =>
+      prev === "both-unsupported" ? "both-unsupported" : null
+    )
   } else if (ws === "error") {
-    dispatch.setStatus("error")
+    dispatch.setStatus((prev) =>
+      prev === "unsupported" ? "unsupported" : "error"
+    )
     dispatch.setEngineStatus("idle")
     dispatch.setSpeed(0)
     dispatch.setEta(0)
     dispatch.setText("")
-    dispatch.setError(payload.we ?? "Unknown worker error")
+    dispatch.setError((prev) =>
+      prev === "both-unsupported"
+        ? "both-unsupported"
+        : (payload.we ?? "Unknown worker error")
+    )
   }
 }
 
@@ -100,7 +130,8 @@ export function createMessageListener(
   setEta: React.Dispatch<React.SetStateAction<number>>,
   setRetryCount: React.Dispatch<React.SetStateAction<number>>,
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>,
-  setText: React.Dispatch<React.SetStateAction<string>>
+  setText: React.Dispatch<React.SetStateAction<string>>,
+  setWebGpuFallback?: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   return (message: any) => {
     if (message.source !== "offscreen-worker") return
@@ -124,7 +155,8 @@ export function createMessageListener(
       setEta,
       setRetryCount,
       setMaxRetries,
-      setText
+      setText,
+      setWebGpuFallback
     }
     handleStatusMessage(ws, { wp, we, wsp, weta, wrc, wmr, wtxt }, dispatch)
   }

@@ -209,6 +209,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     let variantFile = urlParams.get('variant') || 'index.html';
     const mockUrl = urlParams.get('mockUrl');
+    const isWide = urlParams.get('isWide');
     
     // 他のモックパラメータもURLから取得
     const gpuParam = urlParams.get('gpu') || 'enabled';
@@ -220,16 +221,21 @@
     const spFrame = document.getElementById('sidepanel-frame');
     const selectEl = document.getElementById('variant-select');
     
-    let spSrc = '/tests/sandbox/sidepanel.html';
-    const spParams = new URLSearchParams();
-    if (mockUrl) spParams.set('mockUrl', mockUrl);
-    if (urlParams.get('clearCache') === 'true') {
-      spParams.set('clearCache', 'true');
-    }
-    
-    const spParamStr = spParams.toString();
-    if (spParamStr && spFrame) {
-      spFrame.src = `${spSrc}?${spParamStr}`;
+    if (spFrame) {
+      const spParams = new URLSearchParams();
+      if (mockUrl) spParams.set('mockUrl', mockUrl);
+      if (urlParams.get('clearCache') === 'true') {
+        spParams.set('clearCache', 'true');
+      }
+      const noseed = urlParams.get('noseed');
+      if (noseed) spParams.set('noseed', noseed);
+      if (isWide === 'true') {
+        spFrame.style.width = '1200px';
+      }
+      const spParamStr = spParams.toString();
+      if (spParamStr) {
+        spFrame.src = `/tests/sandbox/sidepanel.html?${spParamStr}`;
+      }
     }
     
     // iframe の URL を更新
