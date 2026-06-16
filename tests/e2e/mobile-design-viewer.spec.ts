@@ -16,11 +16,8 @@ test.describe("Mobile Viewer E2E Test", () => {
   test("should render fallback Cyber Samurai, flip card and copy prompt with visual feedbacks @J-MOBILE-PREVIEW-01", async ({
     page
   }) => {
-    // 1. Navigate to the mobile app index page (no params, should fallback)
-    await page.goto("/src/mobile-app/index.html")
-    await page.evaluate(() => {
-      ;(window as any).__E2E_TEST__ = true
-    })
+    // 1. Navigate to the mobile app index page (no params, should fallback, and use mock mode)
+    await page.goto("/src/mobile-app/index.html?mock=true")
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")
@@ -72,6 +69,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 16:9")
     await expect(badges.nth(1)).toHaveText("--stylize 750")
+
     // 3. Click the copy button and verify toast message appears
     const copyBtn = page.locator("#copyBtn")
     await copyBtn.click()
@@ -94,11 +92,23 @@ test.describe("Mobile Viewer E2E Test", () => {
     await page.waitForTimeout(2200)
     await expect(toast).not.toHaveClass(/show/)
 
-    // 4. Click the cloud save button and verify toast message appears
+    // 4. Click the cloud save button and verify toast message appears with sync notice
     const saveCloudBtn = page.locator("#saveCloudBtn")
     await saveCloudBtn.click()
     await expect(toast).toHaveClass(/show/)
-    await expect(toast.locator("span")).toHaveText("クラウドに一時保存しました")
+    await expect(toast.locator("span")).toHaveText(
+      "クラウドに一時保存しました（PC起動時に同期されます）"
+    )
+
+    // Verify localStorage has the saved card data
+    const savedDataRaw = await page.evaluate(() =>
+      localStorage.getItem("mock_gdrive_appdata_temp_shared_cards")
+    )
+    expect(savedDataRaw).not.toBeNull()
+    const savedData = JSON.parse(savedDataRaw!)
+    expect(savedData).toBeInstanceOf(Array)
+    expect(savedData).toHaveLength(1)
+    expect(savedData[0].name).toBe("Cyber Samurai")
 
     // Take screenshot of the cloud-saved state with toast notification
     const cloudSavedScreenshotPath = path.join(
@@ -108,6 +118,16 @@ test.describe("Mobile Viewer E2E Test", () => {
     )
     await page.screenshot({ path: cloudSavedScreenshotPath })
     console.log(`Saved screenshot to ${cloudSavedScreenshotPath}`)
+
+    // 5. Try to save again and verify duplicate handling
+    await page.waitForTimeout(2200)
+    await expect(toast).not.toHaveClass(/show/)
+
+    await saveCloudBtn.click()
+    await expect(toast).toHaveClass(/show/)
+    await expect(toast.locator("span")).toHaveText(
+      "既にクラウドに保存されています"
+    )
   })
 
   test("should render custom card dynamically from URL query parameters @J-MOBILE-PREVIEW-01", async ({
@@ -117,7 +137,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     const testCard: Partial<StyleCard> = {
       id: "dynamic-test-id",
       name: "Cyber Ninja",
-      tier: "epic",
+      tier: "Epic", // Type-safe matching
       accentColor: "#a855f7",
       dominantColor: "#1e1b4b",
       promptSegments: [
@@ -136,9 +156,9 @@ test.describe("Mobile Viewer E2E Test", () => {
     // 2. Compress using the production encoder helper
     const payload = compressCardData(testCard as StyleCard)
 
-    // 3. Navigate with parameter '?p='
+    // 3. Navigate with parameter '?p=' and '&mock=true'
     await page.goto(
-      `/src/mobile-app/index.html?p=${encodeURIComponent(payload)}`
+      `/src/mobile-app/index.html?p=${encodeURIComponent(payload)}&mock=true`
     )
 
     // Wait for elements
@@ -182,6 +202,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 4:3")
     await expect(badges.nth(1)).toHaveText("--stylize 250")
+
     // Take screenshot of dynamically loaded card back
     const dynamicBackScreenshotPath = path.join(
       "tests",
@@ -190,5 +211,48 @@ test.describe("Mobile Viewer E2E Test", () => {
     )
     await page.screenshot({ path: dynamicBackScreenshotPath })
     console.log(`Saved screenshot to ${dynamicBackScreenshotPath}`)
+
+    // 5. Pre-populate localStorage to test merging
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "mock_gdrive_appdata_temp_shared_cards",
+        JSON.stringify([
+          {
+            name: "Existing Card",
+            tier: "Common",
+            promptSegments: [{ type: "text", value: "Existing prompt" }]
+          }
+        ])
+      )
+    })
+
+    // 6. Click the cloud save button and verify dynamic card is saved/merged into localStorage
+    const saveCloudBtn = page.locator("#saveCloudBtn")
+    await saveCloudBtn.click()
+
+    const toast = page.locator("#toast")
+    await expect(toast).toHaveClass(/show/)
+    await expect(toast.locator("span")).toHaveText(
+      "クラウドに一時保存しました（PC起動時に同期されます）"
+    )
+
+    // Verify localStorage has both cards
+    const savedDataRaw = await page.evaluate(() =>
+      localStorage.getItem("mock_gdrive_appdata_temp_shared_cards")
+    )
+    expect(savedDataRaw).not.toBeNull()
+    const savedData = JSON.parse(savedDataRaw!)
+    expect(savedData).toHaveLength(2)
+    expect(savedData[0].name).toBe("Existing Card")
+    expect(savedData[1].name).toBe("Cyber Ninja")
+
+    // Take screenshot of dynamically merged state
+    const dynamicMergedScreenshotPath = path.join(
+      "tests",
+      "screenshots",
+      "07-mobile-viewer-dynamic-merged.png"
+    )
+    await page.screenshot({ path: dynamicMergedScreenshotPath })
+    console.log(`Saved screenshot to ${dynamicMergedScreenshotPath}`)
   })
 })
