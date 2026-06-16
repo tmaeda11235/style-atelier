@@ -89,7 +89,8 @@ function loadFallbackCard() {
     promptSegments: [
       {
         id: "1",
-        text: "A futuristic cyberpunk samurai standing in neon rain, Tokyo street background, highly detailed style, glowing katana, rich colors, intricate cybernetic armor, Unreal Engine 5 render, cinematic lighting",
+        value:
+          "A futuristic cyberpunk samurai standing in neon rain, Tokyo street background, highly detailed style, glowing katana, rich colors, intricate cybernetic armor, Unreal Engine 5 render, cinematic lighting",
         type: "text"
       }
     ],
