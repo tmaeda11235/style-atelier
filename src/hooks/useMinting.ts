@@ -77,56 +77,44 @@ export interface SaveMintedCardParams {
   setAlertType?: (type: AlertType) => void
 }
 
-export function useSaveMintedCard(params: SaveMintedCardParams) {
+export function useSaveMintedCard(p: SaveMintedCardParams) {
   return async () => {
-    const {
-      mintingItem,
-      variationBase,
-      editedSegments,
-      meta,
-      colors,
-      selectedRarity,
-      isSrefHidden,
-      isPHidden,
-      addLog,
-      dispatchState,
-      setActiveTab,
-      setAlertType
-    } = params
-
-    if (!mintingItem && !variationBase) return
-    addLog(
-      mintingItem
-        ? `Saving card from history item: ${mintingItem.id}`
+    if (!p.mintingItem && !p.variationBase) return
+    p.addLog(
+      p.mintingItem
+        ? `Saving card from history item: ${p.mintingItem.id}`
         : `Saving card variation`
     )
     try {
-      const thumbnailData = await getThumbnailData(mintingItem, variationBase)
+      const thumbnailData = await getThumbnailData(
+        p.mintingItem,
+        p.variationBase
+      )
       const buildParams = createBuildCardParams(
-        mintingItem,
-        variationBase,
-        editedSegments,
-        selectedRarity,
-        isSrefHidden,
-        isPHidden,
+        p.mintingItem,
+        p.variationBase,
+        p.editedSegments,
+        p.selectedRarity,
+        p.isSrefHidden,
+        p.isPHidden,
         thumbnailData,
-        meta,
-        colors
+        p.meta,
+        p.colors
       )
       const newCard = buildMintedCard(buildParams)
       await db.styleCards.put(newCard)
-      addLog(`New StyleCard "${newCard.name}" minted successfully!`)
-      dispatchState((s) => ({
+      p.addLog(`New StyleCard "${newCard.name}" minted successfully!`)
+      p.dispatchState((s) => ({
         ...s,
         mintingItem: null,
         isSrefHidden: false,
         isPHidden: false
       }))
-      setActiveTab("library")
+      p.setActiveTab("library")
     } catch (err) {
       console.error("Failed to mint StyleCard:", err)
-      addLog("Error: Failed to mint StyleCard.")
-      setAlertType?.("db_error")
+      p.addLog("Error: Failed to mint StyleCard.")
+      p.setAlertType?.("db_error")
     }
   }
 }

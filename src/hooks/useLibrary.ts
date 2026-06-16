@@ -54,7 +54,6 @@ export function useLibrary(
 ) {
   const { allCardsMeta, categories, flexsearchIndex, allSrefs } =
     useLibraryData()
-
   const filterStates = useLibraryFilterStates()
   const { breadcrumbs, currentSubfolders } = useLibraryBreadcrumbs(
     filterStates.currentFolderId,
@@ -63,13 +62,11 @@ export function useLibrary(
     filterStates.rarityFilter,
     filterStates.colorFilter
   )
-
   const filtered = useLibraryFilteredCards(
     allCardsMeta,
     flexsearchIndex,
     filterStates
   )
-
   const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
   const handleCardClick = useHandleCardClick(
     allCardsMeta,
@@ -77,7 +74,6 @@ export function useLibrary(
     setAlertType,
     onNavigateToWorkbench
   )
-
   const moveCardToCategory = useMoveCardToCategory(
     categories,
     addLog,
@@ -89,7 +85,6 @@ export function useLibrary(
     filterStates.currentFolderId,
     filterStates.setSortBy
   )
-
   const activeFiltersCount = calculateActiveFiltersCount(filterStates)
 
   return {
