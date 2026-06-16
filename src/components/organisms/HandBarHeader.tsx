@@ -18,16 +18,18 @@ export interface HandBarHeaderProps {
 function HandBarHeaderTitle({
   pinnedCardsCount,
   isCollapsed,
-  toggleCollapse
+  toggleCollapse,
+  t
 }: {
   pinnedCardsCount: number
   isCollapsed: boolean
   toggleCollapse: () => void
+  t: any
 }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-        Workbench ({pinnedCardsCount})
+        {t.navigation.workbench} ({pinnedCardsCount})
       </span>
       <Button
         variant="ghost"
@@ -37,7 +39,7 @@ function HandBarHeaderTitle({
           toggleCollapse()
         }}
         className="text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 p-0.5 h-auto"
-        title={isCollapsed ? "展開" : "最小化"}
+        title={isCollapsed ? t.workbench.expand : t.workbench.collapse}
         data-testid="handbar-toggle-collapse-btn">
         {isCollapsed ? (
           <ChevronUp className="w-3.5 h-3.5" />
@@ -107,6 +109,7 @@ export function HandBarHeader({
         pinnedCardsCount={pinnedCardsCount}
         isCollapsed={isCollapsed}
         toggleCollapse={toggleCollapse}
+        t={t}
       />
       {!isCollapsed && (
         <HandBarHeaderActions

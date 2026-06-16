@@ -45,7 +45,9 @@ function StrategyOption({
           onChange={() => onChange(strategyValue)}
           className="accent-blue-500 cursor-pointer"
         />
-        <span className="text-xs font-black">{label}</span>
+        <label htmlFor={id} className="text-xs font-black cursor-pointer">
+          {label}
+        </label>
       </div>
       <p className="text-[10px] text-slate-400 mt-1 pl-5 leading-normal">
         {desc}
