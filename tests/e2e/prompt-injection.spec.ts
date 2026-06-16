@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -35,6 +34,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Prompt Injection @J-WB-EXPERT-0
       // 2. 左側 iframe (Midjourney) と 右側 iframe (サイドパネル) の取得
       const mjFrame = page.frameLocator("#midjourney-frame")
       const spFrame = page.frameLocator("#sidepanel-frame")
+
+      // Wait for database seeding to complete in sidepanel frame
+      console.log("Waiting for sandbox seeding to complete...")
+      await spFrame.locator("body").evaluate(async () => {
+        for (let i = 0; i < 100; i++) {
+          if ((window as any).sandboxSeedFinished) break
+          await new Promise((r) => setTimeout(r, 50))
+        }
+      })
 
       // 3. Midjourney モック内のテキストエリアが表示されるのを待つ
       console.log("Waiting for Midjourney mock inputs...")

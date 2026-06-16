@@ -85,8 +85,14 @@ async function seedSandboxData() {
     ])
 
     console.log("[Sandbox Seed] Seeding finished successfully.")
+    if (typeof window !== "undefined") {
+      ;(window as any).sandboxSeedFinished = true
+    }
   } catch (err) {
     console.error("[Sandbox Seed] Failed to seed sandbox database:", err)
+    if (typeof window !== "undefined") {
+      ;(window as any).sandboxSeedFinished = true
+    }
   }
 }
 
@@ -95,6 +101,10 @@ const urlParams = new URLSearchParams(
 )
 if (urlParams.get("noseed") !== "true") {
   seedSandboxData()
+} else {
+  if (typeof window !== "undefined") {
+    ;(window as any).sandboxSeedFinished = true
+  }
 }
 
 let updateProfilingCallback: ((data: any) => void) | null = null
