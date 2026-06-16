@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
@@ -7,7 +7,7 @@ import { useEvolution } from "../../hooks/useEvolution"
 import { usePromptInjector } from "../../hooks/usePromptInjector"
 import { usePromptSegmentsSync } from "../../hooks/usePromptSegmentsSync"
 import { useWorkbench } from "../../hooks/useWorkbench"
-import type { PromptSegment } from "../../lib/db-schema"
+import type { PromptSegment, RecipeHistoryItem } from "../../lib/db-schema"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import {
   evolveTargetCard,
@@ -228,12 +228,17 @@ function useWorkbenchCore({
     [workbenchCards]
   )
 
+  const [restoredRecipe, setRestoredRecipe] =
+    useState<RecipeHistoryItem | null>(null)
+
   useChromeTabConnection({ workbenchCardsDependency, setAlertType, addLog })
   usePromptSegmentsSync(
     workbenchCards,
     setEditedSegments,
     setEditedParams,
-    setSlotValues
+    setSlotValues,
+    restoredRecipe,
+    setRestoredRecipe
   )
 
   const handlers = useWorkbenchHandlers({
@@ -265,6 +270,15 @@ function useWorkbenchCore({
     [editedSegments]
   )
 
+  const handleRestoreRecipe = useCallback(
+    async (recipe: RecipeHistoryItem) => {
+      setRestoredRecipe(recipe)
+      await base.restoreRecipe(recipe)
+      addLog?.(`Recipe restored: ${recipe.name}`)
+    },
+    [base.restoreRecipe, addLog]
+  )
+
   return {
     ...base,
     targetCard,
@@ -274,11 +288,52 @@ function useWorkbenchCore({
     canEvolveTarget,
     slots,
     ...states,
-    ...handlers
+    ...handlers,
+    handleRestoreRecipe
   }
 }
 
 export const Workbench: React.FC<WorkbenchProps> = (props) => {
   const data = useWorkbenchCore(props)
+  const { undo, redo } = data
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement
+      if (activeEl) {
+        const tagName = activeEl.tagName.toLowerCase()
+        if (
+          tagName === "input" ||
+          tagName === "textarea" ||
+          activeEl.getAttribute("contenteditable") === "true"
+        ) {
+          // Allow Undo/Redo shortcuts for slider inputs (type range) but ignore for text editing inputs
+          if ((activeEl as HTMLInputElement).type !== "range") {
+            return
+          }
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (e.key.toLowerCase() === "z") {
+          e.preventDefault()
+          if (e.shiftKey) {
+            redo()
+          } else {
+            undo()
+          }
+        } else if (e.key.toLowerCase() === "y") {
+          e.preventDefault()
+          redo()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [undo, redo])
+
   return <WorkbenchView {...data} addLog={props.addLog} />
 }
