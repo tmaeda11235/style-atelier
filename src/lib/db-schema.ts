@@ -82,6 +82,7 @@ export interface StyleCard {
   selectedThumbnails?: string[] // Selected image URLs for thumbnail display (up to 2)
   versionHistory?: CardVersion[] // 過去のプロンプト・パラメータ変更履歴（最大10件）
   weight?: number // 調合割合の重み (0.1 - 2.0)
+  sortIndex?: number // バインダー内での並び順インデックス
 }
 
 // プロンプトの構成要素（バブル）

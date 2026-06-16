@@ -3,7 +3,7 @@
     {
       "id": "@J-MINT-EXPERT-01",
       "name": "エキスパートミント",
-      "description": "エキスパートモードで画像からスタイルカードを作成する",
+      "description": "エキスパートモードで画像からスタイルカードをミントする",
       "steps": ["画像上のMintボタン押下", "プロンプト解析", "カード保存"],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01"],
       "viewComponents": [
@@ -14,7 +14,7 @@
     {
       "id": "@J-MINT-EASY-01",
       "name": "かんたんミント",
-      "description": "かんたんモードで画像からスタイルカードを作成する",
+      "description": "かんたんモードで画像からスタイルカードをミントする",
       "steps": ["画像上のMintボタン押下", "簡易保存"],
       "nextJourneys": ["@J-ORG-EASY-01", "@J-WB-EASY-01"],
       "viewComponents": ["src/components/organisms/SimpleMintingView.tsx"]
@@ -39,7 +39,8 @@
         "@J-ORG-VERSION-01",
         "@J-ORG-FOLDER-01",
         "@J-ORG-QUICK-SEND-01",
-        "@J-ORG-CARD-HOLO-EFFECT-01"
+        "@J-ORG-CARD-HOLO-EFFECT-01",
+        "@J-ORG-BINDER-DND-01"
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
@@ -196,7 +197,10 @@
       "description": "エキスパート向けヘルプツールチップの確認",
       "steps": ["?アイコンにホバー", "ツールチップ表示", "仕様の確認"],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"],
-      "viewComponents": ["src/components/organisms/ExpertModeView.tsx"]
+      "viewComponents": [
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/WelcomeDialog.tsx"
+      ]
     },
     {
       "id": "@J-SYS-03",
@@ -292,7 +296,7 @@
       "steps": [
         "Midjourney画像をドラッグ",
         "サイドパネル上にオーバーレイ（インディゴ/ブルー）が表示されることを確認",
-        "ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"
+        "ドロップして履歴追加または簡易カードミント（Easy Mode）が開始されることを確認"
       ],
       "nextJourneys": ["@J-SYS-01", "@J-MINT-EASY-01"],
       "viewComponents": ["src/pages/SidePanel.tsx"]
@@ -511,7 +515,9 @@
         "src/pages/SidePanel.tsx",
         "src/components/organisms/NonTargetSiteView.tsx",
         "src/components/organisms/EasyModeView.tsx",
-        "src/components/organisms/ExpertModeView.tsx"
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeTabContainer.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeOverlayManager.tsx"
       ]
     },
     {
@@ -579,6 +585,41 @@
       "viewComponents": [
         "src/components/molecules/ConnectionAlert.tsx",
         "src/lib/chrome-utils.ts"
+      ]
+    },
+    {
+      "id": "@J-MOBILE-PREVIEW-01",
+      "name": "モバイルお試しプレビュー＆フリップ",
+      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ及びプロンプトのコピーを行う",
+      "steps": [
+        "URLパラメータからモバイルランディングページに遷移",
+        "アトリエスキンのStyle Card表示を確認",
+        "カードをタップして3Dフリップ回転",
+        "裏面のプロンプトとコピーボタンを確認",
+        "コピーボタンタップでクリップボードへコピー"
+      ],
+      "nextJourneys": [],
+      "viewComponents": [
+        "src/mobile-app/styles/mobile.css",
+        "src/mobile-app/mockup.html",
+        "src/mobile-app/index.html",
+        "src/mobile-app/index.ts"
+      ]
+    },
+    {
+      "id": "@J-ORG-BINDER-DND-01",
+      "name": "カードのバインダーDnD移動",
+      "description": "ライブラリのカード一覧からサイドバーのバインダー（カテゴリ）へドラッグ＆ドロップして所属カテゴリを変更する",
+      "steps": [
+        "ライブラリを開く",
+        "フィルターアコーディオンを展開する",
+        "スタイルカードをカテゴリボタンへドラッグ＆ドロップする",
+        "所属カテゴリが更新され、一覧が更新されることを確認する"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/LibraryFilterAccordion.tsx",
+        "src/components/organisms/LibraryTab/SearchAndFilterSection.tsx"
       ]
     }
   ]
