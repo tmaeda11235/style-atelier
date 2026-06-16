@@ -1,5 +1,7 @@
 import path from "path"
-import { expect, test } from "@playwright/test"
+import { expect } from "@playwright/test"
+
+import { test } from "./extension-fixture"
 
 test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORGAN-UX-PARAM-01", () => {
   test.beforeEach(async ({ page }) => {

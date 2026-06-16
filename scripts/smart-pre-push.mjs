@@ -17,6 +17,18 @@ async function main() {
     }
   }
 
+  // 0.5 Migration: Remove test-proof.enc from git tracking if it exists
+  try {
+    execSync('git ls-files --error-unmatch artifacts/test-proof.enc', { stdio: 'ignore' });
+    console.log('\n⚠️ [Migration Notice] artifacts/test-proof.enc is tracked in your git branch.');
+    console.log('Removing it from the git tree to prevent future merge conflicts...');
+    execSync('git rm --cached artifacts/test-proof.enc');
+    execSync('git commit -m "chore: remove test-proof.enc from git tree in favor of git notes"');
+    console.log('✅ Successfully removed and committed. Proceeding with push...\n');
+  } catch (e) {
+    // If it throws, the file is not tracked, which is exactly what we want.
+  }
+
   // 1. Get changed files
   let diffOutput;
   try {
@@ -176,25 +188,8 @@ async function main() {
   await fs.mkdir('artifacts', { recursive: true });
   await fs.writeFile('artifacts/test-proof.enc', JSON.stringify(proof, null, 2));
   
-  // Amend the current commit to include the proof
-  try {
-    execSync('git add -f artifacts/test-proof.enc');
-    // If this is running inside pre-push, amending might be tricky because the push is already in progress with a specific commit hash.
-    // Wait, pre-push hook runs BEFORE push, but AFTER the commit is created.
-    // If we amend, the commit hash changes! And the push will be rejected if the remote doesn't match, unless it's a force push.
-    // Actually, generating a proof and just leaving it as an uncommitted file or committing it separately isn't great.
-    // But since `pre-push` is running, if we amend, the local SHA changes, and `git push` might push the OLD SHA or the NEW SHA?
-    // Git evaluates the ref to push before running pre-push. So amending in pre-push is generally not recommended because git will push the OLD object.
-    // Alternatively, we just `git add` and `git commit -m "chore: add test proof"`. But that creates a messy history.
-    // Wait, the user said "公開鍵で4のファイルとpush時のコミットハッシュを書き込んだファイルを暗号化し、所定のフォルダに置く / push"
-    // They didn't say it must be committed! Github Actions can't read files that are not pushed.
-    // So the proof MUST be pushed.
-    console.log('Proof of Work generated at artifacts/test-proof.enc');
-    console.log('NOTE: To include the proof, you must commit it. In a pre-push hook, amending changes the hash being pushed.');
-    console.log('It is recommended to run this script as a pre-commit hook or manually before pushing.');
-  } catch (e) {
-    console.error('Failed to add proof to git.', e);
-  }
+  console.log('Proof of Work generated at artifacts/test-proof.enc');
+  console.log('NOTE: This proof will be attached to the current commit as a git note by the push script.');
 }
 
 main().catch(console.error);

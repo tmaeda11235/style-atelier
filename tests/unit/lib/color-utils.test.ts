@@ -15,6 +15,7 @@ import {
   setupImageSrc,
   shouldUseFallback
 } from "@/lib/color-utils"
+import { RARITY_FALLBACK_COLORS } from "@/lib/rarity-config"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 describe("Color Utilities", () => {
@@ -1185,6 +1186,7 @@ describe("Color Utilities", () => {
 
         expect(mockCanvas.width).toBe(50)
         expect(mockCanvas.height).toBe(50)
+        expect(mockCanvas.getContext).toHaveBeenCalledWith("2d")
         expect(mockCtx.drawImage).toHaveBeenCalledWith(mockImg, 0, 0, 50, 50)
         expect(mockCtx.getImageData).toHaveBeenCalledWith(0, 0, 50, 50)
 
@@ -1470,6 +1472,85 @@ describe("Color Utilities", () => {
         consoleErrorSpy.mockRestore()
         consoleWarnSpy.mockRestore()
         process.env.BYPASS_VITEST = originalBypass
+      })
+    })
+
+    describe("Strict Mutation Killers for color-utils", () => {
+      it("tests shouldUseFallback under vitest bypass with different undefined window/document combinations", () => {
+        const originalBypass = process.env.BYPASS_VITEST
+        const originalWindow = global.window
+        const originalDocument = global.document
+
+        process.env.BYPASS_VITEST = "true"
+
+        // window undefined, document defined
+        vi.stubGlobal("window", undefined)
+        vi.stubGlobal("document", originalDocument)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        // window defined, document undefined
+        vi.stubGlobal("window", originalWindow)
+        vi.stubGlobal("document", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        // window undefined, document undefined
+        vi.stubGlobal("window", undefined)
+        vi.stubGlobal("document", undefined)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(true)
+
+        // both defined -> false (normal path)
+        vi.stubGlobal("window", originalWindow)
+        vi.stubGlobal("document", originalDocument)
+        expect(shouldUseFallback("http://example.com/image.png")).toBe(false)
+
+        process.env.BYPASS_VITEST = originalBypass
+      })
+
+      it("tests getFallbackColors and analyzeImageColors with custom empty string rarity configuration mock", async () => {
+        // Mock empty string rarity to verify defaults are strictly used
+        const originalEmpty = (RARITY_FALLBACK_COLORS as any)[""]
+        ;(RARITY_FALLBACK_COLORS as any)[""] = {
+          dominantHex: "#999999",
+          dominantName: "MockEmpty",
+          accentHex: "#888888",
+          accentName: "MockEmptyAccent"
+        }
+
+        try {
+          // getFallbackColors() should fallback to Common (dominantHex #64748b), NOT our MockEmpty (#999999)
+          const fallback = getFallbackColors()
+          expect(fallback.dominantHex).toBe("#64748b")
+          expect(fallback.dominantName).toBe("Gray")
+
+          // analyzeImageColors() should also use Common fallback
+          const colors = await analyzeImageColors("http://example.com/test.png")
+          expect(colors.dominantHex).toBe("#64748b")
+          expect(colors.dominantName).toBe("Gray")
+        } finally {
+          if (originalEmpty === undefined) {
+            delete (RARITY_FALLBACK_COLORS as any)[""]
+          } else {
+            ;(RARITY_FALLBACK_COLORS as any)[""] = originalEmpty
+          }
+        }
+      })
+
+      it("tests selectAccentColor chromatic dominant behavior to prevent if(true) mutations", () => {
+        // dominant = Red (chromatic)
+        // total pixels = 100.
+        // Red: 80 (chromatic, dominant)
+        // White: 15 (neutral)
+        // Blue: 5 (chromatic, >= 5% threshold)
+        // Since dominant is chromatic (Red), selectAccentColor should not search for chromaticAccent
+        // It should pick the next most prominent color which is White, NOT Blue.
+        const nameCounts = {
+          Red: { count: 80, rSum: 20400, gSum: 0, bSum: 0 },
+          White: { count: 15, rSum: 3825, gSum: 3825, bSum: 3825 },
+          Blue: { count: 5, rSum: 0, gSum: 0, bSum: 1275 }
+        }
+        const colors = determineDominantAndAccent(nameCounts, "Common")
+        expect(colors.dominantName).toBe("Red")
+        expect(colors.accentName).toBe("White")
       })
     })
   })

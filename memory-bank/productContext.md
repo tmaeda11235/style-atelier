@@ -23,7 +23,7 @@ Midjourney Style Manager is a "Local-First" and "Local AI-Powered" Chrome Extens
 - **Minting**: Convert generated images into trading cards with encapsulated prompt data.
 - **Organization**: Manage collections with binders, decks, and tiers.
 - **Production**: A visual workspace to mix and match cards to generate new prompts.
-- **Local AI Engine**: Integrated with Gemma-4 E2B (a lightweight model under 1GB) running entirely client-side. This enables intelligent style suggestions, dynamic prompt parsing, and offline assistance without sending any data to external servers.
+- **Local AI Engine**: Integrated with Gemma-2 2B (a lightweight model under 1GB) running entirely client-side. This enables intelligent style suggestions, dynamic prompt parsing, and offline assistance without sending any data to external servers.
 
 ## Target Audience
 
@@ -35,4 +35,4 @@ Midjourney Style Manager is a "Local-First" and "Local AI-Powered" Chrome Extens
 1.  **Visual & Tangible**: Move away from text lists to visual cards and binders.
 2.  **Gamified Ownership**: Satisfy the desire to collect and organize with rarity tiers and frames.
 3.  **Fluid Workflow**: "Atelier" interface for intuitive prompt mixing (drag & drop).
-4.  **Privacy First & Zero API Cost**: All data stays local, and the integrated Gemma-4 E2B AI model runs completely on-device. No external servers or API keys are required, ensuring maximum privacy and zero operating costs.
+4.  **Privacy First & Zero API Cost**: All data stays local, and the integrated Gemma-2 2B AI model runs completely on-device. No external servers or API keys are required, ensuring maximum privacy and zero operating costs.
