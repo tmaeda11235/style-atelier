@@ -5,6 +5,20 @@ export class GDriveTimeoutError extends Error {
   }
 }
 
+export class GDriveQuotaError extends Error {
+  constructor(message = "Google Drive storage quota exceeded.") {
+    super(message)
+    this.name = "GDriveQuotaError"
+  }
+}
+
+export class GDriveRateLimitError extends Error {
+  constructor(message = "Google Drive API rate limit exceeded.") {
+    super(message)
+    this.name = "GDriveRateLimitError"
+  }
+}
+
 export interface BackupMetadata {
   id: string
   modifiedTime: string
@@ -34,6 +48,22 @@ export interface GoogleDriveClient {
     token: string,
     onTokenUpdated?: (newToken: string) => void,
     onProgress?: (progress: number) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<string | null>
+  downloadTempSharedCards?(
+    token: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<string | null>
+  deleteFile?(
+    token: string,
+    fileId: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<void>
+  searchTempSharedCardsFile?(
+    token: string,
+    onTokenUpdated?: (newToken: string) => void,
     options?: { signal?: AbortSignal; timeoutMs?: number }
   ): Promise<string | null>
 }

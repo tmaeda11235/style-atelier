@@ -12,7 +12,7 @@ tags: []
 - **Platform**: Chrome Extension (Manifest V3).
 - **Framework**: Plasmo.
 - **Backend**: None (Serverless Architecture).
-- **Local AI Engine**: Client-side execution of Gemma-4 E2B via LiteRT-LM inside Web Workers.
+- **Local AI Engine**: Client-side execution of Gemma-2 2B via LiteRT-LM inside Web Workers.
 - **Database**: Client-side IndexedDB (via Dexie.js).
 - **Data Transport**: "Memento Pattern" via Image Files (QR Code / PNG tEXt Metadata fallback).
 
@@ -95,7 +95,7 @@ tags: []
   - **Pre-download Quota Check**: Evaluates storage using `navigator.storage.estimate()` before downloading the model, preventing failures from `QuotaExceededError`.
   - **Cache Integrity Guardrails**: Validates cached files in OPFS or Cache Storage. If corruption or incomplete downloads are detected, it automatically purges and restarts the download.
   - **Non-blocking Execution**: The model is executed off the main thread, communicating with the Side Panel and Background Service Worker via Chrome extension runtime messaging.
-  - **Lightweight Model Optimization**: Since Gemma-4 E2B is a <1GB model, it has limited complex reasoning capability. The system handles this via structured prompt templates (Few-shot prompting) and RAG (retrieving relevant style keywords or historical combinations from IndexedDB) before running inference.
+  - **Lightweight Model Optimization**: Since Gemma-2 2B is a <1GB model, it has limited complex reasoning capability. The system handles this via structured prompt templates (Few-shot prompting) and RAG (retrieving relevant style keywords or historical combinations from IndexedDB) before running inference.
   - **AI-Powered Cauldron Recipe Advice**:
     - Generates mixing advice automatically when 2 or more cards are in the Cauldron.
     - Utilizes a 500ms debounce inside the `useAiRecipeAdvice` hook to prevent redundant inference during active editing.
@@ -109,7 +109,7 @@ tags: []
 2.  **Minting**: Image + Prompt Metadata saved to IndexedDB as "Style Card".
 3.  **Usage**: User selects Card from Side Panel -> Content Script injects prompt into Midjourney input.
 4.  **Export**: Card data encoded into image (QR/Metadata) for sharing.
-5.  **Local AI Inference**: User requests prompt analysis/tagging -> Side Panel / Background requests Offscreen Document -> Offscreen Document communicates with LiteRT-LM Worker -> Worker runs inference via LiteRT-LM (Gemma-4 E2B) -> Results updated in state stores / database.
+5.  **Local AI Inference**: User requests prompt analysis/tagging -> Side Panel / Background requests Offscreen Document -> Offscreen Document communicates with LiteRT-LM Worker -> Worker runs inference via LiteRT-LM (Gemma-2 2B) -> Results updated in state stores / database.
 
 ## Component Development Rules (Sustainability)
 

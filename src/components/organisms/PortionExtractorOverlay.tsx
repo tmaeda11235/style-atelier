@@ -19,9 +19,16 @@ const OverlayHeader: React.FC<OverlayHeaderProps> = ({ onClose }) => (
 interface WeightSliderProps {
   weight: number | undefined
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onMouseDown: () => void
+  onTouchStart: () => void
 }
 
-const WeightSlider: React.FC<WeightSliderProps> = ({ weight, onChange }) => (
+const WeightSlider: React.FC<WeightSliderProps> = ({
+  weight,
+  onChange,
+  onMouseDown,
+  onTouchStart
+}) => (
   <div className="flex flex-col space-y-0.5 border-b border-slate-800 pb-1.5">
     <div className="flex justify-between font-mono font-bold">
       <span className="text-slate-400">Weight</span>
@@ -36,6 +43,14 @@ const WeightSlider: React.FC<WeightSliderProps> = ({ weight, onChange }) => (
       step="0.1"
       value={weight !== undefined ? weight : 1.0}
       onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => {
+        e.stopPropagation()
+        onMouseDown()
+      }}
+      onTouchStart={(e) => {
+        e.stopPropagation()
+        onTouchStart()
+      }}
       onChange={onChange}
       className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-blue-500"
     />
@@ -124,6 +139,7 @@ interface PortionExtractorOverlayProps {
   card: StyleCard
   onClose: (e: React.MouseEvent) => void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
+  onStartWeightAdjustment?: () => Promise<void> | void
   handleExtractPortion: (
     name: string,
     segments: PromptSegment[],
@@ -133,7 +149,13 @@ interface PortionExtractorOverlayProps {
 
 export const PortionExtractorOverlay: React.FC<
   PortionExtractorOverlayProps
-> = ({ card, onClose, updateCardWeight, handleExtractPortion }) => {
+> = ({
+  card,
+  onClose,
+  updateCardWeight,
+  onStartWeightAdjustment,
+  handleExtractPortion
+}) => {
   const handleWeightRangeChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -142,11 +164,22 @@ export const PortionExtractorOverlay: React.FC<
     await updateCardWeight(card.id, val)
   }
 
+  const handleStartWeight = () => {
+    if (onStartWeightAdjustment) {
+      onStartWeightAdjustment()
+    }
+  }
+
   return (
     <div className="absolute inset-0 bg-slate-900/95 border border-slate-700 rounded-lg text-white p-2 flex flex-col justify-between overflow-hidden z-20 transition-all text-[9px]">
       <OverlayHeader onClose={onClose} />
       <div className="flex-1 space-y-1.5 overflow-y-auto scrollbar-thin">
-        <WeightSlider weight={card.weight} onChange={handleWeightRangeChange} />
+        <WeightSlider
+          weight={card.weight}
+          onChange={handleWeightRangeChange}
+          onMouseDown={handleStartWeight}
+          onTouchStart={handleStartWeight}
+        />
         {card.promptSegments && card.promptSegments.length > 0 && (
           <SegmentList
             segments={card.promptSegments}

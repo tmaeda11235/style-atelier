@@ -29,7 +29,8 @@ export function useAiSearch(props: UseAiSearchProps) {
     setCategoryFilter: props.setCategoryFilter,
     setColorFilter: props.setColorFilter,
     setSearchTag: props.setSearchTag,
-    t: props.t
+    t: props.t,
+    webLlmStatus: props.webLlmStatus
   })
   const handleToggleAiSearch = () => {
     if (isAiSearch) {
@@ -41,8 +42,7 @@ export function useAiSearch(props: UseAiSearchProps) {
       props.setSearchTag("")
       setExtractedFilters(null)
     } else {
-      if (props.webLlmStatus !== "ready") setAiWarningOpen(true)
-      else setIsAiSearch(true)
+      setIsAiSearch(true)
     }
   }
   return {
