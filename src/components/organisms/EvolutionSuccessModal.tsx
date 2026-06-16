@@ -117,39 +117,34 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   newTier,
   translation
 }) => {
-  const { isFlipped, confetti, tilt, handleMouseMove, handleMouseLeave } =
-    useEvolutionAnimation(isOpen, newTier)
-
+  const anim = useEvolutionAnimation(isOpen, newTier)
   if (!isOpen) return null
-
-  const config = RARITY_CONFIG[newTier],
-    oldConfig = RARITY_CONFIG[oldTier]
 
   return (
     <div className="fixed inset-0 bg-black/20 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
-      <EvolutionConfetti confetti={confetti} />
+      <EvolutionConfetti confetti={anim.confetti} />
 
       <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center overflow-hidden animate-in zoom-in-95 duration-500 z-20">
         <EvolutionBackgroundDecorations
-          configColor={config.color}
+          configColor={RARITY_CONFIG[newTier].color}
           newTier={newTier}
-          isFlipped={isFlipped}
+          isFlipped={anim.isFlipped}
         />
 
         <EvolutionModalHeader onClose={onClose} translation={translation} />
 
         <EvolutionCardDisplay
-          tilt={tilt}
-          isFlipped={isFlipped}
+          tilt={anim.tilt}
+          isFlipped={anim.isFlipped}
           oldTier={oldTier}
           newTier={newTier}
           cardName={cardName}
           thumbnailData={thumbnailData}
           selectedThumbnails={selectedThumbnails}
-          oldConfig={oldConfig}
-          config={config}
-          handleMouseMove={handleMouseMove}
-          handleMouseLeave={handleMouseLeave}
+          oldConfig={RARITY_CONFIG[oldTier]}
+          config={RARITY_CONFIG[newTier]}
+          handleMouseMove={anim.handleMouseMove}
+          handleMouseLeave={anim.handleMouseLeave}
         />
 
         <h3 className="text-md font-bold text-white text-center mb-2 z-10">
