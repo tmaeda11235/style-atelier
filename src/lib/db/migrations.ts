@@ -8,6 +8,7 @@ import {
   listOpfsFiles,
   saveBase64ToOpfs
 } from "./migration-helpers"
+
 export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)
   setupVersions10To13(db)
@@ -137,7 +138,6 @@ function setupVersions14OrHigher(db: Dexie) {
       recipeHistory: "id, timestamp"
     })
     .upgrade(upgradeToVersion15)
-
   // Version 16: Add imageSyncStates table for incremental Google Drive sync
   db.version(16)
     .stores({
@@ -350,8 +350,6 @@ export async function upgradeToVersion15(tx: any) {
     throw err
   }
 }
-
-
 
 async function populateImageSyncStates(syncStatesTable: any) {
   try {
