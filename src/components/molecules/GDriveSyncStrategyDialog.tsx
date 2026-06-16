@@ -86,24 +86,24 @@ function StrategyContent({ t, strategy, setStrategy }: StrategyContentProps) {
 
         <div className="space-y-2.5">
           <StrategyOption
-            id="strategy-merge"
-            strategyValue="merge"
+            id={"strategy-merge"}
+            strategyValue={"merge"}
             currentStrategy={strategy}
             onChange={setStrategy}
             label={t.strategyMergeLabel}
             desc={t.strategyMergeDesc}
           />
           <StrategyOption
-            id="strategy-local-overwrite"
-            strategyValue="local-overwrite"
+            id={"strategy-local-overwrite"}
+            strategyValue={"local-overwrite"}
             currentStrategy={strategy}
             onChange={setStrategy}
             label={t.strategyLocalOverwriteLabel}
             desc={t.strategyLocalOverwriteDesc}
           />
           <StrategyOption
-            id="strategy-cloud-overwrite"
-            strategyValue="cloud-overwrite"
+            id={"strategy-cloud-overwrite"}
+            strategyValue={"cloud-overwrite"}
             currentStrategy={strategy}
             onChange={setStrategy}
             label={t.strategyCloudOverwriteLabel}
@@ -135,11 +135,11 @@ export function GDriveSyncStrategyDialog({
 
   return (
     <div
-      id="sync-strategy-dialog-backdrop"
+      id={"sync-strategy-dialog-backdrop"}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 dark:bg-slate-950/80 backdrop-blur-sm p-4 font-sans animate-in fade-in duration-200"
       onClick={onCancel}>
       <div
-        id="sync-strategy-dialog-container"
+        id={"sync-strategy-dialog-container"}
         className="w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-200 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -149,13 +149,13 @@ export function GDriveSyncStrategyDialog({
         <div className="px-6 pb-6 flex flex-col gap-2 border-t border-slate-800 pt-4 bg-slate-950/20">
           <button
             onClick={() => onConfirm(strategy)}
-            id="sync-strategy-dialog-ok-btn"
+            id={"sync-strategy-dialog-ok-btn"}
             className="w-full py-2.5 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer bg-blue-600 hover:bg-blue-500 active:bg-blue-700 focus:ring-2 focus:ring-blue-500/50">
             {t.syncConfirmBtn}
           </button>
           <button
             onClick={onCancel}
-            id="sync-strategy-dialog-cancel-btn"
+            id={"sync-strategy-dialog-cancel-btn"}
             className="w-full py-2 text-slate-500 hover:text-slate-300 text-[11px] font-semibold transition-all cursor-pointer focus:outline-none">
             {t.cancelBtn}
           </button>

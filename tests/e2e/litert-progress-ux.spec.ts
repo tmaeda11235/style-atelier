@@ -1,7 +1,7 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", () => {
+test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX", () => {
   test.slow()
 
   test.beforeEach(async ({ page }) => {
@@ -32,8 +32,23 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
       await skipButton.click({ force: true })
     }
 
-    // 1. Seed history item
+    // 1. Seed history item (wait for db to be initialized on window first)
     await spFrame.locator("body").evaluate(async () => {
+      const waitForDb = () =>
+        new Promise<void>((resolve) => {
+          if ((window as any).db) {
+            resolve()
+          } else {
+            const interval = setInterval(() => {
+              if ((window as any).db) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 50)
+          }
+        })
+      await waitForDb()
+
       localStorage.removeItem("mock-webllm-downloaded")
       const database = (window as any).db
       await database.historyItems.clear()
@@ -54,7 +69,9 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
     await historyTabBtn.click({ force: true })
 
     const mintCardBtn = spFrame
-      .locator("button:has-text('Mint Card'), button:has-text('カード化')")
+      .locator(
+        "button:has-text('Mint Card'), button:has-text('カードをミント')"
+      )
       .first()
     await expect(mintCardBtn).toBeVisible({ timeout: 30000 })
     await mintCardBtn.click({ force: true })
@@ -104,7 +121,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Take screenshot of download error state
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-style-analysis-error.png")
+      path: path.join(screenshotsDir, "litert-style-analysis-error.png")
     })
     console.log("AI Style Analysis error state screenshot saved.")
 
@@ -203,7 +220,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
           .screenshot({
             path: path.join(
               screenshotsDir,
-              "webllm-style-analysis-downloading.png"
+              "litert-style-analysis-downloading.png"
             )
           })
           .catch(() => {})
@@ -216,7 +233,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Take screenshot of ready / generated state
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-style-analysis-ready.png")
+      path: path.join(screenshotsDir, "litert-style-analysis-ready.png")
     })
     console.log("AI Style Analysis ready state screenshot saved.")
   })
@@ -236,8 +253,23 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
       await skipButton.click({ force: true })
     }
 
-    // Clear db and seed 2 cards
+    // Clear db and seed 2 cards (wait for db to be initialized on window first)
     await spFrame.locator("body").evaluate(async () => {
+      const waitForDb = () =>
+        new Promise<void>((resolve) => {
+          if ((window as any).db) {
+            resolve()
+          } else {
+            const interval = setInterval(() => {
+              if ((window as any).db) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 50)
+          }
+        })
+      await waitForDb()
+
       localStorage.removeItem("mock-webllm-downloaded")
       const database = (window as any).db
       await database.styleCards.clear()
@@ -331,7 +363,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Take screenshot of download progress in Recipe Advice
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-recipe-advice-downloading.png")
+      path: path.join(screenshotsDir, "litert-recipe-advice-downloading.png")
     })
     console.log("AI Recipe Advice downloading progress screenshot saved.")
 
@@ -343,7 +375,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Take screenshot of ready AI advice
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-recipe-advice-ready.png")
+      path: path.join(screenshotsDir, "litert-recipe-advice-ready.png")
     })
     console.log("AI Recipe Advice ready state screenshot saved.")
   })
@@ -370,8 +402,23 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
       await skipButton.click({ force: true })
     }
 
-    // Seed 2 style cards
+    // Seed 2 style cards (wait for db to be initialized on window first)
     await spFrame.locator("body").evaluate(async () => {
+      const waitForDb = () =>
+        new Promise<void>((resolve) => {
+          if ((window as any).db) {
+            resolve()
+          } else {
+            const interval = setInterval(() => {
+              if ((window as any).db) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 50)
+          }
+        })
+      await waitForDb()
+
       const database = (window as any).db
       await database.styleCards.clear()
       await database.styleCards.bulkAdd([
@@ -402,7 +449,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
       ])
     })
 
-    // Setup mock WebLLM configuration to simulate initialization phase
+    // Setup mock LiteRT-LM configuration to simulate initialization phase
     await spFrame.locator("body").evaluate(() => {
       const config = (window as any).mockWebLlmConfig
       if (config) {
@@ -436,7 +483,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Progress & Error UX", ()
 
     // Take screenshot of AI Engine Initializing status
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-engine-initializing.png")
+      path: path.join(screenshotsDir, "litert-engine-initializing.png")
     })
     console.log("AI Engine Initializing screenshot saved.")
 

@@ -14,6 +14,34 @@ const GEMMA_MODEL_FILES = [{ name: MODEL_FILENAME, size: 2008432640 }]
 
 console.log("Offscreen Document loaded.")
 
+if (process.env.PLASMO_PUBLIC_USE_LOCAL_CACHE === "true") {
+  import("./mocks/browser")
+    .then(({ worker }) => {
+      const swUrl =
+        typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
+          ? chrome.runtime.getURL("assets/mockServiceWorker.js")
+          : "/assets/mockServiceWorker.js"
+      worker
+        .start({
+          serviceWorker: {
+            url: swUrl
+          },
+          onUnhandledRequest: "bypass"
+        })
+        .then(() => {
+          console.log(
+            "[MSW] Mock Service Worker initialized successfully in offscreen document."
+          )
+        })
+        .catch((err) => {
+          console.error("[MSW] Failed to start Mock Service Worker:", err)
+        })
+    })
+    .catch((err) => {
+      console.error("[MSW] Failed to load mock worker:", err)
+    })
+}
+
 // Listen for messages from background service worker or sidepanel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.target !== "offscreen") return

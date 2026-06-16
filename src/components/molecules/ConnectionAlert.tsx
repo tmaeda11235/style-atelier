@@ -1,6 +1,7 @@
 import { AlertTriangle, ExternalLink, RefreshCw, X } from "lucide-react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
+import { safeReloadTab } from "../../lib/chrome-utils"
 import { Button } from "../atoms/Button"
 
 export type AlertType = "disconnected" | "no_input" | "hand_full" | null
@@ -49,7 +50,7 @@ export const ConnectionAlert = ({
             variant="outline"
             className="bg-white border-amber-300 hover:bg-amber-50 text-amber-800 w-full justify-center"
             onClick={() => {
-              chrome.tabs.reload()
+              safeReloadTab()
               if (onDismiss) onDismiss()
             }}>
             <RefreshCw className="w-3 h-3 mr-2" />
@@ -71,7 +72,7 @@ export const ConnectionAlert = ({
           </p>
           <p className="text-blue-800/80 text-xs leading-relaxed">
             {(t as any).alerts?.noInputDesc ||
-              "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view."}
+              'Could not find the chat input. Please ensure you are on the "Create" page or the Midjourney gallery details view.'}
           </p>
           <Button
             size="sm"
