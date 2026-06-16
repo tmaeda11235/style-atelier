@@ -23,6 +23,30 @@ The custom configuration sets `base` to `/style-atelier/` and builds using `src/
 - **Base Path:** `/style-atelier/`
 - **Output Directory:** `dist-mobile`
 
+### PWA Build & Service Worker Settings
+
+To transform the mobile page into a fully functional Standalone PWA, we integrate **vite-plugin-pwa** in the mobile build pipeline (`vite.config.mobile.ts`).
+
+#### 1. Service Worker Registration & Lifecycle
+- **Registration Type:** `registerType: 'autoUpdate'` (or `'prompt'` to alert users of updates).
+- **Injection Mode:** `injectRegister: 'inline'` to embed the register script directly in the entry HTML, avoiding dynamic script import issues on older mobile browsers.
+- **Immediate Takeover:** Configured with `skipWaiting: true` and `clientsClaim: true` in Workbox configuration. This ensures that when a new Service Worker is deployed, it immediately controls all open clients rather than waiting for the page to be reloaded.
+
+#### 2. Service Worker Scope & Paths on GitHub Pages
+Because the application is hosted on GitHub Pages under a subpath (`/style-atelier/`), we strictly configure:
+- **Base Path:** `/style-atelier/`
+- **SW Scope:** `/style-atelier/`
+- **SW Filename:** `sw.js` (generated at the root of the output directory `dist-mobile`).
+
+> [!WARNING]
+> If the `scope` is misconfigured or defaults to `/`, the Service Worker will fail to register or cache files from the subdirectory, breaking offline capabilities.
+
+#### 3. Cache & Pre-caching Strategy (Workbox)
+- **Pre-cached Assets:** All production compilation bundles (`.js`, `.css`), entry HTML, local icons, and manifest.json.
+- **Stale-While-Revalidate (SWR):** For external assets such as fonts, i18n localization JSONs, and external CSS frameworks.
+- **Cache Busting Strategy:** Vite dynamically attaches content-based hashes to all compiled asset filenames (e.g., `index-[hash].js`). This forces the browser/Service Worker to bypass old caches when a new build is deployed, eliminating stale UI presentation.
+- **Image Offline Storage:** For large user-generated images (Style Cards), instead of bloating the Cache API, the PWA uses the **Origin Private File System (OPFS)** via `useOpfsImage.ts` to persistently store binary image blobs client-side.
+
 ### Scripts Added in [package.json](file:///package.json)
 
 - `npm run build:mobile`: Compiles the mobile app to `dist-mobile` for production deployment.
