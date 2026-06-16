@@ -8,6 +8,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     // Ensure mock-webllm-downloaded is cleared BEFORE React mounts on sandbox load
     await page.addInitScript(() => {
       window.localStorage.removeItem("mock-webllm-downloaded")
+      ;(window as any).mockWebLlmConfig = {
+        supportWebGpu: true
+      }
     })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
@@ -142,7 +145,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
       const config = (window as any).mockWebLlmConfig
       if (config) {
         config.failDownload = false
-        config.downloadSpeed = 800 // slower download speed (larger interval ms) to capture progressbar state
+        config.downloadSpeed = 1500 // slower download speed to capture progressbar state
       }
     })
 
@@ -160,12 +163,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     )
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
-    await downloadBtn.click({ force: true })
+    await downloadBtn.dispatchEvent("click")
+    await page.waitForTimeout(500)
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await confirmDownloadBtn.waitFor({ state: "visible", timeout: 20000 })
     await expect(confirmDownloadBtn).toBeVisible()
-    await confirmDownloadBtn.click({ force: true })
+    await confirmDownloadBtn.dispatchEvent("click")
 
     // Switch back to Workbench tab to see progress
     await workbenchTabBtn.click({ force: true })

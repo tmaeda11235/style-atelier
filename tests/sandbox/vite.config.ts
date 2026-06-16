@@ -28,6 +28,30 @@ export default defineConfig({
               return
             }
           }
+          if (
+            req.url &&
+            req.url.includes("/assets/") &&
+            !req.url.includes("?import") &&
+            !req.url.includes("&import")
+          ) {
+            const urlPath = req.url.split("?")[0]
+            const filePath = path.join(__dirname, "../..", urlPath)
+            if (fs.existsSync(filePath)) {
+              if (urlPath.endsWith(".wasm")) {
+                res.setHeader("Content-Type", "application/wasm")
+                res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
+                res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
+                res.end(fs.readFileSync(filePath))
+                return
+              } else if (urlPath.endsWith(".js")) {
+                res.setHeader("Content-Type", "application/javascript")
+                res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
+                res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
+                res.end(fs.readFileSync(filePath))
+                return
+              }
+            }
+          }
           next()
         })
       }
