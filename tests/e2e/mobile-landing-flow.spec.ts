@@ -16,7 +16,7 @@ test.describe("Mobile Viewer E2E Test", () => {
   test("should render fallback Cyber Samurai, flip card and copy prompt with visual feedbacks @J-MOBILE-PREVIEW-01", async ({
     page
   }) => {
-    // 1. Navigate to the mobile app index page (no params, should fallback)
+    // 1. Navigate to the mobile app index page (no params, should fallback, and use mock mode)
     await page.goto("/src/mobile-app/index.html?mock=true")
 
     // Ensure fonts and main components are loaded
@@ -47,6 +47,12 @@ test.describe("Mobile Viewer E2E Test", () => {
     // Wait for the flip animation (css transition is 0.8s, wait 1.2s to be safe)
     await page.waitForTimeout(1200)
 
+    // Verify prompt text is rendered correctly (not just parameters)
+    const promptText = page.locator("#promptText")
+    await expect(promptText).toContainText(
+      "A futuristic cyberpunk samurai standing in neon rain"
+    )
+
     // Take screenshot of the back of the Card
     const backScreenshotPath = path.join(
       "tests",
@@ -63,7 +69,6 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 16:9")
     await expect(badges.nth(1)).toHaveText("--stylize 750")
-
     // 3. Click the copy button and verify toast message appears
     const copyBtn = page.locator("#copyBtn")
     await copyBtn.click()
@@ -174,7 +179,6 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 4:3")
     await expect(badges.nth(1)).toHaveText("--stylize 250")
-
     // Take screenshot of dynamically loaded card back
     const dynamicBackScreenshotPath = path.join(
       "tests",

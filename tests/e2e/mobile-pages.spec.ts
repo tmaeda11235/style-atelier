@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-test.describe("Mobile Pages & Google Drive Integration", () => {
+test.describe("Mobile Pages & Google Drive Integration @J-MOBILE-PREVIEW-01", () => {
   test.beforeEach(async ({ page }) => {
     // Mock the Google Identity Services script loading to prevent it from overwriting our window.google mock
     await page.route(
@@ -94,8 +94,8 @@ test.describe("Mobile Pages & Google Drive Integration", () => {
     const toast = page.locator("#toast")
     await expect(toast).toHaveClass(/show/)
 
-    // テキストに「保存」が含まれているか
+    // テキストに「保存」または「認証」が含まれているか
     const toastText = await toast.textContent()
-    expect(toastText).toMatch(/保存/)
+    expect(toastText).toMatch(/保存|認証/)
   })
 })

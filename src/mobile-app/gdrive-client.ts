@@ -83,6 +83,98 @@ export class GDriveClient {
   }
 
   /**
+   * 既存の一時共有カードファイルの内容をダウンロードする
+   */
+  private async downloadExistingTempFile(
+    token: string,
+    fileId: string
+  ): Promise<any> {
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+    if (!response.ok) {
+      throw new Error("Failed to download existing temp shared cards file.")
+    }
+    return response.json()
+  }
+
+  /**
+   * 既存のカード配列と新規カードデータをマージ（重複排除）する
+   */
+  private mergeCardData(existingCards: any[], cardData: any): any[] {
+    const newCardId = cardData.id
+    const merged = [...existingCards]
+
+    if (newCardId) {
+      const index = merged.findIndex((c) => c.id === newCardId)
+      if (index > -1) {
+        merged[index] = cardData
+      } else {
+        merged.push(cardData)
+      }
+    } else {
+      const index = merged.findIndex(
+        (c) =>
+          c.name === cardData.name &&
+          JSON.stringify(c.promptSegments) ===
+            JSON.stringify(cardData.promptSegments)
+      )
+      if (index > -1) {
+        merged[index] = cardData
+      } else {
+        merged.push(cardData)
+      }
+    }
+    return merged
+  }
+
+  /**
+   * マージされたペイロードを Google Drive にアップロードする
+   */
+  private async uploadTempFile(
+    token: string,
+    existingFileId: string | null,
+    payload: any
+  ): Promise<any> {
+    const metadata = {
+      name: "temp_shared_cards.json",
+      mimeType: "application/json"
+    }
+    const fileContent = JSON.stringify(payload, null, 2)
+    const file = new Blob([fileContent], { type: "application/json" })
+
+    const form = new FormData()
+    form.append(
+      "metadata",
+      new Blob([JSON.stringify(metadata)], { type: "application/json" })
+    )
+    form.append("file", file)
+
+    const url = existingFileId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`
+      : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+    const method = existingFileId ? "PATCH" : "POST"
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: form
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to upload to Google Drive")
+    }
+    return response.json()
+  }
+
+  /**
    * データをJSONとして保存する
    */
   async saveCardData(cardData: any): Promise<GDriveUploadResult> {
@@ -90,43 +182,40 @@ export class GDriveClient {
       const token = await this.requestAccessToken()
       const existingFileId = await this.findExistingTempFile(token)
 
-      const metadata = {
-        name: "temp_shared_cards.json",
-        mimeType: "application/json"
-      }
-      // モバイル版では一時的に現在の1枚のカードを配列で保存する仕様
-      const fileContent = JSON.stringify([cardData], null, 2)
-      const file = new Blob([fileContent], { type: "application/json" })
-
-      const form = new FormData()
-      form.append(
-        "metadata",
-        new Blob([JSON.stringify(metadata)], { type: "application/json" })
-      )
-      form.append("file", file)
-
-      let url =
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
-      let method = "POST"
-
+      let existingCards: any[] = []
       if (existingFileId) {
-        url = `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`
-        method = "PATCH"
+        try {
+          const payload = await this.downloadExistingTempFile(
+            token,
+            existingFileId
+          )
+          if (payload?.data && Array.isArray(payload.data.styleCards)) {
+            existingCards = payload.data.styleCards
+          } else if (Array.isArray(payload)) {
+            existingCards = payload
+          }
+        } catch (downloadErr) {
+          console.warn(
+            "Failed to download or parse existing file, proceeding with empty list:",
+            downloadErr
+          )
+        }
       }
 
-      const uploadResponse = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: form
-      })
+      const mergedStyleCards = this.mergeCardData(existingCards, cardData)
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload to Google Drive")
+      const payload = {
+        version: 1,
+        exportedAt: Date.now(),
+        data: {
+          styleCards: mergedStyleCards,
+          categories: [],
+          userSettings: [],
+          historyItems: []
+        }
       }
 
-      const result = await uploadResponse.json()
+      const result = await this.uploadTempFile(token, existingFileId, payload)
       return { success: true, fileId: result.id }
     } catch (err: any) {
       return { success: false, error: err }

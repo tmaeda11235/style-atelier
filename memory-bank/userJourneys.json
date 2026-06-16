@@ -153,10 +153,18 @@
     {
       "id": "@J-IO-QR-IN",
       "name": "QRインポート",
-      "description": "QRコードを読み取ってカードをインポートする",
-      "steps": ["Import via QR選択", "QRスキャン", "カード保存"],
+      "description": "QRコードを読み取ってカードをインポートする（巨大画像や破損画像に対するクラッシュ防止とエラーハンドリングを含む）",
+      "steps": [
+        "Import via QR選択",
+        "QRスキャンまたはエラー検知",
+        "カード保存またはエラーUI表示"
+      ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-EASY-01"],
-      "viewComponents": ["src/components/organisms/LibraryTab.tsx"]
+      "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
+        "src/lib/qr-utils.ts",
+        "src/hooks/dragAndDropHandlers.ts"
+      ]
     },
     {
       "id": "@J-IO-BACKUP",
@@ -606,20 +614,26 @@
     {
       "id": "@J-MOBILE-PREVIEW-01",
       "name": "モバイルお試しプレビュー＆フリップ",
-      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ及びプロンプトのコピーを行う",
+      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ、プロンプトコピー、およびGoogle Driveへの一時保存を行う",
       "steps": [
         "URLパラメータからモバイルランディングページに遷移",
         "アトリエスキンのStyle Card表示を確認",
         "カードをタップして3Dフリップ回転",
         "裏面のプロンプトとコピーボタンを確認",
-        "コピーボタンタップでクリップボードへコピー"
+        "コピーボタンタップでクリップボードへコピー",
+        "「クラウド保存（PCへ同期）」ボタンをタップ",
+        "Google認証および認証トークン取得",
+        "Google DriveのappDataFolder内の一時ファイルへカードデータを追記・保存"
       ],
       "nextJourneys": [],
       "viewComponents": [
         "src/mobile-app/styles/mobile.css",
         "src/mobile-app/mockup.html",
         "src/mobile-app/index.html",
-        "src/mobile-app/index.ts"
+        "src/mobile-app/index.ts",
+        "src/mobile-app/gdrive.ts",
+        "src/mobile-app/gdrive-client.ts",
+        "src/lib/qr-utils.ts"
       ]
     },
     {
