@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 
+import { isExtensionContextValid, safeQueryTabs } from "../lib/chrome-utils"
+
 const TARGET_DOMAINS = [
   "midjourney.com",
   "discord.com",
@@ -14,7 +16,7 @@ function isDomainTarget(url: string | undefined): boolean {
 
 function useTabUrlListener(onTrigger: () => void) {
   useEffect(() => {
-    if (typeof chrome === "undefined" || !chrome.tabs) {
+    if (!isExtensionContextValid()) {
       return
     }
 
@@ -29,14 +31,22 @@ function useTabUrlListener(onTrigger: () => void) {
     }
     const handleWindowFocus = () => onTrigger()
 
-    chrome.tabs.onActivated?.addListener(handleActivated)
-    chrome.tabs.onUpdated?.addListener(handleUpdated)
-    chrome.windows?.onFocusChanged?.addListener(handleWindowFocus)
+    try {
+      chrome.tabs.onActivated?.addListener(handleActivated)
+      chrome.tabs.onUpdated?.addListener(handleUpdated)
+      chrome.windows?.onFocusChanged?.addListener(handleWindowFocus)
+    } catch (e) {
+      console.warn("Failed to add tab listeners:", e)
+    }
 
     return () => {
-      chrome.tabs?.onActivated?.removeListener(handleActivated)
-      chrome.tabs?.onUpdated?.removeListener(handleUpdated)
-      chrome.windows?.onFocusChanged?.removeListener(handleWindowFocus)
+      try {
+        chrome.tabs?.onActivated?.removeListener(handleActivated)
+        chrome.tabs?.onUpdated?.removeListener(handleUpdated)
+        chrome.windows?.onFocusChanged?.removeListener(handleWindowFocus)
+      } catch {
+        // ignore
+      }
     }
   }, [onTrigger])
 }
@@ -46,18 +56,18 @@ export function useActiveTabUrl() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const checkActiveTab = useCallback(async () => {
-    if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) {
+    if (!isExtensionContextValid()) {
       setIsTargetSite(true)
       setIsLoading(false)
       return
     }
 
     try {
-      const tabs = await chrome.tabs.query({
+      const tabs = await safeQueryTabs({
         active: true,
         currentWindow: true
       })
-      const activeTab = tabs[0]
+      const activeTab = tabs?.[0]
       if (!activeTab) {
         setIsTargetSite(false)
         return

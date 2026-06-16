@@ -1,6 +1,11 @@
 import { useCallback, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
+import {
+  isExtensionContextValid,
+  safeQueryTabs,
+  safeSendTabMessage
+} from "../lib/chrome-utils"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { useDragAndDrop } from "./useDragAndDrop"
@@ -66,10 +71,14 @@ async function injectPrompt(
   activeDetailCard: StyleCard | null
 ) {
   try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-    const activeTabEl = tabs[0]
+    if (!isExtensionContextValid()) {
+      setAlertType("disconnected")
+      return
+    }
+    const tabs = await safeQueryTabs({ active: true, currentWindow: true })
+    const activeTabEl = tabs?.[0]
     if (!activeTabEl?.id) throw new Error("No active tab found")
-    const response = await chrome.tabs.sendMessage(activeTabEl.id, {
+    const response = await safeSendTabMessage(activeTabEl.id, {
       type: "INJECT_PROMPT",
       prompt
     })

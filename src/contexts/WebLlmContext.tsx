@@ -14,6 +14,7 @@ import {
   startDownloadHelper,
   type DownloadStatus
 } from "../hooks/webLlmUtils"
+import { isExtensionContextValid, safeSendMessage } from "../lib/chrome-utils"
 
 export interface WebLlmContextType {
   status: DownloadStatus
@@ -39,14 +40,9 @@ export const WebLlmContext = createContext<WebLlmContextType | undefined>(
 )
 
 function preloadEngineHelper() {
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    return
-  }
-  chrome.runtime.sendMessage({ target: "offscreen", action: "preload-engine" })
+  safeSendMessage({ target: "offscreen", action: "preload-engine" })?.catch(
+    (err) => console.error("preloadEngineHelper failed:", err)
+  )
 }
 
 function useWebLlmProviderStates() {
@@ -100,30 +96,38 @@ interface WebLlmEffectProps {
 
 function useWebLlmEffect(props: WebLlmEffectProps) {
   useEffect(() => {
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.runtime ||
-      !chrome.runtime.sendMessage
-    ) {
+    if (!isExtensionContextValid()) {
       return
     }
-    const port = chrome.runtime.connect({ name: "sidepanel" })
-    const messageListener = createMessageListener(
-      props.setStatus,
-      props.setEngineStatus,
-      props.setProgress,
-      props.setError,
-      props.setSpeed,
-      props.setEta,
-      props.setRetryCount,
-      props.setMaxRetries,
-      props.setText
-    )
-    chrome.runtime.onMessage.addListener(messageListener)
-    checkCurrentStateHelper(props.setStatus, props.setProgress)
-    return () => {
-      port.disconnect()
-      chrome.runtime.onMessage.removeListener(messageListener)
+    try {
+      const port = chrome.runtime.connect({ name: "sidepanel" })
+      const messageListener = createMessageListener(
+        props.setStatus,
+        props.setEngineStatus,
+        props.setProgress,
+        props.setError,
+        props.setSpeed,
+        props.setEta,
+        props.setRetryCount,
+        props.setMaxRetries,
+        props.setText
+      )
+      chrome.runtime.onMessage.addListener(messageListener)
+      checkCurrentStateHelper(props.setStatus, props.setProgress)
+      return () => {
+        try {
+          port.disconnect()
+        } catch {
+          // ignore
+        }
+        try {
+          chrome.runtime.onMessage.removeListener(messageListener)
+        } catch {
+          // ignore
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to setup WebLLM message listener:", err)
     }
   }, [
     props.setStatus,
