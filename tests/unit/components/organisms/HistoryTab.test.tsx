@@ -37,7 +37,8 @@ describe("HistoryTab", () => {
     vi.mocked(useHistory).mockReturnValue({
       historyItems: undefined,
       loadMore: vi.fn(),
-      hasMore: false
+      hasMore: false,
+      updateHistoryItem: vi.fn()
     })
 
     const { container } = render(
@@ -57,7 +58,8 @@ describe("HistoryTab", () => {
     vi.mocked(useHistory).mockReturnValue({
       historyItems: [],
       loadMore: vi.fn(),
-      hasMore: false
+      hasMore: false,
+      updateHistoryItem: vi.fn()
     })
 
     render(
@@ -76,7 +78,8 @@ describe("HistoryTab", () => {
     vi.mocked(useHistory).mockReturnValue({
       historyItems: mockHistoryItems,
       loadMore: vi.fn(),
-      hasMore: false
+      hasMore: false,
+      updateHistoryItem: vi.fn()
     })
 
     render(

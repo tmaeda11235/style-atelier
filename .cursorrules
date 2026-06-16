@@ -23,7 +23,7 @@ This file defines the project constraints, architectural guidelines, and workflo
 ## 3. i18n Translation Integrity
 
 - **Key Synchronization**: Keys in `src/locales/ja/translation.json` and `src/locales/en/translation.json` must be strictly synchronized and kept identical.
-- **No Missing Translations**: When introducing new UI text, always add corresponding keys to both English and Japanese dictionaries. Never let the raw translation key (e.g., `minting.aiDeClutterBtn`) leak into the UI.
+- **No Missing Translations**: When introducing new UI text, always add corresponding keys to both English and Japanese dictionaries. Never let the raw translation key (e.g., `minting.aiDeclutter`) leak into the UI.
 
 ## 4. Testing & Quality Assurance
 
