@@ -40,7 +40,6 @@ test.describe("Manifest V3 Extension Lifecycle & Security E2E Tests @J-MV3-LIFEC
 
   test("Offscreen Document の動的生成とメッセージング・ライフサイクル検証", async ({
     context,
-    extensionPage,
     extensionId
   }) => {
     logPhase("Offscreen Document ライフサイクル検証開始")
@@ -61,6 +60,11 @@ test.describe("Manifest V3 Extension Lifecycle & Security E2E Tests @J-MV3-LIFEC
     logPhase("初期状態検証完了（Offscreenは存在しない）")
 
     // 2. サイドパネルから Offscreen Document の生成をトリガー
+    logPhase("拡張機能サイドパネルのロード開始")
+    const extensionPage = await context.newPage()
+    await extensionPage.goto(`chrome-extension://${extensionId}/sidepanel.html`)
+    logPhase("拡張機能サイドパネルのロード完了")
+
     logPhase("推論リクエスト送信による Offscreen Document 生成トリガー")
 
     // サイドパネル側から sendMessage を送信
