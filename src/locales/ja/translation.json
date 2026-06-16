@@ -327,7 +327,8 @@
     "errorNoMetadataActionTitle": "解決のための3つのステップ：",
     "errorNoMetadataStep1": "元画像をインポートする：SNS等を経由していない、カメラで撮影したか直接保存したオリジナルのPNG画像ファイルをドラッグ＆ドロップしてください。",
     "errorNoMetadataStep2": "QRコード部分をトリミングしてインポートする：画像内のQRコード部分だけを切り抜いた（トリミングした）画像をドロップしてみてください。",
-    "errorNoMetadataStep3": "プロンプトを手動で登録する：カード画像を見ながら、「ワークベンチ」タブから手動でプロンプトを入力して新規ミントしてください。"
+    "errorNoMetadataStep3": "プロンプトを手動で登録する：カード画像を見ながら、「ワークベンチ」タブから手動でプロンプトを入力して新規ミントしてください。",
+    "restoreSuccess": "モバイルのお試し保存カードを復元しました！"
   },
   "share": {
     "shareTitle": "スタイルカードの共有",
@@ -410,6 +411,7 @@
     "manageCategories": "カテゴリ管理",
     "loadMore": "さらに読み込む",
     "sortBy": {
+      "custom": "並び替え",
       "newest": "ミント日が新しい順",
       "oldest": "ミント日が古い順",
       "rarity": "レア度順",
@@ -499,7 +501,10 @@
     "aiAdviceLoadingModel": "ローカルAIモデルをロード中...",
     "webllmQuotaWarningTitle": "ストレージ容量不足",
     "webllmQuotaWarningDesc": "AIモデルのキャッシュに必要なストレージ容量が不足しています。ディスク空き容量を増やしてください。",
-    "aiAdviceDownloadBtn": "モデルをダウンロード"
+    "aiAdviceDownloadBtn": "モデルをダウンロード",
+    "recipeHistory": "履歴",
+    "pastRecipes": "過去の調合レシピ",
+    "noRecipes": "まだ調合履歴はありません"
   },
   "mergeStack": {
     "title": "カードスタックの統合",

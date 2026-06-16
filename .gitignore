@@ -26,6 +26,7 @@ yarn-error.log*
 out/
 build/
 dist/
+dist-mobile/
 
 # plasmo
 .plasmo

@@ -39,7 +39,8 @@
         "@J-ORG-VERSION-01",
         "@J-ORG-FOLDER-01",
         "@J-ORG-QUICK-SEND-01",
-        "@J-ORG-CARD-HOLO-EFFECT-01"
+        "@J-ORG-CARD-HOLO-EFFECT-01",
+        "@J-ORG-BINDER-DND-01"
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
@@ -152,10 +153,18 @@
     {
       "id": "@J-IO-QR-IN",
       "name": "QRインポート",
-      "description": "QRコードを読み取ってカードをインポートする",
-      "steps": ["Import via QR選択", "QRスキャン", "カード保存"],
+      "description": "QRコードを読み取ってカードをインポートする（巨大画像や破損画像に対するクラッシュ防止とエラーハンドリングを含む）",
+      "steps": [
+        "Import via QR選択",
+        "QRスキャンまたはエラー検知",
+        "カード保存またはエラーUI表示"
+      ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-EASY-01"],
-      "viewComponents": ["src/components/organisms/LibraryTab.tsx"]
+      "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
+        "src/lib/qr-utils.ts",
+        "src/hooks/dragAndDropHandlers.ts"
+      ]
     },
     {
       "id": "@J-IO-BACKUP",
@@ -547,6 +556,7 @@
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"],
       "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
         "src/components/organisms/CategoryManagerModal.tsx",
         "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
         "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
@@ -572,6 +582,21 @@
       ]
     },
     {
+      "id": "@J-WB-UNDO-REDO-01",
+      "name": "ワークベンチ操作の履歴管理（Undo/Redo）",
+      "description": "ワークベンチ上でのスタイルカードの追加・削除や比率（Portion）変更をUndo/Redoボタンやショートカット（Ctrl+Z, Ctrl+Y等）で巻き戻し・やり直す",
+      "steps": [
+        "ワークベンチでカードを追加・削除・比率変更する",
+        "Undoボタン押下またはCtrl+Z入力で操作を巻き戻す",
+        "Redoボタン押下またはCtrl+Y/Ctrl+Shift+Z入力で操作をやり直す"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/Workbench.tsx",
+        "src/hooks/useWorkbench.ts"
+      ]
+    },
+    {
       "id": "@J-UX-DISCONNECTED-ALERT",
       "name": "接続切断時のエラーハンドリングとリカバリ",
       "description": "拡張機能コンテキスト無効化などの接続切断時、親切な警告（Connection Lost）を表示し、ページのリロードを促す",
@@ -589,19 +614,42 @@
     {
       "id": "@J-MOBILE-PREVIEW-01",
       "name": "モバイルお試しプレビュー＆フリップ",
-      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ及びプロンプトのコピーを行う",
+      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ、プロンプトコピー、およびGoogle Driveへの一時保存を行う",
       "steps": [
         "URLパラメータからモバイルランディングページに遷移",
         "アトリエスキンのStyle Card表示を確認",
         "カードをタップして3Dフリップ回転",
         "裏面のプロンプトとコピーボタンを確認",
-        "コピーボタンタップでクリップボードへコピー"
+        "コピーボタンタップでクリップボードへコピー",
+        "「クラウド保存（PCへ同期）」ボタンをタップ",
+        "Google認証および認証トークン取得",
+        "Google DriveのappDataFolder内の一時ファイルへカードデータを追記・保存"
       ],
       "nextJourneys": [],
       "viewComponents": [
         "src/mobile-app/styles/mobile.css",
+        "src/mobile-app/mockup.html",
         "src/mobile-app/index.html",
-        "src/mobile-app/index.ts"
+        "src/mobile-app/index.ts",
+        "src/mobile-app/gdrive.ts",
+        "src/mobile-app/gdrive-client.ts",
+        "src/lib/qr-utils.ts"
+      ]
+    },
+    {
+      "id": "@J-ORG-BINDER-DND-01",
+      "name": "カードのバインダーDnD移動",
+      "description": "ライブラリのカード一覧からサイドバーのバインダー（カテゴリ）へドラッグ＆ドロップして所属カテゴリを変更する",
+      "steps": [
+        "ライブラリを開く",
+        "フィルターアコーディオンを展開する",
+        "スタイルカードをカテゴリボタンへドラッグ＆ドロップする",
+        "所属カテゴリが更新され、一覧が更新されることを確認する"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/LibraryFilterAccordion.tsx",
+        "src/components/organisms/LibraryTab/SearchAndFilterSection.tsx"
       ]
     }
   ]

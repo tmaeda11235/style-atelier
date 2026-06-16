@@ -1,57 +1,15 @@
-import { BookUp2, Dices } from "lucide-react"
 import React from "react"
 
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
-import { Button } from "../atoms/Button"
+import type {
+  PromptSegment,
+  RecipeHistoryItem,
+  StyleCard
+} from "../../lib/db-schema"
 import { Cauldron } from "./Cauldron"
 import { EvolutionSuccessModal } from "./EvolutionSuccessModal"
 import { RecipeEditor } from "./RecipeEditor"
 import { WorkbenchEmptyState } from "./WorkbenchEmptyState"
-
-interface WorkbenchHeaderProps {
-  workbenchCards: StyleCard[]
-  clearWorkbench: () => void
-  pickRandomCards: () => void
-  isShuffling?: boolean
-  t: any
-}
-
-const WorkbenchHeader: React.FC<WorkbenchHeaderProps> = ({
-  workbenchCards,
-  clearWorkbench,
-  pickRandomCards,
-  isShuffling,
-  t
-}) => (
-  <div className="flex items-center justify-between">
-    <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
-      <BookUp2 className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-      Workbench
-    </h2>
-    <div className="flex items-center gap-2">
-      <button
-        onClick={pickRandomCards}
-        disabled={isShuffling}
-        className={`flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full text-[10px] font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer ${isShuffling ? "opacity-50 cursor-not-allowed" : ""}`}
-        title="Pick 1-3 random styles from library"
-        id="workbench-gacha-btn"
-        data-testid="workbench-gacha-btn"
-        type="button">
-        <Dices className={`w-3.5 h-3.5 ${isShuffling ? "animate-spin" : ""}`} />
-        <span>{t.gachaPick || "Gacha Pick"}</span>
-      </button>
-      {workbenchCards.length > 0 && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearWorkbench}
-          className="text-slate-400 hover:text-slate-600 text-[10px] h-6 px-2">
-          {t.clearAll || "Clear"}
-        </Button>
-      )}
-    </div>
-  </div>
-)
+import { WorkbenchHeader } from "./WorkbenchHeader"
 
 interface RecipeSectionProps {
   isEvolutionMode: boolean
@@ -120,6 +78,11 @@ interface WorkbenchViewProps {
   pickRandomCards: () => void
   toggleCardSelection: (id: string) => Promise<void> | void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
+  startWeightAdjustment?: () => Promise<void> | void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
   handleExtract: (
     name: string,
     segments: PromptSegment[],
@@ -156,50 +119,38 @@ interface WorkbenchViewProps {
   t: any
   i18n: any
   addLog?: (msg: string) => void
+  recipeHistory: RecipeHistoryItem[]
+  handleRestoreRecipe: (recipe: RecipeHistoryItem) => void
+  deleteRecipeHistory: (id: string) => void
 }
 
 export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
+  const {
+    evolvedCardData,
+    isEvolutionSuccessOpen,
+    setIsEvolutionSuccessOpen,
+    i18n
+  } = props
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 space-y-4">
-      <WorkbenchHeader
-        workbenchCards={props.workbenchCards}
-        clearWorkbench={props.clearWorkbench}
-        pickRandomCards={props.pickRandomCards}
-        isShuffling={props.isShuffling}
-        t={props.t}
-      />
-      <Cauldron
-        workbenchCards={props.workbenchCards}
-        handCards={props.handCards}
-        isMixingMode={props.isMixingMode}
-        isBlending={props.isBlending}
-        isShuffling={props.isShuffling}
-        isDragOver={props.isDragOver}
-        setIsDragOver={props.setIsDragOver}
-        selectedCardId={props.selectedCardId}
-        setSelectedCardId={props.setSelectedCardId}
-        toggleCardSelection={props.toggleCardSelection}
-        updateCardWeight={props.updateCardWeight}
-        handleExtractPortion={props.handleExtract}
-        addLog={props.addLog}
-        t={props.t}
-      />
+      <WorkbenchHeader {...props} />
+      <Cauldron {...props} handleExtractPortion={props.handleExtract} />
       <div className="flex-1 overflow-y-auto">
         <RecipeSection {...props} />
       </div>
-      {props.evolvedCardData && (
+      {evolvedCardData && (
         <EvolutionSuccessModal
-          isOpen={props.isEvolutionSuccessOpen}
-          onClose={() => props.setIsEvolutionSuccessOpen(false)}
-          cardName={props.evolvedCardData.name}
-          thumbnailData={props.evolvedCardData.thumbnailData}
-          selectedThumbnails={props.evolvedCardData.selectedThumbnails}
-          oldTier={props.evolvedCardData.oldTier}
-          newTier={props.evolvedCardData.newTier}
+          isOpen={isEvolutionSuccessOpen}
+          onClose={() => setIsEvolutionSuccessOpen(false)}
+          cardName={evolvedCardData.name}
+          thumbnailData={evolvedCardData.thumbnailData}
+          selectedThumbnails={evolvedCardData.selectedThumbnails}
+          oldTier={evolvedCardData.oldTier}
+          newTier={evolvedCardData.newTier}
           translation={{
-            title: props.i18n.workbench.evolutionSuccessTitle,
-            desc: props.i18n.workbench.evolutionSuccessDesc,
-            close: props.i18n.workbench.close
+            title: i18n.workbench.evolutionSuccessTitle,
+            desc: i18n.workbench.evolutionSuccessDesc,
+            close: i18n.workbench.close
           }}
         />
       )}

@@ -327,7 +327,8 @@
     "errorNoMetadataActionTitle": "3 steps to resolve this:",
     "errorNoMetadataStep1": "Import the original image: Please drop the original, uncompressed PNG file directly from its source (not saved from social media).",
     "errorNoMetadataStep2": "Crop and upload the QR code: Try cropping just the QR code portion of the image and dropping it here.",
-    "errorNoMetadataStep3": "Mint the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to mint a new card."
+    "errorNoMetadataStep3": "Mint the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to mint a new card.",
+    "restoreSuccess": "Successfully restored mobile shared cards!"
   },
   "share": {
     "shareTitle": "Share Style Card",
@@ -410,6 +411,7 @@
     "manageCategories": "Manage Categories",
     "loadMore": "Load More",
     "sortBy": {
+      "custom": "Custom",
       "newest": "Newest",
       "oldest": "Oldest",
       "rarity": "Rarity",
@@ -499,7 +501,10 @@
     "aiAdviceLoadingModel": "Loading local AI model...",
     "webllmQuotaWarningTitle": "Storage Quota Exceeded",
     "webllmQuotaWarningDesc": "Not enough storage to cache the AI model. Please free up some disk space.",
-    "aiAdviceDownloadBtn": "Download Model"
+    "aiAdviceDownloadBtn": "Download Model",
+    "recipeHistory": "History",
+    "pastRecipes": "Past Recipes",
+    "noRecipes": "No history yet"
   },
   "mergeStack": {
     "title": "Merge Card Stack",
