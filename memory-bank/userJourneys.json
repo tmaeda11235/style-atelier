@@ -630,7 +630,10 @@
         "src/mobile-app/styles/mobile.css",
         "src/mobile-app/mockup.html",
         "src/mobile-app/index.html",
-        "src/mobile-app/index.ts"
+        "src/mobile-app/index.ts",
+        "src/mobile-app/gdrive.ts",
+        "src/mobile-app/gdrive-client.ts",
+        "src/lib/qr-utils.ts"
       ]
     },
     {

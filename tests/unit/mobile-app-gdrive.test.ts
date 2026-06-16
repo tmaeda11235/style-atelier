@@ -92,111 +92,222 @@ describe("GDriveClient", () => {
     await expect(client.requestAccessToken()).rejects.toThrow("Init failed")
   })
 
-  it("should save card data successfully when file does not exist (POST)", async () => {
-    ;(client as any).accessToken = "existing-token"
+  describe("saveCardData", () => {
+    let fetchMock: any
 
-    const mockFetch = vi.fn()
-    // First call (findExistingTempFile): search returns empty list
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ files: [] })
+    beforeEach(() => {
+      fetchMock = vi.fn()
+      vi.stubGlobal("fetch", fetchMock)
+      // accessToken をあらかじめ設定してGISポップアップを回避する
+      ;(client as any).accessToken = "test-token"
     })
-    // Second call (saveCardData upload): upload returns new file ID
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ id: "new-file-id" })
+
+    it("should upload new BackupPayload if no existing temp_shared_cards.json is found", async () => {
+      // findExistingTempFile: 該当ファイルなし (空のfilesリスト)
+      fetchMock.mockImplementation(async (url: string, _init?: any) => {
+        if (url.includes("files?q=")) {
+          return {
+            ok: true,
+            json: async () => ({ files: [] })
+          }
+        }
+        if (url.includes("upload/drive/v3/files")) {
+          // POSTリクエスト
+          expect(_init.method).toBe("POST")
+          return {
+            ok: true,
+            json: async () => ({ id: "new-file-id" })
+          }
+        }
+        return { ok: false }
+      })
+
+      const card = { id: "card-1", name: "Card 1" }
+      const result = await client.saveCardData(card)
+
+      expect(result.success).toBe(true)
+      expect(result.fileId).toBe("new-file-id")
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+
+      // POSTされたボディの検証
+      const lastCall = fetchMock.mock.calls[1]
+      const body = lastCall[1].body as FormData
+      const metadataBlob = body.get("metadata") as Blob
+      const fileBlob = body.get("file") as Blob
+
+      // Blobのテキストを読み出して検証
+      const metadataText = await metadataBlob.text()
+      const fileText = await fileBlob.text()
+
+      expect(JSON.parse(metadataText)).toEqual({
+        name: "temp_shared_cards.json",
+        mimeType: "application/json"
+      })
+
+      const payload = JSON.parse(fileText)
+      expect(payload.version).toBe(1)
+      expect(payload.data.styleCards).toEqual([card])
     })
-    vi.stubGlobal("fetch", mockFetch)
 
-    const cardData = { id: "card-1", name: "Test Card" }
-    const result = await client.saveCardData(cardData)
+    it("should merge with existing cards if BackupPayload file exists", async () => {
+      const existingCard = { id: "card-1", name: "Card 1" }
+      const newCard = { id: "card-2", name: "Card 2" }
 
-    expect(result).toEqual({ success: true, fileId: "new-file-id" })
+      fetchMock.mockImplementation(async (url: string, init?: any) => {
+        if (url.includes("files?q=")) {
+          return {
+            ok: true,
+            json: async () => ({ files: [{ id: "existing-file-id" }] })
+          }
+        }
+        if (url.includes("existing-file-id?alt=media")) {
+          return {
+            ok: true,
+            json: async () => ({
+              version: 1,
+              exportedAt: Date.now(),
+              data: {
+                styleCards: [existingCard]
+              }
+            })
+          }
+        }
+        if (url.includes("upload/drive/v3/files/existing-file-id")) {
+          expect(init.method).toBe("PATCH")
+          return {
+            ok: true,
+            json: async () => ({ id: "existing-file-id" })
+          }
+        }
+        return { ok: false }
+      })
 
-    expect(mockFetch).toHaveBeenCalledTimes(2)
-    // Verify search query parameters
-    const searchUrl = mockFetch.mock.calls[0][0] as string
-    expect(decodeURIComponent(searchUrl)).toContain(
-      "name='temp_shared_cards.json'"
-    )
-    expect(decodeURIComponent(searchUrl)).toContain("trashed=false")
+      const result = await client.saveCardData(newCard)
 
-    // Verify upload request parameters (POST)
-    const uploadUrl = mockFetch.mock.calls[1][0] as string
-    const uploadOptions = mockFetch.mock.calls[1][1] as any
-    expect(uploadUrl).toContain(
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
-    )
-    expect(uploadOptions.method).toBe("POST")
-    expect(uploadOptions.headers.Authorization).toBe("Bearer existing-token")
-    expect(uploadOptions.body).toBeInstanceOf(FormData)
-  })
+      expect(result.success).toBe(true)
+      expect(result.fileId).toBe("existing-file-id")
 
-  it("should save card data successfully when file exists (PATCH)", async () => {
-    ;(client as any).accessToken = "existing-token"
+      const lastCall = fetchMock.mock.calls[2]
+      const body = lastCall[1].body as FormData
+      const fileBlob = body.get("file") as Blob
+      const fileText = await fileBlob.text()
+      const payload = JSON.parse(fileText)
 
-    const mockFetch = vi.fn()
-    // First call (findExistingTempFile): search returns existing file ID
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ files: [{ id: "existing-file-id" }] })
+      expect(payload.data.styleCards).toEqual([existingCard, newCard])
     })
-    // Second call (saveCardData upload): upload returns file ID
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ id: "existing-file-id" })
+
+    it("should deduplicate by id when merging", async () => {
+      const existingCard = { id: "card-1", name: "Card 1 Old" }
+      const updatedCard = { id: "card-1", name: "Card 1 New" }
+
+      fetchMock.mockImplementation(async (url: string, init?: any) => {
+        if (url.includes("files?q=")) {
+          return {
+            ok: true,
+            json: async () => ({ files: [{ id: "existing-file-id" }] })
+          }
+        }
+        if (url.includes("existing-file-id?alt=media")) {
+          return {
+            ok: true,
+            json: async () => ({
+              version: 1,
+              exportedAt: Date.now(),
+              data: {
+                styleCards: [existingCard]
+              }
+            })
+          }
+        }
+        if (url.includes("upload/drive/v3/files/existing-file-id")) {
+          return {
+            ok: true,
+            json: async () => ({ id: "existing-file-id" })
+          }
+        }
+        return { ok: false }
+      })
+
+      const result = await client.saveCardData(updatedCard)
+
+      expect(result.success).toBe(true)
+
+      const lastCall = fetchMock.mock.calls[2]
+      const body = lastCall[1].body as FormData
+      const fileBlob = body.get("file") as Blob
+      const fileText = await fileBlob.text()
+      const payload = JSON.parse(fileText)
+
+      expect(payload.data.styleCards).toEqual([updatedCard])
     })
-    vi.stubGlobal("fetch", mockFetch)
 
-    const cardData = { id: "card-1", name: "Test Card" }
-    const result = await client.saveCardData(cardData)
+    it("should support backward compatibility with old array-format files", async () => {
+      const existingCard = { id: "card-1", name: "Card 1" }
+      const newCard = { id: "card-2", name: "Card 2" }
 
-    expect(result).toEqual({ success: true, fileId: "existing-file-id" })
+      fetchMock.mockImplementation(async (url: string) => {
+        if (url.includes("files?q=")) {
+          return {
+            ok: true,
+            json: async () => ({ files: [{ id: "existing-file-id" }] })
+          }
+        }
+        if (url.includes("existing-file-id?alt=media")) {
+          // 古い形式: 単なる配列
+          return {
+            ok: true,
+            json: async () => [existingCard]
+          }
+        }
+        if (url.includes("upload/drive/v3/files/existing-file-id")) {
+          return {
+            ok: true,
+            json: async () => ({ id: "existing-file-id" })
+          }
+        }
+        return { ok: false }
+      })
 
-    expect(mockFetch).toHaveBeenCalledTimes(2)
+      const result = await client.saveCardData(newCard)
 
-    // Verify upload request parameters (PATCH with ID)
-    const uploadUrl = mockFetch.mock.calls[1][0] as string
-    const uploadOptions = mockFetch.mock.calls[1][1] as any
-    expect(uploadUrl).toContain(
-      "https://www.googleapis.com/upload/drive/v3/files/existing-file-id?uploadType=multipart"
-    )
-    expect(uploadOptions.method).toBe("PATCH")
-  })
+      expect(result.success).toBe(true)
 
-  it("should return success false if findExistingTempFile fails", async () => {
-    ;(client as any).accessToken = "existing-token"
+      const lastCall = fetchMock.mock.calls[2]
+      const body = lastCall[1].body as FormData
+      const fileBlob = body.get("file") as Blob
+      const fileText = await fileBlob.text()
+      const payload = JSON.parse(fileText)
 
-    const mockFetch = vi.fn()
-    mockFetch.mockResolvedValueOnce({
-      ok: false
+      expect(payload.version).toBe(1)
+      expect(payload.data.styleCards).toEqual([existingCard, newCard])
     })
-    vi.stubGlobal("fetch", mockFetch)
 
-    const result = await client.saveCardData({ id: "card-1" })
+    it("should return success false if findExistingTempFile fails", async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false
+      })
 
-    expect(result.success).toBe(false)
-    expect(result.error).toBeInstanceOf(Error)
-    expect(result.error?.message).toBe("Failed to search existing file.")
-  })
+      const result = await client.saveCardData({ id: "card-1" })
 
-  it("should return success false if upload fails", async () => {
-    ;(client as any).accessToken = "existing-token"
-
-    const mockFetch = vi.fn()
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ files: [] })
+      expect(result.success).toBe(false)
+      expect(result.error).toBeInstanceOf(Error)
+      expect(result.error?.message).toBe("Failed to search existing file.")
     })
-    mockFetch.mockResolvedValueOnce({
-      ok: false
+
+    it("should return success false if upload fails", async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ files: [] })
+      })
+      fetchMock.mockResolvedValueOnce({
+        ok: false
+      })
+
+      const result = await client.saveCardData({ id: "card-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBeInstanceOf(Error)
+      expect(result.error?.message).toBe("Failed to upload to Google Drive")
     })
-    vi.stubGlobal("fetch", mockFetch)
-
-    const result = await client.saveCardData({ id: "card-1" })
-
-    expect(result.success).toBe(false)
-    expect(result.error).toBeInstanceOf(Error)
-    expect(result.error?.message).toBe("Failed to upload to Google Drive")
   })
 })
