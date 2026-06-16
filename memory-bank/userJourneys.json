@@ -604,6 +604,18 @@
         "src/mobile-app/index.html",
         "src/mobile-app/index.ts"
       ]
+    },
+    {
+      "id": "@J-PROFILER-DASHBOARD",
+      "name": "開発者プロファイラーダッシュボード",
+      "description": "LiteRT-LM などの Web Worker と連携し、VRAM/OPFS使用状況や推論レイテンシを可視化するデバッグダッシュボードを確認する",
+      "steps": [
+        "テストサンドボックスを開く",
+        "プロファイラーダッシュボードを確認する",
+        "モックモードと実Workerモードを切り替える"
+      ],
+      "nextJourneys": [],
+      "viewComponents": ["tests/sandbox/main.tsx"]
     }
   ]
 }
