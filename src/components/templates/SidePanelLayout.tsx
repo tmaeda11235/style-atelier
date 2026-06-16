@@ -4,6 +4,7 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useDbError } from "../../hooks/useDbError"
 import type { Tab } from "../../hooks/useTabs"
 import { ConnectionAlert, type AlertType } from "../molecules/ConnectionAlert"
+import { GlobalDownloadIndicator } from "../molecules/GlobalDownloadIndicator"
 import { DbErrorOverlay } from "../organisms/DbErrorOverlay"
 import { SidePanelDebugLogs } from "./SidePanelDebugLogs"
 import { SidePanelHeader } from "./SidePanelHeader"
@@ -75,6 +76,7 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
           onResetDb={props.onResetDb}
         />
       </div>
+      <GlobalDownloadIndicator onTabChange={props.onTabChange} />
     </div>
   )
 }

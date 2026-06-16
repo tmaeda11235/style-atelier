@@ -36,4 +36,20 @@ export interface GoogleDriveClient {
     onProgress?: (progress: number) => void,
     options?: { signal?: AbortSignal; timeoutMs?: number }
   ): Promise<string | null>
+  downloadTempSharedCards?(
+    token: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<string | null>
+  deleteFile?(
+    token: string,
+    fileId: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<void>
+  searchTempSharedCardsFile?(
+    token: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<string | null>
 }
