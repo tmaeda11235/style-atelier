@@ -39,7 +39,8 @@
         "@J-ORG-VERSION-01",
         "@J-ORG-FOLDER-01",
         "@J-ORG-QUICK-SEND-01",
-        "@J-ORG-CARD-HOLO-EFFECT-01"
+        "@J-ORG-CARD-HOLO-EFFECT-01",
+        "@J-ORG-BINDER-DND-01"
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
@@ -603,8 +604,25 @@
       "nextJourneys": [],
       "viewComponents": [
         "src/mobile-app/styles/mobile.css",
+        "src/mobile-app/mockup.html",
         "src/mobile-app/index.html",
         "src/mobile-app/index.ts"
+      ]
+    },
+    {
+      "id": "@J-ORG-BINDER-DND-01",
+      "name": "カードのバインダーDnD移動",
+      "description": "ライブラリのカード一覧からサイドバーのバインダー（カテゴリ）へドラッグ＆ドロップして所属カテゴリを変更する",
+      "steps": [
+        "ライブラリを開く",
+        "フィルターアコーディオンを展開する",
+        "スタイルカードをカテゴリボタンへドラッグ＆ドロップする",
+        "所属カテゴリが更新され、一覧が更新されることを確認する"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/LibraryFilterAccordion.tsx",
+        "src/components/organisms/LibraryTab/SearchAndFilterSection.tsx"
       ]
     }
   ]

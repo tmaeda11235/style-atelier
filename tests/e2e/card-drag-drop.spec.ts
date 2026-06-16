@@ -498,4 +498,122 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Drag and Drop @J-ORG-FOLDE
       path: path.join(screenshotsDir, "card-drag-drop-persistence-success.png")
     })
   })
+
+  // テストケース4: カード一覧からドラッグし、フィルターアコーディオン内のカテゴリボタンにドロップした際、
+  // カードの所属カテゴリが正しく変更されることを検証します。
+  test("should move card to category button in filter accordion when dragged and dropped onto it @J-ORG-BINDER-DND-01", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for category button drag-and-drop E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 2. Clear cards and add two custom categories and one card initially in no category (Root)
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.styleCards.clear()
+      await database.categories.clear()
+
+      // Seed Folder A and Folder B
+      await database.categories.add({
+        id: "folder-a",
+        name: "Folder A",
+        createdAt: 1000
+      })
+      await database.categories.add({
+        id: "folder-b",
+        name: "Folder B",
+        createdAt: 2000
+      })
+
+      // Seed Card A (no category initially)
+      await database.styleCards.add({
+        id: "card-a",
+        name: "Card A",
+        createdAt: 1000,
+        updatedAt: 1000,
+        promptSegments: [{ type: "text", value: "prompt A" }],
+        parameters: {},
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common",
+        isFavorite: false,
+        isPinned: false,
+        usageCount: 0,
+        tags: [],
+        category: "", // initially uncategorized (Root)
+        dominantColor: "#ef4444",
+        thumbnailData: "data:image/svg+xml;utf8,<svg></svg>",
+        frameId: "frame_holo_v1",
+        genealogy: { generation: 1, parentIds: [] }
+      })
+    })
+
+    // 3. Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await libraryTabButton.click()
+
+    // 4. Open filter accordion
+    const filterToggleBtn = spFrame
+      .locator("[data-testid='toggle-filters-btn']")
+      .first()
+    await expect(filterToggleBtn).toBeVisible({ timeout: 10000 })
+    await filterToggleBtn.click()
+
+    // 5. Verify Folder A category button is visible in filter accordion
+    const categoryBtnA = spFrame
+      .locator("[data-testid='category-filter-btn-folder-a']")
+      .first()
+    await expect(categoryBtnA).toBeVisible({ timeout: 10000 })
+
+    const cardA = spFrame.locator("text=Card A").first()
+    await expect(cardA).toBeVisible({ timeout: 10000 })
+
+    // 6. Drag Card A and drop it onto Folder A category button in filter accordion
+    console.log(
+      "Simulating card drag-and-drop: Card A -> Folder A category filter button..."
+    )
+    await categoryBtnA.evaluate((element) => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.setData("cardId", "card-a")
+
+      const dragOverEvent = new DragEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      })
+      element.dispatchEvent(dragOverEvent)
+
+      const dropEvent = new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      })
+      element.dispatchEvent(dropEvent)
+    })
+
+    // Wait for DB transaction and UI update
+    await page.waitForTimeout(1000)
+
+    // Verify DB update
+    const cardInDb = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      return await database.getCard("card-a")
+    })
+    expect(cardInDb?.category).toBe("folder-a")
+
+    // Capture screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "card-drag-drop-filter-btn-success.png")
+    })
+  })
 })
