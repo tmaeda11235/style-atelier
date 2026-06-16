@@ -152,10 +152,18 @@
     {
       "id": "@J-IO-QR-IN",
       "name": "QRインポート",
-      "description": "QRコードを読み取ってカードをインポートする",
-      "steps": ["Import via QR選択", "QRスキャン", "カード保存"],
+      "description": "QRコードを読み取ってカードをインポートする（巨大画像や破損画像に対するクラッシュ防止とエラーハンドリングを含む）",
+      "steps": [
+        "Import via QR選択",
+        "QRスキャンまたはエラー検知",
+        "カード保存またはエラーUI表示"
+      ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-EASY-01"],
-      "viewComponents": ["src/components/organisms/LibraryTab.tsx"]
+      "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
+        "src/lib/qr-utils.ts",
+        "src/hooks/dragAndDropHandlers.ts"
+      ]
     },
     {
       "id": "@J-IO-BACKUP",
