@@ -51,7 +51,8 @@ describe("useDebouncedSemanticSearch", () => {
         setCategoryFilter: mockSetCategoryFilter,
         setColorFilter: mockSetColorFilter,
         setSearchTag: mockSetSearchTag,
-        t
+        t,
+        webLlmStatus: "ready"
       })
     )
 
@@ -97,7 +98,8 @@ describe("useDebouncedSemanticSearch", () => {
         setCategoryFilter: mockSetCategoryFilter,
         setColorFilter: mockSetColorFilter,
         setSearchTag: mockSetSearchTag,
-        t
+        t,
+        webLlmStatus: "ready"
       })
     )
 

@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom"
 import "vitest-canvas-mock"
 import "fake-indexeddb/auto"
+import "./src/lib/i18n"
 
 import { vi } from "vitest"
 
@@ -121,6 +122,7 @@ const chromeMock = {
     }
   },
   runtime: {
+    id: "mock-id",
     getURL: vi.fn((path) => `chrome-extension://mock-id/${path}`),
     lastError: undefined,
     onMessage: {

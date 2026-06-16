@@ -83,6 +83,7 @@ function GridOrEmptySection({
         onNavigateToWorkbench?.()
       }}
       moveCardToCategory={lib.moveCardToCategory}
+      onCardReorder={lib.handleCardReorder}
       hasMore={lib.hasMore}
       loadMore={lib.loadMore}
       t={t}

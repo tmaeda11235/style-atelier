@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LiteRT-LM Offline Debug Harness</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #121212;
+        color: #e0e0e0;
+        padding: 2rem;
+      }
+      .card {
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: bold;
+        background: #333;
+      }
+      .success { background: #1b5e20; color: #a5d6a7; }
+      .error { background: #b71c1c; color: #ef9a9a; }
+    </style>
+  </head>
+  <body>
+    <h1>LiteRT-LM Offline Debug Harness</h1>
+    <div class="card">
+      <h2>MSW LLM Local Cache Status</h2>
+      <div id="msw-status" class="status-badge">Initializing MSW...</div>
+    </div>
+
+    <!-- Initialize Mock Service Worker (MSW) for Local Cache -->
+    <script type="module">
+      // Load MSW conditionally in dev mode or based on build configuration
+      const initHarnessCache = async () => {
+        try {
+          const { worker } = await import('../../mocks/browser.ts');
+          await worker.start({
+            serviceWorker: {
+              url: '/assets/mockServiceWorker.js'
+            },
+            onUnhandledRequest: 'bypass'
+          });
+          const badge = document.getElementById('msw-status');
+          badge.className = 'status-badge success';
+          badge.innerText = 'Active (Local Cache Redirect Enabled)';
+          console.log('[Harness MSW] Mock Service Worker started successfully.');
+        } catch (err) {
+          const badge = document.getElementById('msw-status');
+          badge.className = 'status-badge error';
+          badge.innerText = 'Failed: ' + err.message;
+          console.error('[Harness MSW] Failed to start MSW:', err);
+        }
+      };
+
+      initHarnessCache();
+    </script>
+  </body>
+</html>

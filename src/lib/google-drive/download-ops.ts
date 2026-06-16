@@ -1,5 +1,5 @@
 import { authorize, clearCachedToken } from "./auth"
-import { searchBackupFile } from "./file-ops"
+import { searchBackupFile, searchTempSharedCardsFile } from "./file-ops"
 import { configureXhr } from "./http-client"
 import { GDriveTimeoutError, type ReauthContext } from "./types"
 
@@ -89,4 +89,23 @@ function sendDownloadXhr(
       xhr.send()
     }
   )
+}
+
+export async function downloadTempSharedCards(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<string | null> {
+  const ctx = context || { token: accessToken }
+  const fileId = await searchTempSharedCardsFile(
+    ctx.token,
+    onTokenUpdated,
+    ctx,
+    options
+  )
+  if (!fileId) {
+    return null
+  }
+  return executeDownload(fileId, ctx, onTokenUpdated, undefined, options)
 }
