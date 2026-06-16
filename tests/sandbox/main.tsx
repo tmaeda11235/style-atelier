@@ -1169,14 +1169,7 @@ function SandboxWrapper() {
           )}
         </div>
 
-        {/* Onboarding Trigger Button & Footer */}
-        <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-between">
-          <button
-            id="test-open-onboarding-btn"
-            onClick={() => setIsOnboardingOpen(true)}
-            className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
-            💡 Open Onboarding Guide
-          </button>
+        <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-end">
           <span className="text-[10px] text-slate-600">
             Style Atelier Test Suite v0.2.0
           </span>
@@ -1189,6 +1182,14 @@ function SandboxWrapper() {
     <div
       ref={containerRef}
       className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
+      {/* Onboarding Trigger Button (Floating Absolute for E2E Tests) */}
+      <button
+        id="test-open-onboarding-btn"
+        onClick={() => setIsOnboardingOpen(true)}
+        className="absolute bottom-4 left-4 z-50 px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
+        💡 Open Onboarding Guide
+      </button>
+
       {/* 左半分: プロファイリング＆デバッグダッシュボード */}
       {renderProfiler()}
 
