@@ -1,4 +1,8 @@
-import { setupMigrations, upgradeToVersion15 } from "@/lib/db/migrations"
+import {
+  setupMigrations,
+  upgradeToVersion15,
+  upgradeToVersion16
+} from "@/lib/db/migrations"
 import Dexie from "dexie"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -29,6 +33,7 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(13)
     expect(mockVersion).toHaveBeenCalledWith(14)
     expect(mockVersion).toHaveBeenCalledWith(15)
+    expect(mockVersion).toHaveBeenCalledWith(16)
   })
 })
 
@@ -197,5 +202,100 @@ describe("upgradeToVersion15", () => {
 
     // The first file was written before the crash, so it should have been deleted during rollback
     expect(mockRemoveEntry).toHaveBeenCalledWith("card-1.png")
+  })
+})
+
+describe("upgradeToVersion16", () => {
+  const mockSyncStatesTable = {
+    bulkAdd: vi.fn().mockResolvedValue(undefined)
+  }
+  const mockTx = {
+    table: vi.fn().mockImplementation((name) => {
+      if (name === "imageSyncStates") return mockSyncStatesTable
+    })
+  }
+
+  it("should populate imageSyncStates table from existing OPFS files", async () => {
+    const mockFileHandle1 = {
+      name: "card-123.png",
+      kind: "file",
+      getFile: vi.fn().mockResolvedValue({
+        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(10)),
+        lastModified: 1000
+      })
+    }
+
+    const mockFileHandle2 = {
+      name: "category-456.png",
+      kind: "file",
+      getFile: vi.fn().mockResolvedValue({
+        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(20)),
+        lastModified: 2000
+      })
+    }
+
+    const mockCardsDir = {
+      name: "cards",
+      kind: "directory",
+      values: async function* () {
+        yield mockFileHandle1
+      }
+    }
+
+    const mockCategoriesDir = {
+      name: "categories",
+      kind: "directory",
+      values: async function* () {
+        yield mockFileHandle2
+      }
+    }
+
+    const mockImagesDir = {
+      name: "images",
+      kind: "directory",
+      getDirectoryHandle: vi.fn().mockImplementation((name) => {
+        if (name === "cards") return mockCardsDir
+        if (name === "categories") return mockCategoriesDir
+      }),
+      values: async function* () {
+        yield mockCardsDir
+        yield mockCategoriesDir
+      }
+    }
+
+    const mockGetDirectory = vi.fn().mockResolvedValue({
+      getDirectoryHandle: vi.fn().mockImplementation((name, _options) => {
+        if (name === "images") return mockImagesDir
+        throw new Error("Not found")
+      })
+    })
+
+    vi.stubGlobal("navigator", {
+      storage: {
+        getDirectory: mockGetDirectory
+      }
+    })
+
+    await upgradeToVersion16(mockTx)
+
+    expect(mockGetDirectory).toHaveBeenCalled()
+    expect(mockSyncStatesTable.bulkAdd).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          filePath: "images/cards/card-123.png",
+          cardId: "card-123",
+          categoryId: undefined,
+          syncStatus: "pending",
+          updatedAt: 1000
+        }),
+        expect.objectContaining({
+          filePath: "images/categories/category-456.png",
+          cardId: undefined,
+          categoryId: "category-456",
+          syncStatus: "pending",
+          updatedAt: 2000
+        })
+      ])
+    )
   })
 })

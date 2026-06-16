@@ -187,7 +187,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     await expect(downloadingLabel).toBeVisible({ timeout: 15000 })
 
     // Locate WebLLM progress bar
-    const webLlmProgressBar = spFrame.locator("[role='progressbar']").first()
+    const webLlmProgressBar = spFrame
+      .locator("#ai-recipe-advice-section [role='progressbar']")
+      .first()
     await expect(webLlmProgressBar).toBeVisible({ timeout: 15000 })
 
     // Validate accessibility attributes

@@ -115,7 +115,11 @@ async function executeSemanticSearch(p: EffectParams) {
     result = parseSemanticQueryFallback(p.aiSearchQuery, p.categories)
   } else {
     try {
-      result = await parseSemanticQuery(p.aiSearchQuery, p.categories, p.language)
+      result = await parseSemanticQuery(
+        p.aiSearchQuery,
+        p.categories,
+        p.language
+      )
     } catch (err) {
       console.warn(
         "AI semantic search query parsing failed, using fallback:",

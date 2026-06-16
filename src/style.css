@@ -1,5 +1,6 @@
 @import "tailwindcss" source(none);
 @source "./**/*.{ts,tsx}";
+@source "../tests/sandbox/**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 

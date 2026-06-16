@@ -136,6 +136,16 @@ export interface ParameterFolder {
   createdAt: number
 }
 
+export interface ImageSyncState {
+  filePath: string // OPFS path (e.g., "images/cards/{id}.png")
+  cardId?: string
+  categoryId?: string
+  hash: string
+  cloudFileId?: string
+  syncStatus: "synced" | "pending" | "deleted"
+  updatedAt: number
+}
+
 export interface RecipeHistoryItem {
   id: string
   name: string

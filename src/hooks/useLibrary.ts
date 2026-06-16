@@ -47,6 +47,35 @@ export function calculateActiveFiltersCount(states: any) {
   ].filter(Boolean).length
 }
 
+function useLibraryOperations(
+  allCardsMeta: any,
+  categories: any,
+  addLog: any,
+  setAlertType: any,
+  onNavigateToWorkbench: any,
+  filterStates: any
+) {
+  const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
+  const handleCardClick = useHandleCardClick(
+    allCardsMeta,
+    addLog,
+    setAlertType,
+    onNavigateToWorkbench
+  )
+  const moveCardToCategory = useMoveCardToCategory(
+    categories,
+    addLog,
+    setAlertType
+  )
+  const handleCardReorder = useCardReorder(
+    addLog,
+    filterStates.categoryFilter,
+    filterStates.currentFolderId,
+    filterStates.setSortBy
+  )
+  return { togglePin, handleCardClick, moveCardToCategory, handleCardReorder }
+}
+
 export function useLibrary(
   addLog: (msg: string) => void,
   setAlertType: (type: AlertType) => void,
@@ -54,7 +83,6 @@ export function useLibrary(
 ) {
   const { allCardsMeta, categories, flexsearchIndex, allSrefs } =
     useLibraryData()
-
   const filterStates = useLibraryFilterStates()
   const { breadcrumbs, currentSubfolders } = useLibraryBreadcrumbs(
     filterStates.currentFolderId,
@@ -63,29 +91,19 @@ export function useLibrary(
     filterStates.rarityFilter,
     filterStates.colorFilter
   )
-
   const filtered = useLibraryFilteredCards(
     allCardsMeta,
     flexsearchIndex,
     filterStates
   )
-
-  const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
-  const handleCardClick = useHandleCardClick(
+  const ops = useLibraryOperations(
     allCardsMeta,
+    categories,
     addLog,
     setAlertType,
-    onNavigateToWorkbench
+    onNavigateToWorkbench,
+    filterStates
   )
-
-  const moveCardToCategory = useMoveCardToCategory(categories, addLog)
-  const handleCardReorder = useCardReorder(
-    addLog,
-    filterStates.categoryFilter,
-    filterStates.currentFolderId,
-    filterStates.setSortBy
-  )
-
   const activeFiltersCount = calculateActiveFiltersCount(filterStates)
 
   return {
@@ -93,10 +111,7 @@ export function useLibrary(
     ...filtered,
     breadcrumbs,
     currentSubfolders,
-    moveCardToCategory,
-    handleCardReorder,
-    togglePin,
-    handleCardClick,
+    ...ops,
     allCards: allCardsMeta,
     categories,
     allSrefs,

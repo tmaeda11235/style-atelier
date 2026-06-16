@@ -687,7 +687,9 @@
     "disconnectedBtn": "Reload Page",
     "noInputTitle": "Input Not Found",
     "noInputDesc": "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view.",
-    "noInputBtn": "Retry Connection"
+    "noInputBtn": "Retry Connection",
+    "dbErrorTitle": "Database Write Error",
+    "dbErrorDesc": "Failed to write to the database. Please check your storage quota or limits."
   },
   "aliasEdit": {
     "editTitle": "Edit Parameter Alias",
