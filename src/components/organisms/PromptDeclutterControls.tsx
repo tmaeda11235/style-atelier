@@ -152,20 +152,21 @@ function DeclutterActionArea({
       {(status === "checking" ||
         status === "downloading" ||
         status === "verifying") && (
-          <ActionProgress
-            progress={progress}
-            label={
-              t.minting.aiDeclutterDownloading || "Downloading {{progress}}%"
-            }
-          />
-        )}
+        <ActionProgress
+          progress={progress}
+          label={
+            t.minting.aiDeclutterDownloading || "Downloading {{progress}}%"
+          }
+        />
+      )}
       {status === "error" && (
         <ActionErrorButton
           onClick={onDownload}
           label={t.minting.aiDeclutterError || "Try Again"}
         />
       )}
-      {(status === "insufficient-quota" || webLlmError === "QuotaExceededError") && (
+      {(status === "insufficient-quota" ||
+        webLlmError === "QuotaExceededError") && (
         <span className="text-red-500 font-bold flex items-center gap-1 text-[9px]">
           <AlertCircle className="w-2.5 h-2.5" />
           {t.settings?.webLlmQuotaWarningTitle || "Insufficient Space"}
@@ -205,8 +206,15 @@ export function AiDeclutterControl({
   onChange
 }: AiDeclutterProps) {
   const { t } = useLanguage()
-  const { status, progress, startDownload, loading, error, webLlmError, declutterPrompt } =
-    useAiPromptDeclutter()
+  const {
+    status,
+    progress,
+    startDownload,
+    loading,
+    error,
+    webLlmError,
+    declutterPrompt
+  } = useAiPromptDeclutter()
 
   const handleDeclutter = async () => {
     const combinedText = getCombinedText(segments, inputValue)

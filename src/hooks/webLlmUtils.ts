@@ -25,6 +25,14 @@ export async function checkCurrentStateHelper(
   const wasmSupported =
     typeof WebAssembly === "object" &&
     typeof WebAssembly.instantiate === "function"
+  console.log(
+    "checkCurrentStateHelper: gpuSupported =",
+    gpuSupported,
+    "wasmSupported =",
+    wasmSupported,
+    "typeof WebAssembly =",
+    typeof WebAssembly
+  )
 
   if (!gpuSupported && !wasmSupported) {
     if (setError) setError("both-unsupported")

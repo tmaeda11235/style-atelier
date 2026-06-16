@@ -772,6 +772,22 @@ if (typeof window !== "undefined") {
                 )
               }, 50)
             } else if (message.action === "preload-engine") {
+              const gpuSupported =
+                mockWebLlmConfig.supportWebGpu !== false &&
+                typeof navigator !== "undefined" &&
+                !!navigator.gpu
+              const wasmSupported =
+                typeof WebAssembly === "object" &&
+                typeof WebAssembly.instantiate === "function"
+              if (!gpuSupported && !wasmSupported) {
+                if (callback) {
+                  callback({
+                    status: "success",
+                    message: "Environment unsupported, skipping preload"
+                  })
+                }
+                return
+              }
               setTimeout(() => {
                 if (callback) callback({ status: "success" })
                 const listeners = (window as any).chromeMessageListeners || []

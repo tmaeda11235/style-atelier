@@ -87,6 +87,7 @@ function useSemanticSearchEffect(params: EffectParams) {
       executeSemanticSearch(params)
     }, 600)
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     params.aiSearchQuery,
     params.isAiSearch,
@@ -115,7 +116,11 @@ async function executeSemanticSearch(p: EffectParams) {
     result = parseSemanticQueryFallback(p.aiSearchQuery, p.categories)
   } else {
     try {
-      result = await parseSemanticQuery(p.aiSearchQuery, p.categories, p.language)
+      result = await parseSemanticQuery(
+        p.aiSearchQuery,
+        p.categories,
+        p.language
+      )
     } catch (err) {
       console.warn(
         "AI semantic search query parsing failed, using fallback:",

@@ -234,7 +234,20 @@ test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
         writable: true,
         configurable: true
       })
+      try {
+        // @ts-ignore
+        delete window.WebAssembly
+        // @ts-ignore
+        delete globalThis.WebAssembly
+      } catch {
+        // Safe to ignore if WebAssembly deletion is blocked
+      }
       Object.defineProperty(window, "WebAssembly", {
+        value: undefined,
+        writable: true,
+        configurable: true
+      })
+      Object.defineProperty(globalThis, "WebAssembly", {
         value: undefined,
         writable: true,
         configurable: true
