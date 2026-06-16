@@ -196,7 +196,10 @@
       "description": "エキスパート向けヘルプツールチップの確認",
       "steps": ["?アイコンにホバー", "ツールチップ表示", "仕様の確認"],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"],
-      "viewComponents": ["src/components/organisms/ExpertModeView.tsx"]
+      "viewComponents": [
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/WelcomeDialog.tsx"
+      ]
     },
     {
       "id": "@J-SYS-03",
@@ -511,7 +514,9 @@
         "src/pages/SidePanel.tsx",
         "src/components/organisms/NonTargetSiteView.tsx",
         "src/components/organisms/EasyModeView.tsx",
-        "src/components/organisms/ExpertModeView.tsx"
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeTabContainer.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeOverlayManager.tsx"
       ]
     },
     {
