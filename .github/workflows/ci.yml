@@ -32,12 +32,38 @@ jobs:
         with:
           node-version-file: '.node-version'
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-cache-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
       - name: Verify Proof of Work
         id: verify
         env:
           PRIVATE_KEY: ${{ secrets.INCREMENTAL_TEST_PRIVATE_KEY }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if [ -f artifacts/test-proof.enc ]; then
+          # Fetch notes
+          git fetch origin refs/notes/commits:refs/notes/commits || true
+          
+          mkdir -p artifacts
+          
+          # Try to get proof from git notes on the PR HEAD commit
+          if git notes show "$PR_HEAD_SHA" > artifacts/test-proof.enc 2>/dev/null; then
+            echo "Found test proof in git notes."
+          elif [ -f artifacts/test-proof.enc ]; then
+            echo "Found test proof in file (fallback)."
+          else
+            echo "No test proof found."
+          fi
+          
+          if [ -s artifacts/test-proof.enc ]; then
             node scripts/verify-test-proof.mjs && echo "skip=true" >> $GITHUB_OUTPUT || echo "skip=false" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -45,10 +71,16 @@ jobs:
         continue-on-error: true
 
   # ---------------------------------------------------
-  # Job 2: セットアップとキャッシュ作成
+  # Job 2: ユニットテストとビルド（CPU・メモリ重視）
   # ---------------------------------------------------
-  setup:
+  unit-and-build:
+    needs: [verify-proof]
+    if: needs.verify-proof.outputs.skip != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@v6
 
@@ -65,37 +97,14 @@ jobs:
           restore-keys: |
             npm-cache-${{ runner.os }}-
 
-      # 厳密な依存関係解決により、npmキャッシュの不一致を防ぐ
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-  # ---------------------------------------------------
-  # Job 2: ユニットテストとビルド（CPU・メモリ重視）
-  # ---------------------------------------------------
-  unit-and-build:
-    needs: [verify-proof, setup]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: '.node-version'
-
-      - name: Restore npm dependencies (No save to prevent collision)
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.npm
-          key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            npm-cache-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+      - name: Cancel Workflow on Failure
+        if: failure()
+        run: gh run cancel ${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run lint
         run: npm run lint
@@ -107,11 +116,10 @@ jobs:
         run: node scratch/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
 
       - name: Run unit tests with coverage
-        if: needs.verify-proof.outputs.skip != 'true'
         run: npm test -- --coverage
 
       - name: Report Coverage
-        if: always() && needs.verify-proof.outputs.skip != 'true'
+        if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           json-summary-path: './coverage/coverage-summary.json'
@@ -124,9 +132,12 @@ jobs:
   # Job 3: E2Eテスト（ネットワーク・プロセッサ分離）
   # ---------------------------------------------------
   e2e-test:
-    needs: [verify-proof, unit-and-build]
+    needs: [verify-proof]
     if: needs.verify-proof.outputs.skip != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v6
 
@@ -135,8 +146,8 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Restore npm dependencies (No save to prevent collision)
-        uses: actions/cache/restore@v4
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -145,6 +156,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Cancel Workflow on Failure
+        if: failure()
+        run: gh run cancel ${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Playwright version
         id: playwright-version

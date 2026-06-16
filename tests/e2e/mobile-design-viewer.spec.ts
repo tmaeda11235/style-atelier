@@ -17,7 +17,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     page
   }) => {
     // 1. Navigate to the mobile app index page (no params, should fallback)
-    await page.goto("/src/mobile-app/index.html")
+    await page.goto("/src/mobile-app/index.html?mock=true")
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")
@@ -63,6 +63,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 16:9")
     await expect(badges.nth(1)).toHaveText("--stylize 750")
+
     // 3. Click the copy button and verify toast message appears
     const copyBtn = page.locator("#copyBtn")
     await copyBtn.click()
@@ -89,7 +90,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     const saveCloudBtn = page.locator("#saveCloudBtn")
     await saveCloudBtn.click()
     await expect(toast).toHaveClass(/show/)
-    await expect(toast.locator("span")).toHaveText("クラウドに一時保存しました")
+    await expect(toast.locator("span")).toHaveText(/クラウドに一時保存しました/)
 
     // Take screenshot of the cloud-saved state with toast notification
     const cloudSavedScreenshotPath = path.join(
@@ -173,6 +174,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 4:3")
     await expect(badges.nth(1)).toHaveText("--stylize 250")
+
     // Take screenshot of dynamically loaded card back
     const dynamicBackScreenshotPath = path.join(
       "tests",

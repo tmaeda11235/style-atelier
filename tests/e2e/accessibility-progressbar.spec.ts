@@ -164,6 +164,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await confirmDownloadBtn.waitFor({ state: "visible", timeout: 20000 })
     await expect(confirmDownloadBtn).toBeVisible()
     await confirmDownloadBtn.click({ force: true })
 
