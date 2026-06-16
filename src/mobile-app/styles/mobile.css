@@ -287,7 +287,6 @@ body {
   font-family: "Fira Code", monospace;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 /* Prompt copy button & Actions styles */
 .action-btn {
   width: 100%;

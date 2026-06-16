@@ -50,7 +50,6 @@ function renderParameterBadges(parameters: Record<string, any> | undefined) {
     }
   })
 }
-
 function renderCard(card: Partial<StyleCard>) {
   const cardTitleFront = document.getElementById("cardTitleFront")
   const cardTitleBack = document.getElementById("cardTitleBack")
@@ -143,7 +142,6 @@ function updateHologramProperties(
     backCard.style.setProperty("--holo-y", `${y}%`)
   }
 }
-
 function handleHologramMove(e: MouseEvent, cardContainer: HTMLElement) {
   const rect = cardContainer.getBoundingClientRect()
   const px = ((e.clientX - rect.left) / rect.width) * 100
@@ -260,7 +258,6 @@ function setupEventHandlers() {
   setupCardContainerEvents(cardContainer)
   setupButtonEvents(copyBtn, promptText, saveCloudBtn)
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   loadCardFromUrl()
   setupEventHandlers()
