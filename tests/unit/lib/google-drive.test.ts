@@ -1,15 +1,19 @@
 import {
   authorize,
   clearCachedToken,
+  createFolder,
   defaultGoogleDriveClient,
   deleteFile,
+  deleteImageFile,
   downloadBackup,
   downloadTempSharedCards,
+  findFolder,
   GDriveTimeoutError,
   getBackupMetadata,
   searchBackupFile,
   searchTempSharedCardsFile,
-  uploadBackup
+  uploadBackup,
+  uploadImageFile
 } from "@/lib/google-drive"
 import {
   fetchWithTimeout,
@@ -1495,6 +1499,146 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       })
       await expect(deleteFile("token", "file-id")).rejects.toThrow(
         "Failed to delete file"
+      )
+    })
+
+    it("should find folder successfully if it exists", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "folder-id-123" }]
+        })
+      })
+      const res = await findFolder("token", "MyFolder")
+      expect(res).toBe("folder-id-123")
+    })
+
+    it("should return null in findFolder if folder not found", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ files: [] })
+      })
+      const res = await findFolder("token", "MyFolder", "parent-id")
+      expect(res).toBeNull()
+    })
+
+    it("should handle error in findFolder if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error"
+      })
+      await expect(findFolder("token", "MyFolder")).rejects.toThrow(
+        "Failed to find folder"
+      )
+    })
+
+    it("should create folder successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: "new-folder-id" })
+      })
+      const res = await createFolder("token", "NewFolder", "parent-id")
+      expect(res).toBe("new-folder-id")
+    })
+
+    it("should handle error in createFolder if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error"
+      })
+      await expect(createFolder("token", "NewFolder")).rejects.toThrow(
+        "Failed to create folder"
+      )
+    })
+
+    it("should upload image file by updating existing file if fileId provided", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: "existing-file-id" })
+      })
+      const blob = new Blob(["image-content"], { type: "image/png" })
+      const res = await uploadImageFile(
+        "token",
+        "folder-id",
+        "test.png",
+        blob,
+        "existing-file-id"
+      )
+      expect(res).toBe("existing-file-id")
+    })
+
+    it("should upload image file by creating new file if fileId is null", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: "new-file-id" })
+      })
+      const blob = new Blob(["image-content"], { type: "image/png" })
+      const res = await uploadImageFile(
+        "token",
+        "folder-id",
+        "test.png",
+        blob,
+        null
+      )
+      expect(res).toBe("new-file-id")
+    })
+
+    it("should handle error in uploadImageFile (update) if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error"
+      })
+      const blob = new Blob(["image-content"], { type: "image/png" })
+      await expect(
+        uploadImageFile(
+          "token",
+          "folder-id",
+          "test.png",
+          blob,
+          "existing-file-id"
+        )
+      ).rejects.toThrow("Failed to update image file")
+    })
+
+    it("should handle error in uploadImageFile (create) if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error"
+      })
+      const blob = new Blob(["image-content"], { type: "image/png" })
+      await expect(
+        uploadImageFile("token", "folder-id", "test.png", blob, null)
+      ).rejects.toThrow("Failed to create image file")
+    })
+
+    it("should delete image file successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true
+      })
+      await expect(deleteImageFile("token", "file-id")).resolves.not.toThrow()
+    })
+
+    it("should ignore 404 error in deleteImageFile", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: "Not Found"
+      })
+      await expect(deleteImageFile("token", "file-id")).resolves.not.toThrow()
+    })
+
+    it("should throw error in deleteImageFile for other failures", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error"
+      })
+      await expect(deleteImageFile("token", "file-id")).rejects.toThrow(
+        "Failed to delete image file"
       )
     })
   })

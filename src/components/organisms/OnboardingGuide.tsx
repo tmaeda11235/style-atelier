@@ -138,6 +138,13 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
   const { t } = useLanguage()
   const [currentStep, setCurrentStep] = useState(0)
 
+  console.log(
+    "[OnboardingGuide] Render call: isOpen =",
+    isOpen,
+    "t.onboarding is defined =",
+    !!t?.onboarding
+  )
+
   if (!isOpen) return null
 
   const steps = getSteps(t)

@@ -48,8 +48,48 @@ We enforce strict size limits to ensure maintainable and modular components.
   ファイル制限: 1ファイルあたり最大 **300行**（コメントと空行を除く）。
 - **Function Limit**: Max **50 lines** per function.
   関数制限: 1関数あたり最大 **50行**。
+- **Cognitive Complexity**: Max **15** (enforced by `sonarjs/cognitive-complexity`).
+  認知複雑度: 最大 **15**（`sonarjs/cognitive-complexity` で制限）。
 
-### Design Principle: Separation of Concerns / 設計指針: 関心の分離
+### 2.1 Multi-language i18n Rules / 多言語対応（i18n）の規約
+
+We use `eslint-plugin-i18next` to ensure no hardcoded strings remain in our user interface components.
+
+ユーザーインターフェースコンポーネント内でハードコードされた（直書き）文字列を排除するため、`eslint-plugin-i18next` を使用しています。
+
+- **Rules**: `i18next/no-literal-string` is enforced with `mode: "jsx-only"` on major components.
+  ルール: 主要なコンポーネントに対して `i18next/no-literal-string` ルール（`mode: "jsx-only"`）が強制されます。
+
+#### How to Pass or Avoid i18n Violations / i18nエラーを回避・パスする方法
+
+1. **Use Translations (Recommended)**:
+   For user-facing strings, always use the translation keys with `t('key')` or `useTranslation`.
+   ユーザーに表示される文字列は、必ず `t('key')` または `useTranslation` を用いて多言語翻訳キーを使用してください。
+
+2. **Automatic Exclusions**:
+   - **Attribute exclusions**: Strings inside common structural attributes (e.g. `className`, `style`, `type`, `key`, `id`, `width`, `height`, `variant`, `size`, `href`, `data-testid`, `data-tutorial`, `position`, `aria-label`, etc.) are exempt.
+     属性除外: `className`, `style`, `type`, `key`, `id`, `width`, `height`, `variant`, `size`, `href`, `data-testid`, `data-tutorial`, `position`, `aria-label` などの一般的な構造属性内の文字列はチェックから除外されます。
+   - **Word exclusions**: Strings containing only uppercase letters, numbers, symbols, size units (e.g. `10px`, `100%`, `1.5rem`), or emojis/spaces are automatically excluded.
+     ワード除外: 大文字のみの文字列、数値や記号、サイズ単位（`10px`, `100%`, `1.5rem`など）、絵文字やスペースのみの文字列は、自動的に除外対象となります。
+
+3. **Disabling i18n Warnings in Code**:
+   If you must use a literal string that doesn't fit the exclusions (e.g., specific brand names or non-translatable text), use ESLint disable comments:
+   除外ルールに適合しない文字列をどうしても直書きする必要がある場合（ブランド名や翻訳不要な固有表現など）は、ESLintの無効化コメントを使用します:
+   - For a specific line in JSX:
+     JSXの特定の行を対象とする場合:
+     ```tsx
+     <div>
+       {/* eslint-disable-next-line i18next/no-literal-string */}
+       <span>Non-translatable Text</span>
+     </div>
+     ```
+   - For the entire file (place at the very top of the file):
+     ファイル全体を対象とする場合（ファイルの先頭に記述）:
+     ```ts
+     /* eslint-disable i18next/no-literal-string */
+     ```
+
+### 2.2 Design Principle: Separation of Concerns / 設計指針: 関心の分離
 
 - **Custom Hooks**: Extract side effects, local state mutation, and business logic into custom hooks.
   副作用、ローカル状態の変更、ビジネスロジックはカスタムフックに抽出します。
@@ -71,8 +111,8 @@ node scratch/auto-sync-eslint.js
 ```
 
 > [!IMPORTANT]
-> The CI pipeline will reject PRs that expand ESLint exceptions. Only shrinking or syncing existing exceptions is allowed.
-> CI パイプラインは ESLint の例外を増やす PR を却下します。例外の削減または既存例外の同期のみが許可されます。
+> The CI pipeline will reject PRs that expand ESLint exceptions (i.e. adding new files to the whitelist). Only shrinking or syncing existing exceptions to reflect resolved violations is allowed.
+> CI パイプラインは ESLint の例外を増やす PR（ホワイトリストへの新規ファイル追加）を却下します。例外の削減または既存例外の同期のみが許可されます。
 
 ---
 

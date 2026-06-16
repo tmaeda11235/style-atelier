@@ -161,14 +161,16 @@ function useWorkbenchHandlers({
         evolveCard,
         setEvolvedCardData,
         setIsEvolutionSuccessOpen,
-        addLog
+        addLog,
+        setAlertType
       ),
     [
       targetCard,
       evolveCard,
       setEvolvedCardData,
       setIsEvolutionSuccessOpen,
-      addLog
+      addLog,
+      setAlertType
     ]
   )
 

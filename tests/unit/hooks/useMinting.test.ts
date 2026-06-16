@@ -283,4 +283,38 @@ describe("useMinting hook", () => {
 
     expect(result.current.selectedRarity).toBe("Legendary")
   })
+
+  it("should trigger setAlertType with 'db_error' when database write fails on save", async () => {
+    const mockSetAlertType = vi.fn()
+    const { result } = renderHook(() =>
+      useMinting(mockAddLog, mockSetActiveTab, mockSetAlertType)
+    )
+
+    const mockItem = {
+      id: "job-123",
+      fullCommand: "a beautiful sunset --ar 16:9",
+      imageUrl: "https://example.com/sunset.png",
+      timestamp: Date.now()
+    }
+
+    act(() => {
+      result.current.handleStartMinting(mockItem)
+    })
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    // Mock db.styleCards.put to throw an error
+    vi.mocked(db.styleCards.put).mockRejectedValueOnce(
+      new Error("QuotaExceededError")
+    )
+
+    // Save minted card
+    await act(async () => {
+      await result.current.handleSaveMintedCard()
+    })
+
+    expect(mockSetAlertType).toHaveBeenCalledWith("db_error")
+  })
 })
