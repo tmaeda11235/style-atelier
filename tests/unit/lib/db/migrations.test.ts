@@ -1,7 +1,7 @@
 import {
   setupMigrations,
-  upgradeToVersion14,
-  upgradeToVersion15
+  upgradeToVersion15,
+  upgradeToVersion16
 } from "@/lib/db/migrations"
 import Dexie from "dexie"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -33,10 +33,11 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(13)
     expect(mockVersion).toHaveBeenCalledWith(14)
     expect(mockVersion).toHaveBeenCalledWith(15)
+    expect(mockVersion).toHaveBeenCalledWith(16)
   })
 })
 
-describe("upgradeToVersion14", () => {
+describe("upgradeToVersion15", () => {
   const mockWrite = vi.fn()
   const mockClose = vi.fn()
   const mockRemoveEntry = vi.fn()
@@ -119,7 +120,7 @@ describe("upgradeToVersion14", () => {
     mockCardsTable.toArray.mockResolvedValue(mockCards)
     mockCategoriesTable.toArray.mockResolvedValue(mockCategories)
 
-    await upgradeToVersion14(mockTx)
+    await upgradeToVersion15(mockTx)
 
     // Verify OPFS save calls
     expect(mockGetDirectory).toHaveBeenCalled()
@@ -195,7 +196,7 @@ describe("upgradeToVersion14", () => {
       }
     })
 
-    await expect(upgradeToVersion14(mockTx)).rejects.toThrow(
+    await expect(upgradeToVersion15(mockTx)).rejects.toThrow(
       "Disk Quota Exceeded"
     )
 
@@ -204,7 +205,7 @@ describe("upgradeToVersion14", () => {
   })
 })
 
-describe("upgradeToVersion15", () => {
+describe("upgradeToVersion16", () => {
   const mockSyncStatesTable = {
     bulkAdd: vi.fn().mockResolvedValue(undefined)
   }
@@ -275,7 +276,7 @@ describe("upgradeToVersion15", () => {
       }
     })
 
-    await upgradeToVersion15(mockTx)
+    await upgradeToVersion16(mockTx)
 
     expect(mockGetDirectory).toHaveBeenCalled()
     expect(mockSyncStatesTable.bulkAdd).toHaveBeenCalledWith(
