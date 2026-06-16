@@ -47,6 +47,35 @@ export function calculateActiveFiltersCount(states: any) {
   ].filter(Boolean).length
 }
 
+function useLibraryOperations(
+  allCardsMeta: any,
+  categories: any,
+  addLog: any,
+  setAlertType: any,
+  onNavigateToWorkbench: any,
+  filterStates: any
+) {
+  const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
+  const handleCardClick = useHandleCardClick(
+    allCardsMeta,
+    addLog,
+    setAlertType,
+    onNavigateToWorkbench
+  )
+  const moveCardToCategory = useMoveCardToCategory(
+    categories,
+    addLog,
+    setAlertType
+  )
+  const handleCardReorder = useCardReorder(
+    addLog,
+    filterStates.categoryFilter,
+    filterStates.currentFolderId,
+    filterStates.setSortBy
+  )
+  return { togglePin, handleCardClick, moveCardToCategory, handleCardReorder }
+}
+
 export function useLibrary(
   addLog: (msg: string) => void,
   setAlertType: (type: AlertType) => void,
@@ -67,23 +96,13 @@ export function useLibrary(
     flexsearchIndex,
     filterStates
   )
-  const togglePin = useTogglePin(allCardsMeta, addLog, setAlertType)
-  const handleCardClick = useHandleCardClick(
+  const ops = useLibraryOperations(
     allCardsMeta,
-    addLog,
-    setAlertType,
-    onNavigateToWorkbench
-  )
-  const moveCardToCategory = useMoveCardToCategory(
     categories,
     addLog,
-    setAlertType
-  )
-  const handleCardReorder = useCardReorder(
-    addLog,
-    filterStates.categoryFilter,
-    filterStates.currentFolderId,
-    filterStates.setSortBy
+    setAlertType,
+    onNavigateToWorkbench,
+    filterStates
   )
   const activeFiltersCount = calculateActiveFiltersCount(filterStates)
 
@@ -92,10 +111,7 @@ export function useLibrary(
     ...filtered,
     breadcrumbs,
     currentSubfolders,
-    moveCardToCategory,
-    handleCardReorder,
-    togglePin,
-    handleCardClick,
+    ...ops,
     allCards: allCardsMeta,
     categories,
     allSrefs,
