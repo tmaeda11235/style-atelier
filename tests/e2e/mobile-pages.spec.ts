@@ -2,10 +2,68 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Mobile Pages & Google Drive Integration", () => {
   test.beforeEach(async ({ page }) => {
-    // Viteのローカルサーバー（モバイル用は dev:mobile）またはルートでホストされている想定
-    // e2eテスト時は通常 localhost:5173 を使用
-    // package.json の dev スクリプト等に合わせてURLを調整
-    await page.goto("http://localhost:5173/src/mobile-app/")
+    // Mock the Google Identity Services script loading to prevent it from overwriting our window.google mock
+    await page.route(
+      "https://accounts.google.com/gsi/client",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/javascript",
+          body: "console.log('Mocked GSI Client loaded successfully');"
+        })
+      }
+    )
+
+    // Mock Google Identity Services (GIS)
+    await page.addInitScript(() => {
+      ;(window as any).google = {
+        accounts: {
+          oauth2: {
+            initTokenClient: (config: any) => {
+              return {
+                requestAccessToken: () => {
+                  if (config.callback) {
+                    config.callback({
+                      access_token: "mock-mobile-access-token"
+                    })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+
+    // Mock Google Drive API
+    await page.route("https://www.googleapis.com/**", async (route) => {
+      const url = route.request().url()
+      if (url.includes("files?q=")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ files: [] })
+        })
+      } else if (url.includes("uploadType=multipart")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ id: "mock-temp-file-id-abc" })
+        })
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({})
+        })
+      }
+    })
+
+    // Use relative path to support dynamic port allocation
+    await page.goto("/src/mobile-app/index.html")
+    await page.evaluate(() => {
+      ;(window as any).__E2E_TEST__ = true
+    })
   })
 
   test("should render the mobile app correctly", async ({ page }) => {
@@ -15,7 +73,7 @@ test.describe("Mobile Pages & Google Drive Integration", () => {
     // Fallbackカードがロードされているか確認
     await expect(page.locator("#cardTitleFront")).toHaveText("Cyber Samurai")
 
-    // 裏面へフリップするボタン等はないが、コンテナをクリックするとフリップする
+    // 裏面へフリップするコンテナをクリックするとフリップする
     await page.locator("#cardContainer").click()
     await expect(page.locator("#cardContainer")).toHaveClass(/is-flipped/)
   })
@@ -30,11 +88,9 @@ test.describe("Mobile Pages & Google Drive Integration", () => {
     const saveBtn = page.locator("#saveCloudBtn")
     await expect(saveBtn).toBeVisible()
 
-    // GIS スクリプトが読み込まれる前にクリックした場合のエラー（または設定不足のトースト）を確認
-    // VITE_GOOGLE_CLIENT_ID が設定されていない環境だとトーストが出るはず
     await saveBtn.click()
 
-    // トーストが表示されるか（エラー時は設定不足、または保存中のいずれか）
+    // トーストが表示されるか
     const toast = page.locator("#toast")
     await expect(toast).toHaveClass(/show/)
 
