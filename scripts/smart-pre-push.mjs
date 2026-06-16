@@ -100,7 +100,20 @@ async function main() {
     }
   }
 
-  // 5. Run UTs with coverage
+  // 5. Run static analysis (Lint & ESLint Whitelist)
+  console.log('\n--- Running Static Analysis ---');
+  try {
+    execSync('npm run lint', { stdio: 'inherit' });
+      
+    console.log('Fetching target config from git ref: main...');
+    execSync('node scratch/check-eslint-whitelist.js eslint.config.mjs main', { stdio: 'inherit' });
+    execSync('node scratch/check-vitest-coverage-exceptions.js vitest.config.ts main', { stdio: 'inherit' });
+  } catch {
+    console.error('Static analysis failed. Please fix the errors before pushing.');
+    process.exit(1);
+  }
+
+  // 6. Run UTs with coverage
   console.log('\n--- Running Unit Tests with Coverage ---');
   if (srcFiles.length > 0) {
     try {
@@ -115,7 +128,7 @@ async function main() {
 
   const testedJourneys = Array.from(affectedJourneys);
 
-  // 5.5 Build extension before E2E tests if we are running any E2E tests
+  // 7. Build extension before E2E tests if we are running any E2E tests
   if (testedJourneys.length > 0 || srcFiles.length > 0) {
     console.log('\n--- Building Extension for E2E ---');
     try {
@@ -126,7 +139,7 @@ async function main() {
     }
   }
 
-  // 6. Run E2E
+  // 8. Run E2E
   console.log('\n--- Running E2E Tests ---');
   if (testedJourneys.length > 0) {
     try {
@@ -155,7 +168,7 @@ async function main() {
     console.log('No source code changes requiring E2E tests.');
   }
 
-  // 7. Generate Proof of Work
+  // 9. Generate Proof of Work
   console.log('\n--- Generating Proof of Work ---');
   const commitHash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
   const payload = {
