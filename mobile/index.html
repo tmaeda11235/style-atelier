@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style Atelier Mobile Viewer</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Stylesheet -->
+  <style>
+    /* Styling to render a simulated phone frame when viewed on desktop, 
+       but standard mobile full-page when on mobile viewports */
+    @media (min-width: 480px) {
+      body {
+        background: #040208;
+      }
+      .phone-frame {
+        width: 390px;
+        height: 844px;
+        background: var(--color-bg-gradient);
+        border: 12px solid #1f2937;
+        border-radius: 3rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 2rem 1.5rem;
+      }
+      /* Simulated status bar and notch */
+      .phone-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150px;
+        height: 30px;
+        background: #1f2937;
+        border-bottom-left-radius: 1rem;
+        border-bottom-right-radius: 1rem;
+        z-index: 1000;
+      }
+    }
+  </style>
+  <script type="module" crossorigin src="/mobile/assets/main-CmlR_xBH.js"></script>
+  <link rel="stylesheet" crossorigin href="/mobile/assets/main-CBpW0P2s.css">
+</head>
+<body>
+  <div class="phone-notch"></div>
+  <div class="phone-frame main-container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1 class="app-title">STYLE ATELIER</h1>
+      <p class="app-subtitle" id="appSubtitle">Mobile Preview</p>
+    </header>
+
+    <!-- Card -->
+    <div class="card-perspective" id="cardContainer">
+      <div class="card-inner">
+        <!-- Card Front -->
+        <div class="card-front" id="cardFront">
+          <div class="card-glow-overlay"></div>
+          <div class="hologram-overlay"></div>
+          <div class="card-header">
+            <span class="card-title" id="cardTitleFront">Loading...</span>
+            <span class="card-badge">Style Card</span>
+          </div>
+          <div class="card-body">
+            <div class="card-image-container" id="cardImageContainer">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="card-rarity" id="cardRarityFront">UNKNOWN</span>
+            <span class="card-badge" id="cardVersionFront">v0.0.0</span>
+          </div>
+        </div>
+
+        <!-- Card Back -->
+        <div class="card-back" id="cardBack">
+          <div class="card-glow-overlay"></div>
+          <div class="card-header">
+            <span class="card-title" id="cardTitleBack">Loading...</span>
+            <span class="card-badge">PROMPT</span>
+          </div>
+          <div class="card-body" style="justify-content: flex-start; align-items: stretch; margin-top: 1rem;">
+            <div class="prompt-preview" id="promptText">
+              No prompt data loaded.
+            </div>
+            <div class="parameter-badge-container" id="parameterBadges"></div>
+            <button class="action-btn action-btn-primary" id="copyBtn">
+              <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              プロンプトをコピー
+            </button>
+            <button class="action-btn action-btn-secondary" id="saveCloudBtn">
+              <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+              </svg>
+              クラウド保存（PCへ同期）
+            </button>
+          </div>
+          <div class="card-footer">
+            <span class="card-rarity" id="cardRarityBack">UNKNOWN</span>
+            <span class="card-badge" id="cardVersionBack">v0.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <a href="#" class="install-cta" id="installCta">
+        PC拡張機能へ戻る
+        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+        </svg>
+      </a>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+      <svg style="width: 16px; height: 16px; stroke: #34d399;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>コピーしました！</span>
+    </div>
+  </div>
+
+</body>
+</html>
