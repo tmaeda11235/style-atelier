@@ -70,7 +70,7 @@ describe("useLocalBackup", () => {
       expect(addLog).toHaveBeenCalledWith(
         "Database exported to local JSON file successfully."
       )
-      expect(showStatus).toHaveBeenCalledWith(expect.any(String), "success")
+      expect(showStatus).toHaveBeenCalledWith("Export completed!", "success")
     })
 
     it("should handle export error", async () => {
@@ -91,7 +91,10 @@ describe("useLocalBackup", () => {
       })
 
       expect(addLog).toHaveBeenCalledWith("Export failed: Export failed")
-      expect(showStatus).toHaveBeenCalledWith(expect.any(String), "error")
+      expect(showStatus).toHaveBeenCalledWith(
+        "Export failed: Export failed",
+        "error"
+      )
     })
   })
 

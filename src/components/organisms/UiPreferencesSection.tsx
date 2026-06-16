@@ -141,6 +141,53 @@ function TipsBarSettings({
   )
 }
 
+interface ReplayTutorialSettingsProps {
+  onReplayTutorial?: () => void
+  t: any
+}
+
+function ReplayTutorialSettings({
+  onReplayTutorial,
+  t
+}: ReplayTutorialSettingsProps) {
+  return (
+    <div
+      className="relative overflow-hidden"
+      id="settings-replay-tutorial-section">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+      <div className="flex items-start gap-4 mb-4">
+        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+          <span className="text-xl">🎓</span>
+        </div>
+        <div className="space-y-1 flex-1">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+            {t.replayTutorialLabel || "Interactive Tutorial"}
+            <HelpTooltip
+              content={
+                t.replayTutorialDesc ||
+                "Run the interactive guide explaining how to operate from the beginning."
+              }
+              position="top-left"
+            />
+          </h3>
+        </div>
+      </div>
+      <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
+        <span className="text-xs font-bold text-slate-700">
+          {t.replayTutorialLabel || "Tutorial"}
+        </span>
+        <button
+          type="button"
+          id="settings-replay-tutorial-btn"
+          onClick={onReplayTutorial}
+          className="bg-white hover:bg-slate-100 border border-slate-200 text-blue-600 hover:text-blue-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+          {t.replayTutorialBtn || "Replay Tutorial"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 interface UiPreferencesSectionProps {
   lang: Language
   changeLanguage: (lang: Language) => void
@@ -158,6 +205,7 @@ interface UiPreferencesSectionProps {
   toggleBrandLogo: (enabled: boolean) => void
   alwaysEnglishLogoText: boolean
   toggleAlwaysEnglishLogoText: (enabled: boolean) => void
+  onReplayTutorial?: () => void
 }
 
 export function UiPreferencesSection({
@@ -176,7 +224,8 @@ export function UiPreferencesSection({
   includeBrandLogo,
   toggleBrandLogo,
   alwaysEnglishLogoText,
-  toggleAlwaysEnglishLogoText
+  toggleAlwaysEnglishLogoText,
+  onReplayTutorial
 }: UiPreferencesSectionProps) {
   return (
     <div className="p-5 space-y-6 animate-in slide-in-from-top-2 duration-250">
@@ -189,6 +238,8 @@ export function UiPreferencesSection({
         toggleTipsBar={toggleTipsBar}
         t={t}
       />
+
+      <ReplayTutorialSettings onReplayTutorial={onReplayTutorial} t={t} />
 
       <BrandLogoSettings
         includeBrandLogo={includeBrandLogo}

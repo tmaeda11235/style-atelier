@@ -35,7 +35,10 @@ vi.mock("@/lib/db", () => ({
         if (id === "error-id") throw new Error("Mock database error")
         delete mockDbCards[id]
         return 1
-      })
+      }),
+      filter: vi.fn().mockImplementation((callback: any) => ({
+        toArray: async () => Object.values(mockDbCards).filter(callback)
+      }))
     },
     getAllSlotHistory: vi.fn().mockImplementation(() => mockSlotHistory),
     getAllCards: vi

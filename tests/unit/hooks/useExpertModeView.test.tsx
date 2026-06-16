@@ -83,6 +83,10 @@ describe("useExpertModeView hook", () => {
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
   })
 
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("should initialize with default states and check onboarding status if not seen", () => {
     const { result } = renderHook(() =>
       useExpertModeView({
@@ -674,7 +678,7 @@ describe("useExpertModeView hook", () => {
     expect(result.current.alertType).toBeNull()
   })
 
-  it("should handle open Midjourney tab query fails or empty", () => {
+  it("should handle open Midjourney tab query fails or empty", async () => {
     const windowOpenSpy = vi
       .spyOn(window, "open")
       .mockImplementation(() => null)
@@ -689,8 +693,8 @@ describe("useExpertModeView hook", () => {
       })
     )
 
-    act(() => {
-      result.current.handleOpenMidjourney()
+    await act(async () => {
+      await result.current.handleOpenMidjourney()
     })
 
     expect(windowOpenSpy).toHaveBeenCalledWith(
@@ -701,13 +705,8 @@ describe("useExpertModeView hook", () => {
     windowOpenSpy.mockRestore()
   })
 
-  it("should handle open Midjourney with chrome tabs successfully", () => {
-    vi.mocked(chrome.tabs.query).mockImplementation(((
-      queryObj: any,
-      callback: any
-    ) => {
-      callback([{ id: 123 }])
-    }) as any)
+  it("should handle open Midjourney with chrome tabs successfully", async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 123 }] as any)
 
     const { result } = renderHook(() =>
       useExpertModeView({
@@ -716,22 +715,19 @@ describe("useExpertModeView hook", () => {
       })
     )
 
-    act(() => {
-      result.current.handleOpenMidjourney()
+    await act(async () => {
+      await result.current.handleOpenMidjourney()
     })
 
-    expect(chrome.tabs.update).toHaveBeenCalledWith(123, {
-      url: "https://www.midjourney.com/imagine"
-    })
+    expect(chrome.tabs.update).toHaveBeenCalledWith(
+      123,
+      { url: "https://www.midjourney.com/imagine" },
+      expect.any(Function)
+    )
   })
 
-  it("should do nothing in open Midjourney if tabs list is empty", () => {
-    vi.mocked(chrome.tabs.query).mockImplementation(((
-      queryObj: any,
-      callback: any
-    ) => {
-      callback([])
-    }) as any)
+  it("should do nothing in open Midjourney if tabs list is empty", async () => {
+    vi.mocked(chrome.tabs.query).mockResolvedValue([] as any)
 
     const { result } = renderHook(() =>
       useExpertModeView({
@@ -740,8 +736,8 @@ describe("useExpertModeView hook", () => {
       })
     )
 
-    act(() => {
-      result.current.handleOpenMidjourney()
+    await act(async () => {
+      await result.current.handleOpenMidjourney()
     })
 
     expect(chrome.tabs.update).not.toHaveBeenCalled()
