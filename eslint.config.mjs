@@ -150,7 +150,6 @@ export default ts.config(
       "src/components/organisms/DangerZoneSection.tsx",
       "src/components/organisms/EvolutionSuccessModal.tsx",
       "src/components/organisms/HistoryTab.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
