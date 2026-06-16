@@ -36,8 +36,23 @@ jobs:
         id: verify
         env:
           PRIVATE_KEY: ${{ secrets.INCREMENTAL_TEST_PRIVATE_KEY }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if [ -f artifacts/test-proof.enc ]; then
+          # Fetch notes
+          git fetch origin refs/notes/commits:refs/notes/commits || true
+          
+          mkdir -p artifacts
+          
+          # Try to get proof from git notes on the PR HEAD commit
+          if git notes show "$PR_HEAD_SHA" > artifacts/test-proof.enc 2>/dev/null; then
+            echo "Found test proof in git notes."
+          elif [ -f artifacts/test-proof.enc ]; then
+            echo "Found test proof in file (fallback)."
+          else
+            echo "No test proof found."
+          fi
+          
+          if [ -s artifacts/test-proof.enc ]; then
             node scripts/verify-test-proof.mjs && echo "skip=true" >> $GITHUB_OUTPUT || echo "skip=false" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
