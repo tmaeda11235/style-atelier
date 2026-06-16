@@ -42,12 +42,14 @@ function NormalModeNav({ activeTab, onTabChange, t }: NormalModeNavProps) {
     {
       id: "history",
       label: t.navigation.history,
-      icon: <History className="w-4 h-4" />
+      icon: <History className="w-4 h-4" />,
+      testId: "history-tab"
     },
     {
       id: "library",
       label: t.navigation.library,
-      icon: <BookOpen className="w-4 h-4" />
+      icon: <BookOpen className="w-4 h-4" />,
+      testId: "library-tab"
     },
     {
       id: "workbench",

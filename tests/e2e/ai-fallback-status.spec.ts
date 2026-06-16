@@ -60,7 +60,7 @@ test.describe("Style Atelier E2E Tests - AI Fallback & Status Badges @J-AI-FALLB
 
     // 3. Test Library Search Fallback
     // Switch to Library tab
-    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    const libraryTabButton = spFrame.locator("[data-tutorial='library-tab']")
     await expect(libraryTabButton).toBeVisible()
     await libraryTabButton.click()
     await page.waitForTimeout(1000)
@@ -105,7 +105,9 @@ test.describe("Style Atelier E2E Tests - AI Fallback & Status Badges @J-AI-FALLB
 
     // 4. Test Blending Advice Fallback
     // Switch to Workbench tab
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    const workbenchTabButton = spFrame.locator(
+      "[data-tutorial='workbench-tab']"
+    )
     await workbenchTabButton.click()
     await page.waitForTimeout(1000)
 
