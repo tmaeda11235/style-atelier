@@ -60,7 +60,7 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
         t={t}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 relative">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-48 relative">
         <SidePanelOverlays
           isDraggingFile={props.isDraggingFile}
           isDragging={props.isDragging}
