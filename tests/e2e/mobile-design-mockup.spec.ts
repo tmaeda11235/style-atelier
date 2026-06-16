@@ -10,7 +10,7 @@ test.describe("Mobile Design Mockup E2E Test", () => {
     permissions: ["clipboard-write"]
   })
 
-  test("should render the mobile mockup, flip card and copy prompt with visual feedbacks", async ({
+  test("should render the mobile mockup, flip card and copy prompt with visual feedbacks @J-MOBILE-PREVIEW-01", async ({
     page
   }) => {
     // 1. Navigate to the mobile mockup page
