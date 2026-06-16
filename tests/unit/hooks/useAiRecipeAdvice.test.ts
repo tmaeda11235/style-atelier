@@ -1,5 +1,9 @@
 import { useAiRecipeAdvice } from "@/hooks/useAiRecipeAdvice"
 import { useWebLlm } from "@/hooks/useWebLlm"
+import {
+  generateRecipeAdviceHeuristics,
+  generateStaticRecipeAdvice
+} from "@/lib/ai/recipe-heuristics"
 import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -7,6 +11,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 vi.mock("@/hooks/useWebLlm", () => {
   return {
     useWebLlm: vi.fn()
+  }
+})
+
+// Mock useWebGpuCheck
+vi.mock("@/hooks/useWebGpuCheck", () => {
+  return {
+    useWebGpuCheck: () => ({ hasWebGpu: true, isChecking: false })
   }
 })
 
@@ -70,8 +81,9 @@ describe("useAiRecipeAdvice", () => {
     })
 
     expect(result.current.advice).not.toBeNull()
-    expect(result.current.advice).toContain("Recipe Advice")
+    expect(result.current.advice).toContain("Recipe")
     expect(result.current.isFallback).toBe(true)
+    expect(result.current.isFallbackMode).toBe(true)
     expect(result.current.loading).toBe(false)
     expect(mockRunInference).not.toHaveBeenCalled()
   })
@@ -154,8 +166,82 @@ describe("useAiRecipeAdvice", () => {
 
     expect(result.current.loading).toBe(false)
     expect(result.current.advice).not.toBeNull()
-    expect(result.current.advice).toContain("Recipe Advice")
+    expect(result.current.advice).toContain("Recipe")
     expect(result.current.isFallback).toBe(true)
+    expect(result.current.isFallbackMode).toBe(true)
     expect(result.current.error).toBeNull()
+  })
+})
+
+describe("recipe-heuristics coverage tests", () => {
+  it("should test generateRecipeAdviceHeuristics in en and ja", () => {
+    const cards = [
+      {
+        name: "Common Card",
+        prompt: "neon style --ar 16:9",
+        weight: 1.0,
+        rarity: "Common",
+        category: "Anime"
+      },
+      {
+        name: "Legendary Card",
+        prompt: "cyberpunk warrior --ar 4:3",
+        weight: 1.5,
+        rarity: "Legendary",
+        category: "Cyberpunk"
+      }
+    ]
+
+    const resEn = generateRecipeAdviceHeuristics(cards, "en")
+    expect(resEn).toContain("Recipe Blending Advice")
+    expect(resEn).toContain("Common Card")
+
+    const resJa = generateRecipeAdviceHeuristics(cards, "ja")
+    expect(resJa).toContain("自動生成された調合アドバイス")
+  })
+
+  it("should test generateStaticRecipeAdvice with sref, cref, and parameter conflicts", () => {
+    const cards = [
+      {
+        name: "C1",
+        promptSegments: [{ value: "--sref http://sref1 --v 6.0 --ar 16:9" }],
+        weight: 1.0,
+        category: "Anime"
+      },
+      {
+        name: "C2",
+        prompt: "--cref http://cref1 --v 5.2 --ar 4:3",
+        weight: 1.2,
+        category: "Fantasy"
+      }
+    ]
+
+    const resEn = generateStaticRecipeAdvice(cards, "en")
+    expect(resEn).toContain("Mixed References")
+    expect(resEn).toContain("Model Conflict")
+    expect(resEn).toContain("Aspect Ratio Conflict")
+
+    const resJa = generateStaticRecipeAdvice(cards, "ja")
+    expect(resJa).toContain("スタイルの混在警告")
+    expect(resJa).toContain("モデルの競合")
+
+    // Empty or short cards list
+    expect(generateStaticRecipeAdvice([], "en")).toBe("")
+  })
+
+  it("should test generateStaticRecipeAdvice with same weight and other categories", () => {
+    const cards = [
+      { name: "C1", prompt: "photo realistic", weight: 1.0, category: "Photo" },
+      { name: "C2", prompt: "magic wizard", weight: 1.0, category: "Magic" }
+    ]
+    const resEn = generateStaticRecipeAdvice(cards, "en")
+    expect(resEn).toContain("same weight")
+
+    const cardsEmptyCat = [
+      { name: "C1", prompt: "something", weight: 1.0 },
+      { name: "C2", prompt: "something else", weight: 1.0 }
+    ]
+    const resEnEmptyCat = generateStaticRecipeAdvice(cardsEmptyCat, "en")
+    expect(resEnEmptyCat).toContain("highly detailed")
   })
 })

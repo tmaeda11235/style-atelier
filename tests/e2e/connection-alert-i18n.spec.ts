@@ -11,7 +11,7 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     })
   })
 
-  test("should show localized ConnectionAlerts and take screenshots", async ({
+  test("should show localized ConnectionAlerts and take screenshots (@J-UX-DISCONNECTED-ALERT)", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")

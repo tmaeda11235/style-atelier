@@ -268,7 +268,7 @@
     {
       "id": "@J-WB-EXPERT-05",
       "name": "手札バー（HandBar）の最小化・折りたたみとスクロール",
-      "description": "手札バーを最小化して表示領域を確保し、多数のカードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する",
+      "description": "手札バーを最小化して表示領域を確保し、多数 of カードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する",
       "steps": [
         "最小化ボタン押下",
         "手札バーが折りたたまれる",
@@ -444,13 +444,13 @@
     },
     {
       "id": "@J-ORG-SEMANTIC-SEARCH-01",
-      "name": "セマンティック検索による自然言語フィルタリング",
-      "description": "自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換、または類似カードを抽出する",
+      "name": "セマンティック検索による自然言語フィルターリング",
+      "description": "自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換する。AIモデルが読み込まれていない場合は、キーワード抽出による軽量フォールバックモードで動作する",
       "steps": [
         "ライブラリを開く",
         "検索バーのAIアシスタントボタンをONにする",
         "自然言語クエリを入力する",
-        "AIによるフィルタ自動抽出とカード絞り込み結果を確認する"
+        "AIによるフィルタ自動抽出（または軽量フォールバック抽出）とカード絞り込み結果を確認する"
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-SEARCH-01"],
       "viewComponents": ["src/components/organisms/LibrarySearchBar.tsx"]
@@ -458,11 +458,11 @@
     {
       "id": "@J-WB-AI-ADVICE-01",
       "name": "AI調合アドバイス表示",
-      "description": "ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する",
+      "description": "ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する。AI未ロード時はルールベースの静的アドバイスをフォールバック表示する",
       "steps": [
         "Workbench（Cauldron）に複数カードを追加",
         "AI Recipe Advice エリアを展開",
-        "AIによる調合アドバイス（日本語・英語）が生成・表示されるのを確認",
+        "AIによる調合アドバイス（未ロード時は静的フォールバックアドバイス）が生成・表示されるのを確認",
         "アドバイス内の推奨事項やキーワードを確認する"
       ],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-03"],
@@ -542,6 +542,32 @@
         "src/components/molecules/CardThumbnail.tsx",
         "src/style.css"
       ]
+    },
+    {
+      "id": "@J-AI-DECLUTTER-01",
+      "name": "AIプロンプトクリーンアップ（整理・分割）",
+      "description": "ローカルAIを用いて雑然としたプロンプトから不要なメタデータを除去し、綺麗にセグメント分割する",
+      "steps": [
+        "Mint画面を開く",
+        "AI Prompt Organizerセクションを確認する",
+        "AIで整理ボタンを押下する",
+        "綺麗に分割されたチップ（Bubble）を確認・保存する"
+      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/PromptBubbleEditor.tsx"]
+    },
+    {
+      "id": "@J-AI-DECLUTTER-02",
+      "name": "AIプロンプトクリーンアップ軽量フォールバック",
+      "description": "AIモデル未ロード時に、正規表現ベースのフォールバックロジックを用いてプロンプトのクリーンアップとセグメント分割を行う",
+      "steps": [
+        "Mint画面を開く",
+        "AI Prompt Organizerセクションを確認する",
+        "「整理 (フォールバック)」ボタンを押下する",
+        "フォールバック処理されたチップ（Bubble）を確認・保存する"
+      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/PromptBubbleEditor.tsx"]
     },
     {
       "id": "@J-ORG-BINDER-CUSTOMIZE-01",
