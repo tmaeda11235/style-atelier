@@ -47,6 +47,12 @@ test.describe("Mobile Viewer E2E Test", () => {
     // Wait for the flip animation (css transition is 0.8s, wait 1.2s to be safe)
     await page.waitForTimeout(1200)
 
+    // Verify prompt text is rendered correctly (not just parameters)
+    const promptText = page.locator("#promptText")
+    await expect(promptText).toContainText(
+      "A futuristic cyberpunk samurai standing in neon rain"
+    )
+
     // Take screenshot of the back of the Card
     const backScreenshotPath = path.join(
       "tests",
