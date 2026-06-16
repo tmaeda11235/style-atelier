@@ -1,6 +1,6 @@
 import { authorize, clearCachedToken } from "./auth"
 import { searchBackupFile, searchTempSharedCardsFile } from "./file-ops"
-import { configureXhr } from "./http-client"
+import { configureXhr, parseXhrErrorStatus } from "./http-client"
 import { GDriveTimeoutError, type ReauthContext } from "./types"
 
 export async function downloadBackup(
@@ -35,7 +35,11 @@ async function executeDownload(
   }
 
   if (result.status < 200 || result.status >= 300) {
-    throw new Error(`Failed to download backup file: status ${result.status}`)
+    throw parseXhrErrorStatus(
+      result.status,
+      "Failed to download backup file",
+      result.text || undefined
+    )
   }
 
   return result.text
@@ -72,11 +76,7 @@ function sendDownloadXhr(
 
       xhr.onload = () => {
         cleanup()
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve({ status: xhr.status, text: xhr.responseText })
-        } else {
-          resolve({ status: xhr.status, text: null })
-        }
+        resolve({ status: xhr.status, text: xhr.responseText })
       }
       xhr.ontimeout = () => {
         cleanup()

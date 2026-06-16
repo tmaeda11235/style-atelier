@@ -604,6 +604,23 @@
         "src/mobile-app/index.html",
         "src/mobile-app/index.ts"
       ]
+    },
+    {
+      "id": "@J-SET-GDRIVE-ERROR",
+      "name": "Google Drive同期エラーハンドリング",
+      "description": "Google Drive同期での容量不足やAPI制限時に分かりやすいトースト表示とリカバリステップを提示する",
+      "steps": [
+        "Google Drive同期実行",
+        "エラー発生（容量超過/API制限）",
+        "エラー説明トースト表示",
+        "トースト内のアクションボタン押下（容量整理ガイド/ローカルバックアップ）"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/components/organisms/CloudSyncSection.tsx",
+        "src/hooks/useSettingsGoogleDrive.ts",
+        "src/lib/google-drive.ts"
+      ]
     }
   ]
 }
