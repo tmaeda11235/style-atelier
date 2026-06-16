@@ -25,6 +25,7 @@ interface WebLlmEffectProps {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+  setWebGpuFallback: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function preloadEngineHelper() {
@@ -35,6 +36,7 @@ function preloadEngineHelper() {
   )
 }
 
+// eslint-disable-next-line max-lines-per-function
 function setupWebLlmConnection(
   props: WebLlmEffectProps
 ): (() => void) | undefined {
@@ -59,14 +61,20 @@ function setupWebLlmConnection(
     props.setEta,
     props.setRetryCount,
     props.setMaxRetries,
-    props.setText
+    props.setText,
+    props.setWebGpuFallback
   )
   try {
     chrome.runtime.onMessage.addListener(messageListener)
   } catch (err) {
     console.error("Failed to add message listener:", err)
   }
-  checkCurrentStateHelper(props.setStatus, props.setProgress, props.setError)
+  checkCurrentStateHelper(
+    props.setStatus,
+    props.setProgress,
+    props.setWebGpuFallback,
+    props.setError
+  )
   return () => {
     if (port) {
       try {
@@ -84,18 +92,43 @@ function setupWebLlmConnection(
 }
 
 function useWebLlmEffect(props: WebLlmEffectProps) {
+  const {
+    setStatus,
+    setEngineStatus,
+    setProgress,
+    setError,
+    setSpeed,
+    setEta,
+    setRetryCount,
+    setMaxRetries,
+    setText,
+    setWebGpuFallback
+  } = props
+
   useEffect(() => {
-    return setupWebLlmConnection(props)
+    return setupWebLlmConnection({
+      setStatus,
+      setEngineStatus,
+      setProgress,
+      setError,
+      setSpeed,
+      setEta,
+      setRetryCount,
+      setMaxRetries,
+      setText,
+      setWebGpuFallback
+    })
   }, [
-    props.setStatus,
-    props.setEngineStatus,
-    props.setProgress,
-    props.setError,
-    props.setSpeed,
-    props.setEta,
-    props.setRetryCount,
-    props.setMaxRetries,
-    props.setText
+    setStatus,
+    setEngineStatus,
+    setProgress,
+    setError,
+    setSpeed,
+    setEta,
+    setRetryCount,
+    setMaxRetries,
+    setText,
+    setWebGpuFallback
   ])
 }
 
@@ -111,6 +144,7 @@ function useWebLlmStates() {
   const [retryCount, setRetryCount] = useState<number>(0)
   const [maxRetries, setMaxRetries] = useState<number>(0)
   const [text, setText] = useState<string>("")
+  const [webGpuFallback, setWebGpuFallback] = useState<boolean>(false)
 
   return {
     status,
@@ -130,7 +164,9 @@ function useWebLlmStates() {
     maxRetries,
     setMaxRetries,
     text,
-    setText
+    setText,
+    webGpuFallback,
+    setWebGpuFallback
   }
 }
 
@@ -144,6 +180,7 @@ function useLocalWebLlm() {
     states.setRetryCount(0)
     states.setMaxRetries(0)
     states.setText("")
+    states.setWebGpuFallback(false)
   }
 
   return {
@@ -158,9 +195,15 @@ function useLocalWebLlm() {
     retryCount: states.retryCount,
     maxRetries: states.maxRetries,
     text: states.text,
+    webGpuFallback: states.webGpuFallback,
     startDownload: () => {
       resetStats()
-      startDownloadHelper(states.setStatus, states.setProgress, states.setError)
+      startDownloadHelper(
+        states.setStatus,
+        states.setProgress,
+        states.setError,
+        states.setWebGpuFallback
+      )
     },
     purgeCache: () => {
       resetStats()
@@ -170,6 +213,7 @@ function useLocalWebLlm() {
       checkCurrentStateHelper(
         states.setStatus,
         states.setProgress,
+        states.setWebGpuFallback,
         states.setError
       ),
     preloadEngine: preloadEngineHelper,

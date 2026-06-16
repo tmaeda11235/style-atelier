@@ -291,11 +291,12 @@ describe("useWebLlm", () => {
     ).rejects.toThrow("Inference failed error")
   })
 
-  it("should set status to unsupported on initialization if WebGPU is not supported", async () => {
+  it("should set status to unsupported on initialization if both WebGPU and WebAssembly are not supported", async () => {
     vi.stubGlobal("navigator", {
       ...window.navigator,
       gpu: undefined
     })
+    vi.stubGlobal("WebAssembly", undefined)
 
     const { result } = renderHook(() => useWebLlm())
 
@@ -310,11 +311,12 @@ describe("useWebLlm", () => {
     vi.unstubAllGlobals()
   })
 
-  it("should set status to unsupported when startDownload is called if WebGPU is not supported", async () => {
+  it("should set status to unsupported when startDownload is called if both WebGPU and WebAssembly are not supported", async () => {
     vi.stubGlobal("navigator", {
       ...window.navigator,
       gpu: undefined
     })
+    vi.stubGlobal("WebAssembly", undefined)
 
     const { result } = renderHook(() => useWebLlm())
 
@@ -336,6 +338,40 @@ describe("useWebLlm", () => {
       },
       expect.any(Function)
     )
+    vi.unstubAllGlobals()
+  })
+
+  it("should enable webGpuFallback when WebGPU is not supported but WebAssembly is supported", async () => {
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      gpu: undefined
+    })
+    // WebAssembly is left as defined (supported)
+
+    let resolveMessage: any
+    const sendMessagePromise = new Promise((resolve) => {
+      resolveMessage = resolve
+    })
+
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "verify-integrity") {
+          setTimeout(() => {
+            if (callback) callback({ status: "success", integrityPassed: true })
+            resolveMessage()
+          }, 10)
+        }
+      }
+    )
+
+    const { result } = renderHook(() => useWebLlm())
+
+    await act(async () => {
+      await sendMessagePromise
+    })
+
+    expect(result.current.status).toBe("ready")
+    expect(result.current.webGpuFallback).toBe(true)
     vi.unstubAllGlobals()
   })
 })

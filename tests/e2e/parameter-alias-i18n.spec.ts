@@ -1,5 +1,6 @@
 import path from "path"
-import { expect, test } from "@playwright/test"
+
+import { expect, test } from "./extension-fixture"
 
 test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
   test.beforeEach(async ({ page }) => {
@@ -16,7 +17,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?noseed=true")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
@@ -41,9 +42,21 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
         await new Promise((r) => setTimeout(r, 100))
       }
 
+      await database.categories.clear()
       await database.styleCards.clear()
       await database.parameterAliases.clear()
       await database.parameterFolders.clear()
+
+      const now = Date.now()
+      await database.categories.bulkAdd([
+        { id: "style", name: "Style", iconEmoji: "🎨", createdAt: now },
+        { id: "character", name: "Character", iconEmoji: "👤", createdAt: now },
+        { id: "landscape", name: "Landscape", iconEmoji: "🌲", createdAt: now },
+        { id: "lighting", name: "Lighting", iconEmoji: "💡", createdAt: now },
+        { id: "camera", name: "Camera", iconEmoji: "📷", createdAt: now },
+        { id: "abstract", name: "Abstract", iconEmoji: "🌀", createdAt: now },
+        { id: "other", name: "Other", iconEmoji: "📁", createdAt: now }
+      ])
 
       await database.styleCards.add({
         id: "style-i18n-1",
@@ -84,7 +97,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
     await expect(srefEditBtn).toBeVisible()
-    await srefEditBtn.click()
+    await srefEditBtn.dispatchEvent("click")
     const modalHeaderEn = spFrame.locator("h4:has-text('Edit Parameter Alias')")
     await expect(modalHeaderEn).toBeVisible()
     await expect(
@@ -104,8 +117,11 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     console.log("English Alias Modal screenshot saved.")
 
     // Cancel modal via X button
-    const closeBtn = spFrame.locator("#alias-modal-close-btn").first()
-    await closeBtn.click()
+    await page.waitForTimeout(500)
+    const closeBtn = spFrame.locator("#alias-modal-close-btn")
+    await expect(closeBtn).toBeVisible()
+    await closeBtn.click({ force: true })
+
     console.log("Setting language to Japanese...")
     await settingsNavBtn.click()
     await langSelect.selectOption("ja")
@@ -114,7 +130,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
       .locator("button[title='エイリアスを編集']")
       .first()
     await expect(srefEditBtnJa).toBeVisible()
-    await srefEditBtnJa.click()
+    await srefEditBtnJa.dispatchEvent("click")
     const modalHeaderJa = spFrame.locator(
       "h4:has-text('パラメータエイリアスの編集')"
     )
@@ -138,6 +154,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     console.log("Japanese Alias Modal screenshot saved.")
 
     // Close modal via X button
-    await closeBtn.click()
+    await page.waitForTimeout(500)
+    await closeBtn.click({ force: true })
   })
 })

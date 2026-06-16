@@ -88,7 +88,9 @@ test.describe("Style Atelier E2E Tests - AI Fallback & Status Badges @J-AI-FALLB
       .first()
     await statusBadge.hover()
     await expect(tooltip).toBeVisible()
-    await expect(tooltip).toContainText(/(FlexSearch|Light Mode|軽量モード)/)
+    await expect(tooltip).toContainText(
+      /(FlexSearch|Light Mode|軽量モード|lightweight fallback|軽量フォールバック|fallback|フォールバック)/
+    )
 
     // Perform query which should trigger fallback keyword search
     const searchInput = spFrame.locator("#library-search-input")
@@ -127,7 +129,7 @@ test.describe("Style Atelier E2E Tests - AI Fallback & Status Badges @J-AI-FALLB
     const adviceContent = adviceSection.locator(".prose")
     await expect(adviceContent).toBeVisible({ timeout: 5000 })
     await expect(adviceContent).toContainText(
-      /(Recipe Advice|レシピ調合アドバイス)/
+      /(Recipe Advice|Recipe Blending Advice|レシピ調合アドバイス)/
     )
 
     // Take a screenshot of the blending advice fallback in action

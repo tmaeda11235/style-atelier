@@ -8,6 +8,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 import "../../src/style.css" // スタイルの読み込み
 
 import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
+import { LanguageProvider } from "../../src/contexts/LanguageContext"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -632,11 +633,51 @@ if (typeof window !== "undefined") {
                 const maxRetries = 3
 
                 const runProgressStep = () => {
+                  const listeners = (window as any).chromeMessageListeners || []
+
+                  const simulateQuotaError =
+                    typeof localStorage !== "undefined" &&
+                    localStorage.getItem("mock-webllm-simulate-quota-error") ===
+                      "true"
+                  const simulateUnsupportedError =
+                    typeof localStorage !== "undefined" &&
+                    localStorage.getItem(
+                      "mock-webllm-simulate-unsupported-error"
+                    ) === "true"
+
+                  if (simulateQuotaError) {
+                    clearInterval(intervalId)
+                    listeners.forEach((l: any) =>
+                      l({
+                        source: "offscreen-worker",
+                        payload: {
+                          status: "error",
+                          error:
+                            "QuotaExceededError: Simulated storage quota exceeded"
+                        }
+                      })
+                    )
+                    return
+                  }
+
+                  if (simulateUnsupportedError) {
+                    clearInterval(intervalId)
+                    listeners.forEach((l: any) =>
+                      l({
+                        source: "offscreen-worker",
+                        payload: {
+                          status: "error",
+                          error: "both-unsupported"
+                        }
+                      })
+                    )
+                    return
+                  }
+
                   const isOffline =
                     !navigator.onLine ||
                     mockWebLlmConfig.offlineMode ||
                     mockWebLlmConfig.failDownload
-                  const listeners = (window as any).chromeMessageListeners || []
 
                   if (isOffline) {
                     if (!isRetrying) {
@@ -742,6 +783,22 @@ if (typeof window !== "undefined") {
                 )
               }, 50)
             } else if (message.action === "preload-engine") {
+              const gpuSupported =
+                mockWebLlmConfig.supportWebGpu !== false &&
+                typeof navigator !== "undefined" &&
+                !!navigator.gpu
+              const wasmSupported =
+                typeof WebAssembly === "object" &&
+                typeof WebAssembly.instantiate === "function"
+              if (!gpuSupported && !wasmSupported) {
+                if (callback) {
+                  callback({
+                    status: "success",
+                    message: "Environment unsupported, skipping preload"
+                  })
+                }
+                return
+              }
               setTimeout(() => {
                 if (callback) callback({ status: "success" })
                 const listeners = (window as any).chromeMessageListeners || []
@@ -912,7 +969,9 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
-  const [width, setWidth] = React.useState(380)
+  const [width, setWidth] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  )
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -926,7 +985,7 @@ function SandboxWrapper() {
     return () => observer.disconnect()
   }, [])
 
-  const isNarrow = width < 700
+  const isNarrow = width < 1024
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -1177,12 +1236,24 @@ function SandboxWrapper() {
               {profiling.errorMsg}
             </div>
           )}
-        </div>
 
-        <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-end">
-          <span className="text-[10px] text-slate-600">
-            Style Atelier Test Suite v0.2.0
-          </span>
+          {/* Onboarding Trigger Button & Footer */}
+          <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-between">
+            <button
+              id="test-open-onboarding-btn"
+              onClick={() => {
+                console.log(
+                  "[Sandbox] Clicked Open Onboarding Button, setting state to true"
+                )
+                setIsOnboardingOpen(true)
+              }}
+              className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
+              💡 Open Onboarding Guide
+            </button>
+            <span className="text-[10px] text-slate-600">
+              Style Atelier Test Suite v0.2.0
+            </span>
+          </div>
         </div>
       </div>
     )
@@ -1203,13 +1274,22 @@ function SandboxWrapper() {
       {/* 左半分: プロファイリング＆デバッグダッシュボード */}
       {renderProfiler()}
 
-      {/* 右半分: 実際の拡張機能サイドパネル */}
       <div
         className={`${
           isNarrow ? "w-full" : "w-[380px]"
         } h-full shadow-2xl flex-shrink-0`}>
         <SidePanelPage />
       </div>
+
+      {isNarrow &&
+        !(typeof navigator !== "undefined" && navigator.webdriver) && (
+          <button
+            id="test-open-onboarding-btn"
+            onClick={() => setIsOnboardingOpen(true)}
+            className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
+            💡 Open Onboarding Guide
+          </button>
+        )}
 
       <OnboardingGuide
         isOpen={isOnboardingOpen}
@@ -1223,7 +1303,9 @@ const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SandboxWrapper />
+      <LanguageProvider>
+        <SandboxWrapper />
+      </LanguageProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )

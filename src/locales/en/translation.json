@@ -105,6 +105,7 @@
     "syncFailedRateLimit": "Sync failed: Google Drive API rate limit reached. Please wait a moment and try again.",
     "syncWarningTitle": "Long Offline Warning",
     "syncWarningMessage": "It has been over 60 days since your last sync. Proceeding may restore style cards or folders that were deleted on other devices.",
+    "autoSyncSuspendedBanner": "Auto-sync has been suspended because the last sync was more than 60 days ago. Please perform a manual sync to resolve potential conflicts.",
     "strategyLabel": "Select merge strategy:",
     "strategyMergeLabel": "Safe Merge (Recommended)",
     "strategyMergeDesc": "Merges data as usual. While deleted records may reappear, your local changes are preserved.",
@@ -215,7 +216,11 @@
     "webLlmPurgeBtn": "Delete Cache",
     "webLlmPurgeConfirm": "Are you sure you want to delete the local AI model cache? This will free up storage but you will need to re-download the model to use local AI functions again.",
     "webLlmQuotaWarningTitle": "Insufficient Space Warning",
-    "webLlmQuotaWarningDesc": "Insufficient storage space on your device. WebLLM requires at least 2.5 GB of free space (2.0 GB for model file + 500 MB workspace) to operate.",
+    "webLlmQuotaWarningDesc": "Insufficient storage space on your device. WebLLM requires at least 1.5 GB of free space to operate.",
+    "webLlmQuotaExceededDesc": "Storage space is insufficient. Please ensure at least 1.5 GB of free space.",
+    "webLlmWebGpuFallbackInfo": "WebGPU not supported: Switching to CPU (Wasm) mode. (Inference might be slower)",
+    "webLlmBothUnsupportedTitle": "AI Environment Unsupported",
+    "webLlmBothUnsupportedDesc": "Both WebGPU and Wasm (CPU) are unavailable on your environment. Please update your browser or check your settings.",
     "webLlmStatusRetrying": "Reconnecting...",
     "webLlmRemaining": "Remaining",
     "webLlmRetryingTitle": "Reconnecting... ({{count}}/{{max}})",
@@ -691,7 +696,9 @@
     "disconnectedBtn": "Reload Page",
     "noInputTitle": "Input Not Found",
     "noInputDesc": "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view.",
-    "noInputBtn": "Retry Connection"
+    "noInputBtn": "Retry Connection",
+    "dbErrorTitle": "Database Write Error",
+    "dbErrorDesc": "Failed to write to the database. Please check your storage quota or limits."
   },
   "aliasEdit": {
     "editTitle": "Edit Parameter Alias",
