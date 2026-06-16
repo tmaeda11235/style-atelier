@@ -234,6 +234,7 @@ function StyleAnalysisHeader({ t }: { t: any }) {
   )
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function AiStyleAnalysisSection({
   promptText,
   customTags,
@@ -279,6 +280,7 @@ export function AiStyleAnalysisSection({
           maxRetries={gen.maxRetries}
           text={gen.text}
           webLlmError={gen.webLlmError}
+          webGpuFallback={gen.webGpuFallback}
           startDownload={gen.startDownload}
           t={t}
         />

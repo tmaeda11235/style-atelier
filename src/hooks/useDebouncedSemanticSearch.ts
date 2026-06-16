@@ -87,6 +87,7 @@ function useSemanticSearchEffect(params: EffectParams) {
       executeSemanticSearch(params)
     }, 600)
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     params.aiSearchQuery,
     params.isAiSearch,

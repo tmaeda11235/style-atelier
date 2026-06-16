@@ -3,7 +3,6 @@ import React from "react"
 import { usePromptBubbleEditorState } from "../../hooks/usePromptBubbleEditorState"
 import type { PromptSegment } from "../../lib/db-schema"
 import type { RarityTier } from "../../lib/rarity-config"
-import { AiStatusBadge } from "../atoms/AiStatusBadge"
 import { PromptBubble } from "../molecules/PromptBubble"
 import { AiDeclutterControl } from "./PromptDeclutterControls"
 

@@ -16,7 +16,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page for comprehensive i18n E2E test...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?isWide=true")
 
     // Resize sidepanel frame to show the developer dashboard
     await page.evaluate(() => {

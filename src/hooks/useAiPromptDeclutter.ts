@@ -84,7 +84,13 @@ async function runDeclutterInference(
 }
 
 export function useAiPromptDeclutter() {
-  const { status, progress, startDownload, runInference } = useWebLlm()
+  const {
+    status,
+    progress,
+    error: webLlmError,
+    startDownload,
+    runInference
+  } = useWebLlm()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isFallbackMode, setIsFallbackMode] = useState(false)
@@ -122,6 +128,7 @@ export function useAiPromptDeclutter() {
     startDownload,
     loading,
     error,
+    webLlmError,
     declutterPrompt,
     isModelReady: status === "ready",
     isFallbackMode

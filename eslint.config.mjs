@@ -147,6 +147,7 @@ export default ts.config(
       "src/placeholder-non-existent-func-lines.ts",
       "src/components/molecules/ConnectionAlert.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
+      "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/hooks/useEasyModeView.ts",
     ],

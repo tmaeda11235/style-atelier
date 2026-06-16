@@ -22,7 +22,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Developer Profiler Da
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page for Developer Profiler test...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?isWide=true")
 
     // Resize sidepanel frame to show the developer dashboard
     await page.evaluate(() => {

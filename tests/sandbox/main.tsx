@@ -623,11 +623,51 @@ if (typeof window !== "undefined") {
                 const maxRetries = 3
 
                 const runProgressStep = () => {
+                  const listeners = (window as any).chromeMessageListeners || []
+
+                  const simulateQuotaError =
+                    typeof localStorage !== "undefined" &&
+                    localStorage.getItem("mock-webllm-simulate-quota-error") ===
+                      "true"
+                  const simulateUnsupportedError =
+                    typeof localStorage !== "undefined" &&
+                    localStorage.getItem(
+                      "mock-webllm-simulate-unsupported-error"
+                    ) === "true"
+
+                  if (simulateQuotaError) {
+                    clearInterval(intervalId)
+                    listeners.forEach((l: any) =>
+                      l({
+                        source: "offscreen-worker",
+                        payload: {
+                          status: "error",
+                          error:
+                            "QuotaExceededError: Simulated storage quota exceeded"
+                        }
+                      })
+                    )
+                    return
+                  }
+
+                  if (simulateUnsupportedError) {
+                    clearInterval(intervalId)
+                    listeners.forEach((l: any) =>
+                      l({
+                        source: "offscreen-worker",
+                        payload: {
+                          status: "error",
+                          error: "both-unsupported"
+                        }
+                      })
+                    )
+                    return
+                  }
+
                   const isOffline =
                     !navigator.onLine ||
                     mockWebLlmConfig.offlineMode ||
                     mockWebLlmConfig.failDownload
-                  const listeners = (window as any).chromeMessageListeners || []
 
                   if (isOffline) {
                     if (!isRetrying) {
@@ -733,6 +773,22 @@ if (typeof window !== "undefined") {
                 )
               }, 50)
             } else if (message.action === "preload-engine") {
+              const gpuSupported =
+                mockWebLlmConfig.supportWebGpu !== false &&
+                typeof navigator !== "undefined" &&
+                !!navigator.gpu
+              const wasmSupported =
+                typeof WebAssembly === "object" &&
+                typeof WebAssembly.instantiate === "function"
+              if (!gpuSupported && !wasmSupported) {
+                if (callback) {
+                  callback({
+                    status: "success",
+                    message: "Environment unsupported, skipping preload"
+                  })
+                }
+                return
+              }
               setTimeout(() => {
                 if (callback) callback({ status: "success" })
                 const listeners = (window as any).chromeMessageListeners || []
