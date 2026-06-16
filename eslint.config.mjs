@@ -148,7 +148,6 @@ export default ts.config(
       "src/components/molecules/AutocompleteDropdown.tsx",
       "src/components/molecules/ConnectionAlert.tsx",
       "src/components/organisms/DangerZoneSection.tsx",
-      "src/components/organisms/EvolutionSuccessModal.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
