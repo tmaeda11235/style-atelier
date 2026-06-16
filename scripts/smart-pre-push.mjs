@@ -17,6 +17,18 @@ async function main() {
     }
   }
 
+  // 0.5 Migration: Remove test-proof.enc from git tracking if it exists
+  try {
+    execSync('git ls-files --error-unmatch artifacts/test-proof.enc', { stdio: 'ignore' });
+    console.log('\n⚠️ [Migration Notice] artifacts/test-proof.enc is tracked in your git branch.');
+    console.log('Removing it from the git tree to prevent future merge conflicts...');
+    execSync('git rm --cached artifacts/test-proof.enc');
+    execSync('git commit -m "chore: remove test-proof.enc from git tree in favor of git notes"');
+    console.log('✅ Successfully removed and committed. Proceeding with push...\n');
+  } catch (e) {
+    // If it throws, the file is not tracked, which is exactly what we want.
+  }
+
   // 1. Get changed files
   let diffOutput;
   try {
