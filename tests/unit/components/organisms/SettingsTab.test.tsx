@@ -962,4 +962,35 @@ describe("SettingsTab", () => {
       expect(container.querySelector("#google-drive-toggle-btn")).not.toBeNull()
     })
   })
+
+  describe("Interactive Tutorial Replay Settings", () => {
+    it("renders Tutorial Replay section correctly", () => {
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+      expect(
+        screen.getAllByText("インタラクティブチュートリアル").length
+      ).toBeGreaterThan(0)
+      expect(
+        container.querySelector("#settings-replay-tutorial-btn")
+      ).not.toBeNull()
+    })
+
+    it("triggers onReplayTutorial callback on button click", async () => {
+      const mockReplayTutorial = vi.fn()
+      const { container } = render(
+        <SettingsTab
+          addLog={mockAddLog}
+          onResetDb={mockResetDb}
+          onReplayTutorial={mockReplayTutorial}
+        />
+      )
+
+      const replayBtn = container.querySelector(
+        "#settings-replay-tutorial-btn"
+      )!
+      fireEvent.click(replayBtn)
+      expect(mockReplayTutorial).toHaveBeenCalled()
+    })
+  })
 })

@@ -163,3 +163,78 @@ export function useMoveCardToCategory(
     }
   }
 }
+
+export function useSortStyleCards(addLog: (msg: string) => void) {
+  return async (
+    draggedCardId: string,
+    targetCardId: string,
+    categoryFilter: string,
+    currentFolderId: string | null
+  ) => {
+    try {
+      const allCards = await db.getAllCards()
+      const filtered = allCards.filter((card) => {
+        if (card.isVariable) return false
+        if (categoryFilter !== "All") {
+          return card.category === categoryFilter
+        } else {
+          return !currentFolderId
+            ? !card.category
+            : card.category === currentFolderId
+        }
+      })
+
+      // Sort existing cards by sortIndex (or fallback to createdAt newest first)
+      filtered.sort((a, b) => {
+        const sortA = a.sortIndex ?? 0
+        const sortB = b.sortIndex ?? 0
+        if (sortA !== sortB) return sortA - sortB
+        return b.createdAt - a.createdAt
+      })
+
+      const draggedIndex = filtered.findIndex((c) => c.id === draggedCardId)
+      const targetIndex = filtered.findIndex((c) => c.id === targetCardId)
+
+      if (
+        draggedIndex === -1 ||
+        targetIndex === -1 ||
+        draggedIndex === targetIndex
+      ) {
+        return
+      }
+
+      // Move element
+      const [draggedCard] = filtered.splice(draggedIndex, 1)
+      filtered.splice(targetIndex, 0, draggedCard)
+
+      // Update sortIndex for all items in the filtered list
+      await Promise.all(
+        filtered.map((card, idx) => {
+          return db.updateCard(card.id, { sortIndex: idx })
+        })
+      )
+
+      addLog("Reordered cards within the binder.")
+    } catch (err) {
+      console.error("Failed to sort cards:", err)
+    }
+  }
+}
+
+export function useCardReorder(
+  addLog: (msg: string) => void,
+  categoryFilter: string,
+  currentFolderId: string | null,
+  setSortBy: (sort: any) => void
+) {
+  const sortStyleCards = useSortStyleCards(addLog)
+  return async (draggedCardId: string, targetCardId: string) => {
+    await sortStyleCards(
+      draggedCardId,
+      targetCardId,
+      categoryFilter,
+      currentFolderId
+    )
+    setSortBy("custom")
+  }
+}

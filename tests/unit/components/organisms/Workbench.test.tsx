@@ -365,7 +365,7 @@ describe("Workbench", () => {
 
     // Verify button is rendered
     const mintButton = screen.getByRole("button", {
-      name: /調合したカードを作成する/
+      name: /調合したカードをミントする/
     })
     expect(mintButton).toBeDefined()
 
