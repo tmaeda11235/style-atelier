@@ -24,10 +24,18 @@ export function useGDriveProgress() {
   const [statusMessage, setStatusMessage] = useState<{
     text: string
     type: "success" | "error" | "info" | null
+    actionType?: "quota" | "rateLimit" | null
   }>({ text: "", type: null })
-  const showStatus = (text: string, type: "success" | "error" | "info") => {
-    setStatusMessage({ text, type })
-    setTimeout(() => setStatusMessage({ text: "", type: null }), 6000)
+  const showStatus = (
+    text: string,
+    type: "success" | "error" | "info",
+    actionType?: "quota" | "rateLimit" | null
+  ) => {
+    setStatusMessage({ text, type, actionType })
+    setTimeout(
+      () => setStatusMessage({ text: "", type: null, actionType: null }),
+      6000
+    )
   }
   return {
     syncProgress,

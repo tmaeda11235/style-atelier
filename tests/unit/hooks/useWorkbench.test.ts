@@ -35,7 +35,10 @@ vi.mock("@/lib/db", () => ({
         if (id === "error-id") throw new Error("Mock database error")
         delete mockDbCards[id]
         return 1
-      })
+      }),
+      filter: vi.fn().mockImplementation((callback: any) => ({
+        toArray: async () => Object.values(mockDbCards).filter(callback)
+      }))
     },
     getAllSlotHistory: vi.fn().mockImplementation(() => mockSlotHistory),
     getAllCards: vi
@@ -518,14 +521,16 @@ describe("useWorkbench hook", () => {
 
       const { result } = renderHook(() => useWorkbench())
 
-      const pickPromise = result.current.pickRandomCards()
+      let pickPromise: Promise<void> | undefined
+      await act(async () => {
+        pickPromise = result.current.pickRandomCards()
+      })
 
       // Advance timers to trigger the interval and the timeout
       await act(async () => {
         await vi.runAllTimersAsync()
+        await pickPromise
       })
-
-      await pickPromise
 
       expect(db.styleCards.update).toHaveBeenCalledWith("card-pick", {
         isPinned: true

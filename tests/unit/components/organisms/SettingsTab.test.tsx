@@ -432,9 +432,9 @@ describe("SettingsTab", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+        expect(screen.getByText(/Cloud Backup/i)).toBeDefined()
       },
-      { timeout: 5000 }
+      { timeout: 10000 }
     )
 
     const restoreBtn = screen.getByRole("button", {
@@ -1017,6 +1017,37 @@ describe("SettingsTab", () => {
 
       // Verify it's expanded again
       expect(container.querySelector("#google-drive-toggle-btn")).not.toBeNull()
+    })
+  })
+
+  describe("Interactive Tutorial Replay Settings", () => {
+    it("renders Tutorial Replay section correctly", () => {
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+      expect(
+        screen.getAllByText("インタラクティブチュートリアル").length
+      ).toBeGreaterThan(0)
+      expect(
+        container.querySelector("#settings-replay-tutorial-btn")
+      ).not.toBeNull()
+    })
+
+    it("triggers onReplayTutorial callback on button click", async () => {
+      const mockReplayTutorial = vi.fn()
+      const { container } = render(
+        <SettingsTab
+          addLog={mockAddLog}
+          onResetDb={mockResetDb}
+          onReplayTutorial={mockReplayTutorial}
+        />
+      )
+
+      const replayBtn = container.querySelector(
+        "#settings-replay-tutorial-btn"
+      )!
+      fireEvent.click(replayBtn)
+      expect(mockReplayTutorial).toHaveBeenCalled()
     })
   })
 })

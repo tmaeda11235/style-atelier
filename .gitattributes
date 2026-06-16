@@ -1,0 +1,2 @@
+# Prevent merge conflicts on transient Proof of Work file by keeping the current branch's version
+artifacts/test-proof.enc merge=ours

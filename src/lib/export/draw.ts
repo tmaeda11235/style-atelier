@@ -122,7 +122,7 @@ export async function drawQRCode(
 ) {
   try {
     const compressed = compressCardData(card)
-    const qrPayload = `web+styleatelier://import?data=${compressed}`
+    const qrPayload = `https://style-atelier.github.io/app/?p=${compressed}`
     const qrDataUrl = await generateQRCodeUrl(qrPayload, qrSize)
     const qrImg = await loadImage(qrDataUrl)
 

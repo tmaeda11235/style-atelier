@@ -1,10 +1,11 @@
-import { Tag, X } from "lucide-react"
+import { X } from "lucide-react"
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { ColorPaletteFilter } from "../molecules/ColorPaletteFilter"
 import { HueSliderFilter } from "../molecules/HueSliderFilter"
 import { ModelFiltersRow } from "../molecules/ModelFiltersRow"
+import { CategoryFiltersRow } from "./CategoryFilters"
 
 interface LibraryFilterAccordionProps {
   isFiltersExpanded: boolean
@@ -50,6 +51,10 @@ interface LibraryFilterAccordionProps {
   sortByRarityLabel?: string
   sortByUsageLabel?: string
   sortByColorLabel?: string
+  moveCardToCategory?: (
+    cardId: string,
+    categoryId: string | null
+  ) => Promise<void>
 }
 
 interface RaritySortFiltersProps {
@@ -65,109 +70,25 @@ export function RaritySortFilters({
   setRarityFilter,
   allRaritiesLabel
 }: RaritySortFiltersProps) {
+  const { t: i18n } = useLanguage()
+  const t = i18n.libraryTab
   if (!expertFeatures.rarity) return null
 
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        Rarity
+        {t.rarity}
       </span>
       <select
         value={rarityFilter}
         onChange={(e) => setRarityFilter(e.target.value as any)}
         className="w-full px-2 py-1.5 text-[11px] font-bold border rounded bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer">
-        <option value="All">{allRaritiesLabel}</option>
-        <option value="Common">Common</option>
-        <option value="Rare">Rare</option>
-        <option value="Epic">Epic</option>
-        <option value="Legendary">Legendary</option>
+        <option value={"All"}>{allRaritiesLabel}</option>
+        <option value={"Common"}>{t.rarities?.common}</option>
+        <option value={"Rare"}>{t.rarities?.rare}</option>
+        <option value={"Epic"}>{t.rarities?.epic}</option>
+        <option value={"Legendary"}>{t.rarities?.legendary}</option>
       </select>
-    </div>
-  )
-}
-
-export function CategoryFilterButton({
-  cat,
-  isSelected,
-  onClick
-}: {
-  cat: { id: string; name: string; iconUrl?: string; iconEmoji?: string }
-  isSelected: boolean
-  onClick: () => void
-}) {
-  const { t } = useLanguage()
-  const displayName =
-    (t.defaultCategories as Record<string, string>)[cat.id] || cat.name
-
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1 flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
-        isSelected
-          ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-      }`}>
-      {cat.iconUrl ? (
-        <img
-          src={cat.iconUrl}
-          className="w-3.5 h-3.5 rounded-full object-cover border border-white/20"
-          alt={displayName}
-        />
-      ) : (
-        <span className="text-[11px] leading-none">
-          {cat.iconEmoji || "🖼️"}
-        </span>
-      )}
-      <span>{displayName}</span>
-    </button>
-  )
-}
-
-interface CategoryFiltersRowProps {
-  categoryFilter: string
-  setCategoryFilter: (category: string) => void
-  categories: Array<{
-    id: string
-    name: string
-    iconUrl?: string
-    iconEmoji?: string
-  }>
-  setIsCategoryModalOpen: (open: boolean) => void
-  allCategoriesLabel: string
-  manageCategoriesTitle: string
-}
-
-export function CategoryFiltersRow(props: CategoryFiltersRowProps) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        Category
-      </span>
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mt-0.5 scrollbar-none">
-        <button
-          onClick={() => props.setCategoryFilter("All")}
-          className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
-            props.categoryFilter === "All"
-              ? "bg-slate-800 border-slate-800 text-white shadow-sm"
-              : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
-          }`}>
-          {props.allCategoriesLabel}
-        </button>
-        {props.categories.map((cat) => (
-          <CategoryFilterButton
-            key={cat.id}
-            cat={cat}
-            isSelected={props.categoryFilter === cat.id}
-            onClick={() => props.setCategoryFilter(cat.id)}
-          />
-        ))}
-        <button
-          onClick={() => props.setIsCategoryModalOpen(true)}
-          className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
-          title={props.manageCategoriesTitle}>
-          <Tag className="w-3.5 h-3.5" />
-        </button>
-      </div>
     </div>
   )
 }
@@ -232,6 +153,7 @@ function ColorAndCategoryFilters(props: ColorAndCategoryFiltersProps) {
           setIsCategoryModalOpen={props.setIsCategoryModalOpen}
           allCategoriesLabel={allCategoriesLabel}
           manageCategoriesTitle={manageCategoriesTitle}
+          moveCardToCategory={props.moveCardToCategory}
         />
       )}
     </div>
@@ -242,21 +164,21 @@ function getColorOptions(t: any) {
   return [
     {
       value: "All",
-      label: t.colors?.all || "All Colors",
+      label: t.colors?.all,
       bg: "linear-gradient(45deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)"
     },
-    { value: "Red", label: t.colors?.red || "Red", bg: "#ef4444" },
-    { value: "Orange", label: t.colors?.orange || "Orange", bg: "#f97316" },
-    { value: "Yellow", label: t.colors?.yellow || "Yellow", bg: "#eab308" },
-    { value: "Green", label: t.colors?.green || "Green", bg: "#22c55e" },
-    { value: "Cyan", label: t.colors?.cyan || "Cyan", bg: "#06b6d4" },
-    { value: "Blue", label: t.colors?.blue || "Blue", bg: "#3b82f6" },
-    { value: "Purple", label: t.colors?.purple || "Purple", bg: "#a855f7" },
-    { value: "Pink", label: t.colors?.pink || "Pink", bg: "#ec4899" },
-    { value: "Brown", label: t.colors?.brown || "Brown", bg: "#78350f" },
-    { value: "White", label: t.colors?.white || "White", bg: "#ffffff" },
-    { value: "Gray", label: t.colors?.gray || "Gray", bg: "#6b7280" },
-    { value: "Black", label: t.colors?.black || "Black", bg: "#09090b" }
+    { value: "Red", label: t.colors?.red, bg: "#ef4444" },
+    { value: "Orange", label: t.colors?.orange, bg: "#f97316" },
+    { value: "Yellow", label: t.colors?.yellow, bg: "#eab308" },
+    { value: "Green", label: t.colors?.green, bg: "#22c55e" },
+    { value: "Cyan", label: t.colors?.cyan, bg: "#06b6d4" },
+    { value: "Blue", label: t.colors?.blue, bg: "#3b82f6" },
+    { value: "Purple", label: t.colors?.purple, bg: "#a855f7" },
+    { value: "Pink", label: t.colors?.pink, bg: "#ec4899" },
+    { value: "Brown", label: t.colors?.brown, bg: "#78350f" },
+    { value: "White", label: t.colors?.white, bg: "#ffffff" },
+    { value: "Gray", label: t.colors?.gray, bg: "#6b7280" },
+    { value: "Black", label: t.colors?.black, bg: "#09090b" }
   ]
 }
 
@@ -295,7 +217,7 @@ export function LibraryFilterAccordion(props: LibraryFilterAccordionProps) {
         <div className="flex items-center justify-between px-4 pb-3 border-b border-slate-100 dark:border-slate-850 flex-shrink-0">
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
-            {t.filtersTitle || "Detailed Filters"}
+            {t.filtersTitle}
           </h3>
           <button
             onClick={() => setIsFiltersExpanded(false)}
