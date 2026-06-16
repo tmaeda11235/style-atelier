@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-test.describe("Mobile Pages & Google Drive Integration", () => {
+test.describe("Mobile Pages & Google Drive Integration @J-MOBILE-PREVIEW-01", () => {
   test.beforeEach(async ({ page, baseURL }) => {
     page.on("console", (msg) =>
       console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`)
