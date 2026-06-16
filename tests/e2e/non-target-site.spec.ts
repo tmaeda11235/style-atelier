@@ -95,3 +95,4 @@ test.describe("Style Atelier Sandbox E2E Tests - Non-Target Site Accessibility @
     console.log("Non-target site E2E test finished and screenshots saved.")
   })
 })
+// CI Trigger HistoryTab

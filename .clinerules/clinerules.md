@@ -35,7 +35,8 @@
    - **File, Function & Complexity Limits**: Keep components under 300 lines (excluding blank lines and comments) and functions under 50 lines. Cognitive complexity limit is 15. Refactor when limits are exceeded.
    - **Atomic Design Principles (Hooks and Molecules Separation)**: When implementing UI components, always separate business logic and side effects into custom hooks. Molecules must remain pure presentation components without business logic or raw state mutation handlers.
    - **ESLint Whitelist Guardrail**: Do not expand the ESLint exception lists (`eslint.config.mjs` overrides). The CI pipeline blocks PRs adding new exception files. If you refactor legacy files to satisfy ESLint rules, run `node scratch/auto-sync-eslint.js` to automatically clean up and synchronize the exception list.
-   - **i18n Literal String Rule**: Fully-translated UI components must pass the `i18next/no-literal-string` check. Avoid hardcoded literal strings. Non-translatable brand names, size units, or uppercase acronyms are automatically exempt or can be bypassed using `{/* eslint-disable-next-line i18next/no-literal-string */}` or `/* eslint-disable i18next/no-literal-string */`.
+   - **i18n Compliance & Literal String Rule**: Wrap all user-facing UI text inside JSX/TSX components using `t()` from `useTranslation` and ensure they pass the `i18next/no-literal-string` check. Display attributes like `title`, `placeholder`, and `label` must also be localized. Avoid hardcoded literal strings. Non-translatable brand names, size units, or uppercase acronyms can be bypassed using `{/* eslint-disable-next-line i18next/no-literal-string */}` or `// eslint-disable-line i18next/no-literal-string` for mock/debug literals. Ensure all translation keys exist in both `src/locales/ja/translation.json` and `src/locales/en/translation.json` by running `npm run lint`.
+
 
 ## Style
 

@@ -284,4 +284,36 @@ describe("LibraryTab", () => {
     fireEvent.click(v6Button)
     expect(mockSetModelFilter).toHaveBeenCalledWith("V6")
   })
+
+  it("forces high contrast text style when current category has coverImageUrl", () => {
+    const mockCategory = {
+      id: "cat-1",
+      name: "Custom Category",
+      coverImageUrl: "data:image/png;base64,cover",
+      theme: ""
+    }
+    vi.mocked(useLibrary).mockReturnValue({
+      ...defaultMockReturnValue,
+      categories: [mockCategory],
+      currentFolderId: "cat-1",
+      togglePin: mockTogglePin
+    })
+
+    render(
+      <TutorialProvider>
+        <LibraryTab {...defaultProps} />
+      </TutorialProvider>
+    )
+
+    const titleElement = screen.getByRole("heading", {
+      level: 2,
+      name: "Custom Category"
+    })
+    expect(titleElement.className).toContain("text-white")
+    expect(titleElement.className).toContain("drop-shadow")
+
+    const subtitleElement = screen.getByText("binder")
+    expect(subtitleElement.className).toContain("text-white/70")
+    expect(subtitleElement.className).not.toContain("opacity-60")
+  })
 })

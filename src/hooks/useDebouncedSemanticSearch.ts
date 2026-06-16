@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { parseSemanticQuery } from "../lib/ai-search-utils"
 
@@ -11,6 +12,7 @@ interface DebouncedSemanticSearchProps {
   setColorFilter: (val: any) => void
   setSearchTag: (val: string) => void
   t: any
+  webLlmStatus?: string
 }
 
 interface EffectParams {
@@ -25,6 +27,8 @@ interface EffectParams {
   setIsAiSearching: (val: boolean) => void
   setAiSearchError: (val: string | null) => void
   setExtractedFilters: (val: any) => void
+  language: string
+  webLlmStatus?: string
 }
 
 function resetFilters(
@@ -77,18 +81,7 @@ function useSemanticSearchEffect(params: EffectParams) {
       return params.setExtractedFilters(null)
     }
     const timer = setTimeout(() => {
-      executeSemanticSearch(
-        params.aiSearchQuery,
-        params.categories,
-        params.setExtractedFilters,
-        params.setRarityFilter,
-        params.setCategoryFilter,
-        params.setColorFilter,
-        params.setSearchTag,
-        params.setIsAiSearching,
-        params.setAiSearchError,
-        params.t
-      )
+      executeSemanticSearch(params)
     }, 600)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,40 +96,57 @@ function useSemanticSearchEffect(params: EffectParams) {
     params.t,
     params.setIsAiSearching,
     params.setAiSearchError,
-    params.setExtractedFilters
+    params.setExtractedFilters,
+    params.language,
+    params.webLlmStatus
   ])
 }
 
-async function executeSemanticSearch(
-  query: string,
-  categories: { id: string; name: string }[],
-  setExtractedFilters: (val: any) => void,
-  setRarityFilter: (val: any) => void,
-  setCategoryFilter: (val: string) => void,
-  setColorFilter: (val: any) => void,
-  setSearchTag: (val: string) => void,
-  setIsAiSearching: (val: boolean) => void,
-  setAiSearchError: (val: string | null) => void,
-  t: any
-) {
-  setIsAiSearching(true)
-  setAiSearchError(null)
+function fallbackToKeywordSearch(p: EffectParams) {
+  p.setExtractedFilters(null)
+  p.setRarityFilter("All")
+  p.setCategoryFilter("All")
+  p.setColorFilter("All")
+  p.setSearchTag(p.aiSearchQuery)
+}
+
+async function executeSemanticSearch(p: EffectParams) {
+  p.setIsAiSearching(true)
+  p.setAiSearchError(null)
+
+  if (p.webLlmStatus !== "ready") {
+    // Fallback immediately to standard keywords if model is not ready
+    fallbackToKeywordSearch(p)
+    p.setIsAiSearching(false)
+    return
+  }
+
   try {
-    const result = await parseSemanticQuery(query, categories)
-    setExtractedFilters(result)
+    const result = await parseSemanticQuery(
+      p.aiSearchQuery,
+      p.categories,
+      p.language
+    )
+    p.setExtractedFilters(result)
     applyFilters(
       result,
-      categories,
-      setRarityFilter,
-      setCategoryFilter,
-      setColorFilter,
-      setSearchTag
+      p.categories,
+      p.setRarityFilter,
+      p.setCategoryFilter,
+      p.setColorFilter,
+      p.setSearchTag
     )
   } catch (err) {
-    console.error(err)
-    setAiSearchError(t.aiSearchError || "AI parsing error")
+    console.error(
+      "Semantic query parsing failed, falling back to FlexSearch:",
+      err
+    )
+    p.setAiSearchError(
+      p.t.aiSearchError || "AI parsing error (falling back to keyword search)"
+    )
+    fallbackToKeywordSearch(p)
   } finally {
-    setIsAiSearching(false)
+    p.setIsAiSearching(false)
   }
 }
 
@@ -152,6 +162,9 @@ export function useDebouncedSemanticSearch(
     query: string
   } | null>(null)
 
+  const { i18n } = useTranslation()
+  const currentLanguage = i18n.language
+
   useSemanticSearchEffect({
     isAiSearch: props.isAiSearch,
     aiSearchQuery: props.aiSearchQuery,
@@ -163,7 +176,9 @@ export function useDebouncedSemanticSearch(
     t: props.t,
     setIsAiSearching,
     setAiSearchError,
-    setExtractedFilters
+    setExtractedFilters,
+    language: currentLanguage,
+    webLlmStatus: props.webLlmStatus
   })
 
   return { isAiSearching, aiSearchError, extractedFilters, setExtractedFilters }
