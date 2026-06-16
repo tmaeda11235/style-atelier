@@ -8,6 +8,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 import "../../src/style.css" // スタイルの読み込み
 
 import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
+import { LanguageProvider } from "../../src/contexts/LanguageContext"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -1257,7 +1258,9 @@ const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SandboxWrapper />
+      <LanguageProvider>
+        <SandboxWrapper />
+      </LanguageProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )

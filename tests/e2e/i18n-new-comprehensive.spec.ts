@@ -16,7 +16,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page for comprehensive i18n E2E test...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?isWide=true")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
@@ -208,7 +208,19 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Verify Onboarding Guide (English)
     await spFrame.locator("[data-testid='close-filters-btn']").click() // Close the filters accordion using the close button
-    await spFrame.locator("#test-open-onboarding-btn").click() // Open the Onboarding Guide modal via sandbox test button
+    await page.evaluate(() => {
+      const iframe = document.getElementById(
+        "sidepanel-frame"
+      ) as HTMLIFrameElement
+      const doc = iframe?.contentDocument || iframe?.contentWindow?.document
+      const btn = doc?.getElementById("test-open-onboarding-btn")
+      if (btn) {
+        console.log("[Test Evaluation] Clicking onboarding button...")
+        ;(btn as HTMLElement).click()
+      } else {
+        console.error("[Test Evaluation] Onboarding button not found!")
+      }
+    })
     const dropHereText = spFrame.locator("span:has-text('Drop Here')")
     await expect(dropHereText).toBeVisible()
     await page.screenshot({
@@ -319,7 +331,19 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Verify Onboarding Guide (Japanese)
     await spFrame.locator("[data-testid='close-filters-btn']").click() // Close the filters accordion using the close button
-    await spFrame.locator("#test-open-onboarding-btn").click() // Open the Onboarding Guide modal via sandbox test button
+    await page.evaluate(() => {
+      const iframe = document.getElementById(
+        "sidepanel-frame"
+      ) as HTMLIFrameElement
+      const doc = iframe?.contentDocument || iframe?.contentWindow?.document
+      const btn = doc?.getElementById("test-open-onboarding-btn")
+      if (btn) {
+        console.log("[Test Evaluation] Clicking onboarding button...")
+        ;(btn as HTMLElement).click()
+      } else {
+        console.error("[Test Evaluation] Onboarding button not found!")
+      }
+    })
     const dropHereTextJa = spFrame.locator("span:has-text('ここにドロップ')")
     await expect(dropHereTextJa).toBeVisible()
     await page.screenshot({
