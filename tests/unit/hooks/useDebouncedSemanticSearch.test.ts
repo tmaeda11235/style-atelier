@@ -4,7 +4,8 @@ import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/ai-search-utils", () => ({
-  parseSemanticQuery: vi.fn()
+  parseSemanticQuery: vi.fn(),
+  parseSemanticQueryFallback: vi.fn()
 }))
 
 vi.mock("react-i18next", () => ({
@@ -51,8 +52,8 @@ describe("useDebouncedSemanticSearch", () => {
         setCategoryFilter: mockSetCategoryFilter,
         setColorFilter: mockSetColorFilter,
         setSearchTag: mockSetSearchTag,
-        t,
-        webLlmStatus: "ready"
+        webLlmStatus: "ready",
+        t
       })
     )
 
@@ -98,8 +99,8 @@ describe("useDebouncedSemanticSearch", () => {
         setCategoryFilter: mockSetCategoryFilter,
         setColorFilter: mockSetColorFilter,
         setSearchTag: mockSetSearchTag,
-        t,
-        webLlmStatus: "ready"
+        webLlmStatus: "ready",
+        t
       })
     )
 

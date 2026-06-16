@@ -159,7 +159,7 @@
   display: none !important;
 }
 
-@container (max-width: 135px) {
+@container (max-width: 150px) {
   .hide-on-narrow {
     display: none !important;
   }
