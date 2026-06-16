@@ -140,7 +140,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
       const config = (window as any).mockWebLlmConfig
       if (config) {
         config.failDownload = false
-        config.downloadSpeed = 50 // slower download speed to capture progressbar state
+        config.downloadSpeed = 1000 // slower download speed to capture progressbar state
       }
     })
 
@@ -168,7 +168,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     await expect(downloadingLabel).toBeVisible({ timeout: 15000 })
 
     // Locate WebLLM progress bar
-    const webLlmProgressBar = spFrame.locator("[role='progressbar']").first()
+    const webLlmProgressBar = spFrame
+      .locator("#ai-recipe-advice-section [role='progressbar']")
+      .first()
     await expect(webLlmProgressBar).toBeVisible({ timeout: 15000 })
 
     // Validate accessibility attributes
