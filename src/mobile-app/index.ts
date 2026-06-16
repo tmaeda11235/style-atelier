@@ -14,6 +14,42 @@ function showToast(message: string) {
   }, 2000)
 }
 
+function applyCardColors(
+  card: Partial<StyleCard>,
+  element: HTMLElement | null,
+  rarityClass: string
+) {
+  if (!element) return
+  const baseClass = element.classList.contains("card-front")
+    ? "card-front"
+    : "card-back"
+  element.className = baseClass + " " + rarityClass
+  if (card.dominantColor) {
+    element.style.setProperty(
+      "--color-accent-card",
+      card.accentColor || "#3b82f6"
+    )
+    element.style.setProperty(
+      "--color-dominant-card",
+      card.dominantColor || "#1e293b"
+    )
+  }
+}
+
+function renderParameterBadges(parameters: Record<string, any> | undefined) {
+  const parameterBadgesEl = document.getElementById("parameterBadges")
+  if (!parameterBadgesEl) return
+  parameterBadgesEl.innerHTML = ""
+  const params = parameters || {}
+  Object.entries(params).forEach(([key, val]) => {
+    if (val !== undefined && val !== null && val !== "") {
+      const badge = document.createElement("span")
+      badge.className = "parameter-badge"
+      badge.textContent = `--${key} ${val}`
+      parameterBadgesEl.appendChild(badge)
+    }
+  })
+}
 function renderCard(card: Partial<StyleCard>) {
   const cardTitleFront = document.getElementById("cardTitleFront")
   const cardTitleBack = document.getElementById("cardTitleBack")
@@ -31,32 +67,8 @@ function renderCard(card: Partial<StyleCard>) {
   if (cardRarityBack) cardRarityBack.textContent = rarity
 
   const rarityClass = `rarity-${(card.tier || "common").toLowerCase()}`
-  if (cardFront) {
-    cardFront.className = "card-front " + rarityClass
-    if (card.dominantColor) {
-      cardFront.style.setProperty(
-        "--color-accent-card",
-        card.accentColor || "#3b82f6"
-      )
-      cardFront.style.setProperty(
-        "--color-dominant-card",
-        card.dominantColor || "#1e293b"
-      )
-    }
-  }
-  if (cardBack) {
-    cardBack.className = "card-back " + rarityClass
-    if (card.dominantColor) {
-      cardBack.style.setProperty(
-        "--color-accent-card",
-        card.accentColor || "#3b82f6"
-      )
-      cardBack.style.setProperty(
-        "--color-dominant-card",
-        card.dominantColor || "#1e293b"
-      )
-    }
-  }
+  applyCardColors(card, cardFront, rarityClass)
+  applyCardColors(card, cardBack, rarityClass)
 
   if (promptTextEl) {
     promptTextEl.textContent = buildPromptString(
@@ -64,6 +76,8 @@ function renderCard(card: Partial<StyleCard>) {
       card.parameters || {}
     )
   }
+
+  renderParameterBadges(card.parameters)
 }
 
 function loadFallbackCard() {
@@ -107,46 +121,67 @@ function loadCardFromUrl() {
   }
 }
 
+let ticking = false
+
+function updateHologramProperties(
+  x: number,
+  y: number,
+  cardContainer: HTMLElement
+) {
+  const frontCard = cardContainer.querySelector(".card-front") as HTMLElement
+  const backCard = cardContainer.querySelector(".card-back") as HTMLElement
+
+  if (frontCard && backCard) {
+    frontCard.style.setProperty("--glow-x", `${x}%`)
+    frontCard.style.setProperty("--glow-y", `${y}%`)
+    frontCard.style.setProperty("--holo-x", `${x}%`)
+    frontCard.style.setProperty("--holo-y", `${y}%`)
+    backCard.style.setProperty("--glow-x", `${x}%`)
+    backCard.style.setProperty("--glow-y", `${y}%`)
+    backCard.style.setProperty("--holo-x", `${x}%`)
+    backCard.style.setProperty("--holo-y", `${y}%`)
+  }
+}
 function handleHologramMove(e: MouseEvent, cardContainer: HTMLElement) {
   const rect = cardContainer.getBoundingClientRect()
   const px = ((e.clientX - rect.left) / rect.width) * 100
   const py = ((e.clientY - rect.top) / rect.height) * 100
 
-  const frontCard = cardContainer.querySelector(".card-front") as HTMLElement
-  const backCard = cardContainer.querySelector(".card-back") as HTMLElement
-
-  if (frontCard && backCard) {
-    ;[frontCard, backCard].forEach((card) => {
-      card.style.setProperty("--glow-x", `${px}%`)
-      card.style.setProperty("--glow-y", `${py}%`)
-      card.style.setProperty("--holo-x", `${px}%`)
-      card.style.setProperty("--holo-y", `${py}%`)
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      updateHologramProperties(px, py, cardContainer)
+      ticking = false
     })
+    ticking = true
+  }
+}
+
+function handleHologramTouchMove(e: TouchEvent, cardContainer: HTMLElement) {
+  if (e.touches.length === 0) return
+  const touch = e.touches[0]
+  const rect = cardContainer.getBoundingClientRect()
+  const px = ((touch.clientX - rect.left) / rect.width) * 100
+  const py = ((touch.clientY - rect.top) / rect.height) * 100
+
+  const clampedX = Math.max(0, Math.min(100, px))
+  const clampedY = Math.max(0, Math.min(100, py))
+
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      updateHologramProperties(clampedX, clampedY, cardContainer)
+      ticking = false
+    })
+    ticking = true
   }
 }
 
 function resetHologram(cardContainer: HTMLElement) {
-  const frontCard = cardContainer.querySelector(".card-front") as HTMLElement
-  const backCard = cardContainer.querySelector(".card-back") as HTMLElement
-
-  if (frontCard && backCard) {
-    ;[frontCard, backCard].forEach((card) => {
-      card.style.setProperty("--glow-x", "50%")
-      card.style.setProperty("--glow-y", "50%")
-      card.style.setProperty("--holo-x", "50%")
-      card.style.setProperty("--holo-y", "50%")
-    })
-  }
+  requestAnimationFrame(() => {
+    updateHologramProperties(50, 50, cardContainer)
+  })
 }
 
-function setupEventHandlers() {
-  const cardContainer = document.getElementById("cardContainer") as HTMLElement
-  const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement
-  const promptText = document.getElementById("promptText") as HTMLElement
-  const saveCloudBtn = document.getElementById(
-    "saveCloudBtn"
-  ) as HTMLButtonElement
-
+function setupCardContainerEvents(cardContainer: HTMLElement) {
   cardContainer.addEventListener("click", (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (target.closest(".action-btn")) return
@@ -161,6 +196,32 @@ function setupEventHandlers() {
     resetHologram(cardContainer)
   })
 
+  cardContainer.addEventListener(
+    "touchstart",
+    (e: TouchEvent) => {
+      handleHologramTouchMove(e, cardContainer)
+    },
+    { passive: true }
+  )
+
+  cardContainer.addEventListener(
+    "touchmove",
+    (e: TouchEvent) => {
+      handleHologramTouchMove(e, cardContainer)
+    },
+    { passive: true }
+  )
+
+  cardContainer.addEventListener("touchend", () => {
+    resetHologram(cardContainer)
+  })
+}
+
+function setupButtonEvents(
+  copyBtn: HTMLButtonElement,
+  promptText: HTMLElement,
+  saveCloudBtn: HTMLButtonElement
+) {
   copyBtn.addEventListener("click", async () => {
     const textToCopy = promptText.textContent?.trim() || ""
     try {
@@ -186,6 +247,17 @@ function setupEventHandlers() {
   })
 }
 
+function setupEventHandlers() {
+  const cardContainer = document.getElementById("cardContainer") as HTMLElement
+  const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement
+  const promptText = document.getElementById("promptText") as HTMLElement
+  const saveCloudBtn = document.getElementById(
+    "saveCloudBtn"
+  ) as HTMLButtonElement
+
+  setupCardContainerEvents(cardContainer)
+  setupButtonEvents(copyBtn, promptText, saveCloudBtn)
+}
 document.addEventListener("DOMContentLoaded", () => {
   loadCardFromUrl()
   setupEventHandlers()

@@ -56,6 +56,13 @@ test.describe("Mobile Viewer E2E Test", () => {
     await page.screenshot({ path: backScreenshotPath })
     console.log(`Saved screenshot to ${backScreenshotPath}`)
 
+    // Verify parameter badges are rendered correctly
+    const parameterBadges = page.locator("#parameterBadges")
+    await expect(parameterBadges).toBeVisible()
+    const badges = parameterBadges.locator(".parameter-badge")
+    await expect(badges).toHaveCount(2)
+    await expect(badges.nth(0)).toHaveText("--ar 16:9")
+    await expect(badges.nth(1)).toHaveText("--stylize 750")
     // 3. Click the copy button and verify toast message appears
     const copyBtn = page.locator("#copyBtn")
     await copyBtn.click()
@@ -159,6 +166,13 @@ test.describe("Mobile Viewer E2E Test", () => {
       "A cyberpunk ninja leaping across rooftops in neon cyberpunk Kyoto --ar 4:3 --s 250"
     )
 
+    // Verify parameter badges are rendered correctly
+    const parameterBadges = page.locator("#parameterBadges")
+    await expect(parameterBadges).toBeVisible()
+    const badges = parameterBadges.locator(".parameter-badge")
+    await expect(badges).toHaveCount(2)
+    await expect(badges.nth(0)).toHaveText("--ar 4:3")
+    await expect(badges.nth(1)).toHaveText("--stylize 250")
     // Take screenshot of dynamically loaded card back
     const dynamicBackScreenshotPath = path.join(
       "tests",
