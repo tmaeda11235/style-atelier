@@ -47,8 +47,12 @@ export function safeSendMessage<M = any, R = any>(
     if (returnValue && typeof returnValue.then === "function") {
       return returnValue as Promise<R>
     }
-  } catch {
+  } catch (err) {
     // Fallback to callback if promise-based invocation fails
+    console.debug(
+      "Promise-based chrome.runtime.sendMessage failed, falling back to callback:",
+      err
+    )
   }
 
   return new Promise<R>((resolve, reject) => {
@@ -99,8 +103,12 @@ export function safeSendTabMessage<M = any, R = any>(
     if (returnValue && typeof returnValue.then === "function") {
       return returnValue as Promise<R>
     }
-  } catch {
+  } catch (err) {
     // Fallback to callback if promise-based invocation fails
+    console.debug(
+      "Promise-based chrome.tabs.sendMessage failed, falling back to callback:",
+      err
+    )
   }
 
   return new Promise<R>((resolve, reject) => {
@@ -150,8 +158,12 @@ export function safeQueryTabs(
     if (returnValue && typeof returnValue.then === "function") {
       return returnValue as Promise<chrome.tabs.Tab[]>
     }
-  } catch {
+  } catch (err) {
     // Fallback to callback if promise-based invocation fails
+    console.debug(
+      "Promise-based chrome.tabs.query failed, falling back to callback:",
+      err
+    )
   }
 
   return new Promise<chrome.tabs.Tab[]>((resolve, reject) => {
@@ -161,6 +173,82 @@ export function safeQueryTabs(
           reject(new Error(chrome.runtime.lastError.message))
         } else {
           resolve(res)
+        }
+      })
+    } catch (err: any) {
+      reject(err)
+    }
+  })
+}
+
+/**
+ * Safe wrapper for chrome.tabs.reload that checks context validity
+ * and catches errors. Falls back to window.location.reload() if appropriate.
+ */
+export function safeReloadTab(tabId?: number): void {
+  if (!isExtensionContextValid()) {
+    console.warn(
+      "safeReloadTab: Extension context invalidated. Reloading sidepanel itself as fallback."
+    )
+    try {
+      window.location.reload()
+    } catch (e) {
+      console.error("Failed to reload window:", e)
+    }
+    return
+  }
+
+  try {
+    if (tabId !== undefined) {
+      chrome.tabs.reload(tabId)
+    } else {
+      chrome.tabs.reload()
+    }
+  } catch (err: any) {
+    console.error("safeReloadTab error:", err)
+    try {
+      window.location.reload()
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+
+/**
+ * Safe wrapper for chrome.tabs.update that checks context validity
+ * and catches synchronous/asynchronous errors.
+ */
+export function safeUpdateTab(
+  tabId: number,
+  updateProperties: chrome.tabs.UpdateProperties,
+  callback?: (tab: chrome.tabs.Tab | undefined) => void
+): Promise<chrome.tabs.Tab | undefined> | void {
+  if (!isExtensionContextValid()) {
+    const err = new Error("Extension context invalidated")
+    if (callback) {
+      console.warn("safeUpdateTab: Extension context invalidated")
+      return
+    }
+    return Promise.reject(err)
+  }
+
+  if (callback) {
+    try {
+      chrome.tabs.update(tabId, updateProperties, callback)
+      return
+    } catch (err: any) {
+      console.error("safeUpdateTab error:", err)
+      return
+    }
+  }
+
+  return new Promise<chrome.tabs.Tab | undefined>((resolve, reject) => {
+    try {
+      chrome.tabs.update(tabId, updateProperties, (tab) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message))
+        } else {
+          resolve(tab)
         }
       })
     } catch (err: any) {

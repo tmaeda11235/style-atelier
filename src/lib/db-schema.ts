@@ -8,6 +8,8 @@ export interface CustomCategory {
   updatedAt?: number // Timestamp for versioning/sync
   isDeleted?: boolean // Soft delete flag (Tombstone). Synchronizes deletions across devices. Subject to a 60-day sync window, after which it is purged.
   parentId?: string // Parent category ID for hierarchical folders
+  coverImageUrl?: string // Custom cover image URL
+  theme?: string // Skin theme (e.g., classic, magic, cyberpunk, minimal)
 }
 
 export interface CardVersion {

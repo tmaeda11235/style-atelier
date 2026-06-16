@@ -15,6 +15,10 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Prompt De-cluttering", () =>
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    await page.addInitScript(() => {
+      localStorage.setItem("mock-webllm-downloaded", "true")
+    })
+
     console.log(
       "Navigating to sandbox page for AI Prompt De-cluttering E2E test..."
     )
@@ -30,9 +34,6 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Prompt De-cluttering", () =>
 
     // 2. Seed a history item with a messy prompt
     await spFrame.locator("body").evaluate(async () => {
-      // Set local storage to mock downloaded model state
-      localStorage.setItem("mock-webllm-downloaded", "true")
-
       const database = (window as any).db
       await database.historyItems.clear()
       await database.historyItems.add({

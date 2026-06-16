@@ -3,7 +3,7 @@
     {
       "id": "@J-MINT-EXPERT-01",
       "name": "エキスパートミント",
-      "description": "エキスパートモードで画像からスタイルカードを作成する",
+      "description": "エキスパートモードで画像からスタイルカードをミントする",
       "steps": ["画像上のMintボタン押下", "プロンプト解析", "カード保存"],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01"],
       "viewComponents": [
@@ -14,7 +14,7 @@
     {
       "id": "@J-MINT-EASY-01",
       "name": "かんたんミント",
-      "description": "かんたんモードで画像からスタイルカードを作成する",
+      "description": "かんたんモードで画像からスタイルカードをミントする",
       "steps": ["画像上のMintボタン押下", "簡易保存"],
       "nextJourneys": ["@J-ORG-EASY-01", "@J-WB-EASY-01"],
       "viewComponents": ["src/components/organisms/SimpleMintingView.tsx"]
@@ -125,7 +125,7 @@
       "name": "プロンプトインジェクション",
       "description": "Midjourneyへのプロンプトインジェクション",
       "steps": ["Injectボタン押下", "Discordの入力欄にテキスト反映"],
-      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "nextJourneys": ["@J-MINT-EXPERT-01", "@J-UX-DISCONNECTED-ALERT"],
       "viewComponents": ["src/components/organisms/Workbench.tsx"]
     },
     {
@@ -196,7 +196,10 @@
       "description": "エキスパート向けヘルプツールチップの確認",
       "steps": ["?アイコンにホバー", "ツールチップ表示", "仕様の確認"],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-ORG-EXPERT-01"],
-      "viewComponents": ["src/components/organisms/ExpertModeView.tsx"]
+      "viewComponents": [
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/WelcomeDialog.tsx"
+      ]
     },
     {
       "id": "@J-SYS-03",
@@ -223,7 +226,8 @@
       "viewComponents": [
         "src/components/organisms/SettingsTab.tsx",
         "src/components/organisms/CloudSyncSection.tsx",
-        "src/components/molecules/GDriveSyncStrategyDialog.tsx"
+        "src/components/molecules/GDriveSyncStrategyDialog.tsx",
+        "src/components/organisms/StorageManagerSection.tsx"
       ]
     },
     {
@@ -255,7 +259,7 @@
     {
       "id": "@J-WB-EXPERT-05",
       "name": "手札バー（HandBar）の最小化・折りたたみとスクロール",
-      "description": "手札バーを最小化して表示領域を確保し、多数のカードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する",
+      "description": "手札バーを最小化して表示領域を確保し、多数 of カードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する",
       "steps": [
         "最小化ボタン押下",
         "手札バーが折りたたまれる",
@@ -291,7 +295,7 @@
       "steps": [
         "Midjourney画像をドラッグ",
         "サイドパネル上にオーバーレイ（インディゴ/ブルー）が表示されることを確認",
-        "ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"
+        "ドロップして履歴追加または簡易カードミント（Easy Mode）が開始されることを確認"
       ],
       "nextJourneys": ["@J-SYS-01", "@J-MINT-EASY-01"],
       "viewComponents": ["src/pages/SidePanel.tsx"]
@@ -431,7 +435,7 @@
     },
     {
       "id": "@J-ORG-SEMANTIC-SEARCH-01",
-      "name": "セマンティック検索による自然言語フィルタリング",
+      "name": "セマンティック検索による自然言語フィルターリング",
       "description": "自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換する。AIモデルが読み込まれていない場合は、キーワード抽出による軽量フォールバックモードで動作する",
       "steps": [
         "ライブラリを開く",
@@ -510,7 +514,9 @@
         "src/pages/SidePanel.tsx",
         "src/components/organisms/NonTargetSiteView.tsx",
         "src/components/organisms/EasyModeView.tsx",
-        "src/components/organisms/ExpertModeView.tsx"
+        "src/components/organisms/ExpertModeView.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeTabContainer.tsx",
+        "src/components/organisms/ExpertModeView/ExpertModeOverlayManager.tsx"
       ]
     },
     {
@@ -553,6 +559,58 @@
       ],
       "nextJourneys": ["@J-MINT-EXPERT-01"],
       "viewComponents": ["src/components/organisms/PromptBubbleEditor.tsx"]
+    },
+    {
+      "id": "@J-ORG-BINDER-CUSTOMIZE-01",
+      "name": "バインダーのカスタマイズ（カバー画像とテーマ設定）",
+      "description": "バインダー（フォルダ）ごとに、カスタム表紙画像の設定とスキンテーマ選択を行い、バインダー詳細表示画面のスタイリングを動的に切り替える",
+      "steps": [
+        "バインダー（カテゴリ）編集画面を開く",
+        "カスタムカバー画像を設定する",
+        "スキンテーマを選択する",
+        "保存して適用する",
+        "テーマに応じたスタイリングが適用されていることを確認する"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/CategoryManagerModal.tsx",
+        "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
+        "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
+        "src/components/organisms/FolderExplorer.tsx",
+        "src/lib/image-utils.ts"
+      ]
+    },
+    {
+      "id": "@J-SET-WEBGPU-TROUBLESHOOT-01",
+      "name": "WebGPUトラブルシューティング",
+      "description": "WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く",
+      "steps": [
+        "WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）",
+        "WebGPU無効警告とステップバイステップガイドが表示されることを確認",
+        "「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/components/molecules/WebGpuWarning.tsx",
+        "src/components/organisms/WebLlmSettingsSection.tsx",
+        "src/components/organisms/WebLlmSettingsSubComponents.tsx",
+        "src/components/molecules/AiDownloadStatus.tsx"
+      ]
+    },
+    {
+      "id": "@J-UX-DISCONNECTED-ALERT",
+      "name": "接続切断時のエラーハンドリングとリカバリ",
+      "description": "拡張機能コンテキスト無効化などの接続切断時、親切な警告（Connection Lost）を表示し、ページのリロードを促す",
+      "steps": [
+        "切断状態（invalidated）を検知",
+        "画面上部に「接続が切断されました（Connection Lost）」の警告が表示されることを確認",
+        "「ページをリロード（Reload Page）」ボタンを押下してリカバリを試みる"
+      ],
+      "nextJourneys": ["@J-ORG-EXPERT-01", "@J-WB-EXPERT-01"],
+      "viewComponents": [
+        "src/components/molecules/ConnectionAlert.tsx",
+        "src/lib/chrome-utils.ts"
+      ]
     }
   ]
 }

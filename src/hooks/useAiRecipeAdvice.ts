@@ -156,46 +156,37 @@ interface RecipeAdviceFetchProps {
 function useAiRecipeAdviceFetch(
   props: RecipeAdviceFetchProps & { hasWebGpu: boolean | null }
 ) {
-  const {
-    cards,
-    key,
-    status,
-    lang,
-    setAdvice,
-    setError,
-    setLoading,
-    setIsFallbackMode,
-    cacheRef,
-    runInferenceRef,
-    hasWebGpu
-  } = props
+  const { key, status, lang, hasWebGpu } = props
+  const propsRef = useRef(props)
+  useEffect(() => {
+    propsRef.current = props
+  })
 
   useEffect(() => {
-    if (checkAdviceCache(props)) {
+    const p = propsRef.current
+
+    if (checkAdviceCache({ ...p, hasWebGpu })) {
       return
     }
     let mounted = true
-    const isMounted = () => mounted
     const timer = setTimeout(() => {
       fetchAdviceHelper({
-        cards,
-        lang,
-        key,
-        setAdvice,
-        setError,
-        setLoading,
-        setIsFallbackMode,
-        cacheRef,
-        runInferenceRef,
-        isMounted
+        cards: p.cards,
+        lang: p.lang,
+        key: p.key,
+        setAdvice: p.setAdvice,
+        setError: p.setError,
+        setLoading: p.setLoading,
+        setIsFallbackMode: p.setIsFallbackMode,
+        cacheRef: p.cacheRef,
+        runInferenceRef: p.runInferenceRef,
+        isMounted: () => mounted
       })
     }, 500)
     return () => {
       mounted = false
       clearTimeout(timer)
     }
-    // Depend on specific primitive keys to prevent reference changes of props from resetting the timer
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, status, lang, hasWebGpu])
 }
 

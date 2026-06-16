@@ -47,7 +47,8 @@ describe("offscreen.ts", () => {
         sendMessage: sendMessageMock,
         onMessage: {
           addListener: vi.fn((fn) => messageListeners.push(fn))
-        }
+        },
+        getURL: vi.fn().mockReturnValue("assets/wasm")
       }
     } as any
 
@@ -138,7 +139,6 @@ describe("offscreen.ts", () => {
   it("should handle verify-integrity message correctly", async () => {
     await importOffscreen()
     vi.mocked(verifyOpfsIntegrity).mockResolvedValue(true)
-    vi.mocked(verifyCacheIntegrity).mockResolvedValue(false)
 
     const onMessageCallback = messageListeners[0]
     const sendResponse = vi.fn()
@@ -151,7 +151,6 @@ describe("offscreen.ts", () => {
 
     await vi.waitFor(() => {
       expect(verifyOpfsIntegrity).toHaveBeenCalled()
-      expect(verifyCacheIntegrity).toHaveBeenCalled()
       expect(sendResponse).toHaveBeenCalledWith({
         status: "success",
         integrityPassed: true // True because opfsValid is true
@@ -222,10 +221,9 @@ describe("offscreen.ts", () => {
     )
 
     await vi.waitFor(() => {
-      expect(removeEntryMock).toHaveBeenCalledWith("webllm_models", {
+      expect(removeEntryMock).toHaveBeenCalledWith("litert_models", {
         recursive: true
       })
-      expect(global.caches.delete).toHaveBeenCalledWith("webllm/model_cache")
       expect(sendResponse).toHaveBeenCalledWith({ status: "success" })
     })
   })
@@ -243,8 +241,7 @@ describe("offscreen.ts", () => {
         action: "run-inference",
         requestId: "req-123",
         prompt: "Test prompt",
-        systemPrompt: "Sys prompt",
-        temperature: 0.7
+        systemPrompt: "Sys prompt"
       },
       {},
       sendResponse
@@ -257,8 +254,7 @@ describe("offscreen.ts", () => {
       action: "run-inference",
       requestId: "req-123",
       prompt: "Test prompt",
-      systemPrompt: "Sys prompt",
-      temperature: 0.7
+      systemPrompt: "Sys prompt"
     })
 
     // Simulate worker returning result

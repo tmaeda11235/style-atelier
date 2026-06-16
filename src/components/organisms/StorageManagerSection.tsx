@@ -42,7 +42,13 @@ export function StorageManagerSection({
             <span>{estimate.percentage}%</span>
           </div>
 
-          <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+          <div
+            className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden"
+            role="progressbar"
+            aria-valuenow={estimate.percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`${t.storageUsage}: ${estimate.usageFormatted} / ${estimate.quotaFormatted}`}>
             <div
               className={`h-full transition-all duration-500 rounded-full ${
                 estimate.percentage >= 90
@@ -57,7 +63,9 @@ export function StorageManagerSection({
 
           {/* Warnings */}
           {estimate.percentage >= 90 ? (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200/60 rounded-xl p-3 text-red-800 text-xs">
+            <div
+              role="alert"
+              className="flex items-start gap-2 bg-red-50 border border-red-200/60 rounded-xl p-3 text-red-800 text-xs">
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold">{t.storageWarning90Title}</span>
@@ -67,7 +75,9 @@ export function StorageManagerSection({
               </div>
             </div>
           ) : estimate.percentage >= 80 ? (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-amber-800 text-xs">
+            <div
+              role="alert"
+              className="flex items-start gap-2 bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-amber-800 text-xs">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold">{t.storageWarning80Title}</span>

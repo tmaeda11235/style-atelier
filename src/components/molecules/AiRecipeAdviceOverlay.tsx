@@ -23,13 +23,11 @@ interface AdviceSectionContentProps {
   hasWebGpu?: boolean | null
 }
 
-function NotReadyWrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center justify-center p-4 text-center rounded-lg bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-indigo-950/30">
-      {children}
-    </div>
-  )
-}
+const NotReadyWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex flex-col items-center justify-center p-4 text-center rounded-lg bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-indigo-950/30">
+    {children}
+  </div>
+)
 
 function FallbackAdviceContainer(props: {
   advice: string

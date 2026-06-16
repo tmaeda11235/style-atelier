@@ -200,6 +200,23 @@ function detectInitialState(
   return { detectedRarity, editedSegments }
 }
 
+function useMintingInitialization(
+  state: MintingState,
+  setState: React.Dispatch<React.SetStateAction<MintingState>>
+) {
+  useEffect(() => {
+    const { detectedRarity, editedSegments } = detectInitialState(
+      state.mintingItem,
+      state.variationBase
+    )
+    setState((s) => ({
+      ...s,
+      editedSegments,
+      selectedRarity: detectedRarity
+    }))
+  }, [state.mintingItem, state.variationBase])
+}
+
 export function useMinting(
   addLog: (msg: string) => void,
   setActiveTab: (tab: "history" | "library" | "workbench") => void
@@ -212,17 +229,7 @@ export function useMinting(
     state.selectedRarity
   )
 
-  useEffect(() => {
-    const { detectedRarity, editedSegments } = detectInitialState(
-      state.mintingItem,
-      state.variationBase
-    )
-    setState((s) => ({
-      ...s,
-      editedSegments,
-      selectedRarity: detectedRarity
-    }))
-  }, [state.mintingItem, state.variationBase])
+  useMintingInitialization(state, setState)
 
   const handleSaveMintedCard = useSaveMintedCard({
     ...state,

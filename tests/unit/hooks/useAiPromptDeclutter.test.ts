@@ -71,7 +71,7 @@ describe("useAiPromptDeclutter", () => {
     expect(result.current.error).toBeNull()
   })
 
-  it("should handle error gracefully when inference fails", async () => {
+  it("should handle error gracefully when inference fails and return fallback", async () => {
     vi.mocked(chrome.runtime.sendMessage).mockImplementation(
       (message, callback) => {
         if (message && message.action === "verify-integrity") {
@@ -101,5 +101,35 @@ describe("useAiPromptDeclutter", () => {
 
     expect(segments).toEqual([{ type: "text", value: "test prompt" }])
     expect(result.current.isFallbackMode).toBe(true)
+    expect(result.current.error).toBe("Failed to allocate memory")
+  })
+
+  it("should run fallback directly when status is not ready", async () => {
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "verify-integrity") {
+          if (callback) callback({ status: "success", integrityPassed: false })
+        }
+      }
+    )
+
+    const { result } = renderHook(() => useAiPromptDeclutter())
+
+    // Wait for verify-integrity to settle
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    })
+
+    expect(result.current.isModelReady).toBe(false)
+
+    let segments: any
+    await act(async () => {
+      segments = await result.current.declutterPrompt(
+        "another test prompt --ar 4:3"
+      )
+    })
+
+    expect(segments).toEqual([{ type: "text", value: "another test prompt" }])
+    expect(result.current.error).toBeNull()
   })
 })

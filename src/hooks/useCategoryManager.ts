@@ -57,7 +57,9 @@ async function performUpdateExistingCategory(
       iconEmoji: form.emoji.trim() || undefined,
       iconUrl: form.iconUrl || undefined,
       iconCardId: form.iconCardId || undefined,
-      parentId: form.parentId || undefined
+      parentId: form.parentId || undefined,
+      coverImageUrl: form.coverImageUrl || undefined,
+      theme: form.theme || undefined
     })
     addLog(t.logUpdated.replace("{name}", trimmedName))
     form.handleCancelEdit()
@@ -85,6 +87,8 @@ async function performAddNewCategory(params: SaveParams, trimmedName: string) {
       iconUrl: form.iconUrl || undefined,
       iconCardId: form.iconCardId || undefined,
       parentId: form.parentId || undefined,
+      coverImageUrl: form.coverImageUrl || undefined,
+      theme: form.theme || undefined,
       createdAt: Date.now()
     })
     addLog(t.logCreated.replace("{name}", trimmedName))
@@ -93,7 +97,10 @@ async function performAddNewCategory(params: SaveParams, trimmedName: string) {
       form.setParentId,
       form.setEmoji,
       form.setIconUrl,
-      form.setIconCardId
+      form.setIconCardId,
+      form.setCoverImageUrl,
+      form.setTheme,
+      form.setSelectionType
     )
     onClose()
   } catch (err) {
@@ -140,6 +147,8 @@ function startCategoryEdit(cat: CustomCategory, form: any) {
   form.setEmoji(cat.iconEmoji || "")
   form.setIconUrl(cat.iconUrl || "")
   form.setIconCardId(cat.iconCardId || "")
+  form.setCoverImageUrl(cat.coverImageUrl || "")
+  form.setTheme(cat.theme || "")
   form.setActiveTab("create")
 }
 
@@ -148,13 +157,19 @@ function resetFormState(
   setParentId: (v: string) => void,
   setEmoji: (v: string) => void,
   setIconUrl: (v: string) => void,
-  setIconCardId: (v: string) => void
+  setIconCardId: (v: string) => void,
+  setCoverImageUrl: (v: string) => void,
+  setTheme: (v: string) => void,
+  setSelectionType: (v: "icon" | "cover" | null) => void
 ) {
   setName("")
   setParentId("")
   setEmoji("")
   setIconUrl("")
   setIconCardId("")
+  setCoverImageUrl("")
+  setTheme("")
+  setSelectionType(null)
 }
 
 function useCategoryData() {

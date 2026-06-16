@@ -1,5 +1,5 @@
 import { useWebLlm } from "@/hooks/useWebLlm"
-import { act, renderHook } from "@testing-library/react"
+import { act, renderHook, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Helper to trigger runtime.onMessage event
@@ -49,7 +49,9 @@ describe("useWebLlm", () => {
       { target: "offscreen", action: "verify-integrity" },
       expect.any(Function)
     )
-    expect(result.current.status).toBe("idle")
+    await waitFor(() => {
+      expect(result.current.status).toBe("idle")
+    })
   })
 
   it("should set status to ready if integrity verification passes", async () => {
@@ -75,7 +77,9 @@ describe("useWebLlm", () => {
       await sendMessagePromise
     })
 
-    expect(result.current.status).toBe("ready")
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready")
+    })
     expect(result.current.progress).toBe(100)
   })
 
@@ -119,7 +123,7 @@ describe("useWebLlm", () => {
       {
         target: "offscreen",
         action: "check-quota",
-        requiredBytes: 1.5 * 1024 * 1024 * 1024
+        requiredBytes: 2.5 * 1024 * 1024 * 1024
       },
       expect.any(Function)
     )
@@ -204,7 +208,11 @@ describe("useWebLlm", () => {
     )
 
     const { result } = renderHook(() => useWebLlm())
-    expect(result.current.status).toBe("ready")
+
+    // Wait for the async initialization check to settle
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready")
+    })
 
     vi.mocked(chrome.runtime.sendMessage).mockClear()
 
@@ -243,14 +251,11 @@ describe("useWebLlm", () => {
       }
     )
 
-    let inferenceResult = ""
-    await act(async () => {
-      inferenceResult = await result.current.runInference(
-        "Generate a style",
-        "You are an artist",
-        0.5
-      )
-    })
+    const inferenceResult = await result.current.runInference(
+      "Generate a style",
+      "You are an artist",
+      0.5
+    )
 
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
       {
@@ -282,9 +287,55 @@ describe("useWebLlm", () => {
     )
 
     await expect(
-      act(async () => {
-        await result.current.runInference("Generate a style")
-      })
+      result.current.runInference("Generate a style")
     ).rejects.toThrow("Inference failed error")
+  })
+
+  it("should set status to unsupported on initialization if WebGPU is not supported", async () => {
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      gpu: undefined
+    })
+
+    const { result } = renderHook(() => useWebLlm())
+
+    // Wait for async checks to complete
+    await waitFor(() => {
+      expect(result.current.status).toBe("unsupported")
+    })
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(
+      { target: "offscreen", action: "verify-integrity" },
+      expect.any(Function)
+    )
+    vi.unstubAllGlobals()
+  })
+
+  it("should set status to unsupported when startDownload is called if WebGPU is not supported", async () => {
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      gpu: undefined
+    })
+
+    const { result } = renderHook(() => useWebLlm())
+
+    await waitFor(() => {
+      expect(result.current.status).toBe("unsupported")
+    })
+
+    // Try to trigger startDownload
+    await act(async () => {
+      await result.current.startDownload()
+    })
+
+    expect(result.current.status).toBe("unsupported")
+    expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(
+      {
+        target: "offscreen",
+        action: "check-quota",
+        requiredBytes: expect.any(Number)
+      },
+      expect.any(Function)
+    )
+    vi.unstubAllGlobals()
   })
 })
