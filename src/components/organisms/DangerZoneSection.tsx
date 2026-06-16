@@ -17,6 +17,77 @@ interface DangerZoneSectionProps {
   t: any
 }
 
+interface CloudBackupStatusProps {
+  isLoadingCloudBackup: boolean
+  cloudBackup: {
+    modifiedTime: string
+    size: string
+  } | null
+  t: any
+}
+
+function CloudBackupStatus({
+  isLoadingCloudBackup,
+  cloudBackup,
+  t
+}: CloudBackupStatusProps) {
+  return (
+    <div className="text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
+      {isLoadingCloudBackup ? (
+        <span className="text-blue-500 animate-pulse flex items-center gap-1">
+          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          {t.loadingCloudBackup}
+        </span>
+      ) : cloudBackup ? (
+        <span>
+          {t.cloudBackupLabel}
+          {cloudBackup.modifiedTime} ({cloudBackup.size})
+        </span>
+      ) : (
+        <span className="text-slate-400">{t.noCloudBackup}</span>
+      )}
+    </div>
+  )
+}
+
+interface DangerZoneActionsProps {
+  isSyncEnabled: boolean
+  isSyncing: boolean
+  isRestoring: boolean
+  handleResetDbClick: () => void
+  handleForceRecovery: () => void
+  t: any
+}
+
+function DangerZoneActions({
+  isSyncEnabled,
+  isSyncing,
+  isRestoring,
+  handleResetDbClick,
+  handleForceRecovery,
+  t
+}: DangerZoneActionsProps) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        id="reset-db-btn"
+        onClick={handleResetDbClick}
+        className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5">
+        <Database className="w-3.5 h-3.5" />
+        {t.resetBtn}
+      </button>
+      <button
+        onClick={handleForceRecovery}
+        disabled={!isSyncEnabled || isSyncing || isRestoring}
+        className="px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 disabled:opacity-30"
+        id="force-recovery-btn">
+        <DownloadCloud className="w-3.5 h-3.5 text-red-500" />
+        {t.restoreBtnText}
+      </button>
+    </div>
+  )
+}
+
 export function DangerZoneSection({
   isSyncEnabled,
   isSyncing,
@@ -40,39 +111,20 @@ export function DangerZoneSection({
           </h3>
           <div className="flex flex-col gap-2 mt-2">
             {isSyncEnabled && (
-              <div className="text-[10px] text-slate-500 font-medium mb-1 flex items-center gap-1">
-                {isLoadingCloudBackup ? (
-                  <span className="text-blue-500 animate-pulse flex items-center gap-1">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    {t.loadingCloudBackup}
-                  </span>
-                ) : cloudBackup ? (
-                  <span>
-                    {t.cloudBackupLabel}
-                    {cloudBackup.modifiedTime} ({cloudBackup.size})
-                  </span>
-                ) : (
-                  <span className="text-slate-400">{t.noCloudBackup}</span>
-                )}
-              </div>
+              <CloudBackupStatus
+                isLoadingCloudBackup={isLoadingCloudBackup}
+                cloudBackup={cloudBackup}
+                t={t}
+              />
             )}
-            <div className="flex flex-wrap gap-2">
-              <button
-                id="reset-db-btn"
-                onClick={handleResetDbClick}
-                className="px-3 py-2 bg-red-600 hover:bg-red-700 hover:shadow-sm text-white text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5" />
-                {t.resetBtn}
-              </button>
-              <button
-                onClick={handleForceRecovery}
-                disabled={!isSyncEnabled || isSyncing || isRestoring}
-                className="px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold rounded-xl transition-all duration-150 flex items-center gap-1.5 disabled:opacity-30"
-                id="force-recovery-btn">
-                <DownloadCloud className="w-3.5 h-3.5 text-red-500" />
-                {t.restoreBtnText}
-              </button>
-            </div>
+            <DangerZoneActions
+              isSyncEnabled={isSyncEnabled}
+              isSyncing={isSyncing}
+              isRestoring={isRestoring}
+              handleResetDbClick={handleResetDbClick}
+              handleForceRecovery={handleForceRecovery}
+              t={t}
+            />
           </div>
         </div>
       </div>

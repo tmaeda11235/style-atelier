@@ -8,6 +8,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 import "../../src/style.css" // スタイルの読み込み
 
 import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
+import { LanguageProvider } from "../../src/contexts/LanguageContext"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -907,7 +908,12 @@ function SandboxWrapper() {
   )
 
   React.useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth)
+    const handleResize = () => {
+      console.log(
+        `[Sandbox Dashboard] Resizing layout, clientWidth: ${window.innerWidth}`
+      )
+      setWindowWidth(window.innerWidth)
+    }
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
@@ -1171,7 +1177,12 @@ function SandboxWrapper() {
           <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-between">
             <button
               id="test-open-onboarding-btn"
-              onClick={() => setIsOnboardingOpen(true)}
+              onClick={() => {
+                console.log(
+                  "[Sandbox] Clicked Open Onboarding Button, setting state to true"
+                )
+                setIsOnboardingOpen(true)
+              }}
               className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
               💡 Open Onboarding Guide
             </button>
@@ -1188,14 +1199,15 @@ function SandboxWrapper() {
         <SidePanelPage />
       </div>
 
-      {isNarrow && (
-        <button
-          id="test-open-onboarding-btn"
-          onClick={() => setIsOnboardingOpen(true)}
-          className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
-          💡 Open Onboarding Guide
-        </button>
-      )}
+      {isNarrow &&
+        !(typeof navigator !== "undefined" && navigator.webdriver) && (
+          <button
+            id="test-open-onboarding-btn"
+            onClick={() => setIsOnboardingOpen(true)}
+            className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
+            💡 Open Onboarding Guide
+          </button>
+        )}
 
       <OnboardingGuide
         isOpen={isOnboardingOpen}
@@ -1209,7 +1221,9 @@ const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SandboxWrapper />
+      <LanguageProvider>
+        <SandboxWrapper />
+      </LanguageProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )

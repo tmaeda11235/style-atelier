@@ -146,10 +146,7 @@ export default ts.config(
     files: [
       "src/placeholder-non-existent-func-lines.ts",
       "src/components/molecules/ConnectionAlert.tsx",
-      "src/components/organisms/DangerZoneSection.tsx",
-      "src/components/organisms/LocalBackupSection.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/StorageManagerSection.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/hooks/useEasyModeView.ts",
     ],
