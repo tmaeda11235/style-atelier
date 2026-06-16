@@ -10,36 +10,6 @@ async function getDependencyGraph() {
   return JSON.parse(graphData);
 }
 
-function findAffectedComponents(changedFiles, dependencyGraph) {
-  const affected = new Set();
-  
-  for (const changedFile of changedFiles) {
-    for (const [component, data] of Object.entries(dependencyGraph)) {
-      if (component === changedFile || data.dependencies.includes(changedFile)) {
-        affected.add(component);
-      }
-    }
-  }
-  
-  let newlyAdded;
-  do {
-    newlyAdded = false;
-    for (const [component, data] of Object.entries(dependencyGraph)) {
-      if (!affected.has(component)) {
-        for (const dep of data.dependencies) {
-          if (affected.has(dep)) {
-            affected.add(component);
-            newlyAdded = true;
-            break;
-          }
-        }
-      }
-    }
-  } while (newlyAdded);
-
-  return Array.from(affected);
-}
-
 async function main() {
   console.log('Verifying Proof of Work...');
   
@@ -116,23 +86,53 @@ async function main() {
     console.log('Changed files match git diff exactly.');
 
     // 4. Verify Tested Journeys match dependency graph
-    const dependencyGraph = await getDependencyGraph();
-    const affectedComponents = findAffectedComponents(actualChangedFiles, dependencyGraph);
+    const reverseGraph = await getDependencyGraph();
     
-    const userJourneys = JSON.parse(await fs.readFile('memory-bank/userJourneys.json', 'utf8'));
-    const requiredJourneys = new Set();
+    const userJourneysData = JSON.parse(await fs.readFile('memory-bank/userJourneys.json', 'utf8'));
+    const userJourneys = userJourneysData.journeys || [];
     
-    for (const [journeyId, journeyData] of Object.entries(userJourneys)) {
-      if (journeyData.views) {
-        for (const view of journeyData.views) {
-          if (affectedComponents.some(c => c.includes(view))) {
-            requiredJourneys.add(journeyId);
-          }
+    const viewComponentToJourney = {};
+    for (const journey of userJourneys) {
+      if (journey.viewComponents) {
+        for (const vc of journey.viewComponents) {
+          if (!viewComponentToJourney[vc]) viewComponentToJourney[vc] = new Set();
+          viewComponentToJourney[vc].add(journey.id);
         }
       }
     }
+
+    const affectedViewComponents = new Set();
+    const visited = new Set();
     
-    const expectedJourneys = Array.from(requiredJourneys).sort();
+    function traverse(file) {
+      if (visited.has(file)) return;
+      visited.add(file);
+      
+      if (viewComponentToJourney[file]) {
+        affectedViewComponents.add(file);
+      }
+      
+      const dependents = reverseGraph[file] || [];
+      for (const dep of dependents) {
+        traverse(dep);
+      }
+    }
+
+    for (const file of actualChangedFiles) {
+      if (file.startsWith('src/')) {
+        traverse(file);
+      }
+    }
+
+    const affectedJourneys = new Set();
+    for (const vc of affectedViewComponents) {
+      const journeys = viewComponentToJourney[vc] || new Set();
+      for (const j of journeys) {
+        affectedJourneys.add(j);
+      }
+    }
+    
+    const expectedJourneys = Array.from(affectedJourneys).sort();
     const payloadJourneys = [...(payload.testedJourneys || [])].sort();
 
     if (payloadJourneys.includes('ALL')) {
