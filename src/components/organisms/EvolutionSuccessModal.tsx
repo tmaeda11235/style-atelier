@@ -107,6 +107,20 @@ export const EvolutionModalFooter: React.FC<{
   )
 }
 
+export const EvolutionModalOverlay: React.FC<{
+  confetti: any
+  children: React.ReactNode
+}> = ({ confetti, children }) => {
+  return (
+    <div className="fixed inset-0 bg-black/20 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
+      <EvolutionConfetti confetti={confetti} />
+      <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center overflow-hidden animate-in zoom-in-95 duration-500 z-20">
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   isOpen,
   onClose,
@@ -121,43 +135,39 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/20 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
-      <EvolutionConfetti confetti={anim.confetti} />
+    <EvolutionModalOverlay confetti={anim.confetti}>
+      <EvolutionBackgroundDecorations
+        configColor={RARITY_CONFIG[newTier].color}
+        newTier={newTier}
+        isFlipped={anim.isFlipped}
+      />
 
-      <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center overflow-hidden animate-in zoom-in-95 duration-500 z-20">
-        <EvolutionBackgroundDecorations
-          configColor={RARITY_CONFIG[newTier].color}
-          newTier={newTier}
-          isFlipped={anim.isFlipped}
-        />
+      <EvolutionModalHeader onClose={onClose} translation={translation} />
 
-        <EvolutionModalHeader onClose={onClose} translation={translation} />
+      <EvolutionCardDisplay
+        tilt={anim.tilt}
+        isFlipped={anim.isFlipped}
+        oldTier={oldTier}
+        newTier={newTier}
+        cardName={cardName}
+        thumbnailData={thumbnailData}
+        selectedThumbnails={selectedThumbnails}
+        oldConfig={RARITY_CONFIG[oldTier]}
+        config={RARITY_CONFIG[newTier]}
+        handleMouseMove={anim.handleMouseMove}
+        handleMouseLeave={anim.handleMouseLeave}
+      />
 
-        <EvolutionCardDisplay
-          tilt={anim.tilt}
-          isFlipped={anim.isFlipped}
-          oldTier={oldTier}
-          newTier={newTier}
-          cardName={cardName}
-          thumbnailData={thumbnailData}
-          selectedThumbnails={selectedThumbnails}
-          oldConfig={RARITY_CONFIG[oldTier]}
-          config={RARITY_CONFIG[newTier]}
-          handleMouseMove={anim.handleMouseMove}
-          handleMouseLeave={anim.handleMouseLeave}
-        />
+      <h3 className="text-md font-bold text-white text-center mb-2 z-10 flex-shrink-0">
+        {cardName}
+      </h3>
 
-        <h3 className="text-md font-bold text-white text-center mb-2 z-10">
-          {cardName}
-        </h3>
-
-        <EvolutionModalFooter
-          oldTier={oldTier}
-          newTier={newTier}
-          onClose={onClose}
-          closeText={translation.close}
-        />
-      </div>
-    </div>
+      <EvolutionModalFooter
+        oldTier={oldTier}
+        newTier={newTier}
+        onClose={onClose}
+        closeText={translation.close}
+      />
+    </EvolutionModalOverlay>
   )
 }
