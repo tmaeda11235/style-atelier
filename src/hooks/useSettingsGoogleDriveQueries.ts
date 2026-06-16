@@ -17,6 +17,11 @@ export function useSettingsGoogleDriveQueries(gdriveClient: GoogleDriveClient) {
       ["gdrive", "autoSyncEnabled"],
       localStorage.getItem("style-atelier-auto-sync-enabled") === "true"
     )
+    queryClient.setQueryData(
+      ["gdrive", "autoSyncSuspendedByAge"],
+      localStorage.getItem("style-atelier-auto-sync-suspended-by-age") ===
+        "true"
+    )
     const saved = localStorage.getItem("style-atelier-last-backup")
     queryClient.setQueryData(
       ["gdrive", "lastBackup"],
@@ -29,12 +34,33 @@ export function useSettingsGoogleDriveQueries(gdriveClient: GoogleDriveClient) {
         ["gdrive", "autoSyncEnabled"],
         customEvent.detail
       )
+      queryClient.setQueryData(
+        ["gdrive", "autoSyncSuspendedByAge"],
+        localStorage.getItem("style-atelier-auto-sync-suspended-by-age") ===
+          "true"
+      )
     }
+    const handleSuspendedChanged = (e: Event) => {
+      const customEvent = e as CustomEvent
+      queryClient.setQueryData(
+        ["gdrive", "autoSyncSuspendedByAge"],
+        customEvent.detail
+      )
+    }
+
     window.addEventListener("style-atelier-auto-sync-toggled", handleToggle)
+    window.addEventListener(
+      "style-atelier-auto-sync-suspended-by-age-changed",
+      handleSuspendedChanged
+    )
     return () => {
       window.removeEventListener(
         "style-atelier-auto-sync-toggled",
         handleToggle
+      )
+      window.removeEventListener(
+        "style-atelier-auto-sync-suspended-by-age-changed",
+        handleSuspendedChanged
       )
     }
   }, [queryClient])
@@ -49,6 +75,14 @@ export function useSettingsGoogleDriveQueries(gdriveClient: GoogleDriveClient) {
     queryKey: ["gdrive", "autoSyncEnabled"],
     queryFn: () =>
       localStorage.getItem("style-atelier-auto-sync-enabled") === "true",
+    staleTime: Infinity,
+    gcTime: Infinity
+  })
+  const autoSyncSuspendedByAgeQuery = useQuery({
+    queryKey: ["gdrive", "autoSyncSuspendedByAge"],
+    queryFn: () =>
+      localStorage.getItem("style-atelier-auto-sync-suspended-by-age") ===
+      "true",
     staleTime: Infinity,
     gcTime: Infinity
   })
@@ -79,6 +113,7 @@ export function useSettingsGoogleDriveQueries(gdriveClient: GoogleDriveClient) {
   return {
     isSyncEnabled: syncEnabledQuery.data ?? false,
     isAutoSyncEnabled: autoSyncEnabledQuery.data ?? false,
+    autoSyncSuspendedByAge: autoSyncSuspendedByAgeQuery.data ?? false,
     lastBackup: lastBackupQuery.data ?? null,
     accessToken: accessTokenQuery.data ?? null,
     onTokenUpdated: (newToken: string) => {

@@ -125,18 +125,12 @@ function PrivacyNote({ t }: PrivacyNoteProps) {
   )
 }
 
-export function LocalBackupSection({
-  fileInputRef,
-  isSyncing,
-  isRestoring,
-  handleLocalExport,
-  handleLocalImport,
-  handleExportCSV,
-  handleExportMarkdown,
-  t
-}: LocalBackupSectionProps) {
+export function LocalBackupSection(props: LocalBackupSectionProps) {
+  const { t } = props
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+    <div
+      id="local-backup-section"
+      className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
       {/* Subtle decorative background gradient */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
@@ -154,23 +148,10 @@ export function LocalBackupSection({
 
       {/* Action Buttons */}
       <div className="mt-4 space-y-4">
-        <BackupActions
-          fileInputRef={fileInputRef}
-          isSyncing={isSyncing}
-          isRestoring={isRestoring}
-          handleLocalExport={handleLocalExport}
-          handleLocalImport={handleLocalImport}
-          t={t}
-        />
+        <BackupActions {...props} />
 
         {/* Separator / Subheader for other tools export */}
-        <ExternalIntegration
-          isSyncing={isSyncing}
-          isRestoring={isRestoring}
-          handleExportCSV={handleExportCSV}
-          handleExportMarkdown={handleExportMarkdown}
-          t={t}
-        />
+        <ExternalIntegration {...props} />
 
         {/* Privacy Note */}
         <PrivacyNote t={t} />
