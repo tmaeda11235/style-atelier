@@ -50,6 +50,19 @@ function renderParameterBadges(parameters: Record<string, any> | undefined) {
     }
   })
 }
+function renderCardImage(card: Partial<StyleCard>) {
+  const container = document.getElementById("cardImageContainer")
+  if (!container) return
+
+  // Use thumbnailData if available, otherwise fallback to local image
+  const src = card.thumbnailData || "./cyber_samurai.png"
+
+  container.innerHTML = `
+    <img src="${src}" alt="${card.name || "Card Image"}" class="card-image">
+    <div class="card-image-overlay">Tap to reveal Prompt</div>
+  `
+}
+
 function renderCard(card: Partial<StyleCard>) {
   const cardTitleFront = document.getElementById("cardTitleFront")
   const cardTitleBack = document.getElementById("cardTitleBack")
@@ -77,6 +90,7 @@ function renderCard(card: Partial<StyleCard>) {
     )
   }
 
+  renderCardImage(card)
   renderParameterBadges(card.parameters)
 }
 
