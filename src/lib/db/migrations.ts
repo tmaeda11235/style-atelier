@@ -138,7 +138,6 @@ function setupVersions14OrHigher(db: Dexie) {
       recipeHistory: "id, timestamp"
     })
     .upgrade(upgradeToVersion15)
-
   // Version 16: Add imageSyncStates table for incremental Google Drive sync
   db.version(16)
     .stores({
