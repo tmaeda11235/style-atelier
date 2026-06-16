@@ -8,6 +8,9 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     // Ensure mock-webllm-downloaded is cleared BEFORE React mounts on sandbox load
     await page.addInitScript(() => {
       window.localStorage.removeItem("mock-webllm-downloaded")
+      ;(window as any).mockWebLlmConfig = {
+        supportWebGpu: true
+      }
     })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
@@ -142,7 +145,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
       const config = (window as any).mockWebLlmConfig
       if (config) {
         config.failDownload = false
-        config.downloadSpeed = 50 // slower download speed to capture progressbar state
+        config.downloadSpeed = 1500 // slower download speed to capture progressbar state
       }
     })
 
@@ -152,7 +155,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     )
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
-    await downloadBtn.click({ force: true })
+    await downloadBtn.dispatchEvent("click")
+    await page.waitForTimeout(500)
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame
@@ -160,8 +164,16 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
         "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
       )
       .first()
+
+    // Debugging print
+    const html = await spFrame
+      .locator("#ai-recipe-advice-section")
+      .innerHTML()
+      .catch(() => "not found")
+    console.log("DEBUG: #ai-recipe-advice-section innerHTML:", html)
+
     await expect(confirmDownloadBtn).toBeVisible()
-    await confirmDownloadBtn.click({ force: true })
+    await confirmDownloadBtn.dispatchEvent("click")
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame

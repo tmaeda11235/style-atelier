@@ -54,7 +54,16 @@ function ModelDownloadingOverlay({
       </p>
       {status === "downloading" && (
         <div className="w-full space-y-1">
-          <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
+          <div
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuetext={`${progress}%`}
+            aria-label={
+              t.webLlmStatusDownloadingLabel || "Model Download Progress"
+            }
+            className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
             <div
               className="bg-indigo-500 h-1 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
