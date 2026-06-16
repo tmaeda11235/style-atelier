@@ -59,7 +59,9 @@ export function AiStatusBadge({ status, className }: AiStatusBadgeProps) {
   const config = getBadgeConfig(status, isJa)
 
   return (
-    <div className={cn("group relative inline-block select-none", className)}>
+    <div
+      className={cn("group relative inline-block select-none", className)}
+      data-testid="ai-status-badge">
       <div
         className={cn(
           "flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full border transition-all duration-200 cursor-help",

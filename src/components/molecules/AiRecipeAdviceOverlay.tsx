@@ -276,6 +276,36 @@ const NotReadyWrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 )
 
+function AdviceLoadingView({
+  isEngineInitializing,
+  t
+}: {
+  isEngineInitializing?: boolean
+  t: any
+}) {
+  const loadingText = isEngineInitializing
+    ? t.aiEngineInitializing ||
+      "Initializing AI engine (this may take a few seconds)..."
+    : t.aiAdviceLoading || "Consulting the local AI cauldron..."
+  return (
+    <div className="flex items-center justify-center py-6 gap-2 text-slate-500 dark:text-slate-400">
+      <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+      <span>{loadingText}</span>
+    </div>
+  )
+}
+
+function AdviceErrorView({ error, t }: { error: string; t: any }) {
+  return (
+    <div className="flex items-center gap-1.5 p-2.5 rounded-lg bg-rose-50/50 dark:bg-rose-950/15 border border-rose-100/50 dark:border-rose-950/30 text-rose-600 dark:text-rose-400">
+      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+      <span>
+        {t.aiAdviceError || "Failed to concoct AI advice."}: {error}
+      </span>
+    </div>
+  )
+}
+
 export function AdviceSectionContent(props: AdviceSectionContentProps) {
   const {
     isModelReady,
@@ -310,26 +340,12 @@ export function AdviceSectionContent(props: AdviceSectionContentProps) {
     )
   }
   if (loading) {
-    const loadingText = isEngineInitializing
-      ? t.aiEngineInitializing ||
-        "Initializing AI engine (this may take a few seconds)..."
-      : t.aiAdviceLoading || "Consulting the local AI cauldron..."
     return (
-      <div className="flex items-center justify-center py-6 gap-2 text-slate-500 dark:text-slate-400">
-        <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-        <span>{loadingText}</span>
-      </div>
+      <AdviceLoadingView isEngineInitializing={isEngineInitializing} t={t} />
     )
   }
   if (error) {
-    return (
-      <div className="flex items-center gap-1.5 p-2.5 rounded-lg bg-rose-50/50 dark:bg-rose-950/15 border border-rose-100/50 dark:border-rose-950/30 text-rose-600 dark:text-rose-400">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-        <span>
-          {t.aiAdviceError || "Failed to concoct AI advice."}: {error}
-        </span>
-      </div>
-    )
+    return <AdviceErrorView error={error} t={t} />
   }
   return advice ? <AdviceViewer advice={advice} /> : null
 }

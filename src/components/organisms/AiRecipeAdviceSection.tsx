@@ -50,15 +50,7 @@ export const AiRecipeAdviceSection: React.FC<AiRecipeAdviceSectionProps> = ({
   t
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const {
-    advice,
-    loading,
-    error,
-    isModelReady,
-    status,
-    isEngineInitializing,
-    isFallback
-  } = useAiRecipeAdvice(cards)
+  const adviceState = useAiRecipeAdvice(cards)
   const llm = useWebLlm()
 
   if (cards.length < 2) return null
@@ -72,15 +64,13 @@ export const AiRecipeAdviceSection: React.FC<AiRecipeAdviceSectionProps> = ({
         isOpen={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         t={t}
-        status={status}
+        status={adviceState.status}
       />
 
       {isOpen && (
         <div className="p-3 border-t border-slate-200 dark:border-indigo-950 bg-white/40 dark:bg-slate-950/40 text-[11px] leading-relaxed font-sans text-slate-700 dark:text-slate-300">
           <AdviceSectionContent
-            isModelReady={isModelReady}
-            isEngineInitializing={isEngineInitializing}
-            status={status}
+            {...adviceState}
             progress={llm.progress}
             speed={llm.speed}
             eta={llm.eta}
@@ -89,10 +79,6 @@ export const AiRecipeAdviceSection: React.FC<AiRecipeAdviceSectionProps> = ({
             text={llm.text}
             webLlmError={llm.error}
             startDownload={llm.startDownload}
-            loading={loading}
-            error={error}
-            advice={advice}
-            isFallback={isFallback}
             t={t}
           />
         </div>
