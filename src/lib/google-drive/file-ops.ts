@@ -1,4 +1,4 @@
-import { fetchWithReauth } from "./http-client"
+import { fetchWithReauth, handleResponseError } from "./http-client"
 import type { BackupMetadata, ReauthContext } from "./types"
 
 /**
@@ -24,9 +24,7 @@ export async function searchBackupFile(
   )
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to search backup file: ${res.status} ${res.statusText}`
-    )
+    await handleResponseError(res, "Failed to search backup file")
   }
 
   const data = await res.json()
@@ -59,9 +57,7 @@ export async function getBackupMetadata(
   )
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to get backup metadata: ${res.status} ${res.statusText}`
-    )
+    await handleResponseError(res, "Failed to get backup metadata")
   }
 
   const data = await res.json()
@@ -74,4 +70,63 @@ export async function getBackupMetadata(
     }
   }
   return null
+}
+
+/**
+ * Search Google Drive's appDataFolder for 'temp_shared_cards.json'
+ */
+export async function searchTempSharedCardsFile(
+  accessToken: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<string | null> {
+  const ctx = context || { token: accessToken }
+  const query = encodeURIComponent(
+    "name = 'temp_shared_cards.json' and trashed = false"
+  )
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&spaces=appDataFolder`,
+    {
+      ...options
+    },
+    ctx,
+    onTokenUpdated
+  )
+
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to search temp shared cards file")
+  }
+
+  const data = await res.json()
+  if (data.files && data.files.length > 0) {
+    return data.files[0].id
+  }
+  return null
+}
+
+/**
+ * Delete a file on Google Drive by fileId
+ */
+export async function deleteFile(
+  accessToken: string,
+  fileId: string,
+  onTokenUpdated?: (newToken: string) => void,
+  context?: ReauthContext,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<void> {
+  const ctx = context || { token: accessToken }
+  const res = await fetchWithReauth(
+    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+    {
+      method: "DELETE",
+      ...options
+    },
+    ctx,
+    onTokenUpdated
+  )
+
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to delete file")
+  }
 }

@@ -80,17 +80,19 @@ function ImportSuccessBannerContent({
         </svg>
       </div>
       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
-        {droppedItem.isImport
-          ? t.dragAndDrop.importSuccess.replace(
-              "{name}",
-              droppedItem.name || "New Card"
-            )
-          : droppedItem.isMerged
-            ? t.dragAndDrop.associated.replace(
+        {droppedItem.isRestoreSuccess
+          ? t.dragAndDrop.restoreSuccess
+          : droppedItem.isImport
+            ? t.dragAndDrop.importSuccess.replace(
                 "{name}",
-                droppedItem.name || "Existing Card"
+                droppedItem.name || "New Card"
               )
-            : t.dragAndDrop.historyAdded}
+            : droppedItem.isMerged
+              ? t.dragAndDrop.associated.replace(
+                  "{name}",
+                  droppedItem.name || "Existing Card"
+                )
+              : t.dragAndDrop.historyAdded}
       </p>
     </div>
   )

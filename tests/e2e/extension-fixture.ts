@@ -36,6 +36,12 @@ export const test = base.extend<{
     logPhase("テスト開始", testInfo.title)
 
     const project = testInfo.project
+    if (project.name !== "extension") {
+      testInfo.skip(
+        true,
+        "Skip extension tests on non-extension browser projects"
+      )
+    }
     // playwright.config.ts から args を取得。なければデフォルト
     const args = project.use?.args || []
 

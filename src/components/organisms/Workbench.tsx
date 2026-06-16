@@ -5,10 +5,9 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useChromeTabConnection } from "../../hooks/useChromeTabConnection"
 import { useEvolution } from "../../hooks/useEvolution"
 import { usePromptInjector } from "../../hooks/usePromptInjector"
+import { usePromptSegmentsSync } from "../../hooks/usePromptSegmentsSync"
 import { useWorkbench } from "../../hooks/useWorkbench"
-import type { PromptSegment } from "../../lib/db-schema"
-import { mergePromptSegments } from "../../lib/prompt-utils"
-import { mergeReferences } from "../../lib/prompt-reference-utils"
+import type { PromptSegment, RecipeHistoryItem } from "../../lib/db-schema"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import {
   evolveTargetCard,
@@ -22,82 +21,6 @@ interface WorkbenchProps {
   onStartVariationMinting?: (base: any) => void
   addLog?: (msg: string) => void
   setAlertType: (type: AlertType | null) => void
-}
-
-function usePromptSegmentsSync(
-  workbenchCards: any[],
-  setEditedSegments: (seg: PromptSegment[]) => void,
-  setEditedParams: (p: any) => void,
-  setSlotValues: (vals: Record<string, string>) => void
-) {
-  useEffect(() => {
-    if (workbenchCards.length === 0) {
-      setEditedSegments([])
-      setEditedParams({})
-      setSlotValues({})
-      return
-    }
-    let nextSegments: PromptSegment[]
-    let nextParams: any = {}
-    if (workbenchCards.length === 1) {
-      const target = workbenchCards[0]
-      nextSegments = target.promptSegments || []
-      nextParams = target.parameters || {}
-    } else {
-      // Apply weights to segments
-      const segmentsWithWeights = workbenchCards.flatMap((card) => {
-        const segs = card.promptSegments || []
-        const cardWeight = card.weight !== undefined ? card.weight : 1.0
-        return segs.map((seg: any) => {
-          const segWeight = seg.weight !== undefined ? seg.weight : 1.0
-          const finalWeight = parseFloat((segWeight * cardWeight).toFixed(2))
-          return {
-            ...seg,
-            weight: finalWeight !== 1.0 ? finalWeight : undefined
-          }
-        })
-      })
-
-      nextSegments = mergePromptSegments(segmentsWithWeights)
-
-      // Merge sref / cref parameters with weights
-      nextParams = { ...workbenchCards[0].parameters }
-
-      const srefList = workbenchCards
-        .filter((p) => p.parameters?.sref)
-        .map((p) => ({ items: p.parameters.sref!, cardWeight: p.weight }))
-      nextParams.sref = mergeReferences(srefList).slice(0, 5)
-
-      const crefList = workbenchCards
-        .filter((p) => p.parameters?.cref)
-        .map((p) => ({ items: p.parameters.cref!, cardWeight: p.weight }))
-      nextParams.cref = mergeReferences(crefList).slice(0, 5)
-
-      // Other parameters are merged with latest priority
-      workbenchCards.slice(1).forEach((parent) => {
-        if (parent.parameters?.imagePrompts) {
-          nextParams.imagePrompts = Array.from(
-            new Set([
-              ...(parent.parameters.imagePrompts || []),
-              ...(nextParams.imagePrompts || [])
-            ])
-          ).slice(0, 5)
-        }
-        if (parent.parameters?.p) {
-          nextParams.p = Array.from(
-            new Set([...(parent.parameters.p || []), ...(nextParams.p || [])])
-          ).slice(0, 5)
-        }
-      })
-    }
-    setEditedSegments(nextSegments)
-    setEditedParams(nextParams)
-    const initialSlotValues: Record<string, string> = {}
-    nextSegments.forEach((seg) => {
-      if (seg.type === "slot") initialSlotValues[seg.label] = seg.default || ""
-    })
-    setSlotValues(initialSlotValues)
-  }, [workbenchCards, setEditedSegments, setEditedParams, setSlotValues])
 }
 
 function useWorkbenchBase() {
@@ -305,12 +228,17 @@ function useWorkbenchCore({
     [workbenchCards]
   )
 
+  const [restoredRecipe, setRestoredRecipe] =
+    useState<RecipeHistoryItem | null>(null)
+
   useChromeTabConnection({ workbenchCardsDependency, setAlertType, addLog })
   usePromptSegmentsSync(
     workbenchCards,
     setEditedSegments,
     setEditedParams,
-    setSlotValues
+    setSlotValues,
+    restoredRecipe,
+    setRestoredRecipe
   )
 
   const handlers = useWorkbenchHandlers({
@@ -342,6 +270,15 @@ function useWorkbenchCore({
     [editedSegments]
   )
 
+  const handleRestoreRecipe = useCallback(
+    async (recipe: RecipeHistoryItem) => {
+      setRestoredRecipe(recipe)
+      await base.restoreRecipe(recipe)
+      addLog?.(`Recipe restored: ${recipe.name}`)
+    },
+    [base.restoreRecipe, addLog]
+  )
+
   return {
     ...base,
     targetCard,
@@ -351,11 +288,52 @@ function useWorkbenchCore({
     canEvolveTarget,
     slots,
     ...states,
-    ...handlers
+    ...handlers,
+    handleRestoreRecipe
   }
 }
 
 export const Workbench: React.FC<WorkbenchProps> = (props) => {
   const data = useWorkbenchCore(props)
+  const { undo, redo } = data
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement
+      if (activeEl) {
+        const tagName = activeEl.tagName.toLowerCase()
+        if (
+          tagName === "input" ||
+          tagName === "textarea" ||
+          activeEl.getAttribute("contenteditable") === "true"
+        ) {
+          // Allow Undo/Redo shortcuts for slider inputs (type range) but ignore for text editing inputs
+          if ((activeEl as HTMLInputElement).type !== "range") {
+            return
+          }
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (e.key.toLowerCase() === "z") {
+          e.preventDefault()
+          if (e.shiftKey) {
+            redo()
+          } else {
+            undo()
+          }
+        } else if (e.key.toLowerCase() === "y") {
+          e.preventDefault()
+          redo()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [undo, redo])
+
   return <WorkbenchView {...data} addLog={props.addLog} />
 }

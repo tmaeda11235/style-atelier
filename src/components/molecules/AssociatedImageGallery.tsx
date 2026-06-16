@@ -1,9 +1,8 @@
-import { CheckCircle2 } from "lucide-react"
 import React from "react"
-import iconUrl from "url:../../../assets/icon.png"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { HelpTooltip } from "../atoms/HelpTooltip"
+import { ImageThumbnailItem } from "../atoms/ImageThumbnailItem"
 
 /**
  * Props for the AssociatedImageGallery component.
@@ -15,48 +14,6 @@ export interface AssociatedImageGalleryProps {
   selectedThumbs: string[]
   /** Callback triggered when a thumbnail is selected or deselected */
   onToggleThumbnail: (imgUrl: string) => void
-}
-
-interface GalleryItemProps {
-  imgUrl: string
-  index: number
-  selectedThumbs: string[]
-  onToggleThumbnail: (imgUrl: string) => void
-  orders: string[]
-}
-
-const GalleryItem: React.FC<GalleryItemProps> = ({
-  imgUrl,
-  index,
-  selectedThumbs,
-  onToggleThumbnail,
-  orders
-}) => {
-  const selectedIdx = selectedThumbs.indexOf(imgUrl)
-  const isSelected = selectedIdx !== -1
-  const orderLabel = orders[selectedIdx] || `${selectedIdx + 1}th`
-
-  return (
-    <div
-      onClick={() => onToggleThumbnail(imgUrl)}
-      className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
-        isSelected
-          ? "border-blue-500 ring-2 ring-blue-100 shadow-md"
-          : "border-slate-200 hover:border-slate-400"
-      }`}>
-      <img
-        src={imgUrl === "assets/icon.png" ? iconUrl : imgUrl}
-        className="w-full h-full object-cover"
-        alt={`Card Image ${index + 1}`}
-      />
-      {isSelected && (
-        <div className="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" />
-          <span>{orderLabel}</span>
-        </div>
-      )}
-    </div>
-  )
 }
 
 /**
@@ -90,16 +47,23 @@ export const AssociatedImageGallery: React.FC<AssociatedImageGalleryProps> = ({
       <p className="text-[11px] text-slate-400">{t.minting.galleryTip}</p>
 
       <div className="grid grid-cols-2 gap-3">
-        {images.map((imgUrl, index) => (
-          <GalleryItem
-            key={index}
-            imgUrl={imgUrl}
-            index={index}
-            selectedThumbs={selectedThumbs}
-            onToggleThumbnail={onToggleThumbnail}
-            orders={t.minting.orders}
-          />
-        ))}
+        {images.map((imgUrl, index) => {
+          const selectedIdx = selectedThumbs.indexOf(imgUrl)
+          const isSelected = selectedIdx !== -1
+          const orderLabels = t.minting.orders
+          const orderLabel = orderLabels[selectedIdx] || `${selectedIdx + 1}th`
+
+          return (
+            <ImageThumbnailItem
+              key={index}
+              imgUrl={imgUrl}
+              alt={`Card Image ${index + 1}`}
+              isSelected={isSelected}
+              orderLabel={orderLabel}
+              onClick={() => onToggleThumbnail(imgUrl)}
+            />
+          )
+        })}
       </div>
     </div>
   )
