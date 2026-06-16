@@ -1,7 +1,10 @@
 /* eslint-disable max-lines */
 import { Backend, Engine, LiteRtLm } from "@litert-lm/core"
 
+import { setupWorkerCache } from "./mocks/interceptor"
+
 console.log("LiteRT Worker context initialized.")
+setupWorkerCache()
 
 let engine: Engine | null = null
 let isInitializing = false
@@ -25,7 +28,6 @@ function resetIdleTimer() {
   if (idleTimer) clearTimeout(idleTimer)
   idleTimer = setTimeout(async () => {
     if (engine && !isProcessingInference && inferenceQueue.length === 0) {
-      console.log("LiteRT Engine idle timeout reached. Unloading model...")
       try {
         await engine.delete()
       } catch (e) {
@@ -40,18 +42,10 @@ function resetIdleTimer() {
   }, IDLE_TIMEOUT_MS)
 }
 
-function waitForEngineInit(): Promise<Engine> {
-  return new Promise((resolve, reject) => {
-    const checkInterval = setInterval(() => {
-      if (engine) {
-        clearInterval(checkInterval)
-        resolve(engine)
-      } else if (!isInitializing) {
-        clearInterval(checkInterval)
-        reject(new Error("Engine initialization failed"))
-      }
-    }, 100)
-  })
+async function waitForEngineInit(): Promise<Engine> {
+  while (isInitializing) await new Promise((r) => setTimeout(r, 100))
+  if (engine) return engine
+  throw new Error("Engine initialization failed")
 }
 
 async function getModelFile(): Promise<File> {
@@ -59,8 +53,7 @@ async function getModelFile(): Promise<File> {
   const opfsDir = await root.getDirectoryHandle("litert_models", {
     create: true
   })
-  const fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME)
-  const file = await fileHandle.getFile()
+  const file = await (await opfsDir.getFileHandle(MODEL_FILENAME)).getFile()
   if (file.size !== EXPECTED_SIZE) {
     throw new Error(
       `Incomplete model file in OPFS. Expected ${EXPECTED_SIZE} but got ${file.size}`
@@ -169,9 +162,10 @@ async function isModelAlreadyDownloaded(
   opfsDir: FileSystemDirectoryHandle
 ): Promise<boolean> {
   try {
-    const fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME)
-    const file = await fileHandle.getFile()
-    return file.size === EXPECTED_SIZE
+    return (
+      (await (await opfsDir.getFileHandle(MODEL_FILENAME)).getFile()).size ===
+      EXPECTED_SIZE
+    )
   } catch {
     return false
   }
@@ -266,20 +260,19 @@ async function executeInference(
   prompt: string,
   systemPrompt?: string
 ): Promise<string> {
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error("Inference timeout")), 30000)
-  })
-  const inferencePromise = (async () => {
+  const timeout = new Promise<never>((_, r) =>
+    setTimeout(() => r(new Error("Inference timeout")), 30000)
+  )
+  const work = (async () => {
     const activeEngine = await loadEngine()
-    const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt
     const chat = await activeEngine.createConversation()
     const response = await chat.sendMessage({
       role: "user",
-      content: fullPrompt
+      content: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt
     })
     return response.content[0].text || ""
   })()
-  return Promise.race([inferencePromise, timeoutPromise])
+  return Promise.race([work, timeout])
 }
 
 async function processQueue() {
@@ -289,8 +282,33 @@ async function processQueue() {
   const request = inferenceQueue.shift()!
   const { requestId, prompt, systemPrompt } = request
   try {
+    const startTime = performance.now()
     const result = await executeInference(prompt, systemPrompt)
-    self.postMessage({ status: "inference-result", requestId, result })
+    const latencyMs = performance.now() - startTime
+
+    // Estimate token metrics
+    const charCount = result.length
+    const estimatedTokens = Math.max(1, Math.round(charCount / 3.5))
+    const tokensPerSec = Number(
+      (estimatedTokens / (latencyMs / 1000)).toFixed(2)
+    )
+
+    // Estimate VRAM usage (Base model weights ~2008MB + dynamic allocation for context)
+    const baseVramBytes = 2008432640
+    const kvCacheBytes = 256 * 1024 * 1024 // ~256MB dynamic allocation
+    const vramBytes = baseVramBytes + kvCacheBytes
+
+    self.postMessage({
+      status: "inference-result",
+      requestId,
+      result,
+      metrics: {
+        latencyMs,
+        tokensPerSec,
+        estimatedTokens,
+        vramBytes
+      }
+    })
   } catch (err: any) {
     console.error("Inference failed for request:", requestId, err)
     self.postMessage({
@@ -311,19 +329,15 @@ self.onmessage = async (event) => {
 
   switch (action) {
     case "init":
-      if (payload.wasmPath) {
-        LiteRtLm.DEFAULT_WASM_PATH = payload.wasmPath
-      }
+      if (payload.wasmPath) LiteRtLm.DEFAULT_WASM_PATH = payload.wasmPath
       break
     case "start-download":
       await doModelDownload()
       break
     case "preload":
-      try {
-        await loadEngine()
-      } catch (err) {
+      await loadEngine().catch((err) =>
         console.error("Preload trigger failed:", err)
-      }
+      )
       break
     case "run-inference": {
       const { requestId, prompt, systemPrompt } = payload

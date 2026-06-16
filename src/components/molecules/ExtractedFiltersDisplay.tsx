@@ -1,5 +1,7 @@
 import React from "react"
 
+import { AiStatusBadge } from "../atoms/AiStatusBadge"
+
 interface ExtractedFiltersDisplayProps {
   extractedFilters: {
     rarity: string
@@ -77,21 +79,25 @@ export function ExtractedFiltersDisplay(props: ExtractedFiltersDisplayProps) {
     extractedFilters.query === ""
   return (
     <div className="flex flex-col gap-1.5 px-1 py-0.5 animate-in fade-in duration-200">
-      {isEngineInitializing && (
-        <div className="flex items-center gap-1.5 text-[10px] text-indigo-500 font-medium">
-          <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <span>
-            {t.aiEngineInitializing ||
-              "Initializing AI engine (this may take a few seconds)..."}
-          </span>
-        </div>
-      )}
-      {!isEngineInitializing && isAiSearching && (
-        <div className="flex items-center gap-1.5 text-[10px] text-indigo-500 font-medium">
-          <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <span>{t.aiSearchAnalyzing || "AI parsing query..."}</span>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-0.5">
+        <AiStatusBadge />
+
+        {isEngineInitializing && (
+          <div className="flex items-center gap-1.5 text-[10px] text-indigo-500 font-medium">
+            <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <span>
+              {t.aiEngineInitializing ||
+                "Initializing AI engine (this may take a few seconds)..."}
+            </span>
+          </div>
+        )}
+        {!isEngineInitializing && isAiSearching && (
+          <div className="flex items-center gap-1.5 text-[10px] text-indigo-500 font-medium">
+            <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <span>{t.aiSearchAnalyzing || "AI parsing query..."}</span>
+          </div>
+        )}
+      </div>
       {aiSearchError && (
         <div className="text-[10px] text-red-500 font-medium">
           {aiSearchError}

@@ -1,3 +1,4 @@
+import { safeSendMessage } from "../lib/chrome-utils"
 import { checkWebGpuSupport } from "../lib/gpu-utils"
 
 export type DownloadStatus =
@@ -35,18 +36,8 @@ export async function checkCurrentStateHelper(
     if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    setStatus("idle")
-    setProgress(0)
-    return
-  }
-  chrome.runtime.sendMessage(
-    { target: "offscreen", action: "verify-integrity" },
-    (res) => {
+  safeSendMessage({ target: "offscreen", action: "verify-integrity" })
+    .then((res: any) => {
       if (res && res.status === "success" && res.integrityPassed) {
         setStatus("ready")
         setProgress(100)
@@ -54,8 +45,15 @@ export async function checkCurrentStateHelper(
         setStatus("idle")
         setProgress(0)
       }
-    }
-  )
+    })
+    .catch((err) => {
+      console.error("checkCurrentStateHelper error:", err)
+      setStatus("error")
+      setProgress(0)
+      if (setError) {
+        setError("接続が切断されました。ページをリロードしてください。")
+      }
+    })
 }
 
 function runStartDownload(
@@ -63,23 +61,28 @@ function runStartDownload(
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
-  chrome.runtime.sendMessage(
-    { target: "offscreen", action: "start-download" },
-    (downloadRes) => {
+  safeSendMessage({ target: "offscreen", action: "start-download" })
+    .then((downloadRes: any) => {
       if (!downloadRes || downloadRes.status === "error") {
         setStatus("error")
         setError(downloadRes?.error ?? "Start download failed")
       } else {
         setStatus("downloading")
         setProgress(0)
-        chrome.runtime.sendMessage({
+        safeSendMessage({
           target: "background",
           action: "set-downloading",
           value: true
+        }).catch((err) => {
+          console.error("set-downloading error:", err)
         })
       }
-    }
-  )
+    })
+    .catch((err) => {
+      console.error("runStartDownload error:", err)
+      setStatus("error")
+      setError("接続が切断されました。ページをリロードしてください。")
+    })
 }
 
 function runInitWorker(
@@ -87,17 +90,20 @@ function runInitWorker(
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
-  chrome.runtime.sendMessage(
-    { target: "offscreen", action: "init-worker" },
-    (workerRes) => {
+  safeSendMessage({ target: "offscreen", action: "init-worker" })
+    .then((workerRes: any) => {
       if (!workerRes || workerRes.status === "error") {
         setStatus("error")
         setError(workerRes?.error ?? "Worker init failed")
       } else {
         runStartDownload(setStatus, setProgress, setError)
       }
-    }
-  )
+    })
+    .catch((err) => {
+      console.error("runInitWorker error:", err)
+      setStatus("error")
+      setError("接続が切断されました。ページをリロードしてください。")
+    })
 }
 
 export async function startDownloadHelper(
@@ -124,23 +130,12 @@ export async function startDownloadHelper(
     if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    setError("Extension environment not available")
-    setStatus("error")
-    return
-  }
-
-  chrome.runtime.sendMessage(
-    {
-      target: "offscreen",
-      action: "check-quota",
-      requiredBytes: 1.5 * 1024 * 1024 * 1024
-    },
-    (quotaRes) => {
+  safeSendMessage({
+    target: "offscreen",
+    action: "check-quota",
+    requiredBytes: 2.5 * 1024 * 1024 * 1024
+  })
+    .then((quotaRes: any) => {
       if (!quotaRes || quotaRes.status === "error") {
         setStatus("error")
         setError(quotaRes?.error ?? "Quota check failed")
@@ -149,8 +144,12 @@ export async function startDownloadHelper(
       } else {
         runInitWorker(setStatus, setProgress, setError)
       }
-    }
-  )
+    })
+    .catch((err) => {
+      console.error("startDownloadHelper error:", err)
+      setStatus("error")
+      setError("接続が切断されました。ページをリロードしてください。")
+    })
 }
 
 export function purgeCacheHelper(
@@ -159,17 +158,8 @@ export function purgeCacheHelper(
   setError: (e: string | null) => void
 ) {
   setStatus("checking")
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    setError("Extension environment not available")
-    return
-  }
-  chrome.runtime.sendMessage(
-    { target: "offscreen", action: "purge-cache" },
-    (res) => {
+  safeSendMessage({ target: "offscreen", action: "purge-cache" })
+    .then((res: any) => {
       if (res && res.status === "success") {
         setStatus("idle")
         setProgress(0)
@@ -177,8 +167,12 @@ export function purgeCacheHelper(
         setStatus("error")
         setError(res?.error ?? "Failed to purge cache")
       }
-    }
-  )
+    })
+    .catch((err) => {
+      console.error("purgeCacheHelper error:", err)
+      setStatus("error")
+      setError("接続が切断されました。ページをリロードしてください。")
+    })
 }
 
 export function runInferenceHelper(
@@ -186,35 +180,32 @@ export function runInferenceHelper(
   systemPrompt?: string,
   temperature?: number
 ): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.runtime ||
-      !chrome.runtime.sendMessage
-    ) {
-      reject(new Error("Extension environment not available"))
-      return
-    }
-
-    const requestId = Math.random().toString(36).substring(7)
-    chrome.runtime.sendMessage(
-      {
-        target: "offscreen",
-        action: "run-inference",
-        requestId,
-        prompt,
-        systemPrompt,
-        temperature
-      },
-      (res) => {
-        if (!res) {
-          reject(new Error("No response from background"))
-        } else if (res.status === "error") {
-          reject(new Error(res.error || "Inference failed"))
-        } else {
-          resolve(res.result || "")
-        }
-      }
-    )
+  const requestId = Math.random().toString(36).substring(7)
+  return safeSendMessage({
+    target: "offscreen",
+    action: "run-inference",
+    requestId,
+    prompt,
+    systemPrompt,
+    temperature
   })
+    .then((res: any) => {
+      if (!res) {
+        throw new Error("No response from background")
+      } else if (res.status === "error") {
+        throw new Error(res.error || "Inference failed")
+      } else {
+        return res.result || ""
+      }
+    })
+    .catch((err) => {
+      console.error("runInferenceHelper error:", err)
+      if (
+        err.message &&
+        err.message.includes("Extension context invalidated")
+      ) {
+        throw new Error("接続が切断されました。ページをリロードしてください。")
+      }
+      throw err
+    })
 }

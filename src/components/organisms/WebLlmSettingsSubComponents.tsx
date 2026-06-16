@@ -265,8 +265,7 @@ export function WebLlmActionButtons({
     <div className="flex items-center gap-2 pt-1">
       {status !== "ready" &&
         status !== "downloading" &&
-        status !== "retrying" &&
-        status !== "unsupported" && (
+        status !== "retrying" && (
           <button
             type="button"
             onClick={startDownload}

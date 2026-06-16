@@ -4,7 +4,15 @@ import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/ai-search-utils", () => ({
-  parseSemanticQuery: vi.fn()
+  parseSemanticQuery: vi.fn(),
+  parseSemanticQueryFallback: vi.fn()
+}))
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en" }
+  })
 }))
 
 describe("useDebouncedSemanticSearch", () => {
@@ -44,6 +52,7 @@ describe("useDebouncedSemanticSearch", () => {
         setCategoryFilter: mockSetCategoryFilter,
         setColorFilter: mockSetColorFilter,
         setSearchTag: mockSetSearchTag,
+        webLlmStatus: "ready",
         t
       })
     )
@@ -55,7 +64,8 @@ describe("useDebouncedSemanticSearch", () => {
 
     expect(parseSemanticQuery).toHaveBeenCalledWith(
       "Legendary blue cyberpunk character",
-      categories
+      categories,
+      "en"
     )
 
     // applyFilters should have been called, setting category to ID "cat-cyberpunk"
@@ -89,6 +99,7 @@ describe("useDebouncedSemanticSearch", () => {
         setCategoryFilter: mockSetCategoryFilter,
         setColorFilter: mockSetColorFilter,
         setSearchTag: mockSetSearchTag,
+        webLlmStatus: "ready",
         t
       })
     )

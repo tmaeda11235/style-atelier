@@ -5,6 +5,7 @@ import type {
   HistoryItem,
   ParameterAlias,
   ParameterFolder,
+  RecipeHistoryItem,
   SlotHistoryItem,
   StyleCard,
   UserSettings
@@ -26,6 +27,7 @@ export class StyleAtelierDatabaseBase extends Dexie {
   slotHistory!: Table<SlotHistoryItem, string>
   parameterAliases!: Table<ParameterAlias, string>
   parameterFolders!: Table<ParameterFolder, string>
+  recipeHistory!: Table<RecipeHistoryItem, string>
 
   constructor() {
     super("StyleAtelierDatabase")

@@ -1,7 +1,7 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", () => {
+test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Resilience @J-SET-01", () => {
   test.beforeEach(async ({ page }) => {
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
@@ -82,9 +82,9 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Capture screenshot of quota warning
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-quota-warning-actual.png")
+      path: path.join(screenshotsDir, "litert-quota-warning-actual.png")
     })
-    console.log("WebLLM low quota warning screenshot saved.")
+    console.log("LiteRT-LM low quota warning screenshot saved.")
   })
 
   test("should detect corrupted cache file on startup, purge it, and trigger a clean download recovery", async ({
@@ -256,7 +256,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
 
     // Take screenshot of the retry state (UX change)
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-download-interruption-retry.png")
+      path: path.join(screenshotsDir, "litert-download-interruption-retry.png")
     })
 
     // Restore network connection
@@ -328,7 +328,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(remainingText).toBeVisible({ timeout: 15000 })
 
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-download-progress.png")
+      path: path.join(screenshotsDir, "litert-download-progress.png")
     })
   })
 
@@ -385,7 +385,7 @@ test.describe("Style Atelier Sandbox E2E Tests - WebLLM Resilience @J-SET-01", (
     await expect(adviceText).toBeVisible({ timeout: 15000 })
 
     await page.screenshot({
-      path: path.join(screenshotsDir, "webllm-download-error-advice.png")
+      path: path.join(screenshotsDir, "litert-download-error-advice.png")
     })
     console.log("Screenshot for download error advice UI saved.")
   })

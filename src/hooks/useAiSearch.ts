@@ -20,7 +20,8 @@ export function useAiSearch(props: UseAiSearchProps) {
     isAiSearching,
     aiSearchError,
     extractedFilters,
-    setExtractedFilters
+    setExtractedFilters,
+    isFallbackMode
   } = useDebouncedSemanticSearch({
     aiSearchQuery,
     isAiSearch,
@@ -29,6 +30,7 @@ export function useAiSearch(props: UseAiSearchProps) {
     setCategoryFilter: props.setCategoryFilter,
     setColorFilter: props.setColorFilter,
     setSearchTag: props.setSearchTag,
+    webLlmStatus: props.webLlmStatus,
     t: props.t
   })
   const handleToggleAiSearch = () => {
@@ -41,8 +43,7 @@ export function useAiSearch(props: UseAiSearchProps) {
       props.setSearchTag("")
       setExtractedFilters(null)
     } else {
-      if (props.webLlmStatus !== "ready") setAiWarningOpen(true)
-      else setIsAiSearch(true)
+      setIsAiSearch(true)
     }
   }
   return {
@@ -54,6 +55,7 @@ export function useAiSearch(props: UseAiSearchProps) {
     aiWarningOpen,
     setAiWarningOpen,
     extractedFilters,
-    handleToggleAiSearch
+    handleToggleAiSearch,
+    isFallbackMode
   }
 }

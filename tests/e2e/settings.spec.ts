@@ -989,6 +989,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await mergeOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
+    await expect(syncBtn).toBeEnabled({ timeout: 10000 })
     console.log("Safe Merge strategy confirmed successfully.")
 
     // Reset last-backup to >60 days ago so dialog will show up again
@@ -1007,6 +1008,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
     await localOption.click()
     await confirmBtn.click()
     await expect(warningDialog).not.toBeVisible()
+    await expect(syncBtn).toBeEnabled({ timeout: 10000 })
     console.log("Local Overwrite strategy confirmed successfully.")
 
     // Reset last-backup to >60 days ago so dialog will show up again
@@ -1263,5 +1265,168 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
       .locator("[data-testid='help-tooltip-content']")
       .first()
     await expect(tooltipContent).toBeVisible()
+  })
+
+  test("should handle Google Drive quota error and display cleanup action buttons", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    // Mock Google Drive API response to return 507 (Insufficient Storage)
+    await page.route(
+      "https://www.googleapis.com/upload/drive/v3/files*",
+      async (route) => {
+        await route.fulfill({
+          status: 507,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: {
+              errors: [
+                {
+                  domain: "global",
+                  reason: "storageQuotaExceeded",
+                  message: "The user's Drive storage quota has been exceeded."
+                }
+              ],
+              code: 507,
+              message: "The user's Drive storage quota has been exceeded."
+            }
+          })
+        })
+      }
+    )
+
+    console.log(
+      "Navigating to sandbox page for Google Drive Quota Error E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Switch to Settings tab
+    const settingsTabButton = spFrame.locator("#settings-nav-btn")
+    await settingsTabButton.click()
+
+    // Expand Cloud Backup & Sync section
+    const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
+    await expect(cloudAccordionHeader).toBeVisible()
+    await cloudAccordionHeader.click()
+
+    // Enable Google Drive synchronization
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
+    await toggleBtn.click()
+
+    // Force Sync trigger by clicking Sync button
+    const syncBtn = spFrame.locator("#google-drive-sync-btn")
+    await expect(syncBtn).toBeVisible()
+    await syncBtn.click()
+
+    // Expect the error toast message for storage quota to be visible
+    const quotaErrorToast = spFrame.locator(
+      "text=Insufficient Google Drive storage space"
+    )
+    await expect(quotaErrorToast).toBeVisible({ timeout: 15000 })
+
+    // Check if the Cleanup button is visible
+    const cleanupBtn = spFrame.locator("button:has-text('Cleanup Drive Guide')")
+    await expect(cleanupBtn).toBeVisible()
+
+    // Check if the Local Backup button is visible
+    const localBackupBtn = spFrame.locator("button:has-text('To Local Backup')")
+    await expect(localBackupBtn).toBeVisible()
+
+    // Capture screenshot showing the Quota Error toast with Action Buttons
+    await page.screenshot({
+      path: path.join(screenshotsDir, "sync-quota-error-toast.png")
+    })
+    console.log("Sync quota error toast E2E screenshot saved.")
+
+    // Test smooth scroll to Local Backup section when clicking the Local Backup button in toast
+    await localBackupBtn.click()
+
+    // Check that local backup section is now visible
+    const localBackupHeader = spFrame.locator("#local-backup-section")
+    await expect(localBackupHeader).toBeVisible()
+
+    console.log("Google Drive Quota Error E2E test passed successfully!")
+  })
+
+  test("should handle Google Drive rate limit error and display rate limit message", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    // Mock Google Drive API response to return 403 (Rate Limit)
+    await page.route(
+      "https://www.googleapis.com/upload/drive/v3/files*",
+      async (route) => {
+        await route.fulfill({
+          status: 403,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: {
+              errors: [
+                {
+                  domain: "usageLimits",
+                  reason: "rateLimitExceeded",
+                  message: "Rate Limit Exceeded"
+                }
+              ],
+              code: 403,
+              message: "Rate Limit Exceeded"
+            }
+          })
+        })
+      }
+    )
+
+    console.log(
+      "Navigating to sandbox page for Google Drive Rate Limit Error E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Switch to Settings tab
+    const settingsTabButton = spFrame.locator("#settings-nav-btn")
+    await settingsTabButton.click()
+
+    // Expand Cloud Backup & Sync section
+    const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
+    await expect(cloudAccordionHeader).toBeVisible()
+    await cloudAccordionHeader.click()
+
+    // Enable Google Drive synchronization
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
+    await toggleBtn.click()
+
+    // Force Sync trigger by clicking Sync button
+    const syncBtn = spFrame.locator("#google-drive-sync-btn")
+    await expect(syncBtn).toBeVisible()
+    await syncBtn.click()
+
+    // Expect the error toast message for API limit to be visible
+    const rateLimitErrorToast = spFrame.locator(
+      "text=Google Drive API rate limit reached"
+    )
+    await expect(rateLimitErrorToast).toBeVisible({ timeout: 15000 })
+
+    // Capture screenshot showing the Rate Limit Error toast
+    await page.screenshot({
+      path: path.join(screenshotsDir, "sync-rate-limit-error-toast.png")
+    })
+    console.log("Sync rate limit error toast E2E screenshot saved.")
   })
 })

@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
+import { WebLlmContext } from "../contexts/WebLlmContext"
+import { isExtensionContextValid, safeSendMessage } from "../lib/chrome-utils"
 import { createMessageListener } from "./webLlmMessageListener"
 import {
   checkCurrentStateHelper,
@@ -26,7 +28,69 @@ interface WebLlmEffectProps {
   setWebGpuFallback: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+function preloadEngineHelper() {
+  safeSendMessage({ target: "offscreen", action: "preload-engine" }).catch(
+    (err) => {
+      console.error("preloadEngineHelper error:", err)
+    }
+  )
+}
+
 // eslint-disable-next-line max-lines-per-function
+function setupWebLlmConnection(
+  props: WebLlmEffectProps
+): (() => void) | undefined {
+  if (!isExtensionContextValid()) {
+    props.setError("接続が切断されました。ページをリロードしてください。")
+    return
+  }
+  let port: chrome.runtime.Port | undefined
+  try {
+    port = chrome.runtime.connect({ name: "sidepanel" })
+  } catch (err) {
+    console.error("Failed to connect port:", err)
+    props.setError("接続が切断されました。ページをリロードしてください。")
+    return
+  }
+  const messageListener = createMessageListener(
+    props.setStatus,
+    props.setEngineStatus,
+    props.setProgress,
+    props.setError,
+    props.setSpeed,
+    props.setEta,
+    props.setRetryCount,
+    props.setMaxRetries,
+    props.setText,
+    props.setWebGpuFallback
+  )
+  try {
+    chrome.runtime.onMessage.addListener(messageListener)
+  } catch (err) {
+    console.error("Failed to add message listener:", err)
+  }
+  checkCurrentStateHelper(
+    props.setStatus,
+    props.setProgress,
+    props.setWebGpuFallback,
+    props.setError
+  )
+  return () => {
+    if (port) {
+      try {
+        port.disconnect()
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      chrome.runtime.onMessage.removeListener(messageListener)
+    } catch {
+      // ignore
+    }
+  }
+}
+
 function useWebLlmEffect(props: WebLlmEffectProps) {
   const {
     setStatus,
@@ -42,15 +106,7 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
   } = props
 
   useEffect(() => {
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.runtime ||
-      !chrome.runtime.sendMessage
-    ) {
-      return
-    }
-    const port = chrome.runtime.connect({ name: "sidepanel" })
-    const messageListener = createMessageListener(
+    return setupWebLlmConnection({
       setStatus,
       setEngineStatus,
       setProgress,
@@ -61,13 +117,7 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
       setMaxRetries,
       setText,
       setWebGpuFallback
-    )
-    chrome.runtime.onMessage.addListener(messageListener)
-    checkCurrentStateHelper(setStatus, setProgress, setWebGpuFallback, setError)
-    return () => {
-      port.disconnect()
-      chrome.runtime.onMessage.removeListener(messageListener)
-    }
+    })
   }, [
     setStatus,
     setEngineStatus,
@@ -82,7 +132,7 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
   ])
 }
 
-function useWebLlmState() {
+function useWebLlmStates() {
   const [status, setStatus] = useState<DownloadStatus>("idle")
   const [engineStatus, setEngineStatus] = useState<
     "idle" | "initializing" | "ready"
@@ -95,15 +145,6 @@ function useWebLlmState() {
   const [maxRetries, setMaxRetries] = useState<number>(0)
   const [text, setText] = useState<string>("")
   const [webGpuFallback, setWebGpuFallback] = useState<boolean>(false)
-
-  const resetStats = () => {
-    setSpeed(0)
-    setEta(0)
-    setRetryCount(0)
-    setMaxRetries(0)
-    setText("")
-    setWebGpuFallback(false)
-  }
 
   return {
     status,
@@ -125,73 +166,63 @@ function useWebLlmState() {
     text,
     setText,
     webGpuFallback,
-    setWebGpuFallback,
-    resetStats
+    setWebGpuFallback
   }
 }
 
-function preloadEngineHelper() {
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    return
+function useLocalWebLlm() {
+  const states = useWebLlmStates()
+  useWebLlmEffect(states)
+
+  const resetStats = () => {
+    states.setSpeed(0)
+    states.setEta(0)
+    states.setRetryCount(0)
+    states.setMaxRetries(0)
+    states.setText("")
+    states.setWebGpuFallback(false)
   }
-  chrome.runtime.sendMessage({ target: "offscreen", action: "preload-engine" })
-}
-
-// eslint-disable-next-line max-lines-per-function
-export function useWebLlm() {
-  const state = useWebLlmState()
-
-  useWebLlmEffect({
-    setStatus: state.setStatus,
-    setEngineStatus: state.setEngineStatus,
-    setProgress: state.setProgress,
-    setError: state.setError,
-    setSpeed: state.setSpeed,
-    setEta: state.setEta,
-    setRetryCount: state.setRetryCount,
-    setMaxRetries: state.setMaxRetries,
-    setText: state.setText,
-    setWebGpuFallback: state.setWebGpuFallback
-  })
 
   return {
-    status: state.status,
-    engineStatus: state.engineStatus,
-    isEngineReady: state.engineStatus === "ready",
-    isEngineInitializing: state.engineStatus === "initializing",
-    progress: state.progress,
-    error: state.error,
-    speed: state.speed,
-    eta: state.eta,
-    retryCount: state.retryCount,
-    maxRetries: state.maxRetries,
-    text: state.text,
-    webGpuFallback: state.webGpuFallback,
+    status: states.status,
+    engineStatus: states.engineStatus,
+    isEngineReady: states.engineStatus === "ready",
+    isEngineInitializing: states.engineStatus === "initializing",
+    progress: states.progress,
+    error: states.error,
+    speed: states.speed,
+    eta: states.eta,
+    retryCount: states.retryCount,
+    maxRetries: states.maxRetries,
+    text: states.text,
+    webGpuFallback: states.webGpuFallback,
     startDownload: () => {
-      state.resetStats()
+      resetStats()
       startDownloadHelper(
-        state.setStatus,
-        state.setProgress,
-        state.setError,
-        state.setWebGpuFallback
+        states.setStatus,
+        states.setProgress,
+        states.setError,
+        states.setWebGpuFallback
       )
     },
     purgeCache: () => {
-      state.resetStats()
-      purgeCacheHelper(state.setStatus, state.setProgress, state.setError)
+      resetStats()
+      purgeCacheHelper(states.setStatus, states.setProgress, states.setError)
     },
     checkCurrentState: () =>
       checkCurrentStateHelper(
-        state.setStatus,
-        state.setProgress,
-        state.setWebGpuFallback,
-        state.setError
+        states.setStatus,
+        states.setProgress,
+        states.setWebGpuFallback,
+        states.setError
       ),
     preloadEngine: preloadEngineHelper,
     runInference: runInferenceHelper
   }
+}
+
+export function useWebLlm() {
+  const context = useContext(WebLlmContext)
+  const local = useLocalWebLlm()
+  return context !== undefined ? context : local
 }
