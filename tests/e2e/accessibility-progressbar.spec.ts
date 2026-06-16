@@ -142,12 +142,20 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
       const config = (window as any).mockWebLlmConfig
       if (config) {
         config.failDownload = false
-        config.downloadSpeed = 50 // slower download speed to capture progressbar state
+        config.downloadSpeed = 800 // slower download speed (larger interval ms) to capture progressbar state
       }
     })
 
-    // Click Download Model button inside Recipe Advice
-    const downloadBtn = adviceSection.locator(
+    // Go to Settings tab to download model
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible()
+    await settingsNavBtn.click({ force: true })
+
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click({ force: true })
+
+    const downloadBtn = spFrame.locator(
       "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
     )
     await expect(downloadBtn).toBeVisible()
@@ -155,13 +163,17 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     await downloadBtn.click({ force: true })
 
     // Click confirmation button
-    const confirmDownloadBtn = spFrame
-      .locator(
-        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
-      )
-      .first()
+    const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
     await expect(confirmDownloadBtn).toBeVisible()
     await confirmDownloadBtn.click({ force: true })
+
+    // Switch back to Workbench tab to see progress
+    await workbenchTabBtn.click({ force: true })
+    await page.waitForTimeout(1000)
+
+    // Expand accordion inside Recipe Advice again
+    await accordionHeader.click({ force: true })
+    await page.waitForTimeout(500)
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame
