@@ -3,12 +3,16 @@ import { db } from "./db"
 import { purgeDeletedRecords } from "./db/purge-ops"
 import {
   authorize,
+  deleteFile,
   downloadBackup,
+  downloadTempSharedCards,
   getBackupMetadata,
+  searchTempSharedCardsFile,
   uploadBackup
 } from "./google-drive"
 
 let isInternalChange = false
+let isSyncing = false
 let debounceTimer: number | null = null
 let pollTimer: number | null = null
 let lastCheckedRemoteTime: string | null = null
@@ -131,6 +135,7 @@ function startPolling() {
   }, pollIntervalMs)
 }
 
+// ... stopPolling and isLastSyncAged remain unchanged ...
 function stopPolling() {
   if (pollTimer) {
     clearInterval(pollTimer)
@@ -167,15 +172,19 @@ async function performDatabaseMerge(
 }
 
 export async function checkAndMergeRemoteChanges() {
-  if (!isAutoSyncEnabled()) return
-  if (isLastSyncAged()) {
-    console.warn(
-      "Auto-sync suspended: last sync was more than 60 days ago. Manual sync required."
-    )
-    setAutoSyncEnabled(false)
-    return
-  }
+  if (isSyncing) return
+  isSyncing = true
   try {
+    if (isLastSyncAged()) {
+      console.warn(
+        "Auto-sync suspended: last sync was more than 60 days ago. Manual sync required."
+      )
+      setAutoSyncEnabled(false)
+      return
+    }
+
+    await checkAndMergeMobileTempData()
+
     try {
       const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
       await purgeDeletedRecords(db, thresholdMs)
@@ -206,6 +215,8 @@ export async function checkAndMergeRemoteChanges() {
     }
   } catch (err) {
     console.error("Auto-merge check failed:", err)
+  } finally {
+    isSyncing = false
   }
 }
 
@@ -213,6 +224,12 @@ export async function checkAndMergeRemoteChanges() {
 let hooksRegistered = false
 
 export function initializeAutoSync() {
+  if (localStorage.getItem("style-atelier-sync-enabled") === "true") {
+    checkAndMergeMobileTempData().catch((err) => {
+      console.error("[AutoSync] Error checking mobile temp data on init:", err)
+    })
+  }
+
   if (hooksRegistered) return
 
   const trigger = (transaction: any) => {
@@ -258,5 +275,50 @@ export function initializeAutoSync() {
   if (isAutoSyncEnabled()) {
     startPolling()
     checkAndMergeRemoteChanges()
+  }
+}
+
+/**
+ * Detects temp_shared_cards.json on Google Drive, merges it into IndexedDB, and deletes it.
+ */
+export async function checkAndMergeMobileTempData(): Promise<void> {
+  if (localStorage.getItem("style-atelier-sync-enabled") !== "true") {
+    return
+  }
+
+  try {
+    const token = await authorize(false)
+    const fileId = await searchTempSharedCardsFile(token)
+    if (!fileId) {
+      return
+    }
+
+    console.log(
+      "[AutoSync] Found mobile temp shared cards file, downloading..."
+    )
+    const fileContent = await downloadTempSharedCards(token)
+    if (!fileContent) {
+      console.warn(
+        "[AutoSync] Mobile temp file was empty or could not be downloaded"
+      )
+      return
+    }
+
+    console.log("[AutoSync] Merging mobile temp cards...")
+    await importDatabase(fileContent, "merge")
+
+    console.log(
+      "[AutoSync] Mobile temp cards merged successfully. Deleting remote file..."
+    )
+    await deleteFile(token, fileId)
+    console.log("[AutoSync] Remote mobile temp file deleted.")
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("style-atelier-mobile-restore-success")
+      )
+    }
+  } catch (error) {
+    console.error("[AutoSync] Failed to check/merge mobile temp data:", error)
   }
 }

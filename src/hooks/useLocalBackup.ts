@@ -1,10 +1,12 @@
+import React from "react"
+
 import { useLocalBackupExport } from "./useLocalBackupExport"
 import { useLocalBackupImport } from "./useLocalBackupImport"
 
-interface UseLocalBackupProps {
-  addLog: (log: string) => void
+export interface UseLocalBackupProps {
+  addLog: (msg: string) => void
   checkStorage: () => void
-  showStatus: (text: string, type: "success" | "error" | "info") => void
+  showStatus: (msg: string, type: "info" | "success" | "error") => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
 }
 
