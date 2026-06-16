@@ -317,6 +317,10 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     await accordionHeader.click({ force: true })
     await page.waitForTimeout(500)
 
+    // Scroll advice section to top of viewport to prevent fixed HandBar overlay issues
+    await adviceSection.evaluate((el) => el.scrollIntoView({ block: "start" }))
+    await page.waitForTimeout(500)
+
     // Verify fallback static advice is visible initially
     const adviceContent = adviceSection.locator(".prose")
     await expect(adviceContent).toBeVisible()
@@ -346,7 +350,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     )
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
-    await downloadBtn.click({ force: true })
+    await downloadBtn.dispatchEvent("click")
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
@@ -356,7 +360,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
     await expect(spFrame.locator("body")).toContainText(/2\.0\s*GB/)
     await expect(spFrame.locator("body")).toContainText(/2\.5\s*GB/)
-    await confirmDownloadBtn.click({ force: true })
+    await confirmDownloadBtn.dispatchEvent("click")
 
     // Switch back to Workbench tab to see progress
     await workbenchTabBtn.click({ force: true })
@@ -484,6 +488,11 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     await expect(adviceSection).toBeVisible()
     const accordionHeader = adviceSection.locator("#ai-recipe-advice-toggle")
     await accordionHeader.click({ force: true })
+    await page.waitForTimeout(500)
+
+    // Scroll advice section to top of viewport to prevent fixed HandBar overlay issues
+    await adviceSection.evaluate((el) => el.scrollIntoView({ block: "start" }))
+    await page.waitForTimeout(500)
 
     // Since the model is already downloaded, it will automatically try to generate advice.
     // Because initDelay is 3000ms, it should show the "Initializing AI engine..." message.

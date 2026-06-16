@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test"
 test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
   test.slow()
 
-  test("should display WebGPU troubleshooting warning in SettingsTab when WebGPU is disabled", async ({
+  test("should display WebGPU troubleshooting warning in SettingsTab when WebGPU is disabled (@J-SET-WEBGPU-TROUBLESHOOT-01)", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")

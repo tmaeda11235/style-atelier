@@ -11,7 +11,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     })
   })
 
-  test("should fallback to keyword search and show status badge when AI model is not downloaded", async ({
+  test("should toggle AI search and run in fallback mode when AI model is not downloaded", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -51,24 +51,42 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     )
     await expect(warningModal).not.toBeVisible()
 
-    // Verify AI Status Badge is visible and in 'Offline', 'Initializing', 'Light Mode', or 'Preparing' status
-    const statusBadge = spFrame.locator("[data-testid='ai-status-badge']")
-    await expect(statusBadge).toBeVisible()
+    // Verify status badge is visible
+    const statusBadge = spFrame
+      .locator("[data-testid='ai-status-badge']")
+      .first()
+    await expect(statusBadge).toBeVisible({ timeout: 15000 })
     await expect(statusBadge).toContainText(
-      /(Offline|Initializing|Light Mode|Preparing|オフライン|初期化中|軽量モード|準備中)/
+      /(Fallback|Light Mode|軽量フォールバック|軽量モード)/
     )
 
-    // Type query to trigger search
-    const searchInput = spFrame.locator("#library-search-input")
-    await expect(searchInput).toBeVisible()
-    await searchInput.fill("Cyberpunk")
-    await page.waitForTimeout(1000)
+    // Verify AI placeholder is active
+    const searchField = spFrame.locator("#library-search-input")
+    const placeholder = await searchField.getAttribute("placeholder")
+    expect(placeholder).toMatch(/Ask AI:|AIに尋ねる:/)
 
-    // Take screenshot of fallback search state
+    // Fill query
+    await searchField.fill("Legendary blue anime style")
+
+    // Wait for debounce and processing
+    await page.waitForTimeout(1500)
+
+    // Extracted filter badge should be displayed using fallback parser
+    const extractedFiltersBadge = spFrame.locator(
+      "text=/Extracted Filters|抽出されたフィルター/"
+    )
+    await expect(extractedFiltersBadge).toBeVisible()
+
+    // Check specific filter items extracted by fallback
+    await expect(spFrame.locator("text=Rarity: Legendary")).toBeVisible()
+    await expect(spFrame.locator("text=Color: Blue")).toBeVisible()
+    await expect(spFrame.locator("text=Category: Style")).toBeVisible()
+
+    // Take screenshot of fallback search UI
     await page.screenshot({
       path: path.join(
         screenshotsDir,
-        "library-semantic-search-fallback-offline.png"
+        "library-semantic-search-fallback-success.png"
       )
     })
     console.log(
