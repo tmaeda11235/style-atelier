@@ -1,0 +1,375 @@
+/* 
+  Atelier Skin: Mobile Landing Page CSS
+  Optimized for mobile viewports (390px - 430px) with rich dark fantasy aesthetics.
+*/
+
+:root {
+  --color-bg: #09070f;
+  --color-bg-gradient: radial-gradient(
+    circle at 50% 50%,
+    #160f29 0%,
+    #09070f 100%
+  );
+  --color-card-bg: rgba(18, 14, 33, 0.85);
+  --color-card-border: rgba(167, 139, 250, 0.2);
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-blue: #3b82f6;
+  --color-accent-glow: rgba(139, 92, 246, 0.5);
+  --color-glow-blue: rgba(59, 130, 246, 0.5);
+  --color-gold: #fbbf24;
+  --color-gold-glow: rgba(251, 191, 36, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg-gradient);
+  color: var(--color-text-primary);
+  font-family:
+    "Outfit",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow-x: hidden;
+  padding: 1.5rem 1rem;
+}
+
+/* Header style with a subtle glowing fantasy ornament */
+.app-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: linear-gradient(135deg, #c084fc 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+}
+
+.app-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-top: 0.25rem;
+}
+
+/* Main Container: optimized for 390px - 430px screen widths */
+.main-container {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+/* 3D Card Flip Container */
+.card-perspective {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 2 / 3;
+  margin: 1rem auto;
+  cursor: pointer;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.card-perspective.is-flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid var(--color-card-border);
+  background: var(--color-card-bg);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 20px var(--rarity-glow, var(--color-accent-glow));
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* Card Decorative Background Overlays */
+.card-glow-overlay {
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(
+    circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    var(--rarity-radial-color, rgba(139, 92, 246, 0.15)) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hologram Overlay (Simplified for Mobile Smoothness) */
+.hologram-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: color-dodge;
+  opacity: 0.25;
+  background-size: 200% 200%;
+  background-image: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(167, 139, 250, 0.4) 40%,
+    rgba(59, 130, 246, 0.4) 50%,
+    rgba(236, 72, 153, 0.4) 60%,
+    transparent 70%
+  );
+  background-position: var(--holo-x, 50%) var(--holo-y, 50%);
+  transition: background-position 0.1s ease;
+}
+
+/* Card Content Elements */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.card-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(167, 139, 250, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+.card-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+  margin: 1.5rem 0;
+}
+
+.card-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 27, 75, 0.5) 0%,
+    rgba(15, 23, 42, 0.8) 100%
+  );
+  border: 1px dashed rgba(167, 139, 250, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+.card-image-placeholder svg {
+  width: 48px;
+  height: 48px;
+  stroke: var(--color-accent-purple);
+  filter: drop-shadow(0 0 8px var(--color-accent-glow));
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+}
+
+.card-rarity {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px var(--rarity-text-shadow);
+}
+
+.prompt-preview {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  font-family: "Fira Code", monospace;
+  text-align: left;
+}
+
+/* Prompt copy button & Actions styles */
+.action-btn {
+  width: 100%;
+  min-height: 48px; /* Touch target optimized */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.action-btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-purple) 0%,
+    #6366f1 100%
+  );
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.action-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.action-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  margin-top: 0.75rem;
+}
+
+.action-btn-secondary:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Footer Section */
+.app-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.install-cta {
+  font-size: 0.8rem;
+  color: var(--color-accent-purple);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+/* Interactive Feedback (Toast Notification) */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(17, 24, 39, 0.95);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(139, 92, 246, 0.2);
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Rarity-specific Skins */
+.rarity-epic {
+  --rarity-glow: rgba(168, 85, 247, 0.5);
+  --rarity-radial-color: rgba(168, 85, 247, 0.25);
+  --rarity-text-shadow: rgba(168, 85, 247, 0.8);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.rarity-legendary {
+  --rarity-glow: rgba(251, 191, 36, 0.4);
+  --rarity-radial-color: rgba(251, 191, 36, 0.2);
+  --rarity-text-shadow: rgba(251, 191, 36, 0.8);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+/* Fix backface visibility overlap issues with pointer events */
+.card-perspective.is-flipped .card-front {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.card-perspective:not(.is-flipped) .card-back {
+  pointer-events: none;
+  visibility: hidden;
+}
