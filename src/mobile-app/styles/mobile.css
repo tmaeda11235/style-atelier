@@ -114,11 +114,16 @@ body {
   height: 100%;
   backface-visibility: hidden;
   border-radius: 1.5rem;
-  border: 1px solid var(--color-card-border);
-  background: var(--color-card-bg);
+  border: 1px solid var(--color-accent-card, var(--color-card-border));
+  background: linear-gradient(
+    135deg,
+    var(--color-dominant-card, var(--color-card-bg)) 0%,
+    rgba(9, 7, 15, 0.95) 100%
+  );
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.5),
-    0 0 20px var(--rarity-glow, var(--color-accent-glow));
+    0 0 20px
+      var(--color-accent-card, var(--rarity-glow, var(--color-accent-glow)));
   padding: 1.5rem;
   display: flex;
   flex-direction: column;

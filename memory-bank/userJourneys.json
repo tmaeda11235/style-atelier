@@ -600,7 +600,8 @@
       "nextJourneys": [],
       "viewComponents": [
         "src/mobile-app/styles/mobile.css",
-        "src/mobile-app/mockup.html"
+        "src/mobile-app/index.html",
+        "src/mobile-app/index.ts"
       ]
     }
   ]

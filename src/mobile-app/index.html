@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>[Mockup] Style Atelier Mobile Landing Page</title>
+  <title>Style Atelier Mobile Viewer</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,18 +53,18 @@
     <!-- Header -->
     <header class="app-header">
       <h1 class="app-title">STYLE ATELIER</h1>
-      <p class="app-subtitle">Mobile Preview</p>
+      <p class="app-subtitle" id="appSubtitle">Mobile Preview</p>
     </header>
 
     <!-- Card -->
     <div class="card-perspective" id="cardContainer">
       <div class="card-inner">
         <!-- Card Front -->
-        <div class="card-front rarity-legendary">
+        <div class="card-front" id="cardFront">
           <div class="card-glow-overlay"></div>
           <div class="hologram-overlay"></div>
           <div class="card-header">
-            <span class="card-title">Cyber Samurai</span>
+            <span class="card-title" id="cardTitleFront">Loading...</span>
             <span class="card-badge">Style Card</span>
           </div>
           <div class="card-body">
@@ -72,25 +72,25 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
-              <span>Tap to reveal Prompt</span>
+              <span id="tapToRevealText">Tap to reveal Prompt</span>
             </div>
           </div>
           <div class="card-footer">
-            <span class="card-rarity" style="color: var(--color-gold);">LEGENDARY</span>
-            <span class="card-badge" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.3); color: var(--color-gold);">v1.0.0</span>
+            <span class="card-rarity" id="cardRarityFront">UNKNOWN</span>
+            <span class="card-badge" id="cardVersionFront">v0.0.0</span>
           </div>
         </div>
 
         <!-- Card Back -->
-        <div class="card-back rarity-legendary">
+        <div class="card-back" id="cardBack">
           <div class="card-glow-overlay"></div>
           <div class="card-header">
-            <span class="card-title">Cyber Samurai</span>
+            <span class="card-title" id="cardTitleBack">Loading...</span>
             <span class="card-badge">PROMPT</span>
           </div>
           <div class="card-body" style="justify-content: flex-start; align-items: stretch; margin-top: 1rem;">
             <div class="prompt-preview" id="promptText">
-              /imagine prompt: A futuristic cyberpunk samurai standing in neon rain, Tokyo street background, highly detailed style, glowing katana, rich colors, intricate cybernetic armor, Unreal Engine 5 render, cinematic lighting --ar 16:9 --stylize 750
+              No prompt data loaded.
             </div>
             <button class="action-btn action-btn-primary" id="copyBtn">
               <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -106,8 +106,8 @@
             </button>
           </div>
           <div class="card-footer">
-            <span class="card-rarity" style="color: var(--color-gold);">LEGENDARY</span>
-            <span class="card-badge" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.3); color: var(--color-gold);">v1.0.0</span>
+            <span class="card-rarity" id="cardRarityBack">UNKNOWN</span>
+            <span class="card-badge" id="cardVersionBack">v0.0.0</span>
           </div>
         </div>
       </div>
@@ -132,87 +132,6 @@
     </div>
   </div>
 
-  <script>
-    const cardContainer = document.getElementById('cardContainer');
-    const copyBtn = document.getElementById('copyBtn');
-    const promptText = document.getElementById('promptText');
-    const toast = document.getElementById('toast');
-    const saveCloudBtn = document.getElementById('saveCloudBtn');
-
-    // 3D Card Flip interaction
-    cardContainer.addEventListener('click', (e) => {
-      // Don't flip when clicking action buttons
-      if (e.target.closest('.action-btn')) return;
-      cardContainer.classList.toggle('is-flipped');
-    });
-
-    // Hologram mouse movement effect emulation
-    cardContainer.addEventListener('mousemove', (e) => {
-      const rect = cardContainer.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const px = (x / rect.width) * 100;
-      const py = (y / rect.height) * 100;
-      
-      const frontCard = cardContainer.querySelector('.card-front');
-      const backCard = cardContainer.querySelector('.card-back');
-      
-      [frontCard, backCard].forEach(card => {
-        card.style.setProperty('--glow-x', `${px}%`);
-        card.style.setProperty('--glow-y', `${py}%`);
-        card.style.setProperty('--holo-x', `${px}%`);
-        card.style.setProperty('--holo-y', `${py}%`);
-      });
-    });
-
-    // Reset hologram on mouse leave
-    cardContainer.addEventListener('mouseleave', () => {
-      const frontCard = cardContainer.querySelector('.card-front');
-      const backCard = cardContainer.querySelector('.card-back');
-      
-      [frontCard, backCard].forEach(card => {
-        card.style.setProperty('--glow-x', `50%`);
-        card.style.setProperty('--glow-y', `50%`);
-        card.style.setProperty('--holo-x', `50%`);
-        card.style.setProperty('--holo-y', `50%`);
-      });
-    });
-
-    // Copy to clipboard function with simulated fallback
-    copyBtn.addEventListener('click', async () => {
-      const textToCopy = promptText.textContent.trim();
-      
-      try {
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(textToCopy);
-        } else {
-          // Fallback
-          const textarea = document.createElement('textarea');
-          textarea.value = textToCopy;
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textarea);
-        }
-        showToast('コピーしました！');
-      } catch (err) {
-        console.error('Failed to copy: ', err);
-        showToast('コピーに失敗しました');
-      }
-    });
-
-    // Cloud save interaction simulation
-    saveCloudBtn.addEventListener('click', () => {
-      showToast('クラウドに一時保存しました');
-    });
-
-    function showToast(message) {
-      toast.querySelector('span').textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2000);
-    }
-  </script>
+  <script type="module" src="./index.ts"></script>
 </body>
 </html>
