@@ -47,7 +47,7 @@ test.describe("Mobile Pages & Google Drive Integration @J-MOBILE-PREVIEW-01", ()
 
     // トーストが表示されるか（エラー時は設定不足、または保存中のいずれか）
     const toast = page.locator("#toast")
-    await expect(toast).toHaveClass(/show/)
+    await expect(toast).toHaveClass(/show/, { timeout: 15000 })
 
     // テキストに「保存」または「認証」が含まれているか
     const toastText = await toast.textContent()

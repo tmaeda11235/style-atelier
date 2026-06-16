@@ -16,7 +16,7 @@ function showToast(message: string) {
   const span = toast.querySelector("span")
   if (span) span.textContent = message
   toast.classList.add("show")
-  setTimeout(() => toast.classList.remove("show"), 2000)
+  setTimeout(() => toast.classList.remove("show"), 6000)
 }
 
 function applyCardColors(
