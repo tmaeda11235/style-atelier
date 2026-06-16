@@ -8,25 +8,42 @@ interface UseChromeTabConnectionOptions {
   addLog?: (msg: string) => void
 }
 
-/**
- * Custom hook to monitor connection with Chrome tabs (Content Script)
- * and trigger alert state or log status.
- */
-export function useChromeTabConnection({
-  workbenchCardsDependency,
-  setAlertType,
-  addLog
-}: UseChromeTabConnectionOptions) {
-  // Use refs to avoid re-triggering the useEffect hook when functions change
-  const addLogRef = useRef(addLog)
-  const setAlertTypeRef = useRef(setAlertType)
+async function queryActiveTab(
+  addLog: (msg: string) => void
+): Promise<chrome.tabs.Tab | null> {
+  if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) {
+    return null
+  }
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+  const activeTab = tabs[0]
+  if (!activeTab) {
+    addLog("Check Connection: No active tab returned from query.")
+    return null
+  }
+  if (!activeTab.id) {
+    addLog(`Check Connection: Active tab has no ID. URL: ${activeTab.url}`)
+    return null
+  }
+  return activeTab
+}
 
-  // Keep refs updated with latest function references
-  useEffect(() => {
-    addLogRef.current = addLog
-    setAlertTypeRef.current = setAlertType
-  }, [addLog, setAlertType])
+async function pingTab(
+  tabId: number,
+  addLog: (msg: string) => void
+): Promise<boolean> {
+  addLog(`Checking connection to Tab ${tabId}...`)
+  const response = await chrome.tabs.sendMessage(tabId, { type: "PING" })
+  addLog(
+    `Check Connection: Success! Ping response: ${JSON.stringify(response)}`
+  )
+  return true
+}
 
+function useConnectionMonitor(
+  workbenchCardsDependency: string,
+  addLogRef: React.MutableRefObject<((msg: string) => void) | undefined>,
+  setAlertTypeRef: React.MutableRefObject<(type: AlertType | null) => void>
+) {
   useEffect(() => {
     let retryCount = 0
     const maxRetries = 3
@@ -36,45 +53,20 @@ export function useChromeTabConnection({
     const checkConnection = async () => {
       if (isCancelled) return
       try {
-        const tabs = await chrome.tabs.query({
-          active: true,
-          currentWindow: true
-        })
-        const activeTab = tabs[0]
-        if (isCancelled) return
-        if (!activeTab) {
-          addLogRef.current?.(
-            "Check Connection: No active tab returned from query."
-          )
-          return
-        }
-        if (!activeTab.id) {
-          addLogRef.current?.(
-            `Check Connection: Active tab has no ID. URL: ${activeTab.url}`
-          )
-          return
-        }
+        const log = (msg: string) => addLogRef.current?.(msg)
+        const activeTab = await queryActiveTab(log)
+        if (!activeTab || isCancelled) return
 
-        // If the tab is still loading, wait and retry
         if (activeTab.status !== "complete") {
-          addLogRef.current?.(
+          log(
             `Check Connection: Tab is still loading (status: ${activeTab.status}). Retrying in 1s...`
           )
           timerId = setTimeout(checkConnection, 1000)
           return
         }
 
-        addLogRef.current?.(
-          `Checking connection to Tab ${activeTab.id} (${activeTab.url})...`
-        )
-        // Simple PING to check if content script is alive
-        const response = await chrome.tabs.sendMessage(activeTab.id, {
-          type: "PING"
-        })
+        await pingTab(activeTab.id!, log)
         if (isCancelled) return
-        addLogRef.current?.(
-          `Check Connection: Success! Ping response: ${JSON.stringify(response)}`
-        )
         setAlertTypeRef.current(null)
       } catch (err: any) {
         if (isCancelled) return
@@ -85,7 +77,7 @@ export function useChromeTabConnection({
 
         if (retryCount < maxRetries) {
           retryCount++
-          timerId = setTimeout(checkConnection, 1500) // Wait 1.5s and retry
+          timerId = setTimeout(checkConnection, 1500)
         } else {
           setAlertTypeRef.current("disconnected")
         }
@@ -96,9 +88,23 @@ export function useChromeTabConnection({
 
     return () => {
       isCancelled = true
-      if (timerId) {
-        clearTimeout(timerId)
-      }
+      if (timerId) clearTimeout(timerId)
     }
-  }, [workbenchCardsDependency])
+  }, [workbenchCardsDependency, addLogRef, setAlertTypeRef])
+}
+
+export function useChromeTabConnection({
+  workbenchCardsDependency,
+  setAlertType,
+  addLog
+}: UseChromeTabConnectionOptions) {
+  const addLogRef = useRef(addLog)
+  const setAlertTypeRef = useRef(setAlertType)
+
+  useEffect(() => {
+    addLogRef.current = addLog
+    setAlertTypeRef.current = setAlertType
+  }, [addLog, setAlertType])
+
+  useConnectionMonitor(workbenchCardsDependency, addLogRef, setAlertTypeRef)
 }

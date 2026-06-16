@@ -21,7 +21,7 @@ Style Atelier is a Chrome Extension designed to transform Midjourney prompt mana
 
 - **Core Framework**: [Plasmo](https://docs.plasmo.com/) (React 19 + TypeScript)
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand)
-- **Local AI Engine**: [@mlc-ai/web-llm](https://webllm.mlc.ai/) (Gemma-4 E2B model client-side execution)
+- **Local AI Engine**: [@mlc-ai/web-llm](https://webllm.mlc.ai/) (Gemma-2 2B model client-side execution)
 - **Background Orchestration**: Chrome Extension Offscreen Documents & Web Workers
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Database**: [Dexie.js](https://dexie.org/) (IndexedDB wrapper)
@@ -69,9 +69,9 @@ The popup, option pages, or side panels will auto-reload as you make changes to 
 
 #### Development Guidelines
 
-For detailed guidelines on our collaborative development process (including Git Worktree setup, ESLint limitations, and testing workflows), please refer to the [Development Guide](docs/DEVELOPMENT.md).
+For detailed guidelines on our collaborative development process (including Git Worktree setup, ESLint and i18n rules, and testing workflows), please refer to the [Development Guide](docs/DEVELOPMENT.md).
 
-開発プロセス、Git Worktree のセットアップ、ESLint の行数制限、テスト手順などの詳細なガイドラインについては、[開発ガイドライン](docs/DEVELOPMENT.md) を参照してください。
+開発プロセス、Git Worktree のセットアップ、ESLint の行数・複雑度制限、多言語対応（i18n）ルール、テスト手順などの詳細なガイドラインについては、[開発ガイドライン](docs/DEVELOPMENT.md) を参照してください。
 
 ---
 

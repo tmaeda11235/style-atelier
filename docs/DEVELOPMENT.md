@@ -48,8 +48,48 @@ We enforce strict size limits to ensure maintainable and modular components.
   ファイル制限: 1ファイルあたり最大 **300行**（コメントと空行を除く）。
 - **Function Limit**: Max **50 lines** per function.
   関数制限: 1関数あたり最大 **50行**。
+- **Cognitive Complexity**: Max **15** (enforced by `sonarjs/cognitive-complexity`).
+  認知複雑度: 最大 **15**（`sonarjs/cognitive-complexity` で制限）。
 
-### Design Principle: Separation of Concerns / 設計指針: 関心の分離
+### 2.1 Multi-language i18n Rules / 多言語対応（i18n）の規約
+
+We use `eslint-plugin-i18next` to ensure no hardcoded strings remain in our user interface components.
+
+ユーザーインターフェースコンポーネント内でハードコードされた（直書き）文字列を排除するため、`eslint-plugin-i18next` を使用しています。
+
+- **Rules**: `i18next/no-literal-string` is enforced with `mode: "jsx-only"` on major components.
+  ルール: 主要なコンポーネントに対して `i18next/no-literal-string` ルール（`mode: "jsx-only"`）が強制されます。
+
+#### How to Pass or Avoid i18n Violations / i18nエラーを回避・パスする方法
+
+1. **Use Translations (Recommended)**:
+   For user-facing strings, always use the translation keys with `t('key')` or `useTranslation`.
+   ユーザーに表示される文字列は、必ず `t('key')` または `useTranslation` を用いて多言語翻訳キーを使用してください。
+
+2. **Automatic Exclusions**:
+   - **Attribute exclusions**: Strings inside common structural attributes (e.g. `className`, `style`, `type`, `key`, `id`, `width`, `height`, `variant`, `size`, `href`, `data-testid`, `data-tutorial`, `position`, `aria-label`, etc.) are exempt.
+     属性除外: `className`, `style`, `type`, `key`, `id`, `width`, `height`, `variant`, `size`, `href`, `data-testid`, `data-tutorial`, `position`, `aria-label` などの一般的な構造属性内の文字列はチェックから除外されます。
+   - **Word exclusions**: Strings containing only uppercase letters, numbers, symbols, size units (e.g. `10px`, `100%`, `1.5rem`), or emojis/spaces are automatically excluded.
+     ワード除外: 大文字のみの文字列、数値や記号、サイズ単位（`10px`, `100%`, `1.5rem`など）、絵文字やスペースのみの文字列は、自動的に除外対象となります。
+
+3. **Disabling i18n Warnings in Code**:
+   If you must use a literal string that doesn't fit the exclusions (e.g., specific brand names or non-translatable text), use ESLint disable comments:
+   除外ルールに適合しない文字列をどうしても直書きする必要がある場合（ブランド名や翻訳不要な固有表現など）は、ESLintの無効化コメントを使用します:
+   - For a specific line in JSX:
+     JSXの特定の行を対象とする場合:
+     ```tsx
+     <div>
+       {/* eslint-disable-next-line i18next/no-literal-string */}
+       <span>Non-translatable Text</span>
+     </div>
+     ```
+   - For the entire file (place at the very top of the file):
+     ファイル全体を対象とする場合（ファイルの先頭に記述）:
+     ```ts
+     /* eslint-disable i18next/no-literal-string */
+     ```
+
+### 2.2 Design Principle: Separation of Concerns / 設計指針: 関心の分離
 
 - **Custom Hooks**: Extract side effects, local state mutation, and business logic into custom hooks.
   副作用、ローカル状態の変更、ビジネスロジックはカスタムフックに抽出します。
@@ -71,8 +111,8 @@ node scratch/auto-sync-eslint.js
 ```
 
 > [!IMPORTANT]
-> The CI pipeline will reject PRs that expand ESLint exceptions. Only shrinking or syncing existing exceptions is allowed.
-> CI パイプラインは ESLint の例外を増やす PR を却下します。例外の削減または既存例外の同期のみが許可されます。
+> The CI pipeline will reject PRs that expand ESLint exceptions (i.e. adding new files to the whitelist). Only shrinking or syncing existing exceptions to reflect resolved violations is allowed.
+> CI パイプラインは ESLint の例外を増やす PR（ホワイトリストへの新規ファイル追加）を却下します。例外の削減または既存例外の同期のみが許可されます。
 
 ---
 
@@ -112,3 +152,53 @@ To simplify the check-in process, a unified `npm run push` command is available.
 ```bash
 npm run push
 ```
+
+---
+
+## 6. Internationalization (i18n) Rules / 多言語化（i18n）コーディング規約
+
+To prevent untranslated UI text, we enforce the `i18next/no-literal-string` ESLint rule. Additionally, translation keys must be completely synchronized between languages.
+
+コードベース内での未翻訳テキストの混入を防ぐため、`i18next/no-literal-string` ESLint ルールを適用しています。また、言語間で翻訳キーが完全に同期している必要があります。
+
+### Wrap User-Facing Text / ユーザー表示テキストの翻訳
+
+Always wrap user-facing text using the `useTranslation` hook:
+ユーザーに表示されるテキストは、必ず `useTranslation` フックを使用して翻訳してください。
+
+```tsx
+const { t } = useTranslation()
+// ...
+<span>{t('common.save')}</span>
+```
+
+### Exempting Attributes / 翻訳除外属性
+
+Structural attributes such as `id`, `className`, `testId`, `data-testid`, `color`, `size`, `type` are automatically ignored. However, visual props like `title`, `placeholder`, or `label` must be localized:
+`id`, `className`, `testId`, `data-testid`, `color`, `size`, `type` などの構造的な属性は自動的に翻訳除外対象となりますが、`title`, `placeholder`, `label` などの表示用属性に渡す文字列は翻訳が必要です。
+
+```tsx
+{
+  /* Bad / 悪い例 */
+}
+;<input placeholder="Search prompts..." />
+
+{
+  /* Good / 良い例 */
+}
+;<input placeholder={t("library.searchPlaceholder")} />
+```
+
+### Bypassing Checks / 一時的なチェック回避
+
+If a literal string is absolutely required (e.g. mock data in test files, specific debug constants), disable the line check:
+テストファイルのモックデータやデバッグ用の定数など、どうしてもリテラル文字列が必要な場合は、以下のコメントでチェックを回避できます：
+
+```tsx
+const devUrl = "http://localhost:3000" // eslint-disable-line i18next/no-literal-string
+```
+
+### Translation Key Synchronization Check / 翻訳キーの同期検証
+
+Our linter automatically runs `node scripts/check-i18n-keys.mjs` as part of `npm run lint`. This script ensures that all keys present in `src/locales/ja/translation.json` exist in `src/locales/en/translation.json` and vice versa. If there is a mismatch, the linter (and the CI pipeline) will fail.
+リンター（`npm run lint`）を実行すると、自動的に `node scripts/check-i18n-keys.mjs` が実行されます。このスクリプトは、日本語（`ja/translation.json`）と英語（`en/translation.json`）の間でキーに差分がないかをチェックします。差分がある場合、リンターおよび CI パイプラインは失敗します。

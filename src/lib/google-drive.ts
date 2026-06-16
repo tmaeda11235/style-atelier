@@ -1,18 +1,27 @@
 import { authorize, clearCachedToken } from "./google-drive/auth"
-import { downloadBackup } from "./google-drive/download-ops"
+import {
+  downloadBackup,
+  downloadTempSharedCards
+} from "./google-drive/download-ops"
 import {
   createFolder,
+  deleteFile,
   deleteImageFile,
   downloadImageFile,
   findFolder,
   getBackupMetadata,
   listFolderFiles,
+  searchTempSharedCardsFile,
   uploadImageFile
 } from "./google-drive/file-ops"
 import { type GoogleDriveClient } from "./google-drive/types"
 import { uploadBackup } from "./google-drive/upload-ops"
 
-export { GDriveTimeoutError } from "./google-drive/types"
+export {
+  GDriveTimeoutError,
+  GDriveQuotaError,
+  GDriveRateLimitError
+} from "./google-drive/types"
 export type {
   BackupMetadata,
   GoogleDriveClient,
@@ -27,10 +36,15 @@ export {
   uploadImageFile,
   deleteImageFile,
   downloadImageFile,
-  listFolderFiles
+  listFolderFiles,
+  searchTempSharedCardsFile,
+  deleteFile
 } from "./google-drive/file-ops"
 export { uploadBackup } from "./google-drive/upload-ops"
-export { downloadBackup } from "./google-drive/download-ops"
+export {
+  downloadBackup,
+  downloadTempSharedCards
+} from "./google-drive/download-ops"
 
 export const defaultGoogleDriveClient: GoogleDriveClient = {
   authorize,
@@ -75,5 +89,11 @@ export const defaultGoogleDriveClient: GoogleDriveClient = {
   downloadImageFile: (token, fileId, onTokenUpdated, options) =>
     downloadImageFile(token, fileId, onTokenUpdated, undefined, options),
   listFolderFiles: (token, folderId, onTokenUpdated, options) =>
-    listFolderFiles(token, folderId, onTokenUpdated, undefined, options)
+    listFolderFiles(token, folderId, onTokenUpdated, undefined, options),
+  downloadTempSharedCards: (token, onTokenUpdated, options) =>
+    downloadTempSharedCards(token, onTokenUpdated, undefined, options),
+  deleteFile: (token, fileId, onTokenUpdated, options) =>
+    deleteFile(token, fileId, onTokenUpdated, undefined, options),
+  searchTempSharedCardsFile: (token, onTokenUpdated, options) =>
+    searchTempSharedCardsFile(token, onTokenUpdated, undefined, options)
 }

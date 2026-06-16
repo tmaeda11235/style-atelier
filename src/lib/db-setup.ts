@@ -6,6 +6,7 @@ import type {
   ImageSyncState,
   ParameterAlias,
   ParameterFolder,
+  RecipeHistoryItem,
   SlotHistoryItem,
   StyleCard,
   UserSettings
@@ -28,6 +29,7 @@ export class StyleAtelierDatabaseBase extends Dexie {
   parameterAliases!: Table<ParameterAlias, string>
   parameterFolders!: Table<ParameterFolder, string>
   imageSyncStates!: Table<ImageSyncState, string>
+  recipeHistory!: Table<RecipeHistoryItem, string>
 
   constructor() {
     super("StyleAtelierDatabase")
