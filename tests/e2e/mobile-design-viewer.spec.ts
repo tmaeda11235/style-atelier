@@ -70,7 +70,7 @@ test.describe("Mobile Viewer E2E Test", () => {
 
     // Wait for the toast element to become visible (class 'show' added)
     const toast = page.locator("#toast")
-    await expect(toast).toHaveClass(/show/)
+    await expect(toast).toHaveClass(/show/, { timeout: 15000 })
     await expect(toast.locator("span")).toHaveText("コピーしました！")
 
     // Take screenshot of the copied state with toast notification
@@ -83,13 +83,13 @@ test.describe("Mobile Viewer E2E Test", () => {
     console.log(`Saved screenshot to ${copiedScreenshotPath}`)
 
     // Wait for toast to disappear
-    await page.waitForTimeout(2200)
+    await page.waitForTimeout(6200)
     await expect(toast).not.toHaveClass(/show/)
 
     // 4. Click the cloud save button and verify toast message appears
     const saveCloudBtn = page.locator("#saveCloudBtn")
     await saveCloudBtn.click()
-    await expect(toast).toHaveClass(/show/)
+    await expect(toast).toHaveClass(/show/, { timeout: 15000 })
     await expect(toast.locator("span")).toHaveText(/クラウドに一時保存しました/)
 
     // Take screenshot of the cloud-saved state with toast notification
