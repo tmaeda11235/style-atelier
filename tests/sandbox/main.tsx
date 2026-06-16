@@ -898,6 +898,15 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
+  const [width, setWidth] = React.useState(window.innerWidth)
+
+  React.useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  const isNarrow = width < 350
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -972,10 +981,10 @@ function SandboxWrapper() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
-  return (
-    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
-      {/* 左半分: プロファイリング＆デバッグダッシュボード */}
-      <div className="flex flex-1 max-[350px]:hidden h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
+  const renderProfiler = () => {
+    if (isNarrow) return null
+    return (
+      <div className="flex flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
             <div>
@@ -1163,9 +1172,19 @@ function SandboxWrapper() {
           </span>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
+      {/* 左半分: プロファイリング＆デバッグダッシュボード */}
+      {renderProfiler()}
 
       {/* 右半分: 実際の拡張機能サイドパネル */}
-      <div className="w-[380px] max-[350px]:w-full h-full shadow-2xl flex-shrink-0">
+      <div
+        className={`${
+          isNarrow ? "w-full" : "w-[380px]"
+        } h-full shadow-2xl flex-shrink-0`}>
         <SidePanelPage />
       </div>
 
