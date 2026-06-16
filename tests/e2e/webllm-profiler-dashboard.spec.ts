@@ -42,6 +42,12 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Developer Profiler Da
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
+    // Skip onboarding guide if visible
+    const skipBtn = spFrame.locator("#welcome-skip-btn")
+    if ((await skipBtn.count()) > 0) {
+      await skipBtn.click()
+    }
+
     const width = await spFrame
       .locator("html")
       .evaluate(() => window.innerWidth)
