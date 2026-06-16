@@ -6,7 +6,7 @@ import { deleteOpfsFile, saveBase64ToOpfs } from "./migration-helpers"
 export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)
   setupVersions10To13(db)
-  setupVersion14(db)
+  setupVersions14OrHigher(db)
 }
 
 function setupVersions5To9(db: Dexie) {
@@ -105,9 +105,22 @@ function setupVersions10To13(db: Dexie) {
   })
 }
 
-function setupVersion14(db: Dexie) {
-  // Version 14: Migrate styleCard thumbnailData and category coverImageUrl to OPFS
-  db.version(14)
+function setupVersions14OrHigher(db: Dexie) {
+  // Version 14: Add recipeHistory table
+  db.version(14).stores({
+    styleCards:
+      "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+    historyItems: "id, timestamp",
+    userSettings: "userId",
+    categories: "id, name, createdAt, isDeleted, parentId",
+    slotHistory: "label",
+    parameterAliases: "id, paramType, value, alias, folderId",
+    parameterFolders: "id, name, parentId",
+    recipeHistory: "id, timestamp"
+  })
+
+  // Version 15: Migrate styleCard thumbnailData and category coverImageUrl to OPFS
+  db.version(15)
     .stores({
       styleCards:
         "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
@@ -116,9 +129,10 @@ function setupVersion14(db: Dexie) {
       categories: "id, name, createdAt, isDeleted, parentId",
       slotHistory: "label",
       parameterAliases: "id, paramType, value, alias, folderId",
-      parameterFolders: "id, name, parentId"
+      parameterFolders: "id, name, parentId",
+      recipeHistory: "id, timestamp"
     })
-    .upgrade(upgradeToVersion14)
+    .upgrade(upgradeToVersion15)
 }
 
 export function upgradeToVersion6(tx: any) {
@@ -253,7 +267,7 @@ export async function upgradeToVersion10(tx: any) {
   }
 }
 
-export async function upgradeToVersion14(tx: any) {
+export async function upgradeToVersion15(tx: any) {
   const cardsTable = tx.table("styleCards")
   const categoriesTable = tx.table("categories")
 

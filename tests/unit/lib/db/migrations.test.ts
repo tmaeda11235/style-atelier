@@ -1,4 +1,4 @@
-import { setupMigrations, upgradeToVersion14 } from "@/lib/db/migrations"
+import { setupMigrations, upgradeToVersion15 } from "@/lib/db/migrations"
 import Dexie from "dexie"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -17,7 +17,7 @@ describe("setupMigrations", () => {
 
     setupMigrations(mockDb)
 
-    // Verify versions 5 to 14 are registered
+    // Verify versions 5 to 15 are registered
     expect(mockVersion).toHaveBeenCalledWith(5)
     expect(mockVersion).toHaveBeenCalledWith(6)
     expect(mockVersion).toHaveBeenCalledWith(7)
@@ -28,10 +28,11 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(12)
     expect(mockVersion).toHaveBeenCalledWith(13)
     expect(mockVersion).toHaveBeenCalledWith(14)
+    expect(mockVersion).toHaveBeenCalledWith(15)
   })
 })
 
-describe("upgradeToVersion14", () => {
+describe("upgradeToVersion15", () => {
   const mockWrite = vi.fn()
   const mockClose = vi.fn()
   const mockRemoveEntry = vi.fn()
@@ -114,7 +115,7 @@ describe("upgradeToVersion14", () => {
     mockCardsTable.toArray.mockResolvedValue(mockCards)
     mockCategoriesTable.toArray.mockResolvedValue(mockCategories)
 
-    await upgradeToVersion14(mockTx)
+    await upgradeToVersion15(mockTx)
 
     // Verify OPFS save calls
     expect(mockGetDirectory).toHaveBeenCalled()
@@ -190,7 +191,7 @@ describe("upgradeToVersion14", () => {
       }
     })
 
-    await expect(upgradeToVersion14(mockTx)).rejects.toThrow(
+    await expect(upgradeToVersion15(mockTx)).rejects.toThrow(
       "Disk Quota Exceeded"
     )
 
