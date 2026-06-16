@@ -104,16 +104,12 @@ async function main() {
   console.log('\n--- Running Static Analysis ---');
   try {
     execSync('npm run lint', { stdio: 'inherit' });
-    console.log('Lint passed.');
-  } catch {
-    console.error('Lint failed. Please fix the linting errors before pushing.');
-    process.exit(1);
-  }
-
-  try {
+      
+    console.log('Fetching target config from git ref: main...');
     execSync('node scratch/check-eslint-whitelist.js eslint.config.mjs main', { stdio: 'inherit' });
+    execSync('node scratch/check-vitest-coverage-exceptions.js vitest.config.ts main', { stdio: 'inherit' });
   } catch {
-    console.error('ESLint whitelist check failed. Please do not add new exceptions.');
+    console.error('Static analysis failed. Please fix the errors before pushing.');
     process.exit(1);
   }
 
