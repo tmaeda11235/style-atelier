@@ -975,7 +975,7 @@ function SandboxWrapper() {
   return (
     <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
       {/* 左半分: プロファイリング＆デバッグダッシュボード */}
-      <div className="hidden md:flex flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
+      <div className="flex flex-1 max-[350px]:hidden h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
             <div>
@@ -1165,7 +1165,7 @@ function SandboxWrapper() {
       </div>
 
       {/* 右半分: 実際の拡張機能サイドパネル */}
-      <div className="w-full md:w-[380px] h-full shadow-2xl flex-shrink-0">
+      <div className="w-[380px] max-[350px]:w-full h-full shadow-2xl flex-shrink-0">
         <SidePanelPage />
       </div>
 
