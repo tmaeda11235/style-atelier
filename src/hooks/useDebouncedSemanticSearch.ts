@@ -12,6 +12,7 @@ interface DebouncedSemanticSearchProps {
   setColorFilter: (val: any) => void
   setSearchTag: (val: string) => void
   t: any
+  webLlmStatus?: string
 }
 
 interface EffectParams {
@@ -27,6 +28,7 @@ interface EffectParams {
   setAiSearchError: (val: string | null) => void
   setExtractedFilters: (val: any) => void
   language: string
+  webLlmStatus?: string
 }
 
 function resetFilters(
@@ -90,7 +92,8 @@ function useSemanticSearchEffect(params: EffectParams) {
         params.setIsAiSearching,
         params.setAiSearchError,
         params.t,
-        params.language
+        params.language,
+        params.webLlmStatus
       )
     }, 600)
     return () => clearTimeout(timer)
@@ -107,7 +110,8 @@ function useSemanticSearchEffect(params: EffectParams) {
     params.setIsAiSearching,
     params.setAiSearchError,
     params.setExtractedFilters,
-    params.language
+    params.language,
+    params.webLlmStatus
   ])
 }
 
@@ -122,10 +126,23 @@ async function executeSemanticSearch(
   setIsAiSearching: (val: boolean) => void,
   setAiSearchError: (val: string | null) => void,
   t: any,
-  language: string
+  language: string,
+  webLlmStatus?: string
 ) {
   setIsAiSearching(true)
   setAiSearchError(null)
+
+  if (webLlmStatus !== "ready") {
+    // Fallback immediately to standard keywords if model is not ready
+    setExtractedFilters(null)
+    setRarityFilter("All")
+    setCategoryFilter("All")
+    setColorFilter("All")
+    setSearchTag(query)
+    setIsAiSearching(false)
+    return
+  }
+
   try {
     const result = await parseSemanticQuery(query, categories, language)
     setExtractedFilters(result)
@@ -138,8 +155,18 @@ async function executeSemanticSearch(
       setSearchTag
     )
   } catch (err) {
-    console.error(err)
-    setAiSearchError(t.aiSearchError || "AI parsing error")
+    console.error(
+      "Semantic query parsing failed, falling back to FlexSearch:",
+      err
+    )
+    setAiSearchError(
+      t.aiSearchError || "AI parsing error (falling back to keyword search)"
+    )
+    setExtractedFilters(null)
+    setRarityFilter("All")
+    setCategoryFilter("All")
+    setColorFilter("All")
+    setSearchTag(query)
   } finally {
     setIsAiSearching(false)
   }
@@ -172,7 +199,8 @@ export function useDebouncedSemanticSearch(
     setIsAiSearching,
     setAiSearchError,
     setExtractedFilters,
-    language: currentLanguage
+    language: currentLanguage,
+    webLlmStatus: props.webLlmStatus
   })
 
   return { isAiSearching, aiSearchError, extractedFilters, setExtractedFilters }

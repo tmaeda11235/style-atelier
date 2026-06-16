@@ -266,6 +266,7 @@ interface AdviceSectionContentProps {
   loading: boolean
   error: string | null
   advice: string | null
+  isFallback: boolean
   t: any
 }
 
@@ -276,8 +277,20 @@ const NotReadyWrapper = ({ children }: { children: React.ReactNode }) => (
 )
 
 export function AdviceSectionContent(props: AdviceSectionContentProps) {
-  const { isModelReady, isEngineInitializing, loading, error, advice, t } =
-    props
+  const {
+    isModelReady,
+    isEngineInitializing,
+    loading,
+    error,
+    advice,
+    isFallback,
+    t
+  } = props
+
+  if (isFallback && advice) {
+    return <AdviceViewer advice={advice} />
+  }
+
   if (!isModelReady) {
     return (
       <NotReadyWrapper>
