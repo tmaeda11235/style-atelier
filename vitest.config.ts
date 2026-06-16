@@ -2,6 +2,8 @@ import path from "path"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
+const harnessExclude = ["src/test/harness/**"]
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -46,7 +48,8 @@ export default defineConfig({
         "tests/mocks/**",
         "vitest.config.ts",
         "vitest.setup.ts",
-        "playwright.config.ts"
+        "playwright.config.ts",
+        ...harnessExclude
       ],
       thresholds: {
         statements: 80,
