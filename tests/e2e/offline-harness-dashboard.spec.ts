@@ -11,7 +11,7 @@ test.describe("LiteRT-LM Offline Debug Dashboard E2E Tests", () => {
     })
   })
 
-  test("should load the dashboard and execute mock download and inference flow", async ({
+  test("should load the dashboard and execute mock download and inference flow @J-PROFILER-DASHBOARD", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")

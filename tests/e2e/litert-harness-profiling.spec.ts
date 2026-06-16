@@ -2,7 +2,7 @@ import fs from "fs"
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test("LiteRT Harness Profiling Dashboard End-to-End Simulation", async ({
+test("LiteRT Harness Profiling Dashboard End-to-End Simulation @J-PROFILER-DASHBOARD", async ({
   page
 }) => {
   // 1. Inject OPFS (Origin Private File System) mocks in the browser context
