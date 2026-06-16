@@ -5,6 +5,7 @@ import { createThumbnailDataUrl } from "../image-utils"
 export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)
   setupVersions10To13(db)
+  setupVersions14OrHigher(db)
 }
 
 function setupVersions5To9(db: Dexie) {
@@ -100,6 +101,21 @@ function setupVersions10To13(db: Dexie) {
     slotHistory: "label",
     parameterAliases: "id, paramType, value, alias, folderId",
     parameterFolders: "id, name, parentId"
+  })
+}
+
+function setupVersions14OrHigher(db: Dexie) {
+  // Version 14: Add recipeHistory table
+  db.version(14).stores({
+    styleCards:
+      "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+    historyItems: "id, timestamp",
+    userSettings: "userId",
+    categories: "id, name, createdAt, isDeleted, parentId",
+    slotHistory: "label",
+    parameterAliases: "id, paramType, value, alias, folderId",
+    parameterFolders: "id, name, parentId",
+    recipeHistory: "id, timestamp"
   })
 }
 

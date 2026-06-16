@@ -350,6 +350,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await confirmDownloadBtn.waitFor({ state: "visible", timeout: 20000 })
     await expect(confirmDownloadBtn).toBeVisible()
 
     // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
