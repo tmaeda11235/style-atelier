@@ -23,6 +23,7 @@ interface CauldronProps {
   setSelectedCardId: (id: string | null) => void
   toggleCardSelection: (id: string) => Promise<void> | void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
+  onStartWeightAdjustment?: () => Promise<void> | void
   handleExtractPortion: (
     name: string,
     segments: PromptSegment[],
@@ -163,6 +164,7 @@ const CauldronContent: React.FC<CauldronContentProps> = ({
   setSelectedCardId,
   toggleCardSelection,
   updateCardWeight,
+  onStartWeightAdjustment,
   handleExtractPortion,
   isDragOver,
   setIsDragOver,
@@ -180,6 +182,7 @@ const CauldronContent: React.FC<CauldronContentProps> = ({
         setSelectedCardId={setSelectedCardId}
         toggleCardSelection={toggleCardSelection}
         updateCardWeight={updateCardWeight}
+        onStartWeightAdjustment={onStartWeightAdjustment}
         handleExtractPortion={handleExtractPortion}
       />
     </div>

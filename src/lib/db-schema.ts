@@ -133,3 +133,29 @@ export interface ParameterFolder {
   parentId?: string // null / undefined for root
   createdAt: number
 }
+
+export interface RecipeHistoryItem {
+  id: string
+  name: string
+  timestamp: number
+  cards: {
+    id: string
+    name: string
+    weight: number
+  }[]
+  parameters: {
+    ar?: string
+    sref?: string[]
+    cref?: string[]
+    p?: string[]
+    imagePrompts?: string[]
+    stylize?: number
+    chaos?: number
+    weird?: number
+    tile?: boolean
+    raw?: boolean
+    version?: string
+    niji?: string
+  }
+  slotValues?: Record<string, string>
+}

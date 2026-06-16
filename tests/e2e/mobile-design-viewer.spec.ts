@@ -18,6 +18,9 @@ test.describe("Mobile Viewer E2E Test", () => {
   }) => {
     // 1. Navigate to the mobile app index page (no params, should fallback)
     await page.goto("/src/mobile-app/index.html")
+    await page.evaluate(() => {
+      ;(window as any).__E2E_TEST__ = true
+    })
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")
