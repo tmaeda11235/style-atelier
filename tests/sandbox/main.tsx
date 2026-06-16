@@ -8,6 +8,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 import "../../src/style.css" // スタイルの読み込み
 
 import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
+import { LanguageProvider } from "../../src/contexts/LanguageContext"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -898,6 +899,18 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
+  const [showDashboard, setShowDashboard] = React.useState(false)
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth
+      console.log(`[Sandbox Dashboard] Resizing layout, clientWidth: ${w}`)
+      setShowDashboard(w >= 480)
+    }
+    window.addEventListener("resize", handleResize)
+    handleResize()
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -975,7 +988,8 @@ function SandboxWrapper() {
   return (
     <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
       {/* 左半分: プロファイリング＆デバッグダッシュボード */}
-      <div className="hidden lg:flex flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
+      <div
+        className={`${showDashboard ? "flex" : "hidden"} flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between`}>
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
             <div>
@@ -1154,7 +1168,12 @@ function SandboxWrapper() {
         <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-between">
           <button
             id="test-open-onboarding-btn"
-            onClick={() => setIsOnboardingOpen(true)}
+            onClick={() => {
+              console.log(
+                "[Sandbox] Clicked Open Onboarding Button, setting state to true"
+              )
+              setIsOnboardingOpen(true)
+            }}
             className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
             💡 Open Onboarding Guide
           </button>
@@ -1165,7 +1184,8 @@ function SandboxWrapper() {
       </div>
 
       {/* 右半分: 実際の拡張機能サイドパネル */}
-      <div className="w-full lg:w-[380px] h-full shadow-2xl flex-shrink-0">
+      <div
+        className={`${showDashboard ? "w-[380px]" : "w-full"} h-full shadow-2xl flex-shrink-0`}>
         <SidePanelPage />
       </div>
 
@@ -1181,7 +1201,9 @@ const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SandboxWrapper />
+      <LanguageProvider>
+        <SandboxWrapper />
+      </LanguageProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )
