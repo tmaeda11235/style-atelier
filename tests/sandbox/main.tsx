@@ -1200,14 +1200,15 @@ function SandboxWrapper() {
         <SidePanelPage />
       </div>
 
-      {isNarrow && (
-        <button
-          id="test-open-onboarding-btn"
-          onClick={() => setIsOnboardingOpen(true)}
-          className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
-          💡 Open Onboarding Guide
-        </button>
-      )}
+      {isNarrow &&
+        !(typeof navigator !== "undefined" && navigator.webdriver) && (
+          <button
+            id="test-open-onboarding-btn"
+            onClick={() => setIsOnboardingOpen(true)}
+            className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
+            💡 Open Onboarding Guide
+          </button>
+        )}
 
       <OnboardingGuide
         isOpen={isOnboardingOpen}
