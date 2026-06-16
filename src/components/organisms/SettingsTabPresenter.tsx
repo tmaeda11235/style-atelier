@@ -1,6 +1,8 @@
 import { Settings2 } from "lucide-react"
 import React from "react"
 
+import { useWebLlm } from "../../hooks/useWebLlm"
+import { AiStatusBadge } from "../atoms/AiStatusBadge"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { SettingsAccordionItem } from "../molecules/SettingsAccordionItem"
 import { CloudSyncSection } from "./CloudSyncSection"
@@ -79,12 +81,16 @@ function MaintenanceAccordionItem({
 }
 
 function WebLlmAccordionItem({ isOpen, onToggle, title }: any) {
+  const { status } = useWebLlm()
   return (
     <SettingsAccordionItem
       id="settings-accordion-webllm"
       title={title}
       isOpen={isOpen}
-      onToggle={onToggle}>
+      onToggle={onToggle}
+      headerAccessory={
+        <AiStatusBadge status={status} className="normal-case" />
+      }>
       <div id="webllm-settings-section-wrapper">
         <WebLlmSettingsSection />
       </div>

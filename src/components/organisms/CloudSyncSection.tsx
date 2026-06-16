@@ -22,6 +22,7 @@ interface CloudSyncSectionProps {
   statusMessage: {
     text: string
     type: "success" | "error" | "info" | null
+    actionType?: "quota" | "rateLimit" | null
   }
   handleCancelSync: () => void
   handleToggleSync: (checked: boolean) => void
