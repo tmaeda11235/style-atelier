@@ -1,6 +1,7 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import type { StyleCard } from "../lib/db-schema"
 import {
+  useCardReorder,
   useHandleCardClick,
   useMoveCardToCategory,
   useTogglePin
@@ -12,7 +13,13 @@ import {
   useLibraryFilterStates
 } from "./useLibraryFilters"
 
-export type SortOption = "newest" | "oldest" | "rarity" | "usage" | "color"
+export type SortOption =
+  | "newest"
+  | "oldest"
+  | "rarity"
+  | "usage"
+  | "color"
+  | "custom"
 export type RarityFilter = "All" | StyleCard["tier"]
 export type ModelFilter = "All" | "V6" | "V5" | "Niji 6" | "Niji 5"
 export type ColorFilter =
@@ -29,6 +36,16 @@ export type ColorFilter =
   | "White"
   | "Black"
   | "Gray"
+
+export function calculateActiveFiltersCount(states: any) {
+  return [
+    states.rarityFilter !== "All",
+    states.modelFilter !== "All",
+    states.categoryFilter !== "All",
+    states.colorFilter !== "All" || states.colorHueFilter !== null,
+    states.sortBy !== "newest" && states.sortBy !== "custom"
+  ].filter(Boolean).length
+}
 
 export function useLibrary(
   addLog: (msg: string) => void,
@@ -62,14 +79,14 @@ export function useLibrary(
   )
 
   const moveCardToCategory = useMoveCardToCategory(categories, addLog)
+  const handleCardReorder = useCardReorder(
+    addLog,
+    filterStates.categoryFilter,
+    filterStates.currentFolderId,
+    filterStates.setSortBy
+  )
 
-  const activeFiltersCount = [
-    filterStates.rarityFilter !== "All",
-    filterStates.modelFilter !== "All",
-    filterStates.categoryFilter !== "All",
-    filterStates.colorFilter !== "All" || filterStates.colorHueFilter !== null,
-    filterStates.sortBy !== "newest"
-  ].filter(Boolean).length
+  const activeFiltersCount = calculateActiveFiltersCount(filterStates)
 
   return {
     ...filterStates,
@@ -77,6 +94,7 @@ export function useLibrary(
     breadcrumbs,
     currentSubfolders,
     moveCardToCategory,
+    handleCardReorder,
     togglePin,
     handleCardClick,
     allCards: allCardsMeta,

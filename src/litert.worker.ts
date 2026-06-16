@@ -1,6 +1,9 @@
 import { Engine, LiteRtLm } from "@litert-lm/core"
 
+import { setupWorkerCache } from "./mocks/interceptor"
+
 console.log("LiteRT Worker context initialized.")
+setupWorkerCache()
 
 let engine: Engine | null = null
 let isInitializing = false
