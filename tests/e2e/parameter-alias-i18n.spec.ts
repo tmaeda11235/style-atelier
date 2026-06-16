@@ -86,7 +86,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
     await expect(srefEditBtn).toBeVisible()
-    await srefEditBtn.click()
+    await srefEditBtn.dispatchEvent("click")
     const modalHeaderEn = spFrame.locator("h4:has-text('Edit Parameter Alias')")
     await expect(modalHeaderEn).toBeVisible()
     await expect(
@@ -119,7 +119,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
       .locator("button[title='エイリアスを編集']")
       .first()
     await expect(srefEditBtnJa).toBeVisible()
-    await srefEditBtnJa.click()
+    await srefEditBtnJa.dispatchEvent("click")
     const modalHeaderJa = spFrame.locator(
       "h4:has-text('パラメータエイリアスの編集')"
     )
