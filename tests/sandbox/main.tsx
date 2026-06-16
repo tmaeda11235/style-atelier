@@ -916,7 +916,7 @@ function SandboxWrapper() {
     return () => observer.disconnect()
   }, [])
 
-  const isNarrow = width < 350
+  const isNarrow = width < 700
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
