@@ -327,7 +327,8 @@
     "errorNoMetadataActionTitle": "3 steps to resolve this:",
     "errorNoMetadataStep1": "Import the original image: Please drop the original, uncompressed PNG file directly from its source (not saved from social media).",
     "errorNoMetadataStep2": "Crop and upload the QR code: Try cropping just the QR code portion of the image and dropping it here.",
-    "errorNoMetadataStep3": "Mint the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to mint a new card."
+    "errorNoMetadataStep3": "Mint the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to mint a new card.",
+    "restoreSuccess": "Successfully restored mobile shared cards!"
   },
   "share": {
     "shareTitle": "Share Style Card",
