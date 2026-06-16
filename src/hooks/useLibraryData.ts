@@ -22,6 +22,7 @@ export interface StyleCardMetadata {
   masking: StyleCard["masking"]
   version?: string
   niji?: string
+  sortIndex?: number
 }
 
 function buildFlexSearchIndex(
@@ -43,6 +44,7 @@ function buildFlexSearchIndex(
     ]
       .join(" ")
       .toLowerCase()
+      .trim()
     index.add(card.id, searchText)
   })
   return index
@@ -76,7 +78,8 @@ export function useLibraryData() {
         parameters: c.parameters,
         masking: c.masking,
         version: c.version || c.parameters?.version,
-        niji: c.niji || c.parameters?.niji
+        niji: c.niji || c.parameters?.niji,
+        sortIndex: c.sortIndex
       })
     )
   })
