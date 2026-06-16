@@ -13,6 +13,66 @@ test.describe("Mobile Viewer E2E Test", () => {
     permissions: ["clipboard-write"]
   })
 
+  test.beforeEach(async ({ page }) => {
+    // Mock the Google Identity Services script loading to prevent it from overwriting our window.google mock
+    await page.route(
+      "https://accounts.google.com/gsi/client",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/javascript",
+          body: "console.log('Mocked GSI Client loaded successfully');"
+        })
+      }
+    )
+
+    // Mock Google Identity Services (GIS)
+    await page.addInitScript(() => {
+      ;(window as any).google = {
+        accounts: {
+          oauth2: {
+            initTokenClient: (config: any) => {
+              return {
+                requestAccessToken: () => {
+                  if (config.callback) {
+                    config.callback({
+                      access_token: "mock-mobile-access-token"
+                    })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+
+    // Mock Google Drive API
+    await page.route("https://www.googleapis.com/**", async (route) => {
+      const url = route.request().url()
+      if (url.includes("files?q=")) {
+        // Return no files to trigger create flow
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ files: [] })
+        })
+      } else if (url.includes("uploadType=multipart")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ id: "mock-temp-file-id-abc" })
+        })
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({})
+        })
+      }
+    })
+  })
+
   test("should render fallback Cyber Samurai, flip card and copy prompt with visual feedbacks @J-MOBILE-PREVIEW-01", async ({
     page
   }) => {

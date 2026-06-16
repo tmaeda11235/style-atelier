@@ -1,6 +1,9 @@
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
 import { decompressCardData } from "../lib/qr-utils"
+import { saveCardToGoogleDrive } from "./google-drive-mobile"
+
+let currentCard: Partial<StyleCard> | null = null
 
 function showToast(message: string) {
   const toast = document.getElementById("toast") as HTMLElement
@@ -64,6 +67,7 @@ function renderCardImage(card: Partial<StyleCard>) {
 }
 
 function renderCard(card: Partial<StyleCard>) {
+  currentCard = card
   const cardTitleFront = document.getElementById("cardTitleFront")
   const cardTitleBack = document.getElementById("cardTitleBack")
   const cardRarityFront = document.getElementById("cardRarityFront")
@@ -257,8 +261,25 @@ function setupButtonEvents(
     }
   })
 
-  saveCloudBtn.addEventListener("click", () => {
-    showToast("クラウドに一時保存しました")
+  saveCloudBtn.addEventListener("click", async () => {
+    if (!currentCard) {
+      showToast("保存するカードデータがありません")
+      return
+    }
+
+    const originalHtml = saveCloudBtn.innerHTML
+    try {
+      saveCloudBtn.disabled = true
+      saveCloudBtn.textContent = "保存中..."
+      await saveCardToGoogleDrive(currentCard)
+      showToast("クラウドに一時保存しました")
+    } catch (err) {
+      console.error("Failed to save to Google Drive:", err)
+      showToast("保存に失敗しました")
+    } finally {
+      saveCloudBtn.disabled = false
+      saveCloudBtn.innerHTML = originalHtml
+    }
   })
 }
 
