@@ -14,6 +14,7 @@ To address these challenges, we need a strategy to offload large assets while re
 ## Decision
 
 We will adopt the **Hybrid Storage Pattern**:
+
 - **Metadata Management**: Structured information (prompts, tags, category configurations) remains in **IndexedDB** to maintain fast querying, sorting, and indexing performance.
 - **Binary Offloading**: Large image assets (card thumbnails, category covers) are moved to the **Origin Private File System (OPFS)**, a low-level, high-performance sandbox file system provided by modern browsers.
 - **Reference Resolution**: Instead of containing raw binary data, IndexedDB records will reference images via relative paths (e.g., `card-images/{cardId}.png` or `card-images/categories/{categoryId}.png`).
@@ -23,20 +24,24 @@ We will adopt the **Hybrid Storage Pattern**:
 To ensure system stability, the migration and operation of the hybrid storage pattern are governed by the following guidelines:
 
 ### 1. Atomic Storage Operations (`image-opfs-storage.ts`)
+
 - OPFS file writes are not naturally atomic. To prevent file corruption if the user closes the page or a service worker terminates during a write, writes must be performed using a temporary file (e.g., `{filename}.tmp`).
 - Once the write completes successfully, the temporary file is renamed/moved to the target filename.
 - Error handlers must clean up any leftover `.tmp` files to prevent cluttering the storage.
 
 ### 2. Database Schema Migration (Version 14)
+
 - Upgrading the database schema to version 14 involves migrating existing binary data.
 - The migration process reads the binary `thumbnailData` or Base64 `coverImageUrl` from IndexedDB, writes them into OPFS, saves the relative path under a new field (`thumbnailPath` / `coverImagePath`), and purges the old binary fields to shrink the IndexedDB file.
 
 ### 3. Asynchronous Reading and LRU Cache Adapter (`useOpfsImage`)
+
 - Unlike IndexedDB objects which can be resolved synchronously in-memory once fetched, reading from OPFS is strictly asynchronous.
 - To avoid UI flicker and repeatedly reading the same file from disk, an image cache adapter (`OpfsImage` component / `useOpfsImage` hook) is introduced.
 - An in-memory cache (using LRU logic) stores frequently accessed images to balance memory usage and instant UI rendering.
 
 ### 4. Incremental Google Drive Sync
+
 - Rather than backing up the entire IndexedDB database including images, we implement an incremental sync engine.
 - Only metadata is exported in the primary database backup.
 - Image sync records are maintained in a dedicated IndexedDB table (`imageSyncStates`). When sync occurs, MD5 hashes of local OPFS images are compared against remote files on Google Drive, and only new, modified, or deleted images are synced.
