@@ -1182,7 +1182,6 @@ function SandboxWrapper() {
         </div>
       )}
 
-      {/* 右半分: 実際の拡張機能サイドパネル */}
       <div
         style={{ width: isWide ? "380px" : "100%" }}
         className="h-full shadow-2xl flex-shrink-0">
