@@ -84,7 +84,7 @@
     "easyModeToggleLabel": "Enable Easy Mode",
     "easyModeToggleSub": "Hide tabs to focus on Style Card management",
     "gdriveSyncLabel": "Google Drive Cloud Sync",
-    "gdriveSyncDesc": "Backup your local style cards and binders to Google Drive. Keep your decks safe and load them on other devices.",
+    "gdriveSyncDesc": "Backup your local style cards and binders to Google Drive. Keep your binders safe and load them on other devices.",
     "cloudBackupLabel": "Cloud Backup: ",
     "loadingCloudBackup": "Fetching cloud backup info...",
     "noCloudBackup": "No cloud backup file found",
@@ -101,8 +101,11 @@
     "syncCancelled": "Sync cancelled by user",
     "syncTimeout": "Sync timed out. Please check your network connection.",
     "syncFailed": "Sync failed",
+    "syncFailedQuota": "Sync failed: Insufficient Google Drive storage space. Please clean up space or consider exporting via Local Backup.",
+    "syncFailedRateLimit": "Sync failed: Google Drive API rate limit reached. Please wait a moment and try again.",
     "syncWarningTitle": "Long Offline Warning",
     "syncWarningMessage": "It has been over 60 days since your last sync. Proceeding may restore style cards or folders that were deleted on other devices.",
+    "autoSyncSuspendedBanner": "Auto-sync has been suspended because the last sync was more than 60 days ago. Please perform a manual sync to resolve potential conflicts.",
     "strategyLabel": "Select merge strategy:",
     "strategyMergeLabel": "Safe Merge (Recommended)",
     "strategyMergeDesc": "Merges data as usual. While deleted records may reappear, your local changes are preserved.",
@@ -120,6 +123,10 @@
     "restoreProgress": "Downloading data",
     "restoreSuccess": "Force recovery completed successfully!",
     "restoreFailed": "Force recovery failed",
+    "restoreFailedQuota": "Force recovery failed: Insufficient Google Drive storage space.",
+    "restoreFailedRateLimit": "Force recovery failed: Google Drive API rate limit reached. Please wait a moment and try again.",
+    "actionCleanupDrive": "Cleanup Drive Guide",
+    "actionLocalBackup": "To Local Backup",
     "restoreCancelled": "Force recovery cancelled by user",
     "googleDriveToggleLabel": "Enable Google Drive Sync",
     "googleDriveToggleSub": "Activates backup and restore buttons",
@@ -165,7 +172,7 @@
     "groupOrganization": "Organization",
     "groupWorkbench": "Workbench Features",
     "featureStackLabel": "Card Stacking (Stack)",
-    "featureStackSub": "Merge pinned cards to create new cards",
+    "featureStackSub": "Merge pinned cards to mint new cards",
     "featureSlotLabel": "Prompt Slotting (Slot)",
     "featureSlotSub": "Turn prompt segments into editable variables",
     "featureRarityLabel": "Rarity Selection",
@@ -177,7 +184,7 @@
     "featureMultiCardLabel": "Multi-card Usage",
     "featureMultiCardSub": "Pin and mix multiple cards on the workbench",
     "featureCardEditingLabel": "Card Editing",
-    "featureCardEditingSub": "Edit the name, prompt, and parameters of created cards",
+    "featureCardEditingSub": "Edit the name, prompt, and parameters of minted cards",
     "featureMultiImageLabel": "Multi-image Selection",
     "featureMultiImageSub": "Select up to 4 images for the card thumbnail grid",
     "tipsBarToggleLabel": "Enable Tips Bar",
@@ -194,7 +201,7 @@
     "deleteCardMessage": "This action cannot be undone. \"{{cardName}}\" will be permanently deleted from the library.",
     "deleteBtn": "Delete",
     "webLlmGroupTitle": "🤖 Local AI Model (WebLLM)",
-    "webLlmDesc": "Manage the local AI model (Gemma-4 E2B). The model is cached in browser storage (OPFS) for in-browser offline inference.",
+    "webLlmDesc": "Manage the local AI model (Gemma-2 2B). The model is cached in browser storage (OPFS) for in-browser offline inference.",
     "webLlmStatusLabel": "Status",
     "webLlmStatusIdle": "Not Downloaded",
     "webLlmStatusChecking": "Checking...",
@@ -246,7 +253,7 @@
     "tags": "Tags: Add search tags to categorize and filter your style cards in the Library.",
     "categories": "Category: Organize your cards into custom categories (binders). You can manage them in the settings tab.",
     "multiCard": "Multi-card: Pin multiple cards on the Workbench to blend their prompt segments, sref, and other parameters together.",
-    "cardEditing": "Card Editing: Allows modifying the name, prompt bubbles, and parameter options of your created style cards.",
+    "cardEditing": "Card Editing: Allows modifying the name, prompt bubbles, and parameter options of your minted style cards.",
     "multiImage": "Multi-image: Select up to 4 images to create a dynamic thumbnail grid for your style card."
   },
   "categoryManager": {
@@ -327,7 +334,8 @@
     "errorNoMetadataActionTitle": "3 steps to resolve this:",
     "errorNoMetadataStep1": "Import the original image: Please drop the original, uncompressed PNG file directly from its source (not saved from social media).",
     "errorNoMetadataStep2": "Crop and upload the QR code: Try cropping just the QR code portion of the image and dropping it here.",
-    "errorNoMetadataStep3": "Create the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to create a new card."
+    "errorNoMetadataStep3": "Mint the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to mint a new card.",
+    "restoreSuccess": "Successfully restored mobile shared cards!"
   },
   "share": {
     "shareTitle": "Share Style Card",
@@ -382,7 +390,7 @@
   },
   "libraryTab": {
     "emptyTitle": "No Style Cards",
-    "emptyDesc": "Drag and drop images from the History tab of this panel to create your own style cards!",
+    "emptyDesc": "Drag and drop images from the History tab of this panel to mint your own style cards!",
     "notFoundTitle": "No Cards Found",
     "notFoundDesc": "Change or clear your search terms or filters.",
     "clearFilters": "Clear Filters",
@@ -410,6 +418,7 @@
     "manageCategories": "Manage Categories",
     "loadMore": "Load More",
     "sortBy": {
+      "custom": "Custom",
       "newest": "Newest",
       "oldest": "Oldest",
       "rarity": "Rarity",
@@ -453,6 +462,11 @@
   },
   "workbench": {
     "clearAll": "Clear All",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "scrollLeft": "Scroll Left",
+    "scrollRight": "Scroll Right",
+    "openWorkbench": "Open Workbench",
     "gachaPick": "Gacha Pick",
     "addPromptDesc": "Add style cards to Workbench from Library",
     "evolution": "Evolution",
@@ -494,7 +508,10 @@
     "aiAdviceLoadingModel": "Loading local AI model...",
     "webllmQuotaWarningTitle": "Storage Quota Exceeded",
     "webllmQuotaWarningDesc": "Not enough storage to cache the AI model. Please free up some disk space.",
-    "aiAdviceDownloadBtn": "Download Model"
+    "aiAdviceDownloadBtn": "Download Model",
+    "recipeHistory": "History",
+    "pastRecipes": "Past Recipes",
+    "noRecipes": "No history yet"
   },
   "mergeStack": {
     "title": "Merge Card Stack",
@@ -670,7 +687,9 @@
     "disconnectedBtn": "Reload Page",
     "noInputTitle": "Input Not Found",
     "noInputDesc": "Could not find the chat input. Please ensure you are on the \"Create\" page or the Midjourney gallery details view.",
-    "noInputBtn": "Retry Connection"
+    "noInputBtn": "Retry Connection",
+    "dbErrorTitle": "Database Write Error",
+    "dbErrorDesc": "Failed to write to the database. Please check your storage quota or limits."
   },
   "aliasEdit": {
     "editTitle": "Edit Parameter Alias",

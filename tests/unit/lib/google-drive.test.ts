@@ -2,12 +2,24 @@ import {
   authorize,
   clearCachedToken,
   defaultGoogleDriveClient,
+  deleteFile,
   downloadBackup,
+  downloadTempSharedCards,
   GDriveTimeoutError,
   getBackupMetadata,
   searchBackupFile,
+  searchTempSharedCardsFile,
   uploadBackup
 } from "@/lib/google-drive"
+import {
+  fetchWithTimeout,
+  handleResponseError,
+  parseXhrErrorStatus
+} from "@/lib/google-drive/http-client"
+import {
+  GDriveQuotaError,
+  GDriveRateLimitError
+} from "@/lib/google-drive/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Mock XMLHttpRequest
@@ -1219,6 +1231,314 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       expect(mockXhrInstances).toHaveLength(1)
       controller.abort()
       await expect(promise).rejects.toThrow("Upload aborted by user")
+    })
+  })
+
+  describe("http-client error parsing and coverage helpers", () => {
+    it("should parse 429 as GDriveRateLimitError", () => {
+      const err = parseXhrErrorStatus(429, "custom msg")
+      expect(err).toBeInstanceOf(GDriveRateLimitError)
+      expect(err.message).toBe("Google Drive API rate limit exceeded.")
+    })
+
+    it("should parse 507 as GDriveQuotaError", () => {
+      const err = parseXhrErrorStatus(507, "custom msg")
+      expect(err).toBeInstanceOf(GDriveQuotaError)
+      expect(err.message).toBe("Google Drive storage quota exceeded.")
+    })
+
+    it("should parse 403 with rateLimitExceeded as GDriveRateLimitError", () => {
+      const responseText = JSON.stringify({
+        error: {
+          errors: [
+            { reason: "rateLimitExceeded", message: "Too many requests" }
+          ]
+        }
+      })
+      const err = parseXhrErrorStatus(403, "custom msg", responseText)
+      expect(err).toBeInstanceOf(GDriveRateLimitError)
+      expect(err.message).toBe("Too many requests")
+    })
+
+    it("should parse 403 with userRateLimitExceeded as GDriveRateLimitError", () => {
+      const responseText = JSON.stringify({
+        error: {
+          errors: [{ reason: "userRateLimitExceeded" }]
+        }
+      })
+      const err = parseXhrErrorStatus(403, "custom msg", responseText)
+      expect(err).toBeInstanceOf(GDriveRateLimitError)
+      expect(err.message).toBe("Google Drive API rate limit exceeded.")
+    })
+
+    it("should parse 403 with quotaExceeded as GDriveQuotaError", () => {
+      const responseText = JSON.stringify({
+        error: {
+          errors: [{ reason: "quotaExceeded", message: "Disk full" }]
+        }
+      })
+      const err = parseXhrErrorStatus(403, "custom msg", responseText)
+      expect(err).toBeInstanceOf(GDriveQuotaError)
+      expect(err.message).toBe("Disk full")
+    })
+
+    it("should parse 403 with storageQuotaExceeded as GDriveQuotaError", () => {
+      const responseText = JSON.stringify({
+        error: {
+          errors: [{ reason: "storageQuotaExceeded" }]
+        }
+      })
+      const err = parseXhrErrorStatus(403, "custom msg", responseText)
+      expect(err).toBeInstanceOf(GDriveQuotaError)
+      expect(err.message).toBe("Google Drive storage quota exceeded.")
+    })
+
+    it("should fallback to generic error on non-matching 403 reason", () => {
+      const responseText = JSON.stringify({
+        error: {
+          errors: [{ reason: "otherReason" }]
+        }
+      })
+      const err = parseXhrErrorStatus(403, "custom msg", responseText)
+      expect(err).not.toBeInstanceOf(GDriveQuotaError)
+      expect(err.message).toBe("custom msg: status 403")
+    })
+
+    it("should handle invalid JSON responseText in parseXhrErrorStatus gracefully", () => {
+      const err = parseXhrErrorStatus(403, "custom msg", "invalid-json")
+      expect(err.message).toBe("custom msg: status 403")
+    })
+
+    it("should throw GDriveRateLimitError on 429 Response", async () => {
+      const res = {
+        status: 429,
+        json: async () => ({})
+      } as Response
+      await expect(handleResponseError(res, "failed")).rejects.toThrow(
+        GDriveRateLimitError
+      )
+    })
+
+    it("should throw GDriveQuotaError on 507 Response", async () => {
+      const res = {
+        status: 507,
+        json: async () => ({})
+      } as Response
+      await expect(handleResponseError(res, "failed")).rejects.toThrow(
+        GDriveQuotaError
+      )
+    })
+
+    it("should throw GDriveRateLimitError on 403 Response with userRateLimitExceeded", async () => {
+      const res = {
+        status: 403,
+        json: async () => ({
+          error: {
+            errors: [
+              { reason: "userRateLimitExceeded", message: "Rate limit hit" }
+            ]
+          }
+        })
+      } as Response
+      await expect(handleResponseError(res, "failed")).rejects.toThrow(
+        "Rate limit hit"
+      )
+    })
+
+    it("should throw GDriveQuotaError on 403 Response with storageQuotaExceeded", async () => {
+      const res = {
+        status: 403,
+        json: async () => ({
+          error: {
+            errors: [{ reason: "storageQuotaExceeded", message: "Quota hit" }]
+          }
+        })
+      } as Response
+      await expect(handleResponseError(res, "failed")).rejects.toThrow(
+        "Quota hit"
+      )
+    })
+
+    it("should throw standard error on other 403 reasons", async () => {
+      const res = {
+        status: 403,
+        statusText: "Forbidden",
+        json: async () => ({
+          error: {
+            errors: [{ reason: "otherReason" }]
+          }
+        })
+      } as Response
+      await expect(handleResponseError(res, "failed")).rejects.toThrow(
+        "failed: 403 Forbidden"
+      )
+    })
+
+    it("should handle response json parse failure in handleResponseError", async () => {
+      const res = {
+        status: 403,
+        statusText: "Forbidden",
+        json: async () => {
+          throw new Error("JSON parse fail")
+        }
+      } as Response
+      await expect(handleResponseError(res, "failed")).rejects.toThrow(
+        "failed: 403 Forbidden"
+      )
+    })
+
+    it("should throw GDriveTimeoutError on AbortError if signal is not aborted", async () => {
+      const controller = new AbortController()
+
+      const originalFetch = global.fetch
+      global.fetch = vi.fn().mockImplementation(() => {
+        const err = new Error("aborted")
+        err.name = "AbortError"
+        throw err
+      })
+
+      try {
+        await expect(
+          fetchWithTimeout("http://test.com", {
+            timeoutMs: 100,
+            signal: controller.signal
+          })
+        ).rejects.toThrow(GDriveTimeoutError)
+      } finally {
+        global.fetch = originalFetch
+      }
+    })
+
+    it("should throw AbortError on AbortError if signal is aborted", async () => {
+      const controller = new AbortController()
+
+      const originalFetch = global.fetch
+      global.fetch = vi.fn().mockImplementation(() => {
+        const err = new Error("The user aborted a request.")
+        err.name = "AbortError"
+        throw err
+      })
+
+      controller.abort()
+
+      try {
+        await expect(
+          fetchWithTimeout("http://test.com", {
+            timeoutMs: 100,
+            signal: controller.signal
+          })
+        ).rejects.toThrow("aborted")
+      } finally {
+        global.fetch = originalFetch
+      }
+    })
+  })
+
+  describe("file-ops: searchTempSharedCardsFile and deleteFile coverage", () => {
+    it("should handle error in searchBackupFile if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+        json: async () => ({})
+      })
+      await expect(searchBackupFile("token")).rejects.toThrow(
+        "Failed to search backup file"
+      )
+    })
+
+    it("should search temp shared cards file successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "temp-file-id" }]
+        })
+      })
+      const res = await searchTempSharedCardsFile("token")
+      expect(res).toBe("temp-file-id")
+    })
+
+    it("should return null in searchTempSharedCardsFile if no files found", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ files: [] })
+      })
+      const res = await searchTempSharedCardsFile("token")
+      expect(res).toBeNull()
+    })
+
+    it("should handle error in searchTempSharedCardsFile if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error",
+        json: async () => ({})
+      })
+      await expect(searchTempSharedCardsFile("token")).rejects.toThrow(
+        "Failed to search temp shared cards file"
+      )
+    })
+
+    it("should delete file successfully", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true
+      })
+      await expect(deleteFile("token", "file-id")).resolves.not.toThrow()
+    })
+
+    it("should handle error in deleteFile if response is not ok", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Error",
+        json: async () => ({})
+      })
+      await expect(deleteFile("token", "file-id")).rejects.toThrow(
+        "Failed to delete file"
+      )
+    })
+  })
+
+  describe("defaultGoogleDriveClient wrapper methods coverage", () => {
+    it("should call downloadTempSharedCards through client", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "temp-file-id" }]
+        })
+      })
+
+      const promise = defaultGoogleDriveClient.downloadTempSharedCards("token")
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockXhrInstances).toHaveLength(1)
+      const xhr = mockXhrInstances[0]
+      xhr.status = 200
+      xhr.responseText = "mock-temp-cards-data"
+      xhr.onload()
+
+      const res = await promise
+      expect(res).toBe("mock-temp-cards-data")
+    })
+
+    it("should call deleteFile through client", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true
+      })
+      await expect(
+        defaultGoogleDriveClient.deleteFile("token", "file-id")
+      ).resolves.not.toThrow()
+    })
+
+    it("should call searchTempSharedCardsFile through client", async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          files: [{ id: "temp-file-id" }]
+        })
+      })
+      const res =
+        await defaultGoogleDriveClient.searchTempSharedCardsFile("token")
+      expect(res).toBe("temp-file-id")
     })
   })
 })

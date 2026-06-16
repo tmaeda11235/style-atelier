@@ -389,4 +389,65 @@ describe("qr-utils", () => {
       vi.mocked(jsQR).mockImplementation(() => mockJsQrResult)
     })
   })
+
+  describe("Robustness and edge cases", () => {
+    it("should handle huge images by resizing before scanning", async () => {
+      mockJsQrResult = { data: "huge-image-qr-payload" }
+
+      class MockFileReader {
+        onload: any
+        readAsArrayBuffer() {
+          this.onload({ target: { result: new ArrayBuffer(0) } })
+        }
+        readAsDataURL() {}
+      }
+      vi.stubGlobal("FileReader", MockFileReader)
+
+      const mockCreateObjectURL = vi.fn().mockReturnValue("blob:mock-huge-url")
+      const mockRevokeObjectURL = vi.fn()
+      vi.stubGlobal("URL", {
+        createObjectURL: mockCreateObjectURL,
+        revokeObjectURL: mockRevokeObjectURL
+      })
+
+      class MockHugeImage {
+        width = 4096
+        height = 2048
+        onload: any
+        set src(val: string) {
+          this.onload()
+        }
+      }
+      vi.stubGlobal("Image", MockHugeImage)
+
+      const originalGetContext = HTMLCanvasElement.prototype.getContext
+      const mockDrawImage = vi.fn()
+      HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+        drawImage: mockDrawImage,
+        getImageData: vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray([0, 0, 0, 0]),
+          width: 1024,
+          height: 512
+        })
+      })
+
+      const mockFile = new File([""], "huge.png", { type: "image/png" })
+      const result = await readQRCodeFromImage(mockFile)
+
+      expect(result).toBe("huge-image-qr-payload")
+      expect(mockDrawImage).toHaveBeenCalled()
+
+      HTMLCanvasElement.prototype.getContext = originalGetContext
+      vi.unstubAllGlobals()
+    })
+
+    it("should not crash and return null on completely corrupted PNG bytes", () => {
+      const corruptedPng = new Uint8Array([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0xff, 0xff, 0xff,
+        0x74, 0x45, 0x58, 0x74, 0x00, 0x00, 0x00, 0x00
+      ])
+      const result = extractMetadataFromPng(corruptedPng, "stylecard")
+      expect(result).toBeNull()
+    })
+  })
 })

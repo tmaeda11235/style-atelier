@@ -700,6 +700,12 @@ test.describe("Style Atelier Sandbox E2E Tests - Custom Categories @J-ORG-EXPERT
       )
       await expect(themedContainer).toBeVisible({ timeout: 10000 })
 
+      // Verify contrast styling on header text when cover image is present
+      const binderTitle = spFrame.locator("h2:has-text('Magic Binder')")
+      await expect(binderTitle).toBeVisible()
+      await expect(binderTitle).toHaveClass(/text-white/)
+      await expect(binderTitle).toHaveClass(/drop-shadow/)
+
       console.log("Theme E2E test passed successfully!")
       await page.screenshot({
         path: path.join(
