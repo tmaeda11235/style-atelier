@@ -105,6 +105,7 @@
     "syncFailedRateLimit": "Sync failed: Google Drive API rate limit reached. Please wait a moment and try again.",
     "syncWarningTitle": "Long Offline Warning",
     "syncWarningMessage": "It has been over 60 days since your last sync. Proceeding may restore style cards or folders that were deleted on other devices.",
+    "autoSyncSuspendedBanner": "Auto-sync has been suspended because the last sync was more than 60 days ago. Please perform a manual sync to resolve potential conflicts.",
     "strategyLabel": "Select merge strategy:",
     "strategyMergeLabel": "Safe Merge (Recommended)",
     "strategyMergeDesc": "Merges data as usual. While deleted records may reappear, your local changes are preserved.",
