@@ -26,3 +26,8 @@ Midjourney Style Manager ("style-atelier") is a Chrome Extension designed to tra
 3.  **Phase 3: The Economy Update (Monetization)**
     - Frame designs, Licensing logic.
     - Mobile PWA Viewer.
+4.  **Phase 4: Mobile Standalone PWA Expansion**
+    - Mobile PWA化に向けた機能要件定義とロードマップ。詳細は [docs/mobile-pwa-roadmap.md](file:///c:/Users/oculus/Desktop/worktrees/1174-mobile-pwa-roadmap/docs/mobile-pwa-roadmap.md) を参照。
+      - Phase 1: Foundation & Offline Storage (基礎・オフライン化)
+      - Phase 2: Zero-Friction Hybrid Sync (P2P/中間キャッシュによる同期摩擦排除)
+      - Phase 3: Resilient Mobile AI Inference (ハイブリッドクラウドフォールバック推論)
