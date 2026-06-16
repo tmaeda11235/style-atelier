@@ -367,6 +367,23 @@ describe("parsePrompt", () => {
     expect(promptSegments).toHaveLength(1)
     expect(promptSegments[0].value).toBe("a majestic lion")
   })
+
+  it("should handle boundary spacing and edge cases for parsePrompt including whitespace formatting", () => {
+    // Prompt with only spaces
+    const resultEmpty = parsePrompt("   ")
+    expect(resultEmpty.promptSegments).toEqual([])
+    expect(resultEmpty.parameters).toEqual({})
+
+    // Prompt with starting image prompt and excessive spaces, tabs and newlines
+    const promptComplex =
+      "  \n\t https://s.mj.run/img1   \n\t a majestic lion   "
+    const resultComplex = parsePrompt(promptComplex)
+    expect(resultComplex.parameters.imagePrompts).toEqual([
+      "https://s.mj.run/img1"
+    ])
+    expect(resultComplex.promptSegments).toHaveLength(1)
+    expect(resultComplex.promptSegments[0].value).toBe("a majestic lion")
+  })
 })
 
 describe("mergePromptSegments", () => {

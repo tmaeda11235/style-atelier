@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { db } from "../lib/db"
 import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
 import {
@@ -73,56 +74,47 @@ export interface SaveMintedCardParams {
   addLog: (msg: string) => void
   dispatchState: React.Dispatch<React.SetStateAction<MintingState>>
   setActiveTab: (tab: "history" | "library" | "workbench") => void
+  setAlertType?: (type: AlertType) => void
 }
 
-export function useSaveMintedCard(params: SaveMintedCardParams) {
-  const {
-    mintingItem,
-    variationBase,
-    editedSegments,
-    meta,
-    colors,
-    selectedRarity,
-    isSrefHidden,
-    isPHidden,
-    addLog,
-    dispatchState,
-    setActiveTab
-  } = params
-
+export function useSaveMintedCard(p: SaveMintedCardParams) {
   return async () => {
-    if (!mintingItem && !variationBase) return
-    addLog(
-      mintingItem
-        ? `Saving card from history item: ${mintingItem.id}`
+    if (!p.mintingItem && !p.variationBase) return
+    p.addLog(
+      p.mintingItem
+        ? `Saving card from history item: ${p.mintingItem.id}`
         : `Saving card variation`
     )
     try {
-      const thumbnailData = await getThumbnailData(mintingItem, variationBase)
+      const thumbnailData = await getThumbnailData(
+        p.mintingItem,
+        p.variationBase
+      )
       const buildParams = createBuildCardParams(
-        mintingItem,
-        variationBase,
-        editedSegments,
-        selectedRarity,
-        isSrefHidden,
-        isPHidden,
+        p.mintingItem,
+        p.variationBase,
+        p.editedSegments,
+        p.selectedRarity,
+        p.isSrefHidden,
+        p.isPHidden,
         thumbnailData,
-        meta,
-        colors
+        p.meta,
+        p.colors
       )
       const newCard = buildMintedCard(buildParams)
       await db.styleCards.put(newCard)
-      addLog(`New StyleCard "${newCard.name}" minted successfully!`)
-      dispatchState((s) => ({
+      p.addLog(`New StyleCard "${newCard.name}" minted successfully!`)
+      p.dispatchState((s) => ({
         ...s,
         mintingItem: null,
         isSrefHidden: false,
         isPHidden: false
       }))
-      setActiveTab("library")
+      p.setActiveTab("library")
     } catch (err) {
       console.error("Failed to mint StyleCard:", err)
-      addLog("Error: Failed to mint StyleCard.")
+      p.addLog("Error: Failed to mint StyleCard.")
+      p.setAlertType?.("db_error")
     }
   }
 }
@@ -168,35 +160,47 @@ export function createMintingHandlers(
   }
 }
 
+interface DetectedInitState {
+  detectedRarity: RarityTier
+  editedSegments: PromptSegment[]
+}
+
+function detectInitialState(
+  mintingItem: HistoryItem | null,
+  variationBase: VariationBase | null
+): DetectedInitState {
+  let detectedRarity: RarityTier = "Common"
+  let editedSegments: PromptSegment[] = []
+
+  if (mintingItem) {
+    const parsed = parsePrompt(mintingItem.fullCommand)
+    editedSegments = parsed.promptSegments
+    detectedRarity = determineRarity(
+      mintingItem.fullCommand,
+      parsed.parameters,
+      1
+    )
+  } else if (variationBase) {
+    editedSegments = variationBase.promptSegments
+    const gen = variationBase.genealogy?.generation || 1
+    const fullPrompt = variationBase.promptSegments
+      .map((seg) => seg.value)
+      .join(" ")
+    detectedRarity = determineRarity(fullPrompt, variationBase.parameters, gen)
+  }
+
+  return { detectedRarity, editedSegments }
+}
+
 function useMintingInitialization(
   state: MintingState,
   setState: React.Dispatch<React.SetStateAction<MintingState>>
 ) {
   useEffect(() => {
-    let detectedRarity: RarityTier = "Common"
-    let editedSegments: PromptSegment[] = []
-
-    if (state.mintingItem) {
-      const parsed = parsePrompt(state.mintingItem.fullCommand)
-      editedSegments = parsed.promptSegments
-      detectedRarity = determineRarity(
-        state.mintingItem.fullCommand,
-        parsed.parameters,
-        1
-      )
-    } else if (state.variationBase) {
-      editedSegments = state.variationBase.promptSegments
-      const gen = state.variationBase.genealogy?.generation || 1
-      const fullPrompt = state.variationBase.promptSegments
-        .map((seg) => seg.value)
-        .join(" ")
-      detectedRarity = determineRarity(
-        fullPrompt,
-        state.variationBase.parameters,
-        gen
-      )
-    }
-
+    const { detectedRarity, editedSegments } = detectInitialState(
+      state.mintingItem,
+      state.variationBase
+    )
     setState((s) => ({
       ...s,
       editedSegments,
@@ -207,7 +211,8 @@ function useMintingInitialization(
 
 export function useMinting(
   addLog: (msg: string) => void,
-  setActiveTab: (tab: "history" | "library" | "workbench") => void
+  setActiveTab: (tab: "history" | "library" | "workbench") => void,
+  setAlertType?: (type: AlertType) => void
 ) {
   const [state, setState] = useState<MintingState>(INITIAL_MINTING_STATE)
   const meta = useMintingMetadata(state.mintingItem, state.variationBase)
@@ -225,7 +230,8 @@ export function useMinting(
     colors,
     addLog,
     dispatchState: setState,
-    setActiveTab
+    setActiveTab,
+    setAlertType
   })
 
   return {

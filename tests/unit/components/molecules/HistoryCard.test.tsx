@@ -108,7 +108,7 @@ describe("HistoryCard", () => {
         </LanguageProvider>
       )
       expect(
-        screen.getByRole("button", { name: "カード化 (Mint)" })
+        screen.getByRole("button", { name: "カードをミント" })
       ).toBeDefined()
     } finally {
       localStorage.removeItem("style-atelier-language")

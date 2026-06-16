@@ -152,3 +152,52 @@ export async function readBlobFromOpfs(filePath: string): Promise<Blob> {
   const file = await fileHandle.getFile()
   return file
 }
+
+/**
+ * Recursively list all files in an OPFS directory.
+ */
+export async function listOpfsFiles(
+  dirHandle: FileSystemDirectoryHandle,
+  currentPath = ""
+): Promise<Array<{ filePath: string; handle: FileSystemFileHandle }>> {
+  const files: Array<{ filePath: string; handle: FileSystemFileHandle }> = []
+  // We use standard async iteration over dirHandle
+  for await (const entry of (dirHandle as any).values()) {
+    const entryPath = currentPath ? `${currentPath}/${entry.name}` : entry.name
+    if (entry.kind === "file") {
+      files.push({ filePath: entryPath, handle: entry as FileSystemFileHandle })
+    } else if (entry.kind === "directory") {
+      const subFiles = await listOpfsFiles(
+        entry as FileSystemDirectoryHandle,
+        entryPath
+      )
+      files.push(...subFiles)
+    }
+  }
+  return files
+}
+
+/**
+ * Computes SHA-256 hash of an ArrayBuffer.
+ */
+export async function computeHash(arrayBuffer: ArrayBuffer): Promise<string> {
+  const cryptoObj =
+    typeof crypto !== "undefined"
+      ? crypto
+      : typeof window !== "undefined"
+        ? window.crypto
+        : null
+  if (cryptoObj && cryptoObj.subtle) {
+    const hashBuffer = await cryptoObj.subtle.digest("SHA-256", arrayBuffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+  }
+  // Fallback for tests/environments without Web Crypto API
+  let hash = 0
+  const view = new Uint8Array(arrayBuffer)
+  for (let i = 0; i < view.length; i++) {
+    hash = (hash << 5) - hash + view[i]
+    hash |= 0
+  }
+  return "mock-hash-" + Math.abs(hash).toString(16)
+}

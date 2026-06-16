@@ -84,6 +84,7 @@ export interface StyleCard {
   selectedThumbnails?: string[] // Selected image URLs for thumbnail display (up to 2)
   versionHistory?: CardVersion[] // 過去のプロンプト・パラメータ変更履歴（最大10件）
   weight?: number // 調合割合の重み (0.1 - 2.0)
+  sortIndex?: number // バインダー内での並び順インデックス
 }
 
 // プロンプトの構成要素（バブル）
@@ -133,4 +134,40 @@ export interface ParameterFolder {
   name: string
   parentId?: string // null / undefined for root
   createdAt: number
+}
+
+export interface ImageSyncState {
+  filePath: string // OPFS path (e.g., "images/cards/{id}.png")
+  cardId?: string
+  categoryId?: string
+  hash: string
+  cloudFileId?: string
+  syncStatus: "synced" | "pending" | "deleted"
+  updatedAt: number
+}
+
+export interface RecipeHistoryItem {
+  id: string
+  name: string
+  timestamp: number
+  cards: {
+    id: string
+    name: string
+    weight: number
+  }[]
+  parameters: {
+    ar?: string
+    sref?: string[]
+    cref?: string[]
+    p?: string[]
+    imagePrompts?: string[]
+    stylize?: number
+    chaos?: number
+    weird?: number
+    tile?: boolean
+    raw?: boolean
+    version?: string
+    niji?: string
+  }
+  slotValues?: Record<string, string>
 }

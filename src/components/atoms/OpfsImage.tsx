@@ -25,7 +25,7 @@ function useIntersectionLoader(
   const [isVisible, setIsVisible] = useState(!enabled)
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || typeof IntersectionObserver === "undefined") {
       setIsVisible(true)
       return
     }

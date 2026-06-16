@@ -1,14 +1,19 @@
+/* eslint-disable max-lines */
 import Dexie from "dexie"
 
 import { createThumbnailDataUrl } from "../image-utils"
-import { deleteOpfsFile, saveBase64ToOpfs } from "./migration-helpers"
+import {
+  computeHash,
+  deleteOpfsFile,
+  listOpfsFiles,
+  saveBase64ToOpfs
+} from "./migration-helpers"
 
 export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)
   setupVersions10To13(db)
-  setupVersion14(db)
+  setupVersions14OrHigher(db)
 }
-
 function setupVersions5To9(db: Dexie) {
   // Version 5: Previous version
   db.version(5).stores({
@@ -105,9 +110,22 @@ function setupVersions10To13(db: Dexie) {
   })
 }
 
-function setupVersion14(db: Dexie) {
-  // Version 14: Migrate styleCard thumbnailData and category coverImageUrl to OPFS
-  db.version(14)
+function setupVersions14OrHigher(db: Dexie) {
+  // Version 14: Add recipeHistory table
+  db.version(14).stores({
+    styleCards:
+      "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+    historyItems: "id, timestamp",
+    userSettings: "userId",
+    categories: "id, name, createdAt, isDeleted, parentId",
+    slotHistory: "label",
+    parameterAliases: "id, paramType, value, alias, folderId",
+    parameterFolders: "id, name, parentId",
+    recipeHistory: "id, timestamp"
+  })
+
+  // Version 15: Migrate styleCard thumbnailData and category coverImageUrl to OPFS
+  db.version(15)
     .stores({
       styleCards:
         "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
@@ -116,9 +134,25 @@ function setupVersion14(db: Dexie) {
       categories: "id, name, createdAt, isDeleted, parentId",
       slotHistory: "label",
       parameterAliases: "id, paramType, value, alias, folderId",
-      parameterFolders: "id, name, parentId"
+      parameterFolders: "id, name, parentId",
+      recipeHistory: "id, timestamp"
     })
-    .upgrade(upgradeToVersion14)
+    .upgrade(upgradeToVersion15)
+  // Version 16: Add imageSyncStates table for incremental Google Drive sync
+  db.version(16)
+    .stores({
+      styleCards:
+        "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+      historyItems: "id, timestamp",
+      userSettings: "userId",
+      categories: "id, name, createdAt, isDeleted, parentId",
+      slotHistory: "label",
+      parameterAliases: "id, paramType, value, alias, folderId",
+      parameterFolders: "id, name, parentId",
+      recipeHistory: "id, timestamp",
+      imageSyncStates: "filePath, cardId, categoryId, syncStatus"
+    })
+    .upgrade(upgradeToVersion16)
 }
 
 export function upgradeToVersion6(tx: any) {
@@ -253,7 +287,7 @@ export async function upgradeToVersion10(tx: any) {
   }
 }
 
-export async function upgradeToVersion14(tx: any) {
+export async function upgradeToVersion15(tx: any) {
   const cardsTable = tx.table("styleCards")
   const categoriesTable = tx.table("categories")
 
@@ -315,4 +349,73 @@ export async function upgradeToVersion14(tx: any) {
     // Re-throw to abort Dexie transaction
     throw err
   }
+}
+
+async function populateImageSyncStates(syncStatesTable: any) {
+  try {
+    const root = await navigator.storage.getDirectory()
+    let imagesDir: FileSystemDirectoryHandle
+    try {
+      imagesDir = await root.getDirectoryHandle("images", { create: false })
+    } catch {
+      // "images" directory doesn't exist, nothing to migrate
+      return
+    }
+
+    const fileEntries = await listOpfsFiles(imagesDir, "images")
+    const records = []
+
+    for (const entry of fileEntries) {
+      const file = await entry.handle.getFile()
+      const buf = await file.arrayBuffer()
+      const hash = await computeHash(buf)
+
+      let cardId: string | undefined
+      let categoryId: string | undefined
+
+      // Detect if it is a card or category image
+      // e.g. "images/cards/uuid.png"
+      const parts = entry.filePath.split("/")
+      if (parts.length >= 3) {
+        const type = parts[1] // "cards" or "categories"
+        const nameWithExt = parts[2]
+        const id = nameWithExt.replace(/\.[^/.]+$/, "") // remove extension
+
+        if (type === "cards") {
+          cardId = id
+        } else if (type === "categories") {
+          categoryId = id
+        }
+      }
+
+      records.push({
+        filePath: entry.filePath,
+        cardId,
+        categoryId,
+        hash,
+        syncStatus: "pending" as const,
+        updatedAt: file.lastModified || Date.now()
+      })
+    }
+
+    if (records.length > 0) {
+      await syncStatesTable.bulkAdd(records)
+    }
+  } catch (err) {
+    console.warn("Failed to populate imageSyncStates during migration:", err)
+  }
+}
+
+export async function upgradeToVersion16(tx: any) {
+  const syncStatesTable = tx.table("imageSyncStates")
+
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.storage ||
+    !navigator.storage.getDirectory
+  ) {
+    return
+  }
+
+  await Dexie.waitFor(populateImageSyncStates(syncStatesTable))
 }

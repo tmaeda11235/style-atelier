@@ -1,6 +1,11 @@
 import { authorize, clearCachedToken } from "./auth"
 import { searchBackupFile } from "./file-ops"
-import { fetchWithReauth, sendResumableXhr, sendSimpleXhr } from "./http-client"
+import {
+  fetchWithReauth,
+  parseXhrErrorStatus,
+  sendResumableXhr,
+  sendSimpleXhr
+} from "./http-client"
 import { type ReauthContext } from "./types"
 
 export async function uploadBackup(
@@ -124,14 +129,14 @@ async function executeResumableUpload(
   options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<void> {
   const activeCtx = ctx || { token: "" }
-  let status = await sendResumableXhr(
+  let result = await sendResumableXhr(
     uploadUrl,
     blob,
     activeCtx.token,
     onProgress,
     options
   )
-  if (status === 401) {
+  if (result.status === 401) {
     console.warn(
       "Resumable upload PUT returned 401. Retrying with new token..."
     )
@@ -139,7 +144,7 @@ async function executeResumableUpload(
     const newToken = await authorize(false)
     activeCtx.token = newToken
     if (onTokenUpdated) onTokenUpdated(newToken)
-    status = await sendResumableXhr(
+    result = await sendResumableXhr(
       uploadUrl,
       blob,
       newToken,
@@ -148,8 +153,12 @@ async function executeResumableUpload(
     )
   }
 
-  if (status < 200 || status >= 300) {
-    throw new Error(`Resumable upload failed with status: ${status}`)
+  if (result.status < 200 || result.status >= 300) {
+    throw parseXhrErrorStatus(
+      result.status,
+      "Upload failed",
+      result.responseText
+    )
   }
 }
 
@@ -186,7 +195,7 @@ async function updateBackupSimple(
   options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<void> {
   const url = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`
-  let status = await sendSimpleXhr(
+  let result = await sendSimpleXhr(
     "PATCH",
     url,
     "application/json",
@@ -196,12 +205,12 @@ async function updateBackupSimple(
     options
   )
 
-  if (status === 401) {
+  if (result.status === 401) {
     await clearCachedToken(ctx.token)
     const newToken = await authorize(false)
     ctx.token = newToken
     if (onTokenUpdated) onTokenUpdated(newToken)
-    status = await sendSimpleXhr(
+    result = await sendSimpleXhr(
       "PATCH",
       url,
       "application/json",
@@ -212,8 +221,12 @@ async function updateBackupSimple(
     )
   }
 
-  if (status < 200 || status >= 300) {
-    throw new Error(`Failed to update backup file: status ${status}`)
+  if (result.status < 200 || result.status >= 300) {
+    throw parseXhrErrorStatus(
+      result.status,
+      "Failed to update backup file",
+      result.responseText
+    )
   }
 }
 
@@ -234,7 +247,7 @@ async function createBackupSimple(
   const url =
     "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
   const contentType = `multipart/related; boundary=${boundary}`
-  let status = await sendSimpleXhr(
+  let result = await sendSimpleXhr(
     "POST",
     url,
     contentType,
@@ -244,12 +257,12 @@ async function createBackupSimple(
     options
   )
 
-  if (status === 401) {
+  if (result.status === 401) {
     await clearCachedToken(ctx.token)
     const newToken = await authorize(false)
     ctx.token = newToken
     if (onTokenUpdated) onTokenUpdated(newToken)
-    status = await sendSimpleXhr(
+    result = await sendSimpleXhr(
       "POST",
       url,
       contentType,
@@ -260,8 +273,12 @@ async function createBackupSimple(
     )
   }
 
-  if (status < 200 || status >= 300) {
-    throw new Error(`Failed to create backup file: status ${status}`)
+  if (result.status < 200 || result.status >= 300) {
+    throw parseXhrErrorStatus(
+      result.status,
+      "Failed to create backup file",
+      result.responseText
+    )
   }
 }
 

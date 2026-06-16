@@ -1,4 +1,10 @@
-import { Cloud, Lock, RefreshCw, ShieldCheck } from "lucide-react"
+import {
+  AlertTriangle,
+  Cloud,
+  Lock,
+  RefreshCw,
+  ShieldCheck
+} from "lucide-react"
 import React from "react"
 
 import { HelpTooltip } from "../atoms/HelpTooltip"
@@ -22,12 +28,14 @@ interface CloudSyncSectionProps {
   statusMessage: {
     text: string
     type: "success" | "error" | "info" | null
+    actionType?: "quota" | "rateLimit" | null
   }
   handleCancelSync: () => void
   handleToggleSync: (checked: boolean) => void
   handleToggleAutoSync: (checked: boolean) => void
   handleSync: () => void
   t: any
+  autoSyncSuspendedByAge: boolean
 }
 
 interface SyncHeaderProps {
@@ -184,14 +192,51 @@ function SyncActions({
   )
 }
 
+interface AutoSyncSuspendedBannerProps {
+  handleSync: () => void
+  isSyncing: boolean
+  isRestoring: boolean
+  t: any
+}
+
+function AutoSyncSuspendedBanner({
+  handleSync,
+  isSyncing,
+  isRestoring,
+  t
+}: AutoSyncSuspendedBannerProps) {
+  return (
+    <div
+      className="flex flex-col gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-4 text-xs text-amber-800"
+      id="auto-sync-suspended-banner">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <span className="font-medium">{t.autoSyncSuspendedBanner}</span>
+      </div>
+      <button
+        onClick={handleSync}
+        disabled={isSyncing || isRestoring}
+        className="self-start px-3 py-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-30 disabled:hover:bg-amber-600 text-white font-semibold rounded-lg transition-all"
+        id="suspended-banner-sync-btn">
+        {t.syncButtonText}
+      </button>
+    </div>
+  )
+}
+
 export function CloudSyncSection(props: CloudSyncSectionProps) {
   return (
     <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-      {/* Subtle decorative background gradient */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
-
       <SyncHeader isSyncEnabled={props.isSyncEnabled} t={props.t} />
-
+      {props.autoSyncSuspendedByAge && (
+        <AutoSyncSuspendedBanner
+          handleSync={props.handleSync}
+          isSyncing={props.isSyncing}
+          isRestoring={props.isRestoring}
+          t={props.t}
+        />
+      )}
       <SyncToggleSwitches
         isSyncEnabled={props.isSyncEnabled}
         isAutoSyncEnabled={props.isAutoSyncEnabled}
@@ -199,8 +244,6 @@ export function CloudSyncSection(props: CloudSyncSectionProps) {
         handleToggleAutoSync={props.handleToggleAutoSync}
         t={props.t}
       />
-
-      {/* Status / Message Display */}
       <SyncStatusMessage
         statusMessage={props.statusMessage}
         isSyncing={props.isSyncing}
@@ -208,16 +251,12 @@ export function CloudSyncSection(props: CloudSyncSectionProps) {
         handleCancelSync={props.handleCancelSync}
         t={props.t}
       />
-
-      {/* Progress Bar (Only during Sync or Force Recovering) */}
       <SyncProgressBar
         isSyncing={props.isSyncing}
         isRestoring={props.isRestoring}
         syncProgress={props.syncProgress}
         restoreProgress={props.restoreProgress}
       />
-
-      {/* Action Buttons & Backup Info */}
       <SyncActions
         isSyncEnabled={props.isSyncEnabled}
         isSyncing={props.isSyncing}

@@ -2,6 +2,11 @@ import { useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useConfirm } from "../contexts/ConfirmContext"
+import {
+  safeQueryTabs,
+  safeReloadTab,
+  safeSendTabMessage
+} from "../lib/chrome-utils"
 import { db, seedDefaultCategories } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { useDragAndDrop } from "./useDragAndDrop"
@@ -48,6 +53,7 @@ export function useEasyModeView({
     } catch (err) {
       console.error("Failed to save style card updates:", err)
       addLog("Error: Failed to save style card updates.")
+      setAlertType("db_error")
     }
   }
 
@@ -59,21 +65,22 @@ export function useEasyModeView({
     } catch (err) {
       console.error("Failed to delete style card:", err)
       addLog("Error: Failed to delete style card.")
+      setAlertType("db_error")
     }
   }
 
   const handleInjectPrompt = async (prompt: string) => {
     setAlertType(null)
     try {
-      const tabs = await chrome.tabs.query({
+      const tabs = await safeQueryTabs({
         active: true,
         currentWindow: true
       })
-      const activeTabEl = tabs[0]
+      const activeTabEl = tabs ? tabs[0] : undefined
       if (!activeTabEl?.id) {
         throw new Error("No active tab found")
       }
-      const response = await chrome.tabs.sendMessage(activeTabEl.id, {
+      const response = await safeSendTabMessage(activeTabEl.id, {
         type: "INJECT_PROMPT",
         prompt: prompt
       })
@@ -133,11 +140,15 @@ export function useEasyModeView({
     }
   }
 
-  const minting = useMinting(addLog, (tab) => {
-    if (tab === "library") {
-      setActiveTab("library")
-    }
-  })
+  const minting = useMinting(
+    addLog,
+    (tab) => {
+      if (tab === "library") {
+        setActiveTab("library")
+      }
+    },
+    setAlertType
+  )
 
   const handleResetDb = async () => {
     const ok = await confirm({
@@ -165,7 +176,7 @@ export function useEasyModeView({
   }
 
   const handleRetryConnection = () => {
-    chrome.tabs.reload()
+    safeReloadTab()
     setAlertType(null)
   }
 
