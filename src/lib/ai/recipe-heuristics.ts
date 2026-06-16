@@ -39,7 +39,10 @@ function getVisualEffectHeuristics(cardData: any[], isJa: boolean): string {
   return `A creative synergy is expected by blending **"${c0.name}"** and **"${c1.name}"**.\n${desc}- Elements from ${listNames} will be integrated based on their respective weights.`
 }
 
-function getRecommendedWeightsHeuristics(cardData: any[], isJa: boolean): string {
+function getRecommendedWeightsHeuristics(
+  cardData: any[],
+  isJa: boolean
+): string {
   const weightSum = cardData.reduce((sum, c) => sum + (c.weight ?? 1.0), 0)
   const ratioStr = cardData
     .map((c) => `${Math.round(((c.weight ?? 1.0) / (weightSum || 1)) * 100)}%`)
@@ -74,7 +77,10 @@ function getRecommendedWeightsHeuristics(cardData: any[], isJa: boolean): string
   return lines
 }
 
-function getSuggestedKeywordsHeuristics(cardData: any[], isJa: boolean): string {
+function getSuggestedKeywordsHeuristics(
+  cardData: any[],
+  isJa: boolean
+): string {
   const allWords = cardData
     .flatMap((c) => (c.prompt || "").split(/[\s,.:;]+/))
     .map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ""))
@@ -176,7 +182,12 @@ export function generateRecipeAdviceHeuristics(
   const recommendedWeights = getRecommendedWeightsHeuristics(cardData, isJa)
   const suggestedKeywords = getSuggestedKeywordsHeuristics(cardData, isJa)
 
-  return formatAdviceHeuristics(visualEffect, recommendedWeights, suggestedKeywords, isJa)
+  return formatAdviceHeuristics(
+    visualEffect,
+    recommendedWeights,
+    suggestedKeywords,
+    isJa
+  )
 }
 
 // ==========================================

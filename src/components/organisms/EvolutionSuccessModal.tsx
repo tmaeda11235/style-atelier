@@ -131,24 +131,22 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
   newTier,
   translation
 }) => {
-  const { isFlipped, confetti, tilt, handleMouseMove, handleMouseLeave } =
-    useEvolutionAnimation(isOpen, newTier)
-
+  const anim = useEvolutionAnimation(isOpen, newTier)
   if (!isOpen) return null
 
   return (
-    <EvolutionModalOverlay confetti={confetti}>
+    <EvolutionModalOverlay confetti={anim.confetti}>
       <EvolutionBackgroundDecorations
         configColor={RARITY_CONFIG[newTier].color}
         newTier={newTier}
-        isFlipped={isFlipped}
+        isFlipped={anim.isFlipped}
       />
 
       <EvolutionModalHeader onClose={onClose} translation={translation} />
 
       <EvolutionCardDisplay
-        tilt={tilt}
-        isFlipped={isFlipped}
+        tilt={anim.tilt}
+        isFlipped={anim.isFlipped}
         oldTier={oldTier}
         newTier={newTier}
         cardName={cardName}
@@ -156,8 +154,8 @@ export const EvolutionSuccessModal: React.FC<EvolutionSuccessModalProps> = ({
         selectedThumbnails={selectedThumbnails}
         oldConfig={RARITY_CONFIG[oldTier]}
         config={RARITY_CONFIG[newTier]}
-        handleMouseMove={handleMouseMove}
-        handleMouseLeave={handleMouseLeave}
+        handleMouseMove={anim.handleMouseMove}
+        handleMouseLeave={anim.handleMouseLeave}
       />
 
       <h3 className="text-md font-bold text-white text-center mb-2 z-10 flex-shrink-0">
