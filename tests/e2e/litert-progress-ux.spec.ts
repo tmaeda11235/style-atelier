@@ -321,11 +321,9 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     await adviceSection.evaluate((el) => el.scrollIntoView({ block: "start" }))
     await page.waitForTimeout(500)
 
-    // Verify not loaded status
-    const notReadyText = spFrame.locator(
-      "text=/Local AI model is not loaded|ローカルAIモデルがロードされていません/"
-    )
-    await expect(notReadyText).toBeVisible()
+    // Verify fallback static advice is visible initially
+    const adviceContent = adviceSection.locator(".prose")
+    await expect(adviceContent).toBeVisible()
 
     // Setup slow download mock
     await spFrame.locator("body").evaluate(() => {
@@ -338,8 +336,16 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
       }
     })
 
-    // Click Download Model button inside Recipe Advice
-    const downloadBtn = adviceSection.locator(
+    // Go to Settings tab to download model
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible()
+    await settingsNavBtn.click({ force: true })
+
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click({ force: true })
+
+    const downloadBtn = spFrame.locator(
       "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
     )
     await expect(downloadBtn).toBeVisible()
@@ -347,17 +353,22 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     await downloadBtn.dispatchEvent("click")
 
     // Click confirmation button
-    const confirmDownloadBtn = spFrame
-      .locator(
-        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
-      )
-      .first()
+    const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await confirmDownloadBtn.waitFor({ state: "visible", timeout: 20000 })
     await expect(confirmDownloadBtn).toBeVisible()
 
     // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
     await expect(spFrame.locator("body")).toContainText(/2\.0\s*GB/)
     await expect(spFrame.locator("body")).toContainText(/2\.5\s*GB/)
     await confirmDownloadBtn.dispatchEvent("click")
+
+    // Switch back to Workbench tab to see progress
+    await workbenchTabBtn.click({ force: true })
+    await page.waitForTimeout(1000)
+
+    // Expand accordion inside Recipe Advice again
+    await accordionHeader.click({ force: true })
+    await page.waitForTimeout(500)
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame

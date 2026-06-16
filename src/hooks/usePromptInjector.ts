@@ -2,6 +2,7 @@ import { useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { safeQueryTabs, safeSendTabMessage } from "../lib/chrome-utils"
+import { db } from "../lib/db"
 import type { PromptSegment, StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
 
@@ -67,16 +68,9 @@ async function executePromptInjection({
 
   try {
     const response = await performPromptInjection(fullPrompt)
-
     if (response && response.status === "error") {
-      if (
-        response.message &&
-        response.message.includes("Could not find chat input")
-      ) {
-        setAlertType("no_input")
-      } else {
-        setAlertType("disconnected")
-      }
+      const isNoInput = response.message?.includes("Could not find chat input")
+      setAlertType(isNoInput ? "no_input" : "disconnected")
     } else {
       addLog?.(`Prompt injected successfully!`)
       await updateUsageAndHistory(
@@ -86,6 +80,7 @@ async function executePromptInjection({
         incrementCardUsage,
         saveSlotHistory
       )
+      await saveRecipeHistory(workbenchCards, editedParams, slotValues)
     }
   } catch (err) {
     console.error("Injection failed:", err)
@@ -158,5 +153,58 @@ async function updateUsageAndHistory(
     }
   } catch (e) {
     console.error("Failed to save slot history:", e)
+  }
+}
+
+async function saveRecipeHistory(
+  workbenchCards: StyleCard[],
+  editedParams: any,
+  slotValues: Record<string, string>
+) {
+  if (workbenchCards.length === 0) return
+  try {
+    const cards = workbenchCards.map((c) => ({
+      id: c.id,
+      name: c.name,
+      weight: c.weight !== undefined ? c.weight : 1.0
+    }))
+
+    const totalWeight = cards.reduce((sum, c) => sum + c.weight, 0)
+    const nameParts = cards.map((c) => {
+      const pct =
+        totalWeight > 0 ? Math.round((c.weight / totalWeight) * 100) : 100
+      return `${c.name} (${pct}%)`
+    })
+    const recipeName = nameParts.join(" + ")
+
+    const parameters: any = {}
+    const keys: (keyof StyleCard["parameters"])[] = [
+      "ar",
+      "sref",
+      "cref",
+      "p",
+      "imagePrompts",
+      "stylize",
+      "chaos",
+      "weird",
+      "tile",
+      "raw",
+      "version",
+      "niji"
+    ]
+    for (const key of keys) {
+      if (editedParams[key] !== undefined) {
+        parameters[key] = editedParams[key]
+      }
+    }
+
+    await db.addRecipeHistory({
+      name: recipeName,
+      cards,
+      parameters,
+      slotValues
+    })
+  } catch (err) {
+    console.error("Failed to save recipe history:", err)
   }
 }

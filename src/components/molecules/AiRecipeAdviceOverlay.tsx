@@ -19,6 +19,7 @@ interface AdviceSectionContentProps {
   loading: boolean
   error: string | null
   advice: string | null
+  isFallback: boolean
   t: any
   hasWebGpu?: boolean | null
 }
@@ -64,6 +65,7 @@ function FallbackAdviceContainer(props: {
             status={props.status}
             progress={props.progress}
             speed={props.speed}
+            slate-400={false}
             eta={props.eta}
             retryCount={props.retryCount}
             maxRetries={props.maxRetries}
@@ -78,7 +80,7 @@ function FallbackAdviceContainer(props: {
   )
 }
 
-function LoadingAdviceContainer({
+function AdviceLoadingView({
   isEngineInitializing,
   t
 }: {
@@ -97,7 +99,7 @@ function LoadingAdviceContainer({
   )
 }
 
-function ErrorAdviceContainer({ error, t }: { error: string; t: any }) {
+function AdviceErrorView({ error, t }: { error: string; t: any }) {
   return (
     <div className="flex items-center gap-1.5 p-2.5 rounded-lg bg-rose-50/50 dark:bg-rose-950/15 border border-rose-100/50 dark:border-rose-950/30 text-rose-600 dark:text-rose-400">
       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -109,8 +111,23 @@ function ErrorAdviceContainer({ error, t }: { error: string; t: any }) {
 }
 
 export function AdviceSectionContent(props: AdviceSectionContentProps) {
-  const { isModelReady, isEngineInitializing, loading, error, advice, t } =
-    props
+  const {
+    isModelReady,
+    isEngineInitializing,
+    loading,
+    error,
+    advice,
+    isFallback,
+    t
+  } = props
+
+  if (isFallback && advice) {
+    if (!isModelReady) {
+      return <FallbackAdviceContainer {...props} advice={advice} />
+    }
+    return <AdviceViewer advice={advice} />
+  }
+
   if (!isModelReady) {
     if (advice) {
       return <FallbackAdviceContainer {...props} advice={advice} />
@@ -132,16 +149,16 @@ export function AdviceSectionContent(props: AdviceSectionContentProps) {
       </NotReadyWrapper>
     )
   }
+
   if (loading) {
     return (
-      <LoadingAdviceContainer
-        isEngineInitializing={isEngineInitializing}
-        t={t}
-      />
+      <AdviceLoadingView isEngineInitializing={isEngineInitializing} t={t} />
     )
   }
+
   if (error) {
-    return <ErrorAdviceContainer error={error} t={t} />
+    return <AdviceErrorView error={error} t={t} />
   }
+
   return advice ? <AdviceViewer advice={advice} /> : null
 }

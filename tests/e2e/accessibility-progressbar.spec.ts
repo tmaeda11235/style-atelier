@@ -149,8 +149,16 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
       }
     })
 
-    // Click Download Model button inside Recipe Advice
-    const downloadBtn = adviceSection.locator(
+    // Go to Settings tab to download model
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible()
+    await settingsNavBtn.click({ force: true })
+
+    const webLlmAccordionHeader = spFrame.locator("#settings-accordion-webllm")
+    await expect(webLlmAccordionHeader).toBeVisible()
+    await webLlmAccordionHeader.click({ force: true })
+
+    const downloadBtn = spFrame.locator(
       "button:has-text('Download Model'), button:has-text('モデルをダウンロード')"
     )
     await expect(downloadBtn).toBeVisible()
@@ -159,21 +167,18 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     await page.waitForTimeout(500)
 
     // Click confirmation button
-    const confirmDownloadBtn = spFrame
-      .locator(
-        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
-      )
-      .first()
-
-    // Debugging print
-    const html = await spFrame
-      .locator("#ai-recipe-advice-section")
-      .innerHTML()
-      .catch(() => "not found")
-    console.log("DEBUG: #ai-recipe-advice-section innerHTML:", html)
-
+    const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
+    await confirmDownloadBtn.waitFor({ state: "visible", timeout: 20000 })
     await expect(confirmDownloadBtn).toBeVisible()
     await confirmDownloadBtn.dispatchEvent("click")
+
+    // Switch back to Workbench tab to see progress
+    await workbenchTabBtn.click({ force: true })
+    await page.waitForTimeout(1000)
+
+    // Expand accordion inside Recipe Advice again
+    await accordionHeader.click({ force: true })
+    await page.waitForTimeout(500)
 
     // Assert download progress UI is shown
     const downloadingLabel = spFrame

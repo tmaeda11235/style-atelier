@@ -10,6 +10,12 @@ import React from "react"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useWebGpuCheck } from "../../hooks/useWebGpuCheck"
 import { useWebLlm } from "../../hooks/useWebLlm"
+import { cn } from "../../lib/utils"
+
+interface AiStatusBadgeProps {
+  status?: string
+  className?: string
+}
 
 interface BadgeConfig {
   badgeText: string
@@ -21,7 +27,7 @@ interface BadgeConfig {
 
 function getReadyConfig(isJa: boolean): BadgeConfig {
   return {
-    badgeText: isJa ? "AI準備完了" : "AI Ready",
+    badgeText: isJa ? "AI: 利用可能" : "AI: Available",
     badgeClass:
       "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400",
     Icon: Sparkles,
@@ -53,8 +59,8 @@ function getFallbackConfig(
   if (hasWebGpu === false) {
     return {
       badgeText: isJa
-        ? "AI軽量フォールバック動作中 (WebGPU非対応)"
-        : "AI Fallback (WebGPU Unsupported)",
+        ? "AI: 軽量モード (WebGPU非対応)"
+        : "AI: Light Mode (WebGPU Unsupported)",
       badgeClass:
         "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 animate-pulse",
       Icon: AlertCircle,
@@ -67,8 +73,8 @@ function getFallbackConfig(
 
   return {
     badgeText: isJa
-      ? "AI軽量フォールバック動作中 (モデル未ロード)"
-      : "AI Fallback (Model Not Loaded)",
+      ? "AI: 軽量モード (モデル未ロード)"
+      : "AI: Light Mode (Model Not Loaded)",
     badgeClass:
       "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400",
     Icon: HelpCircle,
@@ -85,41 +91,57 @@ function getBadgeConfig(
   hasWebGpu: boolean | null,
   isJa: boolean
 ): BadgeConfig {
-  if (status === "ready") {
+  const isReady = status === "ready" || status === "engine-ready"
+  const isPreparing = [
+    "downloading",
+    "checking",
+    "verifying",
+    "retrying",
+    "engine-initializing"
+  ].includes(status)
+
+  if (isReady) {
     return getReadyConfig(isJa)
   }
 
-  if (
-    status === "checking" ||
-    status === "downloading" ||
-    status === "verifying"
-  ) {
+  if (isPreparing) {
     return getDownloadingConfig(progress, isJa)
   }
 
   return getFallbackConfig(hasWebGpu, isJa)
 }
 
-export function AiStatusBadge() {
+export function AiStatusBadge({
+  status: propStatus,
+  className
+}: AiStatusBadgeProps) {
   const { language } = useLanguage()
   const { hasWebGpu } = useWebGpuCheck()
-  const { status, progress } = useWebLlm()
+  const { status: webLlmStatus, progress } = useWebLlm()
 
+  const activeStatus = propStatus || webLlmStatus
   const isJa = language?.startsWith("ja")
-  const { badgeText, badgeClass, Icon, isSpinning, tooltipText } =
-    getBadgeConfig(status, progress, hasWebGpu, isJa)
+  const config = getBadgeConfig(activeStatus, progress, hasWebGpu, isJa)
 
   return (
     <div
-      className={`group relative flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full border transition-all duration-200 cursor-help ${badgeClass}`}
-      title={tooltipText}>
-      <Icon className={`w-3.5 h-3.5 ${isSpinning ? "animate-spin" : ""}`} />
-      <span>{badgeText}</span>
-
-      {/* Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[9px] font-normal rounded-lg shadow-lg z-50 text-center leading-normal">
-        {tooltipText}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+      className={cn("group relative inline-block select-none", className)}
+      data-testid="ai-status-badge">
+      <div
+        className={cn(
+          "flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold rounded-full border transition-all duration-200 cursor-help",
+          config.badgeClass
+        )}
+        data-testid="ai-status-badge-container">
+        <config.Icon
+          className={cn("w-3.5 h-3.5", config.isSpinning ? "animate-spin" : "")}
+        />
+        <span>{config.badgeText}</span>
+      </div>
+      <div
+        className="absolute hidden group-hover:block group-focus-within:block bg-slate-900 dark:bg-slate-950 text-white text-[10px] font-normal rounded-lg p-2.5 shadow-xl w-56 z-[9999] pointer-events-none leading-relaxed transition-all animate-in fade-in duration-150 bottom-full left-1/2 -translate-x-1/2 mb-2 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-slate-900 dark:after:border-t-slate-950"
+        data-testid="ai-status-badge-tooltip">
+        {config.tooltipText}
       </div>
     </div>
   )

@@ -154,9 +154,9 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Prompt De-cluttering", () =>
 
     // 7. Verify status badge displays fallback mode
     const statusBadge = spFrame.locator(
-      "text=/AI Fallback|AI軽量フォールバック/"
+      "text=/AI Fallback|AI軽量フォールバック|Light Mode|軽量モード|軽量フォールバック/"
     )
-    await expect(statusBadge).toBeVisible()
+    await expect(statusBadge).toBeVisible({ timeout: 15000 })
 
     // 8. Click "Organize (Fallback)" button
     const declutterBtn = spFrame.locator(

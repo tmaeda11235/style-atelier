@@ -1,5 +1,9 @@
 export function setupWorkerCache() {
-  if (process.env.PLASMO_PUBLIC_USE_LOCAL_CACHE === "true") {
+  const useCache =
+    typeof process !== "undefined" && process.env
+      ? process.env.PLASMO_PUBLIC_USE_LOCAL_CACHE === "true"
+      : false
+  if (useCache) {
     console.log("Worker caching redirect enabled.")
     const originalFetch = self.fetch
     self.fetch = async (

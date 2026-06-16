@@ -47,7 +47,7 @@ interface FetchAdviceParams {
   setAdvice: React.Dispatch<React.SetStateAction<string | null>>
   setError: React.Dispatch<React.SetStateAction<string | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
-  setIsFallbackMode: React.Dispatch<React.SetStateAction<boolean>>
+  setIsFallback: React.Dispatch<React.SetStateAction<boolean>>
   cacheRef: React.MutableRefObject<Record<string, string>>
   runInferenceRef: React.MutableRefObject<
     (prompt: string, systemPrompt?: string, temp?: number) => Promise<string>
@@ -63,7 +63,7 @@ async function fetchAdviceHelper(params: FetchAdviceParams) {
     setAdvice,
     setError,
     setLoading,
-    setIsFallbackMode,
+    setIsFallback,
     cacheRef,
     runInferenceRef,
     isMounted
@@ -77,40 +77,57 @@ async function fetchAdviceHelper(params: FetchAdviceParams) {
     if (isMounted()) {
       cacheRef.current[key] = res
       setAdvice(res)
-      setIsFallbackMode(false)
+      setIsFallback(false)
     }
   } catch (err: any) {
-    console.warn("AI recipe advice generation failed, using fallback:", err)
+    console.error(
+      "AI blend advice generation failed, falling back to static heuristics:",
+      err
+    )
     if (isMounted()) {
       const fallbackAdvice = generateRecipeAdviceHeuristics(cards, lang)
       setAdvice(fallbackAdvice)
-      setIsFallbackMode(true)
+      setIsFallback(true)
     }
   } finally {
-    if (isMounted()) setLoading(false)
+    if (isMounted()) {
+      setLoading(false)
+    }
   }
 }
 
-function checkAdviceCache(
-  props: RecipeAdviceFetchProps & { hasWebGpu: boolean | null }
-): boolean {
+interface CacheCheckParams {
+  cards: any[]
+  status: string
+  key: string
+  lang: string
+  hasWebGpu: boolean | null
+  cacheRef: React.MutableRefObject<Record<string, string>>
+  setAdvice: React.Dispatch<React.SetStateAction<string | null>>
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  setIsFallback: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+function processCache(params: CacheCheckParams): boolean {
   const {
     cards,
     status,
     key,
+    lang,
+    hasWebGpu,
     cacheRef,
     setAdvice,
     setError,
     setLoading,
-    setIsFallbackMode,
-    lang,
-    hasWebGpu
-  } = props
+    setIsFallback
+  } = params
+
   if (cards.length < 2) {
     setAdvice(null)
     setError(null)
     setLoading(false)
-    setIsFallbackMode(false)
+    setIsFallback(false)
     return true
   }
 
@@ -119,22 +136,23 @@ function checkAdviceCache(
     status === "engine-initializing" ||
     status === "engine-ready"
 
-  // If WebGPU is unsupported, or WebLLM is not loaded yet, use lightweight fallback advice
   if (hasWebGpu === false || !isDownloaded) {
     const fallbackAdvice = generateRecipeAdviceHeuristics(cards, lang)
     setAdvice(fallbackAdvice)
     setError(null)
     setLoading(false)
-    setIsFallbackMode(true)
+    setIsFallback(true)
     return true
   }
+
   if (cacheRef.current[key]) {
     setAdvice(cacheRef.current[key])
     setError(null)
     setLoading(false)
-    setIsFallbackMode(false)
+    setIsFallback(false)
     return true
   }
+
   return false
 }
 
@@ -143,19 +161,18 @@ interface RecipeAdviceFetchProps {
   key: string
   status: string
   lang: string
+  hasWebGpu: boolean | null
   setAdvice: React.Dispatch<React.SetStateAction<string | null>>
   setError: React.Dispatch<React.SetStateAction<string | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
-  setIsFallbackMode: React.Dispatch<React.SetStateAction<boolean>>
+  setIsFallback: React.Dispatch<React.SetStateAction<boolean>>
   cacheRef: React.MutableRefObject<Record<string, string>>
   runInferenceRef: React.MutableRefObject<
     (prompt: string, systemPrompt?: string, temp?: number) => Promise<string>
   >
 }
 
-function useAiRecipeAdviceFetch(
-  props: RecipeAdviceFetchProps & { hasWebGpu: boolean | null }
-) {
+function useAiRecipeAdviceFetch(props: RecipeAdviceFetchProps) {
   const { key, status, lang, hasWebGpu } = props
   const propsRef = useRef(props)
   useEffect(() => {
@@ -165,9 +182,23 @@ function useAiRecipeAdviceFetch(
   useEffect(() => {
     const p = propsRef.current
 
-    if (checkAdviceCache({ ...p, hasWebGpu })) {
+    if (
+      processCache({
+        cards: p.cards,
+        status: p.status,
+        key: p.key,
+        lang: p.lang,
+        hasWebGpu,
+        cacheRef: p.cacheRef,
+        setAdvice: p.setAdvice,
+        setError: p.setError,
+        setLoading: p.setLoading,
+        setIsFallback: p.setIsFallback
+      })
+    ) {
       return
     }
+
     let mounted = true
     const timer = setTimeout(() => {
       fetchAdviceHelper({
@@ -177,12 +208,13 @@ function useAiRecipeAdviceFetch(
         setAdvice: p.setAdvice,
         setError: p.setError,
         setLoading: p.setLoading,
-        setIsFallbackMode: p.setIsFallbackMode,
+        setIsFallback: p.setIsFallback,
         cacheRef: p.cacheRef,
         runInferenceRef: p.runInferenceRef,
         isMounted: () => mounted
       })
     }, 500)
+
     return () => {
       mounted = false
       clearTimeout(timer)
@@ -197,7 +229,7 @@ export function useAiRecipeAdvice(cards: any[]) {
   const [advice, setAdvice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isFallbackMode, setIsFallbackMode] = useState(false)
+  const [isFallback, setIsFallback] = useState(false)
   const cacheRef = useRef<Record<string, string>>({})
   const runInferenceRef = useRef(runInference)
 
@@ -212,13 +244,13 @@ export function useAiRecipeAdvice(cards: any[]) {
     key,
     status,
     lang: i18n.language,
+    hasWebGpu,
     setAdvice,
     setError,
     setLoading,
-    setIsFallbackMode,
+    setIsFallback,
     cacheRef,
-    runInferenceRef,
-    hasWebGpu
+    runInferenceRef
   })
 
   const isDownloaded =
@@ -231,9 +263,10 @@ export function useAiRecipeAdvice(cards: any[]) {
     loading,
     error,
     isModelReady: isDownloaded,
+    isFallback,
+    isFallbackMode: isFallback,
     status,
     isEngineInitializing,
-    isFallbackMode,
     hasWebGpu
   }
 }

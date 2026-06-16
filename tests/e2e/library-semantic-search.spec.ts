@@ -43,13 +43,22 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     const aiToggleBtn = spFrame.locator("#ai-search-toggle-btn")
     await expect(aiToggleBtn).toBeVisible()
     await aiToggleBtn.click()
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1000)
+
+    // Verify Warning Modal is NOT shown
+    const warningModal = spFrame.locator(
+      "text=/Local AI Model not loaded|ローカルAIモデルがロードされていません/"
+    )
+    await expect(warningModal).not.toBeVisible()
 
     // Verify status badge is visible
-    const statusBadge = spFrame.locator(
-      "text=/AI Fallback|AI軽量フォールバック/"
+    const statusBadge = spFrame
+      .locator("[data-testid='ai-status-badge']")
+      .first()
+    await expect(statusBadge).toBeVisible({ timeout: 15000 })
+    await expect(statusBadge).toContainText(
+      /(Fallback|Light Mode|軽量フォールバック|軽量モード)/
     )
-    await expect(statusBadge).toBeVisible()
 
     // Verify AI placeholder is active
     const searchField = spFrame.locator("#library-search-input")
@@ -80,6 +89,9 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
         "library-semantic-search-fallback-success.png"
       )
     })
+    console.log(
+      "Library AI Semantic Search fallback offline state screenshot saved."
+    )
   })
 
   test("should parse query and apply filters dynamically", async ({ page }) => {

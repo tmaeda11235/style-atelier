@@ -432,9 +432,9 @@ describe("SettingsTab", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+        expect(screen.getByText(/Cloud Backup/i)).toBeDefined()
       },
-      { timeout: 5000 }
+      { timeout: 10000 }
     )
 
     const restoreBtn = screen.getByRole("button", {

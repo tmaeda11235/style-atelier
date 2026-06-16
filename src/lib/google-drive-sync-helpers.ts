@@ -1,4 +1,9 @@
-import { GDriveTimeoutError, type GoogleDriveClient } from "./google-drive"
+import {
+  GDriveQuotaError,
+  GDriveRateLimitError,
+  GDriveTimeoutError,
+  type GoogleDriveClient
+} from "./google-drive"
 import {
   runRestoreWorkflow,
   runSyncWorkflow
@@ -10,8 +15,13 @@ export interface GDriveProgressTracker {
   setStatusMessage: (msg: {
     text: string
     type: "success" | "error" | "info" | null
+    actionType?: "quota" | "rateLimit" | null
   }) => void
-  showStatus: (text: string, type: "success" | "error" | "info") => void
+  showStatus: (
+    text: string,
+    type: "success" | "error" | "info",
+    actionType?: "quota" | "rateLimit" | null
+  ) => void
 }
 
 export async function performSyncWorkflow(params: {
@@ -102,6 +112,12 @@ export async function handleSyncError(params: {
   } else if (err instanceof GDriveTimeoutError) {
     addLog("Sync failed: Connection timed out.")
     progress.showStatus(t.syncTimeout, "error")
+  } else if (err instanceof GDriveQuotaError) {
+    addLog("Sync failed: Storage quota exceeded.")
+    progress.showStatus(t.syncFailedQuota, "error", "quota")
+  } else if (err instanceof GDriveRateLimitError) {
+    addLog("Sync failed: API rate limit exceeded.")
+    progress.showStatus(t.syncFailedRateLimit, "error", "rateLimit")
   } else {
     console.error(err)
     addLog(`Sync failed: ${err.message || err}`)
@@ -240,6 +256,12 @@ export async function handleRestoreError(params: {
   } else if (err instanceof GDriveTimeoutError) {
     addLog("Force recovery failed: Connection timed out.")
     progress.showStatus(t.syncTimeout, "error")
+  } else if (err instanceof GDriveQuotaError) {
+    addLog("Force recovery failed: Storage quota exceeded.")
+    progress.showStatus(t.restoreFailedQuota, "error", "quota")
+  } else if (err instanceof GDriveRateLimitError) {
+    addLog("Force recovery failed: API rate limit exceeded.")
+    progress.showStatus(t.restoreFailedRateLimit, "error", "rateLimit")
   } else {
     console.error(err)
     addLog(`Force recovery failed: ${err.message || err}`)

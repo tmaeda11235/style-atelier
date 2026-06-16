@@ -23,12 +23,12 @@ interface ActionAreaProps {
   t: Record<string, any>
 }
 
-function DeclutterStatusLabel() {
+function DeclutterStatusLabel({ status }: { status: string }) {
   return (
-    <div className="text-slate-400 dark:text-slate-500 flex items-center gap-2 font-medium">
+    <div className="text-slate-400 dark:text-slate-500 flex items-center gap-1.5 font-medium">
       <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
       <span>AI Prompt Organizer</span>
-      <AiStatusBadge />
+      <AiStatusBadge status={status} className="shrink-0" />
     </div>
   )
 }
@@ -221,7 +221,7 @@ export function AiDeclutterControl({
   return (
     <div className="mt-2.5 flex flex-col gap-1 text-[11px] border-t border-slate-100 dark:border-slate-800 pt-2 font-sans select-none">
       <div className="flex items-center justify-between min-h-[28px]">
-        <DeclutterStatusLabel />
+        <DeclutterStatusLabel status={status} />
         <DeclutterActionArea
           status={status}
           progress={progress}

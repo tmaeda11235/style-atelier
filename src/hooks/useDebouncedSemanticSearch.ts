@@ -32,6 +32,7 @@ interface EffectParams {
   setExtractedFilters: (val: any) => void
   setIsFallbackMode: (val: boolean) => void
   language: string
+  t: any
 }
 
 function resetFilters(
@@ -83,20 +84,7 @@ function useSemanticSearchEffect(params: EffectParams) {
       return params.setExtractedFilters(null)
     }
     const timer = setTimeout(() => {
-      executeSemanticSearch({
-        query: params.aiSearchQuery,
-        categories: params.categories,
-        setExtractedFilters: params.setExtractedFilters,
-        setRarityFilter: params.setRarityFilter,
-        setCategoryFilter: params.setCategoryFilter,
-        setColorFilter: params.setColorFilter,
-        setSearchTag: params.setSearchTag,
-        setIsAiSearching: params.setIsAiSearching,
-        setAiSearchError: params.setAiSearchError,
-        webLlmStatus: params.webLlmStatus,
-        setIsFallbackMode: params.setIsFallbackMode,
-        language: params.language
-      })
+      executeSemanticSearch(params)
     }, 600)
     return () => clearTimeout(timer)
   }, [
@@ -116,69 +104,39 @@ function useSemanticSearchEffect(params: EffectParams) {
   ])
 }
 
-interface ExecuteSemanticSearchParams {
-  query: string
-  categories: { id: string; name: string }[]
-  setExtractedFilters: (val: any) => void
-  setRarityFilter: (val: any) => void
-  setCategoryFilter: (val: string) => void
-  setColorFilter: (val: any) => void
-  setSearchTag: (val: string) => void
-  setIsAiSearching: (val: boolean) => void
-  setAiSearchError: (val: string | null) => void
-  webLlmStatus: string
-  setIsFallbackMode: (val: boolean) => void
-  language: string
-}
-
-async function executeSemanticSearch(params: ExecuteSemanticSearchParams) {
-  const {
-    query,
-    categories,
-    setExtractedFilters,
-    setRarityFilter,
-    setCategoryFilter,
-    setColorFilter,
-    setSearchTag,
-    setIsAiSearching,
-    setAiSearchError,
-    webLlmStatus,
-    setIsFallbackMode,
-    language
-  } = params
-
-  setIsAiSearching(true)
-  setAiSearchError(null)
+async function executeSemanticSearch(p: EffectParams) {
+  p.setIsAiSearching(true)
+  p.setAiSearchError(null)
 
   let result
-  let isFallback = webLlmStatus !== "ready"
+  let isFallback = p.webLlmStatus !== "ready"
 
   if (isFallback) {
-    result = parseSemanticQueryFallback(query, categories)
+    result = parseSemanticQueryFallback(p.aiSearchQuery, p.categories)
   } else {
     try {
-      result = await parseSemanticQuery(query, categories, language)
+      result = await parseSemanticQuery(p.aiSearchQuery, p.categories, p.language)
     } catch (err) {
       console.warn(
         "AI semantic search query parsing failed, using fallback:",
         err
       )
       isFallback = true
-      result = parseSemanticQueryFallback(query, categories)
+      result = parseSemanticQueryFallback(p.aiSearchQuery, p.categories)
     }
   }
 
-  setIsFallbackMode(isFallback)
-  setExtractedFilters(result)
+  p.setIsFallbackMode(isFallback)
+  p.setExtractedFilters(result)
   applyFilters(
     result,
-    categories,
-    setRarityFilter,
-    setCategoryFilter,
-    setColorFilter,
-    setSearchTag
+    p.categories,
+    p.setRarityFilter,
+    p.setCategoryFilter,
+    p.setColorFilter,
+    p.setSearchTag
   )
-  setIsAiSearching(false)
+  p.setIsAiSearching(false)
 }
 
 export function useDebouncedSemanticSearch(
