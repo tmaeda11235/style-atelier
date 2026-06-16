@@ -898,12 +898,18 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
-  const [width, setWidth] = React.useState(window.innerWidth)
+  const [width, setWidth] = React.useState(380)
+  const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth)
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
+    if (!containerRef.current) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
   }, [])
 
   const isNarrow = width < 350
@@ -1176,7 +1182,9 @@ function SandboxWrapper() {
   }
 
   return (
-    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
+    <div
+      ref={containerRef}
+      className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
       {/* 左半分: プロファイリング＆デバッグダッシュボード */}
       {renderProfiler()}
 
