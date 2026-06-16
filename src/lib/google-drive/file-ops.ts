@@ -1,4 +1,4 @@
-import { fetchWithReauth } from "./http-client"
+import { fetchWithReauth, handleResponseError } from "./http-client"
 import type { BackupMetadata, ReauthContext } from "./types"
 
 /**
@@ -24,9 +24,7 @@ export async function searchBackupFile(
   )
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to search backup file: ${res.status} ${res.statusText}`
-    )
+    await handleResponseError(res, "Failed to search backup file")
   }
 
   const data = await res.json()
@@ -59,9 +57,7 @@ export async function getBackupMetadata(
   )
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to get backup metadata: ${res.status} ${res.statusText}`
-    )
+    await handleResponseError(res, "Failed to get backup metadata")
   }
 
   const data = await res.json()
@@ -99,9 +95,7 @@ export async function searchTempSharedCardsFile(
   )
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to search temp shared cards file: ${res.status} ${res.statusText}`
-    )
+    await handleResponseError(res, "Failed to search temp shared cards file")
   }
 
   const data = await res.json()
@@ -133,6 +127,6 @@ export async function deleteFile(
   )
 
   if (!res.ok) {
-    throw new Error(`Failed to delete file: ${res.status} ${res.statusText}`)
+    await handleResponseError(res, "Failed to delete file")
   }
 }

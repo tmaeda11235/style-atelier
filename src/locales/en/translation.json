@@ -101,6 +101,8 @@
     "syncCancelled": "Sync cancelled by user",
     "syncTimeout": "Sync timed out. Please check your network connection.",
     "syncFailed": "Sync failed",
+    "syncFailedQuota": "Sync failed: Insufficient Google Drive storage space. Please clean up space or consider exporting via Local Backup.",
+    "syncFailedRateLimit": "Sync failed: Google Drive API rate limit reached. Please wait a moment and try again.",
     "syncWarningTitle": "Long Offline Warning",
     "syncWarningMessage": "It has been over 60 days since your last sync. Proceeding may restore style cards or folders that were deleted on other devices.",
     "strategyLabel": "Select merge strategy:",
@@ -120,6 +122,10 @@
     "restoreProgress": "Downloading data",
     "restoreSuccess": "Force recovery completed successfully!",
     "restoreFailed": "Force recovery failed",
+    "restoreFailedQuota": "Force recovery failed: Insufficient Google Drive storage space.",
+    "restoreFailedRateLimit": "Force recovery failed: Google Drive API rate limit reached. Please wait a moment and try again.",
+    "actionCleanupDrive": "Cleanup Drive Guide",
+    "actionLocalBackup": "To Local Backup",
     "restoreCancelled": "Force recovery cancelled by user",
     "googleDriveToggleLabel": "Enable Google Drive Sync",
     "googleDriveToggleSub": "Activates backup and restore buttons",
@@ -501,7 +507,10 @@
     "aiAdviceLoadingModel": "Loading local AI model...",
     "webllmQuotaWarningTitle": "Storage Quota Exceeded",
     "webllmQuotaWarningDesc": "Not enough storage to cache the AI model. Please free up some disk space.",
-    "aiAdviceDownloadBtn": "Download Model"
+    "aiAdviceDownloadBtn": "Download Model",
+    "recipeHistory": "History",
+    "pastRecipes": "Past Recipes",
+    "noRecipes": "No history yet"
   },
   "mergeStack": {
     "title": "Merge Card Stack",

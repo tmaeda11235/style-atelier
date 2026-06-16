@@ -32,7 +32,9 @@ export function LocalBackupSection({
   t
 }: LocalBackupSectionProps) {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+    <div
+      id="local-backup-section"
+      className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
       {/* Subtle decorative background gradient */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
