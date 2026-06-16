@@ -66,6 +66,13 @@ export function useExpertModeView({
     }
   }
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    minting.setMintingItem(null)
+    minting.setVariationBase(null)
+    setActiveDetailCard(null)
+  }
+
   const handleStartTutorial = () => {
     localStorage.setItem("style-atelier-onboarding-seen", "true")
     setShowWelcome(false)
@@ -261,9 +268,29 @@ export function useExpertModeView({
     startTutorial()
   }
 
+  const sidePanelLayoutProps = {
+    activeTab,
+    onTabChange: handleTabChange,
+    isDragging,
+    isDraggingFile,
+    isImporting,
+    logs,
+    onClearLogs: handleClearLogs,
+    onResetDb: handleResetDb,
+    droppedItem,
+    onClearDroppedItem: clearDroppedItem,
+    alertType,
+    onRetryConnection: handleRetryConnection,
+    onDismissAlert: handleDismissAlert,
+    onOpenGuide: handleOpenGuide,
+    isEasyMode: _isEasyMode
+  }
+
   return {
     activeTab,
     setActiveTab,
+    handleTabChange,
+    sidePanelLayoutProps,
     logs,
     alertType,
     setAlertType,
