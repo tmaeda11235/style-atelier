@@ -585,6 +585,25 @@
         "src/components/molecules/ConnectionAlert.tsx",
         "src/lib/chrome-utils.ts"
       ]
+    },
+    {
+      "id": "@J-MOBILE-PREVIEW-01",
+      "name": "モバイルお試しプレビュー＆フリップ",
+      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ及びプロンプトのコピーを行う",
+      "steps": [
+        "URLパラメータからモバイルランディングページに遷移",
+        "アトリエスキンのStyle Card表示を確認",
+        "カードをタップして3Dフリップ回転",
+        "裏面のプロンプトとコピーボタンを確認",
+        "コピーボタンタップでクリップボードへコピー"
+      ],
+      "nextJourneys": [],
+      "viewComponents": [
+        "src/mobile-app/styles/mobile.css",
+        "src/mobile-app/mockup.html",
+        "src/mobile-app/index.html",
+        "src/mobile-app/index.ts"
+      ]
     }
   ]
 }

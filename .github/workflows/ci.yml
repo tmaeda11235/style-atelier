@@ -176,7 +176,7 @@ jobs:
           bash -c 'while true; do date; echo "=== RAM ==="; free -m; echo "=== CPU ==="; top -b -n 1 | head -n 15; echo "-------------------"; sleep 5; done' > system_metrics.log &
 
       - name: Run E2E tests
-        run: npm run test:e2e -- --reporter=html
+        run: xvfb-run npm run test:e2e -- --reporter=html
 
       - name: Upload System Metrics
         uses: actions/upload-artifact@v4
