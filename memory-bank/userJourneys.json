@@ -548,6 +548,7 @@
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"],
       "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
         "src/components/organisms/CategoryManagerModal.tsx",
         "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
         "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
@@ -570,6 +571,21 @@
         "src/components/organisms/WebLlmSettingsSection.tsx",
         "src/components/organisms/WebLlmSettingsSubComponents.tsx",
         "src/components/molecules/AiDownloadStatus.tsx"
+      ]
+    },
+    {
+      "id": "@J-WB-UNDO-REDO-01",
+      "name": "ワークベンチ操作の履歴管理（Undo/Redo）",
+      "description": "ワークベンチ上でのスタイルカードの追加・削除や比率（Portion）変更をUndo/Redoボタンやショートカット（Ctrl+Z, Ctrl+Y等）で巻き戻し・やり直す",
+      "steps": [
+        "ワークベンチでカードを追加・削除・比率変更する",
+        "Undoボタン押下またはCtrl+Z入力で操作を巻き戻す",
+        "Redoボタン押下またはCtrl+Y/Ctrl+Shift+Z入力で操作をやり直す"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/Workbench.tsx",
+        "src/hooks/useWorkbench.ts"
       ]
     },
     {

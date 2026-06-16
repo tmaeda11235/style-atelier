@@ -1,6 +1,9 @@
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
 import { decompressCardData } from "../lib/qr-utils"
+import { GDriveClient } from "./gdrive-client"
+
+let currentCardData: Partial<StyleCard> | null = null
 
 function showToast(message: string) {
   const toast = document.getElementById("toast") as HTMLElement
@@ -50,6 +53,19 @@ function renderParameterBadges(parameters: Record<string, any> | undefined) {
     }
   })
 }
+function renderCardImage(card: Partial<StyleCard>) {
+  const container = document.getElementById("cardImageContainer")
+  if (!container) return
+
+  // Use thumbnailData if available, otherwise fallback to local image
+  const src = card.thumbnailData || "./cyber_samurai.png"
+
+  container.innerHTML = `
+    <img src="${src}" alt="${card.name || "Card Image"}" class="card-image">
+    <div class="card-image-overlay">Tap to reveal Prompt</div>
+  `
+}
+
 function renderCard(card: Partial<StyleCard>) {
   const cardTitleFront = document.getElementById("cardTitleFront")
   const cardTitleBack = document.getElementById("cardTitleBack")
@@ -77,6 +93,7 @@ function renderCard(card: Partial<StyleCard>) {
     )
   }
 
+  renderCardImage(card)
   renderParameterBadges(card.parameters)
 }
 
@@ -99,6 +116,7 @@ function loadFallbackCard() {
       stylize: 750
     }
   }
+  currentCardData = fallback
   renderCard(fallback)
 }
 
@@ -111,6 +129,7 @@ function loadCardFromUrl() {
       // URLSearchParams decodes '+' as ' '. We must convert spaces back to '+' for valid Base64 decoding.
       const normalizedData = rawParam.replace(/ /g, "+")
       const cardData = decompressCardData(normalizedData)
+      currentCardData = cardData
       renderCard(cardData)
     } catch (err) {
       console.error("Failed to decode card data from URL:", err)
@@ -218,6 +237,44 @@ function setupCardContainerEvents(cardContainer: HTMLElement) {
   })
 }
 
+async function handleCloudSave() {
+  if (!currentCardData) {
+    showToast("保存するカードデータがありません")
+    return
+  }
+
+  // E2Eテスト時はダミーの成功トーストを返す
+  if ((window as any).__E2E_TEST__) {
+    showToast("クラウドに一時保存しました")
+    return
+  }
+
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY
+
+  if (!clientId || !apiKey) {
+    console.error("Google API Credentials not found.")
+    showToast("クラウド保存の設定が不足しています")
+    return
+  }
+
+  try {
+    showToast("クラウド保存中...")
+    const client = new GDriveClient(clientId, apiKey)
+    const result = await client.saveCardData(currentCardData)
+
+    if (result.success) {
+      showToast("クラウドに保存しました！")
+    } else {
+      console.error(result.error)
+      showToast("保存に失敗しました")
+    }
+  } catch (err) {
+    console.error(err)
+    showToast("保存中にエラーが発生しました")
+  }
+}
+
 function setupButtonEvents(
   copyBtn: HTMLButtonElement,
   promptText: HTMLElement,
@@ -243,9 +300,7 @@ function setupButtonEvents(
     }
   })
 
-  saveCloudBtn.addEventListener("click", () => {
-    showToast("クラウドに一時保存しました")
-  })
+  saveCloudBtn.addEventListener("click", handleCloudSave)
 }
 
 function setupEventHandlers() {

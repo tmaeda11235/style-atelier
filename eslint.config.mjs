@@ -151,7 +151,6 @@ export default ts.config(
       "src/components/organisms/EvolutionSuccessModal.tsx",
       "src/components/organisms/HistoryTab.tsx",
       "src/components/organisms/LocalBackupSection.tsx",
-      "src/components/organisms/MergeStackModal.tsx",
       "src/components/organisms/OnboardingGuide.tsx",
       "src/components/organisms/SimpleMintingView.tsx",
       "src/components/organisms/StorageManagerSection.tsx",

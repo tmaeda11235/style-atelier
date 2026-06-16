@@ -77,6 +77,7 @@ interface WorkbenchCardListProps {
   setSelectedCardId: (id: string | null) => void
   toggleCardSelection: (id: string) => Promise<void> | void
   updateCardWeight: (id: string, weight: number) => Promise<void> | void
+  onStartWeightAdjustment?: () => Promise<void> | void
   handleExtractPortion: (
     name: string,
     segments: PromptSegment[],
@@ -90,6 +91,7 @@ export const WorkbenchCardList: React.FC<WorkbenchCardListProps> = ({
   setSelectedCardId,
   toggleCardSelection,
   updateCardWeight,
+  onStartWeightAdjustment,
   handleExtractPortion
 }) => (
   <>
@@ -102,6 +104,7 @@ export const WorkbenchCardList: React.FC<WorkbenchCardListProps> = ({
         setSelectedCardId={setSelectedCardId}
         toggleCardSelection={toggleCardSelection}
         updateCardWeight={updateCardWeight}
+        onStartWeightAdjustment={onStartWeightAdjustment}
         handleExtractPortion={handleExtractPortion}
       />
     ))}
