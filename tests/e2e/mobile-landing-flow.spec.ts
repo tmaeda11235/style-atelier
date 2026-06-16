@@ -16,11 +16,8 @@ test.describe("Mobile Viewer E2E Test", () => {
   test("should render fallback Cyber Samurai, flip card and copy prompt with visual feedbacks @J-MOBILE-PREVIEW-01", async ({
     page
   }) => {
-    // 1. Navigate to the mobile app index page (no params, should fallback)
-    await page.goto("/src/mobile-app/index.html")
-    await page.evaluate(() => {
-      ;(window as any).__E2E_TEST__ = true
-    })
+    // 1. Navigate to the mobile app index page (no params, should fallback, and use mock mode)
+    await page.goto("/src/mobile-app/index.html?mock=true")
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")

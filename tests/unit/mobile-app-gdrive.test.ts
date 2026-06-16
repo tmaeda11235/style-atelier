@@ -9,10 +9,13 @@ describe("GDriveClient", () => {
 
   beforeEach(() => {
     client = new GDriveClient(mockClientId, mockApiKey)
-    // モックのリセット
     vi.clearAllMocks()
+    vi.restoreAllMocks()
 
-    // グローバルな window.google のモック設定
+    // Mock global fetch
+    vi.stubGlobal("fetch", vi.fn())
+
+    // Mock window.google
     global.window = Object.create(window)
     global.window.google = {
       accounts: {
@@ -28,7 +31,6 @@ describe("GDriveClient", () => {
   })
 
   it("should throw error if google identity services is not loaded", async () => {
-    // 意図的に google オブジェクトを未定義に設定
     ;(window as any).google = undefined
 
     await expect(client.requestAccessToken()).rejects.toThrow(
@@ -37,7 +39,6 @@ describe("GDriveClient", () => {
   })
 
   it("should return access token if already authenticated", async () => {
-    // 内部状態を強制的に書き換え（テスト用）
     ;(client as any).accessToken = "existing-token"
     const token = await client.requestAccessToken()
     expect(token).toBe("existing-token")
@@ -50,20 +51,16 @@ describe("GDriveClient", () => {
     })
     global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
 
-    // 非同期でリクエストを投げる
     const tokenPromise = client.requestAccessToken()
 
-    // initTokenClientが呼ばれたことを確認
     expect(mockInitTokenClient).toHaveBeenCalledWith({
       client_id: mockClientId,
       scope: "https://www.googleapis.com/auth/drive.file",
       callback: expect.any(Function)
     })
 
-    // requestAccessTokenが呼ばれたことを確認
     expect(mockRequestAccessToken).toHaveBeenCalledWith({ prompt: "consent" })
 
-    // コールバックをシミュレート
     const initArgs = mockInitTokenClient.mock.calls[0][0]
     initArgs.callback({ access_token: "new-mock-token" })
 
@@ -71,7 +68,7 @@ describe("GDriveClient", () => {
     expect(token).toBe("new-mock-token")
   })
 
-  it("should reject if tokenClient returns error", async () => {
+  it("should reject requestAccessToken if callback returns error", async () => {
     const mockRequestAccessToken = vi.fn()
     const mockInitTokenClient = vi.fn().mockReturnValue({
       requestAccessToken: mockRequestAccessToken
@@ -86,116 +83,120 @@ describe("GDriveClient", () => {
     await expect(tokenPromise).rejects.toThrow("access_denied")
   })
 
-  describe("saveCardData", () => {
-    let mockFetch: any
-
-    beforeEach(() => {
-      mockFetch = vi.fn()
-      global.fetch = mockFetch
-      // すでに認証済み状態にしておく
-      ;(client as any).accessToken = "test-token"
+  it("should reject requestAccessToken if requesting token throws", async () => {
+    const mockInitTokenClient = vi.fn().mockImplementation(() => {
+      throw new Error("Init failed")
     })
+    global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
 
-    it("should successfully save card data as a new file (POST)", async () => {
-      // 1. findExistingTempFile: 既存ファイルなしの応答
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ files: [] })
-      })
-      // 2. uploadResponse: 成功時の応答
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ id: "new-file-id" })
-      })
+    await expect(client.requestAccessToken()).rejects.toThrow("Init failed")
+  })
 
-      const cardData = { name: "Test Card" }
-      const result = await client.saveCardData(cardData)
+  it("should save card data successfully when file does not exist (POST)", async () => {
+    ;(client as any).accessToken = "existing-token"
 
-      expect(result).toEqual({ success: true, fileId: "new-file-id" })
-      expect(mockFetch).toHaveBeenCalledTimes(2)
-
-      // findExistingTempFile のURL検証
-      const findCall = mockFetch.mock.calls[0]
-      expect(findCall[0]).toContain("https://www.googleapis.com/drive/v3/files")
-
-      // upload のURLとmethodの検証
-      const uploadCall = mockFetch.mock.calls[1]
-      expect(uploadCall[0]).toBe(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
-      )
-      expect(uploadCall[1].method).toBe("POST")
+    const mockFetch = vi.fn()
+    // First call (findExistingTempFile): search returns empty list
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ files: [] })
     })
-
-    it("should successfully update existing card data (PATCH)", async () => {
-      // 1. findExistingTempFile: 既存ファイルありの応答
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ files: [{ id: "existing-file-id" }] })
-      })
-      // 2. uploadResponse: 成功時の応答
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ id: "existing-file-id" })
-      })
-
-      const cardData = { name: "Test Card" }
-      const result = await client.saveCardData(cardData)
-
-      expect(result).toEqual({ success: true, fileId: "existing-file-id" })
-      expect(mockFetch).toHaveBeenCalledTimes(2)
-
-      // upload のURLとmethodが PATCH であることを検証
-      const uploadCall = mockFetch.mock.calls[1]
-      expect(uploadCall[0]).toBe(
-        "https://www.googleapis.com/upload/drive/v3/files/existing-file-id?uploadType=multipart"
-      )
-      expect(uploadCall[1].method).toBe("PATCH")
+    // Second call (saveCardData upload): upload returns new file ID
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ id: "new-file-id" })
     })
+    vi.stubGlobal("fetch", mockFetch)
 
-    it("should return success: false if requestAccessToken fails", async () => {
-      // 認証情報をクリアし、requestAccessTokenが例外を投げるようにする
-      ;(client as any).accessToken = null
-      ;(window as any).google = undefined
+    const cardData = { id: "card-1", name: "Test Card" }
+    const result = await client.saveCardData(cardData)
 
-      const cardData = { name: "Test Card" }
-      const result = await client.saveCardData(cardData)
+    expect(result).toEqual({ success: true, fileId: "new-file-id" })
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBeInstanceOf(Error)
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+    // Verify search query parameters
+    const searchUrl = mockFetch.mock.calls[0][0] as string
+    expect(decodeURIComponent(searchUrl)).toContain(
+      "name='temp_shared_cards.json'"
+    )
+    expect(decodeURIComponent(searchUrl)).toContain("trashed=false")
+
+    // Verify upload request parameters (POST)
+    const uploadUrl = mockFetch.mock.calls[1][0] as string
+    const uploadOptions = mockFetch.mock.calls[1][1] as any
+    expect(uploadUrl).toContain(
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+    )
+    expect(uploadOptions.method).toBe("POST")
+    expect(uploadOptions.headers.Authorization).toBe("Bearer existing-token")
+    expect(uploadOptions.body).toBeInstanceOf(FormData)
+  })
+
+  it("should save card data successfully when file exists (PATCH)", async () => {
+    ;(client as any).accessToken = "existing-token"
+
+    const mockFetch = vi.fn()
+    // First call (findExistingTempFile): search returns existing file ID
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ files: [{ id: "existing-file-id" }] })
     })
-
-    it("should return success: false if findExistingTempFile fails (fetch not ok)", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500
-      })
-
-      const cardData = { name: "Test Card" }
-      const result = await client.saveCardData(cardData)
-
-      expect(result.success).toBe(false)
-      expect(result.error?.message).toContain("Failed to search existing file")
+    // Second call (saveCardData upload): upload returns file ID
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ id: "existing-file-id" })
     })
+    vi.stubGlobal("fetch", mockFetch)
 
-    it("should return success: false if upload fails (fetch not ok)", async () => {
-      // 1. findExistingTempFile: 既存ファイルなしの応答
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ files: [] })
-      })
-      // 2. uploadResponse: アップロード失敗の応答
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400
-      })
+    const cardData = { id: "card-1", name: "Test Card" }
+    const result = await client.saveCardData(cardData)
 
-      const cardData = { name: "Test Card" }
-      const result = await client.saveCardData(cardData)
+    expect(result).toEqual({ success: true, fileId: "existing-file-id" })
 
-      expect(result.success).toBe(false)
-      expect(result.error?.message).toContain(
-        "Failed to upload to Google Drive"
-      )
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+
+    // Verify upload request parameters (PATCH with ID)
+    const uploadUrl = mockFetch.mock.calls[1][0] as string
+    const uploadOptions = mockFetch.mock.calls[1][1] as any
+    expect(uploadUrl).toContain(
+      "https://www.googleapis.com/upload/drive/v3/files/existing-file-id?uploadType=multipart"
+    )
+    expect(uploadOptions.method).toBe("PATCH")
+  })
+
+  it("should return success false if findExistingTempFile fails", async () => {
+    ;(client as any).accessToken = "existing-token"
+
+    const mockFetch = vi.fn()
+    mockFetch.mockResolvedValueOnce({
+      ok: false
     })
+    vi.stubGlobal("fetch", mockFetch)
+
+    const result = await client.saveCardData({ id: "card-1" })
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBeInstanceOf(Error)
+    expect(result.error?.message).toBe("Failed to search existing file.")
+  })
+
+  it("should return success false if upload fails", async () => {
+    ;(client as any).accessToken = "existing-token"
+
+    const mockFetch = vi.fn()
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ files: [] })
+    })
+    mockFetch.mockResolvedValueOnce({
+      ok: false
+    })
+    vi.stubGlobal("fetch", mockFetch)
+
+    const result = await client.saveCardData({ id: "card-1" })
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBeInstanceOf(Error)
+    expect(result.error?.message).toBe("Failed to upload to Google Drive")
   })
 })
