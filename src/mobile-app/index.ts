@@ -55,6 +55,19 @@ function renderParameterBadges(parameters: Record<string, any> | undefined) {
   })
 }
 
+function renderCardImage(card: Partial<StyleCard>) {
+  const container = document.getElementById("cardImageContainer")
+  if (!container) return
+
+  // Use thumbnailData if available, otherwise fallback to local image
+  const src = card.thumbnailData || "./cyber_samurai.png"
+
+  container.innerHTML = `
+    <img src="${src}" alt="${card.name || "Card Image"}" class="card-image">
+    <div class="card-image-overlay">Tap to reveal Prompt</div>
+  `
+}
+
 function renderCard(card: Partial<StyleCard>) {
   currentCardData = card
   const titleFront = document.getElementById("cardTitleFront")
@@ -80,6 +93,8 @@ function renderCard(card: Partial<StyleCard>) {
       card.parameters || {}
     )
   }
+
+  renderCardImage(card)
   renderParameterBadges(card.parameters)
 }
 
@@ -91,9 +106,10 @@ function loadFallbackCard() {
     dominantColor: "#1e293b",
     promptSegments: [
       {
-        type: "text",
+        id: "1",
         value:
-          "A futuristic cyberpunk samurai standing in neon rain, Tokyo street background, highly detailed style, glowing katana, rich colors, intricate cybernetic armor, Unreal Engine 5 render, cinematic lighting"
+          "A futuristic cyberpunk samurai standing in neon rain, Tokyo street background, highly detailed style, glowing katana, rich colors, intricate cybernetic armor, Unreal Engine 5 render, cinematic lighting",
+        type: "text"
       }
     ],
     parameters: { ar: "16:9", stylize: 750 }
