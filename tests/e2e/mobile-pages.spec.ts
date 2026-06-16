@@ -5,7 +5,7 @@ test.describe("Mobile Pages & Google Drive Integration", () => {
     // Viteのローカルサーバー（モバイル用は dev:mobile）またはルートでホストされている想定
     // e2eテスト時は通常 localhost:5173 を使用
     // package.json の dev スクリプト等に合わせてURLを調整
-    await page.goto("http://localhost:5173/src/mobile-app/")
+    await page.goto("/src/mobile-app/index.html")
   })
 
   test("should render the mobile app correctly", async ({ page }) => {
