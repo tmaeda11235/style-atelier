@@ -66,6 +66,12 @@ function EasyModeChildren({
   isTargetSite,
   onOpenMidjourney
 }: EasyModeChildrenProps) {
+  const handleReplayTutorial = () => {
+    localStorage.removeItem("style-atelier-onboarding-seen")
+    localStorage.setItem("style-atelier-onboarding-replay-trigger", "true")
+    state.handleToggleEasyMode(false)
+  }
+
   return (
     <>
       <EasyModeMintingWrapper minting={state.minting} />
@@ -96,6 +102,7 @@ function EasyModeChildren({
         handleToggleEasyMode={state.handleToggleEasyMode}
         setActiveTab={state.setActiveTab}
         handleResetDb={state.handleResetDb}
+        onReplayTutorial={handleReplayTutorial}
       />
     </>
   )
@@ -243,6 +250,7 @@ interface EasyModeTabContentProps {
   handleToggleEasyMode: (enabled: boolean) => void
   setActiveTab: (tab: any) => void
   handleResetDb: () => void
+  onReplayTutorial?: () => void
 }
 
 function EasyModeTabContent({
@@ -256,7 +264,8 @@ function EasyModeTabContent({
   isEasyMode,
   handleToggleEasyMode,
   setActiveTab,
-  handleResetDb
+  handleResetDb,
+  onReplayTutorial
 }: EasyModeTabContentProps) {
   if (activeTab === "library") {
     if (!isTargetSite) {
@@ -283,6 +292,7 @@ function EasyModeTabContent({
         isEasyMode={isEasyMode}
         onToggleEasyMode={handleToggleEasyMode}
         onNavigateToLibrary={() => setActiveTab("library")}
+        onReplayTutorial={onReplayTutorial}
       />
     )
   }

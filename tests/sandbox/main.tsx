@@ -7,6 +7,7 @@ import SidePanelPage from "../../src/pages/SidePanel"
 
 import "../../src/style.css" // スタイルの読み込み
 
+import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,
@@ -89,7 +90,12 @@ async function seedSandboxData() {
   }
 }
 
-seedSandboxData()
+const urlParams = new URLSearchParams(
+  typeof window !== "undefined" ? window.location.search : ""
+)
+if (urlParams.get("noseed") !== "true") {
+  seedSandboxData()
+}
 
 if (typeof window !== "undefined") {
   // Mock navigator.gpu for sandbox / E2E tests
@@ -604,13 +610,34 @@ if (typeof window !== "undefined") {
   }
 }
 
+function SandboxWrapper() {
+  const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
+
+  return (
+    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 relative">
+      <SidePanelPage />
+
+      {/* Test helper button for Onboarding Guide E2E validation */}
+      <button
+        id="test-open-onboarding-btn"
+        onClick={() => setIsOnboardingOpen(true)}
+        className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity">
+        TEST: Open Onboarding Guide
+      </button>
+
+      <OnboardingGuide
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+      />
+    </div>
+  )
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root")!)
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50">
-        <SidePanelPage />
-      </div>
+      <SandboxWrapper />
     </QueryClientProvider>
   </React.StrictMode>
 )

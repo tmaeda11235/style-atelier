@@ -49,7 +49,9 @@ describe("useWebLlm", () => {
       { target: "offscreen", action: "verify-integrity" },
       expect.any(Function)
     )
-    expect(result.current.status).toBe("idle")
+    await waitFor(() => {
+      expect(result.current.status).toBe("idle")
+    })
   })
 
   it("should set status to ready if integrity verification passes", async () => {
@@ -75,7 +77,9 @@ describe("useWebLlm", () => {
       await sendMessagePromise
     })
 
-    expect(result.current.status).toBe("ready")
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready")
+    })
     expect(result.current.progress).toBe(100)
   })
 
@@ -206,11 +210,9 @@ describe("useWebLlm", () => {
     const { result } = renderHook(() => useWebLlm())
 
     // Wait for the async initialization check to settle
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready")
     })
-
-    expect(result.current.status).toBe("ready")
 
     vi.mocked(chrome.runtime.sendMessage).mockClear()
 
@@ -298,11 +300,9 @@ describe("useWebLlm", () => {
     const { result } = renderHook(() => useWebLlm())
 
     // Wait for async checks to complete
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+    await waitFor(() => {
+      expect(result.current.status).toBe("unsupported")
     })
-
-    expect(result.current.status).toBe("unsupported")
     expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(
       { target: "offscreen", action: "verify-integrity" },
       expect.any(Function)
@@ -318,10 +318,9 @@ describe("useWebLlm", () => {
 
     const { result } = renderHook(() => useWebLlm())
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+    await waitFor(() => {
+      expect(result.current.status).toBe("unsupported")
     })
-    expect(result.current.status).toBe("unsupported")
 
     // Try to trigger startDownload
     await act(async () => {

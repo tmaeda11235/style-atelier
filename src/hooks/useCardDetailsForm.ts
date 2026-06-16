@@ -4,34 +4,35 @@ import { db } from "../lib/db"
 import type { PromptSegment, StyleCard } from "../lib/db-schema"
 import { createThumbnailDataUrl } from "../lib/image-utils"
 
-export function useCardDetailsForm(
-  card: StyleCard,
-  onSave: (updatedCard: StyleCard) => Promise<void>
-) {
-  const [name, setName] = useState(card.name)
-  const [tier, setTier] = useState(card.tier)
-  const [promptSegments, setPromptSegments] = useState<PromptSegment[]>(
-    card.promptSegments || []
-  )
-  const [parameters, setParameters] = useState<StyleCard["parameters"]>(
-    card.parameters || {}
-  )
-  const [isSrefHidden, setIsSrefHidden] = useState(
-    card.masking?.isSrefHidden || false
-  )
-  const [isPHidden, setIsPHidden] = useState(card.masking?.isPHidden || false)
-  const [category, setCategory] = useState(card.category || "")
-  const [tags, setTags] = useState<string[]>(card.tags || [])
+interface FormFields {
+  name: string
+  tier: string
+  promptSegments: PromptSegment[]
+  parameters: StyleCard["parameters"]
+  isSrefHidden: boolean
+  isPHidden: boolean
+  category: string
+  tags: string[]
+  selectedThumbs: string[]
+}
 
-  const images =
-    card.images && card.images.length > 0
-      ? card.images
-      : [card.thumbnailData].filter(Boolean)
+function getInitialFields(card: StyleCard): FormFields {
+  return {
+    name: card.name,
+    tier: card.tier || "",
+    promptSegments: card.promptSegments || [],
+    parameters: card.parameters || {},
+    isSrefHidden: card.masking?.isSrefHidden || false,
+    isPHidden: card.masking?.isPHidden || false,
+    category: card.category || "",
+    tags: card.tags || [],
+    selectedThumbs:
+      card.selectedThumbnails ||
+      (card.thumbnailData ? [card.thumbnailData] : [])
+  }
+}
 
-  const [selectedThumbs, setSelectedThumbs] = useState<string[]>(
-    card.selectedThumbnails || (card.thumbnailData ? [card.thumbnailData] : [])
-  )
-
+function useParents(card: StyleCard) {
   const [parents, setParents] = useState<(StyleCard | null)[]>([])
 
   useEffect(() => {
@@ -57,129 +58,146 @@ export function useCardDetailsForm(
     fetchParents()
   }, [card])
 
+  return parents
+}
+
+function useCardFormState(card: StyleCard) {
+  const [fields, setFields] = useState<FormFields>(() => getInitialFields(card))
+
   useEffect(() => {
-    setName(card.name)
-    setTier(card.tier)
-    setPromptSegments(card.promptSegments || [])
-    setParameters(card.parameters || {})
-    setIsSrefHidden(card.masking?.isSrefHidden || false)
-    setIsPHidden(card.masking?.isPHidden || false)
-    setCategory(card.category || "")
-    setTags(card.tags || [])
-    setSelectedThumbs(
-      card.selectedThumbnails ||
-        (card.thumbnailData ? [card.thumbnailData] : [])
-    )
+    setFields(getInitialFields(card))
   }, [card])
 
+  const setField = <K extends keyof FormFields>(
+    key: K,
+    value: FormFields[K]
+  ) => {
+    setFields((prev) => ({ ...prev, [key]: value }))
+  }
+
+  return {
+    ...fields,
+    fields,
+    setName: (val: string) => setField("name", val),
+    setTier: (val: string) => setField("tier", val),
+    setPromptSegments: (val: PromptSegment[]) =>
+      setField("promptSegments", val),
+    setParameters: (val: StyleCard["parameters"]) =>
+      setField("parameters", val),
+    setIsSrefHidden: (val: boolean) => setField("isSrefHidden", val),
+    setIsPHidden: (val: boolean) => setField("isPHidden", val),
+    setCategory: (val: string) => setField("category", val),
+    setTags: (val: string[]) => setField("tags", val),
+    setSelectedThumbs: (val: string[]) => setField("selectedThumbs", val)
+  }
+}
+
+async function getThumbnailData(primaryThumb: string): Promise<string> {
+  try {
+    return await createThumbnailDataUrl(primaryThumb)
+  } catch (err) {
+    console.error("Failed to convert thumbnail to Base64:", err)
+    return primaryThumb
+  }
+}
+
+function buildVersionHistory(
+  card: StyleCard,
+  newValues: { name: string; promptSegments: any[]; parameters: any }
+) {
+  const isChanged =
+    card.name !== newValues.name ||
+    JSON.stringify(card.promptSegments || []) !==
+      JSON.stringify(newValues.promptSegments) ||
+    JSON.stringify(card.parameters || {}) !==
+      JSON.stringify(newValues.parameters)
+
+  const history = card.versionHistory ? [...card.versionHistory] : []
+  if (!isChanged) return history
+
+  const newVersion = {
+    id: crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).substring(2, 11),
+    timestamp: card.updatedAt || card.createdAt,
+    name: card.name,
+    promptSegments: card.promptSegments || [],
+    parameters: card.parameters || {}
+  }
+  return [newVersion, ...history].slice(0, 10)
+}
+
+async function buildUpdatedCard(
+  card: StyleCard,
+  formValues: FormFields & { images: string[] }
+): Promise<StyleCard> {
+  const primaryThumb =
+    formValues.selectedThumbs[0] || formValues.images[0] || "assets/icon.png"
+  const thumbnailData = await getThumbnailData(primaryThumb)
+  const versionHistory = buildVersionHistory(card, formValues)
+
+  return {
+    ...card,
+    name: formValues.name,
+    tier: formValues.tier,
+    promptSegments: formValues.promptSegments,
+    parameters: formValues.parameters,
+    tags: formValues.tags,
+    images: formValues.images,
+    selectedThumbnails: formValues.selectedThumbs,
+    thumbnailData,
+    category: formValues.category || undefined,
+    masking: {
+      isSrefHidden: formValues.isSrefHidden,
+      isPHidden: formValues.isPHidden
+    },
+    versionHistory,
+    updatedAt: Date.now()
+  }
+}
+
+export function useCardDetailsForm(
+  card: StyleCard,
+  onSave: (updatedCard: StyleCard) => Promise<void>
+) {
+  const state = useCardFormState(card)
+  const parents = useParents(card)
+
+  const images =
+    card.images && card.images.length > 0
+      ? card.images
+      : [card.thumbnailData].filter(Boolean)
+
   const handleToggleThumbnail = (imgUrl: string) => {
-    if (selectedThumbs.includes(imgUrl)) {
-      setSelectedThumbs(selectedThumbs.filter((url) => url !== imgUrl))
-    } else {
-      if (selectedThumbs.length < 4) {
-        setSelectedThumbs([...selectedThumbs, imgUrl])
-      } else {
-        setSelectedThumbs([...selectedThumbs.slice(1), imgUrl])
-      }
-    }
+    const thumbs = state.selectedThumbs
+    const nextThumbs = thumbs.includes(imgUrl)
+      ? thumbs.filter((url) => url !== imgUrl)
+      : thumbs.length < 4
+        ? [...thumbs, imgUrl]
+        : [...thumbs.slice(1), imgUrl]
+    state.setSelectedThumbs(nextThumbs)
   }
 
   const handleSaveChanges = async () => {
-    const primaryThumb = selectedThumbs[0] || images[0] || "assets/icon.png"
-    let thumbnailData = primaryThumb
     try {
-      thumbnailData = await createThumbnailDataUrl(primaryThumb)
-    } catch (err) {
-      console.error("Failed to convert thumbnail to Base64:", err)
-    }
-
-    const isSegmentsEqual = (a: PromptSegment[], b: PromptSegment[]) => {
-      return JSON.stringify(a) === JSON.stringify(b)
-    }
-
-    const isParamsEqual = (
-      a: StyleCard["parameters"],
-      b: StyleCard["parameters"]
-    ) => {
-      return JSON.stringify(a) === JSON.stringify(b)
-    }
-
-    const isChanged =
-      card.name !== name ||
-      !isSegmentsEqual(card.promptSegments || [], promptSegments) ||
-      !isParamsEqual(card.parameters || {}, parameters)
-
-    let updatedVersionHistory = card.versionHistory
-      ? [...card.versionHistory]
-      : []
-
-    if (isChanged) {
-      const newVersion = {
-        id: crypto.randomUUID
-          ? crypto.randomUUID()
-          : Math.random().toString(36).substring(2, 11),
-        timestamp: card.updatedAt || card.createdAt,
-        name: card.name,
-        promptSegments: card.promptSegments || [],
-        parameters: card.parameters || {}
-      }
-      updatedVersionHistory = [newVersion, ...updatedVersionHistory].slice(
-        0,
-        10
-      )
-    }
-
-    const updatedCard: StyleCard = {
-      ...card,
-      name,
-      tier,
-      promptSegments,
-      parameters,
-      tags,
-      images,
-      selectedThumbnails: selectedThumbs,
-      thumbnailData,
-      category: category || undefined,
-      masking: {
-        isSrefHidden,
-        isPHidden
-      },
-      versionHistory: updatedVersionHistory,
-      updatedAt: Date.now()
-    }
-
-    try {
-      await onSave(updatedCard)
+      const updated = await buildUpdatedCard(card, {
+        ...state.fields,
+        images
+      })
+      await onSave(updated)
     } catch (err) {
       console.error("Failed to save style card updates:", err)
     }
   }
 
   const handleRollback = (version: any) => {
-    setName(version.name)
-    setPromptSegments(version.promptSegments || [])
-    setParameters(version.parameters || {})
+    state.setName(version.name)
+    state.setPromptSegments(version.promptSegments || [])
+    state.setParameters(version.parameters || {})
   }
 
   return {
-    name,
-    setName,
-    tier,
-    setTier,
-    promptSegments,
-    setPromptSegments,
-    parameters,
-    setParameters,
-    isSrefHidden,
-    setIsSrefHidden,
-    isPHidden,
-    setIsPHidden,
-    category,
-    setCategory,
-    tags,
-    setTags,
-    selectedThumbs,
-    setSelectedThumbs,
+    ...state,
     parents,
     images,
     handleToggleThumbnail,
