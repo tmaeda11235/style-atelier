@@ -21,7 +21,10 @@ export async function initHarnessCache(
     const { worker } = await import("../../mocks/browser")
     await worker.start({
       serviceWorker: {
-        url: "/assets/mockServiceWorker.js"
+        url: "/assets/mockServiceWorker.js",
+        options: {
+          scope: "/"
+        }
       },
       onUnhandledRequest: "bypass"
     })

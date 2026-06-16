@@ -47,6 +47,9 @@ export default defineConfig({
                 res.setHeader("Content-Type", "application/javascript")
                 res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
                 res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
+                if (urlPath.includes("mockServiceWorker.js")) {
+                  res.setHeader("Service-Worker-Allowed", "/")
+                }
                 res.end(fs.readFileSync(filePath))
                 return
               }
