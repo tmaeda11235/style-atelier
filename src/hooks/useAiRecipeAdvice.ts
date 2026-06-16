@@ -195,6 +195,7 @@ function useAiRecipeAdviceFetch(
       clearTimeout(timer)
     }
     // Depend on specific primitive keys to prevent reference changes of props from resetting the timer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, status, lang, hasWebGpu])
 }
 

@@ -36,7 +36,7 @@ export function useWebGpuCheck() {
         const isSupported = !!adapter
         cachedHasWebGpu = isSupported
         if (active) setHasWebGpu(isSupported)
-      } catch (e) {
+      } catch {
         cachedHasWebGpu = false
         if (active) setHasWebGpu(false)
       }
