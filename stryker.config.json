@@ -16,6 +16,6 @@
     "src/lib/color-utils.ts"
   ],
   "vitest": {
-    "configFile": "vitest.config.ts"
+    "configFile": "vitest.stryker.config.ts"
   }
 }
