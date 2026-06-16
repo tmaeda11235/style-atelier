@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
@@ -17,7 +16,15 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page for comprehensive i18n E2E test...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?isWide=true")
+
+    // Resize sidepanel frame to show the developer dashboard
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "1200px"
+      }
+    })
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
@@ -47,6 +54,16 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       )
     })
     await page.reload()
+    // Wait for iframe content to render before resizing to avoid width reset by initial CSS load
+    await spFrame
+      .locator("#settings-nav-btn")
+      .waitFor({ state: "attached", timeout: 15000 })
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "1200px"
+      }
+    })
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click()
     }
@@ -182,6 +199,46 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
     })
     console.log("English comprehensive layout screenshot saved.")
 
+    // Switch to Library tab to verify filters and onboarding (English)
+    await libraryTab.click()
+    const toggleFiltersBtn = spFrame.locator("#toggle-filters-btn")
+    await expect(toggleFiltersBtn).toBeVisible()
+    await toggleFiltersBtn.click()
+
+    const filtersTitle = spFrame.locator("h3:has-text('Detailed Filters')")
+    await expect(filtersTitle).toBeVisible()
+
+    const rarityLabel = spFrame.locator("span:has-text('Rarity')")
+    await expect(rarityLabel).toBeVisible()
+
+    const categoryLabel = spFrame.locator("span:has-text('Category')")
+    await expect(categoryLabel).toBeVisible()
+
+    const raritySelect = spFrame.locator("span:has-text('Rarity') + select")
+    const optionCommon = raritySelect.locator("option[value='Common']")
+    const optionRare = raritySelect.locator("option[value='Rare']")
+    const optionEpic = raritySelect.locator("option[value='Epic']")
+    const optionLegendary = raritySelect.locator("option[value='Legendary']")
+    await expect(optionCommon).toHaveText("Common")
+    await expect(optionRare).toHaveText("Rare")
+    await expect(optionEpic).toHaveText("Epic")
+    await expect(optionLegendary).toHaveText("Legendary")
+
+    // Verify Onboarding Guide (English)
+    await spFrame.locator("[data-testid='close-filters-btn']").click() // Close the filters accordion using the close button
+    await spFrame.locator("#test-open-onboarding-btn").scrollIntoViewIfNeeded()
+    await spFrame.locator("#test-open-onboarding-btn").dispatchEvent("click") // Open the Onboarding Guide modal via sandbox test button
+    const dropHereText = spFrame.locator("span:has-text('Drop Here')")
+    await expect(dropHereText).toBeVisible()
+    await page.screenshot({
+      path: path.join(screenshotsDir, "i18n-onboarding-en.png")
+    })
+    console.log("English onboarding screenshot saved.")
+
+    const closeBtnEn = spFrame.locator("button[aria-label='Close Guide']")
+    await closeBtnEn.click()
+    await expect(closeBtnEn).not.toBeVisible()
+
     // 4. Switch to Settings and change to Japanese (ja)
     await settingsNavBtn.click()
     await langSelect.selectOption("ja")
@@ -206,7 +263,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       "select >> option:has-text('すべてのレア度')"
     )
     const sortByNewestJa = spFrame.locator(
-      "select >> option:has-text('作成日が新しい順')"
+      "select >> option:has-text('ミント日が新しい順')"
     )
     await expect(rarityOptionJa).toBeAttached()
     await expect(sortByNewestJa).toBeAttached()
@@ -253,5 +310,45 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       path: path.join(screenshotsDir, "i18n-comprehensive-ja.png")
     })
     console.log("Japanese comprehensive layout screenshot saved.")
+
+    // Switch to Library tab to verify filters and onboarding (Japanese)
+    await libraryTab.click()
+    await toggleFiltersBtn.click() // Open filters
+
+    const filtersTitleJa = spFrame.locator("h3:has-text('詳細フィルター')")
+    await expect(filtersTitleJa).toBeVisible()
+
+    const rarityLabelJa = spFrame.locator("span:has-text('レア度')")
+    await expect(rarityLabelJa).toBeVisible()
+
+    const categoryLabelJa = spFrame.locator("span:has-text('カテゴリー')")
+    await expect(categoryLabelJa).toBeVisible()
+
+    const raritySelectJa = spFrame.locator("span:has-text('レア度') + select")
+    const optionCommonJa = raritySelectJa.locator("option[value='Common']")
+    const optionRareJa = raritySelectJa.locator("option[value='Rare']")
+    const optionEpicJa = raritySelectJa.locator("option[value='Epic']")
+    const optionLegendaryJa = raritySelectJa.locator(
+      "option[value='Legendary']"
+    )
+    await expect(optionCommonJa).toHaveText("コモン")
+    await expect(optionRareJa).toHaveText("レア")
+    await expect(optionEpicJa).toHaveText("エピック")
+    await expect(optionLegendaryJa).toHaveText("レジェンダリー")
+
+    // Verify Onboarding Guide (Japanese)
+    await spFrame.locator("[data-testid='close-filters-btn']").click() // Close the filters accordion using the close button
+    await spFrame.locator("#test-open-onboarding-btn").scrollIntoViewIfNeeded()
+    await spFrame.locator("#test-open-onboarding-btn").dispatchEvent("click") // Open the Onboarding Guide modal via sandbox test button
+    const dropHereTextJa = spFrame.locator("span:has-text('ここにドロップ')")
+    await expect(dropHereTextJa).toBeVisible()
+    await page.screenshot({
+      path: path.join(screenshotsDir, "i18n-onboarding-ja.png")
+    })
+    console.log("Japanese onboarding screenshot saved.")
+
+    const closeBtnJa = spFrame.locator("button[aria-label='Close Guide']")
+    await closeBtnJa.click()
+    await expect(closeBtnJa).not.toBeVisible()
   })
 })

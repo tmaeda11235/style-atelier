@@ -62,10 +62,38 @@ function parseDeclutterResponse(response: string): DeclutterResult {
   return { segments: [] }
 }
 
+async function runDeclutterInference(
+  rawPromptText: string,
+  runInference: (
+    prompt: string,
+    systemPrompt?: string,
+    temp?: number
+  ) => Promise<string>
+): Promise<PromptSegment[]> {
+  const response = await runInference(rawPromptText, SYSTEM_PROMPT, 0.1)
+  const parsed = parseDeclutterResponse(response)
+
+  if (parsed.segments.length === 0) {
+    throw new Error("No segments extracted by the model")
+  }
+
+  return parsed.segments.map((val) => ({
+    type: "text" as const,
+    value: val
+  }))
+}
+
 export function useAiPromptDeclutter() {
-  const { status, progress, startDownload, runInference } = useWebLlm()
+  const {
+    status,
+    progress,
+    error: webLlmError,
+    startDownload,
+    runInference
+  } = useWebLlm()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isFallbackMode, setIsFallbackMode] = useState(false)
 
   const declutterPrompt = useCallback(
     async (rawPromptText: string): Promise<PromptSegment[] | null> => {
@@ -74,24 +102,18 @@ export function useAiPromptDeclutter() {
       setError(null)
 
       if (status !== "ready") {
+        setIsFallbackMode(true)
         setLoading(false)
         return declutterFallback(rawPromptText)
       }
 
       try {
-        const response = await runInference(rawPromptText, SYSTEM_PROMPT, 0.1)
-        const parsed = parseDeclutterResponse(response)
-
-        if (parsed.segments.length === 0) {
-          throw new Error("No segments extracted by the model")
-        }
-
-        return parsed.segments.map((val) => ({
-          type: "text" as const,
-          value: val
-        }))
+        setIsFallbackMode(false)
+        return await runDeclutterInference(rawPromptText, runInference)
       } catch (err: any) {
+        console.warn("AI prompt decluttering failed, using fallback:", err)
         setError(err.message || "Failed to de-clutter prompt")
+        setIsFallbackMode(true)
         return declutterFallback(rawPromptText)
       } finally {
         setLoading(false)
@@ -106,7 +128,9 @@ export function useAiPromptDeclutter() {
     startDownload,
     loading,
     error,
+    webLlmError,
     declutterPrompt,
-    isModelReady: status === "ready"
+    isModelReady: status === "ready",
+    isFallbackMode
   }
 }

@@ -1,5 +1,7 @@
 import path from "path"
-import { expect, test } from "@playwright/test"
+import { expect } from "@playwright/test"
+
+import { test } from "./extension-fixture"
 
 test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORGAN-UX-PARAM-01", () => {
   test.beforeEach(async ({ page }) => {
@@ -117,6 +119,7 @@ test.describe("Style Atelier E2E - Parameter Alias and Gacha Pick Feature @J-ORG
     })
 
     // 4. Test Parameter Editor - open alias editing modal
+    await page.waitForTimeout(500)
     const srefEditBtn = spFrame.locator("button[title='Edit alias']").first()
     await expect(srefEditBtn).toBeVisible({ timeout: 5000 })
     await srefEditBtn.click()

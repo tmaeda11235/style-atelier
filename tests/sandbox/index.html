@@ -89,13 +89,23 @@
     const urlParams = new URLSearchParams(window.location.search);
     let variantFile = urlParams.get('variant') || 'index.html';
     const mockUrl = urlParams.get('mockUrl');
+    const isWide = urlParams.get('isWide');
     
     const mjFrame = document.getElementById('midjourney-frame');
     const spFrame = document.getElementById('sidepanel-frame');
     const selectEl = document.getElementById('variant-select');
     
-    if (mockUrl && spFrame) {
-      spFrame.src = `/tests/sandbox/sidepanel.html?mockUrl=${encodeURIComponent(mockUrl)}`;
+    if (spFrame) {
+      const noseed = urlParams.get('noseed');
+      const params = [];
+      if (mockUrl) params.push(`mockUrl=${encodeURIComponent(mockUrl)}`);
+      if (noseed) params.push(`noseed=${encodeURIComponent(noseed)}`);
+      if (isWide === 'true') {
+        spFrame.style.width = '1200px';
+      }
+      if (params.length > 0) {
+        spFrame.src = `/tests/sandbox/sidepanel.html?${params.join('&')}`;
+      }
     }
     
     // iframe の URL を更新

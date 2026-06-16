@@ -106,7 +106,8 @@ export async function evolveTargetCard(
   evolveCard: (id: string) => Promise<any>,
   setEvolvedCardData: (data: any) => void,
   setIsEvolutionSuccessOpen: (open: boolean) => void,
-  addLog?: (msg: string) => void
+  addLog?: (msg: string) => void,
+  setAlertType?: (type: any) => void
 ) {
   if (!targetCard) return
   try {
@@ -123,5 +124,6 @@ export async function evolveTargetCard(
     addLog?.(`Evolved card "${targetCard.name}" from ${oldTier} to ${nextTier}`)
   } catch (err: any) {
     console.error("Evolution failed:", err)
+    setAlertType?.("db_error")
   }
 }

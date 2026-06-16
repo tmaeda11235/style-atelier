@@ -43,12 +43,18 @@ stateDiagram-v2
   _J_ORGAN_UX_PARAM_01 : パラメータエイリアス・ガチャPick（無機質なパラメータの視覚化とセレンディピティ）
   _J_WB_MIXING_INTELLIGENT_01 : Midjourney sref/cref インテリジェントブレンド
   _J_ORG_QUICK_SEND_01 : クイックワークベンチ送信
-  _J_ORG_SEMANTIC_SEARCH_01 : セマンティック検索による自然言語フィルタリング
+  _J_ORG_SEMANTIC_SEARCH_01 : セマンティック検索による自然言語フィルターリング
   _J_WB_AI_ADVICE_01 : AI調合アドバイス表示
   _J_ORG_CARD_TOOLTIP_01 : カードアクションツールチップ＆レスポンシブメニュー
   _J_WB_EMPTY_CAULDRON_01 : 空状態の大釜アフォーダンス
   _J_UX_RESILIENCE_01 : 狭小画面ビジュアルレジリエンス
   _J_UX_NON_TARGET_01 : 非対象サイトでの機能制限緩和
+  _J_ORG_CARD_HOLO_EFFECT_01 : 高レアリティカードプレミアムエフェクト
+  _J_AI_DECLUTTER_01 : AIプロンプトクリーンアップ（整理・分割）
+  _J_AI_DECLUTTER_02 : AIプロンプトクリーンアップ軽量フォールバック
+  _J_ORG_BINDER_CUSTOMIZE_01 : バインダーのカスタマイズ（カバー画像とテーマ設定）
+  _J_SET_WEBGPU_TROUBLESHOOT_01 : WebGPUトラブルシューティング
+  _J_UX_DISCONNECTED_ALERT : 接続切断時のエラーハンドリングとリカバリ
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -61,6 +67,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_VERSION_01
   _J_ORG_EXPERT_01 --> _J_ORG_FOLDER_01
   _J_ORG_EXPERT_01 --> _J_ORG_QUICK_SEND_01
+  _J_ORG_EXPERT_01 --> _J_ORG_CARD_HOLO_EFFECT_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EXPERT_02 --> _J_ORG_FOLDER_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
@@ -80,6 +87,7 @@ stateDiagram-v2
   _J_WB_EXPERT_02 --> _J_WB_MIXING_INTELLIGENT_01
   _J_WB_EXPERT_02 --> _J_WB_AI_ADVICE_01
   _J_WB_EXPERT_03 --> _J_MINT_EXPERT_01
+  _J_WB_EXPERT_03 --> _J_UX_DISCONNECTED_ALERT
   _J_WB_EASY_01 --> _J_WB_EXPERT_01
   _J_IO_QR_IN --> _J_ORG_EXPERT_01
   _J_IO_QR_IN --> _J_ORG_EASY_01
@@ -128,13 +136,20 @@ stateDiagram-v2
   _J_UX_NON_TARGET_01 --> _J_SET_01
   _J_UX_NON_TARGET_01 --> _J_ORG_EXPERT_01
   _J_UX_NON_TARGET_01 --> _J_ORG_EASY_01
+  _J_ORG_CARD_HOLO_EFFECT_01 --> _J_ORG_EXPERT_01
+  _J_AI_DECLUTTER_01 --> _J_MINT_EXPERT_01
+  _J_AI_DECLUTTER_02 --> _J_MINT_EXPERT_01
+  _J_ORG_BINDER_CUSTOMIZE_01 --> _J_ORG_EXPERT_01
+  _J_SET_WEBGPU_TROUBLESHOOT_01 --> _J_SET_01
+  _J_UX_DISCONNECTED_ALERT --> _J_ORG_EXPERT_01
+  _J_UX_DISCONNECTED_ALERT --> _J_WB_EXPERT_01
 ```
 
 ## 個別ジャーニーのフロー詳細
 
 ### @J-MINT-EXPERT-01: エキスパートミント
 
-エキスパートモードで画像からスタイルカードを作成する
+エキスパートモードで画像からスタイルカードをミントする
 
 ```mermaid
 flowchart TD
@@ -147,7 +162,7 @@ flowchart TD
 
 ### @J-MINT-EASY-01: かんたんミント
 
-かんたんモードで画像からスタイルカードを作成する
+かんたんモードで画像からスタイルカードをミントする
 
 ```mermaid
 flowchart TD
@@ -415,7 +430,7 @@ flowchart TD
 
 ### @J-WB-EXPERT-05: 手札バー（HandBar）の最小化・折りたたみとスクロール
 
-手札バーを最小化して表示領域を確保し、多数のカードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する
+手札バーを最小化して表示領域を確保し、多数 of カードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する
 
 ```mermaid
 flowchart TD
@@ -458,7 +473,7 @@ flowchart TD
   S1["Midjourney画像をドラッグ"]
   S2["サイドパネル上にオーバーレイ（インディゴ/ブルー）が表示されることを確認"]
   S1 --> S2
-  S3["ドロップして履歴追加または簡易カード作成（Easy Mode）が開始されることを確認"]
+  S3["ドロップして履歴追加または簡易カードミント（Easy Mode）が開始されることを確認"]
   S2 --> S3
 ```
 
@@ -615,9 +630,9 @@ flowchart TD
   S2 --> S3
 ```
 
-### @J-ORG-SEMANTIC-SEARCH-01: セマンティック検索による自然言語フィルタリング
+### @J-ORG-SEMANTIC-SEARCH-01: セマンティック検索による自然言語フィルターリング
 
-自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換、または類似カードを抽出する
+自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換する。AIモデルが読み込まれていない場合は、キーワード抽出による軽量フォールバックモードで動作する
 
 ```mermaid
 flowchart TD
@@ -626,20 +641,20 @@ flowchart TD
   S1 --> S2
   S3["自然言語クエリを入力する"]
   S2 --> S3
-  S4["AIによるフィルタ自動抽出とカード絞り込み結果を確認する"]
+  S4["AIによるフィルタ自動抽出（または軽量フォールバック抽出）とカード絞り込み結果を確認する"]
   S3 --> S4
 ```
 
 ### @J-WB-AI-ADVICE-01: AI調合アドバイス表示
 
-ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する
+ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する。AI未ロード時はルールベースの静的アドバイスをフォールバック表示する
 
 ```mermaid
 flowchart TD
   S1["Workbench（Cauldron）に複数カードを追加"]
   S2["AI Recipe Advice エリアを展開"]
   S1 --> S2
-  S3["AIによる調合アドバイス（日本語・英語）が生成・表示されるのを確認"]
+  S3["AIによる調合アドバイス（未ロード時は静的フォールバックアドバイス）が生成・表示されるのを確認"]
   S2 --> S3
   S4["アドバイス内の推奨事項やキーワードを確認する"]
   S3 --> S4
@@ -704,5 +719,91 @@ flowchart TD
   S2["設定タブを通常通り開いて操作（Easy Modeのトグルなど）できるのを確認する"]
   S1 --> S2
   S3["かんたん・エキスパートの各モードで、対象サイト限定タブ（ライブラリ、ワークベンチ、履歴など）にアクセスした際、NonTargetSiteViewの警告が表示されることを確認する"]
+  S2 --> S3
+```
+
+### @J-ORG-CARD-HOLO-EFFECT-01: 高レアリティカードプレミアムエフェクト
+
+EpicまたはLegendaryカードにホバーした際に3D Tiltとホログラム/グリッター効果が適用されることを確認する
+
+```mermaid
+flowchart TD
+  S1["ライブラリでEpicまたはLegendaryカードを表示"]
+  S2["カードにホバーする"]
+  S1 --> S2
+  S3["3D Tiltの傾きとホログラム/グリッター効果が描画されるのを確認"]
+  S2 --> S3
+```
+
+### @J-AI-DECLUTTER-01: AIプロンプトクリーンアップ（整理・分割）
+
+ローカルAIを用いて雑然としたプロンプトから不要なメタデータを除去し、綺麗にセグメント分割する
+
+```mermaid
+flowchart TD
+  S1["Mint画面を開く"]
+  S2["AI Prompt Organizerセクションを確認する"]
+  S1 --> S2
+  S3["AIで整理ボタンを押下する"]
+  S2 --> S3
+  S4["綺麗に分割されたチップ（Bubble）を確認・保存する"]
+  S3 --> S4
+```
+
+### @J-AI-DECLUTTER-02: AIプロンプトクリーンアップ軽量フォールバック
+
+AIモデル未ロード時に、正規表現ベースのフォールバックロジックを用いてプロンプトのクリーンアップとセグメント分割を行う
+
+```mermaid
+flowchart TD
+  S1["Mint画面を開く"]
+  S2["AI Prompt Organizerセクションを確認する"]
+  S1 --> S2
+  S3["「整理 (フォールバック)」ボタンを押下する"]
+  S2 --> S3
+  S4["フォールバック処理されたチップ（Bubble）を確認・保存する"]
+  S3 --> S4
+```
+
+### @J-ORG-BINDER-CUSTOMIZE-01: バインダーのカスタマイズ（カバー画像とテーマ設定）
+
+バインダー（フォルダ）ごとに、カスタム表紙画像の設定とスキンテーマ選択を行い、バインダー詳細表示画面のスタイリングを動的に切り替える
+
+```mermaid
+flowchart TD
+  S1["バインダー（カテゴリ）編集画面を開く"]
+  S2["カスタムカバー画像を設定する"]
+  S1 --> S2
+  S3["スキンテーマを選択する"]
+  S2 --> S3
+  S4["保存して適用する"]
+  S3 --> S4
+  S5["テーマに応じたスタイリングが適用されていることを確認する"]
+  S4 --> S5
+```
+
+### @J-SET-WEBGPU-TROUBLESHOOT-01: WebGPUトラブルシューティング
+
+WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く
+
+```mermaid
+flowchart TD
+  S1["WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）"]
+  S2["WebGPU無効警告とステップバイステップガイドが表示されることを確認"]
+  S1 --> S2
+  S3["「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"]
+  S2 --> S3
+```
+
+### @J-UX-DISCONNECTED-ALERT: 接続切断時のエラーハンドリングとリカバリ
+
+拡張機能コンテキスト無効化などの接続切断時、親切な警告（Connection Lost）を表示し、ページのリロードを促す
+
+```mermaid
+flowchart TD
+  S1["切断状態（invalidated）を検知"]
+  S2["画面上部に「接続が切断されました（Connection Lost）」の警告が表示されることを確認"]
+  S1 --> S2
+  S3["「ページをリロード（Reload Page）」ボタンを押下してリカバリを試みる"]
   S2 --> S3
 ```
