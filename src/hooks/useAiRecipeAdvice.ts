@@ -126,12 +126,25 @@ function processCache(params: CacheCheckParams): boolean {
     setIsFallback(false)
     return true
   }
-  if (status !== "ready") {
+  const isDownloading =
+    status === "checking" ||
+    status === "downloading" ||
+    status === "verifying" ||
+    status === "retrying"
+
+  if (status !== "ready" && !isDownloading && status !== "insufficient-quota") {
     const fallbackAdvice = generateStaticRecipeAdvice(cards, lang)
     setAdvice(fallbackAdvice)
     setError(null)
     setLoading(false)
     setIsFallback(true)
+    return true
+  }
+  if (status !== "ready") {
+    setAdvice(null)
+    setError(null)
+    setLoading(false)
+    setIsFallback(false)
     return true
   }
   if (cacheRef.current[key]) {
