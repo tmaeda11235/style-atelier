@@ -959,18 +959,23 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
-
   const [windowWidth, setWindowWidth] = React.useState(
     typeof window !== "undefined" ? window.innerWidth : 1024
   )
 
   React.useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth)
+    const handleResize = () => {
+      console.log(
+        `[Sandbox Dashboard] Resizing layout, clientWidth: ${window.innerWidth}`
+      )
+      setWindowWidth(window.innerWidth)
+    }
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
   const isWide = windowWidth >= 1024
+  const isNarrow = !isWide
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -1228,7 +1233,12 @@ function SandboxWrapper() {
           <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-between">
             <button
               id="test-open-onboarding-btn"
-              onClick={() => setIsOnboardingOpen(true)}
+              onClick={() => {
+                console.log(
+                  "[Sandbox] Clicked Open Onboarding Button, setting state to true"
+                )
+                setIsOnboardingOpen(true)
+              }}
               className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
               💡 Open Onboarding Guide
             </button>
@@ -1239,12 +1249,21 @@ function SandboxWrapper() {
         </div>
       )}
 
-      {/* 右半分: 実際の拡張機能サイドパネル */}
       <div
         style={{ width: isWide ? "380px" : "100%" }}
         className="h-full shadow-2xl flex-shrink-0">
         <SidePanelPage />
       </div>
+
+      {isNarrow &&
+        !(typeof navigator !== "undefined" && navigator.webdriver) && (
+          <button
+            id="test-open-onboarding-btn"
+            onClick={() => setIsOnboardingOpen(true)}
+            className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
+            💡 Open Onboarding Guide
+          </button>
+        )}
 
       <OnboardingGuide
         isOpen={isOnboardingOpen}

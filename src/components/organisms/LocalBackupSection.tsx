@@ -21,63 +21,7 @@ interface LocalBackupSectionProps {
   t: any
 }
 
-interface ExternalIntegrationSectionProps {
-  isSyncing: boolean
-  isRestoring: boolean
-  handleExportCSV: () => void
-  handleExportMarkdown: () => void
-  t: any
-}
-
-function ExternalIntegrationSection({
-  isSyncing,
-  isRestoring,
-  handleExportCSV,
-  handleExportMarkdown,
-  t
-}: ExternalIntegrationSectionProps) {
-  return (
-    <div className="border-t border-slate-100 pt-4 mt-2">
-      <div className="mb-2">
-        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-          External Integration (Notion, Obsidian, etc.)
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={handleExportCSV}
-          disabled={isSyncing || isRestoring}
-          className="py-2 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-30 disabled:hover:bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
-          <FileSpreadsheet className="w-3.5 h-3.5" />
-          {t.exportCsvBtn}
-        </button>
-        <button
-          onClick={handleExportMarkdown}
-          disabled={isSyncing || isRestoring}
-          className="py-2 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-30 disabled:hover:bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
-          <FileText className="w-3.5 h-3.5" />
-          {t.exportMdBtn}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function PrivacyNote({ t }: { t: any }) {
-  return (
-    <div className="flex items-center gap-1.5 bg-indigo-50/40 rounded-xl px-3 py-2 border border-indigo-100/50 justify-between">
-      <div className="flex items-center gap-1.5">
-        <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-        <span className="text-[10px] text-indigo-700 font-bold">
-          {t.privacyNoteTitle}
-        </span>
-      </div>
-      <HelpTooltip content={t.privacyNote} position="top-left" />
-    </div>
-  )
-}
-
-interface BackupActionButtonsProps {
+interface BackupActionsProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>
   isSyncing: boolean
   isRestoring: boolean
@@ -86,14 +30,14 @@ interface BackupActionButtonsProps {
   t: any
 }
 
-function BackupActionButtons({
+function BackupActions({
   fileInputRef,
   isSyncing,
   isRestoring,
   handleLocalExport,
   handleLocalImport,
   t
-}: BackupActionButtonsProps) {
+}: BackupActionsProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
@@ -121,16 +65,68 @@ function BackupActionButtons({
   )
 }
 
-export function LocalBackupSection({
-  fileInputRef,
+interface ExternalIntegrationProps {
+  isSyncing: boolean
+  isRestoring: boolean
+  handleExportCSV: () => void
+  handleExportMarkdown: () => void
+  t: any
+}
+
+function ExternalIntegration({
   isSyncing,
   isRestoring,
-  handleLocalExport,
-  handleLocalImport,
   handleExportCSV,
   handleExportMarkdown,
   t
-}: LocalBackupSectionProps) {
+}: ExternalIntegrationProps) {
+  return (
+    <div className="border-t border-slate-100 pt-4 mt-2">
+      <div className="mb-2">
+        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+          External Integration (Notion, Obsidian, etc.)
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={handleExportCSV}
+          disabled={isSyncing || isRestoring}
+          className="py-2 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-30 disabled:hover:bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+          <FileSpreadsheet className="w-3.5 h-3.5" />
+          {t.exportCsvBtn}
+        </button>
+        <button
+          onClick={handleExportMarkdown}
+          disabled={isSyncing || isRestoring}
+          className="py-2 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-30 disabled:hover:bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[11px] font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+          <FileText className="w-3.5 h-3.5" />
+          {t.exportMdBtn}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+interface PrivacyNoteProps {
+  t: any
+}
+
+function PrivacyNote({ t }: PrivacyNoteProps) {
+  return (
+    <div className="flex items-center gap-1.5 bg-indigo-50/40 rounded-xl px-3 py-2 border border-indigo-100/50 justify-between">
+      <div className="flex items-center gap-1.5">
+        <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+        <span className="text-[10px] text-indigo-700 font-bold">
+          {t.privacyNoteTitle}
+        </span>
+      </div>
+      <HelpTooltip content={t.privacyNote} position="top-left" />
+    </div>
+  )
+}
+
+export function LocalBackupSection(props: LocalBackupSectionProps) {
+  const { t } = props
   return (
     <div
       id="local-backup-section"
@@ -152,23 +148,12 @@ export function LocalBackupSection({
 
       {/* Action Buttons */}
       <div className="mt-4 space-y-4">
-        <BackupActionButtons
-          fileInputRef={fileInputRef}
-          isSyncing={isSyncing}
-          isRestoring={isRestoring}
-          handleLocalExport={handleLocalExport}
-          handleLocalImport={handleLocalImport}
-          t={t}
-        />
+        <BackupActions {...props} />
 
-        <ExternalIntegrationSection
-          isSyncing={isSyncing}
-          isRestoring={isRestoring}
-          handleExportCSV={handleExportCSV}
-          handleExportMarkdown={handleExportMarkdown}
-          t={t}
-        />
+        {/* Separator / Subheader for other tools export */}
+        <ExternalIntegration {...props} />
 
+        {/* Privacy Note */}
         <PrivacyNote t={t} />
       </div>
     </div>

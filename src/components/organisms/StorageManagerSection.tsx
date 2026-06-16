@@ -9,12 +9,69 @@ interface StorageManagerSectionProps {
   t: any
 }
 
-interface StorageProgressBarProps {
-  estimate: {
-    usageFormatted: string
-    quotaFormatted: string
-    percentage: number
+interface StorageHeaderProps {
+  t: any
+}
+
+function StorageHeader({ t }: StorageHeaderProps) {
+  return (
+    <div className="flex items-start gap-4 mb-4">
+      <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+        <Database className="w-6 h-6" />
+      </div>
+      <div className="space-y-1 flex-1">
+        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          {t.storageTitle}
+          <HelpTooltip content={t.storageDesc} position="top-left" />
+        </h3>
+      </div>
+    </div>
+  )
+}
+
+interface StorageWarningsProps {
+  percentage: number
+  t: any
+}
+
+function StorageWarnings({ percentage, t }: StorageWarningsProps) {
+  if (percentage >= 90) {
+    return (
+      <div
+        role="alert"
+        className="flex items-start gap-2 bg-red-50 border border-red-200/60 rounded-xl p-3 text-red-800 text-xs">
+        <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold">{t.storageWarning90Title}</span>
+          <p className="text-[10px] text-red-700/90 mt-0.5 leading-relaxed">
+            {t.storageWarning90Desc}
+          </p>
+        </div>
+      </div>
+    )
   }
+
+  if (percentage >= 80) {
+    return (
+      <div
+        role="alert"
+        className="flex items-start gap-2 bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-amber-800 text-xs">
+        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold">{t.storageWarning80Title}</span>
+          <p className="text-[10px] text-amber-700/90 mt-0.5 leading-relaxed">
+            {t.storageWarning80Desc}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
+
+interface StorageProgressBarProps {
+  estimate: any
   t: any
 }
 
@@ -47,59 +104,18 @@ function StorageProgressBar({ estimate, t }: StorageProgressBarProps) {
           style={{ width: `${estimate.percentage}%` }}
         />
       </div>
+
+      <StorageWarnings percentage={estimate.percentage} t={t} />
     </div>
   )
 }
 
-function StorageWarningAlert({
-  percentage,
-  t
-}: {
-  percentage: number
-  t: any
-}) {
-  if (percentage >= 90) {
-    return (
-      <div
-        role="alert"
-        className="flex items-start gap-2 bg-red-50 border border-red-200/60 rounded-xl p-3 text-red-800 text-xs">
-        <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold">{t.storageWarning90Title}</span>
-          <p className="text-[10px] text-red-700/90 mt-0.5 leading-relaxed">
-            {t.storageWarning90Desc}
-          </p>
-        </div>
-      </div>
-    )
-  }
-  if (percentage >= 80) {
-    return (
-      <div
-        role="alert"
-        className="flex items-start gap-2 bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-amber-800 text-xs">
-        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold">{t.storageWarning80Title}</span>
-          <p className="text-[10px] text-amber-700/90 mt-0.5 leading-relaxed">
-            {t.storageWarning80Desc}
-          </p>
-        </div>
-      </div>
-    )
-  }
-  return null
-}
-
-interface StorageCleanupActionProps {
+interface StorageActionsProps {
   handleClearHistory: () => void
   t: any
 }
 
-function StorageCleanupAction({
-  handleClearHistory,
-  t
-}: StorageCleanupActionProps) {
+function StorageActions({ handleClearHistory, t }: StorageActionsProps) {
   return (
     <div className="mt-4 pt-3 border-t border-slate-100 space-y-4">
       <div className="flex items-center justify-between">
@@ -130,24 +146,11 @@ export function StorageManagerSection({
       {/* Subtle decorative background gradient */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
 
-      <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
-          <Database className="w-6 h-6" />
-        </div>
-        <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-            {t.storageTitle}
-            <HelpTooltip content={t.storageDesc} position="top-left" />
-          </h3>
-        </div>
-      </div>
+      <StorageHeader t={t} />
 
       {/* Progress Bar & Status Text */}
       {estimate ? (
-        <div className="space-y-3">
-          <StorageProgressBar estimate={estimate} t={t} />
-          <StorageWarningAlert percentage={estimate.percentage} t={t} />
-        </div>
+        <StorageProgressBar estimate={estimate} t={t} />
       ) : (
         <div className="text-xs text-slate-400 animate-pulse">
           {t.storageLoading}
@@ -155,7 +158,7 @@ export function StorageManagerSection({
       )}
 
       {/* Action button & Optimization description */}
-      <StorageCleanupAction handleClearHistory={handleClearHistory} t={t} />
+      <StorageActions handleClearHistory={handleClearHistory} t={t} />
     </div>
   )
 }

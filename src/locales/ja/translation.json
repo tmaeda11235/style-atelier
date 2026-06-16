@@ -105,6 +105,7 @@
     "syncFailedRateLimit": "同期に失敗しました: Google Drive APIの制限に達しました。しばらく待ってから再試行してください。",
     "syncWarningTitle": "長期オフライン警告",
     "syncWarningMessage": "最後の同期から60日以上経過しています。同期を続行すると、過去に他の端末で削除したスタイルカードやフォルダが復活する可能性があります。",
+    "autoSyncSuspendedBanner": "最後の同期から60日以上経過したため、自動同期が一時停止されました。データの競合を防ぐため、手動同期を実行してください。",
     "strategyLabel": "マージ戦略を選択してください：",
     "strategyMergeLabel": "安全マージ（推奨）",
     "strategyMergeDesc": "通常通りマージを行います。他端末で削除されたレコードが一部復活する可能性がありますが、ローカルの変更は保持されます。",
@@ -690,7 +691,9 @@
     "disconnectedBtn": "ページをリロード",
     "noInputTitle": "入力エリアが見つかりません",
     "noInputDesc": "チャット入力エリアが見つかりませんでした。現在「Create」ページ、またはMidjourneyギャラリーの詳細表示画面を開いていることを確認してください。",
-    "noInputBtn": "接続を再試行"
+    "noInputBtn": "接続を再試行",
+    "dbErrorTitle": "データベース書き込みエラー",
+    "dbErrorDesc": "データベースの書き込みに失敗しました。容量制限等をご確認ください。"
   },
   "aliasEdit": {
     "editTitle": "パラメータエイリアスの編集",

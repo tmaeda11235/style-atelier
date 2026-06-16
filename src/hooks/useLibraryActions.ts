@@ -51,9 +51,10 @@ function handleSlotCard(
       setAlertType("hand_full")
       return
     }
-    db.updateCard(card.id, { isPinned: true }).catch((err) =>
+    db.updateCard(card.id, { isPinned: true }).catch((err) => {
       console.error("Failed to pin card:", err)
-    )
+      setAlertType("db_error")
+    })
   }
   addLog(`Redirected to Workbench to fill slot variables for "${card.name}".`)
   if (onNavigateToWorkbench) {
@@ -85,9 +86,10 @@ function handleNormalCard(
       addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
       db.updateCard(card.id, {
         usageCount: (card.usageCount || 0) + 1
-      }).catch((err) =>
+      }).catch((err) => {
         console.error("Failed to update usage count on inject:", err)
-      )
+        setAlertType("db_error")
+      })
     },
     () => setAlertType("no_input"),
     () => setAlertType("disconnected")
@@ -120,6 +122,7 @@ export function useTogglePin(
       )
     } catch (err) {
       console.error("Failed to toggle pin:", err)
+      setAlertType("db_error")
     }
   }
 }
@@ -149,7 +152,8 @@ export function useHandleCardClick(
 
 export function useMoveCardToCategory(
   categories: { id: string; name: string }[],
-  addLog: (msg: string) => void
+  addLog: (msg: string) => void,
+  setAlertType?: (type: AlertType) => void
 ) {
   return async (cardId: string, categoryId: string | null) => {
     try {
@@ -160,6 +164,7 @@ export function useMoveCardToCategory(
       addLog(`Moved card to "${catName}".`)
     } catch (err) {
       console.error("Failed to move card:", err)
+      setAlertType?.("db_error")
     }
   }
 }
