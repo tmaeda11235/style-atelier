@@ -1,7 +1,31 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useLanguage } from "../contexts/LanguageContext"
 import { dispatchDrop, type DroppedItem } from "./dragAndDropHandlers"
+
+function useMobileRestoreListener(
+  triggerNotification: (item: DroppedItem | null) => void
+) {
+  useEffect(() => {
+    const handleRestoreSuccess = () => {
+      triggerNotification({
+        isRestoreSuccess: true,
+        isError: false,
+        name: ""
+      } as any)
+    }
+    window.addEventListener(
+      "style-atelier-mobile-restore-success",
+      handleRestoreSuccess
+    )
+    return () => {
+      window.removeEventListener(
+        "style-atelier-mobile-restore-success",
+        handleRestoreSuccess
+      )
+    }
+  }, [triggerNotification])
+}
 
 export function useDragAndDrop(addLog: (msg: string) => void) {
   const [isDragging, setIsDragging] = useState(false)
@@ -16,6 +40,8 @@ export function useDragAndDrop(addLog: (msg: string) => void) {
     setDroppedItem(item)
     if (item && !item.isError) setTimeout(() => setDroppedItem(null), 3000)
   }
+
+  useMobileRestoreListener(triggerNotification)
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()

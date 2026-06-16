@@ -36,7 +36,6 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
     await expect(langSelect).toBeVisible()
     await langSelect.selectOption("ja")
     await spFrame.locator("body").evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const database = (window as any).db
 
       // Clear data
@@ -102,7 +101,7 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
       .first()
     await expect(mintBtn).toBeVisible()
     await mintBtn.click()
-    const mintTitle = spFrame.locator("h2:has-text('新規カード作成')")
+    const mintTitle = spFrame.locator("h2:has-text('新規カードをミント')")
     await expect(mintTitle).toBeVisible()
     await expect(spFrame.locator("h3:has-text('カード情報')")).toBeVisible()
     await expect(
@@ -230,11 +229,9 @@ test.describe("Style Atelier E2E Tests - i18n Minting and Card Detail", () => {
 
         cardEl.dispatchEvent(dropEvent)
       })
+    await expect(spFrame.locator("h2:has-text('クイックミント')")).toBeVisible()
     await expect(
-      spFrame.locator("h2:has-text('クイックカード作成')")
-    ).toBeVisible()
-    await expect(
-      spFrame.locator("p:has-text('スタイルをすぐにカード化')")
+      spFrame.locator("p:has-text('スタイルをすぐにミント')")
     ).toBeVisible()
     await expect(
       spFrame.locator("span:has-text('かんたんモード')")

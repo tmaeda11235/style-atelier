@@ -3,7 +3,7 @@
     "title": "Welcome to Style Atelier!",
     "description": "Would you like to start the interactive guide to learn how to use it?",
     "start": "Start Guide",
-    "skip": "Skip (You can start it later from the Guide button)"
+    "skip": "Skip (You can start it later from Settings)"
   },
   "onboarding": {
     "quickGuide": "Quick Guide",
@@ -76,12 +76,15 @@
     "themeSystem": "System Settings",
     "languageLabel": "Language",
     "languageDesc": "Switch the interface display language.",
+    "replayTutorialLabel": "Interactive Tutorial",
+    "replayTutorialDesc": "Run the step-by-step interactive guide explaining how to use the app from the beginning.",
+    "replayTutorialBtn": "Replay Tutorial",
     "easyModeLabel": "Easy Mode",
     "easyModeDesc": "Simplifies the UI by showing only the Library tab. You can return to Settings anytime via the gear icon.",
     "easyModeToggleLabel": "Enable Easy Mode",
     "easyModeToggleSub": "Hide tabs to focus on Style Card management",
     "gdriveSyncLabel": "Google Drive Cloud Sync",
-    "gdriveSyncDesc": "Backup your local style cards and binders to Google Drive. Keep your decks safe and load them on other devices.",
+    "gdriveSyncDesc": "Backup your local style cards and binders to Google Drive. Keep your binders safe and load them on other devices.",
     "cloudBackupLabel": "Cloud Backup: ",
     "loadingCloudBackup": "Fetching cloud backup info...",
     "noCloudBackup": "No cloud backup file found",
@@ -162,7 +165,7 @@
     "groupOrganization": "Organization",
     "groupWorkbench": "Workbench Features",
     "featureStackLabel": "Card Stacking (Stack)",
-    "featureStackSub": "Merge pinned cards to create new cards",
+    "featureStackSub": "Merge pinned cards to mint new cards",
     "featureSlotLabel": "Prompt Slotting (Slot)",
     "featureSlotSub": "Turn prompt segments into editable variables",
     "featureRarityLabel": "Rarity Selection",
@@ -174,7 +177,7 @@
     "featureMultiCardLabel": "Multi-card Usage",
     "featureMultiCardSub": "Pin and mix multiple cards on the workbench",
     "featureCardEditingLabel": "Card Editing",
-    "featureCardEditingSub": "Edit the name, prompt, and parameters of created cards",
+    "featureCardEditingSub": "Edit the name, prompt, and parameters of minted cards",
     "featureMultiImageLabel": "Multi-image Selection",
     "featureMultiImageSub": "Select up to 4 images for the card thumbnail grid",
     "tipsBarToggleLabel": "Enable Tips Bar",
@@ -191,7 +194,7 @@
     "deleteCardMessage": "This action cannot be undone. \"{{cardName}}\" will be permanently deleted from the library.",
     "deleteBtn": "Delete",
     "webLlmGroupTitle": "🤖 Local AI Model (WebLLM)",
-    "webLlmDesc": "Manage the local AI model (Gemma-4 E2B). The model is cached in browser storage (OPFS) for in-browser offline inference.",
+    "webLlmDesc": "Manage the local AI model (Gemma-2 2B). The model is cached in browser storage (OPFS) for in-browser offline inference.",
     "webLlmStatusLabel": "Status",
     "webLlmStatusIdle": "Not Downloaded",
     "webLlmStatusChecking": "Checking...",
@@ -243,7 +246,7 @@
     "tags": "Tags: Add search tags to categorize and filter your style cards in the Library.",
     "categories": "Category: Organize your cards into custom categories (binders). You can manage them in the settings tab.",
     "multiCard": "Multi-card: Pin multiple cards on the Workbench to blend their prompt segments, sref, and other parameters together.",
-    "cardEditing": "Card Editing: Allows modifying the name, prompt bubbles, and parameter options of your created style cards.",
+    "cardEditing": "Card Editing: Allows modifying the name, prompt bubbles, and parameter options of your minted style cards.",
     "multiImage": "Multi-image: Select up to 4 images to create a dynamic thumbnail grid for your style card."
   },
   "categoryManager": {
@@ -324,7 +327,8 @@
     "errorNoMetadataActionTitle": "3 steps to resolve this:",
     "errorNoMetadataStep1": "Import the original image: Please drop the original, uncompressed PNG file directly from its source (not saved from social media).",
     "errorNoMetadataStep2": "Crop and upload the QR code: Try cropping just the QR code portion of the image and dropping it here.",
-    "errorNoMetadataStep3": "Create the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to create a new card."
+    "errorNoMetadataStep3": "Mint the card manually: Look at the card image and enter the prompt details manually in the \"Workbench\" tab to mint a new card.",
+    "restoreSuccess": "Successfully restored mobile shared cards!"
   },
   "share": {
     "shareTitle": "Share Style Card",
@@ -379,7 +383,7 @@
   },
   "libraryTab": {
     "emptyTitle": "No Style Cards",
-    "emptyDesc": "Drag and drop images from the History tab of this panel to create your own style cards!",
+    "emptyDesc": "Drag and drop images from the History tab of this panel to mint your own style cards!",
     "notFoundTitle": "No Cards Found",
     "notFoundDesc": "Change or clear your search terms or filters.",
     "clearFilters": "Clear Filters",
@@ -407,6 +411,7 @@
     "manageCategories": "Manage Categories",
     "loadMore": "Load More",
     "sortBy": {
+      "custom": "Custom",
       "newest": "Newest",
       "oldest": "Oldest",
       "rarity": "Rarity",
@@ -450,6 +455,11 @@
   },
   "workbench": {
     "clearAll": "Clear All",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "scrollLeft": "Scroll Left",
+    "scrollRight": "Scroll Right",
+    "openWorkbench": "Open Workbench",
     "gachaPick": "Gacha Pick",
     "addPromptDesc": "Add style cards to Workbench from Library",
     "evolution": "Evolution",
@@ -608,10 +618,7 @@
     "aiSummary": "AI Summary Description",
     "aiSummaryPlaceholder": "AI summary will appear here...",
     "aiUseSummary": "Use as Card Note/Description",
-    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations",
-    "aiDeClutterBtn": "AI De-clutter",
-    "aiDeClutterLoading": "De-cluttering...",
-    "aiDeClutterNotReady": "Gemma model is not loaded. Please download it in settings."
+    "aiModelNotDownloaded": "Download AI Model to Enable Recommendations"
   },
   "cardDetail": {
     "title": "Card Details",

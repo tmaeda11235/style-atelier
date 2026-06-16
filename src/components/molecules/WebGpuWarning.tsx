@@ -18,18 +18,17 @@ export function WebGpuWarning({ t }: WebGpuWarningProps) {
         <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h5 className="font-bold text-rose-600 dark:text-rose-400">
-            {t.webLlmWebGpuDisabledTitle || "WebGPU is disabled"}
+            {t.webLlmWebGpuDisabledTitle}
           </h5>
           <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-            {t.webLlmWebGpuDisabledDesc ||
-              "WebGPU is not available. Local AI (WebLLM) will run on Wasm, which might be extremely slow or fail."}
+            {t.webLlmWebGpuDisabledDesc}
           </p>
         </div>
       </div>
 
       <div className="border-t border-rose-200/50 dark:border-rose-900/20 pt-3 space-y-2">
         <p className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
-          {t.webLlmWebGpuTroubleshootingTitle || "WebGPU Troubleshooting Guide"}
+          {t.webLlmWebGpuTroubleshootingTitle}
         </p>
         <ul className="space-y-1 text-slate-500 dark:text-slate-400 text-[11px] list-none pl-0">
           <li>{t.webLlmWebGpuStep1}</li>
@@ -41,7 +40,7 @@ export function WebGpuWarning({ t }: WebGpuWarningProps) {
           onClick={openChromeSettings}
           className="mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-[10px] transition-all duration-200 active:scale-95 cursor-pointer">
           <ExternalLink className="w-3 h-3" />
-          {t.webLlmWebGpuOpenSettingsBtn || "Open Chrome Settings"}
+          {t.webLlmWebGpuOpenSettingsBtn}
         </button>
       </div>
     </div>

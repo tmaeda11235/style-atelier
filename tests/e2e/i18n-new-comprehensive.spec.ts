@@ -244,7 +244,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       "select >> option:has-text('すべてのレア度')"
     )
     const sortByNewestJa = spFrame.locator(
-      "select >> option:has-text('作成日が新しい順')"
+      "select >> option:has-text('ミント日が新しい順')"
     )
     await expect(rarityOptionJa).toBeAttached()
     await expect(sortByNewestJa).toBeAttached()
