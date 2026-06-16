@@ -410,6 +410,7 @@
     "manageCategories": "Manage Categories",
     "loadMore": "Load More",
     "sortBy": {
+      "custom": "Custom",
       "newest": "Newest",
       "oldest": "Oldest",
       "rarity": "Rarity",
