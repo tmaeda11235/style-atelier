@@ -37,7 +37,6 @@
    - **ESLint Whitelist Guardrail**: Do not expand the ESLint exception lists (`eslint.config.mjs` overrides). The CI pipeline blocks PRs adding new exception files. If you refactor legacy files to satisfy ESLint rules, run `node scratch/auto-sync-eslint.js` to automatically clean up and synchronize the exception list.
    - **i18n Compliance & Literal String Rule**: Wrap all user-facing UI text inside JSX/TSX components using `t()` from `useTranslation` and ensure they pass the `i18next/no-literal-string` check. Display attributes like `title`, `placeholder`, and `label` must also be localized. Avoid hardcoded literal strings. Non-translatable brand names, size units, or uppercase acronyms can be bypassed using `{/* eslint-disable-next-line i18next/no-literal-string */}` or `// eslint-disable-line i18next/no-literal-string` for mock/debug literals. Ensure all translation keys exist in both `src/locales/ja/translation.json` and `src/locales/en/translation.json` by running `npm run lint`.
 
-
 ## Style
 
 - **Documentation Style**: Prioritize **conciseness** over detail or comprehensiveness. Avoid verbose explanations.
