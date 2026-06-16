@@ -39,7 +39,7 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
 
   return (
     <div
-      className={`w-full h-screen flex flex-col font-sans text-slate-800 dark:text-slate-100 transition-colors ${
+      className={`w-full h-screen flex flex-col relative overflow-hidden font-sans text-slate-800 dark:text-slate-100 transition-colors ${
         props.isDraggingFile
           ? "bg-blue-50 dark:bg-blue-950"
           : props.isDragging
