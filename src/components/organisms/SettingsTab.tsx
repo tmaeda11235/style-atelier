@@ -239,6 +239,7 @@ export function SettingsTab({
               handleToggleSync={handleToggleSync}
               handleToggleAutoSync={handleToggleAutoSync}
               handleSync={handleSyncWithWarning}
+              handleLocalExport={handleLocalExport}
               t={t}
             />
           </div>

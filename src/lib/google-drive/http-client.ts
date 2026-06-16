@@ -1,5 +1,10 @@
 import { authorize, clearCachedToken } from "./auth"
-import { GDriveTimeoutError, type ReauthContext } from "./types"
+import {
+  GDriveTimeoutError,
+  GoogleDriveQuotaError,
+  GoogleDriveRateLimitError,
+  type ReauthContext
+} from "./types"
 
 export async function fetchWithTimeout(
   url: string,
@@ -122,6 +127,16 @@ export function sendResumableXhr(
 
     xhr.onload = () => {
       cleanup()
+      if (xhr.status === 401) {
+        resolve(xhr.status)
+        return
+      }
+      try {
+        checkXhrStatus(xhr.status, xhr.responseText)
+      } catch (err) {
+        reject(err)
+        return
+      }
       resolve(xhr.status)
     }
     xhr.ontimeout = () => {
@@ -134,6 +149,52 @@ export function sendResumableXhr(
     }
     xhr.send(blob)
   })
+}
+
+function setupSimpleXhrEvents(
+  xhr: XMLHttpRequest,
+  cleanup: () => void,
+  resolve: (status: number) => void,
+  reject: (reason: any) => void,
+  method: string,
+  onProgress?: (progress: number) => void
+) {
+  if (onProgress) {
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100))
+      }
+    }
+  }
+
+  xhr.onload = () => {
+    cleanup()
+    if (xhr.status === 401) {
+      resolve(xhr.status)
+      return
+    }
+    try {
+      checkXhrStatus(xhr.status, xhr.responseText)
+    } catch (err) {
+      reject(err)
+      return
+    }
+    resolve(xhr.status)
+  }
+
+  xhr.ontimeout = () => {
+    cleanup()
+    reject(new GDriveTimeoutError())
+  }
+
+  xhr.onerror = () => {
+    cleanup()
+    reject(
+      new Error(
+        `Network error during simple ${method === "PATCH" ? "update" : "creation"}.`
+      )
+    )
+  }
 }
 
 export function sendSimpleXhr(
@@ -155,31 +216,55 @@ export function sendSimpleXhr(
       reject(new Error("Upload aborted by user"))
     })
 
-    if (onProgress) {
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100)
-          onProgress(percent)
-        }
-      }
-    }
-
-    xhr.onload = () => {
-      cleanup()
-      resolve(xhr.status)
-    }
-    xhr.ontimeout = () => {
-      cleanup()
-      reject(new GDriveTimeoutError())
-    }
-    xhr.onerror = () => {
-      cleanup()
-      reject(
-        new Error(
-          `Network error during simple ${method === "PATCH" ? "update" : "creation"}.`
-        )
-      )
-    }
+    setupSimpleXhrEvents(xhr, cleanup, resolve, reject, method, onProgress)
     xhr.send(body)
   })
+}
+
+export function checkXhrStatus(status: number, responseText: string): void {
+  if (status === 507) {
+    throw new GoogleDriveQuotaError(responseText || undefined)
+  }
+  if (status === 429) {
+    throw new GoogleDriveRateLimitError(responseText || undefined)
+  }
+  if (status === 403) {
+    const text = responseText || ""
+    if (text.includes("storageQuotaExceeded")) {
+      throw new GoogleDriveQuotaError(text)
+    }
+    if (
+      text.includes("rateLimitExceeded") ||
+      text.includes("userRateLimitExceeded")
+    ) {
+      throw new GoogleDriveRateLimitError(text)
+    }
+  }
+}
+
+export async function checkResponseForErrors(res: Response): Promise<void> {
+  if (res.ok) return
+
+  const status = res.status
+  let text = ""
+  try {
+    text = await res.text()
+  } catch {
+    // ignore
+  }
+
+  if (status === 507 || text.includes("storageQuotaExceeded")) {
+    throw new GoogleDriveQuotaError(
+      text || `Google Drive storage quota exceeded (status ${status}).`
+    )
+  }
+  if (
+    status === 429 ||
+    text.includes("rateLimitExceeded") ||
+    text.includes("userRateLimitExceeded")
+  ) {
+    throw new GoogleDriveRateLimitError(
+      text || `Google Drive API rate limit exceeded (status ${status}).`
+    )
+  }
 }

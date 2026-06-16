@@ -1,6 +1,11 @@
 import { authorize, clearCachedToken } from "./auth"
 import { searchBackupFile } from "./file-ops"
-import { fetchWithReauth, sendResumableXhr, sendSimpleXhr } from "./http-client"
+import {
+  checkResponseForErrors,
+  fetchWithReauth,
+  sendResumableXhr,
+  sendSimpleXhr
+} from "./http-client"
 import { type ReauthContext } from "./types"
 
 export async function uploadBackup(
@@ -101,6 +106,7 @@ async function initResumableSession(
   )
 
   if (!res.ok) {
+    await checkResponseForErrors(res)
     throw new Error(
       `Failed to initialize resumable upload: ${res.status} ${res.statusText}`
     )

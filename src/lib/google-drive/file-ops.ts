@@ -1,4 +1,4 @@
-import { fetchWithReauth } from "./http-client"
+import { checkResponseForErrors, fetchWithReauth } from "./http-client"
 import type { BackupMetadata, ReauthContext } from "./types"
 
 /**
@@ -24,6 +24,7 @@ export async function searchBackupFile(
   )
 
   if (!res.ok) {
+    await checkResponseForErrors(res)
     throw new Error(
       `Failed to search backup file: ${res.status} ${res.statusText}`
     )
@@ -59,6 +60,7 @@ export async function getBackupMetadata(
   )
 
   if (!res.ok) {
+    await checkResponseForErrors(res)
     throw new Error(
       `Failed to get backup metadata: ${res.status} ${res.statusText}`
     )

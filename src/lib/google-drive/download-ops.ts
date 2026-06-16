@@ -1,6 +1,6 @@
 import { authorize, clearCachedToken } from "./auth"
 import { searchBackupFile } from "./file-ops"
-import { configureXhr } from "./http-client"
+import { checkXhrStatus, configureXhr } from "./http-client"
 import { GDriveTimeoutError, type ReauthContext } from "./types"
 
 export async function downloadBackup(
@@ -41,6 +41,50 @@ async function executeDownload(
   return result.text
 }
 
+function setupDownloadXhrEvents(
+  xhr: XMLHttpRequest,
+  cleanup: () => void,
+  resolve: (value: { status: number; text: string | null }) => void,
+  reject: (reason: any) => void,
+  onProgress?: (progress: number) => void
+) {
+  if (onProgress) {
+    xhr.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100))
+      }
+    }
+  }
+
+  xhr.onload = () => {
+    cleanup()
+    if (xhr.status === 401) {
+      resolve({ status: xhr.status, text: null })
+      return
+    }
+    try {
+      checkXhrStatus(xhr.status, xhr.responseText)
+    } catch (err) {
+      reject(err)
+      return
+    }
+    resolve({
+      status: xhr.status,
+      text: xhr.status >= 200 && xhr.status < 300 ? xhr.responseText : null
+    })
+  }
+
+  xhr.ontimeout = () => {
+    cleanup()
+    reject(new GDriveTimeoutError())
+  }
+
+  xhr.onerror = () => {
+    cleanup()
+    reject(new Error("Network error during download."))
+  }
+}
+
 function sendDownloadXhr(
   fileId: string,
   token: string,
@@ -61,31 +105,7 @@ function sendDownloadXhr(
         reject(new Error("Download aborted by user"))
       })
 
-      if (onProgress) {
-        xhr.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100)
-            onProgress(percent)
-          }
-        }
-      }
-
-      xhr.onload = () => {
-        cleanup()
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve({ status: xhr.status, text: xhr.responseText })
-        } else {
-          resolve({ status: xhr.status, text: null })
-        }
-      }
-      xhr.ontimeout = () => {
-        cleanup()
-        reject(new GDriveTimeoutError())
-      }
-      xhr.onerror = () => {
-        cleanup()
-        reject(new Error("Network error during download."))
-      }
+      setupDownloadXhrEvents(xhr, cleanup, resolve, reject, onProgress)
       xhr.send()
     }
   )

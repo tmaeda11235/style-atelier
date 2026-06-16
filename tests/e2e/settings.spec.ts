@@ -1266,4 +1266,117 @@ test.describe("Style Atelier Sandbox E2E Tests - Settings @J-SET-01", () => {
       .first()
     await expect(tooltipContent).toBeVisible()
   })
+
+  test("should handle Google Drive quota and rate limit errors with robust UI warnings", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    // We will dynamic route files API to mock failures.
+    // 1. First scenario: quota error (status 403 with storageQuotaExceeded)
+    let errorScenario: "quota" | "rateLimit" = "quota"
+
+    await page.route(
+      "https://www.googleapis.com/drive/v3/files*",
+      async (route) => {
+        if (errorScenario === "quota") {
+          await route.fulfill({
+            status: 403,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: {
+                errors: [
+                  {
+                    domain: "usageLimits",
+                    reason: "storageQuotaExceeded",
+                    message: "The user's drive storage quota has been exceeded."
+                  }
+                ],
+                code: 403,
+                message: "The user's drive storage quota has been exceeded."
+              }
+            })
+          })
+        } else {
+          await route.fulfill({
+            status: 429,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: {
+                code: 429,
+                message: "Rate limit exceeded"
+              }
+            })
+          })
+        }
+      }
+    )
+
+    console.log(
+      "Navigating to sandbox page for GDrive Error Resilience E2E test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // Open settings tab
+    const settingsTabButton = spFrame.locator("#settings-nav-btn")
+    await expect(settingsTabButton).toBeVisible()
+    await settingsTabButton.click()
+
+    // Expand Cloud accordion
+    const cloudAccordionHeader = spFrame.locator("#settings-accordion-cloud")
+    await expect(cloudAccordionHeader).toBeVisible()
+    await cloudAccordionHeader.click()
+
+    // Enable Google Drive synchronization
+    console.log("Enabling Google Drive sync to trigger mock quota error...")
+    const toggleBtn = spFrame.locator("#google-drive-toggle-btn")
+    await expect(toggleBtn).toBeVisible()
+    await toggleBtn.click()
+
+    // Verify Quota Error messages and action buttons
+    const quotaMsg = spFrame
+      .locator("text=Google Drive storage quota exceeded")
+      .first()
+    await expect(quotaMsg).toBeVisible({ timeout: 10000 })
+
+    const localExportBtn = spFrame.locator("#gdrive-quota-export-btn")
+    const checkSpaceBtn = spFrame.locator("#gdrive-quota-check-btn")
+    await expect(localExportBtn).toBeVisible()
+    await expect(checkSpaceBtn).toBeVisible()
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "gdrive-quota-error-ui.png")
+    })
+    console.log("GDrive quota error UI screenshot saved.")
+
+    // Switch scenario to Rate Limit and reload to trigger again
+    errorScenario = "rateLimit"
+    console.log("Re-enabling with rateLimit error...")
+
+    // Toggle off and toggle back on to re-trigger auth & file check
+    await toggleBtn.click()
+    await toggleBtn.click()
+
+    // Verify Rate Limit Error messages and action buttons
+    const rateLimitMsg = spFrame
+      .locator("text=Google Drive API rate limit reached")
+      .first()
+    await expect(rateLimitMsg).toBeVisible({ timeout: 10000 })
+
+    const retryBtn = spFrame.locator("#gdrive-rate-limit-retry-btn")
+    await expect(retryBtn).toBeVisible()
+
+    await page.screenshot({
+      path: path.join(screenshotsDir, "gdrive-rate-limit-error-ui.png")
+    })
+    console.log("GDrive rate limit error UI screenshot saved.")
+  })
 })

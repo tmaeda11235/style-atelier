@@ -217,12 +217,18 @@
     {
       "id": "@J-SET-01",
       "name": "アプリ設定",
-      "description": "アプリケーション設定の変更",
-      "steps": ["Settingsパネルを開く", "トグル変更", "保存"],
+      "description": "アプリケーション設定 of 変更",
+      "steps": [
+        "Settingsパネルを開く",
+        "トグル変更",
+        "保存",
+        "Google Drive接続エラー（容量制限・レート制限）発生時の警告と回避アクション（ローカル書き出し・再試行）の確認"
+      ],
       "nextJourneys": ["@J-IO-BACKUP", "@J-IO-RESTORE", "@J-SYS-04"],
       "viewComponents": [
         "src/components/organisms/SettingsTab.tsx",
         "src/components/organisms/CloudSyncSection.tsx",
+        "src/components/organisms/SyncStatusMessage.tsx",
         "src/components/molecules/GDriveSyncStrategyDialog.tsx",
         "src/components/organisms/StorageManagerSection.tsx"
       ]

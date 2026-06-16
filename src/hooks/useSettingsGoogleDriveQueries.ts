@@ -113,6 +113,7 @@ export function useSettingsGoogleDriveBackupMetadata(
   })
   return {
     cloudBackup: cloudBackupQuery.data ?? null,
-    isLoadingCloudBackup: cloudBackupQuery.isLoading
+    isLoadingCloudBackup: cloudBackupQuery.isLoading,
+    error: cloudBackupQuery.error
   }
 }

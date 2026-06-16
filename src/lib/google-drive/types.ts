@@ -5,6 +5,22 @@ export class GDriveTimeoutError extends Error {
   }
 }
 
+export class GoogleDriveQuotaError extends Error {
+  constructor(message = "Google Drive storage quota exceeded.") {
+    super(message)
+    this.name = "GoogleDriveQuotaError"
+  }
+}
+
+export class GoogleDriveRateLimitError extends Error {
+  constructor(
+    message = "Google Drive API rate limit exceeded. Please try again later."
+  ) {
+    super(message)
+    this.name = "GoogleDriveRateLimitError"
+  }
+}
+
 export interface BackupMetadata {
   id: string
   modifiedTime: string

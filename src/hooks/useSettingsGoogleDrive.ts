@@ -4,6 +4,8 @@ import { useConfirm } from "../contexts/ConfirmContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import {
   defaultGoogleDriveClient,
+  GoogleDriveQuotaError,
+  GoogleDriveRateLimitError,
   type GoogleDriveClient
 } from "../lib/google-drive"
 import { useGDriveMutations } from "./gdrive-mutations"
@@ -24,10 +26,18 @@ export function useGDriveProgress() {
   const [statusMessage, setStatusMessage] = useState<{
     text: string
     type: "success" | "error" | "info" | null
-  }>({ text: "", type: null })
-  const showStatus = (text: string, type: "success" | "error" | "info") => {
-    setStatusMessage({ text, type })
-    setTimeout(() => setStatusMessage({ text: "", type: null }), 6000)
+    actionType?: "quota" | "rateLimit" | null
+  }>({ text: "", type: null, actionType: null })
+  const showStatus = (
+    text: string,
+    type: "success" | "error" | "info",
+    actionType?: "quota" | "rateLimit" | null
+  ) => {
+    setStatusMessage({ text, type, actionType })
+    setTimeout(
+      () => setStatusMessage({ text: "", type: null, actionType: null }),
+      actionType ? 15000 : 6000
+    )
   }
   return {
     syncProgress,
@@ -49,6 +59,22 @@ function useAbortController() {
     }
   }, [])
   return abortControllerRef
+}
+
+function useSettingsGoogleDriveBackupError(
+  error: any,
+  showStatus: any,
+  t: any
+) {
+  useEffect(() => {
+    if (error) {
+      if (error instanceof GoogleDriveQuotaError) {
+        showStatus(t.syncQuotaError, "error", "quota")
+      } else if (error instanceof GoogleDriveRateLimitError) {
+        showStatus(t.syncRateLimitError, "error", "rateLimit")
+      }
+    }
+  }, [error, showStatus, t])
 }
 
 export function useSettingsGoogleDrive({
@@ -80,6 +106,9 @@ export function useSettingsGoogleDrive({
     addLog,
     checkStorage
   })
+
+  useSettingsGoogleDriveBackupError(meta.error, progress.showStatus, t)
+
   return {
     ...q,
     ...meta,

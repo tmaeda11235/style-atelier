@@ -1,8 +1,13 @@
-import { GDriveTimeoutError, type GoogleDriveClient } from "./google-drive"
+import { GDriveTimeoutError } from "./google-drive"
 import {
   runRestoreWorkflow,
   runSyncWorkflow
 } from "./google-drive-sync-workflow"
+import {
+  GoogleDriveQuotaError,
+  GoogleDriveRateLimitError,
+  type GoogleDriveClient
+} from "./google-drive/types"
 
 export interface GDriveProgressTracker {
   setSyncProgress: (progress: number | null) => void
@@ -11,7 +16,11 @@ export interface GDriveProgressTracker {
     text: string
     type: "success" | "error" | "info" | null
   }) => void
-  showStatus: (text: string, type: "success" | "error" | "info") => void
+  showStatus: (
+    text: string,
+    type: "success" | "error" | "info",
+    actionType?: "quota" | "rateLimit" | null
+  ) => void
 }
 
 export async function performSyncWorkflow(params: {
@@ -102,6 +111,16 @@ export async function handleSyncError(params: {
   } else if (err instanceof GDriveTimeoutError) {
     addLog("Sync failed: Connection timed out.")
     progress.showStatus(t.syncTimeout, "error")
+  } else if (err instanceof GoogleDriveQuotaError) {
+    addLog(
+      `Sync failed: Google Drive storage quota exceeded. Details: ${err.message}`
+    )
+    progress.showStatus(t.syncQuotaError, "error", "quota")
+  } else if (err instanceof GoogleDriveRateLimitError) {
+    addLog(
+      `Sync failed: Google Drive API rate limit exceeded. Details: ${err.message}`
+    )
+    progress.showStatus(t.syncRateLimitError, "error", "rateLimit")
   } else {
     console.error(err)
     addLog(`Sync failed: ${err.message || err}`)
@@ -240,6 +259,16 @@ export async function handleRestoreError(params: {
   } else if (err instanceof GDriveTimeoutError) {
     addLog("Force recovery failed: Connection timed out.")
     progress.showStatus(t.syncTimeout, "error")
+  } else if (err instanceof GoogleDriveQuotaError) {
+    addLog(
+      `Force recovery failed: Google Drive storage quota exceeded. Details: ${err.message}`
+    )
+    progress.showStatus(t.syncQuotaError, "error", "quota")
+  } else if (err instanceof GoogleDriveRateLimitError) {
+    addLog(
+      `Force recovery failed: Google Drive API rate limit exceeded. Details: ${err.message}`
+    )
+    progress.showStatus(t.syncRateLimitError, "error", "rateLimit")
   } else {
     console.error(err)
     addLog(`Force recovery failed: ${err.message || err}`)

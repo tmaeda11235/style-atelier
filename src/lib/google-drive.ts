@@ -4,7 +4,11 @@ import { getBackupMetadata } from "./google-drive/file-ops"
 import { type GoogleDriveClient } from "./google-drive/types"
 import { uploadBackup } from "./google-drive/upload-ops"
 
-export { GDriveTimeoutError } from "./google-drive/types"
+export {
+  GDriveTimeoutError,
+  GoogleDriveQuotaError,
+  GoogleDriveRateLimitError
+} from "./google-drive/types"
 export type {
   BackupMetadata,
   GoogleDriveClient,

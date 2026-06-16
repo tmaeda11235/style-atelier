@@ -22,11 +22,13 @@ interface CloudSyncSectionProps {
   statusMessage: {
     text: string
     type: "success" | "error" | "info" | null
+    actionType?: "quota" | "rateLimit" | null
   }
   handleCancelSync: () => void
   handleToggleSync: (checked: boolean) => void
   handleToggleAutoSync: (checked: boolean) => void
   handleSync: () => void
+  handleLocalExport: () => void
   t: any
 }
 
@@ -206,6 +208,8 @@ export function CloudSyncSection(props: CloudSyncSectionProps) {
         isSyncing={props.isSyncing}
         isRestoring={props.isRestoring}
         handleCancelSync={props.handleCancelSync}
+        handleLocalExport={props.handleLocalExport}
+        handleSync={props.handleSync}
         t={props.t}
       />
 
