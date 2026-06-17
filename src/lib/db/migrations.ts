@@ -287,48 +287,65 @@ export async function upgradeToVersion10(tx: any) {
   }
 }
 
+async function migrateSingleCard(
+  card: any,
+  cardsTable: any,
+  writtenOpfsPaths: string[]
+) {
+  if (card.thumbnailData && !card.thumbnailPath) {
+    const thumbnailPath = `images/cards/${card.id}.png`
+    await Dexie.waitFor(saveBase64ToOpfs(thumbnailPath, card.thumbnailData))
+    writtenOpfsPaths.push(thumbnailPath)
+    card.thumbnailPath = thumbnailPath
+    delete card.thumbnailData
+    card.updatedAt = Date.now()
+    await cardsTable.put(card)
+  }
+}
+
+async function migrateSingleCategory(
+  category: any,
+  categoriesTable: any,
+  writtenOpfsPaths: string[]
+) {
+  if (category.coverImageUrl && !category.coverImagePath) {
+    const coverImagePath = `images/categories/${category.id}.png`
+    await Dexie.waitFor(
+      saveBase64ToOpfs(coverImagePath, category.coverImageUrl)
+    )
+    writtenOpfsPaths.push(coverImagePath)
+    category.coverImagePath = coverImagePath
+    delete category.coverImageUrl
+    category.updatedAt = Date.now()
+    await categoriesTable.put(category)
+  }
+}
+
 export async function upgradeToVersion15(tx: any) {
   const cardsTable = tx.table("styleCards")
   const categoriesTable = tx.table("categories")
 
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.storage ||
+    !navigator.storage.getDirectory
+  ) {
+    console.warn(
+      "OPFS is not supported in this environment. Skipping migration of thumbnails to OPFS."
+    )
+    return
+  }
+
   const cards = await cardsTable.toArray()
   const categories = await categoriesTable.toArray()
-
   const writtenOpfsPaths: string[] = []
 
   try {
-    // 1. Style cards migration
     for (const card of cards) {
-      if (card.thumbnailData && !card.thumbnailPath) {
-        const thumbnailPath = `images/cards/${card.id}.png`
-
-        // Save to OPFS
-        await Dexie.waitFor(saveBase64ToOpfs(thumbnailPath, card.thumbnailData))
-        writtenOpfsPaths.push(thumbnailPath)
-
-        card.thumbnailPath = thumbnailPath
-        delete card.thumbnailData
-        card.updatedAt = Date.now()
-        await cardsTable.put(card)
-      }
+      await migrateSingleCard(card, cardsTable, writtenOpfsPaths)
     }
-
-    // 2. Categories migration
     for (const category of categories) {
-      if (category.coverImageUrl && !category.coverImagePath) {
-        const coverImagePath = `images/categories/${category.id}.png`
-
-        // Save to OPFS
-        await Dexie.waitFor(
-          saveBase64ToOpfs(coverImagePath, category.coverImageUrl)
-        )
-        writtenOpfsPaths.push(coverImagePath)
-
-        category.coverImagePath = coverImagePath
-        delete category.coverImageUrl
-        category.updatedAt = Date.now()
-        await categoriesTable.put(category)
-      }
+      await migrateSingleCategory(category, categoriesTable, writtenOpfsPaths)
     }
   } catch (err) {
     console.error(

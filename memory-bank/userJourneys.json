@@ -744,6 +744,9 @@
       "nextJourneys": ["@J-PWA-P2P-SYNC-01"],
       "viewComponents": [
         "src/mobile-app/index.html",
+        "src/mobile-app/index.ts",
+        "src/mobile-app/image.ts",
+        "src/mobile-app/hologram.ts",
         "src/mobile-app/manifest.json",
         "src/mobile-app/sw.template.js",
         "scripts/build-mobile.mjs",

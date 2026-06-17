@@ -231,4 +231,116 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
       expect(dismissedUntil).toBeTruthy()
     })
   })
+
+  test.describe("OPFS Image Integration & Fallback", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/src/mobile-app/index.html")
+    })
+
+    test("should save thumbnailData to OPFS and render it from OPFS when supported", async ({
+      page
+    }) => {
+      const mockCardId = "e2e-card-pwa-opfs"
+      const mockBase64 =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+      await page.evaluate(
+        ({ cardId, base64 }) => {
+          const mockCard = {
+            id: cardId,
+            name: "OPFS E2E PWA Card",
+            tier: "Epic" as const,
+            thumbnailData: base64,
+            promptSegments: [],
+            dominantColor: "#1e293b",
+            frameId: "default"
+          }
+          ;(window as any).__renderCardForTest(mockCard)
+        },
+        { cardId: mockCardId, base64: mockBase64 }
+      )
+
+      const img = page.locator("#cardImageContainer img")
+      await expect(img).not.toHaveClass(/loading/)
+
+      const src = await img.getAttribute("src")
+      expect(src).toMatch(/^blob:/)
+
+      const isFileInOpfs = await page.evaluate(async (cardId) => {
+        try {
+          const root = await navigator.storage.getDirectory()
+          const dirImages = await root.getDirectoryHandle("images", {
+            create: false
+          })
+          const dirCards = await dirImages.getDirectoryHandle("cards", {
+            create: false
+          })
+          const fileHandle = await dirCards.getFileHandle(`${cardId}.png`, {
+            create: false
+          })
+          const file = await fileHandle.getFile()
+          return file.size > 0
+        } catch (e) {
+          return false
+        }
+      }, mockCardId)
+
+      expect(isFileInOpfs).toBe(true)
+
+      await page.evaluate((cardId) => {
+        const mockCardPathOnly = {
+          id: cardId,
+          name: "OPFS E2E PWA Card Path Only",
+          tier: "Epic" as const,
+          thumbnailPath: `images/cards/${cardId}.png`,
+          promptSegments: [],
+          dominantColor: "#1e293b",
+          frameId: "default"
+        }
+        ;(window as any).__renderCardForTest(mockCardPathOnly)
+      }, mockCardId)
+
+      await expect(img).not.toHaveClass(/loading/)
+      const newSrc = await img.getAttribute("src")
+      expect(newSrc).toMatch(/^blob:/)
+    })
+
+    test("should fallback to base64 thumbnailData when OPFS is not supported", async ({
+      page
+    }) => {
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, "storage", {
+          value: undefined,
+          configurable: true,
+          writable: true
+        })
+      })
+
+      const mockCardId = "e2e-card-fallback"
+      const mockBase64 =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+      await page.evaluate(
+        ({ cardId, base64 }) => {
+          const mockCard = {
+            id: cardId,
+            name: "Fallback E2E PWA Card",
+            tier: "Common" as const,
+            thumbnailData: base64,
+            promptSegments: [],
+            dominantColor: "#1e293b",
+            frameId: "default"
+          }
+          ;(window as any).__renderCardForTest(mockCard)
+        },
+        { cardId: mockCardId, base64: mockBase64 }
+      )
+
+      const img = page.locator("#cardImageContainer img")
+      await expect(img).not.toHaveClass(/loading/)
+
+      const src = await img.getAttribute("src")
+      expect(src).toBe(mockBase64)
+    })
+  })
 })
