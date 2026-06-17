@@ -1,9 +1,9 @@
 import {
   fallbackStaticParser,
   getActiveModel,
-  InferenceResult,
   LIGHTWEIGHT_MODEL
 } from "./local-ai-fallback-parser"
+import type { InferenceResult } from "./local-ai-fallback-parser"
 
 export type LocalAiStatus =
   | "uninitialized"
