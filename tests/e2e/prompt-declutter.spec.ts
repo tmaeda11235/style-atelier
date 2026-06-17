@@ -175,7 +175,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Prompt De-cluttering", () =>
       "button:has-text('Organize (Fallback)'), button:has-text('整理 (フォールバック)'), button:has-text('Organize'), button:has-text('整理')"
     )
     await expect(declutterBtn).toBeVisible()
-    await declutterBtn.click()
+    await declutterBtn.click({ force: true })
 
     // 9. Verify the bubbles updated using regex splitting
     const bubble1 = spFrame
