@@ -61,8 +61,8 @@ interface ImageColorAnalysisProps {
   setFallback: (f: boolean) => void
 }
 
-function performImageColorAnalysis(
-  active: boolean,
+function startAnalysis(
+  active: { current: boolean },
   imageUrl: string | undefined,
   selectedRarity: RarityTier,
   setDominant: (c: string) => void,
@@ -70,7 +70,7 @@ function performImageColorAnalysis(
   setTags: (t: string[]) => void,
   setFallback: (f: boolean) => void
 ) {
-  const apply = () =>
+  const apply = () => {
     applyFallbackColors(
       selectedRarity,
       setDominant,
@@ -78,15 +78,17 @@ function performImageColorAnalysis(
       setTags,
       setFallback
     )
+  }
   if (imageUrl) {
     analyzeImageColors(imageUrl, selectedRarity)
       .then((colors) => {
-        if (active)
+        if (active.current) {
           applyImageColors(colors, setDominant, setAccent, setFallback, setTags)
+        }
       })
       .catch((err) => {
         console.error("Failed to analyze image colors:", err)
-        if (active) apply()
+        if (active.current) apply()
       })
   } else {
     apply()
@@ -103,8 +105,8 @@ export function useImageColorAnalysis(props: ImageColorAnalysisProps) {
     setTags
   } = props
   useEffect(() => {
-    let active = true
-    performImageColorAnalysis(
+    const active = { current: true }
+    startAnalysis(
       active,
       mintingItem?.imageUrl,
       selectedRarity,
@@ -114,7 +116,7 @@ export function useImageColorAnalysis(props: ImageColorAnalysisProps) {
       setFallback
     )
     return () => {
-      active = false
+      active.current = false
     }
   }, [
     mintingItem,
