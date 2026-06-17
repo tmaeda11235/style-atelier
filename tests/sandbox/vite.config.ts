@@ -15,6 +15,23 @@ export default defineConfig({
       name: "serve-fixtures-static",
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.startsWith("/mobile/")) {
+            const urlPath = req.url.slice("/mobile/".length).split("?")[0]
+            const filePath = path.join(
+              __dirname,
+              "../../src/mobile-app/public",
+              urlPath
+            )
+            if (fs.existsSync(filePath)) {
+              const ext = path.extname(filePath)
+              let contentType = "application/octet-stream"
+              if (ext === ".json") contentType = "application/json"
+              else if (ext === ".png") contentType = "image/png"
+              res.setHeader("Content-Type", contentType)
+              res.end(fs.readFileSync(filePath))
+              return
+            }
+          }
           if (
             req.url &&
             req.url.includes("/tests/fixtures/") &&
