@@ -1,7 +1,7 @@
 import React from "react"
-import iconUrl from "url:../../../assets/icon.png"
 
 import type { StyleCard } from "../../lib/db-schema"
+import { OpfsImage } from "../atoms/OpfsImage"
 
 interface RepresentativeCardRowProps {
   card: StyleCard
@@ -24,12 +24,8 @@ const RepresentativeCardRow: React.FC<RepresentativeCardRowProps> = ({
         : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30"
     }`}>
     <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 border dark:border-slate-700 bg-white dark:bg-slate-800">
-      <img
-        src={
-          !card.thumbnailData || card.thumbnailData === "assets/icon.png"
-            ? iconUrl
-            : card.thumbnailData
-        }
+      <OpfsImage
+        src={card.thumbnailPath || card.thumbnailData}
         className="w-full h-full object-cover"
         alt={card.name}
       />

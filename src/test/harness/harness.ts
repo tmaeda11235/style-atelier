@@ -33,7 +33,7 @@ const userPromptInput = document.getElementById(
 const engineStatusText = document.getElementById("engine-status-text")!
 const outputArea = document.getElementById("output")!
 const toast = document.getElementById("toast")!
-const mswStatus = document.getElementById("msw-status")!
+const mswStatus = document.getElementById("msw-status-badge")!
 
 function log(msg: string, isError = false) {
   const timestamp = new Date().toLocaleTimeString()

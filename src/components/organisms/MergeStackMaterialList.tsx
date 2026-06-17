@@ -1,7 +1,7 @@
 import React from "react"
-import iconUrl from "url:../../../assets/icon.png"
 
 import type { StyleCard } from "../../lib/db-schema"
+import { OpfsImage } from "../atoms/OpfsImage"
 
 interface MaterialCardRowProps {
   card: StyleCard
@@ -25,12 +25,8 @@ const MaterialCardRow: React.FC<MaterialCardRowProps> = ({
     className="flex items-center justify-between p-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-800/20 gap-3">
     <div className="flex items-center gap-2.5 min-w-0">
       <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 border bg-white">
-        <img
-          src={
-            !card.thumbnailData || card.thumbnailData === "assets/icon.png"
-              ? iconUrl
-              : card.thumbnailData
-          }
+        <OpfsImage
+          src={card.thumbnailPath || card.thumbnailData}
           className="w-full h-full object-cover"
           alt={card.name}
         />

@@ -1,5 +1,5 @@
 diff --git a/node_modules/@tailwindcss/oxide/index.js b/node_modules/@tailwindcss/oxide/index.js
-index 6f541a6..f43ab79 100644
+index ef2f522..c13ee2f 100644
 --- a/node_modules/@tailwindcss/oxide/index.js
 +++ b/node_modules/@tailwindcss/oxide/index.js
 @@ -3,7 +3,7 @@

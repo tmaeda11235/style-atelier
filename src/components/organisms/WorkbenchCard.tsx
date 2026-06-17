@@ -95,7 +95,7 @@ const InteractiveThumbnail: React.FC<{
     onClick={() => setSelectedCardId(isSelected ? null : card.id)}
     className="relative cursor-pointer rounded-lg overflow-hidden border border-slate-800 shadow-lg group-hover:scale-105 transition-transform">
     <CardThumbnail
-      imageUrl={card.thumbnailData}
+      imageUrl={card.thumbnailPath || card.thumbnailData}
       thumbnailImages={card.selectedThumbnails}
       alt={card.name}
       tier={card.tier}

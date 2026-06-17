@@ -150,7 +150,7 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
   ])
 }
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable max-lines-per-function */
 export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
@@ -212,6 +212,7 @@ export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
     <WebLlmContext.Provider value={value}>{children}</WebLlmContext.Provider>
   )
 }
+/* eslint-enable max-lines-per-function */
 
 export const useWebLlmContext = () => {
   const context = useContext(WebLlmContext)

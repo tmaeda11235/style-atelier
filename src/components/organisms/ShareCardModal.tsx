@@ -7,11 +7,11 @@ import {
   X
 } from "lucide-react"
 import React from "react"
-import iconUrl from "url:../../../assets/icon.png"
 
 import { useShareCard } from "../../hooks/useShareCard"
 import type { StyleCard } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
+import { OpfsImage } from "../atoms/OpfsImage"
 
 interface ShareCardModalProps {
   card: StyleCard
@@ -47,16 +47,11 @@ interface CardSummaryProps {
 }
 
 function CardSummary({ card, tierLabel, srefIdLabel }: CardSummaryProps) {
-  const imgSrc =
-    !card.thumbnailData || card.thumbnailData === "assets/icon.png"
-      ? iconUrl
-      : card.thumbnailData
-
   return (
     <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 border dark:border-slate-800 rounded-lg">
       <div className="w-16 h-16 rounded overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0">
-        <img
-          src={imgSrc}
+        <OpfsImage
+          src={card.thumbnailPath || card.thumbnailData || "assets/icon.png"}
           className="w-full h-full object-cover"
           alt={card.name}
         />

@@ -44,7 +44,10 @@
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
-        "src/components/organisms/CardsGrid.tsx"
+        "src/components/organisms/CardsGrid.tsx",
+        "src/components/molecules/CardThumbnailImages.tsx",
+        "src/components/atoms/OpfsImage.tsx",
+        "src/hooks/useOpfsImage.ts"
       ]
     },
     {
@@ -712,6 +715,45 @@
         "tests/sandbox/main.tsx",
         "src/test/harness/index.html",
         "src/test/harness/harness.js"
+      ]
+    },
+    {
+      "id": "@J-PWA-A2HS-OFFLINE-01",
+      "name": "モバイルPWAスマートQR起動＆A2HSとオフライン閲覧",
+      "description": "ユーザーがスマートQRからモバイルPWAを起動し、カード詳細をめくって閲覧した後、ホーム画面に追加（A2HS）し、オフライン状態でコレクションを閲覧・整理する",
+      "steps": [
+        "スマートQRコードをスマホカメラで読み取りPWAを起動",
+        "アトリエスキンのカード一覧からカードを選択しタップしてめくる（3Dフリップ）",
+        "iOS/AndroidそれぞれのA2HSインストールプロンプトに従いホーム画面に追加",
+        "端末の通信を切断（オフライン化）",
+        "ホーム画面からPWAを再起動し、オフライン状態でコレクションを通常通り閲覧・整理できることを確認"
+      ],
+      "nextJourneys": ["@J-PWA-P2P-SYNC-01"],
+      "viewComponents": [
+        "src/mobile-app/index.html",
+        "src/mobile-app/manifest.json",
+        "src/mobile-app/sw.ts",
+        "src/mobile-app/components/A2HSPrompt.tsx",
+        "src/hooks/useOpfsImage.ts"
+      ]
+    },
+    {
+      "id": "@J-PWA-P2P-SYNC-01",
+      "name": "モバイルPWA・PC間ハイブリッド同期（P2P/Drive）",
+      "description": "モバイルPWAでバインダー整理やカード操作を行い、WebRTCによるP2P直接同期またはGoogle Drive/暗号化中間キャッシュを経由してPC Chrome拡張機能とコンフリクトなく自動同期する",
+      "steps": [
+        "モバイルPWA上でバインダーの整理（フォルダ移動やカード追加）を行う",
+        "PC側に表示された同期QRコードをモバイルPWAカメラでスキャン",
+        "WebRTC (DataChannel) または暗号化中間キャッシュを介したP2P直接同期が開始されることを確認",
+        "または独立ドメインからのGoogle Drive認証ポップアップフローを実行して自動同期する",
+        "LWW (Last-Write-Wins) マージおよびコンフリクト解消ダイアログによる安全なデータ統合を確認する"
+      ],
+      "nextJourneys": ["@J-MOBILE-PREVIEW-01"],
+      "viewComponents": [
+        "src/mobile-app/gdrive-client.ts",
+        "src/mobile-app/webrtc-sync.ts",
+        "src/lib/db/sync-merger.ts",
+        "src/components/molecules/GDriveSyncStrategyDialog.tsx"
       ]
     }
   ]
