@@ -24,9 +24,11 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
     testTimeout: 15000,
-    pool: "forks",
-    forks: {
-      singleFork: true
+    pool: "threads",
+    poolOptions: {
+      threads: {
+        singleThread: true
+      }
     },
     maxWorkers: 1,
     minWorkers: 1,
