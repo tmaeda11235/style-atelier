@@ -1,4 +1,6 @@
 /* eslint-disable no-undef */
+import { initHarnessCache } from "./mockSetup"
+
 // LiteRT-LM Offline Debug Dashboard & Profiler Controller
 const el = (id) => document.getElementById(id)
 let currentMode = "mock"
@@ -306,4 +308,9 @@ window.addEventListener("load", () => {
   setupEventListeners()
   setInterval(updateOPFSInfo, 5000)
   log("Dashboard ready.", "success")
+
+  // Initialize MSW Mock Service Worker
+  initHarnessCache(el("msw-status-badge"), (msg, isError) =>
+    log(msg, isError ? "error" : "info")
+  )
 })
