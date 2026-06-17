@@ -25,6 +25,11 @@ export default defineConfig({
     setupFiles: "./vitest.setup.ts",
     testTimeout: 15000,
     pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
+    },
     maxWorkers: 1,
     include: ["tests/**/*.test.{ts,tsx}", "tests/**/*.spec.ts"],
     exclude: [
