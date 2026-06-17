@@ -7,7 +7,7 @@ const ASSETS = [
   "/mobile/icon-192.png",
   "/mobile/icon-512.png",
   "/mobile/assets/main-BBZOfuDg.css",
-  "/mobile/assets/main-yLhnm027.js"
+  "/mobile/assets/main-BrXUJ1BF.js"
 ]
 
 self.addEventListener("install", (event) => {
