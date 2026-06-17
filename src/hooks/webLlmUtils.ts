@@ -17,14 +17,31 @@ export type DownloadStatus =
 export async function checkCurrentStateHelper(
   setStatus: (s: DownloadStatus) => void,
   setProgress: (p: number) => void,
+  setWebGpuFallback?: (fb: boolean) => void,
   setError?: (e: string | null) => void
 ) {
   setStatus("checking")
   const gpuSupported = await checkWebGpuSupport()
-  if (!gpuSupported) {
+  const wasmSupported =
+    typeof WebAssembly === "object" &&
+    typeof WebAssembly.instantiate === "function"
+  console.log(
+    "checkCurrentStateHelper: gpuSupported =",
+    gpuSupported,
+    "wasmSupported =",
+    wasmSupported,
+    "typeof WebAssembly =",
+    typeof WebAssembly
+  )
+
+  if (!gpuSupported && !wasmSupported) {
+    if (setError) setError("both-unsupported")
     setStatus("unsupported")
-    setProgress(0)
     return
+  }
+
+  if (!gpuSupported) {
+    if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
   safeSendMessage({ target: "offscreen", action: "verify-integrity" })
@@ -100,16 +117,25 @@ function runInitWorker(
 export async function startDownloadHelper(
   setStatus: (s: DownloadStatus) => void,
   setProgress: (p: number) => void,
-  setError: (e: string | null) => void
+  setError: (e: string | null) => void,
+  setWebGpuFallback?: (fb: boolean) => void
 ) {
   setStatus("checking")
   setError(null)
 
   const gpuSupported = await checkWebGpuSupport()
-  if (!gpuSupported) {
+  const wasmSupported =
+    typeof WebAssembly === "object" &&
+    typeof WebAssembly.instantiate === "function"
+
+  if (!gpuSupported && !wasmSupported) {
+    setError("both-unsupported")
     setStatus("unsupported")
-    setProgress(0)
     return
+  }
+
+  if (!gpuSupported) {
+    if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
   safeSendMessage({

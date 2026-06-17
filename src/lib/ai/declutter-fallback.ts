@@ -64,7 +64,7 @@ function splitIntoSegments(cleanPrompt: string): PromptSegment[] {
 
 /**
  * AIによるプロンプト整理（De-cluttering）が使えない場合用の、
- * 正規表現/ルールベース의軽量フォールバック処理。
+ * 正規表現/ルールベースの軽量フォールバック処理。
  */
 export function declutterFallback(rawPrompt: string): PromptSegment[] {
   if (!rawPrompt || !rawPrompt.trim()) {

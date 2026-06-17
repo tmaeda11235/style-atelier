@@ -217,8 +217,32 @@ export function WebLlmQuotaWarning({ t }: { t: Record<string, string> }) {
         <span>{t.webLlmQuotaWarningTitle || "Insufficient Space"}</span>
       </div>
       <p className="leading-relaxed">
-        {t.webLlmQuotaWarningDesc ||
-          "Insufficient storage space. WebLLM requires at least 2.5 GB of free space."}
+        {t.webLlmQuotaExceededDesc ||
+          "Storage space is insufficient. Please ensure at least 1.5 GB of free space."}
+      </p>
+    </div>
+  )
+}
+
+export function WebLlmBothUnsupportedWarning({
+  t
+}: {
+  t: Record<string, string>
+}) {
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="text-[11px] text-rose-500 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-lg p-2.5 space-y-1">
+      <div className="flex items-center gap-1.5 font-bold">
+        <AlertTriangle className="w-4 h-4 shrink-0" />
+        <span>
+          {t.webLlmBothUnsupportedTitle || "AI Environment Unsupported"}
+        </span>
+      </div>
+      <p className="leading-relaxed">
+        {t.webLlmBothUnsupportedDesc ||
+          "Both WebGPU and Wasm (CPU) are unavailable on your environment. Please update your browser or check your settings."}
       </p>
     </div>
   )
@@ -229,13 +253,13 @@ export function WebLlmActionButtons({
   startDownload,
   handlePurge,
   t,
-  isSupported = true
+  _isSupported = true
 }: {
   status: string
   startDownload: () => void
   handlePurge: () => void
   t: Record<string, string>
-  isSupported?: boolean
+  _isSupported?: boolean
 }) {
   return (
     <div className="flex items-center gap-2 pt-1">
@@ -245,12 +269,10 @@ export function WebLlmActionButtons({
           <button
             type="button"
             onClick={startDownload}
-            disabled={status === "checking" || !isSupported}
+            disabled={status === "checking"}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-xs transition-all duration-200 shadow-sm shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 disabled:opacity-50 cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            {!isSupported
-              ? t.webLlmDownloadBtnUnsupported || "WebGPU Not Supported"
-              : t.webLlmDownloadBtn || "Download Model"}
+            {t.webLlmDownloadBtn || "Download Model"}
           </button>
         )}
 

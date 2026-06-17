@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
+import {
+  isExtensionContextValid,
+  safeQueryTabs,
+  safeSendTabMessage
+} from "../lib/chrome-utils"
 
 interface UseChromeTabConnectionOptions {
   workbenchCardsDependency: string
@@ -11,11 +16,11 @@ interface UseChromeTabConnectionOptions {
 async function queryActiveTab(
   addLog: (msg: string) => void
 ): Promise<chrome.tabs.Tab | null> {
-  if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) {
+  if (!isExtensionContextValid()) {
     return null
   }
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-  const activeTab = tabs[0]
+  const tabs = await safeQueryTabs({ active: true, currentWindow: true })
+  const activeTab = tabs?.[0]
   if (!activeTab) {
     addLog("Check Connection: No active tab returned from query.")
     return null
@@ -32,7 +37,7 @@ async function pingTab(
   addLog: (msg: string) => void
 ): Promise<boolean> {
   addLog(`Checking connection to Tab ${tabId}...`)
-  const response = await chrome.tabs.sendMessage(tabId, { type: "PING" })
+  const response = await safeSendTabMessage(tabId, { type: "PING" })
   addLog(
     `Check Connection: Success! Ping response: ${JSON.stringify(response)}`
   )

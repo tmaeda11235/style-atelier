@@ -67,6 +67,14 @@ describe("mj-parser", () => {
       const url = "https://cdn.midjourney.com/invalid"
       expect(extractJobIdFromUrl(url)).toBeUndefined()
     })
+
+    it("should return undefined for invalid URLs targeting cdn host with spoofed hostnames", () => {
+      expect(
+        extractJobIdFromUrl(
+          "https://cdn.midjourney.com.attacker.com/100cc076-ef20-46b4-8aeb-f7c294169800/0_0.png"
+        )
+      ).toBeUndefined()
+    })
   })
 
   describe("extractParameters", () => {
@@ -135,6 +143,19 @@ describe("mj-parser", () => {
     it("should handle standalone parameter with trailing/leading spaces", () => {
       const text = "  --fast   "
       expect(extractParameters(text)).toEqual(["--fast"])
+    })
+
+    it("should handle boundary spacing and edge cases for value-less or short parameters", () => {
+      // Standalone parameter with trailing tab/newline
+      expect(extractParameters("render --fast \t\n")).toEqual(["--fast"])
+      // Multiple duplicate parameters with trailing spaces
+      expect(extractParameters("render --fast --fast \t ")).toEqual(["--fast"])
+      // Short parameter key and value
+      expect(extractParameters("test --a b")).toEqual(["--a b"])
+      // Parameters with tab spacing between key and value
+      expect(extractParameters("test --sref \t value")).toEqual([
+        "--sref value"
+      ])
     })
   })
 

@@ -9,6 +9,11 @@ describe("useActiveTabUrl hook", () => {
 
   beforeEach(() => {
     vi.stubGlobal("chrome", {
+      runtime: {
+        id: "mock-extension-id",
+        sendMessage: vi.fn(),
+        connect: vi.fn()
+      },
       tabs: {
         query: vi.fn(),
         onActivated: {

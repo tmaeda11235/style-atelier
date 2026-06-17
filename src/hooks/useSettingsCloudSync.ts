@@ -68,7 +68,8 @@ export function useCloudSyncState({
     handleToggleSync: gdrive.handleToggleSync,
     handleToggleAutoSync: gdrive.handleToggleAutoSync,
     handleSync: handleSyncWithWarning,
-    t
+    t,
+    autoSyncSuspendedByAge: gdrive.autoSyncSuspendedByAge
   }
 
   return { gdrive, cloudProps }

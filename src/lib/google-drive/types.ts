@@ -5,6 +5,20 @@ export class GDriveTimeoutError extends Error {
   }
 }
 
+export class GDriveQuotaError extends Error {
+  constructor(message = "Google Drive storage quota exceeded.") {
+    super(message)
+    this.name = "GDriveQuotaError"
+  }
+}
+
+export class GDriveRateLimitError extends Error {
+  constructor(message = "Google Drive API rate limit exceeded.") {
+    super(message)
+    this.name = "GDriveRateLimitError"
+  }
+}
+
 export interface BackupMetadata {
   id: string
   modifiedTime: string
@@ -36,6 +50,47 @@ export interface GoogleDriveClient {
     onProgress?: (progress: number) => void,
     options?: { signal?: AbortSignal; timeoutMs?: number }
   ): Promise<string | null>
+  findFolder(
+    token: string,
+    folderName: string,
+    parentId?: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal }
+  ): Promise<string | null>
+  createFolder(
+    token: string,
+    folderName: string,
+    parentId?: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal }
+  ): Promise<string>
+  uploadImageFile(
+    token: string,
+    folderId: string,
+    fileName: string,
+    blob: Blob,
+    fileId: string | null,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal }
+  ): Promise<string>
+  deleteImageFile(
+    token: string,
+    fileId: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal }
+  ): Promise<void>
+  downloadImageFile(
+    token: string,
+    fileId: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal }
+  ): Promise<Blob>
+  listFolderFiles(
+    token: string,
+    folderId: string,
+    onTokenUpdated?: (newToken: string) => void,
+    options?: { signal?: AbortSignal }
+  ): Promise<Array<{ id: string; name: string; md5Checksum?: string }>>
   downloadTempSharedCards?(
     token: string,
     onTokenUpdated?: (newToken: string) => void,

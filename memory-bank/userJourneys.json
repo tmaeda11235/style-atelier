@@ -44,7 +44,10 @@
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
-        "src/components/organisms/CardsGrid.tsx"
+        "src/components/organisms/CardsGrid.tsx",
+        "src/components/molecules/CardThumbnailImages.tsx",
+        "src/components/atoms/OpfsImage.tsx",
+        "src/hooks/useOpfsImage.ts"
       ]
     },
     {
@@ -153,10 +156,18 @@
     {
       "id": "@J-IO-QR-IN",
       "name": "QRインポート",
-      "description": "QRコードを読み取ってカードをインポートする",
-      "steps": ["Import via QR選択", "QRスキャン", "カード保存"],
+      "description": "QRコードを読み取ってカードをインポートする（巨大画像や破損画像に対するクラッシュ防止とエラーハンドリングを含む）",
+      "steps": [
+        "Import via QR選択",
+        "QRスキャンまたはエラー検知",
+        "カード保存またはエラーUI表示"
+      ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-EASY-01"],
-      "viewComponents": ["src/components/organisms/LibraryTab.tsx"]
+      "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
+        "src/lib/qr-utils.ts",
+        "src/hooks/dragAndDropHandlers.ts"
+      ]
     },
     {
       "id": "@J-IO-BACKUP",
@@ -260,7 +271,7 @@
     {
       "id": "@J-WB-EXPERT-05",
       "name": "手札バー（HandBar）の最小化・折りたたみとスクロール",
-      "description": "手札バーを最小化して表示領域を確保し、多数のカードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する",
+      "description": "手札バーを最小化して表示領域を確保し、多数 of カードがピン留めされた場合は縮小させずに、スタックUIとホバー時の浮き上がり、左右のフェードスクロールインジケータ、スクロールバーおよび左右ボタンで快適にスクロール操作する",
       "steps": [
         "最小化ボタン押下",
         "手札バーが折りたたまれる",
@@ -436,13 +447,13 @@
     },
     {
       "id": "@J-ORG-SEMANTIC-SEARCH-01",
-      "name": "セマンティック検索による自然言語フィルタリング",
-      "description": "自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換、または類似カードを抽出する",
+      "name": "セマンティック検索による自然言語フィルターリング",
+      "description": "自然言語を入力してローカルAIが意図を汲み取り、自動的にRarity, Category, Colorなどのデータベースフィルターへ変換する。AIモデルが読み込まれていない場合は、キーワード抽出による軽量フォールバックモードで動作する",
       "steps": [
         "ライブラリを開く",
         "検索バーのAIアシスタントボタンをONにする",
         "自然言語クエリを入力する",
-        "AIによるフィルタ自動抽出とカード絞り込み結果を確認する"
+        "AIによるフィルタ自動抽出（または軽量フォールバック抽出）とカード絞り込み結果を確認する"
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01", "@J-ORG-SEARCH-01"],
       "viewComponents": ["src/components/organisms/LibrarySearchBar.tsx"]
@@ -450,11 +461,11 @@
     {
       "id": "@J-WB-AI-ADVICE-01",
       "name": "AI調合アドバイス表示",
-      "description": "ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する",
+      "description": "ワークベンチで複数カードを調合する際、ローカルAIから調合アドバイスを非同期に取得・表示する。AI未ロード時はルールベースの静的アドバイスをフォールバック表示する",
       "steps": [
         "Workbench（Cauldron）に複数カードを追加",
         "AI Recipe Advice エリアを展開",
-        "AIによる調合アドバイス（日本語・英語）が生成・表示されるのを確認",
+        "AIによる調合アドバイス（未ロード時は静的フォールバックアドバイス）が生成・表示されるのを確認",
         "アドバイス内の推奨事項やキーワードを確認する"
       ],
       "nextJourneys": ["@J-WB-EXPERT-01", "@J-WB-EXPERT-03"],
@@ -536,6 +547,32 @@
       ]
     },
     {
+      "id": "@J-AI-DECLUTTER-01",
+      "name": "AIプロンプトクリーンアップ（整理・分割）",
+      "description": "ローカルAIを用いて雑然としたプロンプトから不要なメタデータを除去し、綺麗にセグメント分割する",
+      "steps": [
+        "Mint画面を開く",
+        "AI Prompt Organizerセクションを確認する",
+        "AIで整理ボタンを押下する",
+        "綺麗に分割されたチップ（Bubble）を確認・保存する"
+      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/PromptBubbleEditor.tsx"]
+    },
+    {
+      "id": "@J-AI-DECLUTTER-02",
+      "name": "AIプロンプトクリーンアップ軽量フォールバック",
+      "description": "AIモデル未ロード時に、正規表現ベースのフォールバックロジックを用いてプロンプトのクリーンアップとセグメント分割を行う",
+      "steps": [
+        "Mint画面を開く",
+        "AI Prompt Organizerセクションを確認する",
+        "「整理 (フォールバック)」ボタンを押下する",
+        "フォールバック処理されたチップ（Bubble）を確認・保存する"
+      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "viewComponents": ["src/components/organisms/PromptBubbleEditor.tsx"]
+    },
+    {
       "id": "@J-ORG-BINDER-CUSTOMIZE-01",
       "name": "バインダーのカスタマイズ（カバー画像とテーマ設定）",
       "description": "バインダー（フォルダ）ごとに、カスタム表紙画像の設定とスキンテーマ選択を行い、バインダー詳細表示画面のスタイリングを動的に切り替える",
@@ -548,6 +585,7 @@
       ],
       "nextJourneys": ["@J-ORG-EXPERT-01"],
       "viewComponents": [
+        "src/components/organisms/LibraryTab.tsx",
         "src/components/organisms/CategoryManagerModal.tsx",
         "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
         "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
@@ -557,12 +595,15 @@
     },
     {
       "id": "@J-SET-WEBGPU-TROUBLESHOOT-01",
-      "name": "WebGPUトラブルシューティング",
-      "description": "WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く",
+      "name": "WebGPUトラブルシューティング・自動フォールバックと容量チェック",
+      "description": "WebGPUが無効な場合にWasmへ自動フォールバックしインフォバー警告を表示、両方不可な場合は最終エラー表示、容量不足時はエラー表示する",
       "steps": [
-        "WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）",
+        "WebGPUが無効化されたブラウザ環境でダウンロード・ロードを開始する",
+        "自動でCPU(Wasm)モードにフォールバックされ、「WebGPU非対応：CPU(Wasm)モードに切り替えています」の警告インフォバーが表示されることを確認",
         "WebGPU無効警告とステップバイステップガイドが表示されることを確認",
-        "「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"
+        "「Chrome設定を開く」をクリックして設定ページに遷移できることを確認",
+        "WebGPUおよびWasmの両方が利用不可能な場合に、最終エラー画面「AI実行環境非対応」が表示されることを確認",
+        "ストレージ空き容量が1.5GB未満、またはダウンロード中にQuotaExceededErrorが発生した際に、「ストレージ空き容量が不足しています。1.5GB以上の空き容量を確保してください」と表示されることを確認"
       ],
       "nextJourneys": ["@J-SET-01"],
       "viewComponents": [
@@ -570,6 +611,21 @@
         "src/components/organisms/WebLlmSettingsSection.tsx",
         "src/components/organisms/WebLlmSettingsSubComponents.tsx",
         "src/components/molecules/AiDownloadStatus.tsx"
+      ]
+    },
+    {
+      "id": "@J-WB-UNDO-REDO-01",
+      "name": "ワークベンチ操作の履歴管理（Undo/Redo）",
+      "description": "ワークベンチ上でのスタイルカードの追加・削除や比率（Portion）変更をUndo/Redoボタンやショートカット（Ctrl+Z, Ctrl+Y等）で巻き戻し・やり直す",
+      "steps": [
+        "ワークベンチでカードを追加・削除・比率変更する",
+        "Undoボタン押下またはCtrl+Z入力で操作を巻き戻す",
+        "Redoボタン押下またはCtrl+Y/Ctrl+Shift+Z入力で操作をやり直す"
+      ],
+      "nextJourneys": ["@J-WB-EXPERT-01"],
+      "viewComponents": [
+        "src/components/organisms/Workbench.tsx",
+        "src/hooks/useWorkbench.ts"
       ]
     },
     {
@@ -590,20 +646,26 @@
     {
       "id": "@J-MOBILE-PREVIEW-01",
       "name": "モバイルお試しプレビュー＆フリップ",
-      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ及びプロンプトのコピーを行う",
+      "description": "モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ、プロンプトコピー、およびGoogle Driveへの一時保存を行う",
       "steps": [
         "URLパラメータからモバイルランディングページに遷移",
         "アトリエスキンのStyle Card表示を確認",
         "カードをタップして3Dフリップ回転",
         "裏面のプロンプトとコピーボタンを確認",
-        "コピーボタンタップでクリップボードへコピー"
+        "コピーボタンタップでクリップボードへコピー",
+        "「クラウド保存（PCへ同期）」ボタンをタップ",
+        "Google認証および認証トークン取得",
+        "Google DriveのappDataFolder内の一時ファイルへカードデータを追記・保存"
       ],
       "nextJourneys": [],
       "viewComponents": [
         "src/mobile-app/styles/mobile.css",
         "src/mobile-app/mockup.html",
         "src/mobile-app/index.html",
-        "src/mobile-app/index.ts"
+        "src/mobile-app/index.ts",
+        "src/mobile-app/gdrive.ts",
+        "src/mobile-app/gdrive-client.ts",
+        "src/lib/qr-utils.ts"
       ]
     },
     {
@@ -620,6 +682,78 @@
       "viewComponents": [
         "src/components/organisms/LibraryFilterAccordion.tsx",
         "src/components/organisms/LibraryTab/SearchAndFilterSection.tsx"
+      ]
+    },
+    {
+      "id": "@J-SET-GDRIVE-ERROR",
+      "name": "Google Drive同期エラーハンドリング",
+      "description": "Google Drive同期での容量不足やAPI制限時に分かりやすいトースト表示とリカバリステップを提示する",
+      "steps": [
+        "Google Drive同期実行",
+        "エラー発生（容量超過/API制限）",
+        "エラー説明トースト表示",
+        "トースト内のアクションボタン押下（容量整理ガイド/ローカルバックアップ）"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/components/organisms/CloudSyncSection.tsx",
+        "src/hooks/useSettingsGoogleDrive.ts",
+        "src/lib/google-drive.ts"
+      ]
+    },
+    {
+      "id": "@J-PROFILER-DASHBOARD",
+      "name": "開発者プロファイラーダッシュボード",
+      "description": "LiteRT-LM などの Web Worker と連携し、VRAM/OPFS使用状況や推論レイテンシを可視化するデバッグダッシュボードを確認する",
+      "steps": [
+        "テストサンドボックスを開く",
+        "プロファイラーダッシュボードを確認する",
+        "モックモードと実Workerモードを切り替える"
+      ],
+      "nextJourneys": [],
+      "viewComponents": [
+        "tests/sandbox/main.tsx",
+        "src/test/harness/index.html",
+        "src/test/harness/harness.js"
+      ]
+    },
+    {
+      "id": "@J-PWA-A2HS-OFFLINE-01",
+      "name": "モバイルPWAスマートQR起動＆A2HSとオフライン閲覧",
+      "description": "ユーザーがスマートQRからモバイルPWAを起動し、カード詳細をめくって閲覧した後、ホーム画面に追加（A2HS）し、オフライン状態でコレクションを閲覧・整理する",
+      "steps": [
+        "スマートQRコードをスマホカメラで読み取りPWAを起動",
+        "アトリエスキンのカード一覧からカードを選択しタップしてめくる（3Dフリップ）",
+        "iOS/AndroidそれぞれのA2HSインストールプロンプトに従いホーム画面に追加",
+        "端末の通信を切断（オフライン化）",
+        "ホーム画面からPWAを再起動し、オフライン状態でコレクションを通常通り閲覧・整理できることを確認"
+      ],
+      "nextJourneys": ["@J-PWA-P2P-SYNC-01"],
+      "viewComponents": [
+        "src/mobile-app/index.html",
+        "src/mobile-app/manifest.json",
+        "src/mobile-app/sw.ts",
+        "src/mobile-app/components/A2HSPrompt.tsx",
+        "src/hooks/useOpfsImage.ts"
+      ]
+    },
+    {
+      "id": "@J-PWA-P2P-SYNC-01",
+      "name": "モバイルPWA・PC間ハイブリッド同期（P2P/Drive）",
+      "description": "モバイルPWAでバインダー整理やカード操作を行い、WebRTCによるP2P直接同期またはGoogle Drive/暗号化中間キャッシュを経由してPC Chrome拡張機能とコンフリクトなく自動同期する",
+      "steps": [
+        "モバイルPWA上でバインダーの整理（フォルダ移動やカード追加）を行う",
+        "PC側に表示された同期QRコードをモバイルPWAカメラでスキャン",
+        "WebRTC (DataChannel) または暗号化中間キャッシュを介したP2P直接同期が開始されることを確認",
+        "または独立ドメインからのGoogle Drive認証ポップアップフローを実行して自動同期する",
+        "LWW (Last-Write-Wins) マージおよびコンフリクト解消ダイアログによる安全なデータ統合を確認する"
+      ],
+      "nextJourneys": ["@J-MOBILE-PREVIEW-01"],
+      "viewComponents": [
+        "src/mobile-app/gdrive-client.ts",
+        "src/mobile-app/webrtc-sync.ts",
+        "src/lib/db/sync-merger.ts",
+        "src/components/molecules/GDriveSyncStrategyDialog.tsx"
       ]
     }
   ]

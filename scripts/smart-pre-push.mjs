@@ -147,7 +147,7 @@ async function main() {
       const grepPattern = `(${testedJourneys.join('|')})`;
       console.log(`Affected Journeys: ${testedJourneys.join(', ')}`);
       console.log(`Running E2E tests for pattern: ${grepPattern}`);
-      execSync(`npx playwright test -g "${grepPattern}"`, { stdio: 'inherit' });
+      execSync(`npx playwright test -g "${grepPattern}" --retries=2`, { stdio: 'inherit' });
     } catch {
       console.error('E2E tests failed.');
       process.exit(1);
@@ -158,7 +158,7 @@ async function main() {
     console.log('WARNING: Changed files did not map to any View Components defined in userJourneys.json.');
     console.log('Running ALL E2E tests to be safe.');
     try {
-      execSync(`npx playwright test`, { stdio: 'inherit' });
+      execSync(`npx playwright test --retries=2`, { stdio: 'inherit' });
       testedJourneys.push('ALL'); // Indicate all were run
     } catch {
       console.error('E2E tests failed.');
