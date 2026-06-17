@@ -313,4 +313,15 @@ function setupEventHandlers() {
 document.addEventListener("DOMContentLoaded", () => {
   loadCardFromUrl()
   setupEventHandlers()
+
+  // Register Service Worker for offline support
+  if (
+    "serviceWorker" in navigator &&
+    (import.meta.env.PROD || window.location.search.includes("pwa=true"))
+  ) {
+    navigator.serviceWorker
+      .register("/mobile/sw.js")
+      .then((reg) => console.log("ServiceWorker registered: ", reg.scope))
+      .catch((err) => console.error("ServiceWorker failed: ", err))
+  }
 })

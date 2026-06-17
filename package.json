@@ -15,7 +15,7 @@
     "dev:mobile": "vite --config vite.config.mobile.ts",
     "serve:cache": "node scripts/serve-cache.mjs",
     "build": "plasmo build",
-    "build:mobile": "vite build --config vite.config.mobile.ts",
+    "build:mobile": "node scripts/build-mobile.mjs",
     "package": "plasmo package",
     "test": "vitest run",
     "test:ui": "vitest --ui",

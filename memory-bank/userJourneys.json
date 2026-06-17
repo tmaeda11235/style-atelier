@@ -745,7 +745,8 @@
       "viewComponents": [
         "src/mobile-app/index.html",
         "src/mobile-app/manifest.json",
-        "src/mobile-app/sw.ts",
+        "src/mobile-app/sw.template.js",
+        "scripts/build-mobile.mjs",
         "src/mobile-app/components/A2HSPrompt.tsx",
         "src/hooks/useOpfsImage.ts"
       ]

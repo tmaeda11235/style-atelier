@@ -17,6 +17,29 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           if (req.url && req.url.startsWith("/mobile/")) {
             const urlPath = req.url.slice("/mobile/".length).split("?")[0]
+
+            // Try serving from dist-mobile (built PWA assets) first if it exists
+            const distFilePath = path.join(
+              __dirname,
+              "../../dist-mobile",
+              urlPath || "index.html"
+            )
+            if (
+              fs.existsSync(distFilePath) &&
+              fs.statSync(distFilePath).isFile()
+            ) {
+              const ext = path.extname(distFilePath)
+              let contentType = "application/octet-stream"
+              if (ext === ".html") contentType = "text/html"
+              else if (ext === ".js") contentType = "application/javascript"
+              else if (ext === ".css") contentType = "text/css"
+              else if (ext === ".json") contentType = "application/json"
+              else if (ext === ".png") contentType = "image/png"
+              res.setHeader("Content-Type", contentType)
+              res.end(fs.readFileSync(distFilePath))
+              return
+            }
+
             const filePath = path.join(
               __dirname,
               "../../src/mobile-app/public",
