@@ -28,6 +28,7 @@ export interface WebLlmContextType {
   retryCount: number
   maxRetries: number
   text: string
+  webGpuFallback: boolean
   startDownload: () => void
   purgeCache: () => void
   checkCurrentState: () => void
@@ -57,6 +58,7 @@ function useWebLlmProviderStates() {
   const [retryCount, setRetryCount] = useState<number>(0)
   const [maxRetries, setMaxRetries] = useState<number>(0)
   const [text, setText] = useState<string>("")
+  const [webGpuFallback, setWebGpuFallback] = useState<boolean>(false)
 
   return {
     status,
@@ -76,7 +78,9 @@ function useWebLlmProviderStates() {
     maxRetries,
     setMaxRetries,
     text,
-    setText
+    setText,
+    webGpuFallback,
+    setWebGpuFallback
   }
 }
 
@@ -92,6 +96,7 @@ interface WebLlmEffectProps {
   setRetryCount: React.Dispatch<React.SetStateAction<number>>
   setMaxRetries: React.Dispatch<React.SetStateAction<number>>
   setText: React.Dispatch<React.SetStateAction<string>>
+  setWebGpuFallback: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function useWebLlmEffect(props: WebLlmEffectProps) {
@@ -110,10 +115,16 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
         props.setEta,
         props.setRetryCount,
         props.setMaxRetries,
-        props.setText
+        props.setText,
+        props.setWebGpuFallback
       )
       chrome.runtime.onMessage.addListener(messageListener)
-      checkCurrentStateHelper(props.setStatus, props.setProgress)
+      checkCurrentStateHelper(
+        props.setStatus,
+        props.setProgress,
+        props.setWebGpuFallback,
+        props.setError
+      )
       return () => {
         try {
           port.disconnect()
@@ -138,10 +149,12 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
     props.setEta,
     props.setRetryCount,
     props.setMaxRetries,
-    props.setText
+    props.setText,
+    props.setWebGpuFallback
   ])
 }
 
+/* eslint-disable max-lines-per-function */
 export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
@@ -154,11 +167,17 @@ export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
     states.setRetryCount(0)
     states.setMaxRetries(0)
     states.setText("")
+    states.setWebGpuFallback(false)
   }, [states])
 
   const startDownload = useCallback(() => {
     resetStats()
-    startDownloadHelper(states.setStatus, states.setProgress, states.setError)
+    startDownloadHelper(
+      states.setStatus,
+      states.setProgress,
+      states.setError,
+      states.setWebGpuFallback
+    )
   }, [resetStats, states])
 
   const purgeCache = useCallback(() => {
@@ -178,10 +197,16 @@ export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
     eta: states.eta,
     retryCount: states.retryCount,
     maxRetries: states.maxRetries,
+    webGpuFallback: states.webGpuFallback,
     startDownload,
     purgeCache,
     checkCurrentState: useCallback(() => {
-      checkCurrentStateHelper(states.setStatus, states.setProgress)
+      checkCurrentStateHelper(
+        states.setStatus,
+        states.setProgress,
+        states.setWebGpuFallback,
+        states.setError
+      )
     }, [states]),
     preloadEngine: preloadEngineHelper,
     runInference: runInferenceHelper
@@ -191,6 +216,7 @@ export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
     <WebLlmContext.Provider value={value}>{children}</WebLlmContext.Provider>
   )
 }
+/* eslint-enable max-lines-per-function */
 
 export const useWebLlmContext = () => {
   const context = useContext(WebLlmContext)

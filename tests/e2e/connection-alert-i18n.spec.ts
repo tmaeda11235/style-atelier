@@ -11,7 +11,7 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     })
   })
 
-  test("should show localized ConnectionAlerts and take screenshots", async ({
+  test("should show localized ConnectionAlerts and take screenshots (@J-UX-DISCONNECTED-ALERT)", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -145,6 +145,40 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
     })
     console.log("No Input English Alert screenshot saved.")
 
+    // Dismiss Alert
+    await dismissBtn.click()
+
+    // Mock db to throw error on updateCard and styleCards.put
+    await spFrame.locator("body").evaluate(() => {
+      const database = (window as any).db
+      database.updateCard = async () => {
+        throw new Error("QuotaExceededError")
+      }
+      database.styleCards.put = async () => {
+        throw new Error("QuotaExceededError")
+      }
+    })
+
+    // Click Save button in English
+    const saveBtnEn = spFrame.locator("button:has-text('Save')")
+    await expect(saveBtnEn).toBeVisible()
+    await saveBtnEn.click()
+
+    // Verify DB Write Error Alert in English
+    const dbErrorTitleEn = spFrame.locator("p:has-text('Database Write Error')")
+    await expect(dbErrorTitleEn).toBeVisible()
+    await expect(
+      spFrame.locator(
+        "p:has-text('Failed to write to the database. Please check your storage quota or limits.')"
+      )
+    ).toBeVisible()
+
+    // Take screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "connection-alert-dberror-en.png")
+    })
+    console.log("DB Error English Alert screenshot saved.")
+
     // Dismiss Alert and close detail view
     await dismissBtn.click()
     await spFrame.locator("button:has-text('Cancel')").click()
@@ -231,6 +265,42 @@ test.describe("ConnectionAlert i18n E2E Tests", () => {
       path: path.join(screenshotsDir, "connection-alert-noinput-ja.png")
     })
     console.log("No Input Japanese Alert screenshot saved.")
+
+    // Dismiss Alert
+    await dismissBtn.click()
+
+    // Mock db to throw error on updateCard and styleCards.put
+    await spFrame.locator("body").evaluate(() => {
+      const database = (window as any).db
+      database.updateCard = async () => {
+        throw new Error("QuotaExceededError")
+      }
+      database.styleCards.put = async () => {
+        throw new Error("QuotaExceededError")
+      }
+    })
+
+    // Click Save (保存) button
+    const saveBtnJa = spFrame.locator("button:has-text('保存')")
+    await expect(saveBtnJa).toBeVisible()
+    await saveBtnJa.click()
+
+    // Verify DB Write Error Alert in Japanese
+    const dbErrorTitleJa = spFrame.locator(
+      "p:has-text('データベース書き込みエラー')"
+    )
+    await expect(dbErrorTitleJa).toBeVisible()
+    await expect(
+      spFrame.locator(
+        "p:has-text('データベースの書き込みに失敗しました。容量制限等をご確認ください。')"
+      )
+    ).toBeVisible()
+
+    // Take screenshot
+    await page.screenshot({
+      path: path.join(screenshotsDir, "connection-alert-dberror-ja.png")
+    })
+    console.log("DB Error Japanese Alert screenshot saved.")
 
     // Dismiss Alert and close detail view
     await dismissBtn.click()

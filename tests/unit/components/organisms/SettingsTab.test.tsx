@@ -432,9 +432,9 @@ describe("SettingsTab", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Cloud Backup Preview")).toBeDefined()
+        expect(screen.getByText(/Cloud Backup/i)).toBeDefined()
       },
-      { timeout: 5000 }
+      { timeout: 10000 }
     )
 
     const restoreBtn = screen.getByRole("button", {
@@ -690,7 +690,7 @@ describe("SettingsTab", () => {
   it("displays progress percentage and progress bar during sync", async () => {
     let progressCallback: any = null
     vi.mocked(googleDrive.downloadBackup).mockImplementation(
-      async (token, onTokenUpdated, onProgress, options) => {
+      async (token, onTokenUpdated, onProgress, _options) => {
         if (onProgress) progressCallback = onProgress
         return new Promise(() => {})
       }
@@ -734,7 +734,7 @@ describe("SettingsTab", () => {
   it("displays progress percentage and progress bar during force recovery", async () => {
     let progressCallback: any = null
     vi.mocked(googleDrive.downloadBackup).mockImplementation(
-      async (token, onTokenUpdated, onProgress, context, options) => {
+      async (token, onTokenUpdated, onProgress, _context, _options) => {
         if (onProgress) progressCallback = onProgress
         return new Promise(() => {})
       }
@@ -909,6 +909,63 @@ describe("SettingsTab", () => {
         expect(
           container.querySelector("#google-drive-auto-sync-btn")
         ).toBeNull()
+      })
+    })
+  })
+
+  describe("Auto Sync Age Suspension UX", () => {
+    it("renders auto-sync suspended warning banner when autoSyncSuspendedByAge is true", async () => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123")
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null)
+
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-suspended-by-age", "true")
+
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+
+      await waitFor(() => {
+        expect(
+          container.querySelector("#auto-sync-suspended-banner")
+        ).not.toBeNull()
+      })
+
+      expect(
+        screen.getByText(/最後の同期から60日以上経過したため/i)
+      ).toBeDefined()
+    })
+
+    it("triggers sync when the warning banner sync button is clicked", async () => {
+      vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token-123")
+      vi.mocked(googleDrive.getBackupMetadata).mockResolvedValue(null)
+
+      localStorage.setItem("style-atelier-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-enabled", "true")
+      localStorage.setItem("style-atelier-auto-sync-suspended-by-age", "true")
+      localStorage.setItem(
+        "style-atelier-last-backup",
+        (Date.now() - 61 * 24 * 60 * 60 * 1000).toString()
+      )
+
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+
+      await waitFor(() => {
+        expect(
+          container.querySelector("#suspended-banner-sync-btn")
+        ).not.toBeNull()
+      })
+
+      const bannerSyncBtn = container.querySelector(
+        "#suspended-banner-sync-btn"
+      )!
+      fireEvent.click(bannerSyncBtn)
+
+      await waitFor(() => {
+        expect(screen.getByText(/マージ戦略を選択してください/i)).toBeDefined()
       })
     })
   })

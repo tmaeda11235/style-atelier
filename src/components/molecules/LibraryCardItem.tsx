@@ -64,7 +64,7 @@ function LibraryCardThumbnail({
 }: LibraryCardThumbnailProps) {
   return (
     <CardThumbnail
-      imageUrl={card.thumbnailData}
+      imageUrl={card.thumbnailPath || card.thumbnailData}
       thumbnailImages={card.selectedThumbnails}
       alt={card.name}
       tier={card.tier}

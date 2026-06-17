@@ -1,10 +1,12 @@
 import { Send, X } from "lucide-react"
 import React from "react"
+import iconUrl from "url:../../../assets/icon.png"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSimpleWorkbenchModal } from "../../hooks/useSimpleWorkbenchModal"
 import type { StyleCard } from "../../lib/db-schema"
 import { Button } from "../atoms/Button"
+import { OpfsImage } from "../atoms/OpfsImage"
 import type { AlertType } from "../molecules/ConnectionAlert"
 import { ParameterEditor } from "./ParameterEditor"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"
@@ -53,8 +55,8 @@ const SimpleWorkbenchCardInfo = ({
 }) => (
   <div className="flex gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-100">
     <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden border border-slate-200 shadow-sm">
-      <img
-        src={card.thumbnailData || "assets/icon.png"}
+      <OpfsImage
+        src={card.thumbnailPath || card.thumbnailData || iconUrl}
         className="w-full h-full object-cover"
         alt={card.name}
       />

@@ -53,6 +53,7 @@ export function useEasyModeView({
     } catch (err) {
       console.error("Failed to save style card updates:", err)
       addLog("Error: Failed to save style card updates.")
+      setAlertType("db_error")
     }
   }
 
@@ -64,6 +65,7 @@ export function useEasyModeView({
     } catch (err) {
       console.error("Failed to delete style card:", err)
       addLog("Error: Failed to delete style card.")
+      setAlertType("db_error")
     }
   }
 
@@ -138,11 +140,15 @@ export function useEasyModeView({
     }
   }
 
-  const minting = useMinting(addLog, (tab) => {
-    if (tab === "library") {
-      setActiveTab("library")
-    }
-  })
+  const minting = useMinting(
+    addLog,
+    (tab) => {
+      if (tab === "library") {
+        setActiveTab("library")
+      }
+    },
+    setAlertType
+  )
 
   const handleResetDb = async () => {
     const ok = await confirm({

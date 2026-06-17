@@ -4,7 +4,12 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { safeReloadTab } from "../../lib/chrome-utils"
 import { Button } from "../atoms/Button"
 
-export type AlertType = "disconnected" | "no_input" | "hand_full" | null
+export type AlertType =
+  | "disconnected"
+  | "no_input"
+  | "hand_full"
+  | "db_error"
+  | null
 
 interface ConnectionAlertProps {
   type: AlertType
@@ -19,8 +24,6 @@ export const ConnectionAlert = ({
 }: ConnectionAlertProps) => {
   const context = useLanguage()
   const { t } = context
-  console.log("DEBUG_LOG: lang is", context.lang)
-  console.log("DEBUG_LOG: alerts is", (t as any).alerts)
   if (!type) return null
 
   const DismissButton = () =>
@@ -101,6 +104,26 @@ export const ConnectionAlert = ({
           <p className="text-rose-800/80 text-xs leading-relaxed">
             {(t as any).alerts?.handFullDesc ||
               "You can only pin up to 7 cards. Please unpin another card first."}
+          </p>
+        </div>
+        <DismissButton />
+      </div>
+    )
+  }
+
+  if (type === "db_error") {
+    return (
+      <div
+        className="relative bg-rose-50 border border-rose-200 rounded-lg p-3 text-sm flex gap-3 text-rose-900 shadow-sm pr-8"
+        id="alert-db-error">
+        <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+        <div className="flex-1 space-y-1">
+          <p className="font-semibold text-rose-950">
+            {(t as any).alerts?.dbErrorTitle || "Database Write Error"}
+          </p>
+          <p className="text-rose-800/80 text-xs leading-relaxed">
+            {(t as any).alerts?.dbErrorDesc ||
+              "Database write failed. Please check your storage limits."}
           </p>
         </div>
         <DismissButton />
