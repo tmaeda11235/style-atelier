@@ -6,7 +6,7 @@ This file defines the project constraints, architectural guidelines, and workflo
 
 - **File Size Limit**: No source file (especially components) should exceed **300 lines** (excluding blank lines and comments).
 - **Function Size Limit**: No function should exceed **50 lines**.
-- **Rule Violations**: If a component or function exceeds these limits, decompose and refactor it into smaller sub-components or utility hooks.
+- **Rule Violations**: If a component or function exceeds these limits, decompose and refactor it into smaller sub-components or utility hooks. Detailed design patterns and guidelines (UI-logic separation, single-responsibility hook splitting, sub-componentization) are documented in [docs/DEVELOPMENT.md](file:///docs/DEVELOPMENT.md#L92).
 - **ESLint Whitelist Guardrail**: Do not manually expand the ESLint exception list (`eslint.config.mjs` overrides). If you refactor a file and resolve ESLint errors, run the sync script to automatically update the exception list:
   ```bash
   node scratch/auto-sync-eslint.js

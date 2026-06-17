@@ -89,12 +89,101 @@ We use `eslint-plugin-i18next` to ensure no hardcoded strings remain in our user
      /* eslint-disable i18next/no-literal-string */
      ```
 
-### 2.2 Design Principle: Separation of Concerns / 設計指針: 関心の分離
+### 2.2 Design Principle: Separation of Concerns & 50-Line Limit Compliance / 設計指針: 関心の分離と50行制限の遵守パターン
 
-- **Custom Hooks**: Extract side effects, local state mutation, and business logic into custom hooks.
-  副作用、ローカル状態の変更、ビジネスロジックはカスタムフックに抽出します。
-- **Pure Presentation**: Keep UI components (e.g. Molecules) pure. They should only receive props and render elements. Do not make direct database queries inside UI components (do not import `src/lib/db.ts` directly).
-  UIコンポーネント（Moleculesなど）はピュアに保ち、Propsの受け取りとレンダリングのみを行います。UIコンポーネント内で直接データベースクエリを実行しないでください（`src/lib/db.ts` を直接インポートしない）。
+To comply with the strict **50 lines per function** limit and prevent the ESLint exception list (`eslint.config.mjs` overrides) from expanding, developers and AI agents must follow these patterns:
+
+関数の **50行制限** を容易に遵守し、ESLint例外リスト（`eslint.config.mjs` 内の overrides）の再肥大化を防ぐため、以下の設計パターンを徹底してください。
+
+#### 1. Complete UI and Logic Separation (Custom Hooks) / UIとロジックの完全分離（Custom Hooksの活用）
+
+- **UI Components**: Keep rendering components (Atoms, Molecules) purely presentational. They should only receive props and render JSX. Do not manage complex state, handle raw events, or run side effects inside the component. Do not make direct database queries inside UI components (do not import `src/lib/db.ts` directly).
+- **Custom Hooks**: Extract all state definitions, event handlers, API/database calls, and side-effects into custom hooks.
+- **UIコンポーネント**: レンダリングコンポーネントは描画に専念させ、複雑な状態管理やイベントハンドラ、副作用を直接記述しないでください。また、UIコンポーネント内で直接データベースクエリを実行しないでください（`src/lib/db.ts` を直接インポートしない）。
+- **カスタムフック**: 状態定義、イベントハンドリング、APIやデータベースとの連携（`src/lib/db.ts` 等の操作）はすべてカスタムフックへ抽出します。
+
+_Example / 例:_
+
+```tsx
+// ❌ Bad (UI and logic mixed, exceeding 50 lines)
+export const TodoList = () => {
+  const [todos, setTodos] = useState<Todo[]>([])
+  useEffect(() => {
+    /* fetch logic */
+  }, [])
+  const handleAdd = () => {
+    /* add logic */
+  }
+  return <div>...large JSX...</div>
+}
+
+//  Good (Separated into Custom Hook and Pure Component)
+const useTodoList = () => {
+  const [todos, setTodos] = useState<Todo[]>([])
+  useEffect(() => {
+    /* fetch logic */
+  }, [])
+  const handleAdd = () => {
+    /* add logic */
+  }
+  return { todos, handleAdd }
+}
+
+export const TodoList = () => {
+  const { todos, handleAdd } = useTodoList()
+  return <div>...render items...</div>
+}
+```
+
+#### 2. Single Responsibility Hook Splitting / フックの単一責任分割
+
+- If a custom hook itself grows large and approaches the 50-line limit, split it into smaller, specialized hooks based on specific domains or capabilities.
+- カスタムフック自体のコード量が増え50行に近づいた場合は、機能やドメインごとにさらに小さなフックへと分割します。
+- _Example / 例:_ Instead of a monolithic `useGoogleDrive` hook, split it into `useGoogleDriveAuth` for authentication and `useGoogleDriveSync` for file synchronization.
+
+#### 3. Sub-componentization of Render Helpers / レンダリング補助関数のサブコンポーネント化
+
+- Do not define helper rendering functions (e.g., `renderHeader()`, `renderItem()`) within the parent component or hook context. These functions bloat the parent component's size and obscure state dependencies.
+- Instead, refactor these helper functions into lightweight sub-components (Atoms/Molecules) as separate components.
+- 親コンポーネント内で `renderHeader()` や `renderItem()` のようなレンダリング補助関数を定義しないでください。これらはコンポーネントの行数を増やし、状態の依存関係を不透明にします。
+- レンダリング補助関数は、それぞれ独立した軽量なサブコンポーネント（Atoms/Molecules）に分割・切り出してください。
+
+_Example / 例:_
+
+```tsx
+// ❌ Bad (Helper functions inline)
+export const Dashboard = () => {
+  const renderSidebar = () => {
+    /* JSX... */
+  }
+  const renderMain = () => {
+    /* JSX... */
+  }
+  return (
+    <div>
+      {renderSidebar()}
+      {renderMain()}
+    </div>
+  )
+}
+
+//  Good (Sub-componentized)
+const Sidebar = () => {
+  /* JSX... */
+}
+const MainContent = () => {
+  /* JSX... */
+}
+
+export const Dashboard = () => {
+  return (
+    <div>
+      <Sidebar />
+      <MainContent />
+    </div>
+  )
+}
+```
 
 ---
 
