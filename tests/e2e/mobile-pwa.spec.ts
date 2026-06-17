@@ -51,4 +51,49 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
     expect(icon512Response.ok()).toBe(true)
     expect(icon512Response.headers()["content-type"]).toBe("image/png")
   })
+
+  test("should register service worker and work offline", async ({
+    page,
+    context
+  }) => {
+    // Start waiting for the service worker registration
+    const swPromise = context.waitForEvent("serviceworker")
+
+    // Visit PWA with pwa=true
+    await page.goto("/mobile/?pwa=true")
+
+    // Wait for registration
+    const sw = await swPromise
+    expect(sw).toBeTruthy()
+
+    // Wait for the Service Worker to be activated
+    await page.evaluate(async () => {
+      const reg = await navigator.serviceWorker.ready
+      if (reg.active && reg.active.state !== "activated") {
+        await new Promise<void>((resolve) => {
+          reg.active!.addEventListener("statechange", (e: any) => {
+            if (e.target.state === "activated") {
+              resolve()
+            }
+          })
+        })
+      }
+    })
+
+    // Simulate going offline
+    await context.setOffline(true)
+
+    // Reload the page while offline
+    await page.reload()
+
+    // Assert that the page is still loaded and interactive
+    const title = page.locator(".app-title")
+    await expect(title).toHaveText("STYLE ATELIER")
+
+    const cardTitle = page.locator("#cardTitleFront")
+    await expect(cardTitle).toBeVisible()
+
+    // Clean up: return online
+    await context.setOffline(false)
+  })
 })
