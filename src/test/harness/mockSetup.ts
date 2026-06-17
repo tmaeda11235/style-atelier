@@ -1,6 +1,3 @@
-import { checkWebGpuSupport } from "../../lib/gpu-utils"
-import { getStorageEstimate } from "../../lib/storage-utils"
-
 export const mockState = {
   webGpuUnsupported: false,
   quotaExceeded: false,

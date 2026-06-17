@@ -206,7 +206,7 @@ function useMintingInitialization(
       editedSegments,
       selectedRarity: detectedRarity
     }))
-  }, [state.mintingItem, state.variationBase])
+  }, [state.mintingItem, state.variationBase, setState])
 }
 
 export function useMinting(
