@@ -74,7 +74,10 @@ export default defineConfig({
             !req.url.includes("?import") &&
             !req.url.includes("&import")
           ) {
-            const urlPath = req.url.split("?")[0]
+            let urlPath = req.url.split("?")[0]
+            if (urlPath.startsWith("/mobile/assets/")) {
+              urlPath = urlPath.slice("/mobile".length)
+            }
             const filePath = path.join(__dirname, "../..", urlPath)
             if (fs.existsSync(filePath)) {
               if (urlPath.endsWith(".wasm")) {
