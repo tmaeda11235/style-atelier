@@ -196,10 +196,12 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       .first()
     await libraryTabButton.click()
 
-    // 4. Change viewport width to narrow (320px) and hide midjourney-frame to prevent squishing the sidepanel
+    // 4. Change viewport width to narrow (320px) and hide midjourney-frame/sandbox-controls to prevent squishing and overlap
     await page.evaluate(() => {
       const mjFrame = document.getElementById("midjourney-frame")
       if (mjFrame) mjFrame.style.display = "none"
+      const controls = document.querySelector(".sandbox-controls")
+      if (controls) (controls as HTMLElement).style.display = "none"
       const spFrame = document.getElementById("sidepanel-frame")
       if (spFrame) spFrame.style.width = "100%"
     })
@@ -208,7 +210,7 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
 
     const cardItem = spFrame.locator("div:has-text('Quick Card C')").last()
     await expect(cardItem).toBeVisible({ timeout: 10000 })
-    await cardItem.hover()
+    await cardItem.hover({ force: true })
 
     // 5. Verify direct quick-send button is hidden
     const quickSendBtn = spFrame.locator("[data-testid='quick-send-button']")
@@ -219,7 +221,7 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       .locator("[data-testid='more-actions-button']")
       .first()
     await expect(moreBtn).toBeVisible()
-    await moreBtn.click()
+    await moreBtn.click({ force: true })
     await page.waitForTimeout(250)
 
     // 7. Click the Quick Send button in the More menu

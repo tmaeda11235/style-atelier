@@ -38,7 +38,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Resilience @J-SET-01"
     console.log(
       "Navigating to sandbox page with low storage estimate mocked..."
     )
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?quota=insufficient")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 

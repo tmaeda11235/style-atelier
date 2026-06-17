@@ -101,20 +101,21 @@ test.describe("Sandbox Controller E2E Tests", () => {
     await expect(warningTitle).toBeVisible({ timeout: 15000 })
 
     const statusText = spFrame
-      .locator(
-        "text=/Unsupported \\(Lightweight Fallback\\)|非サポート \\(軽量フォールバックモード\\)/"
-      )
+      .locator("text=/Not Downloaded|未ダウンロード/")
       .first()
     await expect(statusText).toBeVisible({ timeout: 15000 })
 
-    // Verify download button is now disabled
-    const disabledDownloadBtn = spFrame
+    // Verify download button is enabled (since CPU/Wasm fallback is available)
+    await expect(downloadBtn).toBeVisible()
+    await expect(downloadBtn).not.toBeDisabled()
+
+    // Verify CPU/Wasm fallback warning infobar is displayed
+    const fallbackWarning = spFrame
       .locator(
-        "button:has-text('WebGPU Not Supported'), button:has-text('WebGPU非対応のためダウンロード不可')"
+        "text=/WebGPU not supported: Switching to CPU \\(Wasm\\) mode|WebGPU非対応：CPU\\(Wasm\\)モードに切り替えています/"
       )
       .first()
-    await expect(disabledDownloadBtn).toBeVisible()
-    await expect(disabledDownloadBtn).toBeDisabled()
+    await expect(fallbackWarning).toBeVisible({ timeout: 15000 })
 
     // Save screenshot
     await page.screenshot({

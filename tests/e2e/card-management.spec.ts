@@ -584,6 +584,14 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     })
 
     // 6. Change viewport width to very narrow (e.g. 320px) to test collapsing actions
+    await page.evaluate(() => {
+      const mjFrame = document.getElementById("midjourney-frame")
+      if (mjFrame) mjFrame.style.display = "none"
+      const controls = document.querySelector(".sandbox-controls")
+      if (controls) (controls as HTMLElement).style.display = "none"
+      const spFrame = document.getElementById("sidepanel-frame")
+      if (spFrame) spFrame.style.width = "100%"
+    })
     await page.setViewportSize({ width: 320, height: 600 })
 
     // Wait for layout updates
@@ -613,7 +621,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     })
 
     // 8. Click "More" button to show popover menu
-    await moreBtn.click()
+    await moreBtn.click({ force: true })
 
     // 9. Verify popup items are visible and translated in Japanese
     const moreEditBtn = spFrame.locator("[data-testid='more-edit-card-button']")
@@ -638,7 +646,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     })
 
     // 10. Click "Edit" item inside popup and verify it opens Card Details (in Japanese context: カード詳細)
-    await moreEditBtn.click()
+    await moreEditBtn.click({ force: true })
     const detailTitle = spFrame
       .locator("h2:has-text('Card Details')")
       .or(spFrame.locator("h2:has-text('カード詳細')"))

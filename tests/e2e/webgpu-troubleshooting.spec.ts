@@ -27,7 +27,7 @@ test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
     })
 
     console.log("Navigating to sandbox page with WebGPU disabled...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?gpu=disabled")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
@@ -257,7 +257,7 @@ test.describe("WebGPU Troubleshooting Guide E2E Tests", () => {
     console.log(
       "Navigating to sandbox page and preparing to simulate both-unsupported error..."
     )
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?gpu=disabled")
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
