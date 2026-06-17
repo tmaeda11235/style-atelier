@@ -1,672 +1,190 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LiteRT-LM Offline Debug Harness Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --bg-color: #080c14;
-        --card-bg: rgba(17, 25, 40, 0.75);
-        --border-color: rgba(255, 255, 255, 0.08);
-        --border-glow: rgba(0, 210, 255, 0.3);
-        --text-primary: #f8fafc;
-        --text-secondary: #94a3b8;
-        --accent-blue: #00d2ff;
-        --accent-green: #05ffaa;
-        --accent-magenta: #ff007f;
-        --accent-orange: #ff9f1c;
-        --shadow-glow: 0 0 25px rgba(0, 210, 255, 0.15);
-        --font-sans: 'Outfit', -apple-system, sans-serif;
-        --font-mono: 'JetBrains Mono', monospace;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family: var(--font-sans);
-        background: var(--bg-color);
-        background-image: 
-          radial-gradient(at 0% 0%, rgba(0, 210, 255, 0.08) 0, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(255, 0, 127, 0.05) 0, transparent 50%);
-        color: var(--text-primary);
-        min-height: 100vh;
-        padding: 2.5rem;
-      }
-
-      .dashboard-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 2rem;
-      }
-
-      header {
-        grid-column: 1 / -1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-      }
-
-      h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-        background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-blue));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .status-group {
-        display: flex;
-        gap: 1rem;
-      }
-
-      .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--border-color);
-        backdrop-filter: blur(12px);
-      }
-
-      .status-badge::before {
-        content: '';
-        display: block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #64748b;
-      }
-
-      .status-badge.success::before { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
-      .status-badge.warn::before { background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }
-      .status-badge.error::before { background: var(--accent-magenta); box-shadow: 0 0 10px var(--accent-magenta); }
-
-      .card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 2rem;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-      }
-
-      .card:hover {
-        border-color: rgba(0, 210, 255, 0.2);
-        box-shadow: var(--shadow-glow);
-      }
-
-      .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .main-section {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-      }
-
-      /* Downloader Section */
-      .downloader-layout {
-        display: grid;
-        grid-template-columns: 200px 1fr;
-        gap: 2rem;
-        align-items: center;
-      }
-
-      .btn {
-        background: linear-gradient(135deg, var(--accent-blue), #0082ff);
-        color: #000;
-        font-weight: 700;
-        border: none;
-        padding: 0.8rem 1.8rem;
-        border-radius: 12px;
-        cursor: pointer;
-        font-family: var(--font-sans);
-        font-size: 0.95rem;
-        transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-        filter: brightness(1.1);
-        box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
-      }
-
-      .btn:active:not(:disabled) {
-        transform: translateY(0);
-      }
-
-      .btn:disabled {
-        background: rgba(255, 255, 255, 0.05);
-        color: #475569;
-        cursor: not-allowed;
-      }
-
-      .progress-container {
-        width: 100%;
-      }
-
-      .progress-header {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
-      }
-
-      .progress-bar-bg {
-        width: 100%;
-        height: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 9999px;
-        overflow: hidden;
-      }
-
-      .progress-bar-fill {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
-        border-radius: 9999px;
-        transition: width 0.3s ease;
-      }
-
-      .download-stats {
-        display: flex;
-        gap: 1.5rem;
-        margin-top: 0.5rem;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-      }
-
-      .stat-highlight {
-        color: var(--accent-blue);
-        font-weight: 600;
-      }
-
-      /* Playground Section */
-      .playground-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-
-      .input-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-      }
-
-      textarea {
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-        color: var(--text-primary);
-        font-family: var(--font-sans);
-        font-size: 1rem;
-        resize: vertical;
-        transition: border-color 0.3s ease;
-      }
-
-      textarea:focus {
-        outline: none;
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
-      }
-
-      .response-card {
-        background: rgba(0, 0, 0, 0.15);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
-        min-height: 100px;
-        font-family: var(--font-sans);
-        line-height: 1.6;
-        color: #cbd5e1;
-      }
-
-      /* Metrics Panel */
-      .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
-      }
-
-      .metric-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
-        transition: transform 0.3s ease;
-      }
-
-      .metric-card:hover {
-        transform: translateY(-5px);
-        border-color: rgba(0, 210, 255, 0.2);
-      }
-
-      .metric-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 0.5rem;
-      }
-
-      .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        font-family: var(--font-sans);
-        color: var(--accent-blue);
-        background: linear-gradient(135deg, var(--accent-blue), #0082ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .metric-card:nth-child(2) .metric-value {
-        background: linear-gradient(135deg, var(--accent-green), #00b4d8);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .metric-card:nth-child(3) .metric-value {
-        background: linear-gradient(135deg, var(--accent-magenta), #9b5de5);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .metric-card:nth-child(4) .metric-value {
-        background: linear-gradient(135deg, var(--accent-orange), #f77f00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      /* Console Logs Sidebar */
-      .sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        height: 100%;
-      }
-
-      .console-card {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        max-height: 600px;
-      }
-
-      .console-output {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-        overflow-y: auto;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        scroll-behavior: smooth;
-        min-height: 350px;
-      }
-
-      .log-entry {
-        display: grid;
-        grid-template-columns: 75px 1fr;
-        gap: 0.5rem;
-        line-height: 1.4;
-      }
-
-      .log-timestamp {
-        color: #475569;
-      }
-
-      .log-tag {
-        font-weight: 700;
-      }
-
-      .log-tag.system { color: var(--accent-blue); }
-      .log-tag.worker { color: var(--accent-green); }
-      .log-tag.error { color: var(--accent-magenta); }
-
-      .log-message {
-        color: #e2e8f0;
-      }
-
-      .action-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="dashboard-container">
-      <header>
-        <div>
-          <h1>LiteRT-LM Debug Harness</h1>
-          <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">
-            Real-time WebGPU & Worker Performance Profiling Dashboard
-          </p>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiteRT-LM Offline Debug Dashboard & Profiler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="harness.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="dashboard-header">
+      <div class="header-logo">
+        <span class="logo-glow"></span>
+        <div class="logo-text">
+          <h1>LiteRT-LM</h1>
+          <span class="badge badge-primary">Offline Debugger</span>
         </div>
-        <div class="status-group">
-          <div id="msw-status-badge" class="status-badge">MSW: Inactive</div>
-          <div id="worker-status-badge" class="status-badge">Worker: Disconnected</div>
-          <div id="opfs-status-badge" class="status-badge">OPFS Model: Not Found</div>
-        </div>
-      </header>
-
-      <div class="main-section">
-        <!-- Downloader Component -->
-        <div class="card">
-          <div class="card-title">
-            <span>Model File Manager (OPFS Storage)</span>
-            <span style="font-size: 0.85rem; color: var(--text-secondary);" id="opfs-size">0.00 GB</span>
+      </div>
+      <div class="header-controls">
+        <div id="msw-status-badge" class="status-badge">MSW: Initializing...</div>
+        <div class="mode-selector">
+          <span class="mode-label">Mode:</span>
+          <div class="toggle-container">
+            <button id="btn-mode-mock" class="toggle-btn active" data-mode="mock">Mock Mode</button>
+            <button id="btn-mode-real" class="toggle-btn" data-mode="real">Real Mode</button>
           </div>
-          <div class="downloader-layout">
-            <button id="download-btn" class="btn" disabled>Download Model</button>
-            <div class="progress-container">
-              <div class="progress-header">
-                <span id="download-status-txt">Idle</span>
-                <span id="download-percentage">0%</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Left Column: Control Panel & Status -->
+      <section class="grid-column">
+        <div class="card glass">
+          <div class="card-header">
+            <h2>Model Status & Controls</h2>
+            <div id="status-indicator" class="status-badge state-unloaded">
+              <span class="pulse-dot"></span>
+              <span id="status-text">UNLOADED</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="control-actions">
+              <button id="btn-start-download" class="btn btn-gradient">Start Download</button>
+              <button id="btn-preload" class="btn btn-secondary">Preload Engine</button>
+              <button id="btn-unload" class="btn btn-danger">Unload Engine</button>
+              <button id="btn-purge" class="btn btn-outline-danger">Purge OPFS Cache</button>
+            </div>
+
+            <div class="status-details">
+              <div class="status-row">
+                <span class="label">Progress:</span>
+                <div class="progress-container">
+                  <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                  <span id="progress-val" class="progress-text">0%</span>
+                </div>
               </div>
-              <div class="progress-bar-bg">
-                <div id="download-bar" class="progress-bar-fill"></div>
-              </div>
-              <div class="download-stats">
-                <span>Speed: <span id="download-speed" class="stat-highlight">0.0 MB/s</span></span>
-                <span>ETA: <span id="download-eta" class="stat-highlight">0s</span></span>
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Download Speed</span>
+                  <span id="metric-speed" class="metric-value">-</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">ETA</span>
+                  <span id="metric-eta" class="metric-value">-</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">VRAM Usage</span>
+                  <span id="metric-vram" class="metric-value">-</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Memory</span>
+                  <span id="metric-memory" class="metric-value">-</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Playground (Inference) Component -->
-        <div class="card">
-          <div class="card-title">Inference Engine Playground</div>
-          <div class="playground-grid">
-            <div class="input-wrapper">
-              <label for="system-prompt">System Prompt (Context setting)</label>
-              <textarea id="system-prompt" rows="2">You are a helpful and concise local AI assistant specialized in structuring fashion card attributes.</textarea>
+        <div class="card glass">
+          <div class="card-header">
+            <h2>OPFS Storage Info</h2>
+          </div>
+          <div class="card-body">
+            <div class="opfs-info">
+              <div class="info-row">
+                <span class="label">Storage Quota:</span>
+                <span id="opfs-quota" class="value">Checking...</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Model File:</span>
+                <span id="opfs-model-exists" class="value badge badge-error">Not Found</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Path:</span>
+                <span class="value code">opfs://litert_models/gemma-4-E2B-it-web.litertlm</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Size:</span>
+                <span id="opfs-model-size" class="value">-</span>
+              </div>
             </div>
-            <div class="input-wrapper">
-              <label for="prompt">User Prompt</label>
-              <textarea id="prompt" rows="3">A high-fashion neon gothic style card, dark colors, rare legendary tier, tags: goth, cyberpunk.</textarea>
+          </div>
+        </div>
+
+        <div id="mock-controls-card" class="card glass">
+          <div class="card-header">
+            <h2>Mock Controls</h2>
+            <span class="badge badge-warning">Testing Only</span>
+          </div>
+          <div class="card-body">
+            <div class="mock-sliders">
+              <div class="slider-group">
+                <label for="slider-progress">Simulate Progress: <span id="lbl-mock-progress">0%</span></label>
+                <input type="range" id="slider-progress" min="0" max="100" value="0">
+              </div>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <button id="inference-btn" class="btn" disabled>Execute Inference</button>
-              <span id="engine-status-txt" style="color: var(--text-secondary); font-size: 0.9rem;">Engine Not Initialized</span>
+            <div class="mock-actions">
+              <button id="btn-mock-downloading" class="btn btn-xs btn-outline">Simulate Downloading</button>
+              <button id="btn-mock-initializing" class="btn btn-xs btn-outline">Simulate Loading</button>
+              <button id="btn-mock-ready" class="btn btn-xs btn-outline">Simulate Ready</button>
+              <button id="btn-mock-error-vram" class="btn btn-xs btn-outline-danger">Simulate VRAM Error</button>
+              <button id="btn-mock-error-net" class="btn btn-xs btn-outline-danger">Simulate Net Error</button>
             </div>
-            <div class="input-wrapper">
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Inference Tester & Stream Log -->
+      <section class="grid-column">
+        <div class="card glass flex-fill">
+          <div class="card-header">
+            <h2>Inference Console</h2>
+            <div class="preset-selector">
+              <label for="select-preset">Preset:</label>
+              <select id="select-preset">
+                <option value="recipe">Atelier Recipe Helper</option>
+                <option value="midjourney">Midjourney Style Generator</option>
+                <option value="qa">Simple QA</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body flex-column">
+            <div class="form-group">
+              <label for="input-system-prompt">System Prompt</label>
+              <textarea id="input-system-prompt" rows="3" placeholder="Enter system instructions..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="input-prompt">Prompt</label>
+              <textarea id="input-prompt" rows="4" placeholder="Enter user prompt..."></textarea>
+            </div>
+            <div class="inference-actions">
+              <button id="btn-run-inference" class="btn btn-gradient">Run Inference</button>
+              <button id="btn-cancel-inference" class="btn btn-secondary" disabled>Cancel</button>
+              <div id="inference-time-badge" class="time-badge hide">
+                Time: <span id="inference-time">-</span>s
+              </div>
+            </div>
+            <div class="form-group flex-fill">
               <label>Model Response Output</label>
-              <div id="response-output" class="response-card">No output yet. Execute inference to fetch result.</div>
+              <div id="inference-output" class="console-output placeholder">
+                Inference output will be displayed here...
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Metrics Dashboard -->
-        <div class="card">
-          <div class="card-title">Real-time Profiling Metrics</div>
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-label">Latency (Time to First Token)</div>
-              <div id="metric-latency" class="metric-value">0.00s</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Generation Speed</div>
-              <div id="metric-speed" class="metric-value">0.0 t/s</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Estimated VRAM Allocation</div>
-              <div id="metric-vram" class="metric-value">0.00 GB</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Generated Tokens</div>
-              <div id="metric-tokens" class="metric-value">0 tokens</div>
+        <div class="card glass">
+          <div class="card-header">
+            <h2>Event Logs</h2>
+            <button id="btn-clear-logs" class="btn btn-xs btn-outline">Clear Logs</button>
+          </div>
+          <div class="card-body">
+            <div id="event-logs" class="log-console">
+              <!-- Logs will be populated here -->
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Sidebar Console & Logs -->
-      <div class="sidebar">
-        <div class="card console-card">
-          <div class="card-title">Message Logging Console</div>
-          <div id="console-output" class="console-output">
-            <!-- Dynamic Logs will be injected here -->
-          </div>
-          <div class="action-bar">
-            <span style="font-size: 0.8rem; color: var(--text-secondary);">Listening to Worker postMessage...</span>
-            <button id="clear-console-btn" class="btn" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary);">Clear</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Initialize Mock Service Worker (MSW) & Connect Worker -->
-    <script type="module">
-      const consoleOutput = document.getElementById("console-output");
-
-      function logMessage(tag, message, type = "system") {
-        const timeStr = new Date().toTimeString().split(' ')[0];
-        const logEntry = document.createElement("div");
-        logEntry.className = "log-entry";
-        logEntry.innerHTML = `
-          <span class="log-timestamp">[${timeStr}]</span>
-          <span>
-            <span class="log-tag ${type}">${tag}:</span>
-            <span class="log-message">${message}</span>
-          </span>
-        `;
-        consoleOutput.appendChild(logEntry);
-        consoleOutput.scrollTop = consoleOutput.scrollHeight;
-      }
-
-      document.getElementById("clear-console-btn").onclick = () => {
-        consoleOutput.innerHTML = "";
-        logMessage("System", "Console cleared.");
-      };
-
-      // 1. Initialize MSW
-      const initHarnessCache = async () => {
-        try {
-          const { worker } = await import('../../mocks/browser.ts');
-          await worker.start({
-            serviceWorker: {
-              url: '/assets/mockServiceWorker.js'
-            },
-            onUnhandledRequest: 'bypass'
-          });
-          const badge = document.getElementById('msw-status-badge');
-          badge.className = 'status-badge success';
-          badge.innerText = 'MSW: Active';
-          logMessage("MSW", "Mock Service Worker started successfully.");
-        } catch (err) {
-          const badge = document.getElementById('msw-status-badge');
-          badge.className = 'status-badge error';
-          badge.innerText = 'MSW: Error';
-          logMessage("MSW Error", err.message, "error");
-        }
-      };
-
-      await initHarnessCache();
-
-      // 2. Setup Worker Connection
-      let litertWorker = null;
-      try {
-        litertWorker = new Worker(new URL('../../litert.worker.ts', import.meta.url), { type: 'module' });
-        const workerBadge = document.getElementById("worker-status-badge");
-        workerBadge.className = "status-badge success";
-        workerBadge.innerText = "Worker: Connected";
-        logMessage("System", "LiteRT Worker thread initialized successfully.");
-      } catch (e) {
-        const workerBadge = document.getElementById("worker-status-badge");
-        workerBadge.className = "status-badge error";
-        workerBadge.innerText = "Worker: Fail";
-        logMessage("System Error", "Failed to construct worker: " + e.message, "error");
-      }
-
-      // 3. Monitor OPFS File
-      async function updateOpfsStatus() {
-        try {
-          const root = await navigator.storage.getDirectory();
-          const opfsDir = await root.getDirectoryHandle("litert_models", { create: true });
-          let fileHandle = null;
-          try {
-            fileHandle = await opfsDir.getFileHandle("gemma-4-E2B-it-web.litertlm");
-          } catch (e) {
-            // File not found
-          }
-
-          const opfsBadge = document.getElementById("opfs-status-badge");
-          const downloadBtn = document.getElementById("download-btn");
-          const inferenceBtn = document.getElementById("inference-btn");
-
-          if (fileHandle) {
-            const file = await fileHandle.getFile();
-            const expectedSize = 2008432640;
-            const sizeGB = (file.size / (1024 * 1024 * 1024)).toFixed(3);
-            document.getElementById("opfs-size").innerText = `${sizeGB} GB`;
-            
-            if (file.size === expectedSize) {
-              opfsBadge.className = "status-badge success";
-              opfsBadge.innerText = "OPFS Model: Ready";
-              downloadBtn.disabled = true;
-              downloadBtn.innerText = "Downloaded";
-              inferenceBtn.disabled = false;
-              document.getElementById("engine-status-txt").innerText = "Model Ready (OPFS Local Cache Verified)";
-            } else {
-              opfsBadge.className = "status-badge warn";
-              opfsBadge.innerText = "OPFS Model: Incomplete";
-              downloadBtn.disabled = false;
-              downloadBtn.innerText = "Download Model";
-              inferenceBtn.disabled = true;
-            }
-          } else {
-            document.getElementById("opfs-size").innerText = "0.00 GB";
-            opfsBadge.className = "status-badge warn";
-            opfsBadge.innerText = "OPFS Model: Not Found";
-            downloadBtn.disabled = false;
-            downloadBtn.innerText = "Download Model";
-            inferenceBtn.disabled = true;
-          }
-        } catch (e) {
-          logMessage("OPFS Error", "Failed to access OPFS storage: " + e.message, "error");
-        }
-      }
-
-      setInterval(updateOpfsStatus, 2000);
-      await updateOpfsStatus();
-
-      // 4. Downloader trigger
-      const downloadBtn = document.getElementById("download-btn");
-      downloadBtn.onclick = () => {
-        if (!litertWorker) return;
-        logMessage("System", "Triggering model download request to Worker...");
-        litertWorker.postMessage({ action: "start-download" });
-      };
-
-      // 5. Inference trigger
-      const inferenceBtn = document.getElementById("inference-btn");
-      inferenceBtn.onclick = () => {
-        if (!litertWorker) return;
-        const promptText = document.getElementById("prompt").value;
-        const systemPromptText = document.getElementById("system-prompt").value;
-        const requestId = "req-" + Date.now();
-
-        logMessage("System", `Posting inference request [${requestId}] to Worker...`);
-        document.getElementById("response-output").innerText = "Inference in progress... (Awaiting worker result)";
-        inferenceBtn.disabled = true;
-        document.getElementById("engine-status-txt").innerText = "Executing WebGPU kernel...";
-
-        litertWorker.postMessage({
-          action: "run-inference",
-          requestId,
-          prompt: promptText,
-          systemPrompt: systemPromptText
-        });
-      };
-
-      // 6. Worker Message Handler
-      if (litertWorker) {
-        litertWorker.onmessage = (event) => {
-          const data = event.data;
-          const { status } = data;
-          logMessage("Worker", JSON.stringify(data), "worker");
-
-          if (status === "downloading") {
-            const { progress, speed, eta, text } = data;
-            document.getElementById("download-status-txt").innerText = text;
-            document.getElementById("download-percentage").innerText = `${progress}%`;
-            document.getElementById("download-bar").style.width = `${progress}%`;
-            document.getElementById("download-speed").innerText = `${speed} MB/s`;
-            document.getElementById("download-eta").innerText = `${eta}s`;
-          } else if (status === "ready") {
-            document.getElementById("download-status-txt").innerText = "Download completed successfully!";
-            document.getElementById("download-percentage").innerText = "100%";
-            document.getElementById("download-bar").style.width = "100%";
-            updateOpfsStatus();
-          } else if (status === "engine-initializing") {
-            const { progress, text } = data;
-            document.getElementById("engine-status-txt").innerText = `${text} (${progress}%)`;
-          } else if (status === "engine-ready") {
-            document.getElementById("engine-status-txt").innerText = "Engine ready. Loading GPU context...";
-          } else if (status === "inference-result") {
-            const { result, metrics } = data;
-            document.getElementById("response-output").innerText = result;
-            inferenceBtn.disabled = false;
-            document.getElementById("engine-status-txt").innerText = "Idle (Ready)";
-
-            if (metrics) {
-              const { latencyMs, tokensPerSec, estimatedTokens, vramBytes } = metrics;
-              document.getElementById("metric-latency").innerText = `${(latencyMs / 1000).toFixed(2)}s`;
-              document.getElementById("metric-speed").innerText = `${tokensPerSec} t/s`;
-              document.getElementById("metric-vram").innerText = `${(vramBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-              document.getElementById("metric-tokens").innerText = `${estimatedTokens} tokens`;
-            }
-          } else if (status === "inference-error" || status === "error") {
-            const errMessage = data.error || "Inference failed";
-            document.getElementById("response-output").innerText = `Error: ${errMessage}`;
-            inferenceBtn.disabled = false;
-            document.getElementById("engine-status-txt").innerText = "Error state";
-            logMessage("Worker Error", errMessage, "error");
-          }
-        };
-      }
-    </script>
-  </body>
+      </section>
+    </main>
+  </div>
+  <script src="harness.presets.js" type="module"></script>
+  <script src="harness.mock.js" type="module"></script>
+  <script src="harness.js" type="module"></script>
+</body>
 </html>

@@ -1,6 +1,8 @@
 import React from "react"
 import iconUrl from "url:../../../assets/icon.png"
 
+import { OpfsImage } from "../atoms/OpfsImage"
+
 interface CardThumbnailImagesProps {
   imageUrl?: string
   thumbnailImages?: string[]
@@ -23,7 +25,7 @@ function FourImagesGrid({ images, alt }: GridLayoutProps) {
   return (
     <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
       {images.map((img, i) => (
-        <img
+        <OpfsImage
           key={i}
           src={img}
           alt={`${alt} - Thumbnail ${i + 1}`}
@@ -38,19 +40,19 @@ function ThreeImagesGrid({ images, alt }: GridLayoutProps) {
   return (
     <div className="grid grid-cols-3 w-full h-full">
       <div className="col-span-2 h-full">
-        <img
+        <OpfsImage
           src={images[0]}
           alt={`${alt} - Thumbnail 1`}
           className="w-full h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
         />
       </div>
       <div className="grid grid-rows-2 h-full">
-        <img
+        <OpfsImage
           src={images[1]}
           alt={`${alt} - Thumbnail 2`}
           className="w-full h-full object-cover border-b border-white/20 transition-transform group-hover:scale-105"
         />
-        <img
+        <OpfsImage
           src={images[2]}
           alt={`${alt} - Thumbnail 3`}
           className="w-full h-full object-cover transition-transform group-hover:scale-105"
@@ -63,12 +65,12 @@ function ThreeImagesGrid({ images, alt }: GridLayoutProps) {
 function TwoImagesGrid({ images, alt }: GridLayoutProps) {
   return (
     <div className="flex w-full h-full">
-      <img
+      <OpfsImage
         src={images[0]}
         alt={`${alt} - Thumbnail 1`}
         className="w-1/2 h-full object-cover border-r border-white/20 transition-transform group-hover:scale-105"
       />
-      <img
+      <OpfsImage
         src={images[1]}
         alt={`${alt} - Thumbnail 2`}
         className="w-1/2 h-full object-cover transition-transform group-hover:scale-105"
@@ -79,7 +81,7 @@ function TwoImagesGrid({ images, alt }: GridLayoutProps) {
 
 function SingleImageGrid({ src, alt }: { src?: string; alt: string }) {
   return (
-    <img
+    <OpfsImage
       src={src || iconUrl}
       alt={alt}
       className="w-full h-full object-cover transition-transform group-hover:scale-110"

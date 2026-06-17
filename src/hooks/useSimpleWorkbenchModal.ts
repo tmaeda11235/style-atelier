@@ -2,6 +2,11 @@ import { useEffect, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useLanguage } from "../contexts/LanguageContext"
+import {
+  isExtensionContextValid,
+  safeQueryTabs,
+  safeSendTabMessage
+} from "../lib/chrome-utils"
 import type { PromptSegment, StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
 import { updateStyleCard } from "../lib/style-card-store"
@@ -29,15 +34,63 @@ const resolveSegments = (
 }
 
 const sendInjectMessage = async (prompt: string) => {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-  const activeTab = tabs[0]
+  if (!isExtensionContextValid()) {
+    throw new Error("Extension context invalidated")
+  }
+  const tabs = await safeQueryTabs({ active: true, currentWindow: true })
+  const activeTab = tabs?.[0]
   if (!activeTab?.id) {
     throw new Error("No active tab found")
   }
-  return chrome.tabs.sendMessage(activeTab.id, {
+  return safeSendTabMessage(activeTab.id, {
     type: "INJECT_PROMPT",
     prompt
   })
+}
+
+interface ConnectionState {
+  isCancelled: boolean
+  retryCount: number
+  timerId: any
+}
+
+async function performConnectionCheck(
+  state: ConnectionState,
+  addLog: ((msg: string) => void) | undefined,
+  setAlertType: (type: AlertType | null) => void,
+  noActiveTabMsg: string,
+  maxRetries: number,
+  retryCallback: () => void
+) {
+  if (state.isCancelled) return
+  if (!isExtensionContextValid()) {
+    setAlertType("disconnected")
+    return
+  }
+  try {
+    const tabs = await safeQueryTabs({ active: true, currentWindow: true })
+    const activeTab = tabs?.[0]
+    if (state.isCancelled) return
+    if (!activeTab?.id) {
+      addLog?.(`Check Connection: ${noActiveTabMsg}`)
+      return
+    }
+    if (activeTab.status !== "complete") {
+      state.timerId = setTimeout(retryCallback, 1000)
+      return
+    }
+    await safeSendTabMessage(activeTab.id, { type: "PING" })
+    if (!state.isCancelled) setAlertType(null)
+  } catch (err: any) {
+    if (state.isCancelled) return
+    console.log("Connection check failed:", err)
+    if (state.retryCount < maxRetries) {
+      state.retryCount++
+      state.timerId = setTimeout(retryCallback, 1500)
+    } else {
+      setAlertType("disconnected")
+    }
+  }
 }
 
 export function useSimpleWorkbenchConnection(
@@ -47,47 +100,25 @@ export function useSimpleWorkbenchConnection(
   noActiveTabMsg: string
 ) {
   useEffect(() => {
-    let isCancelled = false
-    let retryCount = 0
-    const maxRetries = 2
-    let timerId: any = null
-
-    const checkConnection = async () => {
-      if (isCancelled) return
-      try {
-        const tabs = await chrome.tabs.query({
-          active: true,
-          currentWindow: true
-        })
-        const activeTab = tabs[0]
-        if (isCancelled) return
-        if (!activeTab || !activeTab.id) {
-          addLog?.(`Check Connection: ${noActiveTabMsg}`)
-          return
-        }
-        if (activeTab.status !== "complete") {
-          timerId = setTimeout(checkConnection, 1000)
-          return
-        }
-        await chrome.tabs.sendMessage(activeTab.id, { type: "PING" })
-        if (isCancelled) return
-        setAlertType(null)
-      } catch (err: any) {
-        if (isCancelled) return
-        console.log("Connection check failed:", err)
-        if (retryCount < maxRetries) {
-          retryCount++
-          timerId = setTimeout(checkConnection, 1500)
-        } else {
-          setAlertType("disconnected")
-        }
-      }
+    const state: ConnectionState = {
+      isCancelled: false,
+      retryCount: 0,
+      timerId: null
     }
-
+    const checkConnection = () => {
+      performConnectionCheck(
+        state,
+        addLog,
+        setAlertType,
+        noActiveTabMsg,
+        2,
+        checkConnection
+      )
+    }
     checkConnection()
     return () => {
-      isCancelled = true
-      if (timerId) clearTimeout(timerId)
+      state.isCancelled = true
+      if (state.timerId) clearTimeout(state.timerId)
     }
   }, [cardId, addLog, setAlertType, noActiveTabMsg])
 }

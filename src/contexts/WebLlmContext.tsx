@@ -14,6 +14,7 @@ import {
   startDownloadHelper,
   type DownloadStatus
 } from "../hooks/webLlmUtils"
+import { isExtensionContextValid, safeSendMessage } from "../lib/chrome-utils"
 
 export interface WebLlmContextType {
   status: DownloadStatus
@@ -40,14 +41,9 @@ export const WebLlmContext = createContext<WebLlmContextType | undefined>(
 )
 
 function preloadEngineHelper() {
-  if (
-    typeof chrome === "undefined" ||
-    !chrome.runtime ||
-    !chrome.runtime.sendMessage
-  ) {
-    return
-  }
-  chrome.runtime.sendMessage({ target: "offscreen", action: "preload-engine" })
+  safeSendMessage({ target: "offscreen", action: "preload-engine" })?.catch(
+    (err) => console.error("preloadEngineHelper failed:", err)
+  )
 }
 
 function useWebLlmProviderStates() {
@@ -103,38 +99,47 @@ interface WebLlmEffectProps {
   setWebGpuFallback: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+/* eslint-disable max-lines-per-function */
 function useWebLlmEffect(props: WebLlmEffectProps) {
   useEffect(() => {
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.runtime ||
-      !chrome.runtime.sendMessage
-    ) {
+    if (!isExtensionContextValid()) {
       return
     }
-    const port = chrome.runtime.connect({ name: "sidepanel" })
-    const messageListener = createMessageListener(
-      props.setStatus,
-      props.setEngineStatus,
-      props.setProgress,
-      props.setError,
-      props.setSpeed,
-      props.setEta,
-      props.setRetryCount,
-      props.setMaxRetries,
-      props.setText,
-      props.setWebGpuFallback
-    )
-    chrome.runtime.onMessage.addListener(messageListener)
-    checkCurrentStateHelper(
-      props.setStatus,
-      props.setProgress,
-      props.setWebGpuFallback,
-      props.setError
-    )
-    return () => {
-      port.disconnect()
-      chrome.runtime.onMessage.removeListener(messageListener)
+    try {
+      const port = chrome.runtime.connect({ name: "sidepanel" })
+      const messageListener = createMessageListener(
+        props.setStatus,
+        props.setEngineStatus,
+        props.setProgress,
+        props.setError,
+        props.setSpeed,
+        props.setEta,
+        props.setRetryCount,
+        props.setMaxRetries,
+        props.setText,
+        props.setWebGpuFallback
+      )
+      chrome.runtime.onMessage.addListener(messageListener)
+      checkCurrentStateHelper(
+        props.setStatus,
+        props.setProgress,
+        props.setWebGpuFallback,
+        props.setError
+      )
+      return () => {
+        try {
+          port.disconnect()
+        } catch {
+          // ignore
+        }
+        try {
+          chrome.runtime.onMessage.removeListener(messageListener)
+        } catch {
+          // ignore
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to setup WebLLM message listener:", err)
     }
   }, [
     props.setStatus,
@@ -149,8 +154,9 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
     props.setWebGpuFallback
   ])
 }
+/* eslint-enable max-lines-per-function */
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable max-lines-per-function */
 export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
@@ -212,6 +218,7 @@ export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
     <WebLlmContext.Provider value={value}>{children}</WebLlmContext.Provider>
   )
 }
+/* eslint-enable max-lines-per-function */
 
 export const useWebLlmContext = () => {
   const context = useContext(WebLlmContext)

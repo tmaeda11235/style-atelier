@@ -4,6 +4,11 @@ import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useConfirm } from "../contexts/ConfirmContext"
 import { useTutorial } from "../contexts/TutorialContext"
 import {
+  isExtensionContextValid,
+  safeQueryTabs,
+  safeUpdateTab
+} from "../lib/chrome-utils"
+import {
   buildSidePanelLayoutProps,
   useExpertSubHooks
 } from "./useExpertSubHooks"
@@ -15,23 +20,22 @@ interface UseExpertModeViewProps {
 }
 
 async function openMidjourney() {
-  if (typeof chrome !== "undefined" && chrome.tabs?.query) {
-    try {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true
-      })
-      if (tabs?.[0]?.id) {
-        chrome.tabs.update(
-          tabs[0].id,
-          { url: "https://www.midjourney.com/imagine" },
-          () => {}
-        )
-        return
-      }
-    } catch (err) {
-      console.error("Failed to query tabs:", err)
+  if (!isExtensionContextValid()) {
+    window.open("https://www.midjourney.com/imagine", "_blank")
+    return
+  }
+  try {
+    const tabs = await safeQueryTabs({
+      active: true,
+      currentWindow: true
+    })
+    const activeTab = tabs?.[0]
+    if (activeTab?.id) {
+      safeUpdateTab(activeTab.id, { url: "https://www.midjourney.com/imagine" })
+      return
     }
+  } catch (err) {
+    console.error("Failed to query tabs:", err)
   }
   window.open("https://www.midjourney.com/imagine", "_blank")
 }

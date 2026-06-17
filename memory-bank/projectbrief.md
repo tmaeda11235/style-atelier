@@ -27,11 +27,9 @@ Midjourney Style Manager ("style-atelier") is a Chrome Extension designed to tra
 2.  **Phase 2: The TCG Update (Value Add)**
     - Bubble UI, Tier System.
     - Visual Indexing, Deck Building.
-3.  **Phase 3: The Economy Update (Monetization)**
+3.  **Phase 3: The Economy Update & Mobile Standalone PWA (Monetization & Expansion)**
     - Frame designs, Licensing logic.
-    - Mobile PWA Viewer.
-4.  **Phase 4: Mobile Standalone PWA Expansion**
-    - Mobile PWA化に向けた機能要件定義とロードマップ。詳細は [docs/mobile-pwa-roadmap.md](file:///c:/Users/oculus/Desktop/worktrees/1174-mobile-pwa-roadmap/docs/mobile-pwa-roadmap.md) を参照。
-      - Phase 1: Foundation & Offline Storage (基礎・オフライン化)
-      - Phase 2: Zero-Friction Hybrid Sync (P2P/中間キャッシュによる同期摩擦排除)
-      - Phase 3: Resilient Mobile AI Inference (ハイブリッドクラウドフォールバック推論)
+    - Mobile PWA Expansion (詳細は [docs/mobile-pwa-roadmap.md](file:///c:/Users/oculus/Desktop/style-atelier/docs/mobile-pwa-roadmap.md) を参照):
+      - **Phase 1: Foundation & Offline Storage (基礎・オフライン化)**: Web App Manifest, Service Workerによるキャッシュ, iOS/AndroidのA2HS, OPFSによる画像キャッシュ。
+      - **Phase 2: Zero-Friction Hybrid Sync & Touch UX (同期摩擦解消とUI最適化)**: Google Drive OAuth Standaloneリダイレクト問題へのポップアップ対応, WebRTCによるP2Pローカル同期, 暗号化中間キャッシュ同期, タッチ・フリック操作に最適化したSocial Binder UI。
+      - **Phase 3: Resilient Mobile AI Inference & Mobile Mint (モバイルAI・高レジリエンス)**: Web Worker内でのLiteRT-LM推論, デバイス特性(RAM/WebGPU)の事前検知, クラウド(Gemini API)への自動フォールバック推論, OPFSによる大容量モデル of キャッシュストレージ管理。
