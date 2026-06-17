@@ -96,4 +96,139 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
     // Clean up: return online
     await context.setOffline(false)
   })
+
+  test.describe("A2HS Installation Prompts", () => {
+    test.beforeEach(async ({ page }) => {
+      // Clear localStorage before each test
+      await page.goto("/src/mobile-app/index.html")
+      await page.evaluate(() => localStorage.clear())
+    })
+
+    test("should display Android install dialog when beforeinstallprompt fires and hide on dismiss", async ({
+      page
+    }) => {
+      await page.goto("/src/mobile-app/index.html")
+
+      // Dispatch beforeinstallprompt
+      await page.evaluate(() => {
+        const event = new Event("beforeinstallprompt")
+        ;(event as any).userChoice = Promise.resolve({ outcome: "accepted" })
+        ;(event as any).prompt = function () {
+          ;(window as any).mockPromptCalled = true
+          return Promise.resolve()
+        }
+        window.dispatchEvent(event)
+      })
+
+      // Trigger card flip (Wow moment) to trigger prompt immediately
+      await page.click("#cardContainer")
+
+      // Wait for the show transition
+      const dialog = page.locator("#androidInstallDialog")
+      await expect(dialog).toBeVisible()
+      await expect(dialog).toHaveClass(/show/)
+
+      // Click install button
+      const installBtn = page.locator("#androidInstallBtn")
+      await installBtn.click()
+
+      // The dialog should close
+      await expect(dialog).not.toBeVisible()
+
+      // Verify prompt was called
+      const mockPromptCalled = await page.evaluate(
+        () => (window as any).mockPromptCalled
+      )
+      expect(mockPromptCalled).toBe(true)
+    })
+
+    test("should save dismissal and not show dialog on reload", async ({
+      page
+    }) => {
+      await page.goto("/src/mobile-app/index.html")
+
+      // Trigger beforeinstallprompt
+      await page.evaluate(() => {
+        const event = new Event("beforeinstallprompt")
+        ;(event as any).userChoice = Promise.resolve({ outcome: "dismissed" })
+        ;(event as any).prompt = () => Promise.resolve()
+        window.dispatchEvent(event)
+      })
+
+      // Trigger flip to show dialog
+      await page.click("#cardContainer")
+      const dialog = page.locator("#androidInstallDialog")
+      await expect(dialog).toBeVisible()
+
+      // Click dismiss button
+      const dismissBtn = page.locator("#androidDismissBtn")
+      await dismissBtn.click()
+
+      // Dialog should close
+      await expect(dialog).not.toBeVisible()
+
+      // Check localStorage has dismissal timestamp
+      const dismissedUntil = await page.evaluate(() =>
+        localStorage.getItem("a2hs-dismissed-until")
+      )
+      expect(dismissedUntil).toBeTruthy()
+      expect(Number(dismissedUntil)).toBeGreaterThan(Date.now())
+
+      // Reload page
+      await page.reload()
+
+      // Dispatch event again
+      await page.evaluate(() => {
+        const event = new Event("beforeinstallprompt")
+        ;(event as any).userChoice = Promise.resolve({ outcome: "dismissed" })
+        ;(event as any).prompt = () => Promise.resolve()
+        window.dispatchEvent(event)
+      })
+
+      // Trigger flip
+      await page.click("#cardContainer")
+
+      // The dialog should NOT show because of dismissal
+      await expect(dialog).not.toBeVisible()
+    })
+
+    test("should display iOS install tooltip when on iOS Safari and hide on close", async ({
+      page
+    }) => {
+      // Mock iOS UserAgent and standalone = false
+      await page.addInitScript(() => {
+        Object.defineProperty(navigator, "userAgent", {
+          value:
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1",
+          configurable: true
+        })
+        Object.defineProperty(navigator, "standalone", {
+          value: false,
+          configurable: true
+        })
+      })
+
+      await page.goto("/src/mobile-app/index.html")
+
+      // Trigger flip to show iOS tooltip
+      await page.click("#cardContainer")
+
+      const tooltip = page.locator("#iosInstallTooltip")
+      await expect(tooltip).toBeVisible()
+      await expect(tooltip).toHaveClass(/show/)
+
+      // Close iOS tooltip
+      const closeBtn = page.locator("#iosCloseBtn")
+      await closeBtn.click()
+
+      // Tooltip should close
+      await expect(tooltip).not.toBeVisible()
+
+      // Check localStorage
+      const dismissedUntil = await page.evaluate(() =>
+        localStorage.getItem("a2hs-dismissed-until")
+      )
+      expect(dismissedUntil).toBeTruthy()
+    })
+  })
 })

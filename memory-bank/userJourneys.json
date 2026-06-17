@@ -748,6 +748,7 @@
         "src/mobile-app/sw.template.js",
         "scripts/build-mobile.mjs",
         "src/mobile-app/components/A2HSPrompt.tsx",
+        "src/mobile-app/a2hs.ts",
         "src/hooks/useOpfsImage.ts"
       ]
     },

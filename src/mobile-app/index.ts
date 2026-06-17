@@ -1,6 +1,7 @@
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
 import { decompressCardData } from "../lib/qr-utils"
+import { initA2HS } from "./a2hs"
 import {
   initGisClient,
   isMock,
@@ -140,17 +141,15 @@ function updateHologramProperties(
   y: number,
   cardContainer: HTMLElement
 ) {
-  const frontCard = cardContainer.querySelector(".card-front") as HTMLElement
-  const backCard = cardContainer.querySelector(".card-back") as HTMLElement
-  if (frontCard && backCard) {
-    const setHolo = (el: HTMLElement) => {
+  const front = cardContainer.querySelector(".card-front") as HTMLElement
+  const back = cardContainer.querySelector(".card-back") as HTMLElement
+  if (front && back) {
+    ;[front, back].forEach((el) => {
       el.style.setProperty("--glow-x", `${x}%`)
       el.style.setProperty("--glow-y", `${y}%`)
       el.style.setProperty("--holo-x", `${x}%`)
       el.style.setProperty("--holo-y", `${y}%`)
-    }
-    setHolo(frontCard)
-    setHolo(backCard)
+    })
   }
 }
 
@@ -300,21 +299,21 @@ function setupButtonEvents(
 }
 
 function setupEventHandlers() {
-  const cardContainer = document.getElementById("cardContainer") as HTMLElement
-  const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement
-  const promptText = document.getElementById("promptText") as HTMLElement
-  const saveCloudBtn = document.getElementById(
-    "saveCloudBtn"
-  ) as HTMLButtonElement
-  setupCardContainerEvents(cardContainer)
-  setupButtonEvents(copyBtn, promptText, saveCloudBtn)
+  setupCardContainerEvents(
+    document.getElementById("cardContainer") as HTMLElement
+  )
+  setupButtonEvents(
+    document.getElementById("copyBtn") as HTMLButtonElement,
+    document.getElementById("promptText") as HTMLElement,
+    document.getElementById("saveCloudBtn") as HTMLButtonElement
+  )
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   loadCardFromUrl()
   setupEventHandlers()
+  initA2HS()
 
-  // Register Service Worker for offline support
   if (
     "serviceWorker" in navigator &&
     (import.meta.env.PROD || window.location.search.includes("pwa=true"))
