@@ -1,14 +1,9 @@
-export interface InferenceMetrics {
-  latencyMs: number
-  tokensPerSec: number
-  estimatedTokens: number
-  vramBytes: number
-}
-
-export interface InferenceResult {
-  result: string
-  metrics: InferenceMetrics
-}
+import {
+  fallbackStaticParser,
+  getActiveModel,
+  LIGHTWEIGHT_MODEL
+} from "./local-ai-fallback-parser"
+import type { InferenceResult } from "./local-ai-fallback-parser"
 
 export type LocalAiStatus =
   | "uninitialized"
@@ -30,6 +25,8 @@ export class LocalAiClient {
   private text = ""
   private error: string | null = null
   private webGpuFallback = false
+  private dynamicMemoryRestricted = false
+  private useStaticFallback = false
 
   private statusListeners = new Set<
     (status: LocalAiStatus, payload?: any) => void
@@ -67,6 +64,13 @@ export class LocalAiClient {
 
   private emitStatus(status: LocalAiStatus, payload?: any) {
     this.status = status
+    const activeModel = getActiveModel(this.dynamicMemoryRestricted)
+    const mode = this.useStaticFallback
+      ? "static"
+      : activeModel.filename === LIGHTWEIGHT_MODEL.filename
+        ? "lightweight"
+        : "standard"
+
     const data = {
       progress: this.progress,
       speed: this.speed,
@@ -74,6 +78,7 @@ export class LocalAiClient {
       text: this.text,
       error: this.error,
       webGpuFallback: this.webGpuFallback,
+      mode,
       ...payload
     }
     for (const listener of this.statusListeners) {
@@ -93,6 +98,8 @@ export class LocalAiClient {
         localStorage.getItem("mock-webllm") === "true" ||
         urlParams.get("mock") === "true"
 
+      const activeModel = getActiveModel(this.dynamicMemoryRestricted)
+
       if (mockMode) {
         const isDownloaded =
           localStorage.getItem("mock-webllm-downloaded") === "true"
@@ -111,11 +118,9 @@ export class LocalAiClient {
       const opfsDir = await root.getDirectoryHandle("litert_models", {
         create: false
       })
-      const fileHandle = await opfsDir.getFileHandle(
-        "gemma-4-E2B-it-web.litertlm"
-      )
+      const fileHandle = await opfsDir.getFileHandle(activeModel.filename)
       const file = await fileHandle.getFile()
-      const expectedSize = 2008432640
+      const expectedSize = activeModel.size
       if (file.size === expectedSize) {
         this.emitStatus("ready")
         return true
@@ -196,6 +201,8 @@ export class LocalAiClient {
         }
         case "error":
           this.error = payload.error ?? "Unknown worker error"
+          this.dynamicMemoryRestricted = true
+          this.useStaticFallback = true
           this.emitStatus("error")
           break
         default:
@@ -210,7 +217,13 @@ export class LocalAiClient {
       localStorage.getItem("mock-webllm") === "true" ||
       urlParams.get("mock") === "true"
 
-    this.worker.postMessage({ action: "init", wasmPath, mockMode })
+    const activeModel = getActiveModel(this.dynamicMemoryRestricted)
+    this.worker.postMessage({
+      action: "init",
+      wasmPath,
+      mockMode,
+      modelInfo: activeModel
+    })
   }
 
   public startDownload() {
@@ -228,6 +241,22 @@ export class LocalAiClient {
     prompt: string,
     systemPrompt?: string
   ): Promise<InferenceResult> {
+    if (this.useStaticFallback) {
+      console.log(
+        "LocalAiClient: Dynamic fallback to static rule-based parsing."
+      )
+      const result = fallbackStaticParser(prompt)
+      return Promise.resolve({
+        result,
+        metrics: {
+          latencyMs: 5,
+          tokensPerSec: 200,
+          estimatedTokens: Math.max(1, Math.round(result.length / 3.5)),
+          vramBytes: 0
+        }
+      })
+    }
+
     this.init()
     const requestId = Math.random().toString(36).substring(7)
     return new Promise<InferenceResult>((resolve, reject) => {
@@ -238,6 +267,20 @@ export class LocalAiClient {
         prompt,
         systemPrompt
       })
+    }).catch((err) => {
+      console.warn("Inference failed, retrying once with static fallback:", err)
+      this.useStaticFallback = true
+      this.emitStatus(this.status)
+      const result = fallbackStaticParser(prompt)
+      return {
+        result,
+        metrics: {
+          latencyMs: 5,
+          tokensPerSec: 200,
+          estimatedTokens: Math.max(1, Math.round(result.length / 3.5)),
+          vramBytes: 0
+        }
+      }
     })
   }
 

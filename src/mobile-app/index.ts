@@ -284,6 +284,45 @@ function parseResponse(response: string): GeneratedMetadata {
   }
 }
 
+function updateAiModeBadge(details: any) {
+  const modeBadge = document.getElementById("aiModeBadge")
+  if (!modeBadge || !details || !details.mode) return
+
+  modeBadge.style.display = "inline-block"
+  if (details.mode === "lightweight") {
+    modeBadge.textContent = "軽量モード"
+    modeBadge.style.background = "rgba(234, 179, 8, 0.2)"
+    modeBadge.style.borderColor = "rgba(234, 179, 8, 0.4)"
+    modeBadge.style.color = "#facc15"
+  } else if (details.mode === "static") {
+    modeBadge.textContent = "非AIフォールバック"
+    modeBadge.style.background = "rgba(239, 68, 68, 0.2)"
+    modeBadge.style.borderColor = "rgba(239, 68, 68, 0.4)"
+    modeBadge.style.color = "#f87171"
+  } else {
+    modeBadge.textContent = "標準モード"
+    modeBadge.style.background = "rgba(59, 130, 246, 0.2)"
+    modeBadge.style.borderColor = "rgba(59, 130, 246, 0.4)"
+    modeBadge.style.color = "#60a5fa"
+  }
+}
+
+function handleStatusError(
+  details: any,
+  errorText: HTMLElement,
+  errorAlert: HTMLElement,
+  downloadBtn: HTMLElement,
+  analyzeBtn: HTMLElement
+) {
+  if (details && details.mode === "static") {
+    analyzeBtn.style.display = "block"
+  } else {
+    downloadBtn.style.display = "block" // Allow retry
+  }
+  errorText.textContent = details.error || "エラーが発生しました"
+  errorAlert.style.display = "flex"
+}
+
 // eslint-disable-next-line max-lines-per-function
 function initLocalAi() {
   const downloadBtn = document.getElementById(
@@ -323,6 +362,9 @@ function initLocalAi() {
   if (!downloadBtn || !analyzeBtn) return
 
   const client = new LocalAiClient()
+  if (typeof window !== "undefined") {
+    ;(window as any).localAiClient = client
+  }
 
   downloadBtn.addEventListener("click", () => {
     client.startDownload()
@@ -384,6 +426,8 @@ function initLocalAi() {
   client.addStatusListener((status, details) => {
     console.log("UI updated with status:", status, details)
 
+    updateAiModeBadge(details)
+
     // Hide everything first
     downloadBtn.style.display = "none"
     analyzeBtn.style.display = "none"
@@ -416,9 +460,7 @@ function initLocalAi() {
       progressPercent.textContent = `${details.progress}%`
       progressBarFill.style.width = `${details.progress}%`
     } else if (status === "error") {
-      downloadBtn.style.display = "block" // Allow retry
-      errorText.textContent = details.error || "エラーが発生しました"
-      errorAlert.style.display = "flex"
+      handleStatusError(details, errorText, errorAlert, downloadBtn, analyzeBtn)
     }
   })
 
