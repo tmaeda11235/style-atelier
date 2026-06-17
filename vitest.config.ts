@@ -24,11 +24,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
     testTimeout: 15000,
-    poolOptions: {
-      threads: {
-        singleThread: true
-      }
-    },
+    pool: "threads",
+    maxWorkers: 1,
     include: ["tests/**/*.test.{ts,tsx}", "tests/**/*.spec.ts"],
     exclude: [
       "node_modules",
@@ -41,6 +38,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
+      clean: false,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
