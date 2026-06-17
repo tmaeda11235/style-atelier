@@ -138,30 +138,12 @@ export function OnboardingGuide({ isOpen, onClose }: OnboardingGuideProps) {
   const { t } = useLanguage()
   const [currentStep, setCurrentStep] = useState(0)
 
-  console.log(
-    "[OnboardingGuide] Render call: isOpen =",
-    isOpen,
-    "t.onboarding is defined =",
-    !!t?.onboarding
-  )
-
   if (!isOpen) return null
 
   const steps = getSteps(t)
-
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
-    } else {
-      onClose()
-    }
-  }
-
-  const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  const handleNext = () =>
+    currentStep < steps.length - 1 ? setCurrentStep(currentStep + 1) : onClose()
+  const handlePrev = () => currentStep > 0 && setCurrentStep(currentStep - 1)
 
   return (
     <div

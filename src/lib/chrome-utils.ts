@@ -192,8 +192,8 @@ export function safeReloadTab(tabId?: number): void {
     )
     try {
       window.location.reload()
-    } catch (e) {
-      console.error("Failed to reload window:", e)
+    } catch (err) {
+      console.error("Failed to reload window:", err)
     }
     return
   }
@@ -208,7 +208,7 @@ export function safeReloadTab(tabId?: number): void {
     console.error("safeReloadTab error:", err)
     try {
       window.location.reload()
-    } catch (e) {
+    } catch {
       // ignore
     }
   }
