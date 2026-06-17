@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test"
 test("LiteRT Harness Profiling Dashboard End-to-End Simulation @J-PROFILER-DASHBOARD", async ({
   page
 }) => {
-  // 1. Inject OPFS (Origin Private File System) mocks in the browser context
+  // 1. Inject OPFS (Origin Private File System) and Web Worker mocks in the browser context
   await page.addInitScript(() => {
     let hasFile = false
 
@@ -46,53 +46,61 @@ test("LiteRT Harness Profiling Dashboard End-to-End Simulation @J-PROFILER-DASHB
     ;(window as any).__setMockFile = (val: boolean) => {
       hasFile = val
     }
-  })
 
-  // 2. Route all litert.worker.ts requests to our high-fidelity Mock Worker
-  await page.route("**/litert.worker.ts*", async (route) => {
-    const mockWorkerCode = `
-      self.onmessage = async (event) => {
-        const { action, ...payload } = event.data;
-        if (action === "start-download") {
-          for (let progress = 0; progress <= 100; progress += 25) {
-            self.postMessage({
-              status: "downloading",
-              progress,
-              speed: 45.5,
-              eta: Math.round((100 - progress) / 20),
-              text: "Downloading model weights... (" + progress + "%)"
-            });
-            await new Promise(r => setTimeout(r, 80));
-          }
-          self.postMessage({ status: "ready" });
-        } else if (action === "run-inference") {
-          const { requestId } = payload;
-          self.postMessage({
-            status: "engine-initializing",
-            progress: 50,
-            text: "Loading WASM and WebGPU shaders..."
-          });
-          await new Promise(r => setTimeout(r, 80));
-          self.postMessage({ status: "engine-ready" });
-          await new Promise(r => setTimeout(r, 80));
-          self.postMessage({
-            status: "inference-result",
-            requestId,
-            result: '{"rarity": "legendary", "category": "outerwear", "color": "dark", "keywords": ["goth", "cyberpunk"]}',
-            metrics: {
-              latencyMs: 1250,
-              tokensPerSec: 40.0,
-              estimatedTokens: 50,
-              vramBytes: 2264924160
+    // Intercept Worker creation to inject high-fidelity mock worker code
+    // This resolves Vite dev server / bundling issues where page.route fails to catch blob-URL workers.
+    const OriginalWorker = window.Worker
+    const NewWorker = function (spec: string | URL, options?: any) {
+      const urlStr = spec.toString()
+      if (urlStr.includes("litert.worker") || urlStr.includes("litert_worker")) {
+        console.log("[E2E Mock] Intercepted LiteRT Worker creation:", urlStr)
+        const mockWorkerCode = `
+          self.onmessage = async (event) => {
+            const { action, ...payload } = event.data;
+            if (action === "start-download") {
+              for (let progress = 0; progress <= 100; progress += 25) {
+                self.postMessage({
+                  status: "downloading",
+                  progress,
+                  speed: 45.5,
+                  eta: Math.round((100 - progress) / 20),
+                  text: "Downloading model weights... (" + progress + "%)"
+                });
+                await new Promise(r => setTimeout(r, 80));
+              }
+              self.postMessage({ status: "ready" });
+            } else if (action === "run-inference") {
+              const { requestId } = payload;
+              self.postMessage({
+                status: "engine-initializing",
+                progress: 50,
+                text: "Loading WASM and WebGPU shaders..."
+              });
+              await new Promise(r => setTimeout(r, 80));
+              self.postMessage({ status: "engine-ready" });
+              await new Promise(r => setTimeout(r, 80));
+              self.postMessage({
+                status: "inference-result",
+                requestId,
+                result: '{"rarity": "legendary", "category": "outerwear", "color": "dark", "keywords": ["goth", "cyberpunk"]}',
+                metrics: {
+                  latencyMs: 1250,
+                  tokensPerSec: 40.0,
+                  estimatedTokens: 50,
+                  vramBytes: 2264924160
+                }
+              });
             }
-          });
-        }
-      };
-    `
-    await route.fulfill({
-      contentType: "application/javascript",
-      body: mockWorkerCode
-    })
+          };
+        `
+        const blob = new Blob([mockWorkerCode], { type: "application/javascript" })
+        return new OriginalWorker(URL.createObjectURL(blob), options)
+      }
+      return new OriginalWorker(spec, options)
+    }
+    // Bind prototype to mock constructor
+    NewWorker.prototype = OriginalWorker.prototype
+    ;(window as any).Worker = NewWorker
   })
 
   // 3. Navigate to the Harness page (baseURL will be automatically used from Playwright config)
