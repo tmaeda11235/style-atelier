@@ -142,69 +142,68 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
       )
       .first()
 
-    const isAlreadyReady = await analyzeBtn.isVisible().catch(() => false)
+    const retryBtn = spFrame
+      .locator("button:has-text('Try Again'), button:has-text('再試行')")
+      .first()
 
-    if (isAlreadyReady) {
+    // Wait for either the retry button or the analyze button to be visible to avoid race conditions
+    const statusResult = await Promise.race([
+      analyzeBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => "ready"),
+      retryBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => "retry")
+    ]).catch(() => "none")
+
+    if (statusResult === "ready") {
       console.log(
         "Model is already ready due to broadcast. Skipping download steps."
       )
+    } else if (statusResult === "retry") {
+      await page.waitForTimeout(200)
+      // Directly query and click within the iframe context to avoid Playwright's locator wait loop
+      await spFrame
+        .locator("body")
+        .evaluate(() => {
+          const buttons = Array.from(document.querySelectorAll("button"))
+          const btn = buttons.find(
+            (b) =>
+              b.textContent?.includes("Try Again") ||
+              b.textContent?.includes("再試行")
+          )
+          if (btn) {
+            btn.click()
+          }
+        })
+        .catch(() => {})
     } else {
-      const retryBtn = spFrame
-        .locator("button:has-text('Try Again'), button:has-text('再試行')")
-        .first()
-
-      // Wait up to 5 seconds for the Retry button to render in the error UI
-      const isRetryVisible = await retryBtn
-        .waitFor({ state: "visible", timeout: 5000 })
-        .then(() => true)
-        .catch(() => false)
-      if (isRetryVisible) {
-        await page.waitForTimeout(200)
-        // Directly query and click within the iframe context to avoid Playwright's locator wait loop
-        await spFrame
-          .locator("body")
-          .evaluate(() => {
-            const buttons = Array.from(document.querySelectorAll("button"))
-            const btn = buttons.find(
-              (b) =>
-                b.textContent?.includes("Try Again") ||
-                b.textContent?.includes("再試行")
-            )
-            if (btn) {
-              btn.click()
-            }
-          })
-          .catch(() => {})
-      } else {
-        console.log(
-          "Retry button not visible, clicking initial Analyze button and triggering download again"
+      console.log(
+        "Neither retry nor ready button visible, fallback to clicking initial Analyze button and triggering download again"
+      )
+      const startBtn = spFrame
+        .locator(
+          "button:has-text('Analyze Style with AI'), button:has-text('AIでスタイルを分析')"
         )
-        const startBtn = spFrame
-          .locator(
-            "button:has-text('Analyze Style with AI'), button:has-text('AIでスタイルを分析')"
-          )
-          .first()
-        await expect(startBtn).toBeVisible()
-        await startBtn.click({ force: true })
+        .first()
+      await expect(startBtn).toBeVisible()
+      await startBtn.click({ force: true })
 
-        const downloadBtn2 = spFrame
-          .locator(
-            "[data-testid='minting-view-container'] button:has-text('Download Model'), [data-testid='minting-view-container'] button:has-text('モデルをダウンロード')"
-          )
-          .first()
-        await expect(downloadBtn2).toBeVisible()
-        await downloadBtn2.click({ force: true })
+      const downloadBtn2 = spFrame
+        .locator(
+          "[data-testid='minting-view-container'] button:has-text('Download Model'), [data-testid='minting-view-container'] button:has-text('モデルをダウンロード')"
+        )
+        .first()
+      await expect(downloadBtn2).toBeVisible()
+      await downloadBtn2.click({ force: true })
 
-        // Click confirmation button
-        const confirmDownloadBtn2 = spFrame
-          .locator(
-            "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
-          )
-          .first()
-        await expect(confirmDownloadBtn2).toBeVisible()
-        await confirmDownloadBtn2.click({ force: true })
-      }
+      // Click confirmation button
+      const confirmDownloadBtn2 = spFrame
+        .locator(
+          "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+        )
+        .first()
+      await expect(confirmDownloadBtn2).toBeVisible()
+      await confirmDownloadBtn2.click({ force: true })
+    }
 
+    if (statusResult !== "ready") {
       // Assert that download progress shows up (only if not already ready)
       const isReadyNow = await analyzeBtn.isVisible().catch(() => false)
       if (!isReadyNow) {
