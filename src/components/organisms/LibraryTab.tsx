@@ -6,6 +6,7 @@ import { useTutorial } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
 import type { StyleCard } from "../../lib/db-schema"
 import { THEME_STYLES } from "../../lib/theme-config"
+import { OpfsImage } from "../atoms/OpfsImage"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import { CardsGrid } from "./CardsGrid"
 import { CategoryManagerModal } from "./CategoryManagerModal"
@@ -83,6 +84,7 @@ function GridOrEmptySection({
         onNavigateToWorkbench?.()
       }}
       moveCardToCategory={lib.moveCardToCategory}
+      onCardReorder={lib.handleCardReorder}
       hasMore={lib.hasMore}
       loadMore={lib.loadMore}
       t={t}
@@ -146,10 +148,12 @@ function BinderThemeHeader({
   return (
     <div
       className={`p-4 rounded-xl border flex flex-col justify-center relative overflow-hidden transition-all duration-300 min-h-[4rem] ${bgClass}`}>
-      {currentCategory.coverImageUrl && (
+      {(currentCategory.coverImagePath || currentCategory.coverImageUrl) && (
         <div className="absolute inset-0 z-0">
-          <img
-            src={currentCategory.coverImageUrl}
+          <OpfsImage
+            src={
+              currentCategory.coverImagePath || currentCategory.coverImageUrl
+            }
             className="w-full h-full object-cover opacity-45"
             alt="Category Cover"
           />
@@ -157,11 +161,16 @@ function BinderThemeHeader({
         </div>
       )}
       <div className="relative z-10 flex flex-col">
-        <span className="text-[9px] uppercase tracking-wider font-extrabold opacity-60">
+        <span
+          className={`text-[9px] uppercase tracking-wider font-extrabold ${currentCategory.coverImageUrl ? "text-white/70" : "opacity-60"}`}>
           {activeTheme ? `${activeTheme} theme binder` : "binder"}
         </span>
         <h2
-          className={`text-base font-extrabold truncate ${themeStyles?.title || "text-slate-800"}`}>
+          className={`text-base font-extrabold truncate ${
+            currentCategory.coverImageUrl
+              ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              : themeStyles?.title || "text-slate-800"
+          }`}>
           {currentCategory.name}
         </h2>
       </div>

@@ -147,7 +147,7 @@ function startCategoryEdit(cat: CustomCategory, form: any) {
   form.setEmoji(cat.iconEmoji || "")
   form.setIconUrl(cat.iconUrl || "")
   form.setIconCardId(cat.iconCardId || "")
-  form.setCoverImageUrl(cat.coverImageUrl || "")
+  form.setCoverImageUrl(cat.coverImagePath || cat.coverImageUrl || "")
   form.setTheme(cat.theme || "")
   form.setActiveTab("create")
 }

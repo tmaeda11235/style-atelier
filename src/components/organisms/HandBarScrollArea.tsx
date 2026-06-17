@@ -1,38 +1,11 @@
-import { BookUp2, ChevronLeft, ChevronRight } from "lucide-react"
+import { BookUp2 } from "lucide-react"
 import React from "react"
 
 import type { StyleCard } from "../../lib/db-schema"
 import { buildPromptString } from "../../lib/prompt-utils"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
 import { CardThumbnail } from "../molecules/CardThumbnail"
-
-interface ScrollButtonProps {
-  direction: "left" | "right"
-  onClick: () => void
-  show: boolean
-}
-
-function ScrollButton({ direction, onClick, show }: ScrollButtonProps) {
-  if (!show) return null
-  const isLeft = direction === "left"
-  return (
-    <button
-      onClick={onClick}
-      className={`absolute ${isLeft ? "left-0" : "right-0"} top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-1 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all opacity-40 hover:opacity-100 group-hover/scroll:opacity-100 focus:opacity-100`}
-      style={{ width: "20px", height: "20px" }}
-      title={isLeft ? "左へスクロール" : "右へスクロール"}
-      data-testid={
-        isLeft ? "handbar-scroll-left-btn" : "handbar-scroll-right-btn"
-      }
-      type="button">
-      {isLeft ? (
-        <ChevronLeft className="w-3 h-3" />
-      ) : (
-        <ChevronRight className="w-3 h-3" />
-      )}
-    </button>
-  )
-}
+import { ScrollButton } from "./HandBarScrollButton"
 
 function HandBarThumbnailItem({
   card,
@@ -102,6 +75,7 @@ export interface HandBarScrollAreaProps {
   unpinCard: (id: string) => Promise<void>
   onOpenDetailCard?: (card: StyleCard) => void
   onNavigateToWorkbench?: () => void
+  t: any
 }
 
 export function HandBarScrollArea(props: HandBarScrollAreaProps) {
@@ -116,6 +90,7 @@ export function HandBarScrollArea(props: HandBarScrollAreaProps) {
         onClick={() =>
           props.scrollRef.current?.scrollBy({ left: -80, behavior: "smooth" })
         }
+        t={props.t}
       />
 
       <div
@@ -137,7 +112,7 @@ export function HandBarScrollArea(props: HandBarScrollAreaProps) {
         <button
           onClick={props.onNavigateToWorkbench}
           className="flex-shrink-0 w-12 h-12 rounded-md border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-all bg-slate-50 dark:bg-slate-800/50"
-          title="Workbenchを開く"
+          title={props.t.workbench.openWorkbench}
           data-testid="navigate-to-workbench-btn">
           <BookUp2 className="w-5 h-5" />
         </button>
@@ -150,6 +125,7 @@ export function HandBarScrollArea(props: HandBarScrollAreaProps) {
         onClick={() =>
           props.scrollRef.current?.scrollBy({ left: 80, behavior: "smooth" })
         }
+        t={props.t}
       />
     </div>
   )

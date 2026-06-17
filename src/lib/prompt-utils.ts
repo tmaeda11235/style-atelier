@@ -20,52 +20,34 @@ function extractImagePrompts(promptText: string): {
   return { imagePrompts, cleanPromptText }
 }
 
-function setListParam(
+function applyListParam(
   key: string,
   value: string,
   parameters: StyleCard["parameters"]
-): boolean {
-  if (key === "sref" || key === "cref" || key === "p" || key === "profile") {
-    const list = value
-      .trim()
-      .split(/\s+/)
-      .filter((v) => v.length > 0)
-    if (key === "sref") {
-      parameters.sref = list
-    } else if (key === "cref") {
-      parameters.cref = list
-    } else {
-      parameters.p = list
-    }
-    return true
+): void {
+  const list = value.match(/\S+/g) || []
+  if (key === "sref") {
+    parameters.sref = list
+  } else if (key === "cref") {
+    parameters.cref = list
+  } else {
+    parameters.p = list
   }
-  return false
 }
 
-function setIntParam(
+function applyIntParam(
   key: string,
   value: string,
   parameters: StyleCard["parameters"]
-): boolean {
-  if (
-    key === "stylize" ||
-    key === "s" ||
-    key === "chaos" ||
-    key === "c" ||
-    key === "weird" ||
-    key === "w"
-  ) {
-    const val = parseInt(value, 10)
-    if (key === "stylize" || key === "s") {
-      parameters.stylize = val
-    } else if (key === "chaos" || key === "c") {
-      parameters.chaos = val
-    } else {
-      parameters.weird = val
-    }
-    return true
+): void {
+  const val = parseInt(value, 10)
+  if (key === "stylize" || key === "s") {
+    parameters.stylize = val
+  } else if (key === "chaos" || key === "c") {
+    parameters.chaos = val
+  } else {
+    parameters.weird = val
   }
-  return false
 }
 
 function applyParameter(
@@ -73,28 +55,38 @@ function applyParameter(
   value: string,
   parameters: StyleCard["parameters"]
 ): void {
-  if (setListParam(key, value, parameters)) return
-  if (setIntParam(key, value, parameters)) return
-
-  switch (key) {
-    case "ar":
-      parameters.ar = value
-      break
-    case "tile":
-      parameters.tile = true
-      break
-    case "style":
-      if (value === "raw") {
-        parameters.raw = true
-      }
-      break
-    case "v":
-    case "version":
-      parameters.version = value
-      break
-    case "niji":
-      parameters.niji = value
-      break
+  if (key === "sref" || key === "cref" || key === "p" || key === "profile") {
+    applyListParam(key, value, parameters)
+  } else if (
+    key === "stylize" ||
+    key === "s" ||
+    key === "chaos" ||
+    key === "c" ||
+    key === "weird" ||
+    key === "w"
+  ) {
+    applyIntParam(key, value, parameters)
+  } else {
+    switch (key) {
+      case "ar":
+        parameters.ar = value
+        break
+      case "tile":
+        parameters.tile = true
+        break
+      case "style":
+        if (value === "raw") {
+          parameters.raw = true
+        }
+        break
+      case "v":
+      case "version":
+        parameters.version = value
+        break
+      case "niji":
+        parameters.niji = value
+        break
+    }
   }
 }
 
@@ -105,7 +97,7 @@ function parseParameters(
   let cleanPromptText = promptText
   const matches = [...cleanPromptText.matchAll(PARAM_REGEX)]
   matches.forEach((match) => {
-    const key = match[1].trim()
+    const key = match[1]
     const value = match[2] ? match[2].trim() : ""
     cleanPromptText = cleanPromptText.replace(match[0], "")
     applyParameter(key, value, parameters)
@@ -142,31 +134,30 @@ export function buildSegmentString(
   return segments
     .map((seg) => {
       const w = seg.weight !== undefined ? seg.weight : cardWeight
-      switch (seg.type) {
-        case "text":
-          return w !== undefined && w !== 1.0 ? `${seg.value}::${w}` : seg.value
-        case "slot":
-          return w !== undefined && w !== 1.0
-            ? `{{${seg.label}}}::${w}`
-            : `{{${seg.label}}}`
-        case "chip":
-          return ``
+      if (seg.type === "text") {
+        return w !== undefined && w !== 1.0 ? `${seg.value}::${w}` : seg.value
       }
+      if (seg.type === "slot") {
+        return w !== undefined && w !== 1.0
+          ? `{{${seg.label}}}::${w}`
+          : `{{${seg.label}}}`
+      }
+      return undefined
     })
-    .filter((val) => !!val && val.trim() !== "")
+    .filter((val): val is string => !!val && val.trim() !== "")
     .join(", ")
 }
 
 function buildListParams(
   params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[],
+  maskedKeys: (keyof StyleCard["parameters"])[] | undefined,
   parts: string[]
 ): void {
-  if (params.sref?.length && !maskedKeys.includes("sref")) {
+  if (params.sref?.length && !maskedKeys?.includes("sref")) {
     const srefArray = Array.isArray(params.sref) ? params.sref : [params.sref]
     parts.push(`--sref ${srefArray.join(" ")}`)
   }
-  if (params.cref?.length && !maskedKeys.includes("cref")) {
+  if (params.cref?.length && !maskedKeys?.includes("cref")) {
     const crefArray = Array.isArray(params.cref) ? params.cref : [params.cref]
     parts.push(`--cref ${crefArray.join(" ")}`)
   }
@@ -177,36 +168,36 @@ function buildListParams(
     : params.p
       ? [params.p]
       : []
-  if (pValues.length && !maskedKeys.includes("p")) {
+  if (pValues.length && !maskedKeys?.includes("p")) {
     parts.push(`--p ${pValues.join(" ")}`)
   }
 }
 
 function buildNumericAndOtherParams(
   params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[],
+  maskedKeys: (keyof StyleCard["parameters"])[] | undefined,
   parts: string[]
 ): void {
-  if (params.stylize !== undefined && !maskedKeys.includes("stylize"))
+  if (params.stylize !== undefined && !maskedKeys?.includes("stylize"))
     parts.push(`--s ${params.stylize}`)
-  if (params.chaos !== undefined && !maskedKeys.includes("chaos"))
+  if (params.chaos !== undefined && !maskedKeys?.includes("chaos"))
     parts.push(`--c ${params.chaos}`)
-  if (params.weird !== undefined && !maskedKeys.includes("weird"))
+  if (params.weird !== undefined && !maskedKeys?.includes("weird"))
     parts.push(`--w ${params.weird}`)
-  if (params.tile && !maskedKeys.includes("tile")) parts.push("--tile")
-  if (params.raw && !maskedKeys.includes("raw")) parts.push("--style raw")
-  if (params.version && !maskedKeys.includes("version"))
+  if (params.tile && !maskedKeys?.includes("tile")) parts.push("--tile")
+  if (params.raw && !maskedKeys?.includes("raw")) parts.push("--style raw")
+  if (params.version && !maskedKeys?.includes("version"))
     parts.push(`--v ${params.version}`)
-  if (params.niji && !maskedKeys.includes("niji"))
+  if (params.niji && !maskedKeys?.includes("niji"))
     parts.push(`--niji ${params.niji}`)
 }
 
 export function buildParamParts(
   params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[]
+  maskedKeys?: (keyof StyleCard["parameters"])[]
 ): string[] {
   const paramParts: string[] = []
-  if (params.ar && !maskedKeys.includes("ar"))
+  if (params.ar && !maskedKeys?.includes("ar"))
     paramParts.push(`--ar ${params.ar}`)
 
   buildListParams(params, maskedKeys, paramParts)
@@ -218,14 +209,14 @@ export function buildParamParts(
 export const buildPromptString = (
   segments: PromptSegment[],
   params: StyleCard["parameters"],
-  maskedKeys: (keyof StyleCard["parameters"])[] = [],
+  maskedKeys?: (keyof StyleCard["parameters"])[],
   cardWeight?: number
 ): string => {
   const segmentString = buildSegmentString(segments, cardWeight)
   const paramParts = buildParamParts(params, maskedKeys)
 
   const prefix =
-    params.imagePrompts?.length && !maskedKeys.includes("imagePrompts")
+    params.imagePrompts?.length && !maskedKeys?.includes("imagePrompts")
       ? params.imagePrompts.join(" ")
       : ""
 

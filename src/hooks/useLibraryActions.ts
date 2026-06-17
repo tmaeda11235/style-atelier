@@ -51,9 +51,10 @@ function handleSlotCard(
       setAlertType("hand_full")
       return
     }
-    db.updateCard(card.id, { isPinned: true }).catch((err) =>
+    db.updateCard(card.id, { isPinned: true }).catch((err) => {
       console.error("Failed to pin card:", err)
-    )
+      setAlertType("db_error")
+    })
   }
   addLog(`Redirected to Workbench to fill slot variables for "${card.name}".`)
   if (onNavigateToWorkbench) {
@@ -85,9 +86,10 @@ function handleNormalCard(
       addLog(`Sent prompt: ${prompt.substring(0, 30)}...`)
       db.updateCard(card.id, {
         usageCount: (card.usageCount || 0) + 1
-      }).catch((err) =>
+      }).catch((err) => {
         console.error("Failed to update usage count on inject:", err)
-      )
+        setAlertType("db_error")
+      })
     },
     () => setAlertType("no_input"),
     () => setAlertType("disconnected")
@@ -120,6 +122,7 @@ export function useTogglePin(
       )
     } catch (err) {
       console.error("Failed to toggle pin:", err)
+      setAlertType("db_error")
     }
   }
 }
@@ -149,7 +152,8 @@ export function useHandleCardClick(
 
 export function useMoveCardToCategory(
   categories: { id: string; name: string }[],
-  addLog: (msg: string) => void
+  addLog: (msg: string) => void,
+  setAlertType?: (type: AlertType) => void
 ) {
   return async (cardId: string, categoryId: string | null) => {
     try {
@@ -160,6 +164,82 @@ export function useMoveCardToCategory(
       addLog(`Moved card to "${catName}".`)
     } catch (err) {
       console.error("Failed to move card:", err)
+      setAlertType?.("db_error")
     }
+  }
+}
+
+export function useSortStyleCards(addLog: (msg: string) => void) {
+  return async (
+    draggedCardId: string,
+    targetCardId: string,
+    categoryFilter: string,
+    currentFolderId: string | null
+  ) => {
+    try {
+      const allCards = await db.getAllCards()
+      const filtered = allCards.filter((card) => {
+        if (card.isVariable) return false
+        if (categoryFilter !== "All") {
+          return card.category === categoryFilter
+        } else {
+          return !currentFolderId
+            ? !card.category
+            : card.category === currentFolderId
+        }
+      })
+
+      // Sort existing cards by sortIndex (or fallback to createdAt newest first)
+      filtered.sort((a, b) => {
+        const sortA = a.sortIndex ?? 0
+        const sortB = b.sortIndex ?? 0
+        if (sortA !== sortB) return sortA - sortB
+        return b.createdAt - a.createdAt
+      })
+
+      const draggedIndex = filtered.findIndex((c) => c.id === draggedCardId)
+      const targetIndex = filtered.findIndex((c) => c.id === targetCardId)
+
+      if (
+        draggedIndex === -1 ||
+        targetIndex === -1 ||
+        draggedIndex === targetIndex
+      ) {
+        return
+      }
+
+      // Move element
+      const [draggedCard] = filtered.splice(draggedIndex, 1)
+      filtered.splice(targetIndex, 0, draggedCard)
+
+      // Update sortIndex for all items in the filtered list
+      await Promise.all(
+        filtered.map((card, idx) => {
+          return db.updateCard(card.id, { sortIndex: idx })
+        })
+      )
+
+      addLog("Reordered cards within the binder.")
+    } catch (err) {
+      console.error("Failed to sort cards:", err)
+    }
+  }
+}
+
+export function useCardReorder(
+  addLog: (msg: string) => void,
+  categoryFilter: string,
+  currentFolderId: string | null,
+  setSortBy: (sort: any) => void
+) {
+  const sortStyleCards = useSortStyleCards(addLog)
+  return async (draggedCardId: string, targetCardId: string) => {
+    await sortStyleCards(
+      draggedCardId,
+      targetCardId,
+      categoryFilter,
+      currentFolderId
+    )
+    setSortBy("custom")
   }
 }

@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react"
 import React from "react"
 
 import { useConfirm } from "../../contexts/ConfirmContext"
@@ -8,6 +9,7 @@ import { isMobileConnection } from "../../lib/network-utils"
 import { WebGpuWarning } from "../molecules/WebGpuWarning"
 import {
   WebLlmActionButtons,
+  WebLlmBothUnsupportedWarning,
   WebLlmError,
   WebLlmHeader,
   WebLlmProgress,
@@ -82,12 +84,14 @@ interface WebLlmSettingsContentProps {
   eta: number
   retryCount: number
   maxRetries: number
+  webGpuFallback: boolean
   startDownload: () => void
   handlePurge: () => void
   t: any
   disp: { text: string; colorClass: string }
 }
 
+// eslint-disable-next-line max-lines-per-function
 function WebLlmSettingsContent({
   status,
   progress,
@@ -96,6 +100,7 @@ function WebLlmSettingsContent({
   eta,
   retryCount,
   maxRetries,
+  webGpuFallback,
   startDownload,
   handlePurge,
   t,
@@ -104,6 +109,16 @@ function WebLlmSettingsContent({
   const { isSupported } = useWebGpu()
   return (
     <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 rounded-xl p-4 space-y-4">
+      {webGpuFallback && (
+        <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/10 rounded-xl border border-amber-200 text-amber-700 text-[10px] leading-normal font-medium animate-in fade-in duration-200">
+          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <span>
+            {t.webLlmWebGpuFallbackInfo ||
+              /* eslint-disable-next-line i18next/no-literal-string */
+              "WebGPU not supported: Switching to CPU (Wasm) mode. (Inference might be slower)"}
+          </span>
+        </div>
+      )}
       {isSupported === false && <WebGpuWarning t={t} />}
       <WebLlmStatusRow
         status={status}
@@ -123,8 +138,15 @@ function WebLlmSettingsContent({
           t={t}
         />
       )}
-      {error && status !== "retrying" && <WebLlmError error={error} t={t} />}
-      {status === "insufficient-quota" && <WebLlmQuotaWarning t={t} />}
+      {error &&
+        status !== "retrying" &&
+        !error.includes("QuotaExceededError") &&
+        error !== "both-unsupported" && <WebLlmError error={error} t={t} />}
+      {(status === "insufficient-quota" ||
+        (error && error.includes("QuotaExceededError"))) && (
+        <WebLlmQuotaWarning t={t} />
+      )}
+      {error === "both-unsupported" && <WebLlmBothUnsupportedWarning t={t} />}
 
       <WebLlmActionButtons
         status={status}
@@ -182,6 +204,7 @@ export function WebLlmSettingsSection() {
     eta,
     retryCount,
     maxRetries,
+    webGpuFallback,
     startDownload,
     purgeCache
   } = useWebLlm()
@@ -209,6 +232,7 @@ export function WebLlmSettingsSection() {
         eta={eta}
         retryCount={retryCount}
         maxRetries={maxRetries}
+        webGpuFallback={webGpuFallback}
         startDownload={handleDownload}
         handlePurge={handlePurge}
         t={t}

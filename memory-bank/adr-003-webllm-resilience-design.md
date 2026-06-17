@@ -1,4 +1,4 @@
-# ADR 003: WebLLM (Gemma-4 E2B) Resilience and Cache Integrity Design
+# ADR 003: WebLLM (Gemma-2 2B) Resilience and Cache Integrity Design
 
 ## Status
 
@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Integrating Gemma-4 E2B (~1GB model) running client-side via WebLLM inside a Chrome Extension (Manifest V3) introduces several platform-specific challenges:
+Integrating Gemma-2 2B (~1GB model) running client-side via WebLLM inside a Chrome Extension (Manifest V3) introduces several platform-specific challenges:
 
 1. **Side Panel context closure**: The Side Panel is the main UI. If a user closes the Side Panel during a large model download or load process, the JavaScript execution context and any child Web Workers are immediately terminated. This can leave incomplete or corrupt files in local storage (Origin Private File System / Cache Storage), leading to hangs or initialization failures on subsequent launches.
 2. **Background Service Worker constraints**: Manifest V3 Background Service Workers do not support WebGPU. Furthermore, they are subject to execution limits (terminated after 5 minutes of lifetime or 30 seconds of inactivity), making them unsuitable for managing long-running model downloads or heavy inference tasks directly.

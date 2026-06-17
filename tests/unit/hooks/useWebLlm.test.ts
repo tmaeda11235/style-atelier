@@ -49,7 +49,9 @@ describe("useWebLlm", () => {
       { target: "offscreen", action: "verify-integrity" },
       expect.any(Function)
     )
-    expect(result.current.status).toBe("idle")
+    await waitFor(() => {
+      expect(result.current.status).toBe("idle")
+    })
   })
 
   it("should set status to ready if integrity verification passes", async () => {
@@ -75,7 +77,9 @@ describe("useWebLlm", () => {
       await sendMessagePromise
     })
 
-    expect(result.current.status).toBe("ready")
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready")
+    })
     expect(result.current.progress).toBe(100)
   })
 
@@ -206,11 +210,9 @@ describe("useWebLlm", () => {
     const { result } = renderHook(() => useWebLlm())
 
     // Wait for the async initialization check to settle
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready")
     })
-
-    expect(result.current.status).toBe("ready")
 
     vi.mocked(chrome.runtime.sendMessage).mockClear()
 
@@ -289,20 +291,19 @@ describe("useWebLlm", () => {
     ).rejects.toThrow("Inference failed error")
   })
 
-  it("should set status to unsupported on initialization if WebGPU is not supported", async () => {
+  it("should set status to unsupported on initialization if both WebGPU and WebAssembly are not supported", async () => {
     vi.stubGlobal("navigator", {
       ...window.navigator,
       gpu: undefined
     })
+    vi.stubGlobal("WebAssembly", undefined)
 
     const { result } = renderHook(() => useWebLlm())
 
     // Wait for async checks to complete
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+    await waitFor(() => {
+      expect(result.current.status).toBe("unsupported")
     })
-
-    expect(result.current.status).toBe("unsupported")
     expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith(
       { target: "offscreen", action: "verify-integrity" },
       expect.any(Function)
@@ -310,18 +311,18 @@ describe("useWebLlm", () => {
     vi.unstubAllGlobals()
   })
 
-  it("should set status to unsupported when startDownload is called if WebGPU is not supported", async () => {
+  it("should set status to unsupported when startDownload is called if both WebGPU and WebAssembly are not supported", async () => {
     vi.stubGlobal("navigator", {
       ...window.navigator,
       gpu: undefined
     })
+    vi.stubGlobal("WebAssembly", undefined)
 
     const { result } = renderHook(() => useWebLlm())
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+    await waitFor(() => {
+      expect(result.current.status).toBe("unsupported")
     })
-    expect(result.current.status).toBe("unsupported")
 
     // Try to trigger startDownload
     await act(async () => {
@@ -337,6 +338,40 @@ describe("useWebLlm", () => {
       },
       expect.any(Function)
     )
+    vi.unstubAllGlobals()
+  })
+
+  it("should enable webGpuFallback when WebGPU is not supported but WebAssembly is supported", async () => {
+    vi.stubGlobal("navigator", {
+      ...window.navigator,
+      gpu: undefined
+    })
+    // WebAssembly is left as defined (supported)
+
+    let resolveMessage: any
+    const sendMessagePromise = new Promise((resolve) => {
+      resolveMessage = resolve
+    })
+
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
+      (message, callback) => {
+        if (message && message.action === "verify-integrity") {
+          setTimeout(() => {
+            if (callback) callback({ status: "success", integrityPassed: true })
+            resolveMessage()
+          }, 10)
+        }
+      }
+    )
+
+    const { result } = renderHook(() => useWebLlm())
+
+    await act(async () => {
+      await sendMessagePromise
+    })
+
+    expect(result.current.status).toBe("ready")
+    expect(result.current.webGpuFallback).toBe(true)
     vi.unstubAllGlobals()
   })
 })

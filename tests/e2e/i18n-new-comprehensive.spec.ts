@@ -16,7 +16,15 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
     console.log("Navigating to sandbox page for comprehensive i18n E2E test...")
-    await page.goto("/tests/sandbox/index.html")
+    await page.goto("/tests/sandbox/index.html?isWide=true")
+
+    // Resize sidepanel frame to show the developer dashboard
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "1200px"
+      }
+    })
 
     const spFrame = page.frameLocator("#sidepanel-frame")
 
@@ -46,6 +54,16 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       )
     })
     await page.reload()
+    // Wait for iframe content to render before resizing to avoid width reset by initial CSS load
+    await spFrame
+      .locator("#settings-nav-btn")
+      .waitFor({ state: "attached", timeout: 15000 })
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "1200px"
+      }
+    })
     if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await skipButton.click()
     }
@@ -208,7 +226,8 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Verify Onboarding Guide (English)
     await spFrame.locator("[data-testid='close-filters-btn']").click() // Close the filters accordion using the close button
-    await spFrame.locator("#test-open-onboarding-btn").click() // Open the Onboarding Guide modal via sandbox test button
+    await spFrame.locator("#test-open-onboarding-btn").scrollIntoViewIfNeeded()
+    await spFrame.locator("#test-open-onboarding-btn").dispatchEvent("click") // Open the Onboarding Guide modal via sandbox test button
     const dropHereText = spFrame.locator("span:has-text('Drop Here')")
     await expect(dropHereText).toBeVisible()
     await page.screenshot({
@@ -244,7 +263,7 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
       "select >> option:has-text('すべてのレア度')"
     )
     const sortByNewestJa = spFrame.locator(
-      "select >> option:has-text('作成日が新しい順')"
+      "select >> option:has-text('ミント日が新しい順')"
     )
     await expect(rarityOptionJa).toBeAttached()
     await expect(sortByNewestJa).toBeAttached()
@@ -319,7 +338,8 @@ test.describe("Style Atelier Sandbox E2E Tests - i18n Comprehensive Localization
 
     // Verify Onboarding Guide (Japanese)
     await spFrame.locator("[data-testid='close-filters-btn']").click() // Close the filters accordion using the close button
-    await spFrame.locator("#test-open-onboarding-btn").click() // Open the Onboarding Guide modal via sandbox test button
+    await spFrame.locator("#test-open-onboarding-btn").scrollIntoViewIfNeeded()
+    await spFrame.locator("#test-open-onboarding-btn").dispatchEvent("click") // Open the Onboarding Guide modal via sandbox test button
     const dropHereTextJa = spFrame.locator("span:has-text('ここにドロップ')")
     await expect(dropHereTextJa).toBeVisible()
     await page.screenshot({
