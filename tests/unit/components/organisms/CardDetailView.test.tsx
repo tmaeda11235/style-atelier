@@ -1,4 +1,5 @@
 import { CardDetailView } from "@/components/organisms/CardDetailView"
+// CI trigger comment
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { useHand } from "@/hooks/useHand"
 import type { StyleCard } from "@/lib/db-schema"
@@ -263,7 +264,7 @@ describe("CardDetailView", () => {
     }
 
     const { db } = await import("@/lib/db")
-    vi.mocked(db.getCard).mockImplementation(async (id) => {
+    vi.spyOn(db, "getCard").mockImplementation(async (id) => {
       if (id === "parent-uuid-1") return mockParentCard
       return undefined
     })

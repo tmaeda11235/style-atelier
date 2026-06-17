@@ -11,7 +11,7 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     })
   })
 
-  test("should toggle AI search and run in fallback mode when AI model is not downloaded", async ({
+  test("should transition to settings tab and focus download button when local AI is not set up", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
@@ -45,53 +45,35 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Semantic Search @J-ORG-SEMAN
     await aiToggleBtn.click()
     await page.waitForTimeout(1000)
 
-    // Verify Warning Modal is NOT shown
-    const warningModal = spFrame.locator(
-      "text=/Local AI Model not loaded|ローカルAIモデルがロードされていません/"
-    )
-    await expect(warningModal).not.toBeVisible()
+    // Check if LocalAiSetupPlaceholder is visible
+    const placeholder = spFrame.locator("#local-ai-setup-placeholder")
+    await expect(placeholder).toBeVisible()
 
-    // Verify status badge is visible
-    const statusBadge = spFrame
-      .locator("[data-testid='ai-status-badge']")
-      .first()
-    await expect(statusBadge).toBeVisible({ timeout: 15000 })
-    await expect(statusBadge).toContainText(
-      /(Fallback|Light Mode|軽量フォールバック|軽量モード)/
-    )
-
-    // Verify AI placeholder is active
-    const searchField = spFrame.locator("#library-search-input")
-    const placeholder = await searchField.getAttribute("placeholder")
-    expect(placeholder).toMatch(/Ask AI:|AIに尋ねる:/)
-
-    // Fill query
-    await searchField.fill("Legendary blue anime style")
-
-    // Wait for debounce and processing
-    await page.waitForTimeout(1500)
-
-    // Extracted filter badge should be displayed using fallback parser
-    const extractedFiltersBadge = spFrame.locator(
-      "text=/Extracted Filters|抽出されたフィルター/"
-    )
-    await expect(extractedFiltersBadge).toBeVisible()
-
-    // Check specific filter items extracted by fallback
-    await expect(spFrame.locator("text=Rarity: Legendary")).toBeVisible()
-    await expect(spFrame.locator("text=Color: Blue")).toBeVisible()
-    await expect(spFrame.locator("text=Category: Style")).toBeVisible()
-
-    // Take screenshot of fallback search UI
+    // Take screenshot of the inline placeholder
     await page.screenshot({
       path: path.join(
         screenshotsDir,
-        "library-semantic-search-fallback-success.png"
+        "library-semantic-search-setup-placeholder.png"
       )
     })
-    console.log(
-      "Library AI Semantic Search fallback offline state screenshot saved."
-    )
+
+    // Click "Set Up" button
+    const setupBtn = spFrame.locator("#local-ai-setup-start-btn")
+    await expect(setupBtn).toBeVisible()
+    await setupBtn.click()
+    await page.waitForTimeout(500)
+
+    // Now Settings tab should be active, and WebLLM download button should be focused
+    const downloadBtn = spFrame.locator("#webllm-download-btn")
+    await expect(downloadBtn).toBeVisible()
+
+    // Take screenshot of the transition to settings
+    await page.screenshot({
+      path: path.join(
+        screenshotsDir,
+        "library-semantic-search-transition-to-settings.png"
+      )
+    })
   })
 
   test("should parse query and apply filters dynamically", async ({ page }) => {

@@ -37,6 +37,7 @@ function LibraryTabWrapper({
       setAlertType={expertView.setAlertType}
       onOpenDetailCard={expertView.setActiveDetailCard}
       onNavigateToWorkbench={() => expertView.setActiveTab("workbench")}
+      onSetActiveTab={expertView.setActiveTab}
     />
   )
 }

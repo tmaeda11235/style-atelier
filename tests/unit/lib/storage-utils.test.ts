@@ -1,5 +1,6 @@
 import {
   checkAvailableStorage,
+  downloadFileWithResume,
   formatBytes,
   getStorageEstimate,
   verifyCacheIntegrity,
@@ -356,6 +357,213 @@ describe("storage-utils", () => {
       ])
       expect(res).toBe(false)
       expect(mockDirHandle.removeEntry).toHaveBeenCalledWith("file1.bin")
+    })
+  })
+
+  describe("downloadFileWithResume", () => {
+    const originalNavigator = global.navigator
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      Object.defineProperty(global, "navigator", {
+        value: originalNavigator,
+        writable: true,
+        configurable: true
+      })
+    })
+
+    it("should throw error if OPFS is not supported", async () => {
+      Object.defineProperty(global, "navigator", {
+        value: undefined,
+        writable: true,
+        configurable: true
+      })
+      await expect(
+        downloadFileWithResume(
+          "dir",
+          "file.bin",
+          "http://test.com/file.bin",
+          1000
+        )
+      ).rejects.toThrow("OPFS is not supported in this environment")
+    })
+
+    it("should complete immediately if file size matches expectedSize", async () => {
+      const mockFileHandle = {
+        getFile: vi.fn().mockResolvedValue({ size: 1000 })
+      }
+      const mockDirHandle = {
+        getFileHandle: vi.fn().mockResolvedValue(mockFileHandle)
+      }
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockResolvedValue(mockDirHandle)
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const onProgress = vi.fn()
+      await downloadFileWithResume(
+        "dir",
+        "file.bin",
+        "http://test.com/file.bin",
+        1000,
+        onProgress
+      )
+      expect(onProgress).toHaveBeenCalledWith(100, 0, 0)
+    })
+
+    it("should remove file and recreate if currentSize > expectedSize", async () => {
+      const mockFileHandle = {
+        getFile: vi.fn().mockResolvedValue({ size: 1500 }), // larger than 1000
+        createWritable: vi.fn().mockResolvedValue({
+          write: vi.fn(),
+          seek: vi.fn(),
+          close: vi.fn()
+        })
+      }
+      const mockDirHandle = {
+        getFileHandle: vi.fn().mockResolvedValue(mockFileHandle),
+        removeEntry: vi.fn().mockResolvedValue(undefined)
+      }
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockResolvedValue(mockDirHandle)
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const mockReader = {
+        read: vi
+          .fn()
+          .mockResolvedValueOnce({
+            done: false,
+            value: new Uint8Array([1, 2, 3])
+          })
+          .mockResolvedValueOnce({ done: true, value: undefined })
+      }
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        body: {
+          getReader: vi.fn().mockReturnValue(mockReader)
+        }
+      }
+      const fetchSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValue(mockResponse as any)
+
+      await downloadFileWithResume(
+        "dir",
+        "file.bin",
+        "http://test.com/file.bin",
+        1000
+      )
+      expect(mockDirHandle.removeEntry).toHaveBeenCalledWith("file.bin")
+      expect(fetchSpy).toHaveBeenCalled()
+      fetchSpy.mockRestore()
+    })
+
+    it("should fetch with Range if currentSize < expectedSize and resume", async () => {
+      const mockWritable = {
+        write: vi.fn().mockResolvedValue(undefined),
+        seek: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      }
+      const mockFileHandle = {
+        getFile: vi.fn().mockResolvedValue({ size: 500 }),
+        createWritable: vi.fn().mockResolvedValue(mockWritable)
+      }
+      const mockDirHandle = {
+        getFileHandle: vi.fn().mockResolvedValue(mockFileHandle)
+      }
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockResolvedValue(mockDirHandle)
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const mockReader = {
+        read: vi
+          .fn()
+          .mockResolvedValueOnce({ done: false, value: new Uint8Array(500) })
+          .mockResolvedValueOnce({ done: true, value: undefined })
+      }
+      const mockResponse = {
+        ok: true,
+        status: 206, // Partial Content
+        body: {
+          getReader: vi.fn().mockReturnValue(mockReader)
+        }
+      }
+      const fetchSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValue(mockResponse as any)
+
+      const onProgress = vi.fn()
+      await downloadFileWithResume(
+        "dir",
+        "file.bin",
+        "http://test.com/file.bin",
+        1000,
+        onProgress
+      )
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "http://test.com/file.bin",
+        expect.objectContaining({
+          headers: expect.any(Headers)
+        })
+      )
+      const sentHeaders = fetchSpy.mock.calls[0][1]?.headers as Headers
+      expect(sentHeaders.get("Range")).toBe("bytes=500-")
+      expect(mockWritable.seek).toHaveBeenCalledWith(500)
+      expect(onProgress).toHaveBeenCalled()
+      fetchSpy.mockRestore()
+    })
+
+    it("should throw error if fetch response is not ok", async () => {
+      const mockFileHandle = {
+        getFile: vi.fn().mockResolvedValue({ size: 0 })
+      }
+      const mockDirHandle = {
+        getFileHandle: vi.fn().mockResolvedValue(mockFileHandle)
+      }
+      const mockGetDirectory = vi.fn().mockResolvedValue({
+        getDirectoryHandle: vi.fn().mockResolvedValue(mockDirHandle)
+      })
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const mockResponse = {
+        ok: false,
+        status: 404,
+        statusText: "Not Found"
+      }
+      const fetchSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValue(mockResponse as any)
+
+      await expect(
+        downloadFileWithResume(
+          "dir",
+          "file.bin",
+          "http://test.com/file.bin",
+          1000
+        )
+      ).rejects.toThrow("Failed to fetch model: 404 Not Found")
+
+      fetchSpy.mockRestore()
     })
   })
 })

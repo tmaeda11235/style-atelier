@@ -32,7 +32,21 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Developer Profiler Da
       }
     })
 
+    // Resize sidepanel frame so that the profiler dashboard is rendered (width >= 1024px)
+    await page.evaluate(() => {
+      const iframe = document.getElementById("sidepanel-frame")
+      if (iframe) {
+        iframe.style.width = "1200px"
+      }
+    })
+
     const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip onboarding guide if visible
+    const skipBtn = spFrame.locator("#welcome-skip-btn")
+    if ((await skipBtn.count()) > 0) {
+      await skipBtn.click()
+    }
 
     const width = await spFrame
       .locator("html")

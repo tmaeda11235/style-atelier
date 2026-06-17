@@ -20,13 +20,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Visual Resilience & Obstruction
       // Calculate center point of the element
       const x = rect.left + rect.width / 2
       const y = rect.top + rect.height / 2
-
-      // Get the topmost element at that point
       const topElement = document.elementFromPoint(x, y)
-      if (!topElement) return true
-
-      // If the topmost element is the element itself or is contained inside the element, it is not obstructed
-      return !el.contains(topElement) && topElement !== el
+      const obstructed =
+        !topElement || (!el.contains(topElement) && topElement !== el)
+      console.log(
+        `[OBSTRUCTION_CHECK] x=${x} y=${y} innerWidth=${window.innerWidth} innerHeight=${window.innerHeight} rect=${JSON.stringify(rect)} top=${topElement ? topElement.tagName + "#" + topElement.id + "." + topElement.className : "null"} obstructed=${obstructed}`
+      )
+      return obstructed
     })
     expect(
       isObstructed,

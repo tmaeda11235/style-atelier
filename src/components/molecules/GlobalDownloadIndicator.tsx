@@ -127,7 +127,7 @@ export function GlobalDownloadIndicator({
       id="global-download-indicator"
       style={{ bottom: `${bottomOffset}px` }}
       onClick={isDownloading ? handleBarClick : undefined}
-      className={`fixed left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 transition-all duration-300 ease-in-out ${
+      className={`absolute left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 transition-all duration-300 ease-in-out ${
         isDownloading
           ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40"
           : ""

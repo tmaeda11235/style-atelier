@@ -28,6 +28,20 @@ export function ExpertModeView({
 }: ExpertModeViewProps) {
   const expertView = useExpertModeView({ isEasyMode, onToggleEasyMode })
 
+  React.useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail) {
+        expertView.setActiveTab(customEvent.detail)
+        expertView.setActiveDetailCard(null)
+      }
+    }
+    window.addEventListener("change-expert-tab", handleTabChange)
+    return () => {
+      window.removeEventListener("change-expert-tab", handleTabChange)
+    }
+  }, [expertView])
+
   return (
     <div
       onDragOver={expertView.handleDragOver}

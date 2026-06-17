@@ -4,10 +4,12 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { useLibrary } from "../../hooks/useLibrary"
+import { useWebLlm } from "../../hooks/useWebLlm"
 import type { StyleCard } from "../../lib/db-schema"
 import { THEME_STYLES } from "../../lib/theme-config"
 import { OpfsImage } from "../atoms/OpfsImage"
 import { type AlertType } from "../molecules/ConnectionAlert"
+import { LocalAiSetupPlaceholder } from "../molecules/LocalAiSetupPlaceholder"
 import { CardsGrid } from "./CardsGrid"
 import { CategoryManagerModal } from "./CategoryManagerModal"
 import { EmptyState } from "./EmptyState"
@@ -22,6 +24,7 @@ interface LibraryTabProps {
   onNavigateToWorkbench?: () => void
   isEasyMode?: boolean
   onOpenSimpleWorkbench?: (card: StyleCard) => void
+  onSetActiveTab?: (tab: string) => void
 }
 
 interface GridOrEmptySectionProps {
@@ -225,11 +228,12 @@ function useLibraryTheme(lib: any) {
   return { currentCategory, activeTheme, themeStyles }
 }
 
-export function LibraryTab(props: LibraryTabProps) {
+function useLibraryTabState(props: LibraryTabProps) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [sharingCard, setSharingCard] = useState<StyleCard | null>(null)
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
-  const { expertFeatures } = useSettings()
+  const { expertFeatures, setAutoOpenSection } = useSettings()
+  const { status: webLlmStatus } = useWebLlm()
   const { t: i18n } = useLanguage()
   const t = i18n.libraryTab
   const lib = useLibrary(
@@ -239,14 +243,36 @@ export function LibraryTab(props: LibraryTabProps) {
   )
   const { currentCategory, activeTheme, themeStyles } = useLibraryTheme(lib)
 
+  return {
+    isCategoryModalOpen,
+    setIsCategoryModalOpen,
+    sharingCard,
+    setSharingCard,
+    isFiltersExpanded,
+    setIsFiltersExpanded,
+    expertFeatures,
+    setAutoOpenSection,
+    webLlmStatus,
+    t,
+    lib,
+    currentCategory,
+    activeTheme,
+    themeStyles
+  }
+}
+
+export function LibraryTab(props: LibraryTabProps) {
+  const state = useLibraryTabState(props)
+  const { lib, t, currentCategory, activeTheme, themeStyles } = state
+
   return (
     <div className="flex flex-col gap-4">
       <SearchAndFilterSection
         lib={lib}
-        isFiltersExpanded={isFiltersExpanded}
-        setIsFiltersExpanded={setIsFiltersExpanded}
-        expertFeatures={expertFeatures}
-        setIsCategoryModalOpen={setIsCategoryModalOpen}
+        isFiltersExpanded={state.isFiltersExpanded}
+        setIsFiltersExpanded={state.setIsFiltersExpanded}
+        expertFeatures={state.expertFeatures}
+        setIsCategoryModalOpen={state.setIsCategoryModalOpen}
         t={t}
       />
       {currentCategory && (
@@ -256,18 +282,27 @@ export function LibraryTab(props: LibraryTabProps) {
           themeStyles={themeStyles}
         />
       )}
-      <LibraryContentSection
-        lib={lib}
-        themeStyles={themeStyles}
-        props={props}
-        setSharingCard={setSharingCard}
-        t={t}
-      />
+      {lib.isAiSearch && state.webLlmStatus !== "ready" ? (
+        <LocalAiSetupPlaceholder
+          onSetupStart={() => {
+            props.onSetActiveTab?.("settings")
+            state.setAutoOpenSection("local-ai")
+          }}
+        />
+      ) : (
+        <LibraryContentSection
+          lib={lib}
+          themeStyles={themeStyles}
+          props={props}
+          setSharingCard={state.setSharingCard}
+          t={t}
+        />
+      )}
       <ModalsSection
-        isCategoryModalOpen={isCategoryModalOpen}
-        setIsCategoryModalOpen={setIsCategoryModalOpen}
-        sharingCard={sharingCard}
-        setSharingCard={setSharingCard}
+        isCategoryModalOpen={state.isCategoryModalOpen}
+        setIsCategoryModalOpen={state.setIsCategoryModalOpen}
+        sharingCard={state.sharingCard}
+        setSharingCard={state.setSharingCard}
         addLog={props.addLog}
       />
     </div>

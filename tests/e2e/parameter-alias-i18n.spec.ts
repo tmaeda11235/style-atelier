@@ -29,7 +29,18 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
 
     // 2. Seed database
     await spFrame.locator("body").evaluate(async () => {
+      for (let i = 0; i < 100; i++) {
+        if ((window as any).sandboxSeedFinished && (window as any).db) break
+        await new Promise((r) => setTimeout(r, 50))
+      }
       const database = (window as any).db
+      if (!database) throw new Error("Database not initialized")
+
+      for (let i = 0; i < 50; i++) {
+        const count = await database.categories.count()
+        if (count > 0) break
+        await new Promise((r) => setTimeout(r, 100))
+      }
 
       await database.categories.clear()
       await database.styleCards.clear()

@@ -24,11 +24,12 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
     testTimeout: 15000,
-    poolOptions: {
-      threads: {
-        singleThread: true
-      }
+    pool: "forks",
+    forks: {
+      singleFork: true
     },
+    maxWorkers: 1,
+    minWorkers: 1,
     include: ["tests/**/*.test.{ts,tsx}", "tests/**/*.spec.ts"],
     exclude: [
       "node_modules",
@@ -40,7 +41,8 @@ export default defineConfig({
       ".stryker-tmp/**"
     ],
     coverage: {
-      provider: "v8",
+      provider: "istanbul",
+      clean: true,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",

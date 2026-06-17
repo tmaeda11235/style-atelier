@@ -1,7 +1,8 @@
 import { AlertTriangle, Loader2 } from "lucide-react"
 import React from "react"
 
-import { ModelIdleOverlay } from "./ModelIdleOverlay"
+import { useSettings } from "../../contexts/SettingsContext"
+import { LocalAiSetupPlaceholder } from "./LocalAiSetupPlaceholder"
 
 export interface ModelStatusOverlayProps {
   status: string
@@ -217,58 +218,76 @@ function ModelErrorOverlay({
   )
 }
 
-// eslint-disable-next-line max-lines-per-function
-export function ModelStatusOverlay({
-  status,
-  progress,
-  speed,
-  eta,
-  retryCount,
-  maxRetries,
-  text,
-  webLlmError,
-  startDownload,
-  t
-}: ModelStatusOverlayProps) {
-  const isDownloading =
-    status === "checking" || status === "downloading" || status === "verifying"
-
-  if (isDownloading) {
+function renderDownloadingOrQuota(s: string, props: ModelStatusOverlayProps) {
+  if (s === "checking" || s === "downloading" || s === "verifying") {
     return (
       <ModelDownloadingOverlay
-        status={status}
-        progress={progress}
-        speed={speed}
-        eta={eta}
-        text={text}
-        t={t}
+        status={s}
+        progress={props.progress}
+        speed={props.speed}
+        eta={props.eta}
+        text={props.text}
+        t={props.t}
       />
     )
   }
-  if (status === "insufficient-quota" || webLlmError === "QuotaExceededError") {
-    return <ModelQuotaWarningOverlay t={t} />
+  if (
+    s === "insufficient-quota" ||
+    props.webLlmError === "QuotaExceededError"
+  ) {
+    return <ModelQuotaWarningOverlay t={props.t} />
   }
-  if (status === "unsupported" || webLlmError === "both-unsupported") {
-    return <ModelUnsupportedOverlay t={t} />
+  if (s === "unsupported" || props.webLlmError === "both-unsupported") {
+    return <ModelUnsupportedOverlay t={props.t} />
   }
-  if (status === "retrying") {
+  return null
+}
+
+function renderRetryingOrError(s: string, props: ModelStatusOverlayProps) {
+  if (s === "retrying") {
     return (
       <ModelRetryingOverlay
-        retryCount={retryCount}
-        maxRetries={maxRetries}
-        webLlmError={webLlmError}
-        t={t}
+        retryCount={props.retryCount}
+        maxRetries={props.maxRetries}
+        webLlmError={props.webLlmError}
+        t={props.t}
       />
     )
   }
-  if (status === "error" || webLlmError) {
+  if (s === "error" || props.webLlmError) {
     return (
       <ModelErrorOverlay
-        webLlmError={webLlmError}
-        startDownload={startDownload}
-        t={t}
+        webLlmError={props.webLlmError}
+        startDownload={props.startDownload}
+        t={props.t}
       />
     )
   }
-  return <ModelIdleOverlay startDownload={startDownload} t={t} />
+  return null
+}
+
+function renderOverlayContent(
+  props: ModelStatusOverlayProps,
+  setAutoOpenSection: (section: string | null) => void
+) {
+  const s = props.status
+  const activeOverlay =
+    renderDownloadingOrQuota(s, props) || renderRetryingOrError(s, props)
+  if (activeOverlay) return activeOverlay
+
+  return (
+    <LocalAiSetupPlaceholder
+      onSetupStart={() => {
+        window.dispatchEvent(
+          new CustomEvent("change-expert-tab", { detail: "settings" })
+        )
+        setAutoOpenSection("local-ai")
+      }}
+    />
+  )
+}
+
+export function ModelStatusOverlay(props: ModelStatusOverlayProps) {
+  const { setAutoOpenSection } = useSettings()
+  return renderOverlayContent(props, setAutoOpenSection)
 }

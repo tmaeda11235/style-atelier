@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import React from "react"
 
 import { useLanguage } from "../contexts/LanguageContext"
@@ -165,6 +166,25 @@ export function useSettingsTab(props: SettingsTabHooksProps) {
     estimate,
     t
   })
+
+  const contextSettings = useSettings()
+  const { autoOpenSection, setAutoOpenSection } = contextSettings
+
+  const { setOpenSections } = accordion
+
+  React.useEffect(() => {
+    if (autoOpenSection === "local-ai") {
+      setOpenSections((prev) => ({ ...prev, webllm: true }))
+      setAutoOpenSection(null)
+      setTimeout(() => {
+        const btn = document.getElementById("webllm-download-btn")
+        if (btn) {
+          btn.focus()
+          btn.scrollIntoView({ behavior: "smooth", block: "center" })
+        }
+      }, 300)
+    }
+  }, [autoOpenSection, setAutoOpenSection, setOpenSections])
 
   useSettingsTabFocus(accordion.setOpenSections)
 

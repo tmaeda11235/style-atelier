@@ -86,8 +86,14 @@ async function seedSandboxData() {
     ])
 
     console.log("[Sandbox Seed] Seeding finished successfully.")
+    if (typeof window !== "undefined") {
+      ;(window as any).sandboxSeedFinished = true
+    }
   } catch (err) {
     console.error("[Sandbox Seed] Failed to seed sandbox database:", err)
+    if (typeof window !== "undefined") {
+      ;(window as any).sandboxSeedFinished = true
+    }
   }
 }
 
@@ -96,6 +102,10 @@ const urlParams = new URLSearchParams(
 )
 if (urlParams.get("noseed") !== "true") {
   seedSandboxData()
+} else {
+  if (typeof window !== "undefined") {
+    ;(window as any).sandboxSeedFinished = true
+  }
 }
 
 let updateProfilingCallback: ((data: any) => void) | null = null
@@ -1031,23 +1041,23 @@ function SandboxWrapper() {
   const [useRealWorker, setUseRealWorker] = React.useState(() => {
     return localStorage.getItem("sandbox-use-real-worker") === "true"
   })
-  const [windowWidth, setWindowWidth] = React.useState(
+  const [width, setWidth] = React.useState(
     typeof window !== "undefined" ? window.innerWidth : 1024
   )
+  const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    const handleResize = () => {
-      console.log(
-        `[Sandbox Dashboard] Resizing layout, clientWidth: ${window.innerWidth}`
-      )
-      setWindowWidth(window.innerWidth)
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
+    if (!containerRef.current) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
   }, [])
 
-  const isWide = windowWidth >= 1024
-  const isNarrow = !isWide
+  const isNarrow = width < 1024
 
   const [profiling, setProfiling] = React.useState<any>({
     workerStatus: "uninitialized",
@@ -1122,189 +1132,187 @@ function SandboxWrapper() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
-  return (
-    <div className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
-      {/* 左半分: プロファイリング＆デバッグダッシュボード */}
-      {isWide && (
-        <div className="flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex flex-col justify-between">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
-              <div>
-                <h1 className="text-xl font-bold text-indigo-400 flex items-center gap-2">
-                  <span className="p-1.5 bg-indigo-950 rounded-lg text-indigo-400 border border-indigo-900">
-                    ⚡
-                  </span>
-                  LiteRT-LM Developer Profiler
-                </h1>
-                <p className="text-xs text-slate-400 mt-1">
-                  Real-time WebGPU & OPFS inference analysis harness.
-                </p>
-              </div>
-
-              {/* モード切り替えトグルスイッチ */}
-              <div className="flex items-center gap-3 bg-slate-900 border border-slate-800/80 rounded-xl p-1.5">
-                <button
-                  onClick={() => handleToggleMode(false)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    !useRealWorker
-                      ? "bg-indigo-600 text-white shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}>
-                  Mock Mode
-                </button>
-                <button
-                  onClick={() => handleToggleMode(true)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    useRealWorker
-                      ? "bg-indigo-600 text-white shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}>
-                  Real WebGPU
-                </button>
-              </div>
+  const renderProfiler = () => {
+    if (isNarrow) return null
+    return (
+      <div className="flex flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
+            <div>
+              <h1 className="text-xl font-bold text-indigo-400 flex items-center gap-2">
+                <span className="p-1.5 bg-indigo-950 rounded-lg text-indigo-400 border border-indigo-900">
+                  ⚡
+                </span>
+                LiteRT-LM Developer Profiler
+              </h1>
+              <p className="text-xs text-slate-400 mt-1">
+                Real-time WebGPU & OPFS inference analysis harness.
+              </p>
             </div>
 
-            {/* VRAM & Memory Panel */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4 flex flex-col justify-between">
-                <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                  <span>📟</span> VRAM Allocation
-                </div>
-                <div className="mt-2">
-                  <div className="text-2xl font-bold text-slate-100">
-                    {useRealWorker
-                      ? `${profiling.vramTotal.toFixed(2)} GB`
-                      : "N/A (Mock)"}
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-1">
-                    {useRealWorker
-                      ? `Model: ${profiling.vramModel.toFixed(2)}G | Cache: ${profiling.vramCache.toFixed(2)}G`
-                      : "Mock mode runs lightweight"}
-                  </div>
-                </div>
-                <div className="w-full bg-slate-850 h-1 rounded-full overflow-hidden mt-3">
-                  <div
-                    className="bg-indigo-500 h-full transition-all duration-300"
-                    style={{
-                      width: useRealWorker
-                        ? `${Math.min(100, (profiling.vramTotal / 8) * 100)}%`
-                        : "0%"
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4 flex flex-col justify-between">
-                <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                  <span>💾</span> OPFS Storage Usage
-                </div>
-                <div className="mt-2">
-                  <div className="text-2xl font-bold text-slate-100">
-                    {formatBytes(profiling.opfsUsage)}
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-1">
-                    Quota: {formatBytes(profiling.opfsQuota)}
-                  </div>
-                </div>
-                <div className="w-full bg-slate-850 h-1 rounded-full overflow-hidden mt-3">
-                  <div
-                    className="bg-sky-500 h-full transition-all duration-300"
-                    style={{
-                      width: `${profiling.opfsQuota ? (profiling.opfsUsage / profiling.opfsQuota) * 100 : 0}%`
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4 flex flex-col justify-between">
-                <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                  <span>⏱️</span> Inference Latency
-                </div>
-                <div className="mt-2">
-                  <div className="text-2xl font-bold text-slate-100">
-                    {profiling.inferenceLatency > 0
-                      ? `${(profiling.inferenceLatency / 1000).toFixed(2)}s`
-                      : "0.00s"}
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-1">
-                    Speed: {profiling.tokensPerSec.toFixed(1)} tokens/s
-                  </div>
-                </div>
-                <div className="w-full bg-slate-850 h-1 rounded-full overflow-hidden mt-3">
-                  <div
-                    className="bg-emerald-500 h-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(100, (profiling.tokensPerSec / 50) * 100)}%`
-                    }}
-                  />
-                </div>
-              </div>
+            {/* モード切り替えトグルスイッチ */}
+            <div className="flex items-center gap-3 bg-slate-900 border border-slate-800/80 rounded-xl p-1.5">
+              <button
+                onClick={() => handleToggleMode(false)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  !useRealWorker
+                    ? "bg-indigo-600 text-white shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}>
+                Mock Mode
+              </button>
+              <button
+                onClick={() => handleToggleMode(true)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  useRealWorker
+                    ? "bg-indigo-600 text-white shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}>
+                Real WebGPU
+              </button>
             </div>
-
-            {/* Model Downloading Metrics */}
-            {profiling.workerStatus === "downloading" && (
-              <div className="bg-slate-900/80 border border-amber-900/30 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-amber-400 font-semibold flex items-center gap-1.5 animate-pulse">
-                    <span>📥</span> Downloading Model Weights...
-                  </span>
-                  <span className="text-slate-400">
-                    {profiling.downloadProgress}%
-                  </span>
-                </div>
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-amber-500 h-full transition-all duration-200"
-                    style={{ width: `${profiling.downloadProgress}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-500">
-                  <span>Speed: {profiling.downloadSpeed} MB/s</span>
-                  <span>ETA: {profiling.downloadEta}s</span>
-                </div>
-              </div>
-            )}
-
-            {/* Last Inference Request / Output Logs */}
-            <div className="bg-slate-900/20 border border-slate-800/50 rounded-xl p-4 space-y-4">
-              <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                <span>💻</span> Real-time Console Inference Log
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-[10px] text-indigo-400 font-bold block mb-1">
-                    PROMPT
-                  </span>
-                  <div className="bg-slate-950 border border-slate-900 rounded-lg p-2.5 text-xs text-slate-355 font-mono min-h-[40px] whitespace-pre-wrap">
-                    {profiling.lastPrompt || "(No query executed yet)"}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-[10px] text-emerald-400 font-bold block mb-1">
-                    RESPONSE
-                  </span>
-                  <div className="bg-slate-950 border border-slate-900 rounded-lg p-2.5 text-xs text-emerald-350 font-mono min-h-[80px] max-h-[200px] overflow-y-auto whitespace-pre-wrap">
-                    {profiling.lastResponse || "(Waiting for prompt...)"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Error Message Panel */}
-            {profiling.errorMsg && (
-              <div className="bg-rose-955/40 border border-rose-900/50 rounded-xl p-4 text-xs text-rose-300">
-                <strong className="block text-rose-400 font-bold mb-1">
-                  ⚠️ Error Encountered:
-                </strong>
-                {profiling.errorMsg}
-              </div>
-            )}
           </div>
+
+          {/* VRAM & Memory Panel */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4 flex flex-col justify-between">
+              <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                <span>📟</span> VRAM Allocation
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-bold text-slate-100">
+                  {useRealWorker
+                    ? `${profiling.vramTotal.toFixed(2)} GB`
+                    : "N/A (Mock)"}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1">
+                  {useRealWorker
+                    ? `Model: ${profiling.vramModel.toFixed(2)}G | Cache: ${profiling.vramCache.toFixed(2)}G`
+                    : "Mock mode runs lightweight"}
+                </div>
+              </div>
+              <div className="w-full bg-slate-850 h-1 rounded-full overflow-hidden mt-3">
+                <div
+                  className="bg-indigo-500 h-full transition-all duration-300"
+                  style={{
+                    width: useRealWorker
+                      ? `${Math.min(100, (profiling.vramTotal / 8) * 100)}%`
+                      : "0%"
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4 flex flex-col justify-between">
+              <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                <span>💾</span> OPFS Storage Usage
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-bold text-slate-100">
+                  {formatBytes(profiling.opfsUsage)}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1">
+                  Quota: {formatBytes(profiling.opfsQuota)}
+                </div>
+              </div>
+              <div className="w-full bg-slate-850 h-1 rounded-full overflow-hidden mt-3">
+                <div
+                  className="bg-sky-500 h-full transition-all duration-300"
+                  style={{
+                    width: `${profiling.opfsQuota ? (profiling.opfsUsage / profiling.opfsQuota) * 100 : 0}%`
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4 flex flex-col justify-between">
+              <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                <span>⏱️</span> Inference Latency
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-bold text-slate-100">
+                  {profiling.inferenceLatency > 0
+                    ? `${(profiling.inferenceLatency / 1000).toFixed(2)}s`
+                    : "0.00s"}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1">
+                  Speed: {profiling.tokensPerSec.toFixed(1)} tokens/s
+                </div>
+              </div>
+              <div className="w-full bg-slate-850 h-1 rounded-full overflow-hidden mt-3">
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min(100, (profiling.tokensPerSec / 50) * 100)}%`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Model Downloading Metrics */}
+          {profiling.workerStatus === "downloading" && (
+            <div className="bg-slate-900/80 border border-amber-900/30 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-amber-400 font-semibold flex items-center gap-1.5 animate-pulse">
+                  <span>📥</span> Downloading Model Weights...
+                </span>
+                <span className="text-slate-400">
+                  {profiling.downloadProgress}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-amber-500 h-full transition-all duration-200"
+                  style={{ width: `${profiling.downloadProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-500">
+                <span>Speed: {profiling.downloadSpeed} MB/s</span>
+                <span>ETA: {profiling.downloadEta}s</span>
+              </div>
+            </div>
+          )}
+
+          {/* Last Inference Request / Output Logs */}
+          <div className="bg-slate-900/20 border border-slate-800/50 rounded-xl p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+              <span>💻</span> Real-time Console Inference Log
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <span className="text-[10px] text-indigo-400 font-bold block mb-1">
+                  PROMPT
+                </span>
+                <div className="bg-slate-950 border border-slate-900 rounded-lg p-2.5 text-xs text-slate-355 font-mono min-h-[40px] whitespace-pre-wrap">
+                  {profiling.lastPrompt || "(No query executed yet)"}
+                </div>
+              </div>
+              <div>
+                <span className="text-[10px] text-emerald-400 font-bold block mb-1">
+                  RESPONSE
+                </span>
+                <div className="bg-slate-950 border border-slate-900 rounded-lg p-2.5 text-xs text-emerald-350 font-mono min-h-[80px] max-h-[200px] overflow-y-auto whitespace-pre-wrap">
+                  {profiling.lastResponse || "(Waiting for prompt...)"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Error Message Panel */}
+          {profiling.errorMsg && (
+            <div className="bg-rose-955/40 border border-rose-900/50 rounded-xl p-4 text-xs text-rose-300">
+              <strong className="block text-rose-400 font-bold mb-1">
+                ⚠️ Error Encountered:
+              </strong>
+              {profiling.errorMsg}
+            </div>
+          )}
 
           {/* Onboarding Trigger Button & Footer */}
           <div className="border-t border-slate-900 pt-4 mt-6 flex items-center justify-between">
             <button
-              id="test-open-onboarding-btn"
+              id="test-open-onboarding-btn-profiler"
               onClick={() => {
                 console.log(
                   "[Sandbox] Clicked Open Onboarding Button, setting state to true"
@@ -1319,18 +1327,36 @@ function SandboxWrapper() {
             </span>
           </div>
         </div>
-      )}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
+      {/* Onboarding Trigger Button (Floating Absolute for E2E Tests) */}
+      <button
+        id="test-open-onboarding-btn"
+        onClick={() => setIsOnboardingOpen(true)}
+        className="absolute bottom-4 left-4 z-50 px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
+        💡 Open Onboarding Guide
+      </button>
+
+      {/* 左半分: プロファイリング＆デバッグダッシュボード */}
+      {renderProfiler()}
 
       <div
-        style={{ width: isWide ? "380px" : "100%" }}
-        className="h-full shadow-2xl flex-shrink-0">
+        className={`${
+          isNarrow ? "w-full" : "w-[380px]"
+        } h-full shadow-2xl flex-shrink-0`}>
         <SidePanelPage />
       </div>
 
       {isNarrow &&
         !(typeof navigator !== "undefined" && navigator.webdriver) && (
           <button
-            id="test-open-onboarding-btn"
+            id="test-open-onboarding-btn-narrow"
             onClick={() => setIsOnboardingOpen(true)}
             className="absolute bottom-4 left-4 z-[9999] px-2 py-1 text-[10px] bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold opacity-20 hover:opacity-100 transition-opacity shadow-md">
             💡 Open Onboarding Guide

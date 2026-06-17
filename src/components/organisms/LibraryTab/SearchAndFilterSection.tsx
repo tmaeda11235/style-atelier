@@ -86,6 +86,8 @@ export function SearchAndFilterSection({
         activeFiltersCount={lib.activeFiltersCount}
         sortBy={lib.sortBy}
         setSortBy={lib.setSortBy}
+        isAiSearch={lib.isAiSearch}
+        setIsAiSearch={lib.setIsAiSearch}
       />
       <LibraryFilterAccordion {...filterProps} />
     </>

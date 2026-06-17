@@ -34,7 +34,13 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Prompt De-cluttering", () =>
 
     // 2. Seed a history item with a messy prompt
     await spFrame.locator("body").evaluate(async () => {
+      for (let i = 0; i < 100; i++) {
+        if ((window as any).sandboxSeedFinished && (window as any).db) break
+        await new Promise((r) => setTimeout(r, 50))
+      }
       const database = (window as any).db
+      if (!database) throw new Error("Database not initialized")
+
       await database.historyItems.clear()
       await database.historyItems.add({
         id: "mock-history-item-to-declutter",
@@ -120,7 +126,13 @@ test.describe("Style Atelier Sandbox E2E Tests - AI Prompt De-cluttering", () =>
       // ClearDownloaded model state to force fallback
       localStorage.removeItem("mock-webllm-downloaded")
 
+      for (let i = 0; i < 100; i++) {
+        if ((window as any).sandboxSeedFinished && (window as any).db) break
+        await new Promise((r) => setTimeout(r, 50))
+      }
       const database = (window as any).db
+      if (!database) throw new Error("Database not initialized")
+
       await database.historyItems.clear()
       await database.historyItems.add({
         id: "mock-history-item-to-declutter-fallback",
