@@ -126,7 +126,6 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-max-lines.ts",
-      "src/components/organisms/Workbench.tsx",
     ],
     rules: {
       "max-lines": "warn"
@@ -145,11 +144,6 @@ export default ts.config(
   {
     files: [
       "src/placeholder-non-existent-func-lines.ts",
-      "src/components/molecules/ConnectionAlert.tsx",
-      "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/SimpleMintingView.tsx",
-      "src/components/organisms/Workbench.tsx",
-      "src/hooks/useEasyModeView.ts",
     ],
     rules: {
       "max-lines-per-function": "warn"
