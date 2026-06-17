@@ -20,12 +20,7 @@ import {
   deleteStyleCardAndCleanup,
   mergeStyleCards
 } from "./db/merge-ops"
-import {
-  processCardChangesOpfs,
-  processCardOpfs,
-  processCategoryChangesOpfs,
-  processCategoryOpfs
-} from "./db/opfs-helpers"
+import { processCardChangesOpfs, processCardOpfs } from "./db/opfs-helpers"
 
 export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
 
@@ -92,7 +87,6 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   }
 
   async addCategory(category: CustomCategory): Promise<string> {
-    await processCategoryOpfs(category)
     return this.categories.add({
       ...category,
       updatedAt: category.updatedAt || category.createdAt
@@ -103,7 +97,6 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
     id: string,
     changes: Partial<CustomCategory>
   ): Promise<number> {
-    await processCategoryChangesOpfs(id, changes)
     return this.categories.update(id, {
       ...changes,
       updatedAt: Date.now()
