@@ -344,7 +344,7 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
     })
   })
 
-  test.describe("AI Style Analysis Integration @J-PWA-AI-01", () => {
+  test.describe("AI Style Analysis Integration @J-PWA-AI-STYLE-ANALYSIS-01", () => {
     test.slow()
 
     test.beforeEach(async ({ page }) => {

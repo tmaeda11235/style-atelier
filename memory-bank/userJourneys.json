@@ -773,6 +773,24 @@
         "src/lib/db/sync-merger.ts",
         "src/components/molecules/GDriveSyncStrategyDialog.tsx"
       ]
+    },
+    {
+      "id": "@J-PWA-AI-STYLE-ANALYSIS-01",
+      "name": "モバイルPWAローカルAIアートスタイル分析",
+      "description": "モバイルPWA環境において、ローカルにダウンロードされたLiteRT LMモデルを利用してオフラインで画像のアートスタイル分析を実行する",
+      "steps": [
+        "スタイルカードを選択し、カード詳細パネル（裏面）を開く",
+        "「モデルをダウンロード」ボタンをタップしてLiteRT LMのモデルウェイトのダウンロードと初期化（OPFS保存）を行う",
+        "ダウンロード完了後、「スタイルを分析」ボタンをタップする",
+        "ローカルのWebGPU（またはWasm CPUフォールバック）で推論を行い、分析されたジャンル、タグ、要約テキストが画面に表示されるのを確認する"
+      ],
+      "nextJourneys": [],
+      "viewComponents": [
+        "src/mobile-app/index.html",
+        "src/mobile-app/index.ts",
+        "src/mobile-app/local-ai-client.ts",
+        "src/workers/local-ai.worker.ts"
+      ]
     }
   ]
 }
