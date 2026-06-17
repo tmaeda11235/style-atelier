@@ -135,6 +135,16 @@ function startMockInference() {
   )
 }
 
+function updateMetrics(metrics) {
+  if (!metrics) return
+  const { latencyMs, tokensPerSec, estimatedTokens, vramBytes } = metrics
+  el("inference-time").textContent = (latencyMs / 1000).toFixed(2)
+  el("metric-speed").textContent = `${tokensPerSec} t/s`
+  el("metric-vram").textContent =
+    `${(vramBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  el("metric-memory").textContent = `${estimatedTokens} tokens`
+}
+
 function handleWorkerMessage(event) {
   const data = event.data
   if (!data) return
@@ -170,6 +180,7 @@ function handleWorkerMessage(event) {
       el("inference-output").classList.remove("placeholder")
       const elapsed = ((Date.now() - inferenceStartTime) / 1000).toFixed(1)
       el("inference-time").textContent = elapsed
+      updateMetrics(data.metrics)
       log(`Inference result received in ${elapsed}s.`, "success")
       break
     }

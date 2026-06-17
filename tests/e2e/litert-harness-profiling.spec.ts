@@ -98,17 +98,16 @@ test("LiteRT Harness Profiling Dashboard End-to-End Simulation @J-PROFILER-DASHB
   // 3. Navigate to the Harness page (baseURL will be automatically used from Playwright config)
   await page.goto("/src/test/harness/index.html")
 
-  // Verify dashboard structural elements
-  await expect(page.locator("h1")).toContainText("LiteRT-LM Debug Harness")
-  await expect(page.locator("#worker-status-badge")).toContainText(
-    "Worker: Connected"
-  )
-  await expect(page.locator("#opfs-status-badge")).toContainText(
-    "OPFS Model: Not Found"
-  )
+  // Switch to Real Mode to connect to the mock worker
+  await page.locator("#btn-mode-real").click()
 
-  const downloadBtn = page.locator("#download-btn")
-  const inferenceBtn = page.locator("#inference-btn")
+  // Verify dashboard structural elements
+  await expect(page.locator("h1")).toContainText("LiteRT-LM")
+  await expect(page.locator("#status-text")).toContainText("UNLOADED")
+  await expect(page.locator("#opfs-model-exists")).toContainText("Not Found")
+
+  const downloadBtn = page.locator("#btn-start-download")
+  const inferenceBtn = page.locator("#btn-run-inference")
 
   // Verify buttons initial state
   await expect(downloadBtn).toBeEnabled()
@@ -116,14 +115,12 @@ test("LiteRT Harness Profiling Dashboard End-to-End Simulation @J-PROFILER-DASHB
 
   // 4. Click download and verify progress updates
   await downloadBtn.click()
-  await expect(page.locator("#download-status-txt")).toContainText(
-    "Downloading model weights..."
-  )
+  await expect(page.locator("#status-text")).toContainText("DOWNLOADING")
 
   // Wait for downloading completion states
   await page.waitForFunction(
     () => {
-      const txt = document.getElementById("download-status-txt")?.innerText
+      const txt = document.getElementById("progress-val")?.innerText
       return txt && txt.includes("100%")
     },
     { timeout: 5000 }
@@ -135,23 +132,22 @@ test("LiteRT Harness Profiling Dashboard End-to-End Simulation @J-PROFILER-DASHB
   })
 
   // Wait for the UI state to update to Ready
-  await expect(page.locator("#opfs-status-badge")).toContainText(
-    "OPFS Model: Ready"
-  )
+  await expect(page.locator("#status-text")).toContainText("READY")
+  await expect(page.locator("#opfs-model-exists")).toContainText("Found")
   await expect(inferenceBtn).toBeEnabled()
 
   // 5. Execute inference and verify profiling metrics display
   await inferenceBtn.click()
 
   // Wait for result rendering in response output card
-  const responseOutput = page.locator("#response-output")
+  const responseOutput = page.locator("#inference-output")
   await expect(responseOutput).toContainText("legendary")
 
   // Verify Profiling Metrics cards
-  await expect(page.locator("#metric-latency")).toContainText("1.25s")
+  await expect(page.locator("#inference-time")).toContainText("1.25")
   await expect(page.locator("#metric-speed")).toContainText("40 t/s")
   await expect(page.locator("#metric-vram")).toContainText("2.11 GB")
-  await expect(page.locator("#metric-tokens")).toContainText("50 tokens")
+  await expect(page.locator("#metric-memory")).toContainText("50 tokens")
 
   // 6. Capture E2E test execution verification screenshot in tests/screenshots/
   const screenshotsDir = path.resolve(process.cwd(), "tests", "screenshots")
