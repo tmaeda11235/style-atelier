@@ -711,7 +711,11 @@
         "モックモードと実Workerモードを切り替える"
       ],
       "nextJourneys": [],
-      "viewComponents": ["tests/sandbox/main.tsx"]
+      "viewComponents": [
+        "tests/sandbox/main.tsx",
+        "src/test/harness/index.html",
+        "src/test/harness/harness.js"
+      ]
     },
     {
       "id": "@J-PWA-A2HS-OFFLINE-01",
