@@ -1,4 +1,9 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
+import {
+  isExtensionContextValid,
+  safeQueryTabs,
+  safeSendTabMessage
+} from "../lib/chrome-utils"
 import { db } from "../lib/db"
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
@@ -10,29 +15,32 @@ function injectPromptToActiveTab(
   onNoInput: () => void,
   onDisconnected: () => void
 ) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0]
+  if (!isExtensionContextValid()) {
+    onDisconnected()
+    return
+  }
+
+  safeQueryTabs({ active: true, currentWindow: true }, async (tabs) => {
+    const activeTab = tabs?.[0]
     if (activeTab?.id) {
-      chrome.tabs
-        .sendMessage(activeTab.id, {
+      try {
+        const response = await safeSendTabMessage(activeTab.id, {
           type: "INJECT_PROMPT",
           prompt: prompt
         })
-        .then((response) => {
-          if (response && response.status === "error") {
-            const isNoInput = response.message?.includes(
-              "Could not find chat input"
-            )
-            if (isNoInput) onNoInput()
-            else onDisconnected()
-          } else {
-            onSuccess()
-          }
-        })
-        .catch((err) => {
-          console.error("Library injection failed:", err)
-          onDisconnected()
-        })
+        if (response && response.status === "error") {
+          const isNoInput = response.message?.includes(
+            "Could not find chat input"
+          )
+          if (isNoInput) onNoInput()
+          else onDisconnected()
+        } else {
+          onSuccess()
+        }
+      } catch (err) {
+        console.error("Library injection failed:", err)
+        onDisconnected()
+      }
     } else {
       onDisconnected()
     }

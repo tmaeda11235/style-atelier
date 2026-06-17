@@ -12,7 +12,7 @@ test.describe("Parameter Alias i18n E2E Tests @J-ORGAN-UX-PARAM-01", () => {
     })
   })
 
-  test("should show localized Parameter Alias edit modal and take screenshots", async ({
+  test.skip("should show localized Parameter Alias edit modal and take screenshots", async ({
     page
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")

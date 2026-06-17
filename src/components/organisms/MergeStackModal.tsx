@@ -90,7 +90,6 @@ const MergeStackHeader: React.FC<{ onClose: () => void; title: string }> = ({
     </Button>
   </div>
 )
-
 interface MergeStackFooterProps {
   onClose: () => void
   onMerge: () => void

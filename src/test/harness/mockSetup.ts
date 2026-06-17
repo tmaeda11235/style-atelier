@@ -28,12 +28,12 @@ export async function initHarnessCache(
       },
       onUnhandledRequest: "bypass"
     })
-    mswStatus.textContent = "Active"
-    mswStatus.className = "status-badge active"
+    mswStatus.textContent = "MSW: Active"
+    mswStatus.className = "status-badge success"
     log("Mock Service Worker started. Local cache redirect enabled.")
   } catch (err: any) {
-    mswStatus.textContent = "Failed"
-    mswStatus.className = "status-badge failed"
+    mswStatus.textContent = "MSW: Error"
+    mswStatus.className = "status-badge error"
     log(`Failed to start Mock Service Worker: ${err.message}`, true)
   }
 }

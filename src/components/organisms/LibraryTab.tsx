@@ -7,6 +7,7 @@ import { useLibrary } from "../../hooks/useLibrary"
 import { useWebLlm } from "../../hooks/useWebLlm"
 import type { StyleCard } from "../../lib/db-schema"
 import { THEME_STYLES } from "../../lib/theme-config"
+import { OpfsImage } from "../atoms/OpfsImage"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import { LocalAiSetupPlaceholder } from "../molecules/LocalAiSetupPlaceholder"
 import { CardsGrid } from "./CardsGrid"
@@ -150,10 +151,12 @@ function BinderThemeHeader({
   return (
     <div
       className={`p-4 rounded-xl border flex flex-col justify-center relative overflow-hidden transition-all duration-300 min-h-[4rem] ${bgClass}`}>
-      {currentCategory.coverImageUrl && (
+      {(currentCategory.coverImagePath || currentCategory.coverImageUrl) && (
         <div className="absolute inset-0 z-0">
-          <img
-            src={currentCategory.coverImageUrl}
+          <OpfsImage
+            src={
+              currentCategory.coverImagePath || currentCategory.coverImageUrl
+            }
             className="w-full h-full object-cover opacity-45"
             alt="Category Cover"
           />

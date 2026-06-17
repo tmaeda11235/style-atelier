@@ -36,6 +36,7 @@ tags: []
   - **Tombstone (Soft Delete)**: When a style card or category is deleted, it is soft-deleted by setting `isDeleted: true` and updating `updatedAt` to the current timestamp. This tombstone record is retained in the database.
   - **Deletion Propagation**: During synchronization with Google Drive (auto-sync or manual backup), these tombstone records are bundled in the backup payload. Other devices download the backup and merge changes using the LWW (Last-Write-Wins) merge logic, which propagates the deletion by marking local copies as deleted.
   - **Sync Window (60 Days)**: Tombstones are physically purged from the database after 60 days to prevent indefinite database growth.
+  - **PC-Mobile Conflict Resolution**: PC Chrome拡張機能とモバイルPWAの間でデータ同期を行う際、各レコードの `updatedAt` タイムスタンプを基にした自動 LWW (Last-Write-Wins) マージを実行する。同一データに対する同時編集の競合や、60日の同期ウィンドウを超えた長期オフライン端末が再接続した場合には、競合防止UI (`GDriveSyncStrategyDialog`) を展開し、Safe Merge（ゾンビ復活の警告付き自動マージ）、Local Overwrite（クラウドデータでのローカル完全上書き）、Cloud Overwrite（ローカルデータでのクラウド完全上書き）の3つの戦略から選択させて安全にデータ統合を行う。
   - **Zombie Record Risk**: If a device is offline for more than 60 days, the tombstone records indicating deletion may have already been purged on other active devices and from the cloud backup. When this offline device reconnects and syncs, it will treat its local copy (which lacks the tombstone) as active/new data and re-upload it, causing deleted items to reappear ("zombie records").
 - **Modular Utility & Data Access Layers**: To strictly adhere to the 300-line file limit and 50-line function limit:
   - `backup-validator.ts` is divided into a `src/lib/backup-validator/` subdirectory, splitting domain schema validations into clean, focused sub-modules.
@@ -90,6 +91,10 @@ tags: []
       - _Safe Merge_: Performs normal LWW merge while warning the user of potential zombie resurrection.
       - _Local Overwrite_: Discards local changes and pulls clean data from the cloud backup (fully preventing resurrection).
       - _Cloud Overwrite_: Replaces the cloud backup with the current local state.
+- **Service Worker Offline Caching & SWR (Stale-While-Revalidate) Pattern**:
+  - モバイルPWAのオフライン起動と高速表示を実現するため、Service Worker (`sw.ts`) 内で `Stale-While-Revalidate` キャッシュ戦略を実装。
+  - 静的アセット (HTML/JS/CSS/画像/i18n翻訳JSON) にアクセスした際、まずキャッシュから即時にデータを返し、バックグラウンドでネットワークから最新データを取得してキャッシュを更新する。
+  - これにより、オフライン環境下での動作継続性を担保しつつ、ネットワーク接続時には透過的かつ即座に最新のビルドアセットに更新される仕組みを提供する。
 - **Local AI Inference Pattern (LiteRT-LM, Offscreen & Cache Resilience)**:
   - **Offscreen Orchestration**: LiteRT-LM runs inside a Web Worker hosted in an Offscreen Document rather than the Side Panel. This prevents execution contexts from suddenly terminating when the Side Panel is closed, ensuring long-running downloads and token generations finish safely.
   - **Pre-download Quota Check**: Evaluates storage using `navigator.storage.estimate()` before downloading the model, preventing failures from `QuotaExceededError`.

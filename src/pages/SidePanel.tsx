@@ -11,6 +11,11 @@ import { WorkbenchProvider } from "../contexts/WorkbenchContext"
 import { useActiveTabUrl } from "../hooks/useActiveTabUrl"
 import { useWebLlm } from "../hooks/useWebLlm"
 import { initializeAutoSync } from "../lib/auto-sync"
+import {
+  isExtensionContextValid,
+  safeQueryTabs,
+  safeUpdateTab
+} from "../lib/chrome-utils"
 
 /**
  * Main inner container for the side panel. It manages site target detection
@@ -32,17 +37,18 @@ function SidePanelInner() {
   }
 
   const handleOpenMidjourney = () => {
-    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.update) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.id) {
-          chrome.tabs.update(tabs[0].id, {
-            url: "https://www.midjourney.com/imagine"
-          })
-        }
-      })
-    } else {
+    if (!isExtensionContextValid()) {
       window.open("https://www.midjourney.com/imagine", "_blank")
+      return
     }
+    safeQueryTabs({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs?.[0]
+      if (activeTab?.id) {
+        safeUpdateTab(activeTab.id, {
+          url: "https://www.midjourney.com/imagine"
+        })
+      }
+    })
   }
 
   if (isLoading) {
