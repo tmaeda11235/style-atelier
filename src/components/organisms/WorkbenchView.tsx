@@ -143,7 +143,9 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
           isOpen={isEvolutionSuccessOpen}
           onClose={() => setIsEvolutionSuccessOpen(false)}
           cardName={evolvedCardData.name}
-          thumbnailData={evolvedCardData.thumbnailData}
+          thumbnailData={
+            evolvedCardData.thumbnailPath || evolvedCardData.thumbnailData
+          }
           selectedThumbnails={evolvedCardData.selectedThumbnails}
           oldTier={evolvedCardData.oldTier}
           newTier={evolvedCardData.newTier}
