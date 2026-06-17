@@ -40,3 +40,25 @@ swContent = swContent
 fs.writeFileSync(path.join(distDir, 'sw.js'), swContent, 'utf8');
 console.log(`Service Worker generated successfully at dist-mobile/sw.js`);
 console.log(`Cached assets: \n - ${jsPath}\n - ${cssPath}`);
+
+// Copy WASM assets to dist-mobile/assets/wasm
+const wasmSrcDir = path.join(rootDir, 'assets', 'wasm');
+const wasmDestDir = path.join(distDir, 'assets', 'wasm');
+if (!fs.existsSync(wasmDestDir)) {
+  fs.mkdirSync(wasmDestDir, { recursive: true });
+}
+const wasmFiles = [
+  'litertlm_wasm_compat_internal.js',
+  'litertlm_wasm_compat_internal.wasm',
+  'litertlm_wasm_internal.js',
+  'litertlm_wasm_internal.wasm'
+];
+for (const file of wasmFiles) {
+  const src = path.join(wasmSrcDir, file);
+  const dest = path.join(wasmDestDir, file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    console.log(`Copied WASM asset: ${file} to dist-mobile/assets/wasm/`);
+  }
+}
+

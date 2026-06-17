@@ -53,8 +53,17 @@ stateDiagram-v2
   _J_AI_DECLUTTER_01 : AIプロンプトクリーンアップ（整理・分割）
   _J_AI_DECLUTTER_02 : AIプロンプトクリーンアップ軽量フォールバック
   _J_ORG_BINDER_CUSTOMIZE_01 : バインダーのカスタマイズ（カバー画像とテーマ設定）
-  _J_SET_WEBGPU_TROUBLESHOOT_01 : WebGPUトラブルシューティング
+  _J_SET_WEBGPU_TROUBLESHOOT_01 : WebGPUトラブルシューティング・自動フォールバックと容量チェック
+  _J_WB_UNDO_REDO_01 : ワークベンチ操作の履歴管理（Undo/Redo）
   _J_UX_DISCONNECTED_ALERT : 接続切断時のエラーハンドリングとリカバリ
+  _J_MOBILE_PREVIEW_01 : モバイルお試しプレビュー＆フリップ
+  _J_ORG_BINDER_DND_01 : カードのバインダーDnD移動
+  _J_SET_GDRIVE_ERROR : Google Drive同期エラーハンドリング
+  _J_PROFILER_DASHBOARD : 開発者プロファイラーダッシュボード
+  _J_SANDBOX_CONTROLLER_01 : サンドボックスコントローラーによる異常系シミュレーション
+  _J_PWA_A2HS_OFFLINE_01 : モバイルPWAスマートQR起動＆A2HSとオフライン閲覧
+  _J_PWA_P2P_SYNC_01 : モバイルPWA・PC間ハイブリッド同期（P2P/Drive）
+  _J_PWA_AI_STYLE_ANALYSIS_01 : モバイルPWAローカルAIアートスタイル分析
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -68,6 +77,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_FOLDER_01
   _J_ORG_EXPERT_01 --> _J_ORG_QUICK_SEND_01
   _J_ORG_EXPERT_01 --> _J_ORG_CARD_HOLO_EFFECT_01
+  _J_ORG_EXPERT_01 --> _J_ORG_BINDER_DND_01
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EXPERT_02 --> _J_ORG_FOLDER_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
@@ -141,8 +151,14 @@ stateDiagram-v2
   _J_AI_DECLUTTER_02 --> _J_MINT_EXPERT_01
   _J_ORG_BINDER_CUSTOMIZE_01 --> _J_ORG_EXPERT_01
   _J_SET_WEBGPU_TROUBLESHOOT_01 --> _J_SET_01
+  _J_WB_UNDO_REDO_01 --> _J_WB_EXPERT_01
   _J_UX_DISCONNECTED_ALERT --> _J_ORG_EXPERT_01
   _J_UX_DISCONNECTED_ALERT --> _J_WB_EXPERT_01
+  _J_ORG_BINDER_DND_01 --> _J_ORG_EXPERT_01
+  _J_SET_GDRIVE_ERROR --> _J_SET_01
+  _J_SANDBOX_CONTROLLER_01 --> _J_SET_WEBGPU_TROUBLESHOOT_01
+  _J_PWA_A2HS_OFFLINE_01 --> _J_PWA_P2P_SYNC_01
+  _J_PWA_P2P_SYNC_01 --> _J_MOBILE_PREVIEW_01
 ```
 
 ## 個別ジャーニーのフロー詳細
@@ -296,14 +312,14 @@ flowchart TD
 
 ### @J-IO-QR-IN: QRインポート
 
-QRコードを読み取ってカードをインポートする
+QRコードを読み取ってカードをインポートする（巨大画像や破損画像に対するクラッシュ防止とエラーハンドリングを含む）
 
 ```mermaid
 flowchart TD
   S1["Import via QR選択"]
-  S2["QRスキャン"]
+  S2["QRスキャンまたはエラー検知"]
   S1 --> S2
-  S3["カード保存"]
+  S3["カード保存またはエラーUI表示"]
   S2 --> S3
 ```
 
@@ -782,16 +798,35 @@ flowchart TD
   S4 --> S5
 ```
 
-### @J-SET-WEBGPU-TROUBLESHOOT-01: WebGPUトラブルシューティング
+### @J-SET-WEBGPU-TROUBLESHOOT-01: WebGPUトラブルシューティング・自動フォールバックと容量チェック
 
-WebGPUが無効な場合に警告と復旧手順のステップガイドを表示し、Chrome設定ページを開く
+WebGPUが無効な場合にWasmへ自動フォールバックしインフォバー警告を表示、両方不可な場合は最終エラー表示、容量不足時はエラー表示する
 
 ```mermaid
 flowchart TD
-  S1["WebGPUが無効化されたブラウザ環境でSettingsを開く（またはダウンロード進捗を表示）"]
-  S2["WebGPU無効警告とステップバイステップガイドが表示されることを確認"]
+  S1["WebGPUが無効化されたブラウザ環境でダウンロード・ロードを開始する"]
+  S2["自動でCPU(Wasm)モードにフォールバックされ、「WebGPU非対応：CPU(Wasm)モードに切り替えています」の警告インフォバーが表示されることを確認"]
   S1 --> S2
-  S3["「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"]
+  S3["WebGPU無効警告とステップバイステップガイドが表示されることを確認"]
+  S2 --> S3
+  S4["「Chrome設定を開く」をクリックして設定ページに遷移できることを確認"]
+  S3 --> S4
+  S5["WebGPUおよびWasmの両方が利用不可能な場合に、最終エラー画面「AI実行環境非対応」が表示されることを確認"]
+  S4 --> S5
+  S6["ストレージ空き容量が1.5GB未満、またはダウンロード中にQuotaExceededErrorが発生した際に、「ストレージ空き容量が不足しています。1.5GB以上の空き容量を確保してください」と表示されることを確認"]
+  S5 --> S6
+```
+
+### @J-WB-UNDO-REDO-01: ワークベンチ操作の履歴管理（Undo/Redo）
+
+ワークベンチ上でのスタイルカードの追加・削除や比率（Portion）変更をUndo/Redoボタンやショートカット（Ctrl+Z, Ctrl+Y等）で巻き戻し・やり直す
+
+```mermaid
+flowchart TD
+  S1["ワークベンチでカードを追加・削除・比率変更する"]
+  S2["Undoボタン押下またはCtrl+Z入力で操作を巻き戻す"]
+  S1 --> S2
+  S3["Redoボタン押下またはCtrl+Y/Ctrl+Shift+Z入力で操作をやり直す"]
   S2 --> S3
 ```
 
@@ -806,4 +841,134 @@ flowchart TD
   S1 --> S2
   S3["「ページをリロード（Reload Page）」ボタンを押下してリカバリを試みる"]
   S2 --> S3
+```
+
+### @J-MOBILE-PREVIEW-01: モバイルお試しプレビュー＆フリップ
+
+モバイル対応お試しWebランディングページでStyle Cardを表示し、3Dフリップ、プロンプトコピー、およびGoogle Driveへの一時保存を行う
+
+```mermaid
+flowchart TD
+  S1["URLパラメータからモバイルランディングページに遷移"]
+  S2["アトリエスキンのStyle Card表示を確認"]
+  S1 --> S2
+  S3["カードをタップして3Dフリップ回転"]
+  S2 --> S3
+  S4["裏面のプロンプトとコピーボタンを確認"]
+  S3 --> S4
+  S5["コピーボタンタップでクリップボードへコピー"]
+  S4 --> S5
+  S6["「クラウド保存（PCへ同期）」ボタンをタップ"]
+  S5 --> S6
+  S7["Google認証および認証トークン取得"]
+  S6 --> S7
+  S8["Google DriveのappDataFolder内の一時ファイルへカードデータを追記・保存"]
+  S7 --> S8
+```
+
+### @J-ORG-BINDER-DND-01: カードのバインダーDnD移動
+
+ライブラリのカード一覧からサイドバーのバインダー（カテゴリ）へドラッグ＆ドロップして所属カテゴリを変更する
+
+```mermaid
+flowchart TD
+  S1["ライブラリを開く"]
+  S2["フィルターアコーディオンを展開する"]
+  S1 --> S2
+  S3["スタイルカードをカテゴリボタンへドラッグ＆ドロップする"]
+  S2 --> S3
+  S4["所属カテゴリが更新され、一覧が更新されることを確認する"]
+  S3 --> S4
+```
+
+### @J-SET-GDRIVE-ERROR: Google Drive同期エラーハンドリング
+
+Google Drive同期での容量不足やAPI制限時に分かりやすいトースト表示とリカバリステップを提示する
+
+```mermaid
+flowchart TD
+  S1["Google Drive同期実行"]
+  S2["エラー発生（容量超過/API制限）"]
+  S1 --> S2
+  S3["エラー説明トースト表示"]
+  S2 --> S3
+  S4["トースト内のアクションボタン押下（容量整理ガイド/ローカルバックアップ）"]
+  S3 --> S4
+```
+
+### @J-PROFILER-DASHBOARD: 開発者プロファイラーダッシュボード
+
+LiteRT-LM などの Web Worker と連携し、VRAM/OPFS使用状況や推論レイテンシを可視化するデバッグダッシュボードを確認する
+
+```mermaid
+flowchart TD
+  S1["テストサンドボックスを開く"]
+  S2["プロファイラーダッシュボードを確認する"]
+  S1 --> S2
+  S3["モックモードと実Workerモードを切り替える"]
+  S2 --> S3
+```
+
+### @J-SANDBOX-CONTROLLER-01: サンドボックスコントローラーによる異常系シミュレーション
+
+テストハーネス上でWebGPU無効化や容量制限などのエラー状態を模擬し、フォールバック挙動を確認する
+
+```mermaid
+flowchart TD
+  S1["テストハーネスを開く"]
+  S2["サンドボックスコントローラーでWebGPU StatusをDisabledに切り替える"]
+  S1 --> S2
+  S3["WebGPU無効警告が表示されるのを確認する"]
+  S2 --> S3
+  S4["容量制限やネットワークオフラインなどの他のシミュレーション条件を選択して挙動を確認する"]
+  S3 --> S4
+```
+
+### @J-PWA-A2HS-OFFLINE-01: モバイルPWAスマートQR起動＆A2HSとオフライン閲覧
+
+ユーザーがスマートQRからモバイルPWAを起動し、カード詳細をめくって閲覧した後、ホーム画面に追加（A2HS）し、オフライン状態でコレクションを閲覧・整理する
+
+```mermaid
+flowchart TD
+  S1["スマートQRコードをスマホカメラで読み取りPWAを起動"]
+  S2["アトリエスキンのカード一覧からカードを選択しタップしてめくる（3Dフリップ）"]
+  S1 --> S2
+  S3["iOS/AndroidそれぞれのA2HSインストールプロンプトに従いホーム画面に追加"]
+  S2 --> S3
+  S4["端末の通信を切断（オフライン化）"]
+  S3 --> S4
+  S5["ホーム画面からPWAを再起動し、オフライン状態でコレクションを通常通り閲覧・整理できることを確認"]
+  S4 --> S5
+```
+
+### @J-PWA-P2P-SYNC-01: モバイルPWA・PC間ハイブリッド同期（P2P/Drive）
+
+モバイルPWAでバインダー整理やカード操作を行い、WebRTCによるP2P直接同期またはGoogle Drive/暗号化中間キャッシュを経由してPC Chrome拡張機能とコンフリクトなく自動同期する
+
+```mermaid
+flowchart TD
+  S1["モバイルPWA上でバインダーの整理（フォルダ移動やカード追加）を行う"]
+  S2["PC側に表示された同期QRコードをモバイルPWAカメラでスキャン"]
+  S1 --> S2
+  S3["WebRTC (DataChannel) または暗号化中間キャッシュを介したP2P直接同期が開始されることを確認"]
+  S2 --> S3
+  S4["または独立ドメインからのGoogle Drive認証ポップアップフローを実行して自動同期する"]
+  S3 --> S4
+  S5["LWW (Last-Write-Wins) マージおよびコンフリクト解消ダイアログによる安全なデータ統合を確認する"]
+  S4 --> S5
+```
+
+### @J-PWA-AI-STYLE-ANALYSIS-01: モバイルPWAローカルAIアートスタイル分析
+
+モバイルPWA環境において、ローカルにダウンロードされたLiteRT LMモデルを利用してオフラインで画像のアートスタイル分析を実行する
+
+```mermaid
+flowchart TD
+  S1["スタイルカードを選択し、カード詳細パネル（裏面）を開く"]
+  S2["「モデルをダウンロード」ボタンをタップしてLiteRT LMのモデルウェイトのダウンロードと初期化（OPFS保存）を行う"]
+  S1 --> S2
+  S3["ダウンロード完了後、「スタイルを分析」ボタンをタップする"]
+  S2 --> S3
+  S4["ローカルのWebGPU（またはWasm CPUフォールバック）で推論を行い、分析されたジャンル、タグ、要約テキストが画面に表示されるのを確認する"]
+  S3 --> S4
 ```

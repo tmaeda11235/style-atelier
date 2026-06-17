@@ -612,3 +612,88 @@ body {
   border-bottom: 1px solid rgba(167, 139, 250, 0.3);
   box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
 }
+
+/* AI Style Analysis Section Styling */
+.action-btn-ai {
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  margin-top: 0.75rem;
+}
+
+.action-btn-ai:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.ai-analysis-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-analysis-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.15) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.ai-progress-bar-fill {
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-progress-bar-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: progress-shimmer 1.5s infinite;
+}
+
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.ai-result-tag-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+  text-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.ai-result-tag-badge:hover {
+  background: rgba(59, 130, 246, 0.2);
+  transform: scale(1.05);
+}

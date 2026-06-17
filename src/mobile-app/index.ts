@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { StyleCard } from "../lib/db-schema"
 import { buildPromptString } from "../lib/prompt-utils"
 import { decompressCardData } from "../lib/qr-utils"
@@ -11,6 +12,7 @@ import {
 } from "./gdrive"
 import { setupCardContainerEvents } from "./hologram"
 import { resolveMobileCardImage } from "./image"
+import { LocalAiClient } from "./local-ai-client"
 
 let currentCardData: Partial<StyleCard> | null = null
 
@@ -243,10 +245,192 @@ function setupEventHandlers() {
   )
 }
 
+interface GeneratedMetadata {
+  genre: string
+  tags: string[]
+  summary: string
+}
+
+function parseResponse(response: string): GeneratedMetadata {
+  let cleanJson = response.trim()
+  const jsonStart = cleanJson.indexOf("{")
+  const jsonEnd = cleanJson.lastIndexOf("}")
+  if (jsonStart !== -1 && jsonEnd !== -1) {
+    cleanJson = cleanJson.substring(jsonStart, jsonEnd + 1)
+  }
+
+  try {
+    const parsed = JSON.parse(cleanJson)
+    return {
+      genre: parsed.genre || "",
+      tags: Array.isArray(parsed.tags) ? parsed.tags.map(String) : [],
+      summary: parsed.summary || ""
+    }
+  } catch {
+    const genreMatch = response.match(/"genre"\s*:\s*"([^"]+)"/)
+    const summaryMatch = response.match(/"summary"\s*:\s*"([^"]+)"/)
+    const tagsMatch = response.match(/"tags"\s*:\s*\[([^\]]+)\]/)
+
+    let tags: string[] = []
+    if (tagsMatch) {
+      tags = tagsMatch[1].split(",").map((t) => t.replace(/"/g, "").trim())
+    }
+
+    return {
+      genre: genreMatch ? genreMatch[1] : "",
+      tags: tags,
+      summary: summaryMatch ? summaryMatch[1] : ""
+    }
+  }
+}
+
+// eslint-disable-next-line max-lines-per-function
+function initLocalAi() {
+  const downloadBtn = document.getElementById(
+    "aiDownloadBtn"
+  ) as HTMLButtonElement
+  const analyzeBtn = document.getElementById(
+    "aiAnalyzeBtn"
+  ) as HTMLButtonElement
+  const progressContainer = document.getElementById(
+    "aiProgressContainer"
+  ) as HTMLElement
+  const progressText = document.getElementById("aiProgressText") as HTMLElement
+  const progressPercent = document.getElementById(
+    "aiProgressPercent"
+  ) as HTMLElement
+  const progressBarFill = document.getElementById(
+    "aiProgressBarFill"
+  ) as HTMLElement
+  const downloadStats = document.getElementById(
+    "aiDownloadStats"
+  ) as HTMLElement
+  const speedEl = document.getElementById("aiSpeed") as HTMLElement
+  const etaEl = document.getElementById("aiEta") as HTMLElement
+  const resultsContainer = document.getElementById(
+    "aiResultsContainer"
+  ) as HTMLElement
+  const resultGenre = document.getElementById("aiResultGenre") as HTMLElement
+  const resultTags = document.getElementById("aiResultTags") as HTMLElement
+  const resultSummary = document.getElementById(
+    "aiResultSummary"
+  ) as HTMLElement
+  const latencyEl = document.getElementById("aiLatency") as HTMLElement
+  const speedTpsEl = document.getElementById("aiSpeedTps") as HTMLElement
+  const errorAlert = document.getElementById("aiErrorAlert") as HTMLElement
+  const errorText = document.getElementById("aiErrorText") as HTMLElement
+
+  if (!downloadBtn || !analyzeBtn) return
+
+  const client = new LocalAiClient()
+
+  downloadBtn.addEventListener("click", () => {
+    client.startDownload()
+  })
+
+  analyzeBtn.addEventListener("click", async () => {
+    const promptTextEl = document.getElementById("promptText")
+    if (!promptTextEl) return
+    const prompt = promptTextEl.textContent?.trim() || ""
+    if (!prompt) return
+
+    analyzeBtn.disabled = true
+    analyzeBtn.textContent = "分析中..."
+    errorAlert.style.display = "none"
+    resultsContainer.style.display = "none"
+
+    const isJa = navigator.language?.startsWith("ja")
+    const systemPrompt = isJa
+      ? 'あなたはMidjourneyのプロンプトを分析するAIアシスタントです。入力されたプロンプトのアートスタイルを詳細に分析し、その芸術的ジャンル/スタイル（genre）、画像の特徴を表現する英単語のタグ（tags、最大5個、すべて英語）、および人間が理解しやすい簡潔な日本語の1文の説明（summary）を、以下のJSONフォーマットで出力してください。余計なテキストは含めず純粋なJSONのみを出力してください。\n\nフォーマット:\n{\n  "genre": "ジャンル名",\n  "tags": ["tag1", "tag2"],\n  "summary": "日本語の要約"\n}'
+      : 'You are an AI assistant that analyzes Midjourney prompts. Analyze the art style and output its artistic genre/style (genre), English tags (tags, up to 5 elements), and a concise summary (summary) in the following JSON format. Output ONLY pure JSON.\n\nFormat:\n{\n  "genre": "genre name",\n  "tags": ["tag1", "tag2"],\n  "summary": "concise English summary"\n}'
+
+    try {
+      const res = await client.runInference(prompt, systemPrompt)
+      const parsed = parseResponse(res.result)
+
+      resultGenre.textContent = parsed.genre || "N/A"
+      resultSummary.textContent = parsed.summary || "N/A"
+      resultTags.innerHTML = ""
+      if (parsed.tags && parsed.tags.length > 0) {
+        parsed.tags.forEach((tag) => {
+          const badge = document.createElement("span")
+          badge.className = "ai-result-tag-badge"
+          badge.textContent = tag
+          resultTags.appendChild(badge)
+        })
+      } else {
+        resultTags.textContent = "None"
+      }
+
+      latencyEl.textContent = Math.round(res.metrics.latencyMs).toString()
+      speedTpsEl.textContent = res.metrics.tokensPerSec.toString()
+
+      resultsContainer.style.display = "flex"
+    } catch (err: any) {
+      console.error("Inference error in UI:", err)
+      errorText.textContent = err.message || "推論に失敗しました"
+      errorAlert.style.display = "flex"
+    } finally {
+      analyzeBtn.disabled = false
+      analyzeBtn.innerHTML = `
+        <svg style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+        スタイルを分析する
+      `
+    }
+  })
+
+  client.addStatusListener((status, details) => {
+    console.log("UI updated with status:", status, details)
+
+    // Hide everything first
+    downloadBtn.style.display = "none"
+    analyzeBtn.style.display = "none"
+    progressContainer.style.display = "none"
+    errorAlert.style.display = "none"
+
+    if (status === "download-required") {
+      downloadBtn.style.display = "block"
+    } else if (status === "downloading") {
+      progressContainer.style.display = "flex"
+      downloadStats.style.display = "flex"
+      progressText.textContent = details.text || "モデルをダウンロード中..."
+      progressPercent.textContent = `${details.progress}%`
+      progressBarFill.style.width = `${details.progress}%`
+      speedEl.textContent = `${details.speed} MB/s`
+      etaEl.textContent =
+        details.eta > 0
+          ? `残り時間: ${Math.floor(details.eta / 60)}分${details.eta % 60}秒`
+          : "残り時間: 計算中..."
+    } else if (
+      status === "ready" ||
+      status === "engine-ready" ||
+      status === "idle"
+    ) {
+      analyzeBtn.style.display = "block"
+    } else if (status === "engine-initializing") {
+      progressContainer.style.display = "flex"
+      downloadStats.style.display = "none" // No download stats for engine initialization
+      progressText.textContent = details.text || "AIエンジンを初期化中..."
+      progressPercent.textContent = `${details.progress}%`
+      progressBarFill.style.width = `${details.progress}%`
+    } else if (status === "error") {
+      downloadBtn.style.display = "block" // Allow retry
+      errorText.textContent = details.error || "エラーが発生しました"
+      errorAlert.style.display = "flex"
+    }
+  })
+
+  // Start check
+  client.checkModelDownloaded()
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadCardFromUrl()
   setupEventHandlers()
   initA2HS()
+  initLocalAi()
 
   if (typeof window !== "undefined") {
     ;(window as any).__renderCardForTest = renderCard

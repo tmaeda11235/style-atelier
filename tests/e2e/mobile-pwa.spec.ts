@@ -280,7 +280,7 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
           })
           const file = await fileHandle.getFile()
           return file.size > 0
-        } catch (e) {
+        } catch {
           return false
         }
       }, mockCardId)
@@ -341,6 +341,105 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
 
       const src = await img.getAttribute("src")
       expect(src).toBe(mockBase64)
+    })
+  })
+
+  test.describe("AI Style Analysis Integration @J-PWA-AI-STYLE-ANALYSIS-01", () => {
+    test.slow()
+
+    test.beforeEach(async ({ page }) => {
+      // Clear model downloaded state to force download UI
+      await page.goto("/src/mobile-app/index.html?mock=true")
+      await page.evaluate(async () => {
+        localStorage.clear()
+        localStorage.setItem("mock-webllm", "true")
+        try {
+          const root = await navigator.storage.getDirectory()
+          await root
+            .deleteEntry("litert_models", { recursive: true })
+            .catch(() => {})
+        } catch {
+          // Ignored: directory might not exist
+        }
+      })
+    })
+
+    test("should download model weights and run style analysis successfully", async ({
+      page
+    }) => {
+      const mockCardId = "e2e-ai-card"
+      const mockBase64 =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+      await page.goto("/src/mobile-app/index.html?mock=true")
+
+      // 1. Render style card with a mock prompt
+      await page.evaluate(
+        ({ cardId, base64 }) => {
+          const mockCard = {
+            id: cardId,
+            name: "Cyberpunk Alchemist",
+            tier: "Legendary" as const,
+            thumbnailData: base64,
+            promptSegments: [
+              {
+                type: "text",
+                value:
+                  "a stunning cyberpunk alchemist holding a glowing vial, neon lights, highly detailed, artstation"
+              }
+            ],
+            dominantColor: "#8b5cf6",
+            frameId: "default"
+          }
+          ;(window as any).__renderCardForTest(mockCard)
+        },
+        { cardId: mockCardId, base64: mockBase64 }
+      )
+
+      // 2. Flip the card to show back side
+      await page.click("#cardContainer")
+
+      // 3. Verify download button is visible
+      const downloadBtn = page.locator("#aiDownloadBtn")
+      await expect(downloadBtn).toBeVisible({ timeout: 15000 })
+
+      // 4. Click download button
+      await downloadBtn.click()
+
+      // 5. Verify progress container is displayed
+      const progressContainer = page.locator("#aiProgressContainer")
+      await expect(progressContainer).toBeVisible()
+
+      // 6. Wait for download to complete and analysis button to become ready
+      const analyzeBtn = page.locator("#aiAnalyzeBtn")
+      await expect(analyzeBtn).toBeVisible({ timeout: 90000 })
+
+      // Take a screenshot of the ready state (UX visual check)
+      await page.screenshot({
+        path: "tests/screenshots/mobile-pwa-ai-ready.png"
+      })
+
+      // 7. Click analyze button
+      await analyzeBtn.click()
+
+      // 8. Verify results container is displayed with genre, tags, and summary
+      const resultsContainer = page.locator("#aiResultsContainer")
+      await expect(resultsContainer).toBeVisible({ timeout: 30000 })
+
+      const resultGenre = page.locator("#aiResultGenre")
+      const resultTags = page.locator("#aiResultTags")
+      const resultSummary = page.locator("#aiResultSummary")
+
+      await expect(resultGenre).not.toHaveText("--")
+      await expect(resultSummary).not.toHaveText("--")
+
+      const tagBadges = resultTags.locator(".ai-result-tag-badge")
+      await expect(tagBadges.first()).toBeVisible()
+
+      // Take a screenshot of the final analysis result state
+      await page.screenshot({
+        path: "tests/screenshots/mobile-pwa-ai-analyzed.png"
+      })
     })
   })
 })
