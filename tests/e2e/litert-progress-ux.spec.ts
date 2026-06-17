@@ -350,7 +350,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     )
     await expect(downloadBtn).toBeVisible()
     await page.waitForTimeout(500)
-    await downloadBtn.dispatchEvent("click")
+    await downloadBtn.click({ force: true })
 
     // Click confirmation button
     const confirmDownloadBtn = spFrame.locator("#confirm-dialog-ok-btn")
@@ -360,7 +360,7 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Progress & Error UX",
     // Verify updated model size values (2.0 GB / 2.5 GB) are present in the confirmation UI
     await expect(spFrame.locator("body")).toContainText(/2\.0\s*GB/)
     await expect(spFrame.locator("body")).toContainText(/2\.5\s*GB/)
-    await confirmDownloadBtn.dispatchEvent("click")
+    await confirmDownloadBtn.click({ force: true })
 
     // Switch back to Workbench tab to see progress
     await workbenchTabBtn.click({ force: true })

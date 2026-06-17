@@ -259,6 +259,18 @@ body {
   border: 1px solid transparent;
 }
 
+.status-badge.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
 .pulse-dot {
   width: 8px;
   height: 8px;
