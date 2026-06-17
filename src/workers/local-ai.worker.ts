@@ -10,10 +10,10 @@ let engine: Engine | null = null
 let isInitializing = false
 let idleTimer: any = null
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000
-const MODEL_FILENAME = "gemma-4-E2B-it-web.litertlm"
-const MODEL_URL =
+let MODEL_FILENAME = "gemma-4-E2B-it-web.litertlm"
+let MODEL_URL =
   "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-web.litertlm"
-const EXPECTED_SIZE = 2008432640
+let EXPECTED_SIZE = 2008432640
 let mockMode = false
 
 interface InferenceRequest {
@@ -381,14 +381,49 @@ async function processQueue() {
   }
 }
 
+function handleInitAction(payload: any) {
+  if (payload.wasmPath) LiteRtLm.DEFAULT_WASM_PATH = payload.wasmPath
+  if (payload.mockMode !== undefined) mockMode = !!payload.mockMode
+  if (payload.modelInfo) {
+    MODEL_FILENAME = payload.modelInfo.filename
+    MODEL_URL = payload.modelInfo.url
+    EXPECTED_SIZE = payload.modelInfo.size
+  }
+}
+
+function handleInferenceAction(payload: any) {
+  const { requestId, prompt, systemPrompt } = payload
+  if (!prompt || !requestId) {
+    self.postMessage({
+      status: "inference-error",
+      requestId,
+      error: "Missing prompt or requestId"
+    })
+    return
+  }
+  inferenceQueue.push({ requestId, prompt, systemPrompt })
+  processQueue()
+}
+
+async function handleUnloadAction() {
+  if (engine) {
+    try {
+      await engine.delete()
+    } catch (e) {
+      console.error("Failed to unload engine:", e)
+    }
+    engine = null
+  }
+  self.postMessage({ status: "idle", info: "Engine unloaded manually" })
+}
+
 self.onmessage = async (event) => {
   console.log("LiteRT Worker received message:", event.data)
   const { action, ...payload } = event.data
 
   switch (action) {
     case "init":
-      if (payload.wasmPath) LiteRtLm.DEFAULT_WASM_PATH = payload.wasmPath
-      if (payload.mockMode !== undefined) mockMode = !!payload.mockMode
+      handleInitAction(payload)
       break
     case "start-download":
       await doModelDownload()
@@ -402,30 +437,11 @@ self.onmessage = async (event) => {
         console.error("Preload trigger failed:", err)
       )
       break
-    case "run-inference": {
-      const { requestId, prompt, systemPrompt } = payload
-      if (!prompt || !requestId) {
-        self.postMessage({
-          status: "inference-error",
-          requestId,
-          error: "Missing prompt or requestId"
-        })
-        return
-      }
-      inferenceQueue.push({ requestId, prompt, systemPrompt })
-      processQueue()
+    case "run-inference":
+      handleInferenceAction(payload)
       break
-    }
     case "unload":
-      if (engine) {
-        try {
-          await engine.delete()
-        } catch (e) {
-          console.error("Failed to unload engine:", e)
-        }
-        engine = null
-      }
-      self.postMessage({ status: "idle", info: "Engine unloaded manually" })
+      await handleUnloadAction()
       break
     default:
       self.postMessage({ status: "error", error: `Unknown action: ${action}` })
