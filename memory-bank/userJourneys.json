@@ -718,6 +718,19 @@
       ]
     },
     {
+      "id": "@J-SANDBOX-CONTROLLER-01",
+      "name": "サンドボックスコントローラーによる異常系シミュレーション",
+      "description": "テストハーネス上でWebGPU無効化や容量制限などのエラー状態を模擬し、フォールバック挙動を確認する",
+      "steps": [
+        "テストハーネスを開く",
+        "サンドボックスコントローラーでWebGPU StatusをDisabledに切り替える",
+        "WebGPU無効警告が表示されるのを確認する",
+        "容量制限やネットワークオフラインなどの他のシミュレーション条件を選択して挙動を確認する"
+      ],
+      "nextJourneys": ["@J-SET-WEBGPU-TROUBLESHOOT-01"],
+      "viewComponents": ["tests/sandbox/index.html", "tests/sandbox/main.tsx"]
+    },
+    {
       "id": "@J-PWA-A2HS-OFFLINE-01",
       "name": "モバイルPWAスマートQR起動＆A2HSとオフライン閲覧",
       "description": "ユーザーがスマートQRからモバイルPWAを起動し、カード詳細をめくって閲覧した後、ホーム画面に追加（A2HS）し、オフライン状態でコレクションを閲覧・整理する",

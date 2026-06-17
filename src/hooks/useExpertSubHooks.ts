@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
-
 import type { StyleCard } from "../lib/db-schema"
 import {
   deleteCard,
@@ -13,7 +12,6 @@ import { useDragAndDrop } from "./useDragAndDrop"
 import { useExpertLogs } from "./useExpertLogs"
 import { useExpertTutorial } from "./useExpertTutorial"
 import { useMinting } from "./useMinting"
-
 
 export function useExpertCardOperations(
   addLog: (log: string) => void,
