@@ -6,8 +6,8 @@ const ASSETS = [
   "/mobile/manifest.json",
   "/mobile/icon-192.png",
   "/mobile/icon-512.png",
-  "/mobile/assets/main-CBpW0P2s.css",
-  "/mobile/assets/main-BxkkO6h4.js"
+  "/mobile/assets/main-zI5laQtR.css",
+  "/mobile/assets/main-DMcDJOiD.js"
 ]
 
 self.addEventListener("install", (event) => {

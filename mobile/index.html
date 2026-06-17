@@ -53,8 +53,8 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/mobile/assets/main-BxkkO6h4.js"></script>
-  <link rel="stylesheet" crossorigin href="/mobile/assets/main-CBpW0P2s.css">
+  <script type="module" crossorigin src="/mobile/assets/main-DMcDJOiD.js"></script>
+  <link rel="stylesheet" crossorigin href="/mobile/assets/main-zI5laQtR.css">
 </head>
 <body>
   <div class="phone-notch"></div>
@@ -137,6 +137,36 @@
       </svg>
       <span>コピーしました！</span>
     </div>
+  </div>
+
+  <!-- A2HS Android/Chrome Install Dialog -->
+  <div class="a2hs-dialog" id="androidInstallDialog" style="display: none;">
+    <div class="a2hs-content">
+      <button class="a2hs-close-btn" id="androidCloseBtn" aria-label="閉じる">&times;</button>
+      <div class="a2hs-icon-wrapper">
+        <img src="/mobile/icon-192.png" alt="Style Atelier Icon" class="a2hs-app-icon">
+      </div>
+      <h3 class="a2hs-title">Style Atelier をインストール</h3>
+      <p class="a2hs-desc">ホーム画面に追加して、オフライン表示や高速起動など、より快適なアプリ体験をお楽しみください。</p>
+      <button class="action-btn action-btn-primary" id="androidInstallBtn">インストールする</button>
+      <button class="a2hs-dismiss-btn" id="androidDismissBtn">今回は見送る</button>
+    </div>
+  </div>
+
+  <!-- A2HS iOS/Safari Install Tooltip -->
+  <div class="a2hs-ios-tooltip" id="iosInstallTooltip" style="display: none;">
+    <div class="a2hs-ios-content">
+      <button class="a2hs-close-btn" id="iosCloseBtn" aria-label="閉じる">&times;</button>
+      <div class="a2hs-ios-step">
+        <span class="a2hs-step-num">1</span>
+        <span>Safariの共有ボタン <span class="a2hs-safari-icon"><svg style="width: 18px; height: 18px; display: inline; vertical-align: middle; stroke: #8b5cf6;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></span> をタップします。</span>
+      </div>
+      <div class="a2hs-ios-step">
+        <span class="a2hs-step-num">2</span>
+        <span>メニューから「ホーム画面に追加」を選択します。</span>
+      </div>
+    </div>
+    <div class="a2hs-ios-arrow"></div>
   </div>
 
 </body>
