@@ -188,6 +188,9 @@ jobs:
       - name: Build extension for manifest tests
         run: npm run build
 
+      - name: Build mobile PWA app
+        run: npm run build:mobile
+
       - name: Monitor System Resources
         run: |
           bash -c 'while true; do date; echo "=== RAM ==="; free -m; echo "=== CPU ==="; top -b -n 1 | head -n 15; echo "-------------------"; sleep 5; done' > system_metrics.log &
