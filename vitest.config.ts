@@ -60,7 +60,7 @@ export default defineConfig({
         ...harnessExclude
       ],
       thresholds: {
-        statements: 79,
+        statements: 80,
         branches: 65,
         functions: 75,
         lines: 80
