@@ -99,6 +99,7 @@ interface WebLlmEffectProps {
   setWebGpuFallback: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+/* eslint-disable max-lines-per-function */
 function useWebLlmEffect(props: WebLlmEffectProps) {
   useEffect(() => {
     if (!isExtensionContextValid()) {
@@ -153,6 +154,7 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
     props.setWebGpuFallback
   ])
 }
+/* eslint-enable max-lines-per-function */
 
 /* eslint-disable max-lines-per-function */
 export const WebLlmProvider: React.FC<{ children: React.ReactNode }> = ({
