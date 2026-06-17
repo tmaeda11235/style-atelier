@@ -24,11 +24,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
     testTimeout: 15000,
-    pool: "threads",
-    poolOptions: {
-      threads: {
-        singleThread: true
-      }
+    pool: "forks",
+    forks: {
+      singleFork: true
     },
     maxWorkers: 1,
     minWorkers: 1,
@@ -44,7 +42,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "istanbul",
-      clean: true,
+      clean: false,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
