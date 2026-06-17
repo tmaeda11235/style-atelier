@@ -20,6 +20,7 @@ import {
   deleteStyleCardAndCleanup,
   mergeStyleCards
 } from "./db/merge-ops"
+import { processCardChangesOpfs, processCardOpfs } from "./db/opfs-helpers"
 
 export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
 
@@ -55,14 +56,17 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   }
 
   async addCard(card: StyleCard): Promise<string> {
+    await processCardOpfs(card)
     return this.styleCards.add(card)
   }
 
   async updateCard(id: string, changes: Partial<StyleCard>): Promise<number> {
+    await processCardChangesOpfs(id, changes)
     return this.styleCards.update(id, changes)
   }
 
   async putCard(card: StyleCard): Promise<string> {
+    await processCardOpfs(card)
     return this.styleCards.put(card)
   }
 

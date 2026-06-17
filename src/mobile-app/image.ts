@@ -1,0 +1,62 @@
+import { readBlobFromOpfs, saveBase64ToOpfs } from "../lib/db/migration-helpers"
+
+const mobileImageCache = new Map<string, string>()
+
+export function isOpfsSupported(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    !!navigator.storage &&
+    !!navigator.storage.getDirectory
+  )
+}
+
+export async function resolveMobileCardImage(
+  cardId: string | undefined,
+  thumbnailPath: string | undefined,
+  thumbnailData: string | undefined
+): Promise<string> {
+  const fallback = "./cyber_samurai.png"
+
+  if (!cardId) {
+    return thumbnailData || fallback
+  }
+
+  const pathKey = thumbnailPath || `images/cards/${cardId}.png`
+  const cachedUrl = mobileImageCache.get(pathKey)
+  if (cachedUrl) {
+    return cachedUrl
+  }
+
+  if (isOpfsSupported()) {
+    try {
+      const blob = await readBlobFromOpfs(pathKey)
+      const objectUrl = URL.createObjectURL(blob)
+      mobileImageCache.set(pathKey, objectUrl)
+      return objectUrl
+    } catch {
+      if (thumbnailData && thumbnailData.startsWith("data:image/")) {
+        try {
+          await saveBase64ToOpfs(pathKey, thumbnailData)
+          const blob = await readBlobFromOpfs(pathKey)
+          const objectUrl = URL.createObjectURL(blob)
+          mobileImageCache.set(pathKey, objectUrl)
+          return objectUrl
+        } catch (saveErr) {
+          console.warn(
+            "Failed to write/read OPFS image in background:",
+            saveErr
+          )
+        }
+      }
+    }
+  }
+
+  return thumbnailData || fallback
+}
+
+export function clearMobileImageCache(): void {
+  for (const url of mobileImageCache.values()) {
+    URL.revokeObjectURL(url)
+  }
+  mobileImageCache.clear()
+}
