@@ -186,6 +186,12 @@ describe("extractKeywords", () => {
     expect(keywords).toEqual(["都会の", "iPhone"])
   })
 
+  it("should prevent duplicate English keywords across mixed English and Japanese segments case-insensitively", () => {
+    const prompt = "iPhone, 都会のiphone"
+    const keywords = extractKeywords(prompt)
+    expect(keywords).toEqual(["iPhone", "都会の"])
+  })
+
   it("should route to else branch and preserve the whole segment even when intermediate words become empty after cleaning", () => {
     // "cute : cat" has words ["cute", ":", "cat"].
     // After cleanWord, it becomes ["cute", "", "cat"].

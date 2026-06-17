@@ -158,7 +158,9 @@ describe("Color Utilities", () => {
         }
 
         mockCanvas = {
-          getContext: vi.fn().mockReturnValue(mockContext),
+          getContext: vi
+            .fn()
+            .mockImplementation((type) => (type === "2d" ? mockContext : null)),
           width: 0,
           height: 0
         }
@@ -546,6 +548,16 @@ describe("Color Utilities", () => {
         expect(colors.accentName).toBe("Red")
         expect(colors.dominantHex).toBe("#ff0000")
       })
+
+      it("picks a different color as accent when dominant is chromatic", () => {
+        const nameCounts = {
+          Red: { count: 90, rSum: 22950, gSum: 0, bSum: 0 },
+          Blue: { count: 10, rSum: 0, gSum: 0, bSum: 2550 }
+        }
+        const colors = determineDominantAndAccent(nameCounts, "Common")
+        expect(colors.dominantName).toBe("Red")
+        expect(colors.accentName).toBe("Blue")
+      })
     })
 
     describe("getQuantizedColorName boundary values", () => {
@@ -696,6 +708,21 @@ describe("Color Utilities", () => {
         const rareFallback = getFallbackColors("Rare")
         expect(rareFallback.isFallback).toBe(true)
         expect(rareFallback.dominantName).toBe("Blue")
+      })
+
+      it("uses 'Common' as default fallback rarity strictly in getFallbackColors", () => {
+        ;(RARITY_FALLBACK_COLORS as any)[""] = {
+          dominantHex: "#ffffff",
+          dominantName: "White",
+          accentHex: "#000000",
+          accentName: "Black"
+        }
+        try {
+          const colors = getFallbackColors()
+          expect(colors.dominantHex).toBe("#64748b") // "Common" color
+        } finally {
+          delete (RARITY_FALLBACK_COLORS as any)[""]
+        }
       })
     })
 
