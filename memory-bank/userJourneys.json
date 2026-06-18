@@ -772,7 +772,9 @@
         "src/mobile-app/webrtc-sync.ts",
         "src/lib/db/sync-merger.ts",
         "src/components/molecules/GDriveSyncStrategyDialog.tsx",
-        "src/lib/p2p-signaling.ts"
+        "src/lib/p2p-signaling.ts",
+        "src/lib/use-p2p-sync.ts",
+        "src/lib/p2p-connection-helpers.ts"
       ]
     },
     {
