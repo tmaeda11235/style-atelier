@@ -29,12 +29,21 @@ test.describe("Style Atelier Sandbox E2E Tests - Progress Bar Accessibility", ()
     )
     await page.goto("/tests/sandbox/index.html")
 
+    // Ensure the sidepanel frame is loaded
+    await page.waitForSelector("#sidepanel-frame")
+
     const spFrame = page.frameLocator("#sidepanel-frame")
 
     // Skip welcome dialog if visible
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await skipButton.click()
+    try {
+      await skipButton.waitFor({ state: "visible", timeout: 15000 })
+      await skipButton.click({ force: true })
+      console.log("Skipped welcome dialog.")
+    } catch (e) {
+      console.log(
+        "Welcome dialog skip button not visible or not found. Continuing..."
+      )
     }
 
     // Switch to Settings tab
