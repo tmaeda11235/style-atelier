@@ -18,6 +18,10 @@ test.describe("WebRTC Local Signaling & Mocks @J-PWA-P2P-SYNC-01", () => {
         let resolved = false
 
         ws2.onmessage = (event) => {
+          const parsed = JSON.parse(event.data)
+          if (parsed.type === "turn-credentials") {
+            return
+          }
           resolved = true
           ws1.close()
           ws2.close()

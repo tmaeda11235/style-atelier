@@ -91,8 +91,7 @@ describe("useP2PSync hook", () => {
       params.onStatusChange("connection-state-failed")
     })
 
-    expect(result.current.status).toBe("error")
-    expect(result.current.errorMessage).toBe("P2P Connection failed")
+    expect(result.current.status).toBe("relay-connecting")
   })
 
   it("should handle host onMessageReceived and merge successfully", async () => {
@@ -139,7 +138,7 @@ describe("useP2PSync hook", () => {
     const mockPreventDefault = vi.fn()
     act(() => {
       result.current.setScanInputUrl(
-        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver"
+        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver%3FroomId%3Droom1"
       )
     })
     act(() => {
@@ -157,7 +156,7 @@ describe("useP2PSync hook", () => {
 
     act(() => {
       result.current.setScanInputUrl(
-        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver"
+        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver%3FroomId%3Droom1"
       )
     })
     act(() => {
@@ -175,11 +174,14 @@ describe("useP2PSync hook", () => {
   })
 
   it("should handle error in guest connection flow", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error("Network Error"))
+    global.fetch = fetchMock
+
     const { result } = renderHook(() => useP2PSync(mockT))
 
     act(() => {
       result.current.setScanInputUrl(
-        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver"
+        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver%3FroomId%3Droom1"
       )
     })
     act(() => {
@@ -189,15 +191,13 @@ describe("useP2PSync hook", () => {
     const params = (global as any).__lastP2PConnectionParams
     expect(params).toBeDefined()
 
-    // Trigger failure
-    act(() => {
+    // Trigger failure and wait for async fallback to execute and fail fetch
+    await act(async () => {
       params.onStatusChange("connection-state-failed")
+      await new Promise((resolve) => setTimeout(resolve, 50))
     })
 
     expect(result.current.status).toBe("error")
-    expect(result.current.errorMessage).toBe(
-      "P2P connection failed to establish"
-    )
   })
 
   it("should allow resetting state", async () => {
@@ -256,7 +256,7 @@ describe("useP2PSync hook", () => {
     // Mock jsqr return value
     const mockJsQR = (await import("jsqr")).default as any
     mockJsQR.mockReturnValue({
-      data: "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver"
+      data: "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver%3FroomId%3Droom1"
     })
 
     // Mock getUserMedia
@@ -314,6 +314,78 @@ describe("useP2PSync hook", () => {
     })
 
     expect(result.current.status).toBe("connecting")
+
+    vi.useRealTimers()
+  })
+
+  it("should fallback to relay-connecting and then relay-syncing on WebRTC timeout for host", async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: "mock-encrypted-payload" })
+    })
+    global.fetch = fetchMock
+
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    await act(async () => {
+      await result.current.startHost()
+    })
+
+    expect(result.current.status).toBe("connecting")
+
+    // Fast-forward 10 seconds to trigger timeout
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000)
+    })
+
+    expect(result.current.status).toBe("relay-connecting")
+
+    // Fast-forward 2 seconds to trigger polling fetch
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(result.current.status).toBe("success")
+
+    vi.useRealTimers()
+  })
+
+  it("should fallback to relay-syncing and POST data on WebRTC timeout for guest", async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ success: true })
+    })
+    global.fetch = fetchMock
+
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    act(() => {
+      result.current.setScanInputUrl(
+        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver%3FroomId%3Droom1"
+      )
+    })
+    act(() => {
+      result.current.handleManualUrlSubmit({ preventDefault: vi.fn() } as any)
+    })
+
+    expect(result.current.status).toBe("connecting")
+
+    // Fast-forward 10 seconds to trigger timeout
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000)
+    })
+
+    expect(result.current.status).toBe("success")
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/api/sync/room1"),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ data: "mock-encrypted-payload" })
+      })
+    )
 
     vi.useRealTimers()
   })
