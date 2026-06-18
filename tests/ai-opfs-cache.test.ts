@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { OPFSCacheManager } from "../src/lib/ai/opfs-cache-manager"
-import { MockStorage } from "../src/mocks/storage-mock"
+import { MockStorage } from "./mocks/storage-mock"
 
 describe("OPFSCacheManager", () => {
   const TEST_FILENAME = "test-model.litertlm"
