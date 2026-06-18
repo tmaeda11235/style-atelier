@@ -25,8 +25,10 @@ export default defineConfig({
     setupFiles: "./vitest.setup.ts",
     testTimeout: 15000,
     pool: "forks",
-    forks: {
-      singleFork: true
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
     },
     maxWorkers: 1,
     minWorkers: 1,
@@ -43,6 +45,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       clean: false,
+      processingConcurrency: 1,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
