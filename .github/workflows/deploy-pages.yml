@@ -1,4 +1,4 @@
-name: Deploy Mobile App to GitHub Pages
+name: Deploy Web App to GitHub Pages
 
 on:
   push:
@@ -34,8 +34,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Build Mobile App
-        run: npm run build:mobile
+      - name: Build Web App
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_GOOGLE_API_KEY: ${{ vars.VITE_GOOGLE_API_KEY }}
+        run: npm run build:web
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -43,7 +46,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist-mobile'
+          path: './dist-web'
 
       - name: Deploy to GitHub Pages
         id: deployment
