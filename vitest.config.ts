@@ -51,7 +51,6 @@ export default defineConfig({
         "**/*.test.tsx",
         "**/*.d.ts",
         "src/style.css",
-        "**/*.json",
         "assets/**",
         "tests/mocks/**",
         "vitest.config.ts",
