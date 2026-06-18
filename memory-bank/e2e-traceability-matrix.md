@@ -58,11 +58,11 @@
 | **@J-PROFILER-DASHBOARD**         | 開発者プロファイラーダッシュボード                                               | ✔️ `tests\e2e\litert-harness-profiling.spec.ts`<br>✔️ `tests\e2e\offline-harness-dashboard.spec.ts`<br>✔️ `tests\e2e\webllm-profiler-dashboard.spec.ts` |
 | **@J-SANDBOX-CONTROLLER-01**      | サンドボックスコントローラーによる異常系シミュレーション                         | ❌ 未カバー (Missing)                                                                                                                                   |
 | **@J-PWA-A2HS-OFFLINE-01**        | モバイルPWAスマートQR起動＆A2HSとオフライン閲覧                                  | ✔️ `tests\e2e\mobile-pwa.spec.ts`                                                                                                                       |
-| **@J-PWA-P2P-SYNC-01**            | モバイルPWA・PC間ハイブリッド同期（P2P/Drive）                                   | ❌ 未カバー (Missing)                                                                                                                                   |
+| **@J-PWA-P2P-SYNC-01**            | モバイルPWA・PC間ハイブリッド同期（P2P/Drive）                                   | ✔️ `tests\e2e\p2p-signaling.spec.ts`<br>✔️ `tests\e2e\p2p-sync.spec.ts`                                                                                 |
 | **@J-PWA-AI-STYLE-ANALYSIS-01**   | モバイルPWAローカルAIアートスタイル分析                                          | ✔️ `tests\e2e\mobile-pwa.spec.ts`                                                                                                                       |
 
 ## サマリー
 
 - 全ジャーニー数: 56
-- カバー済み: 53
-- 未カバー: 3
+- カバー済み: 54
+- 未カバー: 2
