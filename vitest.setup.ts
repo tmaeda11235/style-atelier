@@ -4,7 +4,38 @@ import "vitest-canvas-mock"
 import "fake-indexeddb/auto"
 import "./src/lib/i18n"
 
+import { webcrypto } from "node:crypto"
 import { vi } from "vitest"
+
+// Mock Web Crypto API using Node.js webcrypto
+if (typeof window !== "undefined") {
+  if (!window.crypto) {
+    Object.defineProperty(window, "crypto", {
+      value: webcrypto,
+      writable: true,
+      configurable: true
+    })
+  } else if (!window.crypto.subtle) {
+    Object.defineProperty(window.crypto, "subtle", {
+      value: webcrypto.subtle,
+      writable: true,
+      configurable: true
+    })
+  }
+}
+if (!global.crypto) {
+  Object.defineProperty(global, "crypto", {
+    value: webcrypto,
+    writable: true,
+    configurable: true
+  })
+} else if (!global.crypto.subtle) {
+  Object.defineProperty(global.crypto, "subtle", {
+    value: webcrypto.subtle,
+    writable: true,
+    configurable: true
+  })
+}
 
 // ==========================================
 // 1. IndexedDB Mock
@@ -125,6 +156,18 @@ const chromeMock = {
     id: "mock-id",
     getURL: vi.fn((path) => `chrome-extension://mock-id/${path}`),
     lastError: undefined,
+    connect: vi.fn().mockReturnValue({
+      onMessage: {
+        addListener: vi.fn(),
+        removeListener: vi.fn()
+      },
+      onDisconnect: {
+        addListener: vi.fn(),
+        removeListener: vi.fn()
+      },
+      postMessage: vi.fn(),
+      disconnect: vi.fn()
+    }),
     onMessage: {
       addListener: vi.fn((fn) => addChromeListener("runtime.onMessage", fn)),
       removeListener: vi.fn((fn) => {

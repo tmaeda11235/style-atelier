@@ -1,6 +1,6 @@
-/* eslint-disable max-lines */
 import { Backend, Engine, LiteRtLm } from "@litert-lm/core"
 
+import { OPFSCacheManager } from "./lib/ai/opfs-cache-manager"
 import { setupWorkerCache } from "./mocks/interceptor"
 
 console.log("LiteRT Worker context initialized.")
@@ -49,17 +49,14 @@ async function waitForEngineInit(): Promise<Engine> {
 }
 
 async function getModelFile(): Promise<File> {
-  const root = await navigator.storage.getDirectory()
-  const opfsDir = await root.getDirectoryHandle("litert_models", {
-    create: true
-  })
-  const file = await (await opfsDir.getFileHandle(MODEL_FILENAME)).getFile()
-  if (file.size !== EXPECTED_SIZE) {
-    throw new Error(
-      `Incomplete model file in OPFS. Expected ${EXPECTED_SIZE} but got ${file.size}`
-    )
+  const isCached = await OPFSCacheManager.isCached(
+    MODEL_FILENAME,
+    EXPECTED_SIZE
+  )
+  if (!isCached) {
+    throw new Error(`Incomplete model file in OPFS. Expected ${EXPECTED_SIZE}`)
   }
-  return file
+  return await OPFSCacheManager.getFile(MODEL_FILENAME)
 }
 
 // eslint-disable-next-line max-lines-per-function
@@ -158,64 +155,6 @@ async function loadEngine(): Promise<Engine> {
   }
 }
 
-async function isModelAlreadyDownloaded(
-  opfsDir: FileSystemDirectoryHandle
-): Promise<boolean> {
-  try {
-    return (
-      (await (await opfsDir.getFileHandle(MODEL_FILENAME)).getFile()).size ===
-      EXPECTED_SIZE
-    )
-  } catch {
-    return false
-  }
-}
-
-async function streamDownload(
-  response: Response,
-  fileHandle: FileSystemFileHandle
-) {
-  const contentLength = response.headers.get("Content-Length")
-  const totalBytes = contentLength ? parseInt(contentLength, 10) : EXPECTED_SIZE
-  let receivedBytes = 0
-  const reader = response.body!.getReader()
-  const writable = await fileHandle.createWritable()
-  const startTime = Date.now()
-  let lastProgress = 0
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    await writable.write(value)
-    receivedBytes += value.length
-    const progress = Math.min(
-      99,
-      Math.round((receivedBytes / totalBytes) * 100)
-    )
-    if (progress > lastProgress) {
-      lastProgress = progress
-      const elapsedMs = Date.now() - startTime
-      const speed = Number(
-        (receivedBytes / (elapsedMs / 1000) / (1024 * 1024)).toFixed(1)
-      )
-      const eta = Math.max(
-        0,
-        Math.round(
-          (elapsedMs / (receivedBytes / totalBytes) - elapsedMs) / 1000
-        )
-      )
-      self.postMessage({
-        status: "downloading",
-        progress,
-        speed,
-        eta,
-        text: `Downloading model weights... (${progress}%)`
-      })
-    }
-  }
-  await writable.close()
-}
-
 async function doModelDownload() {
   self.postMessage({
     status: "downloading",
@@ -225,22 +164,26 @@ async function doModelDownload() {
     text: "Starting download..."
   })
   try {
-    const root = await navigator.storage.getDirectory()
-    const opfsDir = await root.getDirectoryHandle("litert_models", {
-      create: true
-    })
-    if (await isModelAlreadyDownloaded(opfsDir)) {
+    const isCached = await OPFSCacheManager.isCached(
+      MODEL_FILENAME,
+      EXPECTED_SIZE
+    )
+    if (isCached) {
       self.postMessage({ status: "ready" })
       return
     }
-    const response = await fetch(MODEL_URL)
-    if (!response.ok || !response.body) {
-      throw new Error(`Failed to fetch model: ${response.statusText}`)
-    }
-    const fileHandle = await opfsDir.getFileHandle(MODEL_FILENAME, {
-      create: true
+    await OPFSCacheManager.downloadAndCache(MODEL_URL, MODEL_FILENAME, {
+      expectedSize: EXPECTED_SIZE,
+      onProgress: (progress, speed, eta) => {
+        self.postMessage({
+          status: "downloading",
+          progress,
+          speed,
+          eta,
+          text: `Downloading model weights... (${progress}%)`
+        })
+      }
     })
-    await streamDownload(response, fileHandle)
     self.postMessage({ status: "ready" })
   } catch (err: any) {
     const isQuotaError =
