@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 export interface UseMergeStackProps {
   isOpen: boolean

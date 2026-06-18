@@ -1,7 +1,7 @@
 import { BookUp2, Clock, Dices, Redo, Trash2, Undo } from "lucide-react"
 import React, { useEffect, useRef, useState } from "react"
 
-import type { RecipeHistoryItem, StyleCard } from "../../lib/db-schema"
+import type { RecipeHistoryItem, StyleCard } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 
 export interface WorkbenchHeaderProps {

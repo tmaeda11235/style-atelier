@@ -1,6 +1,6 @@
 import { GenealogySection } from "@/components/molecules/GenealogySection"
 import { LanguageProvider } from "@/contexts/LanguageContext"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"

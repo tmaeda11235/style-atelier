@@ -2,7 +2,6 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { useCallback, useMemo, useState } from "react"
 
 import { db } from "../lib/db"
-import type { RecipeHistoryItem, StyleCard } from "../lib/db-schema"
 import { buildMergedPromptString } from "../lib/prompt-reference-utils"
 import {
   addCard,
@@ -13,6 +12,7 @@ import {
   toggleCardSelection,
   updateCardWeight
 } from "../lib/workbench-db-utils"
+import type { RecipeHistoryItem, StyleCard } from "../shared/lib/db-schema"
 
 interface PinnedCardState {
   id: string

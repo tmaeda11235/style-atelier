@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { useCallback, useState } from "react"
 
 import { db } from "../lib/db"
-import type { HistoryItem } from "../lib/db-schema"
+import type { HistoryItem } from "../shared/lib/db-schema"
 
 export function useHistory() {
   const [limit, setLimit] = useState(50)

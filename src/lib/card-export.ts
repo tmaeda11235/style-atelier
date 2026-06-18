@@ -1,7 +1,7 @@
 import { zipSync } from "fflate"
 
-import type { CustomCategory, StyleCard } from "./db-schema"
-import { buildPromptString } from "./prompt-utils"
+import type { CustomCategory, StyleCard } from "../shared/lib/db-schema"
+import { buildPromptString } from "../shared/lib/prompt-utils"
 
 // Helper to escape CSV values
 function escapeCSVValue(val: string): string {

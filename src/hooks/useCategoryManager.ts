@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { useConfirm } from "../contexts/ConfirmContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import { db } from "../lib/db"
-import type { CustomCategory } from "../lib/db-schema"
+import type { CustomCategory } from "../shared/lib/db-schema"
 import { useCategoryForm } from "./useCategoryForm"
 
 interface UseCategoryManagerProps {

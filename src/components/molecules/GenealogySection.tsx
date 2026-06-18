@@ -2,7 +2,7 @@
 import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 
 interface GenealogySectionProps {
   card: StyleCard

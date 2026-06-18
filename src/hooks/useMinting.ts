@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { db } from "../lib/db"
-import type { HistoryItem, PromptSegment, StyleCard } from "../lib/db-schema"
 import {
   buildMintedCard,
   createBuildCardParams,
@@ -10,8 +9,13 @@ import {
   getThumbnailData
 } from "../lib/minting-helper"
 import { extractKeywords } from "../lib/nlp-utils"
-import { parsePrompt } from "../lib/prompt-utils"
 import type { RarityTier } from "../lib/rarity-config"
+import type {
+  HistoryItem,
+  PromptSegment,
+  StyleCard
+} from "../shared/lib/db-schema"
+import { parsePrompt } from "../shared/lib/prompt-utils"
 import { useMintingColors } from "./useMintingColors"
 
 export interface VariationBase {

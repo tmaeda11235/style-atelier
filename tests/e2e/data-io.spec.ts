@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "fs"
 import path from "path"
 import { expect, test } from "@playwright/test"
 import QRCode from "qrcode"
 
-import { compressCardData } from "../../src/lib/qr-utils"
+import { compressCardData } from "../../src/shared/lib/qr-utils"
 
 test.describe("Style Atelier Sandbox E2E Tests - Data I/O @J-IO-01", () => {
   test.beforeEach(async ({ page }) => {

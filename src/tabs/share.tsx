@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react"
 
-import type { StyleCard } from "../lib/db-schema"
 import { exportCardAsImage, renderCardToCanvas } from "../lib/export-utils"
 import { getStyleCardById } from "../lib/style-card-store"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 import "../style.css"
 

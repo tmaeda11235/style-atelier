@@ -1,6 +1,6 @@
 import React from "react"
 
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { OpfsImage } from "../atoms/OpfsImage"
 
 interface RepresentativeCardRowProps {

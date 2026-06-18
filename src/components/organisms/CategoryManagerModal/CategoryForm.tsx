@@ -1,7 +1,7 @@
 import { Image as ImageIcon } from "lucide-react"
 import React from "react"
 
-import type { CustomCategory } from "../../../lib/db-schema"
+import type { CustomCategory } from "../../../shared/lib/db-schema"
 import { Button } from "../../atoms/Button"
 import { Input } from "../../atoms/Input"
 import { CoverSettingsFields } from "./CoverSettingsFields"

@@ -1,4 +1,4 @@
-import type { PromptSegment } from "../../lib/db-schema"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 
 export async function sendToWorkbench(
   value: string,

@@ -4,7 +4,7 @@ import iconUrl from "url:../../../assets/icon.png"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSimpleWorkbenchModal } from "../../hooks/useSimpleWorkbenchModal"
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 import { OpfsImage } from "../atoms/OpfsImage"
 import type { AlertType } from "../molecules/ConnectionAlert"

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 
 import { db } from "../lib/db"
-import type { PromptSegment, StyleCard } from "../lib/db-schema"
 import { createThumbnailDataUrl } from "../lib/image-utils"
+import type { PromptSegment, StyleCard } from "../shared/lib/db-schema"
 
 interface FormFields {
   name: string

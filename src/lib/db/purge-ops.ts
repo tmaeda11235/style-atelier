@@ -1,5 +1,8 @@
+import {
+  deleteOpfsFile,
+  listOpfsFiles
+} from "../../shared/lib/db/migration-helpers"
 import { StyleAtelierDatabase } from "../db"
-import { deleteOpfsFile, listOpfsFiles } from "./migration-helpers"
 
 /**
  * 物理パージ関数 purgeDeletedRecords

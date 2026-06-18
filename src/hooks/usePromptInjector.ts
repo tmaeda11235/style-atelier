@@ -3,8 +3,8 @@ import { useState } from "react"
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { safeQueryTabs, safeSendTabMessage } from "../lib/chrome-utils"
 import { db } from "../lib/db"
-import type { PromptSegment, StyleCard } from "../lib/db-schema"
-import { buildPromptString } from "../lib/prompt-utils"
+import type { PromptSegment, StyleCard } from "../shared/lib/db-schema"
+import { buildPromptString } from "../shared/lib/prompt-utils"
 
 interface UsePromptInjectorOptions {
   workbenchCards: StyleCard[]

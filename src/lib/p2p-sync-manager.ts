@@ -1,8 +1,11 @@
-import { base64ToUint8Array, uint8ArrayToBase64 } from "./binary-utils"
+import {
+  base64ToUint8Array,
+  uint8ArrayToBase64
+} from "../shared/lib/binary-utils"
+import { computeHash, listOpfsFiles } from "../shared/lib/db/migration-helpers"
 import { db } from "./db"
 import type { BackupData } from "./db/import-ops"
 import { importBackupData } from "./db/import-ops"
-import { computeHash, listOpfsFiles } from "./db/migration-helpers"
 
 async function getCryptoKey(passphrase: string): Promise<CryptoKey> {
   const enc = new TextEncoder()

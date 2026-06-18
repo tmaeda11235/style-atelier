@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks"
 
 import { db } from "../lib/db"
-import type { ParameterFolder } from "../lib/db-schema"
+import type { ParameterFolder } from "../shared/lib/db-schema"
 
 export function useParameterFolders() {
   const folders = useLiveQuery(() => db.getAllParameterFolders()) ?? []

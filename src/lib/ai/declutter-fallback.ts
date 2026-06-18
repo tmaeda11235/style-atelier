@@ -1,4 +1,4 @@
-import type { PromptSegment } from "../db-schema"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 
 /**
  * プロンプトから不要なパラメータと画像を削除する

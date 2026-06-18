@@ -3,7 +3,7 @@ import React from "react"
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { useCategories } from "../../hooks/useCategories"
-import type { HistoryItem, PromptSegment } from "../../lib/db-schema"
+import type { HistoryItem, PromptSegment } from "../../shared/lib/db-schema"
 import {
   FooterActions,
   SimpleMintingBody,

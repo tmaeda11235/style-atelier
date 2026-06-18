@@ -1,7 +1,7 @@
 import { X } from "lucide-react"
 import React from "react"
 
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import type { PromptSegment, StyleCard } from "../../shared/lib/db-schema"
 
 interface OverlayHeaderProps {
   onClose: (e: React.MouseEvent) => void

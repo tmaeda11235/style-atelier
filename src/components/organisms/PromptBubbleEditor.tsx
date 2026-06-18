@@ -1,8 +1,8 @@
 import React from "react"
 
 import { usePromptBubbleEditorState } from "../../hooks/usePromptBubbleEditorState"
-import type { PromptSegment } from "../../lib/db-schema"
 import type { RarityTier } from "../../lib/rarity-config"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 import { PromptBubble } from "../molecules/PromptBubble"
 import { AiDeclutterControl } from "./PromptDeclutterControls"
 

@@ -1,6 +1,6 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 interface UseEasyModeCardHandlersOptions {
   setActiveDetailCard: (card: StyleCard | null) => void

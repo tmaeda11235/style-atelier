@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useSettings } from "../../contexts/SettingsContext"
-import type { StyleCard } from "../../lib/db-schema"
-import { buildPromptString } from "../../lib/prompt-utils"
+import type { StyleCard } from "../../shared/lib/db-schema"
+import { buildPromptString } from "../../shared/lib/prompt-utils"
 import { HelpTooltip } from "../atoms/HelpTooltip"
 import { SlotField } from "../molecules/SlotField"
 

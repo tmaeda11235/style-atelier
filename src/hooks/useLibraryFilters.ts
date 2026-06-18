@@ -2,11 +2,11 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { useMemo, useState } from "react"
 
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
 import {
   calculateBreadcrumbs,
   filterAndSortMetaCards
 } from "../lib/library-filter-utils"
+import type { StyleCard } from "../shared/lib/db-schema"
 import type {
   ColorFilter,
   ModelFilter,

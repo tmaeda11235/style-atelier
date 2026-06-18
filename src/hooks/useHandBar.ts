@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { useLanguage } from "../contexts/LanguageContext"
 import { useSettings } from "../contexts/SettingsContext"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 import { useHand } from "./useHand"
 
 /**

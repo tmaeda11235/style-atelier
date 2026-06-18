@@ -1,4 +1,4 @@
-import type { StyleCard } from "../db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { loadImage, resolveLocalImageSource } from "./helpers"
 
 export function selectImageSources(card: StyleCard): string[] {

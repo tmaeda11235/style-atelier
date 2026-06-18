@@ -1,6 +1,6 @@
 import { SlotVariablesSection } from "@/components/organisms/SlotVariablesSection"
 import { SettingsProvider } from "@/contexts/SettingsContext"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import {
   fireEvent,
   screen,

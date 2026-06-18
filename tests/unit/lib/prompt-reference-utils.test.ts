@@ -1,8 +1,8 @@
-import type { PromptSegment } from "@/lib/db-schema"
 import {
   buildMergedPromptString,
   mergeReferences
 } from "@/lib/prompt-reference-utils"
+import type { PromptSegment } from "@/shared/lib/db-schema"
 import { describe, expect, it } from "vitest"
 
 describe("mergeReferences", () => {

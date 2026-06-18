@@ -1,10 +1,10 @@
 import { useRef, useState } from "react"
 
-import type { PromptSegment } from "../lib/db-schema"
+import type { PromptSegment } from "../shared/lib/db-schema"
 import {
   PROMPT_DELIMITER_CHARS,
   PROMPT_DELIMITER_REGEX
-} from "../lib/prompt-utils"
+} from "../shared/lib/prompt-utils"
 
 interface UsePromptInputProps {
   segments: PromptSegment[]

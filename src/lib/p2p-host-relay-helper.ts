@@ -1,4 +1,4 @@
-import { base64ToUint8Array } from "./binary-utils"
+import { base64ToUint8Array } from "../shared/lib/binary-utils"
 import type { SyncStateUpdater } from "./p2p-connection-helpers"
 import {
   decryptSyncData,

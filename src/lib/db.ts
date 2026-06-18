@@ -6,7 +6,7 @@ import type {
   RecipeHistoryItem,
   StyleCard,
   UserSettings
-} from "./db-schema"
+} from "../shared/lib/db-schema"
 import { StyleAtelierDatabaseBase } from "./db-setup"
 import {
   addParameterFolder,

@@ -1,7 +1,7 @@
 import { PromptBubbleEditor } from "@/components/organisms/PromptBubbleEditor"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { useAiPromptDeclutter } from "@/hooks/useAiPromptDeclutter"
-import type { PromptSegment } from "@/lib/db-schema"
+import type { PromptSegment } from "@/shared/lib/db-schema"
 import {
   fireEvent,
   screen,
