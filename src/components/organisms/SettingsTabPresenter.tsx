@@ -5,6 +5,7 @@ import { useWebLlm } from "../../hooks/useWebLlm"
 import { AiStatusBadge } from "../atoms/AiStatusBadge"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { SettingsAccordionItem } from "../molecules/SettingsAccordionItem"
+import { P2PSyncUI } from "../P2PSyncUI"
 import { CloudSyncSection } from "./CloudSyncSection"
 import { MaintenanceContent } from "./MaintenanceContent"
 import { UiPreferencesSection } from "./UiPreferencesSection"
@@ -63,6 +64,20 @@ function CloudSyncAccordionItem({ isOpen, onToggle, title, cloudProps }: any) {
   )
 }
 
+function P2PSyncAccordionItem({ isOpen, onToggle, title, tP2p }: any) {
+  return (
+    <SettingsAccordionItem
+      id="settings-accordion-p2p"
+      title={title}
+      isOpen={isOpen}
+      onToggle={onToggle}>
+      <div className="p-5 animate-in slide-in-from-top-2 duration-250">
+        <P2PSyncUI t={tP2p} />
+      </div>
+    </SettingsAccordionItem>
+  )
+}
+
 function MaintenanceAccordionItem({
   isOpen,
   onToggle,
@@ -113,37 +128,39 @@ export function SettingsTabPresenter({
   handleConfirmSyncStrategy,
   setIsWarningOpen
 }: SettingsTabPresenterProps) {
+  const [p2pOpen, setP2pOpen] = React.useState(false)
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {!currentEasyMode && <SettingsTabHeader title={t.title} />}
-
       <UiAccordionItem
         isOpen={openSections.ui}
         onToggle={onToggleUi}
         title={t.uiGroupTitle}
         uiProps={uiProps}
       />
-
       <CloudSyncAccordionItem
         isOpen={openSections.cloud}
         onToggle={onToggleCloud}
         title={t.cloudGroupTitle}
         cloudProps={cloudProps}
       />
-
+      <P2PSyncAccordionItem
+        isOpen={p2pOpen}
+        onToggle={() => setP2pOpen(!p2pOpen)}
+        title={t.p2pGroupTitle || "📲 Local P2P Sync (Direct)"}
+        tP2p={t.p2p}
+      />
       <MaintenanceAccordionItem
         isOpen={openSections.maintenance}
         onToggle={onToggleMaintenance}
         title={t.maintenanceGroupTitle}
         maintenanceProps={maintenanceProps}
       />
-
       <WebLlmAccordionItem
         isOpen={openSections.webllm}
         onToggle={onToggleWebLlm}
         title={t.webLlmGroupTitle}
       />
-
       <GDriveSyncStrategyDialog
         isOpen={isWarningOpen}
         onConfirm={handleConfirmSyncStrategy}
