@@ -11,7 +11,7 @@ jobs:
   add-triage-label:
     runs-on: ubuntu-latest
     steps:
-      - name: Add status: triage label
+      - name: "Add status: triage label"
         uses: actions/github-script@v7
         with:
           script: |
