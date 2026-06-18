@@ -26,7 +26,7 @@ describe("Vitest Configuration & Coverage Exception Check Script", () => {
   it("should validate check-vitest-coverage-exceptions.js behavior", () => {
     const scriptPath = path.resolve(
       __dirname,
-      "../../scratch/check-vitest-coverage-exceptions.js"
+      "../../scripts/check-vitest-coverage-exceptions.js"
     )
 
     // Create temporary directory for test fixtures
@@ -50,15 +50,15 @@ describe("Vitest Configuration & Coverage Exception Check Script", () => {
         })
       `
 
-      // Scenario B: Invalid configuration (wrong reportsDirectory)
+      // Scenario B: Invalid configuration (lowered threshold and extra exclude)
       const invalidConfigContent = `
         import { defineConfig } from "vitest/config"
         export default defineConfig({
           test: {
             coverage: {
-              reportsDirectory: "./wrong-coverage",
-              exclude: ["node_modules/**"],
-              thresholds: { statements: 80 }
+              reportsDirectory: process.env.CI ? "./coverage" : "./coverage-qa",
+              exclude: ["node_modules/**", "src/new-exception.ts"],
+              thresholds: { statements: 70 }
             }
           }
         })
@@ -119,10 +119,10 @@ describe("Vitest Configuration & Coverage Exception Check Script", () => {
       }
       expect(errOccurred).toBe(false)
 
-      // Run with invalid config.
+      // Run with invalid config. Comparing against valid config to trigger errors.
       errOccurred = false
       try {
-        execSync(`node "${scriptPath}" "${invalidFile}" "${invalidFile}"`, {
+        execSync(`node "${scriptPath}" "${invalidFile}" "${validFile}"`, {
           stdio: "pipe"
         })
       } catch (e: any) {
