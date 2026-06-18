@@ -10,7 +10,13 @@ function useFocusReturn(isActive: boolean) {
 
   useEffect(() => {
     if (isActive) {
-      returnFocusRef.current = document.activeElement as HTMLElement | null
+      let activeEl = document.activeElement as HTMLElement | null
+      if (!activeEl || activeEl === document.body) {
+        activeEl = document.querySelector(
+          "button[title='Show Guide'], button[title='ガイドを表示']"
+        ) as HTMLElement | null
+      }
+      returnFocusRef.current = activeEl
     } else {
       if (returnFocusRef.current) {
         const elementToFocus = returnFocusRef.current

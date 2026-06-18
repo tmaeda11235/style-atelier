@@ -610,7 +610,9 @@
         "src/components/molecules/WebGpuWarning.tsx",
         "src/components/organisms/WebLlmSettingsSection.tsx",
         "src/components/organisms/WebLlmSettingsSubComponents.tsx",
-        "src/components/molecules/AiDownloadStatus.tsx"
+        "src/components/molecules/AiDownloadStatus.tsx",
+        "src/lib/ai/opfs-cache-manager.ts",
+        "src/litert.worker.ts"
       ]
     },
     {

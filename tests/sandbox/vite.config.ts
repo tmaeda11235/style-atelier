@@ -45,7 +45,7 @@ export default defineConfig({
               "../../src/mobile-app/public",
               urlPath
             )
-            if (fs.existsSync(filePath)) {
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
               const ext = path.extname(filePath)
               let contentType = "application/octet-stream"
               if (ext === ".json") contentType = "application/json"
