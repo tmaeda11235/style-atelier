@@ -42,7 +42,8 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      clean: true,
+      clean: false,
+      cleanOnRerun: false,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
