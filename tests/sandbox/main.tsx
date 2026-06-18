@@ -1135,7 +1135,7 @@ function SandboxWrapper() {
   const renderProfiler = () => {
     if (isNarrow) return null
     return (
-      <div className="flex flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
+      <div className="dark bg-slate-950 text-slate-50 flex flex-1 h-full p-6 overflow-y-auto border-r border-slate-800/80 flex-col justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
             <div>
@@ -1334,7 +1334,7 @@ function SandboxWrapper() {
   return (
     <div
       ref={containerRef}
-      className="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-50 flex relative">
+      className="h-screen w-screen overflow-hidden flex relative">
       {/* Onboarding Trigger Button (Floating Absolute for E2E Tests) */}
       <button
         id="test-open-onboarding-btn"
