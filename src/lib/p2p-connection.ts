@@ -67,30 +67,67 @@ export class P2PConnection {
     }
   }
 
+  private async handleTurnCredentials(message: any) {
+    this.emitStatus("received-turn-credentials")
+    if (this.pc && message.iceServers) {
+      try {
+        const currentConfig = this.pc.getConfiguration()
+        const newIceServers = [
+          ...(currentConfig.iceServers || []),
+          ...message.iceServers
+        ]
+        this.pc.setConfiguration({
+          ...currentConfig,
+          iceServers: newIceServers
+        })
+        this.emitStatus("applied-turn-credentials")
+      } catch (cfgErr) {
+        console.error("[P2PConnection] Failed to setConfiguration:", cfgErr)
+      }
+    }
+  }
+
+  private handleRelayData(message: any) {
+    this.emitStatus("received-relay-data")
+    if (this.options.onMessageReceived) {
+      this.options.onMessageReceived(message.data)
+    }
+  }
+
+  private async handleOffer(message: any) {
+    this.emitStatus("received-offer")
+    await this.pc!.setRemoteDescription(new RTCSessionDescription(message))
+    const answer = await this.pc!.createAnswer()
+    await this.pc!.setLocalDescription(answer)
+    this.sigChannel.send(answer)
+    this.emitStatus("sent-answer")
+  }
+
+  private async handleAnswer(message: any) {
+    this.emitStatus("received-answer")
+    await this.pc!.setRemoteDescription(new RTCSessionDescription(message))
+  }
+
+  private async handleCandidate(message: any) {
+    this.emitStatus("received-candidate")
+    if (message.candidate) {
+      await this.pc!.addIceCandidate(new RTCIceCandidate(message.candidate))
+    }
+  }
+
   private setupSignalingHandlers() {
     this.sigChannel.onMessage = async (message) => {
       try {
-        if (message.type === "offer" && this.isHost) {
-          this.emitStatus("received-offer")
-          await this.pc!.setRemoteDescription(
-            new RTCSessionDescription(message)
-          )
-          const answer = await this.pc!.createAnswer()
-          await this.pc!.setLocalDescription(answer)
-          this.sigChannel.send(answer)
-          this.emitStatus("sent-answer")
+        if (message.type === "turn-credentials") {
+          await this.handleTurnCredentials(message)
+        } else if (message.type === "relay-data") {
+          this.handleRelayData(message)
+        } else if (message.type === "offer" && this.isHost) {
+          await this.handleOffer(message)
         } else if (message.type === "answer" && !this.isHost) {
-          this.emitStatus("received-answer")
-          await this.pc!.setRemoteDescription(
-            new RTCSessionDescription(message)
-          )
+          await this.handleAnswer(message)
         } else if (message.type === "candidate") {
-          this.emitStatus("received-candidate")
-          if (message.candidate) {
-            await this.pc!.addIceCandidate(
-              new RTCIceCandidate(message.candidate)
-            )
-          }
+          await this.handleCandidate(message)
         }
       } catch (err) {
         this.emitError(err instanceof Error ? err : new Error(String(err)))

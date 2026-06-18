@@ -85,6 +85,15 @@ function P2PHostSuccessView({
   )
 }
 
+function P2PHostSyncingView({ statusMessage }: { statusMessage: string }) {
+  return (
+    <div className="flex flex-col items-center space-y-4 py-8">
+      <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+      <p className="text-sm font-semibold text-text-primary">{statusMessage}</p>
+    </div>
+  )
+}
+
 export function P2PSyncHostView({
   status,
   statusMessage,
@@ -107,13 +116,11 @@ export function P2PSyncHostView({
           t={t}
         />
       )}
-      {(status === "connected" || status === "syncing") && (
-        <div className="flex flex-col items-center space-y-4 py-8">
-          <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-          <p className="text-sm font-semibold text-text-primary">
-            {statusMessage}
-          </p>
-        </div>
+      {(status === "connected" ||
+        status === "syncing" ||
+        status === "relay-connecting" ||
+        status === "relay-syncing") && (
+        <P2PHostSyncingView statusMessage={statusMessage} />
       )}
       {status === "success" && (
         <P2PHostSuccessView
