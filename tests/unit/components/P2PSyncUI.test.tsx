@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { P2PSyncProgressTracker } from "../../../src/components/P2PSyncCommonViews"
 import { P2PSyncUI } from "../../../src/components/P2PSyncUI"
+import { P2PSyncProvider } from "../../../src/contexts/P2PSyncContext"
 
 // Mock submodules
 vi.mock("../../../src/lib/qr-utils", () => ({
@@ -34,7 +35,11 @@ describe("P2PSyncUI Component", () => {
   }
 
   it("should render selection buttons in idle state", () => {
-    render(<P2PSyncUI t={mockT} />)
+    render(
+      <P2PSyncProvider t={mockT}>
+        <P2PSyncUI t={mockT} />
+      </P2PSyncProvider>
+    )
 
     expect(screen.getByText("Local P2P Sync")).toBeInTheDocument()
     expect(screen.getByText("Receive on PC")).toBeInTheDocument()
@@ -42,7 +47,11 @@ describe("P2PSyncUI Component", () => {
   })
 
   it("should transition to receiver (host) mode on click", async () => {
-    render(<P2PSyncUI t={mockT} />)
+    render(
+      <P2PSyncProvider t={mockT}>
+        <P2PSyncUI t={mockT} />
+      </P2PSyncProvider>
+    )
 
     const receiveBtn = screen.getByText("Receive on PC")
     fireEvent.click(receiveBtn)
@@ -71,7 +80,11 @@ describe("P2PSyncUI Component", () => {
       writable: true
     })
 
-    render(<P2PSyncUI t={mockT} />)
+    render(
+      <P2PSyncProvider t={mockT}>
+        <P2PSyncUI t={mockT} />
+      </P2PSyncProvider>
+    )
 
     const sendBtn = screen.getByText("Send from Mobile")
     fireEvent.click(sendBtn)
