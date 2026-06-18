@@ -175,10 +175,39 @@ for (const key of keys) {
   }
 }
 
+// 3. Check reportsDirectory mismatch (Issue #1327)
+const extractReportsDirectory = (content) => {
+  const match = content.match(/reportsDirectory:\s*([^\n,]+)/);
+  return match ? match[1].trim() : null;
+};
+
+const currentReportsDir = extractReportsDirectory(currentContent);
+if (currentReportsDir) {
+  const isCIValid = (
+    (currentReportsDir.includes('process.env.CI') && (
+      currentReportsDir.includes('"./coverage"') || 
+      currentReportsDir.includes("'./coverage'") || 
+      currentReportsDir.includes('"coverage"') || 
+      currentReportsDir.includes("'coverage'")
+    )) ||
+    currentReportsDir === '"./coverage"' ||
+    currentReportsDir === "'./coverage'" ||
+    currentReportsDir === '"coverage"' ||
+    currentReportsDir === "'coverage'"
+  );
+
+  if (!isCIValid) {
+    console.error(`\x1b[31mError: reportsDirectory in vitest.config.ts is set to: ${currentReportsDir}\x1b[0m`);
+    console.error(`\x1b[31mIn CI environments, the reportsDirectory MUST resolve to "./coverage" (or "coverage") to match .github/workflows/ci.yml.\x1b[0m`);
+    console.error(`\x1b[31mPlease use: reportsDirectory: process.env.CI ? "./coverage" : "./coverage-qa" (or omit it entirely).\x1b[0m`);
+    hasError = true;
+  }
+}
+
 if (hasError) {
-  console.error('\n\x1b[31mVerification failed! You are not allowed to add new coverage exceptions or lower thresholds.\x1b[0m');
+  console.error('\n\x1b[31mVerification failed! You are not allowed to add new coverage exceptions, lower thresholds, or break reportsDirectory consistency.\x1b[0m');
   process.exit(1);
 } else {
-  console.log('\x1b[32mVerification passed! No new coverage exceptions added and thresholds are intact.\x1b[0m');
+  console.log('\x1b[32mVerification passed! Coverage exclusions, thresholds, and reportsDirectory are all valid.\x1b[0m');
   process.exit(0);
 }
