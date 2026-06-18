@@ -1,5 +1,5 @@
-import type { PromptSegment, StyleCard } from "./db-schema"
-import { buildParamParts, buildSegmentString } from "./prompt-utils"
+import type { PromptSegment, StyleCard } from "../shared/lib/db-schema"
+import { buildParamParts, buildSegmentString } from "../shared/lib/prompt-utils"
 
 export interface ReferenceItem {
   url: string
@@ -98,7 +98,9 @@ function mergeCardParameters(
   mergedParams.cref = mergeReferences(crefList)
 
   // Merge p (personalization)
-  const allP = cards.flatMap((c) => !c.masking?.isPHidden && c.parameters.p || [])
+  const allP = cards.flatMap(
+    (c) => (!c.masking?.isPHidden && c.parameters.p) || []
+  )
   if (allP.length > 0) {
     mergedParams.p = Array.from(new Set(allP))
   }
@@ -115,7 +117,7 @@ function mergeCardParameters(
   ]
   inheritKeys.forEach((key) => {
     if (firstCard.parameters[key] !== undefined) {
-      (mergedParams as any)[key] = firstCard.parameters[key]
+      ;(mergedParams as any)[key] = firstCard.parameters[key]
     }
   })
 

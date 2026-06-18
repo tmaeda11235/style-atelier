@@ -1,6 +1,6 @@
 import React from "react"
 
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { LibraryCardItem } from "../molecules/LibraryCardItem"
 
 interface CardsGridProps {

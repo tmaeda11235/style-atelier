@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import type { CustomCategory } from "../lib/db-schema"
+import type { CustomCategory } from "../shared/lib/db-schema"
 
 function parseEmoji(value: string): string {
   if (!value) return ""

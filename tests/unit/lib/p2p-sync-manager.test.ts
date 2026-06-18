@@ -13,7 +13,7 @@ import {
 } from "../../../src/lib/p2p-sync-manager"
 
 // Mock migration-helpers
-vi.mock("../../../src/lib/db/migration-helpers", () => ({
+vi.mock("../../../src/shared/lib/db/migration-helpers", () => ({
   computeHash: vi.fn().mockResolvedValue("mock-hash"),
   listOpfsFiles: vi.fn().mockResolvedValue([
     {

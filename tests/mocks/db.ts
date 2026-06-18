@@ -6,7 +6,7 @@ import type {
   HistoryItem,
   StyleCard,
   UserSettings
-} from "../../src/lib/db-schema"
+} from "../../src/shared/lib/db-schema"
 
 class MockCollection<T> {
   private items: T[]

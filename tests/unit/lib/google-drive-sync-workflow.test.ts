@@ -1,6 +1,5 @@
 import { exportDatabase, importDatabase } from "@/lib/backup-manager"
 import { db } from "@/lib/db"
-import { listOpfsFiles } from "@/lib/db/migration-helpers"
 import { purgeDeletedRecords } from "@/lib/db/purge-ops"
 import type { GoogleDriveClient } from "@/lib/google-drive"
 import {
@@ -8,6 +7,7 @@ import {
   runSyncWorkflow,
   syncImages
 } from "@/lib/google-drive-sync-workflow"
+import { listOpfsFiles } from "@/shared/lib/db/migration-helpers"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Mock Dexie DB tables with vi.hoisted to prevent initialization error due to hoisting
@@ -52,7 +52,7 @@ vi.mock("@/lib/db/purge-ops", () => ({
   purgeDeletedRecords: vi.fn()
 }))
 
-vi.mock("@/lib/db/migration-helpers", () => ({
+vi.mock("@/shared/lib/db/migration-helpers", () => ({
   listOpfsFiles: vi.fn().mockResolvedValue([]),
   computeHash: vi.fn().mockResolvedValue("mock-hash-123")
 }))

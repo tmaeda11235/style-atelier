@@ -1,8 +1,8 @@
 import { useEffect } from "react"
 
-import type { PromptSegment } from "../lib/db-schema"
 import { mergeReferences } from "../lib/prompt-reference-utils"
-import { mergePromptSegments } from "../lib/prompt-utils"
+import type { PromptSegment } from "../shared/lib/db-schema"
+import { mergePromptSegments } from "../shared/lib/prompt-utils"
 
 function mergeSegmentsWithWeights(workbenchCards: any[]): PromptSegment[] {
   const segmentsWithWeights = workbenchCards.flatMap((card) => {

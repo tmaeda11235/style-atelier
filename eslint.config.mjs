@@ -74,6 +74,16 @@ export default ts.config(
           type: "lib",
           mode: "file",
           pattern: "src/lib/**/*"
+        },
+        {
+          type: "web-app",
+          mode: "file",
+          pattern: "src/web-app/**/*"
+        },
+        {
+          type: "shared",
+          mode: "file",
+          pattern: "src/shared/**/*"
         }
       ]
     },
@@ -114,6 +124,15 @@ export default ts.config(
               from: { type: "components" },
               disallow: [
                 { to: { type: "db" } }
+              ]
+            },
+            {
+              from: { type: "web-app" },
+              disallow: [
+                { to: { type: "components" } },
+                { to: { type: "hooks" } },
+                { to: { type: "db" } },
+                { to: { type: "lib" } }
               ]
             }
           ]

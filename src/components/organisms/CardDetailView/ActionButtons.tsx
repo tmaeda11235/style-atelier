@@ -1,7 +1,7 @@
 import { Beaker, Download, Save, Send, Trash2 } from "lucide-react"
 import React from "react"
 
-import type { StyleCard } from "../../../lib/db-schema"
+import type { StyleCard } from "../../../shared/lib/db-schema"
 import { Button } from "../../atoms/Button"
 
 interface ActionButtonsProps {

@@ -1,7 +1,11 @@
-import type { HistoryItem, PromptSegment, StyleCard } from "./db-schema"
+import type {
+  HistoryItem,
+  PromptSegment,
+  StyleCard
+} from "../shared/lib/db-schema"
+import { parsePrompt } from "../shared/lib/prompt-utils"
 import { createThumbnailDataUrl } from "./image-utils"
 import { extractKeywords } from "./nlp-utils"
-import { parsePrompt } from "./prompt-utils"
 import type { RarityTier } from "./rarity-config"
 
 export interface BuildCardParams {

@@ -3,7 +3,7 @@ import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useAiPromptDeclutter } from "../../hooks/useAiPromptDeclutter"
-import type { PromptSegment } from "../../lib/db-schema"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 import { AiStatusBadge } from "../atoms/AiStatusBadge"
 
 export interface AiDeclutterProps {

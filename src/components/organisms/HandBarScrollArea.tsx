@@ -1,9 +1,9 @@
 import { BookUp2 } from "lucide-react"
 import React from "react"
 
-import type { StyleCard } from "../../lib/db-schema"
-import { buildPromptString } from "../../lib/prompt-utils"
 import { RARITY_CONFIG } from "../../lib/rarity-config"
+import type { StyleCard } from "../../shared/lib/db-schema"
+import { buildPromptString } from "../../shared/lib/prompt-utils"
 import { CardThumbnail } from "../molecules/CardThumbnail"
 import { ScrollButton } from "./HandBarScrollButton"
 

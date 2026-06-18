@@ -3,9 +3,9 @@ import React from "react"
 
 import { Button } from "../../atoms/Button"
 import { HelpTooltip } from "../../atoms/HelpTooltip"
-import type { PromptSegment } from "../../lib/db-schema"
 import { PromptBubble } from "../../molecules/PromptBubble"
 import { RaritySelector } from "../../molecules/RaritySelector"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 import { PromptBubbleEditor } from "../PromptBubbleEditor"
 
 const CHAR_CLOSE = "✕"

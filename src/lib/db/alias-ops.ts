@@ -1,5 +1,8 @@
+import type {
+  ParameterAlias,
+  ParameterFolder
+} from "../../shared/lib/db-schema"
 import type { StyleAtelierDatabase } from "../db"
-import type { ParameterAlias, ParameterFolder } from "../db-schema"
 
 export function generateUUID(): string {
   if (

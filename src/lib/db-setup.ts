@@ -10,7 +10,7 @@ import type {
   SlotHistoryItem,
   StyleCard,
   UserSettings
-} from "./db-schema"
+} from "../shared/lib/db-schema"
 import { setupMigrations } from "./db/migrations"
 
 export {

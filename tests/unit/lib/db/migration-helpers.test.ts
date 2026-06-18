@@ -5,7 +5,7 @@ import {
   listOpfsFiles,
   readBlobFromOpfs,
   saveBase64ToOpfs
-} from "@/lib/db/migration-helpers"
+} from "@/shared/lib/db/migration-helpers"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 // ==========================================

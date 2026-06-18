@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react"
 
 import { declutterFallback } from "../lib/ai/declutter-fallback"
-import type { PromptSegment } from "../lib/db-schema"
+import type { PromptSegment } from "../shared/lib/db-schema"
 import { useWebLlm } from "./useWebLlm"
 
 export interface DeclutterResult {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 
 import { analyzeImageColors } from "../lib/color-utils"
-import type { HistoryItem } from "../lib/db-schema"
 import { RARITY_FALLBACK_COLORS, type RarityTier } from "../lib/rarity-config"
+import type { HistoryItem } from "../shared/lib/db-schema"
 import type { VariationBase } from "./useMinting"
 
 export function getFallbackColors(rarity: RarityTier) {

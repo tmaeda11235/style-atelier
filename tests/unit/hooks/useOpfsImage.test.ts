@@ -1,9 +1,9 @@
 import { opfsImageCache, useOpfsImage } from "@/hooks/useOpfsImage"
-import { readBlobFromOpfs } from "@/lib/db/migration-helpers"
+import { readBlobFromOpfs } from "@/shared/lib/db/migration-helpers"
 import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-vi.mock("@/lib/db/migration-helpers", () => ({
+vi.mock("@/shared/lib/db/migration-helpers", () => ({
   readBlobFromOpfs: vi.fn()
 }))
 

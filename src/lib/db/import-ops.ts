@@ -1,10 +1,10 @@
-import type { StyleAtelierDatabase } from "../db"
 import type {
   CustomCategory,
   HistoryItem,
   StyleCard,
   UserSettings
-} from "../db-schema"
+} from "../../shared/lib/db-schema"
+import type { StyleAtelierDatabase } from "../db"
 
 export interface BackupData {
   styleCards: StyleCard[]

@@ -4,7 +4,7 @@ import {
   base64ToUint8Array,
   crc32,
   uint8ArrayToBase64
-} from "../../../src/lib/binary-utils"
+} from "../../../src/shared/lib/binary-utils"
 
 describe("binary-utils", () => {
   describe("uint8ArrayToBase64 and base64ToUint8Array", () => {

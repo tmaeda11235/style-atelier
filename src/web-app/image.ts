@@ -1,4 +1,7 @@
-import { readBlobFromOpfs, saveBase64ToOpfs } from "../lib/db/migration-helpers"
+import {
+  readBlobFromOpfs,
+  saveBase64ToOpfs
+} from "../shared/lib/db/migration-helpers"
 
 const webImageCache = new Map<string, string>()
 

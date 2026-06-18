@@ -3,7 +3,7 @@ import { Index } from "flexsearch"
 import { useMemo } from "react"
 
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 export interface StyleCardMetadata {
   id: string

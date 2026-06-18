@@ -2,7 +2,7 @@ import {
   exportStyleCardsToCSV,
   exportStyleCardsToMarkdownZip
 } from "@/lib/card-export"
-import type { CustomCategory, StyleCard } from "@/lib/db-schema"
+import type { CustomCategory, StyleCard } from "@/shared/lib/db-schema"
 import { unzipSync } from "fflate"
 import { describe, expect, it } from "vitest"
 

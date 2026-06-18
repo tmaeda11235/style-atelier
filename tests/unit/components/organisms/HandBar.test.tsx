@@ -2,7 +2,7 @@ import { HandBar } from "@/components/organisms/HandBar"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { useHand } from "@/hooks/useHand"
 import { db } from "@/lib/db"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import {
   fireEvent,
   screen,

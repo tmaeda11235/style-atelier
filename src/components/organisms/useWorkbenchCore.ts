@@ -6,7 +6,10 @@ import { useChromeTabConnection } from "../../hooks/useChromeTabConnection"
 import { useEvolution } from "../../hooks/useEvolution"
 import { usePromptSegmentsSync } from "../../hooks/usePromptSegmentsSync"
 import { useWorkbench } from "../../hooks/useWorkbench"
-import type { PromptSegment, RecipeHistoryItem } from "../../lib/db-schema"
+import type {
+  PromptSegment,
+  RecipeHistoryItem
+} from "../../shared/lib/db-schema"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import { useWorkbenchHandlers } from "./useWorkbenchHandlers"
 

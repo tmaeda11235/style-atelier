@@ -1,9 +1,9 @@
 import { db } from "@/lib/db"
-import type { StyleCard } from "@/lib/db-schema"
 import { renderCardToCanvas } from "@/lib/export-utils"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-vi.mock("@/lib/qr-utils", () => ({
+vi.mock("@/shared/lib/qr-utils", () => ({
   compressCardData: vi.fn().mockReturnValue("mocked-compressed-data"),
   generateQRCodeUrl: vi
     .fn()
@@ -150,7 +150,7 @@ describe("export-utils", () => {
   })
 
   it("throws error if QR code generation fails", async () => {
-    const { generateQRCodeUrl } = await import("@/lib/qr-utils")
+    const { generateQRCodeUrl } = await import("@/shared/lib/qr-utils")
     vi.mocked(generateQRCodeUrl).mockRejectedValueOnce(
       new Error("QR generation failed")
     )

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import type { HistoryItem } from "../../lib/db-schema"
+import type { HistoryItem } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 
 /**

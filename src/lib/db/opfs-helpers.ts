@@ -1,5 +1,5 @@
-import type { CustomCategory, StyleCard } from "../db-schema"
-import { saveBase64ToOpfs } from "./migration-helpers"
+import type { CustomCategory, StyleCard } from "../../shared/lib/db-schema"
+import { saveBase64ToOpfs } from "../../shared/lib/db/migration-helpers"
 
 export async function processCardOpfs(card: StyleCard): Promise<void> {
   if (

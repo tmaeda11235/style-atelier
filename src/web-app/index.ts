@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
-import type { StyleCard } from "../lib/db-schema"
-import { buildPromptString } from "../lib/prompt-utils"
-import { decompressCardData } from "../lib/qr-utils"
+import type { StyleCard } from "../shared/lib/db-schema"
+import { buildPromptString } from "../shared/lib/prompt-utils"
+import { decompressCardData } from "../shared/lib/qr-utils"
 import { initA2HS } from "./a2hs"
 import {
   initGisClient,

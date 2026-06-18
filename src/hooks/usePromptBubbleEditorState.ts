@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 
 import { useSettings } from "../contexts/SettingsContext"
-import type { PromptSegment } from "../lib/db-schema"
+import type { PromptSegment } from "../shared/lib/db-schema"
 import {
   PROMPT_DELIMITER_CHARS,
   PROMPT_DELIMITER_REGEX
-} from "../lib/prompt-utils"
+} from "../shared/lib/prompt-utils"
 
 interface UseStateParams {
   initialSegments: PromptSegment[]

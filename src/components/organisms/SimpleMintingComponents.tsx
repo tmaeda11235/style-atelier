@@ -1,6 +1,6 @@
 import React from "react"
 
-import type { PromptSegment } from "../../lib/db-schema"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 import { Input } from "../atoms/Input"
 import { PromptBubbleEditor } from "./PromptBubbleEditor"

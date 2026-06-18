@@ -25,7 +25,7 @@ vi.mock("../../../src/lib/p2p-sync-manager", async (importOriginal) => {
   }
 })
 
-vi.mock("../../../src/lib/db/migration-helpers", () => ({
+vi.mock("../../../src/shared/lib/db/migration-helpers", () => ({
   computeHash: vi.fn().mockResolvedValue("hash-1")
 }))
 
