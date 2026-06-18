@@ -16,14 +16,26 @@ export type SyncStatus =
   | "syncing"
   | "success"
   | "error"
+export type SyncRole = "idle" | "host" | "guest"
+
+export interface SyncState {
+  role: SyncRole
+  status: SyncStatus
+  statusMessage: string
+  qrCodeDataUrl: string | null
+  processedCount: { cards: number; categories: number }
+  errorMessage: string
+  isScanning: boolean
+  scanInputUrl: string
+}
+
+export type SyncStateUpdater = (fields: Partial<SyncState>) => void
 
 export interface HostConnectionParams {
   wsUrl: string
   key: string
   t: any
-  setStatus: (s: SyncStatus) => void
-  setStatusMessage: (m: string) => void
-  setProcessedCount: (c: { cards: number; categories: number }) => void
+  updateState: SyncStateUpdater
   handleError: (err: Error) => void
   connectionRef: React.MutableRefObject<P2PConnection | null>
 }
@@ -32,9 +44,7 @@ export function initHostConnection({
   wsUrl,
   key,
   t,
-  setStatus,
-  setStatusMessage,
-  setProcessedCount,
+  updateState,
   handleError,
   connectionRef
 }: HostConnectionParams) {
@@ -44,25 +54,31 @@ export function initHostConnection({
     isHost: true,
     onStatusChange: (s) => {
       if (s === "datachannel-open") {
-        setStatus("connected")
-        setStatusMessage(t?.connected || "Device connected. Ready to sync.")
+        updateState({
+          status: "connected",
+          statusMessage: t?.connected || "Device connected. Ready to sync."
+        })
       } else if (s.startsWith("connection-state-failed")) {
         handleError(new Error("P2P Connection failed"))
       }
     },
     onMessageReceived: async (encryptedPayload) => {
-      setStatus("syncing")
-      setStatusMessage(t?.receiving || "Receiving and decrypting data...")
+      updateState({
+        status: "syncing",
+        statusMessage: t?.receiving || "Receiving and decrypting data..."
+      })
       try {
         const decrypted = await decryptSyncData(encryptedPayload, key)
         const mergeResult = await mergeIncomingSyncData(decrypted)
         if (mergeResult.success) {
-          setProcessedCount({
-            cards: mergeResult.cardsCount,
-            categories: mergeResult.categoriesCount
+          updateState({
+            status: "success",
+            statusMessage: t?.syncSuccess || "Sync completed successfully!",
+            processedCount: {
+              cards: mergeResult.cardsCount,
+              categories: mergeResult.categoriesCount
+            }
           })
-          setStatus("success")
-          setStatusMessage(t?.syncSuccess || "Sync completed successfully!")
         } else {
           throw new Error("Merge failed")
         }
@@ -78,8 +94,7 @@ export interface GuestConnectionParams {
   key: string
   wsUrl: string
   t: any
-  setStatus: (s: SyncStatus) => void
-  setStatusMessage: (m: string) => void
+  updateState: SyncStateUpdater
   handleError: (err: Error) => void
   connectionRef: React.MutableRefObject<P2PConnection | null>
 }
@@ -88,8 +103,7 @@ export function initGuestConnection({
   key,
   wsUrl,
   t,
-  setStatus,
-  setStatusMessage,
+  updateState,
   handleError,
   connectionRef
 }: GuestConnectionParams) {
@@ -99,14 +113,18 @@ export function initGuestConnection({
     isHost: false,
     onStatusChange: async (s) => {
       if (s === "datachannel-open") {
-        setStatus("syncing")
-        setStatusMessage(t?.sending || "Encrypting and sending local data...")
+        updateState({
+          status: "syncing",
+          statusMessage: t?.sending || "Encrypting and sending local data..."
+        })
         try {
           const syncData = await prepareOutgoingSyncData()
           const encrypted = await encryptSyncData(syncData, key)
           connectionRef.current?.send(encrypted)
-          setStatus("success")
-          setStatusMessage(t?.syncSuccess || "Data synced successfully!")
+          updateState({
+            status: "success",
+            statusMessage: t?.syncSuccess || "Data synced successfully!"
+          })
         } catch (err: any) {
           handleError(err)
         }

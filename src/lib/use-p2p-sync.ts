@@ -3,19 +3,17 @@ import React, { useEffect, useRef, useState } from "react"
 import { P2PConnection } from "./p2p-connection"
 import {
   initGuestConnection,
-  initHostConnection,
-  SyncStatus
+  initHostConnection
 } from "./p2p-connection-helpers"
+import type { SyncState, SyncStateUpdater } from "./p2p-connection-helpers"
 import { generateQRCodeUrl } from "./qr-utils"
 
-export type SyncRole = "idle" | "host" | "guest"
-
 function stopScanning(
-  setIsScanning: (s: boolean) => void,
+  updateState: SyncStateUpdater,
   scanIntervalRef: React.MutableRefObject<any>,
   videoRef: React.RefObject<HTMLVideoElement>
 ) {
-  setIsScanning(false)
+  updateState({ isScanning: false })
   if (scanIntervalRef.current) {
     clearInterval(scanIntervalRef.current)
     scanIntervalRef.current = null
@@ -29,15 +27,15 @@ function stopScanning(
 
 function handleError(
   err: Error,
-  setStatus: (s: SyncStatus) => void,
-  setErrorMessage: (m: string) => void,
+  updateState: SyncStateUpdater,
   connectionRef: React.MutableRefObject<P2PConnection | null>,
   stopScanningFn: () => void
 ) {
-  setStatus("error")
-  setErrorMessage(
-    err.message || "An unknown error occurred during synchronization."
-  )
+  updateState({
+    status: "error",
+    errorMessage:
+      err.message || "An unknown error occurred during synchronization."
+  })
   if (connectionRef.current) {
     connectionRef.current.close()
     connectionRef.current = null
@@ -47,29 +45,23 @@ function handleError(
 
 interface StartHostParams {
   connectionRef: React.MutableRefObject<P2PConnection | null>
-  setRole: (r: SyncRole) => void
-  setStatus: (s: SyncStatus) => void
-  setStatusMessage: (m: string) => void
-  setQrCodeDataUrl: (url: string | null) => void
-  setProcessedCount: (c: { cards: number; categories: number }) => void
+  updateState: SyncStateUpdater
   handleError: (err: Error) => void
   t: any
 }
 
 async function startHost({
   connectionRef,
-  setRole,
-  setStatus,
-  setStatusMessage,
-  setQrCodeDataUrl,
-  setProcessedCount,
+  updateState,
   handleError: handleErrorFn,
   t
 }: StartHostParams) {
   if (connectionRef.current) connectionRef.current.close()
-  setRole("host")
-  setStatus("setup")
-  setStatusMessage(t?.hostInit || "Initializing sync host...")
+  updateState({
+    role: "host",
+    status: "setup",
+    statusMessage: t?.hostInit || "Initializing sync host..."
+  })
   try {
     const room = Math.random().toString(36).substring(2, 12)
     const key = Math.random().toString(36).substring(2, 12)
@@ -79,18 +71,16 @@ async function startHost({
     ;(window as any).__lastSyncUrl = syncUrl
 
     const qrDataUrl = await generateQRCodeUrl(syncUrl, 250)
-    setQrCodeDataUrl(qrDataUrl)
-    setStatus("connecting")
-    setStatusMessage(
-      t?.hostWaiting || "Waiting for remote device to scan QR..."
-    )
+    updateState({
+      qrCodeDataUrl: qrDataUrl,
+      status: "connecting",
+      statusMessage: t?.hostWaiting || "Waiting for remote device to scan QR..."
+    })
     initHostConnection({
       wsUrl,
       key,
       t,
-      setStatus,
-      setStatusMessage,
-      setProcessedCount,
+      updateState,
       handleError: handleErrorFn,
       connectionRef
     })
@@ -132,12 +122,12 @@ async function scanQRFrame(
 }
 
 async function startGuestScan(
-  setIsScanning: (s: boolean) => void,
+  updateState: SyncStateUpdater,
   videoRef: React.RefObject<HTMLVideoElement>,
   scanIntervalRef: React.MutableRefObject<any>,
   scanQRFrameFn: () => void
 ) {
-  setIsScanning(true)
+  updateState({ isScanning: true })
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment" }
@@ -153,7 +143,7 @@ async function startGuestScan(
       "Camera not available or access denied. Please paste the URL manually.",
       err
     )
-    setIsScanning(false)
+    updateState({ isScanning: false })
   }
 }
 
@@ -161,8 +151,7 @@ interface ConnectGuestParams {
   key: string
   wsUrl: string
   connectionRef: React.MutableRefObject<P2PConnection | null>
-  setStatus: (s: SyncStatus) => void
-  setStatusMessage: (m: string) => void
+  updateState: SyncStateUpdater
   handleError: (err: Error) => void
   t: any
 }
@@ -171,21 +160,21 @@ function connectAsGuest({
   key,
   wsUrl,
   connectionRef,
-  setStatus,
-  setStatusMessage,
+  updateState,
   handleError: handleErrorFn,
   t
 }: ConnectGuestParams) {
   if (connectionRef.current) connectionRef.current.close()
-  setStatus("connecting")
-  setStatusMessage(t?.guestConnecting || "Connecting to signaling server...")
+  updateState({
+    status: "connecting",
+    statusMessage: t?.guestConnecting || "Connecting to signaling server..."
+  })
   try {
     initGuestConnection({
       key,
       wsUrl,
       t,
-      setStatus,
-      setStatusMessage,
+      updateState,
       handleError: handleErrorFn,
       connectionRef
     })
@@ -211,69 +200,60 @@ function handleDecodedUrl(
   }
 }
 
-export function useP2PSync(t: any) {
-  const [role, setRole] = useState<SyncRole>("idle")
-  const [status, setStatus] = useState<SyncStatus>("setup")
-  const [statusMessage, setStatusMessage] = useState("")
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
-  const [processedCount, setProcessedCount] = useState({
-    cards: 0,
-    categories: 0
-  })
-  const [errorMessage, setErrorMessage] = useState("")
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanInputUrl, setScanInputUrl] = useState("")
+const initialSyncState: SyncState = {
+  role: "idle",
+  status: "setup",
+  statusMessage: "",
+  qrCodeDataUrl: null,
+  processedCount: { cards: 0, categories: 0 },
+  errorMessage: "",
+  isScanning: false,
+  scanInputUrl: ""
+}
 
+export function useP2PSync(t: any) {
+  const [state, setState] = useState<SyncState>(initialSyncState)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const connectionRef = useRef<P2PConnection | null>(null)
   const scanIntervalRef = useRef<any>(null)
 
-  const stop = () => stopScanning(setIsScanning, scanIntervalRef, videoRef)
-  const err = (e: Error) =>
-    handleError(e, setStatus, setErrorMessage, connectionRef, stop)
+  const update = (f: Partial<SyncState>) =>
+    setState((prev) => ({ ...prev, ...f }))
+  const stop = () => stopScanning(update, scanIntervalRef, videoRef)
+  const err = (e: Error) => handleError(e, update, connectionRef, stop)
   const host = () =>
-    startHost({
-      connectionRef,
-      setRole,
-      setStatus,
-      setStatusMessage,
-      setQrCodeDataUrl,
-      setProcessedCount,
-      handleError: err,
-      t
-    })
+    startHost({ connectionRef, updateState: update, handleError: err, t })
   const decoded = (url: string) =>
     handleDecodedUrl(
       url,
-      (key, wsUrl) =>
+      (key, ws) =>
         connectAsGuest({
           key,
-          wsUrl,
+          wsUrl: ws,
           connectionRef,
-          setStatus,
-          setStatusMessage,
+          updateState: update,
           handleError: err,
           t
         }),
       err
     )
   const scanFrame = () =>
-    scanQRFrame(videoRef, canvasRef, isScanning, stop, decoded)
+    scanQRFrame(videoRef, canvasRef, state.isScanning, stop, decoded)
   const guestScan = () => {
-    setRole("guest")
-    setStatus("setup")
-    setErrorMessage("")
-    startGuestScan(setIsScanning, videoRef, scanIntervalRef, scanFrame)
+    update({ role: "guest", status: "setup", errorMessage: "" })
+    startGuestScan(update, videoRef, scanIntervalRef, scanFrame)
   }
   const resetState = () => {
     if (connectionRef.current) connectionRef.current.close()
     stop()
-    setRole("idle")
-    setStatus("setup")
-    setErrorMessage("")
-    setQrCodeDataUrl(null)
-    setScanInputUrl("")
+    update({
+      role: "idle",
+      status: "setup",
+      errorMessage: "",
+      qrCodeDataUrl: null,
+      scanInputUrl: ""
+    })
   }
 
   useEffect(() => {
@@ -282,25 +262,19 @@ export function useP2PSync(t: any) {
       if (conn) conn.close()
       stop()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return {
-    role,
-    status,
-    statusMessage,
-    qrCodeDataUrl,
-    processedCount,
-    errorMessage,
-    isScanning,
-    scanInputUrl,
-    setScanInputUrl,
+    ...state,
+    setScanInputUrl: (url: string) => update({ scanInputUrl: url }),
     videoRef,
     canvasRef,
     startHost: host,
     startGuestScan: guestScan,
     handleManualUrlSubmit: (e: React.FormEvent) => {
       e.preventDefault()
-      if (scanInputUrl) decoded(scanInputUrl)
+      if (state.scanInputUrl) decoded(state.scanInputUrl)
     },
     reset: resetState
   }
