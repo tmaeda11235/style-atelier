@@ -9,7 +9,7 @@ describe("OPFSCacheManager", () => {
   const TEST_CONTENT = "mock model data"
   const TEST_SIZE = TEST_CONTENT.length
   const TEST_HASH =
-    "6c8411d3be9e7f4c5c2d3a3c9b9866847bc0965d1d6a362bf784a0d9eb965b21"
+    "5dbbe3869b484fc6a9e44a8d0697d458c8413332294039d65f1f3a0a862ccb3a"
 
   beforeEach(() => {
     MockStorage.setup()
