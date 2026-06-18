@@ -1,12 +1,18 @@
 import { expect, test } from "@playwright/test"
 
 test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
+  test.beforeEach((_fixtures, testInfo) => {
+    if (testInfo.project.name === "extension") {
+      test.skip()
+    }
+  })
+
   test("should load manifest and icons correctly", async ({
     page,
     request
   }) => {
     // 1. Visit the web viewer page
-    await page.goto("/src/web-app/index.html")
+    await page.goto("/src/web-app/index.html?pwa=true")
 
     // Check if the manifest link is present in head
     const manifestLink = page.locator('link[rel="manifest"]')
@@ -61,6 +67,9 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
 
     // Visit PWA with pwa=true
     await page.goto("/?pwa=true")
+    await page.waitForFunction(
+      () => typeof (window as any).__renderCardForTest === "function"
+    )
 
     // Wait for registration
     const sw = await swPromise
@@ -76,6 +85,21 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
               resolve()
             }
           })
+        })
+      }
+    })
+
+    // Wait for the Service Worker to control the page
+    await page.evaluate(async () => {
+      if (!navigator.serviceWorker.controller) {
+        await new Promise<void>((resolve) => {
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            () => {
+              resolve()
+            },
+            { once: true }
+          )
         })
       }
     })
@@ -100,14 +124,17 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
   test.describe("A2HS Installation Prompts", () => {
     test.beforeEach(async ({ page }) => {
       // Clear localStorage before each test
-      await page.goto("/src/web-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.waitForFunction(
+        () => typeof (window as any).__renderCardForTest === "function"
+      )
       await page.evaluate(() => localStorage.clear())
     })
 
     test("should display Android install dialog when beforeinstallprompt fires and hide on dismiss", async ({
       page
     }) => {
-      await page.goto("/src/web-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
 
       // Dispatch beforeinstallprompt
       await page.evaluate(() => {
@@ -145,7 +172,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
     test("should save dismissal and not show dialog on reload", async ({
       page
     }) => {
-      await page.goto("/src/web-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
 
       // Trigger beforeinstallprompt
       await page.evaluate(() => {
@@ -208,7 +235,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
         })
       })
 
-      await page.goto("/src/web-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
 
       // Trigger flip to show iOS tooltip
       await page.click("#cardContainer")
@@ -234,7 +261,10 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
 
   test.describe("OPFS Image Integration & Fallback", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/src/web-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.waitForFunction(
+        () => typeof (window as any).__renderCardForTest === "function"
+      )
     })
 
     test("should save thumbnailData to OPFS and render it from OPFS when supported", async ({
@@ -372,6 +402,9 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
       await page.goto("/src/web-app/index.html?mock=true")
+      await page.waitForFunction(
+        () => typeof (window as any).__renderCardForTest === "function"
+      )
 
       // 1. Render style card with a mock prompt
       await page.evaluate(

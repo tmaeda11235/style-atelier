@@ -60,7 +60,10 @@ test.describe("Web Pages & Google Drive Integration @J-WEB-LP-01", () => {
     })
 
     // Use relative path to support dynamic port allocation
-    await page.goto("/src/web-app/index.html")
+    await page.goto("/src/web-app/index.html?pwa=true")
+    await page.waitForFunction(
+      () => typeof (window as any).__renderCardForTest === "function"
+    )
     await page.evaluate(() => {
       ;(window as any).__E2E_TEST__ = true
     })
