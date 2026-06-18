@@ -17,7 +17,25 @@ const getFreePort = () => {
   }
 }
 
+const getSignalingPort = () => {
+  if (process.env.SIGNALING_PORT) return process.env.SIGNALING_PORT
+  try {
+    const port = execSync("node scratch/get-free-port.js", {
+      encoding: "utf-8"
+    }).trim()
+    process.env.SIGNALING_PORT = port
+    return port
+  } catch {
+    console.warn(
+      "Failed to dynamically allocate signaling port. Falling back to 9000."
+    )
+    process.env.SIGNALING_PORT = "9000"
+    return "9000"
+  }
+}
+
 const PORT = getFreePort()
+const SIGNALING_PORT = getSignalingPort()
 
 /**
  * Playwright E2E test configuration for style-atelier Chrome Extension.
@@ -78,10 +96,21 @@ export default defineConfig({
   ],
 
   /* Run local dev server before starting the tests */
-  webServer: {
-    command: `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port ${PORT} --strictPort`,
-    port: Number(PORT),
-    reuseExistingServer: false,
-    timeout: 60 * 1000
-  }
+  webServer: [
+    {
+      command: `"${process.execPath}" ./node_modules/vite/bin/vite.js --config tests/sandbox/vite.config.ts --port ${PORT} --strictPort`,
+      port: Number(PORT),
+      reuseExistingServer: false,
+      timeout: 60 * 1000
+    },
+    {
+      command: `node scripts/dev-signaling-server.js`,
+      port: Number(SIGNALING_PORT),
+      env: {
+        PORT: SIGNALING_PORT
+      },
+      reuseExistingServer: false,
+      timeout: 30 * 1000
+    }
+  ]
 })
