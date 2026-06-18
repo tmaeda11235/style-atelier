@@ -63,15 +63,23 @@ describe("upgradeToVersion15", () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockWrite.mockResolvedValue(undefined)
     mockClose.mockResolvedValue(undefined)
     mockRemoveEntry.mockResolvedValue(undefined)
 
-    mockGetFileHandle.mockResolvedValue({
-      createWritable: vi.fn().mockResolvedValue({
-        write: mockWrite,
-        close: mockClose
-      })
+    mockGetFileHandle.mockImplementation(async () => {
+      const fileChunks: any[] = []
+      return {
+        createWritable: vi.fn().mockResolvedValue({
+          write: vi.fn().mockImplementation(async (val) => {
+            fileChunks.push(val)
+            mockWrite(val)
+          }),
+          close: mockClose
+        }),
+        getFile: vi.fn().mockImplementation(async () => {
+          return new Blob(fileChunks)
+        })
+      }
     })
 
     mockGetDirectoryHandle.mockResolvedValue({
@@ -188,10 +196,17 @@ describe("upgradeToVersion15", () => {
       if (name === "card-2.png") {
         throw new Error("Disk Quota Exceeded")
       }
+      const fileChunks: any[] = []
       return {
         createWritable: vi.fn().mockResolvedValue({
-          write: mockWrite,
+          write: vi.fn().mockImplementation(async (val) => {
+            fileChunks.push(val)
+            mockWrite(val)
+          }),
           close: mockClose
+        }),
+        getFile: vi.fn().mockImplementation(async () => {
+          return new Blob(fileChunks)
         })
       }
     })

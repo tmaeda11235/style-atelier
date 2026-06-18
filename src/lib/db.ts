@@ -296,11 +296,16 @@ db.on("ready", () => {
   // Run asynchronously without blocking the database open operation (avoids deadlock in tests)
   setTimeout(async () => {
     try {
-      const { purgeDeletedRecords } = await import("./db/purge-ops")
+      const { purgeDeletedRecords, cleanupOrphanedImages } =
+        await import("./db/purge-ops")
       const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
       await purgeDeletedRecords(db, thresholdMs)
+      await cleanupOrphanedImages(db)
     } catch (error) {
-      console.error("Failed to purge deleted records on ready hook:", error)
+      console.error(
+        "Failed to purge deleted records or run GC on ready hook:",
+        error
+      )
     }
   }, 0)
 })

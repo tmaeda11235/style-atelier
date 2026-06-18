@@ -1,4 +1,5 @@
 import { StyleAtelierDatabase } from "../db"
+import { deleteOpfsFile, listOpfsFiles } from "./migration-helpers"
 
 /**
  * 物理パージ関数 purgeDeletedRecords
@@ -47,5 +48,73 @@ export async function purgeDeletedRecords(
   if (categoriesToPurge.length > 0) {
     const categoryIds = categoriesToPurge.map((cat) => cat.id)
     await db.categories.bulkDelete(categoryIds)
+  }
+}
+
+/**
+ * OPFS上の画像ファイルをスキャンし、IndexedDBのアクティブなレコードから
+ * 参照されていない（または isDeleted: true となっている）画像ファイルを削除する。
+ */
+async function getActiveImagePaths(
+  db: StyleAtelierDatabase
+): Promise<Set<string>> {
+  const activeCards = await db.styleCards.filter((c) => !c.isDeleted).toArray()
+  const activeCategories = await db.categories
+    .filter((c) => !c.isDeleted)
+    .toArray()
+
+  const referencedPaths = new Set<string>()
+  for (const card of activeCards) {
+    if (card.thumbnailPath) {
+      referencedPaths.add(card.thumbnailPath)
+    }
+  }
+  for (const cat of activeCategories) {
+    if (cat.coverImagePath) {
+      referencedPaths.add(cat.coverImagePath)
+    }
+  }
+  return referencedPaths
+}
+
+/**
+ * OPFS上の画像ファイルをスキャンし、IndexedDBのアクティブなレコードから
+ * 参照されていない（または isDeleted: true となっている）画像ファイルを削除する。
+ */
+export async function cleanupOrphanedImages(
+  db: StyleAtelierDatabase
+): Promise<void> {
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.storage ||
+    !navigator.storage.getDirectory
+  ) {
+    return
+  }
+
+  const referencedPaths = await getActiveImagePaths(db)
+  const root = await navigator.storage.getDirectory()
+  let imagesDir: FileSystemDirectoryHandle
+
+  try {
+    imagesDir = await root.getDirectoryHandle("images", { create: false })
+  } catch (err: any) {
+    if (err.name === "NotFoundError") {
+      return // images ディレクトリがなければクリーンアップするものもない
+    }
+    throw err
+  }
+
+  const files = await listOpfsFiles(imagesDir)
+  for (const file of files) {
+    const fullPath = `images/${file.filePath}`
+    if (!referencedPaths.has(fullPath)) {
+      await deleteOpfsFile(fullPath).catch((err) => {
+        console.warn(
+          `[OPFS GC] Failed to delete orphaned image ${fullPath}:`,
+          err
+        )
+      })
+    }
   }
 }
