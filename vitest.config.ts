@@ -38,7 +38,7 @@ export default defineConfig({
       ".stryker-tmp/**"
     ],
     coverage: {
-      provider: "v8",
+      provider: "istanbul",
       clean: false,
       cleanOnRerun: false,
       reporter: ["text", "json", "json-summary", "html"],
