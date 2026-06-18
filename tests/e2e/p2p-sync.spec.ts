@@ -17,13 +17,14 @@ test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-E2E", () => {
   })
 
   test("should synchronize data between host and guest via WebRTC", async ({
-    browser
+    browser,
+    baseURL
   }) => {
     const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
 
     // Create two separate browser contexts to simulate Host and Guest devices
-    const contextHost = await browser.newContext()
-    const contextGuest = await browser.newContext()
+    const contextHost = await browser.newContext({ baseURL })
+    const contextGuest = await browser.newContext({ baseURL })
 
     const port = process.env.SIGNALING_PORT || "9000"
 

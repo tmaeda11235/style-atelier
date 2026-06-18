@@ -3,10 +3,9 @@ import React, { useEffect, useRef, useState } from "react"
 import { P2PConnection } from "./p2p-connection"
 import {
   initGuestConnection,
-  initHostConnection,
-  SyncState,
-  SyncStateUpdater
+  initHostConnection
 } from "./p2p-connection-helpers"
+import type { SyncState, SyncStateUpdater } from "./p2p-connection-helpers"
 import { generateQRCodeUrl } from "./qr-utils"
 
 function stopScanning(
