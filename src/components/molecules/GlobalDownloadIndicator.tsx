@@ -37,22 +37,28 @@ interface DownloadingContentProps {
 
 function DownloadingContent({ progress, t }: DownloadingContentProps) {
   return (
-    <div className="flex items-center gap-3 w-full">
-      <div className="flex items-center gap-1.5 shrink-0 font-bold text-indigo-600 dark:text-indigo-400">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        <span>📥 {progress}%</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
-          {t.webLlmGlobalAnxietyMicrocopy ||
-            "Downloading safely in the background. You can navigate away."}
-        </p>
-        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 mt-1 overflow-hidden">
-          <div
-            className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+    <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex items-center justify-between text-[11px] sm:text-xs gap-3">
+        <div className="flex items-center gap-1.5 shrink-0 font-bold text-indigo-600 dark:text-indigo-400">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          <span>📥 {progress}%</span>
         </div>
+        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium text-right leading-tight">
+          <span className="hidden sm:inline">
+            {t.webLlmGlobalAnxietyMicrocopy ||
+              "Downloading safely in the background. You can navigate away."}
+          </span>
+          <span className="inline sm:hidden">
+            {t.webLlmGlobalAnxietyMicrocopyShort ||
+              "Downloading in background. Feel free to navigate away."}
+          </span>
+        </p>
+      </div>
+      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+        <div
+          className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </div>
   )

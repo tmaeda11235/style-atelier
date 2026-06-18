@@ -279,6 +279,7 @@
     "webLlmWebGpuOpenSettingsBtn": "Chrome設定を開く",
     "webLlmDownloadBtnUnsupported": "WebGPU非対応のためダウンロード不可",
     "webLlmGlobalAnxietyMicrocopy": "バックグラウンドで安全に進行中。別の画面へ移動しても問題ありません",
+    "webLlmGlobalAnxietyMicrocopyShort": "バックグラウンドでダウンロード中。移動しても大丈夫です",
     "webLlmGlobalQuotaWarning": "空き容量が不足しています（最低2GB必要）",
     "webLlmGlobalCleanupBtn": "ストレージを整理する"
   },

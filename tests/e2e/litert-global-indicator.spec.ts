@@ -188,4 +188,92 @@ test.describe("Style Atelier Sandbox E2E Tests - LiteRT-LM Global Indicator & Qu
     await expect(storageWrapper).toBeVisible()
     console.log("Redirected to Storage Manager successfully on Clean Up click.")
   })
+
+  test("should display global progress indicator nicely on narrow viewport", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log(
+      "Navigating to sandbox page for LiteRT-LM Global Indicator narrow viewport test..."
+    )
+    await page.goto("/tests/sandbox/index.html")
+
+    // Shrink sidepanel frame width to 300px to simulate narrow viewport
+    await page.locator("#sidepanel-frame").evaluate((el) => {
+      el.style.width = "300px"
+    })
+    await page.waitForTimeout(500)
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 15000 }).catch(() => false)) {
+      await skipButton.click({ force: true })
+    }
+
+    // 1. Setup mock config for slow download and trigger download from Settings
+    const settingsTabBtn = spFrame
+      .locator("button:has-text('Settings'), button:has-text('設定')")
+      .first()
+    await settingsTabBtn.click({ force: true })
+    await page.waitForTimeout(500)
+
+    // Open WebLLM accordion
+    const webllmHeader = spFrame.locator("#settings-accordion-webllm")
+    await webllmHeader.click({ force: true })
+    await page.waitForTimeout(500)
+
+    // Inject mock config setting
+    await spFrame.locator("body").evaluate(() => {
+      const config = (window as any).mockWebLlmConfig
+      if (config) {
+        config.quotaSufficient = true
+        config.failDownload = false
+        config.downloadSpeed = 800 // Slow speed to capture downloading state
+      }
+    })
+
+    // Click Download button inside WebLLM settings
+    const downloadBtn = spFrame
+      .locator(
+        "#webllm-settings-section-wrapper button:has-text('Download Model'), #webllm-settings-section-wrapper button:has-text('モデルをダウンロード')"
+      )
+      .first()
+    await downloadBtn.waitFor({ state: "visible" })
+    await downloadBtn.click()
+
+    // Click confirm download
+    const confirmDownloadBtn = spFrame
+      .locator(
+        "button:has-text('Start Download'), button:has-text('ダウンロードを開始する')"
+      )
+      .first()
+    await confirmDownloadBtn.waitFor({ state: "visible" })
+    await confirmDownloadBtn.click()
+    await page.waitForTimeout(500)
+
+    // 2. Navigate away to History tab and check global progress bar
+    const historyTabBtn = spFrame
+      .locator("button:has-text('History'), button:has-text('履歴')")
+      .first()
+    await historyTabBtn.click({ force: true })
+    await page.waitForTimeout(800)
+
+    // Verify global progress indicator is visible
+    const globalIndicator = spFrame.locator("#global-download-indicator")
+    await expect(globalIndicator).toBeVisible()
+
+    // Verify progress text presence
+    await expect(globalIndicator).toContainText(/📥/)
+
+    // Capture screenshot of global progress bar at the bottom in narrow viewport
+    await page.screenshot({
+      path: path.join(
+        screenshotsDir,
+        "litert-global-progress-indicator-narrow.png"
+      )
+    })
+    console.log("Global progress indicator narrow viewport screenshot saved.")
+  })
 })
