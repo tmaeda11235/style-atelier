@@ -27,6 +27,7 @@ out/
 build/
 dist/
 dist-mobile/
+dist-web/
 
 # plasmo
 .plasmo
