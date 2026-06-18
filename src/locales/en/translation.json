@@ -279,6 +279,7 @@
     "webLlmWebGpuOpenSettingsBtn": "Open Chrome Settings",
     "webLlmDownloadBtnUnsupported": "WebGPU Not Supported (Download Disabled)",
     "webLlmGlobalAnxietyMicrocopy": "Downloading safely in the background. You can navigate away from this screen.",
+    "webLlmGlobalAnxietyMicrocopyShort": "Downloading in background. Feel free to navigate away.",
     "webLlmGlobalQuotaWarning": "Insufficient space (Minimum 2GB required)",
     "webLlmGlobalCleanupBtn": "Clean up storage"
   },
