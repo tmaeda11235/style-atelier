@@ -176,7 +176,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Export SNS Share Affordance @J-
     await shareBtn.click()
 
     // 8. Verify navigator.share was called with the correct data
-    const shareData: any = await page.evaluate(() => {
+    const shareData: any = await spFrame.locator("body").evaluate(() => {
       return (window as any)._sharedDataList[0]
     })
 
