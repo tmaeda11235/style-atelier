@@ -1,7 +1,7 @@
 import { CheckCircle, Loader2 } from "lucide-react"
 import React from "react"
 
-import { P2PSyncErrorView } from "./P2PSyncCommonViews"
+import { P2PSyncErrorView, P2PSyncProgressTracker } from "./P2PSyncCommonViews"
 
 interface P2PSyncHostViewProps {
   status: string
@@ -12,6 +12,7 @@ interface P2PSyncHostViewProps {
   t: any
   onReset: () => void
   onRetry: () => void
+  syncProgress?: any
 }
 
 function P2PHostConnectingView({
@@ -85,15 +86,26 @@ function P2PHostSuccessView({
   )
 }
 
-function P2PHostSyncingView({ statusMessage }: { statusMessage: string }) {
+function P2PHostSyncingView({
+  statusMessage,
+  syncProgress,
+  t
+}: {
+  statusMessage: string
+  syncProgress: any
+  t: any
+}) {
   return (
-    <div className="flex flex-col items-center space-y-4 py-8">
-      <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-      <p className="text-sm font-semibold text-text-primary">{statusMessage}</p>
+    <div className="flex flex-col items-center space-y-4 py-4 w-full">
+      <P2PSyncProgressTracker t={t} syncProgress={syncProgress} />
+      <p className="text-xs font-semibold text-text-secondary">
+        {statusMessage}
+      </p>
     </div>
   )
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 export function P2PSyncHostView({
   status,
   statusMessage,
@@ -102,10 +114,11 @@ export function P2PSyncHostView({
   errorMessage,
   t,
   onReset,
-  onRetry
+  onRetry,
+  syncProgress
 }: P2PSyncHostViewProps) {
   return (
-    <div className="flex flex-col items-center p-6 space-y-6 text-center animate-in fade-in duration-300">
+    <div className="flex flex-col items-center p-6 space-y-6 text-center animate-in fade-in duration-300 w-full">
       <h3 className="text-base font-bold text-text-primary">
         {t?.receiveTitle || "P2P Sync Receiver Mode"}
       </h3>
@@ -120,7 +133,11 @@ export function P2PSyncHostView({
         status === "syncing" ||
         status === "relay-connecting" ||
         status === "relay-syncing") && (
-        <P2PHostSyncingView statusMessage={statusMessage} />
+        <P2PHostSyncingView
+          statusMessage={statusMessage}
+          syncProgress={syncProgress}
+          t={t}
+        />
       )}
       {status === "success" && (
         <P2PHostSuccessView

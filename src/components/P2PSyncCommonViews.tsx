@@ -1,6 +1,9 @@
 import {
   AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
   Laptop,
+  Loader2,
   QrCode,
   RefreshCw,
   Smartphone
@@ -93,6 +96,135 @@ export function P2PSyncErrorView({
           <RefreshCw className="w-3.5 h-3.5" />
           {t?.retryBtn || "Retry"}
         </button>
+      </div>
+    </div>
+  )
+}
+
+interface P2PSyncProgressTrackerProps {
+  t: any
+  syncProgress?: {
+    phase: 1 | 2 | 3
+    currentImageIndex?: number
+    totalImages?: number
+  }
+}
+
+/* eslint-disable-next-line max-lines-per-function, sonarjs/cognitive-complexity */
+export function P2PSyncProgressTracker({
+  t,
+  syncProgress
+}: P2PSyncProgressTrackerProps) {
+  const currentPhase = syncProgress?.phase || 1
+
+  // Warn message
+  const warningText =
+    t?.closeWarning ||
+    "Please do not close this panel until the synchronization is complete"
+
+  // Phase texts
+  const phase1Text = t?.phase1 || "Phase 1: Syncing database metadata"
+  const phase2Text = t?.phase2 || "Phase 2: Verifying image differences"
+  const phase3Text = t?.phase3 || "Phase 3: Transferring images"
+
+  // Progress for phase 3
+  const current =
+    syncProgress?.currentImageIndex !== undefined
+      ? syncProgress.currentImageIndex + 1
+      : 1
+  const total = syncProgress?.totalImages || 0
+  const percentage = total > 0 ? Math.round((current / total) * 100) : 0
+
+  let progressLabel = ""
+  if (currentPhase === 3 && total > 0) {
+    const formatStr =
+      t?.syncProgress || "Syncing image files: {current}/{total} ({percent}%)"
+    progressLabel = formatStr
+      .replace("{current}", String(current))
+      .replace("{total}", String(total))
+      .replace("{percent}", String(percentage))
+  }
+
+  return (
+    <div className="w-full space-y-4">
+      {/* Close Warning Alert */}
+      <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl text-left text-xs text-amber-800 dark:text-amber-300 w-full animate-in fade-in duration-300">
+        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <p className="font-semibold leading-relaxed">{warningText}</p>
+        </div>
+      </div>
+
+      {/* Stepper Card */}
+      <div className="border border-border bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 w-full text-left space-y-3.5">
+        {/* Phase 1 */}
+        <div className="flex items-center gap-3">
+          {currentPhase > 1 ? (
+            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+          ) : currentPhase === 1 ? (
+            <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />
+          ) : (
+            <div className="w-5 h-5 rounded-full border border-border flex items-center justify-center text-[10px] text-text-muted shrink-0 font-medium">
+              1
+            </div>
+          )}
+          <span
+            className={`text-xs ${currentPhase === 1 ? "text-blue-600 dark:text-blue-400 font-bold" : currentPhase > 1 ? "text-text-secondary line-through opacity-70" : "text-text-muted"}`}>
+            {phase1Text}
+          </span>
+        </div>
+
+        {/* Phase 2 */}
+        <div className="flex items-center gap-3">
+          {currentPhase > 2 ? (
+            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+          ) : currentPhase === 2 ? (
+            <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />
+          ) : (
+            <div className="w-5 h-5 rounded-full border border-border flex items-center justify-center text-[10px] text-text-muted shrink-0 font-medium">
+              2
+            </div>
+          )}
+          <span
+            className={`text-xs ${currentPhase === 2 ? "text-blue-600 dark:text-blue-400 font-bold" : currentPhase > 2 ? "text-text-secondary line-through opacity-70" : "text-text-muted"}`}>
+            {phase2Text}
+          </span>
+        </div>
+
+        {/* Phase 3 */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            {currentPhase > 3 ? (
+              <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+            ) : currentPhase === 3 ? (
+              <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />
+            ) : (
+              <div className="w-5 h-5 rounded-full border border-border flex items-center justify-center text-[10px] text-text-muted shrink-0 font-medium">
+                3
+              </div>
+            )}
+            <span
+              className={`text-xs ${currentPhase === 3 ? "text-blue-600 dark:text-blue-400 font-bold" : "text-text-muted"}`}>
+              {phase3Text}
+            </span>
+          </div>
+
+          {/* Progress bar inside Phase 3 if it's active */}
+          {currentPhase === 3 && total > 0 && (
+            <div className="pl-8 space-y-2 animate-in slide-in-from-top-1 duration-250">
+              <div className="flex justify-between items-center text-[10px] text-text-secondary font-medium">
+                <span>{progressLabel}</span>
+                <span>{percentage}%</span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

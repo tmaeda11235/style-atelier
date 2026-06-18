@@ -13,6 +13,12 @@ export type SyncStatus =
   | "relay-syncing"
 export type SyncRole = "idle" | "host" | "guest"
 
+export interface SyncProgress {
+  phase: 1 | 2 | 3
+  currentImageIndex?: number
+  totalImages?: number
+}
+
 export interface SyncState {
   role: SyncRole
   status: SyncStatus
@@ -22,6 +28,7 @@ export interface SyncState {
   errorMessage: string
   isScanning: boolean
   scanInputUrl: string
+  syncProgress?: SyncProgress
 }
 
 export type SyncStateUpdater = (fields: Partial<SyncState>) => void

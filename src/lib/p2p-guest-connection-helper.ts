@@ -16,6 +16,7 @@ import {
   scanLocalImages
 } from "./p2p-sync-manager"
 
+/* eslint-disable-next-line max-lines-per-function */
 async function sendSingleImageInChunks(
   connection: P2PConnection,
   filePath: string,
@@ -26,7 +27,12 @@ async function sendSingleImageInChunks(
 ): Promise<void> {
   updateState({
     status: "syncing",
-    statusMessage: `${t?.sendingImages || "Sending images"} (${index + 1}/${totalFiles}): ${filePath}`
+    statusMessage: `${t?.sendingImages || "Sending images"} (${index + 1}/${totalFiles}): ${filePath}`,
+    syncProgress: {
+      phase: 3,
+      currentImageIndex: index,
+      totalImages: totalFiles
+    }
   })
 
   const blob = await readOpfsFileAsBlob(filePath)
@@ -38,7 +44,9 @@ async function sendSingleImageInChunks(
       type: "FILE_START",
       filePath,
       size: buffer.byteLength,
-      hash
+      hash,
+      index,
+      total: totalFiles
     })
   )
 
@@ -92,7 +100,8 @@ async function sendImagesInChunks(
 
     updateState({
       status: "success",
-      statusMessage: t?.syncSuccess || "Sync completed successfully!"
+      statusMessage: t?.syncSuccess || "Sync completed successfully!",
+      syncProgress: undefined
     })
   } catch (err: any) {
     handleError(err)
@@ -109,7 +118,8 @@ async function startP2PImageSync(
   try {
     updateState({
       status: "syncing",
-      statusMessage: t?.scanningImages || "Scanning local images..."
+      statusMessage: t?.scanningImages || "Scanning local images...",
+      syncProgress: { phase: 2 }
     })
 
     await scanLocalImages()
@@ -119,14 +129,16 @@ async function startP2PImageSync(
       connection.send(JSON.stringify({ type: "SYNC_COMPLETE" }))
       updateState({
         status: "success",
-        statusMessage: t?.syncSuccess || "Data synced successfully!"
+        statusMessage: t?.syncSuccess || "Data synced successfully!",
+        syncProgress: undefined
       })
       return
     }
 
     updateState({
       status: "syncing",
-      statusMessage: t?.checkingDiffs || "Comparing image list with host..."
+      statusMessage: t?.checkingDiffs || "Comparing image list with host...",
+      syncProgress: { phase: 2 }
     })
 
     connection.send(
@@ -217,7 +229,9 @@ class GuestConnectionInitiator {
       clearTimeout(this.timeoutId)
       this.updateState({
         status: "syncing",
-        statusMessage: this.t?.sending || "Encrypting and sending local data..."
+        statusMessage:
+          this.t?.sending || "Encrypting and sending local data...",
+        syncProgress: { phase: 1 }
       })
       if (this.connectionRef.current) {
         await sendGuestDataDirectly(

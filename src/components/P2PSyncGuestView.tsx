@@ -1,7 +1,7 @@
-import { CheckCircle, Loader2 } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import React from "react"
 
-import { P2PSyncErrorView } from "./P2PSyncCommonViews"
+import { P2PSyncErrorView, P2PSyncProgressTracker } from "./P2PSyncCommonViews"
 
 interface P2PSyncGuestViewProps {
   status: string
@@ -16,6 +16,7 @@ interface P2PSyncGuestViewProps {
   onConnect: (e: React.FormEvent) => void
   onReset: () => void
   onRetry: () => void
+  syncProgress?: any
 }
 
 interface SetupViewProps {
@@ -94,15 +95,26 @@ function P2PGuestSuccessView({ t, onReset }: { t: any; onReset: () => void }) {
   )
 }
 
-function P2PGuestConnectingView({ statusMessage }: { statusMessage: string }) {
+function P2PGuestConnectingView({
+  statusMessage,
+  syncProgress,
+  t
+}: {
+  statusMessage: string
+  syncProgress: any
+  t: any
+}) {
   return (
-    <div className="flex flex-col items-center space-y-4 py-8">
-      <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-      <p className="text-sm font-semibold text-text-primary">{statusMessage}</p>
+    <div className="flex flex-col items-center space-y-4 py-4 w-full">
+      <P2PSyncProgressTracker t={t} syncProgress={syncProgress} />
+      <p className="text-xs font-semibold text-text-secondary">
+        {statusMessage}
+      </p>
     </div>
   )
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 export function P2PSyncGuestView({
   status,
   statusMessage,
@@ -115,10 +127,11 @@ export function P2PSyncGuestView({
   t,
   onConnect,
   onReset,
-  onRetry
+  onRetry,
+  syncProgress
 }: P2PSyncGuestViewProps) {
   return (
-    <div className="flex flex-col items-center p-6 space-y-6 text-center animate-in fade-in duration-300">
+    <div className="flex flex-col items-center p-6 space-y-6 text-center animate-in fade-in duration-300 w-full">
       <h3 className="text-base font-bold text-text-primary">
         {t?.sendTitle || "P2P Sync Sender Mode"}
       </h3>
@@ -137,7 +150,11 @@ export function P2PSyncGuestView({
         status === "syncing" ||
         status === "relay-connecting" ||
         status === "relay-syncing") && (
-        <P2PGuestConnectingView statusMessage={statusMessage} />
+        <P2PGuestConnectingView
+          statusMessage={statusMessage}
+          syncProgress={syncProgress}
+          t={t}
+        />
       )}
       {status === "success" && <P2PGuestSuccessView t={t} onReset={onReset} />}
       {status === "error" && (

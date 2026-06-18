@@ -169,7 +169,12 @@
       "cancelBtn": "Cancel",
       "retryBtn": "Retry",
       "scanInstruction": "Scan this QR code with the Mobile device to establish a direct connection.",
-      "doneBtn": "Done"
+      "doneBtn": "Done",
+      "phase1": "Phase 1: Syncing database metadata",
+      "phase2": "Phase 2: Verifying image differences",
+      "phase3": "Phase 3: Transferring images",
+      "syncProgress": "Syncing image files: {current}/{total} ({percent}%)",
+      "closeWarning": "Please do not close this panel until the synchronization is complete"
     },
     "localBackupTitle": "Local File Backup (Offline)",
     "localBackupDesc": "Export your style cards and binders to a local JSON file, or restore from a previously exported backup file. Perfect for offline migrations or keeping absolute privacy.",

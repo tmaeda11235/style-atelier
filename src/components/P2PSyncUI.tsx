@@ -30,6 +30,7 @@ export function P2PSyncUI({ t }: P2PSyncUIProps) {
           t={t}
           onReset={sync.reset}
           onRetry={sync.startHost}
+          syncProgress={sync.syncProgress}
         />
       )}
       {sync.role === "guest" && (
@@ -46,6 +47,7 @@ export function P2PSyncUI({ t }: P2PSyncUIProps) {
           onConnect={sync.handleManualUrlSubmit}
           onReset={sync.reset}
           onRetry={sync.startGuestScan}
+          syncProgress={sync.syncProgress}
         />
       )}
     </div>
