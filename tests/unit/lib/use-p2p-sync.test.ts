@@ -21,6 +21,17 @@ vi.mock("../../../src/lib/p2p-connection", () => {
   }
 })
 
+vi.mock("../../../src/lib/p2p-sync-manager", () => ({
+  decryptSyncData: vi.fn().mockResolvedValue({ cards: [], categories: [] }),
+  mergeIncomingSyncData: vi
+    .fn()
+    .mockResolvedValue({ success: true, cardsCount: 5, categoriesCount: 2 }),
+  prepareOutgoingSyncData: vi
+    .fn()
+    .mockResolvedValue({ cards: [], categories: [] }),
+  encryptSyncData: vi.fn().mockResolvedValue("mock-encrypted-payload")
+}))
+
 describe("useP2PSync hook", () => {
   const mockT = {
     hostInit: "Initializing...",
@@ -80,6 +91,25 @@ describe("useP2PSync hook", () => {
     expect(result.current.errorMessage).toBe("P2P Connection failed")
   })
 
+  it("should handle host onMessageReceived and merge successfully", async () => {
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    await act(async () => {
+      await result.current.startHost()
+    })
+
+    const params = (global as any).__lastP2PConnectionParams
+    expect(params).toBeDefined()
+
+    await act(async () => {
+      await params.onMessageReceived("mock-encrypted-data")
+    })
+
+    expect(result.current.status).toBe("success")
+    expect(result.current.processedCount.cards).toBe(5)
+    expect(result.current.processedCount.categories).toBe(2)
+  })
+
   it("should support startGuestScan flow and manual URL submission", async () => {
     // Mock navigator.mediaDevices.getUserMedia
     const mockGetUserMedia = vi.fn().mockResolvedValue({
@@ -116,6 +146,28 @@ describe("useP2PSync hook", () => {
 
     expect(mockPreventDefault).toHaveBeenCalled()
     expect(result.current.status).toBe("connecting")
+  })
+
+  it("should handle guest datachannel-open and encrypt/send local data successfully", async () => {
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    act(() => {
+      result.current.setScanInputUrl(
+        "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver"
+      )
+    })
+    act(() => {
+      result.current.handleManualUrlSubmit({ preventDefault: vi.fn() } as any)
+    })
+
+    const params = (global as any).__lastP2PConnectionParams
+    expect(params).toBeDefined()
+
+    await act(async () => {
+      await params.onStatusChange("datachannel-open")
+    })
+
+    expect(result.current.status).toBe("success")
   })
 
   it("should handle error in guest connection flow", async () => {
