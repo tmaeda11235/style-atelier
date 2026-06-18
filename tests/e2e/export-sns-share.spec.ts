@@ -98,30 +98,6 @@ test.describe("Style Atelier Sandbox E2E Tests - Export SNS Share Affordance @J-
   test("should trigger native navigator.share when sharing on supported platforms", async ({
     page
   }) => {
-    await page.addInitScript(() => {
-      const sharedDataList: any[] = []
-      ;(window as any)._sharedDataList = sharedDataList
-      if (window.navigator) {
-        Object.defineProperty(window.navigator, "canShare", {
-          writable: true,
-          value: () => true
-        })
-        Object.defineProperty(window.navigator, "share", {
-          writable: true,
-          value: async (data: any) => {
-            sharedDataList.push({
-              title: data.title,
-              text: data.text,
-              url: data.url,
-              hasFiles: !!(data.files && data.files.length > 0),
-              fileName: data.files && data.files[0] ? data.files[0].name : null
-            })
-            return Promise.resolve()
-          }
-        })
-      }
-    })
-
     console.log("Navigating to sandbox page for Web Share API test...")
     await page.goto("/tests/sandbox/index.html")
 
@@ -133,7 +109,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Export SNS Share Affordance @J-
       await skipButton.click()
     }
 
-    // 2. Seed style cards in DB
+    // 2. Seed style cards in DB & Mock navigator.share
     await spFrame.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
@@ -150,6 +126,30 @@ test.describe("Style Atelier Sandbox E2E Tests - Export SNS Share Affordance @J-
             "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23f59e0b'/></svg>"
         }
       ])
+
+      const sharedDataList: any[] = []
+      ;(window as any)._sharedDataList = sharedDataList
+      if (window.navigator) {
+        Object.defineProperty(window.navigator, "canShare", {
+          writable: true,
+          configurable: true,
+          value: () => true
+        })
+        Object.defineProperty(window.navigator, "share", {
+          writable: true,
+          configurable: true,
+          value: async (data: any) => {
+            sharedDataList.push({
+              title: data.title,
+              text: data.text,
+              url: data.url,
+              hasFiles: !!(data.files && data.files.length > 0),
+              fileName: data.files && data.files[0] ? data.files[0].name : null
+            })
+            return Promise.resolve()
+          }
+        })
+      }
     })
 
     // 3. Switch to Library tab to see the card
