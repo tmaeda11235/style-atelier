@@ -225,4 +225,154 @@ describe("OPFSCacheManager", () => {
     const isCached = await OPFSCacheManager.isCached(TEST_FILENAME, TEST_SIZE)
     expect(isCached).toBe(false)
   })
+
+  it("should retrieve a cached file successfully", async () => {
+    // Arrange
+    const dir = await MockStorage.rootDir.getDirectoryHandle("litert_models", {
+      create: true
+    })
+    const fileHandle = await dir.getFileHandle(TEST_FILENAME, { create: true })
+    const writable = await fileHandle.createWritable()
+    await writable.write(new TextEncoder().encode(TEST_CONTENT))
+    await writable.close()
+
+    // Act
+    const file = await OPFSCacheManager.getFile(TEST_FILENAME)
+
+    // Assert
+    expect(file).toBeDefined()
+    expect(file.size).toBe(TEST_SIZE)
+    const text = await file.text()
+    expect(text).toBe(TEST_CONTENT)
+  })
+
+  it("should delete a cached file successfully", async () => {
+    // Arrange
+    const dir = await MockStorage.rootDir.getDirectoryHandle("litert_models", {
+      create: true
+    })
+    const fileHandle = await dir.getFileHandle(TEST_FILENAME, { create: true })
+    const writable = await fileHandle.createWritable()
+    await writable.write(new TextEncoder().encode(TEST_CONTENT))
+    await writable.close()
+
+    const existsBefore = await OPFSCacheManager.isCached(
+      TEST_FILENAME,
+      TEST_SIZE
+    )
+    expect(existsBefore).toBe(true)
+
+    // Act
+    await OPFSCacheManager.deleteCache(TEST_FILENAME)
+
+    // Assert
+    const existsAfter = await OPFSCacheManager.isCached(
+      TEST_FILENAME,
+      TEST_SIZE
+    )
+    expect(existsAfter).toBe(false)
+  })
+
+  it("should handle error gracefully when deleting a non-existent cache file", async () => {
+    // Act & Assert
+    await expect(
+      OPFSCacheManager.deleteCache("non-existent.litertlm")
+    ).resolves.not.toThrow()
+  })
+
+  it("should return false if verifyIntegrity encounters an error", async () => {
+    // Arrange
+    vi.spyOn(OPFSCacheManager as any, "getDirectoryHandle").mockRejectedValue(
+      new Error("OPFS error")
+    )
+
+    // Act
+    const isValid = await OPFSCacheManager.verifyIntegrity(
+      TEST_FILENAME,
+      TEST_SIZE
+    )
+
+    // Assert
+    expect(isValid).toBe(false)
+  })
+
+  it("should throw an error if downloadAndCache receives a non-ok HTTP response", async () => {
+    // Arrange
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      statusText: "Not Found"
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    // Act & Assert
+    await expect(
+      OPFSCacheManager.downloadAndCache(TEST_URL, TEST_FILENAME, {
+        expectedSize: TEST_SIZE
+      })
+    ).rejects.toThrow("Failed to fetch model")
+  })
+
+  it("should ignore directory entries during cleanup and handle removeEntry error gracefully", async () => {
+    // Arrange
+    MockStorage.setQuota(20)
+    MockStorage.setUsage(15)
+
+    const dir = await MockStorage.rootDir.getDirectoryHandle("litert_models", {
+      create: true
+    })
+
+    await dir.getDirectoryHandle("sub-directory", { create: true })
+
+    const stickyFile = await dir.getFileHandle("sticky-file.litertlm", {
+      create: true
+    })
+    const stickyWritable = await stickyFile.createWritable()
+    await stickyWritable.write(new TextEncoder().encode("data"))
+    await stickyWritable.close()
+
+    vi.spyOn(dir, "removeEntry").mockRejectedValue(new Error("Cannot delete"))
+
+    let callCount = 0
+    vi.spyOn(navigator.storage, "estimate").mockImplementation(async () => {
+      if (callCount === 0) {
+        callCount++
+        return { usage: 15, quota: 20 }
+      }
+      return { usage: 8, quota: 20 }
+    })
+
+    // Act & Assert
+    await expect(
+      OPFSCacheManager.ensureSpace(10, TEST_FILENAME)
+    ).resolves.not.toThrow()
+  })
+
+  it("should propagate non-quota errors during stream creation", async () => {
+    // Arrange
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => TEST_SIZE.toString() },
+      body: {
+        getReader: () => ({
+          read: async () => ({ done: true, value: undefined })
+        })
+      }
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const dir = await MockStorage.rootDir.getDirectoryHandle("litert_models", {
+      create: true
+    })
+    const fileHandle = await dir.getFileHandle(TEST_FILENAME, { create: true })
+    vi.spyOn(fileHandle, "createWritable").mockRejectedValue(
+      new Error("Generic write error")
+    )
+
+    // Act & Assert
+    await expect(
+      OPFSCacheManager.downloadAndCache(TEST_URL, TEST_FILENAME, {
+        expectedSize: TEST_SIZE
+      })
+    ).rejects.toThrow("Generic write error")
+  })
 })
