@@ -24,14 +24,16 @@ async function handleReceiveDb(
 ): Promise<void> {
   updateState({
     status: "relay-syncing",
-    statusMessage: t?.receiving || "Receiving and decrypting DB data..."
+    statusMessage: t?.receiving || "Receiving and decrypting DB data...",
+    syncProgress: { phase: 1 }
   })
 
   const mergeResult = await mergeIncomingSyncData(decrypted)
   if (mergeResult.success) {
     updateState({
       status: "relay-syncing",
-      statusMessage: "DB synced. Requesting image list..."
+      statusMessage: "DB synced. Requesting image list...",
+      syncProgress: { phase: 2 }
     })
 
     const reqMsg = JSON.stringify({ type: "RELAY_REQ_IMAGE_LIST" })
@@ -59,7 +61,8 @@ async function handleWaitImageList(
 ): Promise<boolean> {
   updateState({
     status: "relay-syncing",
-    statusMessage: "Comparing image differences..."
+    statusMessage: "Comparing image differences...",
+    syncProgress: { phase: 2 }
   })
 
   await scanLocalImages()
@@ -90,7 +93,8 @@ async function handleWaitImageList(
     updateState({
       status: "success",
       statusMessage: t?.syncSuccess || "Sync completed successfully!",
-      processedCount: { cards: 0, categories: 0 }
+      processedCount: { cards: 0, categories: 0 },
+      syncProgress: undefined
     })
     return true
   } else {
@@ -106,9 +110,15 @@ async function handleRelayImageFile(
   ctx: HostRelayContext,
   msg: any
 ): Promise<void> {
+  const index = ctx.missingFiles.length - msg.remainingCount - 1
   updateState({
     status: "relay-syncing",
-    statusMessage: `Receiving image (${ctx.missingFiles.length - msg.remainingCount}/${ctx.missingFiles.length}): ${msg.filePath}`
+    statusMessage: `Receiving image (${index + 1}/${ctx.missingFiles.length}): ${msg.filePath}`,
+    syncProgress: {
+      phase: 3,
+      currentImageIndex: index,
+      totalImages: ctx.missingFiles.length
+    }
   })
 
   const arrayBuf = base64ToUint8Array(msg.data).buffer
@@ -126,6 +136,7 @@ async function handleRelayImageFile(
   })
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 async function handleHostRelayStep(
   getUrl: string,
   key: string,
@@ -172,7 +183,8 @@ async function handleHostRelayStep(
     onSuccess()
     updateState({
       status: "success",
-      statusMessage: t?.syncSuccess || "Sync completed successfully!"
+      statusMessage: t?.syncSuccess || "Sync completed successfully!",
+      syncProgress: undefined
     })
     return true
   }

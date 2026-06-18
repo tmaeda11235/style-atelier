@@ -27,7 +27,12 @@ async function sendNextRelayImage(
   const filePath = missingFiles[index]
   updateState({
     status: "relay-syncing",
-    statusMessage: `${t?.sendingImages || "Sending images"} (${index + 1}/${missingFiles.length}): ${filePath}`
+    statusMessage: `${t?.sendingImages || "Sending images"} (${index + 1}/${missingFiles.length}): ${filePath}`,
+    syncProgress: {
+      phase: 3,
+      currentImageIndex: index,
+      totalImages: missingFiles.length
+    }
   })
 
   const blob = await readOpfsFileAsBlob(filePath)
@@ -60,7 +65,8 @@ async function handleWaitReqList(
 ): Promise<void> {
   updateState({
     status: "relay-syncing",
-    statusMessage: t?.scanningImages || "Scanning local images..."
+    statusMessage: t?.scanningImages || "Scanning local images...",
+    syncProgress: { phase: 2 }
   })
   await scanLocalImages()
   const localImages = await getLocalImagesMetadata()
@@ -79,7 +85,8 @@ async function handleWaitReqList(
   ctx.currentStep = "WAIT_FOR_REQ_IMAGES"
   updateState({
     status: "relay-syncing",
-    statusMessage: t?.waitingForDiffs || "Waiting for difference selection..."
+    statusMessage: t?.waitingForDiffs || "Waiting for difference selection...",
+    syncProgress: { phase: 2 }
   })
 }
 
@@ -103,7 +110,8 @@ async function handleWaitReqImages(
 
     updateState({
       status: "success",
-      statusMessage: t?.syncSuccess || "Data synced successfully!"
+      statusMessage: t?.syncSuccess || "Data synced successfully!",
+      syncProgress: undefined
     })
     return true
   } else {
@@ -142,7 +150,8 @@ async function handleSendingImages(
 
       updateState({
         status: "success",
-        statusMessage: t?.syncSuccess || "Data synced successfully!"
+        statusMessage: t?.syncSuccess || "Data synced successfully!",
+        syncProgress: undefined
       })
       return true
     } else {
@@ -194,7 +203,8 @@ async function sendGuestDbViaRelay(
 ): Promise<void> {
   updateState({
     status: "relay-syncing",
-    statusMessage: t?.relaySending || "Sending local DB data via relay..."
+    statusMessage: t?.relaySending || "Sending local DB data via relay...",
+    syncProgress: { phase: 1 }
   })
   const syncData = await prepareOutgoingSyncData()
   const encryptedDb = await encryptSyncData(syncData, key)
@@ -211,7 +221,8 @@ async function sendGuestDbViaRelay(
 
   updateState({
     status: "relay-syncing",
-    statusMessage: t?.waitingForHost || "Waiting for host response..."
+    statusMessage: t?.waitingForHost || "Waiting for host response...",
+    syncProgress: { phase: 1 }
   })
 }
 

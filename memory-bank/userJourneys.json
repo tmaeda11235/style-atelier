@@ -778,7 +778,15 @@
         "src/lib/use-p2p-sync.ts",
         "src/lib/p2p-connection-helpers.ts",
         "src/lib/p2p-sync-manager.ts",
-        "src/lib/p2p-connection.ts"
+        "src/lib/p2p-connection.ts",
+        "src/components/P2PSyncUI.tsx",
+        "src/components/P2PSyncHostView.tsx",
+        "src/components/P2PSyncGuestView.tsx",
+        "src/components/P2PSyncCommonViews.tsx",
+        "src/lib/p2p-host-connection-helper.ts",
+        "src/lib/p2p-guest-connection-helper.ts",
+        "src/lib/p2p-host-relay-helper.ts",
+        "src/lib/p2p-guest-relay-helper.ts"
       ]
     },
     {

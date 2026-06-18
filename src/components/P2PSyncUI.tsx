@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useP2PSync } from "../lib/use-p2p-sync"
+import { useP2PSyncContext } from "../contexts/P2PSyncContext"
 import { P2PSyncIdleView } from "./P2PSyncCommonViews"
 import { P2PSyncGuestView } from "./P2PSyncGuestView"
 import { P2PSyncHostView } from "./P2PSyncHostView"
@@ -10,7 +10,7 @@ interface P2PSyncUIProps {
 }
 
 export function P2PSyncUI({ t }: P2PSyncUIProps) {
-  const sync = useP2PSync(t)
+  const sync = useP2PSyncContext()
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {sync.role === "idle" && (
@@ -30,6 +30,7 @@ export function P2PSyncUI({ t }: P2PSyncUIProps) {
           t={t}
           onReset={sync.reset}
           onRetry={sync.startHost}
+          syncProgress={sync.syncProgress}
         />
       )}
       {sync.role === "guest" && (
@@ -46,6 +47,7 @@ export function P2PSyncUI({ t }: P2PSyncUIProps) {
           onConnect={sync.handleManualUrlSubmit}
           onReset={sync.reset}
           onRetry={sync.startGuestScan}
+          syncProgress={sync.syncProgress}
         />
       )}
     </div>

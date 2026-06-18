@@ -32,7 +32,8 @@ async function handleReceivedDataAndMerge(
 ) {
   updateState({
     status: "syncing",
-    statusMessage: t?.receiving || "Receiving and decrypting data..."
+    statusMessage: t?.receiving || "Receiving and decrypting data...",
+    syncProgress: { phase: 1 }
   })
   try {
     const decrypted = await decryptSyncData(encryptedPayload, key)
@@ -44,7 +45,8 @@ async function handleReceivedDataAndMerge(
         processedCount: {
           cards: mergeResult.cardsCount,
           categories: mergeResult.categoriesCount
-        }
+        },
+        syncProgress: { phase: 2 }
       })
     } else {
       throw new Error("Merge failed")
@@ -111,7 +113,8 @@ class HostConnectionInitiator {
       clearTimeout(this.timeoutId)
       this.updateState({
         status: "connected",
-        statusMessage: this.t?.connected || "Device connected. Ready to sync."
+        statusMessage: this.t?.connected || "Device connected. Ready to sync.",
+        syncProgress: { phase: 1 }
       })
     } else if (s.startsWith("connection-state-failed")) {
       if (!this.isWebRTCOpen) {
@@ -120,6 +123,7 @@ class HostConnectionInitiator {
     }
   }
 
+  /* eslint-disable-next-line max-lines-per-function */
   private async handleStringMessage(payload: string) {
     try {
       const msg = JSON.parse(payload)
@@ -137,7 +141,12 @@ class HostConnectionInitiator {
         }
         this.updateState({
           status: "syncing",
-          statusMessage: `Receiving image: ${msg.filePath}`
+          statusMessage: `Receiving image: ${msg.filePath}`,
+          syncProgress: {
+            phase: 3,
+            currentImageIndex: msg.index,
+            totalImages: msg.total
+          }
         })
         return
       }
@@ -156,7 +165,8 @@ class HostConnectionInitiator {
       if (msg.type === "SYNC_COMPLETE") {
         this.updateState({
           status: "success",
-          statusMessage: this.t?.syncSuccess || "Sync completed successfully!"
+          statusMessage: this.t?.syncSuccess || "Sync completed successfully!",
+          syncProgress: undefined
         })
         return
       }
@@ -192,6 +202,11 @@ class HostConnectionInitiator {
     files: Array<{ filePath: string; hash: string }>
   ) {
     try {
+      this.updateState({
+        status: "syncing",
+        statusMessage: "Comparing image differences...",
+        syncProgress: { phase: 2 }
+      })
       await scanLocalImages()
       const localMetadata = await getLocalImagesMetadata()
       const localMap = new Map(localMetadata.map((m) => [m.filePath, m.hash]))
@@ -253,7 +268,8 @@ class HostConnectionInitiator {
       status: "relay-connecting",
       statusMessage:
         this.t?.relayConnecting ||
-        "WebRTC connection timeout. Waiting for relay data..."
+        "WebRTC connection timeout. Waiting for relay data...",
+      syncProgress: { phase: 1 }
     })
 
     try {

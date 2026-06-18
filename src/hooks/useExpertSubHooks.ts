@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
+import { useP2PSyncContext } from "../contexts/P2PSyncContext"
 import type { StyleCard } from "../lib/db-schema"
 import {
   deleteCard,
@@ -170,6 +171,7 @@ function useExpertCoreHooks(
   return { tutorial, dragMint }
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 export function useExpertSubHooks(
   confirm: any,
   setActiveTab: any,
@@ -191,14 +193,43 @@ export function useExpertSubHooks(
   const { cardOps, setActiveDetailCard, handleInjectPrompt } =
     useExpertCardOpsHelper(addLog, setAlertType, setActiveTab)
 
+  const sync = useP2PSyncContext()
+  const isActive =
+    sync.role !== "idle" &&
+    (sync.status === "connecting" ||
+      sync.status === "connected" ||
+      sync.status === "syncing" ||
+      sync.status === "relay-connecting" ||
+      sync.status === "relay-syncing")
+
   const handleTabChange = useCallback(
-    (tab: string) => {
+    async (tab: string) => {
+      if (isActive) {
+        const ok = await confirm({
+          title: "P2P Synchronization in Progress",
+          message:
+            "A P2P synchronization is currently in progress. Navigating away will cancel the sync. Are you sure you want to proceed?",
+          confirmText: "Proceed",
+          cancelText: "Cancel",
+          variant: "danger"
+        })
+        if (!ok) return
+        sync.reset()
+      }
+
       setActiveTab(tab)
       dragMint.minting.setMintingItem(null)
       dragMint.minting.setVariationBase(null)
       setActiveDetailCard(null)
     },
-    [setActiveTab, dragMint.minting, setActiveDetailCard]
+    [
+      isActive,
+      sync,
+      confirm,
+      setActiveTab,
+      dragMint.minting,
+      setActiveDetailCard
+    ]
   )
 
   const handleRetryConnection = useCallback(() => {

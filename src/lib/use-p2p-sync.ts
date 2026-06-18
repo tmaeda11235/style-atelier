@@ -34,7 +34,8 @@ function handleError(
   updateState({
     status: "error",
     errorMessage:
-      err.message || "An unknown error occurred during synchronization."
+      err.message || "An unknown error occurred during synchronization.",
+    syncProgress: undefined
   })
   if (connectionRef.current) {
     connectionRef.current.close()
@@ -222,7 +223,8 @@ function triggerReset(
     status: "setup",
     errorMessage: "",
     qrCodeDataUrl: null,
-    scanInputUrl: ""
+    scanInputUrl: "",
+    syncProgress: undefined
   })
 }
 

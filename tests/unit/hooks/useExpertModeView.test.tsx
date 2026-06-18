@@ -20,6 +20,14 @@ vi.mock("@/contexts/ConfirmContext", () => ({
     Promise.resolve(window.confirm(options.message))
 }))
 
+vi.mock("@/contexts/P2PSyncContext", () => ({
+  useP2PSyncContext: () => ({
+    role: "idle",
+    status: "idle",
+    reset: vi.fn()
+  })
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     styleCards: {
