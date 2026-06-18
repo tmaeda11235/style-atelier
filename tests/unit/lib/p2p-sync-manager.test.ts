@@ -1,12 +1,61 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "../../../src/lib/db"
 import {
   decryptSyncData,
   encryptSyncData,
+  getLocalImagesMetadata,
   mergeIncomingSyncData,
-  prepareOutgoingSyncData
+  prepareOutgoingSyncData,
+  readOpfsFileAsBlob,
+  saveIncomingImage,
+  scanLocalImages
 } from "../../../src/lib/p2p-sync-manager"
+
+// Mock migration-helpers
+vi.mock("../../../src/lib/db/migration-helpers", () => ({
+  computeHash: vi.fn().mockResolvedValue("mock-hash"),
+  listOpfsFiles: vi.fn().mockResolvedValue([
+    {
+      filePath: "images/cards/test-card-1.png",
+      name: "test-card-1.png",
+      handle: {
+        getFile: vi
+          .fn()
+          .mockResolvedValue(new Blob([new Uint8Array([1, 2, 3])]))
+      }
+    }
+  ])
+}))
+
+// Mock navigator.storage
+const mockFileHandle = {
+  createWritable: vi.fn().mockResolvedValue({
+    write: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined)
+  }),
+  getFile: vi.fn().mockResolvedValue(new Blob([new Uint8Array([1, 2, 3])])),
+  move: vi.fn().mockResolvedValue(undefined)
+}
+
+const mockDirectoryHandle = {
+  getDirectoryHandle: vi
+    .fn()
+    .mockImplementation(async () => mockDirectoryHandle),
+  getFileHandle: vi.fn().mockResolvedValue(mockFileHandle),
+  removeEntry: vi.fn().mockResolvedValue(undefined)
+}
+
+const mockGetDirectory = vi.fn().mockResolvedValue(mockDirectoryHandle)
+
+if (typeof global.navigator === "undefined") {
+  ;(global as any).navigator = {}
+}
+Object.defineProperty(global.navigator, "storage", {
+  value: { getDirectory: mockGetDirectory },
+  writable: true,
+  configurable: true
+})
 
 describe("p2p-sync-manager", () => {
   beforeEach(async () => {
@@ -85,6 +134,41 @@ describe("p2p-sync-manager", () => {
       const categories = await db.getAllCategories()
       expect(categories.length).toBe(1)
       expect(categories[0].name).toBe("Characters")
+    })
+  })
+
+  describe("OPFS Image operations", () => {
+    beforeEach(async () => {
+      await db.imageSyncStates.clear()
+    })
+
+    it("should read OPFS file as blob", async () => {
+      const blob = await readOpfsFileAsBlob("images/cards/test-card-1.png")
+      expect(blob).toBeInstanceOf(Blob)
+      const buffer = await blob.arrayBuffer()
+      expect(buffer.byteLength).toBe(3)
+    })
+
+    it("should save incoming image", async () => {
+      const buffer = new Uint8Array([1, 2, 3]).buffer
+      await saveIncomingImage(
+        "images/cards/test-card-1.png",
+        buffer,
+        "mock-hash"
+      )
+
+      const meta = await getLocalImagesMetadata()
+      expect(meta.length).toBe(1)
+      expect(meta[0].filePath).toBe("images/cards/test-card-1.png")
+      expect(meta[0].hash).toBe("mock-hash")
+    })
+
+    it("should scan local images and sync state", async () => {
+      await scanLocalImages()
+      const meta = await getLocalImagesMetadata()
+      expect(meta.length).toBe(1)
+      expect(meta[0].filePath).toBe("images/cards/test-card-1.png")
+      expect(meta[0].hash).toBe("mock-hash")
     })
   })
 })
