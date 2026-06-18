@@ -88,6 +88,38 @@ const extractThresholds = (content) => {
   return thresholds;
 };
 
+const extractReportsDirectory = (content) => {
+  const coverageIdx = content.indexOf('coverage:');
+  if (coverageIdx === -1) return null;
+  const afterCoverage = content.slice(coverageIdx);
+  
+  const regex = /reportsDirectory:\s*([^\n,]+)/;
+  const match = afterCoverage.match(regex);
+  if (match) {
+    return match[1].trim();
+  }
+  return null;
+};
+
+const isValidReportsDirectory = (value) => {
+  if (!value) return true; // Undefined defaults to ./coverage in vitest
+  
+  const normalized = value.replace(/'/g, '"');
+  
+  // Case 1: Hardcoded to "./coverage" or "coverage"
+  if (normalized === '"./coverage"' || normalized === '"coverage"') {
+    return true;
+  }
+  
+  // Case 2: Conditional expression that resolves to "./coverage" or "coverage" when process.env.CI is true
+  const ciCondRegex = /process\.env\.CI\s*\?\s*"(\.?\/coverage)"\s*:\s*.+/;
+  if (ciCondRegex.test(normalized)) {
+    return true;
+  }
+  
+  return false;
+};
+
 if (!fs.existsSync(currentPath)) {
   console.error(`Current config file not found: ${currentPath}`);
   process.exit(1);
@@ -101,6 +133,16 @@ const currentThresholds = extractThresholds(currentContent);
 const targetThresholds = extractThresholds(targetContent);
 
 let hasError = false;
+
+// 0. Check reportsDirectory mismatch
+const currentReportsDir = extractReportsDirectory(currentContent);
+if (!isValidReportsDirectory(currentReportsDir)) {
+  console.error(`\x1b[31mError: reportsDirectory is set to an invalid path: "${currentReportsDir}"\x1b[0m`);
+  console.error(`  reportsDirectory must either be undefined (defaulting to ./coverage), hardcoded to "./coverage",`);
+  console.error(`  or use a condition that falls back to "./coverage" when process.env.CI is true`);
+  console.error(`  (e.g., process.env.CI ? "./coverage" : "./coverage-qa").`);
+  hasError = true;
+}
 
 // 1. Check newly added excludes
 const targetSet = new Set(targetExcludes);
@@ -133,35 +175,6 @@ for (const key of keys) {
   }
 }
 
-// 3. Check reportsDirectory mismatch (Issue #1327)
-const extractReportsDirectory = (content) => {
-  const match = content.match(/reportsDirectory:\s*([^\n,]+)/);
-  return match ? match[1].trim() : null;
-};
-
-const currentReportsDir = extractReportsDirectory(currentContent);
-if (currentReportsDir) {
-  const isCIValid = (
-    (currentReportsDir.includes('process.env.CI') && (
-      currentReportsDir.includes('"./coverage"') || 
-      currentReportsDir.includes("'./coverage'") || 
-      currentReportsDir.includes('"coverage"') || 
-      currentReportsDir.includes("'coverage'")
-    )) ||
-    currentReportsDir === '"./coverage"' ||
-    currentReportsDir === "'./coverage'" ||
-    currentReportsDir === '"coverage"' ||
-    currentReportsDir === "'coverage'"
-  );
-
-  if (!isCIValid) {
-    console.error(`\x1b[31mError: reportsDirectory in vitest.config.ts is set to: ${currentReportsDir}\x1b[0m`);
-    console.error(`\x1b[31mIn CI environments, the reportsDirectory MUST resolve to "./coverage" (or "coverage") to match .github/workflows/ci.yml.\x1b[0m`);
-    console.error(`\x1b[31mPlease use: reportsDirectory: process.env.CI ? "./coverage" : "./coverage-qa" (or omit it entirely).\x1b[0m`);
-    hasError = true;
-  }
-}
-
 if (hasError) {
   console.error('\n\x1b[31mVerification failed! You are not allowed to add new coverage exceptions, lower thresholds, or break reportsDirectory consistency.\x1b[0m');
   process.exit(1);
@@ -169,3 +182,4 @@ if (hasError) {
   console.log('\x1b[32mVerification passed! Coverage exclusions, thresholds, and reportsDirectory are all valid.\x1b[0m');
   process.exit(0);
 }
+
