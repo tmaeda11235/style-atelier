@@ -10,6 +10,14 @@ export default defineConfig({
     tsconfigPaths: true,
     alias: [
       {
+        find: /^react$/,
+        replacement: path.resolve(__dirname, "./node_modules/react")
+      },
+      {
+        find: /^react-dom$/,
+        replacement: path.resolve(__dirname, "./node_modules/react-dom")
+      },
+      {
         find: /^url:~src\/offscreen\.html$/,
         replacement: path.resolve(__dirname, "./tests/mocks/mockHtml.ts")
       },
@@ -42,8 +50,10 @@ export default defineConfig({
     ],
     coverage: {
       provider: "istanbul",
-      clean: true,
-      reporter: ["text"],
+      reportsDirectory: "./coverage-qa",
+      clean: false,
+      cleanOnRerun: false,
+      reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
         "dist/**",
