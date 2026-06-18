@@ -13,7 +13,7 @@ permissions:
 jobs:
   enforce-ready-for-dev:
     runs-on: ubuntu-latest
-    if: github.event.label.name == 'status: ready-for-dev'
+    if: "github.event.label.name == 'status: ready-for-dev'"
     steps:
       - name: Verify Actor Permission
         # Replace 'tmaeda11235' with an array check if multiple admins exist, 
