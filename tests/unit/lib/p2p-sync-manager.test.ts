@@ -173,5 +173,81 @@ describe("p2p-sync-manager", () => {
       expect(meta[0].filePath).toBe("images/cards/test-card-1.png")
       expect(meta[0].hash).toBe("mock-hash")
     })
+
+    it("should return early in scanLocalImages if images directory does not exist", async () => {
+      const originalGetDirectoryHandle = mockDirectoryHandle.getDirectoryHandle
+      mockDirectoryHandle.getDirectoryHandle = vi
+        .fn()
+        .mockRejectedValue(new Error("Not found"))
+
+      try {
+        await scanLocalImages()
+        expect(true).toBe(true)
+      } finally {
+        mockDirectoryHandle.getDirectoryHandle = originalGetDirectoryHandle
+      }
+    })
+
+    it("should handle changed hashes and deleted files during scanLocalImages", async () => {
+      await db.imageSyncStates.put({
+        filePath: "images/cards/test-card-1.png",
+        cardId: "test-card-1",
+        hash: "old-hash",
+        syncStatus: "synced",
+        updatedAt: Date.now()
+      })
+
+      await db.imageSyncStates.put({
+        filePath: "images/cards/deleted-card.png",
+        cardId: "deleted-card",
+        hash: "some-hash",
+        syncStatus: "synced",
+        updatedAt: Date.now()
+      })
+
+      await db.imageSyncStates.put({
+        filePath: "images/cards/pending-deleted-card.png",
+        cardId: "pending-deleted-card",
+        hash: "some-hash",
+        syncStatus: "pending",
+        updatedAt: Date.now()
+      })
+
+      await scanLocalImages()
+
+      const state1 = await db.imageSyncStates.get(
+        "images/cards/test-card-1.png"
+      )
+      expect(state1?.syncStatus).toBe("pending")
+
+      const state2 = await db.imageSyncStates.get(
+        "images/cards/deleted-card.png"
+      )
+      expect(state2?.syncStatus).toBe("deleted")
+
+      const state3 = await db.imageSyncStates.get(
+        "images/cards/pending-deleted-card.png"
+      )
+      expect(state3).toBeUndefined()
+    })
+
+    it("should fallback to direct write if atomic move fails during save", async () => {
+      const originalMove = mockFileHandle.move
+      mockFileHandle.move = vi.fn().mockRejectedValue(new Error("Move failed"))
+
+      const buffer = new Uint8Array([9, 9, 9]).buffer
+      await saveIncomingImage(
+        "images/cards/fallback-card.png",
+        buffer,
+        "fallback-hash"
+      )
+
+      const meta = await getLocalImagesMetadata()
+      expect(
+        meta.some((m) => m.filePath === "images/cards/fallback-card.png")
+      ).toBe(true)
+
+      mockFileHandle.move = originalMove
+    })
   })
 })

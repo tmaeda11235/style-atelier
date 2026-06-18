@@ -60,7 +60,7 @@ class MockTable<T extends { id: string } | any, Key = string> {
 
   constructor(initialItems: T[] = []) {
     initialItems.forEach((item) => {
-      const key = item.id || item.userId || item.timestamp
+      const key = item.id || item.userId || item.timestamp || item.filePath
       this.items.set(key, item)
     })
   }
@@ -68,7 +68,7 @@ class MockTable<T extends { id: string } | any, Key = string> {
   __setItems(newItems: T[]) {
     this.items.clear()
     newItems.forEach((item) => {
-      const key = item.id || item.userId || item.timestamp
+      const key = item.id || item.userId || item.timestamp || item.filePath
       this.items.set(key, item)
     })
   }
@@ -87,9 +87,13 @@ class MockTable<T extends { id: string } | any, Key = string> {
 
   add = vi.fn().mockImplementation(async (item: T) => {
     const key =
-      item.id || item.userId || item.timestamp || Math.random().toString()
+      item.id ||
+      item.userId ||
+      item.timestamp ||
+      item.filePath ||
+      Math.random().toString()
     const newItem = { ...item }
-    if (!newItem.id && typeof newItem === "object") {
+    if (!newItem.id && !newItem.filePath && typeof newItem === "object") {
       ;(newItem as any).id = key
     }
     this.items.set(key, newItem)
@@ -98,9 +102,13 @@ class MockTable<T extends { id: string } | any, Key = string> {
 
   put = vi.fn().mockImplementation(async (item: T) => {
     const key =
-      item.id || item.userId || item.timestamp || Math.random().toString()
+      item.id ||
+      item.userId ||
+      item.timestamp ||
+      item.filePath ||
+      Math.random().toString()
     const newItem = { ...item }
-    if (!newItem.id && typeof newItem === "object") {
+    if (!newItem.id && !newItem.filePath && typeof newItem === "object") {
       ;(newItem as any).id = key
     }
     this.items.set(key, newItem)
@@ -138,14 +146,14 @@ class MockTable<T extends { id: string } | any, Key = string> {
 
   bulkPut = vi.fn().mockImplementation(async (items: T[]) => {
     items.forEach((item) => {
-      const key = item.id || item.userId || item.timestamp
+      const key = item.id || item.userId || item.timestamp || item.filePath
       this.items.set(key, item)
     })
   })
 
   bulkAdd = vi.fn().mockImplementation(async (items: T[]) => {
     items.forEach((item) => {
-      const key = item.id || item.userId || item.timestamp
+      const key = item.id || item.userId || item.timestamp || item.filePath
       this.items.set(key, item)
     })
   })
