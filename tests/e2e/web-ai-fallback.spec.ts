@@ -1,12 +1,12 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Mobile PWA - AI Memory Limit & Fallback Support @J-MOBILE-AI-FALLBACK-01", () => {
+test.describe("Web PWA - AI Memory Limit & Fallback Support @J-WEB-PWA-A2HS-01", () => {
   const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
 
   test.beforeEach(async ({ page }) => {
     // Clear localStorage
-    await page.goto("/src/mobile-app/index.html")
+    await page.goto("/src/web-app/index.html")
     await page.evaluate(() => localStorage.clear())
   })
 
@@ -21,7 +21,7 @@ test.describe("Mobile PWA - AI Memory Limit & Fallback Support @J-MOBILE-AI-FALL
       })
     })
 
-    await page.goto("/src/mobile-app/index.html?mock=true")
+    await page.goto("/src/web-app/index.html?mock=true")
     await page.evaluate(() => {
       localStorage.setItem("mock-webllm", "true")
     })
@@ -79,7 +79,7 @@ test.describe("Mobile PWA - AI Memory Limit & Fallback Support @J-MOBILE-AI-FALL
       localStorage.setItem("mock-webllm", "true")
       localStorage.setItem("mock-webllm-downloaded", "true")
     })
-    await page.goto("/src/mobile-app/index.html?mock=true")
+    await page.goto("/src/web-app/index.html?mock=true")
 
     // Flip the card
     await page.click("#cardContainer")

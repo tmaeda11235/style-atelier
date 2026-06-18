@@ -15,13 +15,33 @@ export default defineConfig({
       name: "serve-fixtures-static",
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (req.url && req.url.startsWith("/mobile/")) {
-            const urlPath = req.url.slice("/mobile/".length).split("?")[0]
+          const pwaFiles = [
+            "/manifest.json",
+            "/icon-192.png",
+            "/icon-512.png",
+            "/sw.js"
+          ]
+          const isRootPath =
+            req.url &&
+            (req.url === "/" ||
+              req.url.startsWith("/?") ||
+              req.url === "/index.html" ||
+              req.url.startsWith("/index.html?"))
+          const isMobilePath = req.url && req.url.startsWith("/mobile/")
+          const isPwaFile =
+            req.url &&
+            (pwaFiles.some((f) => req.url.startsWith(f)) || isRootPath)
+          if (isMobilePath || isPwaFile) {
+            const urlPath = isMobilePath
+              ? req.url.slice("/mobile/".length).split("?")[0]
+              : isRootPath
+                ? "index.html"
+                : req.url.slice(1).split("?")[0]
 
-            // Try serving from dist-mobile (built PWA assets) first if it exists
+            // Try serving from dist-web (built PWA assets) first if it exists
             const distFilePath = path.join(
               __dirname,
-              "../../dist-mobile",
+              "../../dist-web",
               urlPath || "index.html"
             )
             if (
@@ -40,9 +60,19 @@ export default defineConfig({
               return
             }
 
+            if (urlPath === "index.html") {
+              req.url =
+                "/src/web-app/index.html" +
+                (req.url.includes("?")
+                  ? req.url.slice(req.url.indexOf("?"))
+                  : "")
+              next()
+              return
+            }
+
             const filePath = path.join(
               __dirname,
-              "../../src/mobile-app/public",
+              "../../src/web-app/public",
               urlPath
             )
             if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
@@ -78,6 +108,34 @@ export default defineConfig({
             if (urlPath.startsWith("/mobile/assets/")) {
               urlPath = urlPath.slice("/mobile".length)
             }
+
+            // Try serving from dist-web first if it exists
+            const distFilePath = path.join(__dirname, "../../dist-web", urlPath)
+            if (
+              fs.existsSync(distFilePath) &&
+              fs.statSync(distFilePath).isFile()
+            ) {
+              const ext = path.extname(distFilePath)
+              let contentType = "application/octet-stream"
+              if (ext === ".html") contentType = "text/html"
+              else if (ext === ".js") contentType = "application/javascript"
+              else if (ext === ".css") contentType = "text/css"
+              else if (ext === ".json") contentType = "application/json"
+              else if (ext === ".png") contentType = "image/png"
+              else if (ext === ".wasm") contentType = "application/wasm"
+
+              if (
+                contentType === "application/wasm" ||
+                contentType === "application/javascript"
+              ) {
+                res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
+                res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
+              }
+              res.setHeader("Content-Type", contentType)
+              res.end(fs.readFileSync(distFilePath))
+              return
+            }
+
             const filePath = path.join(__dirname, "../..", urlPath)
             if (fs.existsSync(filePath)) {
               if (urlPath.endsWith(".wasm")) {
