@@ -4,7 +4,7 @@
     "description": "The name of the extension"
   },
   "extDescription": {
-    "message": "A local-first Prompt Organizer and AI Art Card Collector for Midjourney. Mint prompts into TCG-style cards. Zero-trust private AI style analysis.",
+    "message": "Ein lokaler Prompt-Manager für Midjourney. Dient als Midjourney Prompt Generator, AI Art Card Collector und Prompt Organizer. Prägen Sie Prompts in Karten im TCG-Stil. Sichere lokale KI-Stilanalyse.",
     "description": "The description of the extension"
   }
 }

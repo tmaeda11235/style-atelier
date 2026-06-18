@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Style Atelier - Midjourney Prompt Generator & Organizer",
+    "description": "The name of the extension"
+  },
+  "extDescription": {
+    "message": "Un gestor local de prompts para Midjourney. Funciona como Midjourney Prompt Generator, AI Art Card Collector y Prompt Organizer. Convierta sus prompts en cartas estilo TCG. Análisis de estilo con IA local segura.",
+    "description": "The description of the extension"
+  }
+}

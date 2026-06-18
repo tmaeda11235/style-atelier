@@ -60,7 +60,7 @@ export async function renderCardToCanvas(
 export async function exportCardAsImage(
   card: StyleCard,
   options?: { includeBrandLogo?: boolean; brandLogoText?: string }
-): Promise<void> {
+): Promise<Blob> {
   const canvas = await renderCardToCanvas(card, options)
   const dataUrl = canvas.toDataURL("image/png")
 
@@ -92,4 +92,6 @@ export async function exportCardAsImage(
 
   // Clean up object URL after a short delay
   setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
+
+  return blob
 }
