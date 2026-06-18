@@ -260,4 +260,75 @@ test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
     await contextHost.close()
     await contextGuest.close()
   })
+
+  test("should show alert when navigating away during active sync, and block tab change if cancelled", async ({
+    page,
+    baseURL
+  }) => {
+    const frame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Navigate to the sandbox page
+    await page.goto("/tests/sandbox/index.html")
+
+    // Welcome dialog bypass if visible
+    const skipBtn = frame.locator("#welcome-skip-btn")
+    if (await skipBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await skipBtn.click()
+    }
+
+    // 2. Open Settings Tab
+    const settingsBtn = frame.locator("#settings-nav-btn")
+    await settingsBtn.click()
+
+    // 3. Open P2P Sync Accordion
+    const p2pAccordion = frame.locator("#settings-accordion-p2p")
+    await expect(p2pAccordion).toBeVisible()
+    await p2pAccordion.click()
+
+    // 4. Start Host Mode (Receive on PC)
+    const receiveBtn = frame.locator(
+      "button:has-text('Receive on PC'), button:has-text('PCで受信')"
+    )
+    await expect(receiveBtn).toBeVisible()
+    await receiveBtn.click()
+
+    // Wait until QR Code img or the window.__lastSyncUrl is populated (active status)
+    await frame
+      .locator("img[alt='Sync QR Code']")
+      .waitFor({ state: "visible", timeout: 10000 })
+
+    // Test beforeunload event trigger inside the iframe context
+    const iframeElement = await page.$("#sidepanel-frame")
+    const sidepanelFrame = await iframeElement?.contentFrame()
+    if (!sidepanelFrame) throw new Error("Could not find sidepanel iframe")
+
+    const beforeUnloadResult = await sidepanelFrame.evaluate(() => {
+      const event = new Event("beforeunload", {
+        bubbles: true,
+        cancelable: true
+      })
+      window.dispatchEvent(event)
+      return event.defaultPrevented
+    })
+    expect(beforeUnloadResult).toBe(true) // should prevent default
+
+    // Try to click Library nav button
+    const libraryBtn = frame.locator("[data-tutorial='library-tab']")
+
+    // Verification of navigation warning UI
+    // Set up dialog handler to dismiss the confirm dialog (which keeps us on the settings tab)
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toContain("P2P")
+      await dialog.dismiss() // cancel tab change
+    })
+
+    // Click Library nav button to trigger dialog
+    await libraryBtn.click()
+
+    // Wait a brief moment to ensure we stayed on Settings tab
+    await page.waitForTimeout(1000)
+
+    // Check if Settings view is still visible (i.e. QR Code image is still there)
+    await expect(frame.locator("img[alt='Sync QR Code']")).toBeVisible()
+  })
 })
