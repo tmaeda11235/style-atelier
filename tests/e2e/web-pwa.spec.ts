@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test"
 
 test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
-  test.beforeEach((_fixtures, testInfo) => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
     if (testInfo.project.name === "extension") {
       test.skip()
     }
