@@ -19,7 +19,7 @@ export async function importBackupData(
   data: BackupData,
   mode: "merge" | "replace" = "replace"
 ): Promise<void> {
-  return db.transaction(
+  await db.transaction(
     "rw",
     [
       db.styleCards,
@@ -36,6 +36,13 @@ export async function importBackupData(
       }
     }
   )
+
+  try {
+    const { cleanupOrphanedImages } = await import("./purge-ops")
+    await cleanupOrphanedImages(db)
+  } catch (err) {
+    console.warn("Failed to run OPFS GC after backup import:", err)
+  }
 }
 
 async function importBackupReplace(

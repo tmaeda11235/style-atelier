@@ -38,6 +38,46 @@ async function resolveDirectory(
 /**
  * Helper to save base64 data to OPFS at a specified path.
  */
+async function verifyHash(
+  fileHandle: FileSystemFileHandle,
+  expectedBlob: Blob
+): Promise<void> {
+  const file = await fileHandle.getFile()
+  const writtenBuffer = await file.arrayBuffer()
+  const writtenHash = await computeHash(writtenBuffer)
+
+  const expectedBuffer = await expectedBlob.arrayBuffer()
+  const expectedHash = await computeHash(expectedBuffer)
+
+  if (writtenHash !== expectedHash) {
+    throw new Error("Hash verification failed for written file")
+  }
+}
+
+async function commitTempFile(
+  targetDir: FileSystemDirectoryHandle,
+  tempFileHandle: FileSystemFileHandle,
+  tempFileName: string,
+  fileName: string
+): Promise<void> {
+  if (typeof (tempFileHandle as any).move === "function") {
+    await (tempFileHandle as any).move(fileName)
+  } else {
+    const file = await tempFileHandle.getFile()
+    const buffer = await file.arrayBuffer()
+    const finalFileHandle = await targetDir.getFileHandle(fileName, {
+      create: true
+    })
+    const finalWritable = await finalFileHandle.createWritable()
+    await finalWritable.write(buffer)
+    await finalWritable.close()
+    await targetDir.removeEntry(tempFileName).catch(() => {})
+  }
+}
+
+/**
+ * Saves a base64 Data URL to OPFS at the specified path.
+ */
 export async function saveBase64ToOpfs(
   filePath: string,
   base64Data: string
@@ -60,13 +100,20 @@ export async function saveBase64ToOpfs(
   }
 
   const targetDir = await resolveDirectory(root, pathParts)
+  const tempFileName = `${fileName}.tmp`
   let writable: FileSystemWritableFileStream | null = null
 
   try {
-    const fileHandle = await targetDir.getFileHandle(fileName, { create: true })
-    writable = await fileHandle.createWritable()
+    const tempFileHandle = await targetDir.getFileHandle(tempFileName, {
+      create: true
+    })
+    writable = await tempFileHandle.createWritable()
     await writable.write(blob)
     await writable.close()
+    writable = null
+
+    await verifyHash(tempFileHandle, blob)
+    await commitTempFile(targetDir, tempFileHandle, tempFileName, fileName)
   } catch (err) {
     if (writable) {
       try {
@@ -76,7 +123,7 @@ export async function saveBase64ToOpfs(
       }
     }
     try {
-      await targetDir.removeEntry(fileName)
+      await targetDir.removeEntry(tempFileName)
     } catch {
       // Ignore secondary error during cleanup
     }
