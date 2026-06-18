@@ -16,6 +16,7 @@
     "serve:cache": "node scripts/serve-cache.mjs",
     "build": "plasmo build",
     "build:web": "node scripts/build-web.mjs",
+    "build:mobile": "npm run build:web",
     "package": "plasmo package",
     "test": "vitest run",
     "test:ui": "vitest --ui",

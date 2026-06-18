@@ -468,11 +468,21 @@ function initLocalAi() {
   client.checkModelDownloaded()
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+export function initPwaViewer(onBackToLp?: () => void) {
   loadCardFromUrl()
   setupEventHandlers()
   initA2HS()
   initLocalAi()
+
+  if (onBackToLp) {
+    const installCta = document.getElementById("installCta")
+    if (installCta) {
+      installCta.addEventListener("click", (e) => {
+        e.preventDefault()
+        onBackToLp()
+      })
+    }
+  }
 
   if (typeof window !== "undefined") {
     ;(window as any).__renderCardForTest = renderCard
@@ -487,4 +497,4 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((reg) => console.log("ServiceWorker registered: ", reg.scope))
       .catch((err) => console.error("ServiceWorker failed: ", err))
   }
-})
+}
