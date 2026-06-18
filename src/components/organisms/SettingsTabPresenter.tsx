@@ -113,9 +113,7 @@ function WebLlmAccordionItem({ isOpen, onToggle, title }: any) {
   )
 }
 
-export function SettingsTabPresenter({
-  t,
-  currentEasyMode,
+function AccordionSections({
   openSections,
   onToggleUi,
   onToggleCloud,
@@ -124,14 +122,12 @@ export function SettingsTabPresenter({
   uiProps,
   cloudProps,
   maintenanceProps,
-  isWarningOpen,
-  handleConfirmSyncStrategy,
-  setIsWarningOpen
-}: SettingsTabPresenterProps) {
-  const [p2pOpen, setP2pOpen] = React.useState(false)
+  p2pOpen,
+  setP2pOpen,
+  t
+}: any) {
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      {!currentEasyMode && <SettingsTabHeader title={t.title} />}
+    <>
       <UiAccordionItem
         isOpen={openSections.ui}
         onToggle={onToggleUi}
@@ -161,11 +157,21 @@ export function SettingsTabPresenter({
         onToggle={onToggleWebLlm}
         title={t.webLlmGroupTitle}
       />
+    </>
+  )
+}
+
+export function SettingsTabPresenter(props: SettingsTabPresenterProps) {
+  const [p2pOpen, setP2pOpen] = React.useState(false)
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {!props.currentEasyMode && <SettingsTabHeader title={props.t.title} />}
+      <AccordionSections {...props} p2pOpen={p2pOpen} setP2pOpen={setP2pOpen} />
       <GDriveSyncStrategyDialog
-        isOpen={isWarningOpen}
-        onConfirm={handleConfirmSyncStrategy}
-        onCancel={() => setIsWarningOpen(false)}
-        t={t}
+        isOpen={props.isWarningOpen}
+        onConfirm={props.handleConfirmSyncStrategy}
+        onCancel={() => props.setIsWarningOpen(false)}
+        t={props.t}
       />
     </div>
   )

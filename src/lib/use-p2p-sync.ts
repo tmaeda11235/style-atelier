@@ -1,124 +1,14 @@
 import React, { useEffect, useRef, useState } from "react"
 
 import { P2PConnection } from "./p2p-connection"
-import { WebSocketSignalingChannel } from "./p2p-signaling"
 import {
-  decryptSyncData,
-  encryptSyncData,
-  mergeIncomingSyncData,
-  prepareOutgoingSyncData
-} from "./p2p-sync-manager"
+  initGuestConnection,
+  initHostConnection,
+  SyncStatus
+} from "./p2p-connection-helpers"
 import { generateQRCodeUrl } from "./qr-utils"
 
 export type SyncRole = "idle" | "host" | "guest"
-export type SyncStatus =
-  | "setup"
-  | "connecting"
-  | "connected"
-  | "syncing"
-  | "success"
-  | "error"
-
-interface HostConnectionParams {
-  wsUrl: string
-  key: string
-  t: any
-  setStatus: (s: SyncStatus) => void
-  setStatusMessage: (m: string) => void
-  setProcessedCount: (c: { cards: number; categories: number }) => void
-  handleError: (err: Error) => void
-  connectionRef: React.MutableRefObject<P2PConnection | null>
-}
-
-function initHostConnection({
-  wsUrl,
-  key,
-  t,
-  setStatus,
-  setStatusMessage,
-  setProcessedCount,
-  handleError,
-  connectionRef
-}: HostConnectionParams) {
-  const sigChannel = new WebSocketSignalingChannel(wsUrl)
-  connectionRef.current = new P2PConnection({
-    signalingChannel: sigChannel,
-    isHost: true,
-    onStatusChange: (s) => {
-      if (s === "datachannel-open") {
-        setStatus("connected")
-        setStatusMessage(t?.connected || "Device connected. Ready to sync.")
-      } else if (s.startsWith("connection-state-failed")) {
-        handleError(new Error("P2P Connection failed"))
-      }
-    },
-    onMessageReceived: async (encryptedPayload) => {
-      setStatus("syncing")
-      setStatusMessage(t?.receiving || "Receiving and decrypting data...")
-      try {
-        const decrypted = await decryptSyncData(encryptedPayload, key)
-        const mergeResult = await mergeIncomingSyncData(decrypted)
-        if (mergeResult.success) {
-          setProcessedCount({
-            cards: mergeResult.cardsCount,
-            categories: mergeResult.categoriesCount
-          })
-          setStatus("success")
-          setStatusMessage(t?.syncSuccess || "Sync completed successfully!")
-        } else {
-          throw new Error("Merge failed")
-        }
-      } catch (err: any) {
-        handleError(err)
-      }
-    },
-    onError: handleError
-  })
-}
-
-interface GuestConnectionParams {
-  key: string
-  wsUrl: string
-  t: any
-  setStatus: (s: SyncStatus) => void
-  setStatusMessage: (m: string) => void
-  handleError: (err: Error) => void
-  connectionRef: React.MutableRefObject<P2PConnection | null>
-}
-
-function initGuestConnection({
-  key,
-  wsUrl,
-  t,
-  setStatus,
-  setStatusMessage,
-  handleError,
-  connectionRef
-}: GuestConnectionParams) {
-  const sigChannel = new WebSocketSignalingChannel(wsUrl)
-  connectionRef.current = new P2PConnection({
-    signalingChannel: sigChannel,
-    isHost: false,
-    onStatusChange: async (s) => {
-      if (s === "datachannel-open") {
-        setStatus("syncing")
-        setStatusMessage(t?.sending || "Encrypting and sending local data...")
-        try {
-          const syncData = await prepareOutgoingSyncData()
-          const encrypted = await encryptSyncData(syncData, key)
-          connectionRef.current?.send(encrypted)
-          setStatus("success")
-          setStatusMessage(t?.syncSuccess || "Data synced successfully!")
-        } catch (err: any) {
-          handleError(err)
-        }
-      } else if (s.startsWith("connection-state-failed")) {
-        handleError(new Error("P2P connection failed to establish"))
-      }
-    },
-    onError: handleError
-  })
-}
 
 function stopScanning(
   setIsScanning: (s: boolean) => void,
@@ -144,7 +34,6 @@ function handleError(
   connectionRef: React.MutableRefObject<P2PConnection | null>,
   stopScanningFn: () => void
 ) {
-  console.error("[P2PSyncUI] Error occurred:", err)
   setStatus("error")
   setErrorMessage(
     err.message || "An unknown error occurred during synchronization."
@@ -177,10 +66,7 @@ async function startHost({
   handleError: handleErrorFn,
   t
 }: StartHostParams) {
-  if (connectionRef.current) {
-    connectionRef.current.close()
-    connectionRef.current = null
-  }
+  if (connectionRef.current) connectionRef.current.close()
   setRole("host")
   setStatus("setup")
   setStatusMessage(t?.hostInit || "Initializing sync host...")
@@ -290,10 +176,7 @@ function connectAsGuest({
   handleError: handleErrorFn,
   t
 }: ConnectGuestParams) {
-  if (connectionRef.current) {
-    connectionRef.current.close()
-    connectionRef.current = null
-  }
+  if (connectionRef.current) connectionRef.current.close()
   setStatus("connecting")
   setStatusMessage(t?.guestConnecting || "Connecting to signaling server...")
   try {
@@ -383,12 +266,6 @@ export function useP2PSync(t: any) {
     setErrorMessage("")
     startGuestScan(setIsScanning, videoRef, scanIntervalRef, scanFrame)
   }
-
-  const manualSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (scanInputUrl) decoded(scanInputUrl)
-  }
-
   const resetState = () => {
     if (connectionRef.current) connectionRef.current.close()
     stop()
@@ -421,7 +298,10 @@ export function useP2PSync(t: any) {
     canvasRef,
     startHost: host,
     startGuestScan: guestScan,
-    handleManualUrlSubmit: manualSubmit,
+    handleManualUrlSubmit: (e: React.FormEvent) => {
+      e.preventDefault()
+      if (scanInputUrl) decoded(scanInputUrl)
+    },
     reset: resetState
   }
 }
