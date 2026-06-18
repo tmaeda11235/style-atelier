@@ -180,6 +180,7 @@ export class MockStyleAtelierDatabase {
   parameterAliases = new MockTable<any>()
   parameterFolders = new MockTable<any>()
   recipeHistory = new MockTable<any>()
+  imageSyncStates = new MockTable<any>()
 
   constructor() {
     this.reset()
@@ -222,6 +223,7 @@ export class MockStyleAtelierDatabase {
     this.parameterAliases = new MockTable<any>([])
     this.parameterFolders = new MockTable<any>([])
     this.recipeHistory = new MockTable<any>([])
+    this.imageSyncStates = new MockTable<any>([])
   }
 
   // StyleCard Operations

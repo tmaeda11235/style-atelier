@@ -63,6 +63,9 @@ describe("p2p-sync-manager", () => {
     await db.styleCards.clear()
     await db.categories.clear()
     await db.historyItems.clear()
+    if (db.imageSyncStates) {
+      await db.imageSyncStates.clear()
+    }
   })
 
   describe("Encryption & Decryption", () => {
