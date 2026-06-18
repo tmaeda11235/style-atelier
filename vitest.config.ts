@@ -53,6 +53,7 @@ export default defineConfig({
         "src/style.css",
         "assets/**",
         "tests/mocks/**",
+        "src/mocks/**",
         "vitest.config.ts",
         "vitest.setup.ts",
         "playwright.config.ts",
