@@ -107,7 +107,7 @@ export function CustomTagsBox({
 
   return (
     <div className="mb-4">
-      <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
+      <label className="flex items-center gap-1 text-xs font-medium text-text-secondary mb-1">
         {t.minting.customTags}
         <HelpTooltip content={t.helpTooltips.tags} position="top-left" />
       </label>
@@ -121,11 +121,11 @@ function ColorIndicator({ label, color }: { label: string; color: string }) {
   return (
     <div className="flex items-center gap-2">
       <div
-        className="w-5 h-5 rounded-full border border-slate-300 shadow-sm"
+        className="w-5 h-5 rounded-full border border-border-primary shadow-sm"
         style={{ backgroundColor: color }}
         title={`${label} Color`}
       />
-      <span className="text-xs font-bold text-slate-700">{label}</span>
+      <span className="text-xs font-bold text-text-primary">{label}</span>
     </div>
   )
 }
@@ -143,10 +143,10 @@ export function DetectedPaletteBox({
 }) {
   return (
     <div className="mb-2">
-      <label className="block text-xs font-medium text-slate-500 mb-2">
+      <label className="block text-xs font-medium text-text-secondary mb-2">
         {t.minting.detectedPalette}
       </label>
-      <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+      <div className="flex items-center gap-4 bg-muted p-2.5 rounded-lg border border-border-primary">
         <ColorIndicator
           label={t.minting.dominant}
           color={detectedDominantColor}
@@ -157,7 +157,7 @@ export function DetectedPaletteBox({
             {detectedColorTags.map((colName, i) => (
               <span
                 key={i}
-                className="bg-slate-200/70 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
+                className="bg-muted text-text-primary border border-border-primary px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
                 <span>{EMOJI_PALETTE}</span>
                 <span>{colName}</span>
               </span>

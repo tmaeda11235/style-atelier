@@ -17,11 +17,11 @@ function ThemeSettings({ theme, changeTheme, t }: ThemeSettingsProps) {
     <div className="relative overflow-hidden" id="settings-theme-section">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
       <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+        <div className="p-3 bg-muted text-text-secondary rounded-xl border border-border-primary">
           <span className="text-xl">🌓</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
             {t.themeLabel || "Theme Setting"}
             <HelpTooltip
               content={
@@ -32,14 +32,14 @@ function ThemeSettings({ theme, changeTheme, t }: ThemeSettingsProps) {
           </h3>
         </div>
       </div>
-      <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
-        <span className="text-xs font-bold text-slate-700">
+      <div className="flex items-center justify-between bg-muted/80 border border-border-primary/80 rounded-xl px-4 py-3 transition-all hover:bg-surface-hover">
+        <span className="text-xs font-bold text-text-primary">
           {t.themeLabel || "Theme"}
         </span>
         <select
           value={theme}
           onChange={(e) => changeTheme(e.target.value as Theme)}
-          className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          className="bg-surface border border-border-primary text-text-primary text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           id="theme-select">
           <option value="system">{t.themeSystem || "System"}</option>
           <option value="light">{t.themeLight || "Light"}</option>
@@ -61,24 +61,24 @@ function LanguageSettings({ lang, changeLanguage, t }: LanguageSettingsProps) {
     <div className="relative overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
       <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+        <div className="p-3 bg-muted text-text-secondary rounded-xl border border-border-primary">
           <span className="text-xl">🌐</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
             {t.languageLabel}
             <HelpTooltip content={t.languageDesc} position="top-left" />
           </h3>
         </div>
       </div>
-      <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
-        <span className="text-xs font-bold text-slate-700">
+      <div className="flex items-center justify-between bg-muted/80 border border-border-primary/80 rounded-xl px-4 py-3 transition-all hover:bg-surface-hover">
+        <span className="text-xs font-bold text-text-primary">
           {t.languageLabel}
         </span>
         <select
           value={lang}
           onChange={(e) => changeLanguage(e.target.value as Language)}
-          className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          className="bg-surface border border-border-primary text-text-primary text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           id="language-select">
           <option value="en">English</option>
           <option value="ja">日本語</option>
@@ -103,11 +103,11 @@ function TipsBarSettings({
     <div className="relative overflow-hidden" id="settings-tips-bar-section">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
       <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+        <div className="p-3 bg-muted text-text-secondary rounded-xl border border-border-primary">
           <span className="text-xl">💡</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
             {t.tipsBarToggleLabel || "Enable Tips Bar"}
             <HelpTooltip
               content={
@@ -119,8 +119,8 @@ function TipsBarSettings({
           </h3>
         </div>
       </div>
-      <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
-        <span className="text-xs font-bold text-slate-700">
+      <div className="flex items-center justify-between bg-muted/80 border border-border-primary/80 rounded-xl px-4 py-3 transition-all hover:bg-surface-hover">
+        <span className="text-xs font-bold text-text-primary">
           {t.tipsBarToggleLabel || "Enable Tips Bar"}
         </span>
         <button
@@ -128,7 +128,7 @@ function TipsBarSettings({
           id="tips-bar-toggle-btn"
           onClick={() => toggleTipsBar(!showTipsBar)}
           className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-            showTipsBar ? "bg-blue-600" : "bg-slate-200"
+            showTipsBar ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-800"
           }`}>
           <span
             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -156,11 +156,11 @@ function ReplayTutorialSettings({
       id="settings-replay-tutorial-section">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
       <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+        <div className="p-3 bg-muted text-text-secondary rounded-xl border border-border-primary">
           <span className="text-xl">🎓</span>
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
             {t.replayTutorialLabel || "Interactive Tutorial"}
             <HelpTooltip
               content={
@@ -172,15 +172,15 @@ function ReplayTutorialSettings({
           </h3>
         </div>
       </div>
-      <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all hover:bg-slate-50">
-        <span className="text-xs font-bold text-slate-700">
+      <div className="flex items-center justify-between bg-muted/80 border border-border-primary/80 rounded-xl px-4 py-3 transition-all hover:bg-surface-hover">
+        <span className="text-xs font-bold text-text-primary">
           {t.replayTutorialLabel || "Tutorial"}
         </span>
         <button
           type="button"
           id="settings-replay-tutorial-btn"
           onClick={onReplayTutorial}
-          className="bg-white hover:bg-slate-100 border border-slate-200 text-blue-600 hover:text-blue-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+          className="bg-surface hover:bg-surface-hover border border-border-primary text-blue-600 hover:text-blue-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
           {t.replayTutorialBtn || "Replay Tutorial"}
         </button>
       </div>

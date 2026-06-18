@@ -194,8 +194,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Theme Inconsistency Fix @J-THEM
     // Verify it contains dark mode background classes
     const drawerContainer = shareModalOverlay.locator("div").first()
     const drawerClassName = await drawerContainer.getAttribute("class")
-    expect(drawerClassName).toContain("bg-white")
-    expect(drawerClassName).toContain("dark:bg-slate-900")
+    expect(drawerClassName).toContain("bg-surface")
 
     // Take light mode screenshot of the ShareCardModal
     console.log("Saving light mode share card modal screenshot...")
