@@ -133,8 +133,9 @@ async function main() {
     console.log('\n--- Building Extension for E2E ---');
     try {
       execSync('npm run build', { stdio: 'inherit' });
+      execSync('npm run build:mobile', { stdio: 'inherit' });
     } catch {
-      console.error('Failed to build extension.');
+      console.error('Failed to build extension or mobile assets.');
       process.exit(1);
     }
   }
