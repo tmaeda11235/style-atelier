@@ -3,9 +3,10 @@ import React, { useEffect, useRef, useState } from "react"
 import { P2PConnection } from "./p2p-connection"
 import {
   initGuestConnection,
-  initHostConnection
+  initHostConnection,
+  SyncState,
+  SyncStateUpdater
 } from "./p2p-connection-helpers"
-import type { SyncState, SyncStateUpdater } from "./p2p-connection-helpers"
 import { generateQRCodeUrl } from "./qr-utils"
 
 function stopScanning(
@@ -200,6 +201,41 @@ function handleDecodedUrl(
   }
 }
 
+function triggerGuestScan(
+  update: SyncStateUpdater,
+  videoRef: React.RefObject<HTMLVideoElement>,
+  scanIntervalRef: React.MutableRefObject<any>,
+  scanFrameFn: () => void
+) {
+  update({ role: "guest", status: "setup", errorMessage: "" })
+  startGuestScan(update, videoRef, scanIntervalRef, scanFrameFn)
+}
+
+function triggerReset(
+  connectionRef: React.MutableRefObject<P2PConnection | null>,
+  stopFn: () => void,
+  update: SyncStateUpdater
+) {
+  if (connectionRef.current) connectionRef.current.close()
+  stopFn()
+  update({
+    role: "idle",
+    status: "setup",
+    errorMessage: "",
+    qrCodeDataUrl: null,
+    scanInputUrl: ""
+  })
+}
+
+function triggerManualSubmit(
+  e: React.FormEvent,
+  scanInputUrl: string,
+  decodedFn: (url: string) => void
+) {
+  e.preventDefault()
+  if (scanInputUrl) decodedFn(scanInputUrl)
+}
+
 const initialSyncState: SyncState = {
   role: "idle",
   status: "setup",
@@ -240,21 +276,6 @@ export function useP2PSync(t: any) {
     )
   const scanFrame = () =>
     scanQRFrame(videoRef, canvasRef, state.isScanning, stop, decoded)
-  const guestScan = () => {
-    update({ role: "guest", status: "setup", errorMessage: "" })
-    startGuestScan(update, videoRef, scanIntervalRef, scanFrame)
-  }
-  const resetState = () => {
-    if (connectionRef.current) connectionRef.current.close()
-    stop()
-    update({
-      role: "idle",
-      status: "setup",
-      errorMessage: "",
-      qrCodeDataUrl: null,
-      scanInputUrl: ""
-    })
-  }
 
   useEffect(() => {
     const conn = connectionRef.current
@@ -271,11 +292,10 @@ export function useP2PSync(t: any) {
     videoRef,
     canvasRef,
     startHost: host,
-    startGuestScan: guestScan,
-    handleManualUrlSubmit: (e: React.FormEvent) => {
-      e.preventDefault()
-      if (state.scanInputUrl) decoded(state.scanInputUrl)
-    },
-    reset: resetState
+    startGuestScan: () =>
+      triggerGuestScan(update, videoRef, scanIntervalRef, scanFrame),
+    handleManualUrlSubmit: (e: React.FormEvent) =>
+      triggerManualSubmit(e, state.scanInputUrl, decoded),
+    reset: () => triggerReset(connectionRef, stop, update)
   }
 }
