@@ -42,7 +42,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: "istanbul",
-      clean: true,
+      clean: false,
       processingConcurrency: 1,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
