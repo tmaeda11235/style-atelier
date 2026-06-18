@@ -79,20 +79,24 @@ export default defineConfig({
         viewport: { width: 1920, height: 1080 }
       }
     },
-    {
-      name: "extension",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1920, height: 1080 },
-        headless: false,
-        args: [
-          `--disable-extensions-except=${path.resolve(__dirname, "build/chrome-mv3-prod")}`,
-          `--load-extension=${path.resolve(__dirname, "build/chrome-mv3-prod")}`,
-          "--no-sandbox",
-          "--disable-setuid-sandbox"
+    ...(!process.env.SKIP_EXTENSION_TESTS
+      ? [
+          {
+            name: "extension",
+            use: {
+              ...devices["Desktop Chrome"],
+              viewport: { width: 1920, height: 1080 },
+              headless: false,
+              args: [
+                `--disable-extensions-except=${path.resolve(__dirname, "build/chrome-mv3-prod")}`,
+                `--load-extension=${path.resolve(__dirname, "build/chrome-mv3-prod")}`,
+                "--no-sandbox",
+                "--disable-setuid-sandbox"
+              ]
+            }
+          }
         ]
-      }
-    }
+      : [])
   ],
 
   /* Run local dev server before starting the tests */
