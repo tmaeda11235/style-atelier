@@ -2,7 +2,7 @@ import React from "react"
 import { createPortal } from "react-dom"
 
 import { useHandBar } from "../../hooks/useHandBar"
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { MergeStackModal } from "../organisms/MergeStackModal"
 import { HandBarHeader } from "./HandBarHeader"
 import { HandBarScrollArea } from "./HandBarScrollArea"

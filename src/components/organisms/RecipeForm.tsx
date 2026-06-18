@@ -1,7 +1,7 @@
 import { Send, Sparkles } from "lucide-react"
 import React from "react"
 
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import type { PromptSegment, StyleCard } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 import { HelpTooltip } from "../atoms/HelpTooltip"
 import { RarityBadge } from "../atoms/RarityBadge"

@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react"
 import React from "react"
 
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import type { PromptSegment, StyleCard } from "../../shared/lib/db-schema"
 import { WorkbenchCard } from "./WorkbenchCard"
 
 interface CauldronBackgroundProps {

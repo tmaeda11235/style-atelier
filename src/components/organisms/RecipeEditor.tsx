@@ -1,6 +1,6 @@
 import React from "react"
 
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import type { PromptSegment, StyleCard } from "../../shared/lib/db-schema"
 import { RecipeForm } from "./RecipeForm"
 import { SlotVariablesSection } from "./SlotVariablesSection"
 

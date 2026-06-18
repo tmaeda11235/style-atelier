@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks"
 
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 export function useHand() {
   const pinnedCards = useLiveQuery(() => db.getPinnedCards())

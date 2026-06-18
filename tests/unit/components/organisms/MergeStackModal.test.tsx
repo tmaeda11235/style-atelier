@@ -1,5 +1,5 @@
 import { MergeStackModal } from "@/components/organisms/MergeStackModal"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 

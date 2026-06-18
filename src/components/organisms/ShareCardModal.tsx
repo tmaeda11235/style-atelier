@@ -9,7 +9,7 @@ import {
 import React from "react"
 
 import { useShareCard } from "../../hooks/useShareCard"
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 import { OpfsImage } from "../atoms/OpfsImage"
 

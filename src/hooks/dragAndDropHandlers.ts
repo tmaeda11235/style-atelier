@@ -1,7 +1,7 @@
 import iconUrl from "url:../../assets/icon.png"
 
 import { db } from "../lib/db"
-import type { HistoryItem, StyleCard } from "../lib/db-schema"
+import type { HistoryItem, StyleCard } from "../shared/lib/db-schema"
 
 export interface DroppedItem {
   id?: string
@@ -33,7 +33,7 @@ export async function parseCardFromImage(
   addLog: (msg: string) => void
 ): Promise<any> {
   const { readQRCodeFromImage, decompressCardData } =
-    await import("../lib/qr-utils")
+    await import("../shared/lib/qr-utils")
   const payload = await readQRCodeFromImage(imageFile)
   if (!payload) {
     addLog("No QR code found in the image.")

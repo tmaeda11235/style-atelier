@@ -1,5 +1,5 @@
+import type { StyleCard } from "../../shared/lib/db-schema"
 import type { StyleAtelierDatabase } from "../db"
-import type { StyleCard } from "../db-schema"
 
 /**
  * Soft deletes a style card by marking it with `isDeleted: true` (creating a Tombstone)

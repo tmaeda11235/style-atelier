@@ -1,5 +1,5 @@
 import { usePromptInjector } from "@/hooks/usePromptInjector"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 

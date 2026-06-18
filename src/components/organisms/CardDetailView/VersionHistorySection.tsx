@@ -1,7 +1,7 @@
 import { History, RotateCcw } from "lucide-react"
 import React from "react"
 
-import type { CardVersion } from "../../../lib/db-schema"
+import type { CardVersion } from "../../../shared/lib/db-schema"
 import { Button } from "../../atoms/Button"
 
 interface VersionHistorySectionProps {

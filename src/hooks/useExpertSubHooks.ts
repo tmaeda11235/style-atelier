@@ -2,7 +2,7 @@ import { useCallback, useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { useP2PSyncContext } from "../contexts/P2PSyncContext"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 import {
   deleteCard,
   injectPrompt,

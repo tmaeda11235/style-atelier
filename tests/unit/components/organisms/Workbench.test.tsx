@@ -3,7 +3,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { useEvolution } from "@/hooks/useEvolution"
 import { useWorkbench } from "@/hooks/useWorkbench"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import {
   fireEvent,
   screen,

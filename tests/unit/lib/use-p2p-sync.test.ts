@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { useP2PSync } from "../../../src/lib/use-p2p-sync"
 
 // Mock submodules
-vi.mock("../../../src/lib/qr-utils", () => ({
+vi.mock("../../../src/shared/lib/qr-utils", () => ({
   generateQRCodeUrl: vi.fn().mockResolvedValue("data:image/png;base64,mock-qr")
 }))
 
@@ -60,7 +60,7 @@ vi.mock("../../../src/lib/p2p-sync-manager", () => ({
   readOpfsFileAsBlob: vi.fn().mockResolvedValue(new Blob())
 }))
 
-vi.mock("../../../src/lib/db/migration-helpers", () => ({
+vi.mock("../../../src/shared/lib/db/migration-helpers", () => ({
   computeHash: vi.fn().mockResolvedValue("mock-hash"),
   listOpfsFiles: vi.fn().mockResolvedValue([])
 }))

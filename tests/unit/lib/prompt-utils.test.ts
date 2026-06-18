@@ -1,9 +1,9 @@
-import type { PromptSegment } from "@/lib/db-schema"
+import type { PromptSegment } from "@/shared/lib/db-schema"
 import {
   buildPromptString,
   mergePromptSegments,
   parsePrompt
-} from "@/lib/prompt-utils"
+} from "@/shared/lib/prompt-utils"
 import { describe, expect, it } from "vitest"
 
 describe("buildPromptString", () => {

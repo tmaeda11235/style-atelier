@@ -1,5 +1,5 @@
-import type { StyleCard } from "../db-schema"
-import { compressCardData, generateQRCodeUrl } from "../qr-utils"
+import type { StyleCard } from "../../shared/lib/db-schema"
+import { compressCardData, generateQRCodeUrl } from "../../shared/lib/qr-utils"
 import {
   drawArtworkGrid,
   drawCardParams,

@@ -1,6 +1,6 @@
 import React from "react"
 
-import { computeHash } from "./db/migration-helpers"
+import { computeHash } from "../shared/lib/db/migration-helpers"
 import { P2PConnection } from "./p2p-connection"
 import type {
   GuestConnectionParams,

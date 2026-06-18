@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import { useHistory } from "../../hooks/useHistory"
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll"
-import type { HistoryItem } from "../../lib/db-schema"
+import type { HistoryItem } from "../../shared/lib/db-schema"
 import { HistoryCard } from "../molecules/HistoryCard"
 import { HistoryEmptyState } from "../molecules/HistoryEmptyState"
 

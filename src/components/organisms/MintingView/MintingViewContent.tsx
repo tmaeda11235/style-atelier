@@ -1,7 +1,7 @@
 import React from "react"
 
-import type { HistoryItem, PromptSegment } from "../../../lib/db-schema"
 import type { RarityTier } from "../../../lib/rarity-config"
+import type { HistoryItem, PromptSegment } from "../../../shared/lib/db-schema"
 import { HelpTooltip } from "../../atoms/HelpTooltip"
 import { PromptBubble } from "../../molecules/PromptBubble"
 import { RaritySelector } from "../../molecules/RaritySelector"

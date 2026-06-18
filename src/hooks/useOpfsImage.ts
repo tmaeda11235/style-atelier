@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { readBlobFromOpfs } from "../lib/db/migration-helpers"
+import { readBlobFromOpfs } from "../shared/lib/db/migration-helpers"
 
 class LruCache<K, V> {
   private cache = new Map<K, V>()

@@ -1,8 +1,8 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-import type { StyleCard } from "../../src/lib/db-schema"
-import { compressCardData } from "../../src/lib/qr-utils"
+import type { StyleCard } from "../../src/shared/lib/db-schema"
+import { compressCardData } from "../../src/shared/lib/qr-utils"
 
 test.describe("Mobile Viewer E2E Test", () => {
   // Use iPhone 12 emulation values

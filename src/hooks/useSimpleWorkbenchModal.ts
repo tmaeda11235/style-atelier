@@ -7,9 +7,9 @@ import {
   safeQueryTabs,
   safeSendTabMessage
 } from "../lib/chrome-utils"
-import type { PromptSegment, StyleCard } from "../lib/db-schema"
-import { buildPromptString } from "../lib/prompt-utils"
 import { updateStyleCard } from "../lib/style-card-store"
+import type { PromptSegment, StyleCard } from "../shared/lib/db-schema"
+import { buildPromptString } from "../shared/lib/prompt-utils"
 
 interface UseSimpleWorkbenchModalProps {
   card: StyleCard

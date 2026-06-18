@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import type { AlertType } from "../components/molecules/ConnectionAlert"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 export function useEasyModeState() {
   const [activeTab, setActiveTab] = useState<"library" | "settings">("library")

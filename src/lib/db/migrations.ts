@@ -1,13 +1,13 @@
 /* eslint-disable max-lines */
 import Dexie from "dexie"
 
-import { createThumbnailDataUrl } from "../image-utils"
 import {
   computeHash,
   deleteOpfsFile,
   listOpfsFiles,
   saveBase64ToOpfs
-} from "./migration-helpers"
+} from "../../shared/lib/db/migration-helpers"
+import { createThumbnailDataUrl } from "../image-utils"
 
 export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)

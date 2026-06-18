@@ -1,9 +1,9 @@
-import type { HistoryItem } from "../../../lib/db-schema"
 import {
   cleanPromptBody,
   extractJobIdFromUrl,
   extractParameters
 } from "../../../lib/mj-parser"
+import type { HistoryItem } from "../../../shared/lib/db-schema"
 import type { IExtractor } from "../interfaces"
 
 interface ImageReferences {

@@ -3,7 +3,7 @@ import path from "path"
 import { expect, test } from "@playwright/test"
 import QRCode from "qrcode"
 
-import { compressCardData } from "../../src/lib/qr-utils"
+import { compressCardData } from "../../src/shared/lib/qr-utils"
 
 test.describe("Style Atelier Sandbox E2E Tests - QR Import Robustness @J-IO-QR-IN-ROBUST", () => {
   test.beforeEach(async ({ page }) => {

@@ -1,4 +1,4 @@
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import {
   compressCardData,
   crc32,
@@ -7,7 +7,7 @@ import {
   generateQRCodeUrl,
   insertMetadataToPng,
   readQRCodeFromImage
-} from "@/lib/qr-utils"
+} from "@/shared/lib/qr-utils"
 import jsQR from "jsqr"
 import { describe, expect, it, vi } from "vitest"
 

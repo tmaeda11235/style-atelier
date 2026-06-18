@@ -8,7 +8,7 @@ import {
 import React from "react"
 
 import { Button } from "../components/atoms/Button"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 export interface TranslationType {
   noCardId: string

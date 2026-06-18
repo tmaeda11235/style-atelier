@@ -4,7 +4,7 @@ import type {
   PromptSegment,
   RecipeHistoryItem,
   StyleCard
-} from "../../lib/db-schema"
+} from "../../shared/lib/db-schema"
 import { Cauldron } from "./Cauldron"
 import { EvolutionSuccessModal } from "./EvolutionSuccessModal"
 import { RecipeEditor } from "./RecipeEditor"

@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 
 import { usePromptInjector } from "../../hooks/usePromptInjector"
-import type { PromptSegment } from "../../lib/db-schema"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 import { type AlertType } from "../molecules/ConnectionAlert"
 import {
   evolveTargetCard,

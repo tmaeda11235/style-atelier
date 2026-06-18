@@ -1,7 +1,7 @@
 import { ArrowDown } from "lucide-react"
 import React, { useEffect, useState } from "react"
 
-import type { PromptSegment, StyleCard } from "../../lib/db-schema"
+import type { PromptSegment, StyleCard } from "../../shared/lib/db-schema"
 import { AiRecipeAdviceSection } from "./AiRecipeAdviceSection"
 import {
   BlendingOverlay,

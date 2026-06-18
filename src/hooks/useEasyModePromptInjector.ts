@@ -1,7 +1,7 @@
 import type { AlertType } from "../components/molecules/ConnectionAlert"
 import { safeQueryTabs, safeSendTabMessage } from "../lib/chrome-utils"
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 interface InjectPromptOptions {
   prompt: string

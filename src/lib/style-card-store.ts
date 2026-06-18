@@ -1,5 +1,5 @@
+import type { CustomCategory, StyleCard } from "../shared/lib/db-schema"
 import { db } from "./db"
-import type { CustomCategory, StyleCard } from "./db-schema"
 
 /**
  * Retrieves a StyleCard by its unique ID.

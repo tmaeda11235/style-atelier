@@ -2,7 +2,10 @@ import { Edit3, X } from "lucide-react"
 import React, { useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
-import type { ParameterAlias, ParameterFolder } from "../../lib/db-schema"
+import type {
+  ParameterAlias,
+  ParameterFolder
+} from "../../shared/lib/db-schema"
 
 interface AliasEditModalProps {
   editingValue: string

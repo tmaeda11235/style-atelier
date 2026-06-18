@@ -3,7 +3,7 @@ import React from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
 import { useMergeStack } from "../../hooks/useMergeStack"
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { Button } from "../atoms/Button"
 import { MaterialCardList } from "./MergeStackMaterialList"
 import { RepresentativeCardList } from "./MergeStackRepresentativeList"

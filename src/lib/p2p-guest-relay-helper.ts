@@ -1,5 +1,5 @@
-import { uint8ArrayToBase64 } from "./binary-utils"
-import { computeHash } from "./db/migration-helpers"
+import { uint8ArrayToBase64 } from "../shared/lib/binary-utils"
+import { computeHash } from "../shared/lib/db/migration-helpers"
 import type { SyncStateUpdater } from "./p2p-connection-helpers"
 import {
   decryptSyncData,

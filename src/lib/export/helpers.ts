@@ -1,5 +1,5 @@
+import type { StyleCard } from "../../shared/lib/db-schema"
 import { db } from "../db"
-import type { StyleCard } from "../db-schema"
 
 /**
  * Resolves a given image source URL to a local cache URL (Object URL of local blob)

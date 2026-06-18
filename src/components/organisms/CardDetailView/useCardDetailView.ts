@@ -2,8 +2,8 @@ import { useState } from "react"
 
 import { useCardDetailsForm } from "../../../hooks/useCardDetailsForm"
 import { useCardExporter } from "../../../hooks/useCardExporter"
-import type { StyleCard } from "../../../lib/db-schema"
-import { buildPromptString } from "../../../lib/prompt-utils"
+import type { StyleCard } from "../../../shared/lib/db-schema"
+import { buildPromptString } from "../../../shared/lib/prompt-utils"
 
 interface UseCardDetailViewProps {
   card: StyleCard

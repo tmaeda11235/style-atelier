@@ -5,8 +5,8 @@ import {
   safeSendTabMessage
 } from "../lib/chrome-utils"
 import { db } from "../lib/db"
-import type { StyleCard } from "../lib/db-schema"
-import { buildPromptString } from "../lib/prompt-utils"
+import type { StyleCard } from "../shared/lib/db-schema"
+import { buildPromptString } from "../shared/lib/prompt-utils"
 import type { StyleCardMetadata } from "./useLibraryData"
 
 function injectPromptToActiveTab(

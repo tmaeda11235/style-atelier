@@ -3,13 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   readBlobFromOpfs,
   saveBase64ToOpfs
-} from "../../src/lib/db/migration-helpers"
+} from "../../src/shared/lib/db/migration-helpers"
 import {
   clearWebImageCache,
   resolveWebCardImage
 } from "../../src/web-app/image"
 
-vi.mock("../../src/lib/db/migration-helpers", () => ({
+vi.mock("../../src/shared/lib/db/migration-helpers", () => ({
   readBlobFromOpfs: vi.fn(),
   saveBase64ToOpfs: vi.fn()
 }))

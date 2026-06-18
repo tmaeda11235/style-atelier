@@ -1,7 +1,7 @@
 import { useState } from "react"
 
-import type { StyleCard } from "../lib/db-schema"
 import { exportCardAsImage } from "../lib/export-utils"
+import type { StyleCard } from "../shared/lib/db-schema"
 
 function buildExportCard(
   card: StyleCard,

@@ -1,7 +1,7 @@
 import { LanguageProvider } from "@/contexts/LanguageContext"
 import { useCardExport } from "@/hooks/useCardExport"
 import { db } from "@/lib/db"
-import type { StyleCard } from "@/lib/db-schema"
+import type { StyleCard } from "@/shared/lib/db-schema"
 import { act, renderHook } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"

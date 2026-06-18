@@ -1,5 +1,5 @@
+import type { StyleCard } from "../shared/lib/db-schema"
 import { db } from "./db"
-import type { StyleCard } from "./db-schema"
 
 export async function toggleCardSelection(cardId: string) {
   try {

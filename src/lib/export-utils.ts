@@ -1,6 +1,7 @@
 import iconUrl from "url:../../assets/icon.png"
 
-import type { StyleCard } from "./db-schema"
+import type { StyleCard } from "../shared/lib/db-schema"
+import { compressCardData, insertMetadataToPng } from "../shared/lib/qr-utils"
 import {
   drawArtwork,
   drawBrandLogo,
@@ -8,7 +9,6 @@ import {
   drawCardInfo,
   drawQRCode
 } from "./export/draw"
-import { compressCardData, insertMetadataToPng } from "./qr-utils"
 
 /**
  * Renders the card content onto a canvas.

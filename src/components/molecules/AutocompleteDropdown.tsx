@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 
 import { useParameterAliases } from "../../hooks/useParameterAliases"
 import { useParameterFolders } from "../../hooks/useParameterFolders"
-import type { StyleCard } from "../../lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 
 interface AutocompleteDropdownProps {
   options: string[]

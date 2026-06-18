@@ -1,9 +1,9 @@
 import { X } from "lucide-react"
 import React from "react"
 
-import type { PromptSegment } from "../../lib/db-schema"
 import { RARITY_CONFIG, type RarityTier } from "../../lib/rarity-config"
 import { cn } from "../../lib/utils"
+import type { PromptSegment } from "../../shared/lib/db-schema"
 
 /**
  * プロンプトのセグメント（テキスト、スロット、チップ）を視覚的に表現するバブルコンポーネント。

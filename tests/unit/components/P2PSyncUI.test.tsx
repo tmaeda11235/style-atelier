@@ -7,7 +7,7 @@ import { P2PSyncUI } from "../../../src/components/P2PSyncUI"
 import { P2PSyncProvider } from "../../../src/contexts/P2PSyncContext"
 
 // Mock submodules
-vi.mock("../../../src/lib/qr-utils", () => ({
+vi.mock("../../../src/shared/lib/qr-utils", () => ({
   generateQRCodeUrl: vi
     .fn()
     .mockResolvedValue("data:image/png;base64,mock-qr-code")

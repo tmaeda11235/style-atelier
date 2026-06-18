@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
+import { computeHash, listOpfsFiles } from "../shared/lib/db/migration-helpers"
 import { exportDatabase, importDatabase } from "./backup-manager"
 import { db } from "./db"
-import { computeHash, listOpfsFiles } from "./db/migration-helpers"
 import { purgeDeletedRecords } from "./db/purge-ops"
 import type { GoogleDriveClient } from "./google-drive"
 

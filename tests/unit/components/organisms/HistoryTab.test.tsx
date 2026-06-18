@@ -1,7 +1,7 @@
 import { HistoryTab } from "@/components/organisms/HistoryTab"
 import { LanguageProvider } from "@/contexts/LanguageContext"
 import { useHistory } from "@/hooks/useHistory"
-import type { HistoryItem } from "@/lib/db-schema"
+import type { HistoryItem } from "@/shared/lib/db-schema"
 import { render, screen } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"

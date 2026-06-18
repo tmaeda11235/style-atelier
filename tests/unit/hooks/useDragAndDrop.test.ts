@@ -24,7 +24,7 @@ vi.mock("@/lib/db", () => {
   }
 })
 
-vi.mock("@/lib/qr-utils", () => ({
+vi.mock("@/shared/lib/qr-utils", () => ({
   readQRCodeFromImage: vi.fn().mockResolvedValue("mock-payload"),
   decompressCardData: vi.fn().mockReturnValue({
     id: "imported-card-id",
@@ -348,7 +348,7 @@ describe("useDragAndDrop", () => {
     })
 
     it("should use placeholder icon when no CDN URL is present in card metadata", async () => {
-      const { decompressCardData } = await import("@/lib/qr-utils")
+      const { decompressCardData } = await import("@/shared/lib/qr-utils")
       vi.mocked(decompressCardData).mockReturnValueOnce({
         id: "imported-card-id",
         name: "Imported Card",
@@ -387,7 +387,7 @@ describe("useDragAndDrop", () => {
     })
 
     it("should set error notification when no QR code found in the image", async () => {
-      const { readQRCodeFromImage } = await import("@/lib/qr-utils")
+      const { readQRCodeFromImage } = await import("@/shared/lib/qr-utils")
       vi.mocked(readQRCodeFromImage).mockResolvedValueOnce(null)
 
       const { result } = renderHook(() => useDragAndDrop(mockAddLog))
@@ -415,7 +415,7 @@ describe("useDragAndDrop", () => {
     })
 
     it("should set error notification when card data in QR code is invalid/corrupt", async () => {
-      const { decompressCardData } = await import("@/lib/qr-utils")
+      const { decompressCardData } = await import("@/shared/lib/qr-utils")
       vi.mocked(decompressCardData).mockReturnValueOnce({
         id: "imported-card-id",
         name: "", // empty name makes it invalid
@@ -450,7 +450,7 @@ describe("useDragAndDrop", () => {
       // @ts-ignore
       global.navigator = { language: "ja-JP" }
 
-      const { readQRCodeFromImage } = await import("@/lib/qr-utils")
+      const { readQRCodeFromImage } = await import("@/shared/lib/qr-utils")
       vi.mocked(readQRCodeFromImage).mockResolvedValueOnce(null)
 
       const { result } = renderHook(() => useDragAndDrop(mockAddLog))
@@ -503,7 +503,7 @@ describe("useDragAndDrop", () => {
     })
 
     it("should set errorType 'no_metadata_or_qr' when no QR code found in the image", async () => {
-      const { readQRCodeFromImage } = await import("@/lib/qr-utils")
+      const { readQRCodeFromImage } = await import("@/shared/lib/qr-utils")
       vi.mocked(readQRCodeFromImage).mockResolvedValueOnce(null)
 
       const { result } = renderHook(() => useDragAndDrop(mockAddLog))
@@ -528,7 +528,7 @@ describe("useDragAndDrop", () => {
     })
 
     it("should set errorType 'invalid_or_corrupt' when QR data is invalid", async () => {
-      const { decompressCardData } = await import("@/lib/qr-utils")
+      const { decompressCardData } = await import("@/shared/lib/qr-utils")
       vi.mocked(decompressCardData).mockReturnValueOnce({
         id: "imported-card-id",
         name: "", // empty name makes it invalid
