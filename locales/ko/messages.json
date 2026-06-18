@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Style Atelier - Midjourney Prompt Generator & Organizer",
+    "description": "The name of the extension"
+  },
+  "extDescription": {
+    "message": "Midjourney 전용 로컬 우선 프롬프트 관리자. Midjourney Prompt Generator, AI Art Card Collector 및 Prompt Organizer로 작동하여 프롬프트를 TCG 스타일 카드로 발행합니다. 안전한 로컬 AI 스타일 분석.",
+    "description": "The description of the extension"
+  }
+}

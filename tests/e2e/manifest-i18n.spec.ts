@@ -36,13 +36,13 @@ test.describe("Extension Manifest & Locale Files Metadata Verification @J-SYS-04
 
     // Check Japanese definitions
     expect(jaMessages.extName).toBeDefined()
-    expect(jaMessages.extName.message).toBe("Style Atelier")
+    expect(jaMessages.extName.message).toContain("Style Atelier")
     expect(jaMessages.extDescription).toBeDefined()
     expect(jaMessages.extDescription.message).toContain("Midjourney")
 
     // Check English definitions
     expect(enMessages.extName).toBeDefined()
-    expect(enMessages.extName.message).toBe("Style Atelier")
+    expect(enMessages.extName.message).toContain("Style Atelier")
     expect(enMessages.extDescription).toBeDefined()
     expect(enMessages.extDescription.message).toContain("Midjourney")
   })

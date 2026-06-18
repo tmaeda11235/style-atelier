@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Style Atelier",
+    "message": "Style Atelier - Midjourney Prompt Generator & Organizer",
     "description": "The name of the extension"
   },
   "extDescription": {
-    "message": "Midjourney専用のローカル第一プロンプト＆--sref管理ツール。プロンプトをTCG風カード化。完全ローカルAIが安全にスタイル分析。",
+    "message": "Midjourney専用のローカル第一プロンプト管理ツール。Midjourney Prompt Generator、AI Art Card Collector、Prompt Organizerとして、プロンプトをTCG風カード化し、安全にスタイル分析します。",
     "description": "The description of the extension"
   }
 }

@@ -6,23 +6,14 @@ import { useLanguage } from "../../contexts/LanguageContext"
 interface ExportSuccessModalProps {
   isOpen: boolean
   onClose: () => void
-}
-
-function handleShareClick(lang: string) {
-  const isJa = lang === "ja"
-  const text = isJa
-    ? "Midjourneyのプロンプトを Style Atelier でカード化しました！画像を追加してシェアしよう！"
-    : "I made a Midjourney prompt card using Style Atelier! Add your card image and share!"
-  const hashtags = "Midjourney,StyleAtelier"
-  const intentUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&hashtags=${encodeURIComponent(hashtags)}`
-
-  window.open(intentUrl, "_blank", "noopener,noreferrer")
+  exportedFile?: File | null
 }
 
 /* eslint-disable-next-line max-lines-per-function */
 export function ExportSuccessModal({
   isOpen,
-  onClose
+  onClose,
+  exportedFile
 }: ExportSuccessModalProps) {
   const { t, lang } = useLanguage()
 
@@ -42,6 +33,42 @@ export function ExportSuccessModal({
       "The exported card image preserves prompt metadata.\nOther users can directly import it back into Style Atelier.",
     shareText: "Share on X (Twitter)",
     closeText: "Close"
+  }
+
+  const handleShare = async () => {
+    if (
+      navigator.share &&
+      exportedFile &&
+      navigator.canShare &&
+      navigator.canShare({ files: [exportedFile] })
+    ) {
+      try {
+        const hashtags = "#Midjourney #StyleAtelier"
+        const shareData: ShareData = {
+          files: [exportedFile],
+          title: "Style Atelier Card",
+          text:
+            lang === "ja"
+              ? `Midjourneyのプロンプトを Style Atelier でカード化しました！ ${hashtags}`
+              : `I made a Midjourney prompt card using Style Atelier! ${hashtags}`,
+          url: window.location.origin
+        }
+        await navigator.share(shareData)
+        return
+      } catch (err) {
+        console.log("Navigator share failed, falling back to X intent:", err)
+      }
+    }
+
+    // Fallback to X (Twitter) intent
+    const isJa = lang === "ja"
+    const text = isJa
+      ? "Midjourneyのプロンプトを Style Atelier でカード化しました！画像を追加してシェアしよう！"
+      : "I made a Midjourney prompt card using Style Atelier! Add your card image and share!"
+    const hashtags = "Midjourney,StyleAtelier"
+    const intentUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&hashtags=${encodeURIComponent(hashtags)}`
+
+    window.open(intentUrl, "_blank", "noopener,noreferrer")
   }
 
   return (
@@ -69,7 +96,7 @@ export function ExportSuccessModal({
 
         <div className="px-5 pb-5 flex flex-col gap-2">
           <button
-            onClick={() => handleShareClick(lang)}
+            onClick={handleShare}
             id="export-success-share-btn"
             className="w-full py-2.5 bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center justify-center gap-2 focus:ring-2 focus:ring-sky-500/50">
             <Share2 className="w-4 h-4" />

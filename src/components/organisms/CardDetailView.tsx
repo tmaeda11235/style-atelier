@@ -262,6 +262,7 @@ function CardDetailViewLayout({
       <ExportSuccessModal
         isOpen={logic.exporter.showSuccessModal}
         onClose={() => logic.exporter.setShowSuccessModal(false)}
+        exportedFile={logic.exporter.exportedFile}
       />
     </div>
   )

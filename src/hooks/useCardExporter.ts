@@ -31,6 +31,12 @@ function buildExportCard(
   }
 }
 
+function createExportFile(blob: Blob, cardName: string): File {
+  const safeName = cardName.replace(/[\s/\\?%*:|"<>]/g, "_") || "style_card"
+  return new File([blob], `${safeName}.png`, { type: "image/png" })
+}
+
+/* eslint-disable-next-line max-lines-per-function */
 export function useCardExporter(
   card: StyleCard,
   name: string,
@@ -45,11 +51,13 @@ export function useCardExporter(
   const [isExporting, setIsExporting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [exportedFile, setExportedFile] = useState<File | null>(null)
 
   const handleExportCard = async () => {
     setIsExporting(true)
     setErrorMessage(null)
     setShowSuccessModal(false)
+    setExportedFile(null)
     try {
       const tempCard = buildExportCard(
         card,
@@ -62,7 +70,8 @@ export function useCardExporter(
         selectedThumbs,
         category
       )
-      await exportCardAsImage(tempCard)
+      const blob = await exportCardAsImage(tempCard)
+      setExportedFile(createExportFile(blob, tempCard.name))
       setShowSuccessModal(true)
     } catch (err: any) {
       console.error("Failed to export card:", err)
@@ -78,6 +87,7 @@ export function useCardExporter(
     setErrorMessage,
     showSuccessModal,
     setShowSuccessModal,
-    handleExportCard
+    handleExportCard,
+    exportedFile
   }
 }

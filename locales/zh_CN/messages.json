@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Style Atelier - Midjourney Prompt Generator & Organizer",
+    "description": "The name of the extension"
+  },
+  "extDescription": {
+    "message": "Midjourney 的本地优先提示词管理器。作为 Midjourney Prompt Generator、AI Art Card Collector 和 Prompt Organizer，将提示词铸造为 TCG 风格的卡牌。零信任本地 AI 风格分析。",
+    "description": "The description of the extension"
+  }
+}

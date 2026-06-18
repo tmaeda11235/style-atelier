@@ -40,7 +40,8 @@
         "@J-ORG-FOLDER-01",
         "@J-ORG-QUICK-SEND-01",
         "@J-ORG-CARD-HOLO-EFFECT-01",
-        "@J-ORG-BINDER-DND-01"
+        "@J-ORG-BINDER-DND-01",
+        "@J-EXPORT-SNS-SHARE"
       ],
       "viewComponents": [
         "src/components/organisms/LibraryTab.tsx",
@@ -806,6 +807,23 @@
         "src/mobile-app/index.ts",
         "src/mobile-app/local-ai-client.ts",
         "src/workers/local-ai.worker.ts"
+      ]
+    },
+    {
+      "id": "@J-EXPORT-SNS-SHARE",
+      "name": "エクスポートSNS共有",
+      "description": "カードエクスポート成功時にWeb Share APIまたはSNSインテントを利用してカード画像と情報を共有する",
+      "steps": [
+        "カード詳細を開く",
+        "Exportボタン押下",
+        "エクスポート成功モーダル確認",
+        "共有ボタン押下によるSNS共有実行"
+      ],
+      "nextJourneys": [],
+      "viewComponents": [
+        "src/components/molecules/ExportSuccessModal.tsx",
+        "src/hooks/useCardExporter.ts",
+        "src/lib/export-utils.ts"
       ]
     }
   ]
