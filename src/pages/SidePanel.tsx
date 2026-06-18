@@ -3,7 +3,8 @@ import React, { useEffect } from "react"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
 import { ConfirmProvider } from "../contexts/ConfirmContext"
-import { LanguageProvider } from "../contexts/LanguageContext"
+import { LanguageProvider, useLanguage } from "../contexts/LanguageContext"
+import { P2PSyncProvider } from "../contexts/P2PSyncContext"
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
 import { WebLlmProvider } from "../contexts/WebLlmContext"
@@ -21,9 +22,11 @@ import {
  * Main inner container for the side panel. It manages site target detection
  * and handles top-level routing between Easy Mode and Expert Mode.
  */
+/* eslint-disable-next-line max-lines-per-function */
 function SidePanelInner() {
   const { isTargetSite, isLoading } = useActiveTabUrl()
   const { isEasyMode, toggleEasyMode } = useSettings()
+  const { t } = useLanguage()
 
   const { preloadEngine } = useWebLlm()
 
@@ -56,23 +59,25 @@ function SidePanelInner() {
   }
 
   return (
-    <WorkbenchProvider>
-      {isEasyMode ? (
-        <EasyModeView
-          isEasyMode={isEasyMode}
-          onToggleEasyMode={handleToggleEasyMode}
-          isTargetSite={isTargetSite}
-          onOpenMidjourney={handleOpenMidjourney}
-        />
-      ) : (
-        <ExpertModeView
-          isEasyMode={isEasyMode}
-          onToggleEasyMode={handleToggleEasyMode}
-          isTargetSite={isTargetSite}
-          onOpenMidjourney={handleOpenMidjourney}
-        />
-      )}
-    </WorkbenchProvider>
+    <P2PSyncProvider t={t}>
+      <WorkbenchProvider>
+        {isEasyMode ? (
+          <EasyModeView
+            isEasyMode={isEasyMode}
+            onToggleEasyMode={handleToggleEasyMode}
+            isTargetSite={isTargetSite}
+            onOpenMidjourney={handleOpenMidjourney}
+          />
+        ) : (
+          <ExpertModeView
+            isEasyMode={isEasyMode}
+            onToggleEasyMode={handleToggleEasyMode}
+            isTargetSite={isTargetSite}
+            onOpenMidjourney={handleOpenMidjourney}
+          />
+        )}
+      </WorkbenchProvider>
+    </P2PSyncProvider>
   )
 }
 

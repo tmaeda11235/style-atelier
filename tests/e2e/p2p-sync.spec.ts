@@ -312,18 +312,24 @@ test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
     })
     expect(beforeUnloadResult).toBe(true) // should prevent default
 
-    // Try to click Library nav button
+    // Try to click Library nav button to trigger React ConfirmationDialog inside the iframe
     const libraryBtn = frame.locator("[data-tutorial='library-tab']")
+    await libraryBtn.click()
 
-    // Verification of navigation warning UI
-    // Set up dialog handler to dismiss the confirm dialog (which keeps us on the settings tab)
-    page.once("dialog", async (dialog) => {
-      expect(dialog.message()).toContain("P2P")
-      await dialog.dismiss() // cancel tab change
+    // Wait for the custom confirmation dialog to be visible
+    const cancelBtn = frame.locator("#confirm-dialog-cancel-btn")
+    await expect(cancelBtn).toBeVisible()
+
+    // Capture confirmation dialog screenshot
+    await page.screenshot({
+      path: path.join(
+        __dirname,
+        "../../tests/screenshots/p2p-sync-navigation-confirm.png"
+      )
     })
 
-    // Click Library nav button to trigger dialog
-    await libraryBtn.click()
+    // Click cancel button to dismiss the dialog and block tab change
+    await cancelBtn.click()
 
     // Wait a brief moment to ensure we stayed on Settings tab
     await page.waitForTimeout(1000)
