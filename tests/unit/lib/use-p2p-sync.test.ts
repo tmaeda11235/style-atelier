@@ -8,6 +8,10 @@ vi.mock("../../../src/lib/qr-utils", () => ({
   generateQRCodeUrl: vi.fn().mockResolvedValue("data:image/png;base64,mock-qr")
 }))
 
+vi.mock("jsqr", () => ({
+  default: vi.fn()
+}))
+
 vi.mock("../../../src/lib/p2p-connection", () => {
   return {
     P2PConnection: class {
@@ -210,5 +214,107 @@ describe("useP2PSync hook", () => {
     expect(result.current.role).toBe("idle")
     expect(result.current.status).toBe("setup")
     expect(result.current.qrCodeDataUrl).toBeNull()
+  })
+
+  it("should handle camera access denied errors", async () => {
+    // Mock navigator.mediaDevices.getUserMedia to throw an error
+    const mockGetUserMedia = vi
+      .fn()
+      .mockRejectedValue(new Error("Camera blocked"))
+    Object.defineProperty(global.navigator, "mediaDevices", {
+      value: { getUserMedia: mockGetUserMedia },
+      writable: true,
+      configurable: true
+    })
+
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    await act(async () => {
+      result.current.startGuestScan()
+    })
+
+    expect(result.current.isScanning).toBe(false)
+  })
+
+  it("should handle QR url parsing errors on manual submission", async () => {
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    act(() => {
+      result.current.setScanInputUrl("invalid-url-not-a-link")
+    })
+    act(() => {
+      result.current.handleManualUrlSubmit({ preventDefault: vi.fn() } as any)
+    })
+
+    expect(result.current.status).toBe("error")
+    expect(result.current.errorMessage).toContain("Failed to parse QR Code")
+  })
+
+  it("should scan QR frame and decode URL successfully using fake timers", async () => {
+    vi.useFakeTimers()
+
+    // Mock jsqr return value
+    const mockJsQR = (await import("jsqr")).default as any
+    mockJsQR.mockReturnValue({
+      data: "http://localhost?p2proom=room1&p2pkey=key1&p2pserver=ws%3A%2F%2Fserver"
+    })
+
+    // Mock getUserMedia
+    const mockGetUserMedia = vi.fn().mockResolvedValue({
+      getTracks: () => []
+    })
+    Object.defineProperty(global.navigator, "mediaDevices", {
+      value: { getUserMedia: mockGetUserMedia },
+      writable: true,
+      configurable: true
+    })
+
+    const { result } = renderHook(() => useP2PSync(mockT))
+
+    // Assign mock video and canvas elements to refs
+    const mockVideo = {
+      readyState: 4, // HAVE_ENOUGH_DATA
+      HAVE_ENOUGH_DATA: 4,
+      videoWidth: 100,
+      videoHeight: 100,
+      setAttribute: vi.fn(),
+      play: vi.fn()
+    }
+    const mockCanvas = {
+      getContext: vi.fn().mockReturnValue({
+        drawImage: vi.fn(),
+        getImageData: vi.fn().mockReturnValue({
+          data: new Uint8ClampedArray(40000),
+          width: 100,
+          height: 100
+        })
+      }),
+      width: 0,
+      height: 0
+    }
+
+    Object.defineProperty(result.current.videoRef, "current", {
+      value: mockVideo,
+      writable: true
+    })
+    Object.defineProperty(result.current.canvasRef, "current", {
+      value: mockCanvas,
+      writable: true
+    })
+
+    await act(async () => {
+      result.current.startGuestScan()
+    })
+
+    expect(result.current.isScanning).toBe(true)
+
+    // Trigger setInterval callback via timers
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
+    })
+
+    expect(result.current.status).toBe("connecting")
+
+    vi.useRealTimers()
   })
 })

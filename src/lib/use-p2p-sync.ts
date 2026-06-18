@@ -274,7 +274,7 @@ export function useP2PSync(t: any) {
       err
     )
   const scanFrame = () =>
-    scanQRFrame(videoRef, canvasRef, state.isScanning, stop, decoded)
+    scanQRFrame(videoRef, canvasRef, !!scanIntervalRef.current, stop, decoded)
 
   useEffect(() => {
     const conn = connectionRef.current

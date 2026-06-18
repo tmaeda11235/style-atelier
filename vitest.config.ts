@@ -41,9 +41,9 @@ export default defineConfig({
       ".stryker-tmp/**"
     ],
     coverage: {
-      provider: "v8",
+      provider: "istanbul",
       clean: true,
-      reporter: ["text", "json", "json-summary", "html"],
+      reporter: ["text"],
       exclude: [
         "node_modules/**",
         "dist/**",
@@ -51,6 +51,7 @@ export default defineConfig({
         "**/*.test.tsx",
         "**/*.d.ts",
         "src/style.css",
+        "**/*.json",
         "assets/**",
         "tests/mocks/**",
         "vitest.config.ts",
