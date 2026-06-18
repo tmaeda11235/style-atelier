@@ -6,7 +6,7 @@ export interface P2PConnectionOptions {
   rtcConfig?: RTCConfiguration
   onDataChannelOpen?: () => void
   onDataChannelClose?: () => void
-  onMessageReceived?: (data: string) => void
+  onMessageReceived?: (data: string | ArrayBuffer) => void
   onError?: (err: Error) => void
   onStatusChange?: (status: string) => void
 }
@@ -155,6 +155,10 @@ export class P2PConnection {
   }
 
   private setupDataChannel(channel: RTCDataChannel) {
+    channel.binaryType = "arraybuffer"
+    // Set default threshold for flow control to 64KB
+    channel.bufferedAmountLowThreshold = 65536
+
     channel.onopen = () => {
       this.emitStatus("datachannel-open")
       if (this.options.onDataChannelOpen) {
@@ -180,11 +184,27 @@ export class P2PConnection {
     }
   }
 
-  public send(data: string) {
+  public send(data: string | ArrayBuffer | Uint8Array) {
     if (this.channel && this.channel.readyState === "open") {
-      this.channel.send(data)
+      this.channel.send(data as any)
     } else {
       throw new Error("Data channel is not open")
+    }
+  }
+
+  public getBufferedAmount(): number {
+    return this.channel ? this.channel.bufferedAmount : 0
+  }
+
+  public setOnBufferedAmountLow(callback: (() => void) | null) {
+    if (this.channel) {
+      this.channel.onbufferedamountlow = callback
+    }
+  }
+
+  public setBufferedAmountLowThreshold(threshold: number) {
+    if (this.channel) {
+      this.channel.bufferedAmountLowThreshold = threshold
     }
   }
 

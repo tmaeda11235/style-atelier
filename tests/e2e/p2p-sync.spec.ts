@@ -86,7 +86,7 @@ test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
     }
 
     // 2. Initialize database state
-    // Guest starts with a custom test stylecard. Host starts with a clean database.
+    // Guest starts with a custom test stylecard and OPFS image. Host starts with a clean database.
     await frameGuest.locator("body").evaluate(async () => {
       const database = (window as any).db
       await database.styleCards.clear()
@@ -102,8 +102,26 @@ test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
         tier: "Legendary",
         tags: ["p2p-test"],
         dominantColor: "#00ff00",
+        imageUrl: "opfs:///images/p2p-test-image.png",
         thumbnailData: ""
       })
+
+      // Write dummy OPFS image
+      const root = await navigator.storage.getDirectory()
+      const imagesDir = await root.getDirectoryHandle("images", {
+        create: true
+      })
+      const fileHandle = await imagesDir.getFileHandle("p2p-test-image.png", {
+        create: true
+      })
+      const writable = await fileHandle.createWritable()
+      const dummyData = new Uint8Array([
+        71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0, 255, 255, 255,
+        33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 76, 1,
+        0, 59
+      ])
+      await writable.write(dummyData)
+      await writable.close()
     })
 
     await frameHost.locator("body").evaluate(async () => {
@@ -209,6 +227,34 @@ test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
       return !!card
     })
     expect(cardExists).toBe(true)
+
+    // 9. Verify Host has received the OPFS image file with matching content
+    const imageSyncSuccess = await frameHost
+      .locator("body")
+      .evaluate(async () => {
+        try {
+          const root = await navigator.storage.getDirectory()
+          const imagesDir = await root.getDirectoryHandle("images")
+          const fileHandle = await imagesDir.getFileHandle("p2p-test-image.png")
+          const file = await fileHandle.getFile()
+          const buf = await file.arrayBuffer()
+          const arr = new Uint8Array(buf)
+          const expected = [
+            71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0, 255, 255,
+            255, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2,
+            76, 1, 0, 59
+          ]
+          if (arr.length !== expected.length) return false
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i] !== expected[i]) return false
+          }
+          return true
+        } catch (e) {
+          console.error("OPFS image validation error in E2E Host:", e)
+          return false
+        }
+      })
+    expect(imageSyncSuccess).toBe(true)
 
     // Clean up
     await contextHost.close()

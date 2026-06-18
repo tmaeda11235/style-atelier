@@ -26,15 +26,65 @@ vi.mock("../../../src/lib/p2p-connection", () => {
 })
 
 vi.mock("../../../src/lib/p2p-sync-manager", () => ({
-  decryptSyncData: vi.fn().mockResolvedValue({ cards: [], categories: [] }),
+  decryptSyncData: vi.fn().mockImplementation(async (data) => {
+    if (data === "enc-image-list") {
+      return JSON.stringify({ type: "RELAY_IMAGE_LIST", files: [] })
+    }
+    if (data === "enc-sync-complete") {
+      return JSON.stringify({ type: "RELAY_SYNC_COMPLETE" })
+    }
+    if (data === "enc-req-image-list") {
+      return JSON.stringify({ type: "RELAY_REQ_IMAGE_LIST" })
+    }
+    if (data === "enc-req-images") {
+      return JSON.stringify({ type: "RELAY_REQ_IMAGES", missingFiles: [] })
+    }
+    return JSON.stringify({ cards: [], categories: [] })
+  }),
   mergeIncomingSyncData: vi
     .fn()
     .mockResolvedValue({ success: true, cardsCount: 5, categoriesCount: 2 }),
   prepareOutgoingSyncData: vi
     .fn()
-    .mockResolvedValue({ cards: [], categories: [] }),
-  encryptSyncData: vi.fn().mockResolvedValue("mock-encrypted-payload")
+    .mockResolvedValue(JSON.stringify({ cards: [], categories: [] })),
+  encryptSyncData: vi.fn().mockImplementation(async (data) => {
+    if (data.includes("RELAY_REQ_IMAGE_LIST")) return "enc-req-image-list"
+    if (data.includes("RELAY_IMAGE_LIST")) return "enc-image-list"
+    if (data.includes("RELAY_REQ_IMAGES")) return "enc-req-images"
+    if (data.includes("RELAY_SYNC_COMPLETE")) return "enc-sync-complete"
+    return "mock-encrypted-payload"
+  }),
+  scanLocalImages: vi.fn().mockResolvedValue(undefined),
+  getLocalImagesMetadata: vi.fn().mockResolvedValue([]),
+  saveIncomingImage: vi.fn().mockResolvedValue(undefined),
+  readOpfsFileAsBlob: vi.fn().mockResolvedValue(new Blob())
 }))
+
+vi.mock("../../../src/lib/db/migration-helpers", () => ({
+  computeHash: vi.fn().mockResolvedValue("mock-hash"),
+  listOpfsFiles: vi.fn().mockResolvedValue([])
+}))
+
+// Mock navigator.storage
+if (typeof global.navigator === "undefined") {
+  ;(global as any).navigator = {}
+}
+const mockGetDirectory = vi.fn().mockResolvedValue({
+  getDirectoryHandle: vi.fn().mockResolvedValue({
+    getFileHandle: vi.fn().mockResolvedValue({
+      createWritable: vi.fn().mockResolvedValue({
+        write: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      }),
+      getFile: vi.fn().mockResolvedValue(new Blob())
+    })
+  })
+})
+Object.defineProperty(global.navigator, "storage", {
+  value: { getDirectory: mockGetDirectory },
+  writable: true,
+  configurable: true
+})
 
 describe("useP2PSync hook", () => {
   const mockT = {
@@ -108,6 +158,12 @@ describe("useP2PSync hook", () => {
       await params.onMessageReceived("mock-encrypted-data")
     })
 
+    expect(result.current.status).toBe("syncing")
+
+    await act(async () => {
+      await params.onMessageReceived(JSON.stringify({ type: "SYNC_COMPLETE" }))
+    })
+
     expect(result.current.status).toBe("success")
     expect(result.current.processedCount.cards).toBe(5)
     expect(result.current.processedCount.categories).toBe(2)
@@ -152,6 +208,12 @@ describe("useP2PSync hook", () => {
   })
 
   it("should handle guest datachannel-open and encrypt/send local data successfully", async () => {
+    const { getLocalImagesMetadata } =
+      await import("../../../src/lib/p2p-sync-manager")
+    vi.mocked(getLocalImagesMetadata).mockResolvedValueOnce([
+      { filePath: "test-image.png", hash: "mock-hash-123" }
+    ])
+
     const { result } = renderHook(() => useP2PSync(mockT))
 
     act(() => {
@@ -168,6 +230,17 @@ describe("useP2PSync hook", () => {
 
     await act(async () => {
       await params.onStatusChange("datachannel-open")
+    })
+
+    expect(result.current.status).toBe("syncing")
+
+    await act(async () => {
+      await params.onMessageReceived(
+        JSON.stringify({
+          type: "DIFF_CHECK_RESPONSE",
+          missingFiles: []
+        })
+      )
     })
 
     expect(result.current.status).toBe("success")
@@ -320,9 +393,26 @@ describe("useP2PSync hook", () => {
 
   it("should fallback to relay-connecting and then relay-syncing on WebRTC timeout for host", async () => {
     vi.useFakeTimers()
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ data: "mock-encrypted-payload" })
+    let getCount = 0
+    const fetchMock = vi.fn().mockImplementation((url, init) => {
+      if (!init || init.method === "GET") {
+        getCount++
+        if (getCount === 1) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ data: "mock-encrypted-payload" })
+          })
+        } else {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ data: "enc-image-list" })
+          })
+        }
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ success: true })
+      })
     })
     global.fetch = fetchMock
 
@@ -341,7 +431,12 @@ describe("useP2PSync hook", () => {
 
     expect(result.current.status).toBe("relay-connecting")
 
-    // Fast-forward 2 seconds to trigger polling fetch
+    // Fast-forward 2 seconds to trigger first polling fetch (DB data)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+
+    // Fast-forward 2 seconds to trigger second polling fetch (image list)
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000)
     })
@@ -354,9 +449,26 @@ describe("useP2PSync hook", () => {
 
   it("should fallback to relay-syncing and POST data on WebRTC timeout for guest", async () => {
     vi.useFakeTimers()
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ success: true })
+    let getCount = 0
+    const fetchMock = vi.fn().mockImplementation((url, init) => {
+      if (!init || init.method === "GET") {
+        getCount++
+        if (getCount === 1) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ data: "enc-req-image-list" })
+          })
+        } else {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ data: "enc-req-images" })
+          })
+        }
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ success: true })
+      })
     })
     global.fetch = fetchMock
 
@@ -373,9 +485,19 @@ describe("useP2PSync hook", () => {
 
     expect(result.current.status).toBe("connecting")
 
-    // Fast-forward 10 seconds to trigger timeout
+    // Fast-forward 10 seconds to trigger timeout & first POST
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10000)
+    })
+
+    // Fast-forward 2 seconds to trigger first polling (wait for image list request)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+
+    // Fast-forward 2 seconds to trigger second polling (wait for missing images list)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
     })
 
     expect(result.current.status).toBe("success")

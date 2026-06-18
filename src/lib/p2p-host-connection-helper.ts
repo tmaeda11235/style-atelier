@@ -5,8 +5,23 @@ import type {
   HostConnectionParams,
   SyncStateUpdater
 } from "./p2p-connection-helpers"
+import { runHostRelayPolling } from "./p2p-host-relay-helper"
 import { WebSocketSignalingChannel } from "./p2p-signaling"
-import { decryptSyncData, mergeIncomingSyncData } from "./p2p-sync-manager"
+import {
+  decryptSyncData,
+  getLocalImagesMetadata,
+  mergeIncomingSyncData,
+  saveIncomingImage,
+  scanLocalImages
+} from "./p2p-sync-manager"
+
+interface ReceiveFileState {
+  filePath: string
+  size: number
+  hash: string
+  receivedSize: number
+  chunks: ArrayBuffer[]
+}
 
 async function handleReceivedDataAndMerge(
   encryptedPayload: string,
@@ -24,8 +39,8 @@ async function handleReceivedDataAndMerge(
     const mergeResult = await mergeIncomingSyncData(decrypted)
     if (mergeResult.success) {
       updateState({
-        status: "success",
-        statusMessage: t?.syncSuccess || "Sync completed successfully!",
+        status: "syncing",
+        statusMessage: "DB synced. Waiting for image sync...",
         processedCount: {
           cards: mergeResult.cardsCount,
           categories: mergeResult.categoriesCount
@@ -35,47 +50,6 @@ async function handleReceivedDataAndMerge(
       throw new Error("Merge failed")
     }
   } catch (err: any) {
-    handleError(err)
-  }
-}
-
-async function runHostRelayPolling(
-  getUrl: string,
-  key: string,
-  t: any,
-  updateState: SyncStateUpdater,
-  handleError: (err: Error) => void,
-  onSuccess: () => void
-) {
-  try {
-    const res = await fetch(getUrl)
-    if (res.ok) {
-      const result = await res.json()
-      if (result.data) {
-        onSuccess()
-        updateState({
-          status: "relay-syncing",
-          statusMessage: t?.receiving || "Receiving and decrypting data..."
-        })
-
-        const decrypted = await decryptSyncData(result.data, key)
-        const mergeResult = await mergeIncomingSyncData(decrypted)
-        if (mergeResult.success) {
-          updateState({
-            status: "success",
-            statusMessage: t?.syncSuccess || "Sync completed successfully!",
-            processedCount: {
-              cards: mergeResult.cardsCount,
-              categories: mergeResult.categoriesCount
-            }
-          })
-        } else {
-          throw new Error("Merge failed")
-        }
-      }
-    }
-  } catch (err: any) {
-    onSuccess()
     handleError(err)
   }
 }
@@ -93,6 +67,8 @@ class HostConnectionInitiator {
   private pollInterval: any = null
   private isRelayTriggered = false
   private timeoutId: any = null
+
+  private currentFile: ReceiveFileState | null = null
 
   constructor(params: HostConnectionParams) {
     this.wsUrl = params.wsUrl
@@ -144,10 +120,49 @@ class HostConnectionInitiator {
     }
   }
 
-  private async handleMessage(payload: string) {
-    this.isWebRTCOpen = true
-    clearTimeout(this.timeoutId)
-    if (this.pollInterval) clearInterval(this.pollInterval)
+  private async handleStringMessage(payload: string) {
+    try {
+      const msg = JSON.parse(payload)
+      if (msg.type === "DIFF_CHECK") {
+        await this.handleWebRtcDiffCheck(msg.files || [])
+        return
+      }
+      if (msg.type === "FILE_START") {
+        this.currentFile = {
+          filePath: msg.filePath,
+          size: msg.size,
+          hash: msg.hash,
+          receivedSize: 0,
+          chunks: []
+        }
+        this.updateState({
+          status: "syncing",
+          statusMessage: `Receiving image: ${msg.filePath}`
+        })
+        return
+      }
+      if (msg.type === "FILE_END") {
+        if (this.currentFile) {
+          const combined = this.combineChunks(this.currentFile.chunks)
+          await saveIncomingImage(
+            this.currentFile.filePath,
+            combined,
+            this.currentFile.hash
+          )
+          this.currentFile = null
+        }
+        return
+      }
+      if (msg.type === "SYNC_COMPLETE") {
+        this.updateState({
+          status: "success",
+          statusMessage: this.t?.syncSuccess || "Sync completed successfully!"
+        })
+        return
+      }
+    } catch {
+      // Ignore JSON parse errors for non-JSON payloads
+    }
     await handleReceivedDataAndMerge(
       payload,
       this.key,
@@ -155,6 +170,61 @@ class HostConnectionInitiator {
       this.updateState,
       this.handleError
     )
+  }
+
+  private async handleMessage(payload: string | ArrayBuffer) {
+    this.isWebRTCOpen = true
+    clearTimeout(this.timeoutId)
+    if (this.pollInterval) clearInterval(this.pollInterval)
+
+    if (typeof payload === "string") {
+      await this.handleStringMessage(payload)
+    } else {
+      // バイナリチャンク (ArrayBuffer)
+      if (this.currentFile) {
+        this.currentFile.chunks.push(payload)
+        this.currentFile.receivedSize += payload.byteLength
+      }
+    }
+  }
+
+  private async handleWebRtcDiffCheck(
+    files: Array<{ filePath: string; hash: string }>
+  ) {
+    try {
+      await scanLocalImages()
+      const localMetadata = await getLocalImagesMetadata()
+      const localMap = new Map(localMetadata.map((m) => [m.filePath, m.hash]))
+
+      const missingFiles: string[] = []
+      for (const f of files) {
+        if (!localMap.has(f.filePath) || localMap.get(f.filePath) !== f.hash) {
+          missingFiles.push(f.filePath)
+        }
+      }
+
+      if (this.connectionRef.current) {
+        this.connectionRef.current.send(
+          JSON.stringify({
+            type: "DIFF_CHECK_RESPONSE",
+            missingFiles
+          })
+        )
+      }
+    } catch (err: any) {
+      this.handleError(err)
+    }
+  }
+
+  private combineChunks(chunks: ArrayBuffer[]): ArrayBuffer {
+    const totalLength = chunks.reduce((acc, c) => acc + c.byteLength, 0)
+    const combined = new Uint8Array(totalLength)
+    let offset = 0
+    for (const c of chunks) {
+      combined.set(new Uint8Array(c), offset)
+      offset += c.byteLength
+    }
+    return combined.buffer
   }
 
   private handleErrorEvent(err: Error) {
@@ -191,21 +261,19 @@ class HostConnectionInitiator {
       const roomId = urlObj.searchParams.get("roomId") || ""
       const getUrl = `${urlObj.origin}/api/sync/${roomId}`
 
-      this.pollInterval = setInterval(() => {
-        runHostRelayPolling(
-          getUrl,
-          this.key,
-          this.t,
-          this.updateState,
-          this.handleError,
-          () => {
-            if (this.pollInterval) {
-              clearInterval(this.pollInterval)
-              this.pollInterval = null
-            }
+      this.pollInterval = runHostRelayPolling(
+        getUrl,
+        this.key,
+        this.t,
+        this.updateState,
+        this.handleError,
+        () => {
+          if (this.pollInterval) {
+            clearInterval(this.pollInterval)
+            this.pollInterval = null
           }
-        )
-      }, 2000)
+        }
+      )
     } catch (urlErr: any) {
       this.handleError(urlErr)
     }

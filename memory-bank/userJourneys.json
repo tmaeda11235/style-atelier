@@ -776,7 +776,9 @@
         "src/components/molecules/GDriveSyncStrategyDialog.tsx",
         "src/lib/p2p-signaling.ts",
         "src/lib/use-p2p-sync.ts",
-        "src/lib/p2p-connection-helpers.ts"
+        "src/lib/p2p-connection-helpers.ts",
+        "src/lib/p2p-sync-manager.ts",
+        "src/lib/p2p-connection.ts"
       ]
     },
     {
