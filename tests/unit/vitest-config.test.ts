@@ -90,10 +90,15 @@ describe("Vitest Configuration & Coverage Exception Check Script", () => {
       let errOccurred = false
       try {
         execSync(`node "${scriptPath}" "${validFile}" "${validFile}"`, {
-          stdio: "ignore"
+          stdio: "pipe"
         })
-      } catch (e) {
+      } catch (e: any) {
         errOccurred = true
+        console.error(
+          "Scenario A failed:",
+          e.stdout?.toString(),
+          e.stderr?.toString()
+        )
       }
       expect(errOccurred).toBe(false)
 
@@ -102,10 +107,15 @@ describe("Vitest Configuration & Coverage Exception Check Script", () => {
       try {
         execSync(
           `node "${scriptPath}" "${validStaticFile}" "${validStaticFile}"`,
-          { stdio: "ignore" }
+          { stdio: "pipe" }
         )
-      } catch (e) {
+      } catch (e: any) {
         errOccurred = true
+        console.error(
+          "Scenario B failed:",
+          e.stdout?.toString(),
+          e.stderr?.toString()
+        )
       }
       expect(errOccurred).toBe(false)
 
@@ -113,16 +123,18 @@ describe("Vitest Configuration & Coverage Exception Check Script", () => {
       errOccurred = false
       try {
         execSync(`node "${scriptPath}" "${invalidFile}" "${invalidFile}"`, {
-          stdio: "ignore"
+          stdio: "pipe"
         })
-      } catch (e) {
+      } catch (e: any) {
         errOccurred = true
       }
       expect(errOccurred).toBe(true)
     } finally {
-      // Clean up
-      if (fs.existsSync(tempDir)) {
+      // Cleanup
+      try {
         fs.rmSync(tempDir, { recursive: true, force: true })
+      } catch (e) {
+        // Ignore cleanup errors
       }
     }
   })
