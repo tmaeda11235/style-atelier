@@ -13,11 +13,11 @@ test.describe("Mobile Viewer E2E Test", () => {
     permissions: ["clipboard-write"]
   })
 
-  test("should render fallback Cyber Samurai, flip card and copy prompt with visual feedbacks @J-MOBILE-PREVIEW-01", async ({
+  test("should render fallback Cyber Samurai, flip card and copy prompt with visual feedbacks @J-WEB-LP-01", async ({
     page
   }) => {
-    // 1. Navigate to the mobile app index page (no params, should fallback)
-    await page.goto("/src/mobile-app/index.html?mock=true")
+    // 1. Navigate to the mobile app index page (no params, should fallback, and use mock mode)
+    await page.goto("/src/web-app/index.html?mock=true")
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")
@@ -47,6 +47,12 @@ test.describe("Mobile Viewer E2E Test", () => {
     // Wait for the flip animation (css transition is 0.8s, wait 1.2s to be safe)
     await page.waitForTimeout(1200)
 
+    // Verify prompt text is rendered correctly (not just parameters)
+    const promptText = page.locator("#promptText")
+    await expect(promptText).toContainText(
+      "A futuristic cyberpunk samurai standing in neon rain"
+    )
+
     // Take screenshot of the back of the Card
     const backScreenshotPath = path.join(
       "tests",
@@ -63,7 +69,6 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 16:9")
     await expect(badges.nth(1)).toHaveText("--stylize 750")
-
     // 3. Click the copy button and verify toast message appears
     const copyBtn = page.locator("#copyBtn")
     await copyBtn.click()
@@ -102,7 +107,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     console.log(`Saved screenshot to ${cloudSavedScreenshotPath}`)
   })
 
-  test("should render custom card dynamically from URL query parameters @J-MOBILE-PREVIEW-01", async ({
+  test("should render custom card dynamically from URL query parameters @J-WEB-LP-01", async ({
     page
   }) => {
     // 1. Prepare dynamic StyleCard test data
@@ -129,9 +134,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     const payload = compressCardData(testCard as StyleCard)
 
     // 3. Navigate with parameter '?p='
-    await page.goto(
-      `/src/mobile-app/index.html?p=${encodeURIComponent(payload)}`
-    )
+    await page.goto(`/src/web-app/index.html?p=${encodeURIComponent(payload)}`)
 
     // Wait for elements
     await page.waitForSelector(".phone-frame")
@@ -174,7 +177,6 @@ test.describe("Mobile Viewer E2E Test", () => {
     await expect(badges).toHaveCount(2)
     await expect(badges.nth(0)).toHaveText("--ar 4:3")
     await expect(badges.nth(1)).toHaveText("--stylize 250")
-
     // Take screenshot of dynamically loaded card back
     const dynamicBackScreenshotPath = path.join(
       "tests",

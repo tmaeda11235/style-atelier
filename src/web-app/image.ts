@@ -1,6 +1,6 @@
 import { readBlobFromOpfs, saveBase64ToOpfs } from "../lib/db/migration-helpers"
 
-const mobileImageCache = new Map<string, string>()
+const webImageCache = new Map<string, string>()
 
 export function isOpfsSupported(): boolean {
   return (
@@ -10,7 +10,7 @@ export function isOpfsSupported(): boolean {
   )
 }
 
-export async function resolveMobileCardImage(
+export async function resolveWebCardImage(
   cardId: string | undefined,
   thumbnailPath: string | undefined,
   thumbnailData: string | undefined
@@ -22,7 +22,7 @@ export async function resolveMobileCardImage(
   }
 
   const pathKey = thumbnailPath || `images/cards/${cardId}.png`
-  const cachedUrl = mobileImageCache.get(pathKey)
+  const cachedUrl = webImageCache.get(pathKey)
   if (cachedUrl) {
     return cachedUrl
   }
@@ -31,7 +31,7 @@ export async function resolveMobileCardImage(
     try {
       const blob = await readBlobFromOpfs(pathKey)
       const objectUrl = URL.createObjectURL(blob)
-      mobileImageCache.set(pathKey, objectUrl)
+      webImageCache.set(pathKey, objectUrl)
       return objectUrl
     } catch {
       if (thumbnailData && thumbnailData.startsWith("data:image/")) {
@@ -39,7 +39,7 @@ export async function resolveMobileCardImage(
           await saveBase64ToOpfs(pathKey, thumbnailData)
           const blob = await readBlobFromOpfs(pathKey)
           const objectUrl = URL.createObjectURL(blob)
-          mobileImageCache.set(pathKey, objectUrl)
+          webImageCache.set(pathKey, objectUrl)
           return objectUrl
         } catch (saveErr) {
           console.warn(
@@ -54,9 +54,9 @@ export async function resolveMobileCardImage(
   return thumbnailData || fallback
 }
 
-export function clearMobileImageCache(): void {
-  for (const url of mobileImageCache.values()) {
+export function clearWebImageCache(): void {
+  for (const url of webImageCache.values()) {
     URL.revokeObjectURL(url)
   }
-  mobileImageCache.clear()
+  webImageCache.clear()
 }

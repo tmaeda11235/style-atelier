@@ -5,23 +5,23 @@ import {
   saveBase64ToOpfs
 } from "../../src/lib/db/migration-helpers"
 import {
-  clearMobileImageCache,
-  resolveMobileCardImage
-} from "../../src/mobile-app/image"
+  clearWebImageCache,
+  resolveWebCardImage
+} from "../../src/web-app/image"
 
 vi.mock("../../src/lib/db/migration-helpers", () => ({
   readBlobFromOpfs: vi.fn(),
   saveBase64ToOpfs: vi.fn()
 }))
 
-describe("mobile-app resolveMobileCardImage", () => {
+describe("web-app resolveWebCardImage", () => {
   let objectUrlCounter = 0
   const createdUrls = new Set<string>()
 
   beforeEach(() => {
     objectUrlCounter = 0
     createdUrls.clear()
-    clearMobileImageCache()
+    clearWebImageCache()
     vi.mocked(readBlobFromOpfs).mockReset()
     vi.mocked(saveBase64ToOpfs).mockReset()
 
@@ -43,10 +43,10 @@ describe("mobile-app resolveMobileCardImage", () => {
   })
 
   it("should return fallback when cardId is not provided", async () => {
-    const res = await resolveMobileCardImage(undefined, undefined, undefined)
+    const res = await resolveWebCardImage(undefined, undefined, undefined)
     expect(res).toBe("./cyber_samurai.png")
 
-    const res2 = await resolveMobileCardImage(
+    const res2 = await resolveWebCardImage(
       undefined,
       undefined,
       "data:image/png;base64,foo"
@@ -56,7 +56,7 @@ describe("mobile-app resolveMobileCardImage", () => {
 
   it("should return thumbnailData if OPFS is not supported", async () => {
     vi.stubGlobal("navigator", {})
-    const res = await resolveMobileCardImage(
+    const res = await resolveWebCardImage(
       "card1",
       undefined,
       "data:image/png;base64,foo"
@@ -74,7 +74,7 @@ describe("mobile-app resolveMobileCardImage", () => {
     const mockBlob = new Blob(["test"], { type: "image/png" })
     vi.mocked(readBlobFromOpfs).mockResolvedValue(mockBlob)
 
-    const res = await resolveMobileCardImage(
+    const res = await resolveWebCardImage(
       "card1",
       "images/cards/card1.png",
       "data:image/png;base64,foo"
@@ -96,7 +96,7 @@ describe("mobile-app resolveMobileCardImage", () => {
 
     vi.mocked(saveBase64ToOpfs).mockResolvedValue(undefined)
 
-    const res = await resolveMobileCardImage(
+    const res = await resolveWebCardImage(
       "card1",
       "images/cards/card1.png",
       "data:image/png;base64,foo"
@@ -118,14 +118,14 @@ describe("mobile-app resolveMobileCardImage", () => {
     const mockBlob = new Blob(["test"], { type: "image/png" })
     vi.mocked(readBlobFromOpfs).mockResolvedValue(mockBlob)
 
-    const res1 = await resolveMobileCardImage(
+    const res1 = await resolveWebCardImage(
       "card1",
       "images/cards/card1.png",
       "data:image/png;base64,foo"
     )
     expect(res1).toBe("blob:mock-url-1")
 
-    const res2 = await resolveMobileCardImage(
+    const res2 = await resolveWebCardImage(
       "card1",
       "images/cards/card1.png",
       "data:image/png;base64,foo"

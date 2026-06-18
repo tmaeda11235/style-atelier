@@ -1,27 +1,34 @@
 import { expect, test } from "@playwright/test"
 
-test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
+test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, testInfo) => {
+    if (testInfo.project.name === "extension") {
+      test.skip()
+    }
+  })
+
   test("should load manifest and icons correctly", async ({
     page,
     request
   }) => {
-    // 1. Visit the mobile viewer page
-    await page.goto("/src/mobile-app/index.html")
+    // 1. Visit the web viewer page
+    await page.goto("/src/web-app/index.html?pwa=true")
 
     // Check if the manifest link is present in head
     const manifestLink = page.locator('link[rel="manifest"]')
-    await expect(manifestLink).toHaveAttribute("href", "/mobile/manifest.json")
+    await expect(manifestLink).toHaveAttribute("href", "/manifest.json")
 
     // Check if apple-touch-icon link is present in head
     const appleIconLink = page.locator('link[rel="apple-touch-icon"]')
-    await expect(appleIconLink).toHaveAttribute("href", "/mobile/icon-192.png")
+    await expect(appleIconLink).toHaveAttribute("href", "/icon-192.png")
 
     // Check if theme-color meta tag is present in head
     const themeColorMeta = page.locator('meta[name="theme-color"]')
     await expect(themeColorMeta).toHaveAttribute("content", "#8b5cf6")
 
     // 2. Directly fetch manifest.json using APIRequestContext
-    const manifestResponse = await request.get("/mobile/manifest.json")
+    const manifestResponse = await request.get("/manifest.json")
     expect(manifestResponse.ok()).toBe(true)
     const manifestJson = await manifestResponse.json()
 
@@ -29,7 +36,7 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
     expect(manifestJson.name).toBe("Style Atelier")
     expect(manifestJson.short_name).toBe("Atelier")
     expect(manifestJson.description).toBe("Midjourney Style Card Manager")
-    expect(manifestJson.start_url).toBe("/mobile/?pwa=true")
+    expect(manifestJson.start_url).toBe("/?pwa=true")
     expect(manifestJson.display).toBe("standalone")
     expect(manifestJson.background_color).toBe("#0a0a0c")
     expect(manifestJson.theme_color).toBe("#8b5cf6")
@@ -37,17 +44,17 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
 
     // Verify icons array
     expect(manifestJson.icons).toHaveLength(2)
-    expect(manifestJson.icons[0].src).toBe("/mobile/icon-192.png")
+    expect(manifestJson.icons[0].src).toBe("/icon-192.png")
     expect(manifestJson.icons[0].sizes).toBe("192x192")
-    expect(manifestJson.icons[1].src).toBe("/mobile/icon-512.png")
+    expect(manifestJson.icons[1].src).toBe("/icon-512.png")
     expect(manifestJson.icons[1].sizes).toBe("512x512")
 
     // 3. Directly fetch icons to ensure they are available
-    const icon192Response = await request.get("/mobile/icon-192.png")
+    const icon192Response = await request.get("/icon-192.png")
     expect(icon192Response.ok()).toBe(true)
     expect(icon192Response.headers()["content-type"]).toBe("image/png")
 
-    const icon512Response = await request.get("/mobile/icon-512.png")
+    const icon512Response = await request.get("/icon-512.png")
     expect(icon512Response.ok()).toBe(true)
     expect(icon512Response.headers()["content-type"]).toBe("image/png")
   })
@@ -60,7 +67,10 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
     const swPromise = context.waitForEvent("serviceworker")
 
     // Visit PWA with pwa=true
-    await page.goto("/mobile/?pwa=true")
+    await page.goto("/?pwa=true")
+    await page.waitForFunction(
+      () => typeof (window as any).__renderCardForTest === "function"
+    )
 
     // Wait for registration
     const sw = await swPromise
@@ -76,6 +86,21 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
               resolve()
             }
           })
+        })
+      }
+    })
+
+    // Wait for the Service Worker to control the page
+    await page.evaluate(async () => {
+      if (!navigator.serviceWorker.controller) {
+        await new Promise<void>((resolve) => {
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            () => {
+              resolve()
+            },
+            { once: true }
+          )
         })
       }
     })
@@ -100,14 +125,17 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
   test.describe("A2HS Installation Prompts", () => {
     test.beforeEach(async ({ page }) => {
       // Clear localStorage before each test
-      await page.goto("/src/mobile-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.waitForFunction(
+        () => typeof (window as any).__renderCardForTest === "function"
+      )
       await page.evaluate(() => localStorage.clear())
     })
 
     test("should display Android install dialog when beforeinstallprompt fires and hide on dismiss", async ({
       page
     }) => {
-      await page.goto("/src/mobile-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
 
       // Dispatch beforeinstallprompt
       await page.evaluate(() => {
@@ -145,7 +173,7 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
     test("should save dismissal and not show dialog on reload", async ({
       page
     }) => {
-      await page.goto("/src/mobile-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
 
       // Trigger beforeinstallprompt
       await page.evaluate(() => {
@@ -208,7 +236,7 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
         })
       })
 
-      await page.goto("/src/mobile-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
 
       // Trigger flip to show iOS tooltip
       await page.click("#cardContainer")
@@ -234,7 +262,10 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
 
   test.describe("OPFS Image Integration & Fallback", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/src/mobile-app/index.html")
+      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.waitForFunction(
+        () => typeof (window as any).__renderCardForTest === "function"
+      )
     })
 
     test("should save thumbnailData to OPFS and render it from OPFS when supported", async ({
@@ -349,7 +380,7 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
 
     test.beforeEach(async ({ page }) => {
       // Clear model downloaded state to force download UI
-      await page.goto("/src/mobile-app/index.html?mock=true")
+      await page.goto("/src/web-app/index.html?mock=true")
       await page.evaluate(async () => {
         localStorage.clear()
         localStorage.setItem("mock-webllm", "true")
@@ -371,7 +402,10 @@ test.describe("Mobile PWA Support @J-PWA-A2HS-OFFLINE-01", () => {
       const mockBase64 =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
-      await page.goto("/src/mobile-app/index.html?mock=true")
+      await page.goto("/src/web-app/index.html?mock=true")
+      await page.waitForFunction(
+        () => typeof (window as any).__renderCardForTest === "function"
+      )
 
       // 1. Render style card with a mock prompt
       await page.evaluate(

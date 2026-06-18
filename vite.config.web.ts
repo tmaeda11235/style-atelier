@@ -10,14 +10,14 @@ export default defineConfig({
     }),
     tsconfigPaths()
   ],
-  base: "/mobile/",
-  root: path.resolve(__dirname, "src/mobile-app"),
+  base: "/",
+  root: path.resolve(__dirname, "src/web-app"),
   build: {
-    outDir: path.resolve(__dirname, "dist-mobile"),
+    outDir: path.resolve(__dirname, "dist-web"),
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "src/mobile-app/index.html")
+        main: path.resolve(__dirname, "src/web-app/index.html")
       }
     }
   },

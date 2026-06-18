@@ -1,11 +1,11 @@
 /* eslint-disable */
-const CACHE_NAME = "style-atelier-mobile-v1"
+const CACHE_NAME = "style-atelier-web-v1"
 const ASSETS = [
-  "/mobile/",
-  "/mobile/index.html",
-  "/mobile/manifest.json",
-  "/mobile/icon-192.png",
-  "/mobile/icon-512.png",
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/icon-192.png",
+  "/icon-512.png",
   "__CSS_PATH__",
   "__JS_PATH__"
 ]
@@ -51,7 +51,7 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // /mobile/ 配下のリクエストに対するキャッシュ戦略
+  // Web Appのリクエストに対するキャッシュ戦略
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -77,7 +77,7 @@ self.addEventListener("fetch", (event) => {
         .catch(() => {
           // オフライン時のナビゲーションフォールバック
           if (event.request.mode === "navigate") {
-            return caches.match("/mobile/index.html")
+            return caches.match("/index.html")
           }
         })
     })

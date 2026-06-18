@@ -11,7 +11,7 @@ import {
   type SaveResult
 } from "./gdrive"
 import { setupCardContainerEvents } from "./hologram"
-import { resolveMobileCardImage } from "./image"
+import { resolveWebCardImage } from "./image"
 import { LocalAiClient } from "./local-ai-client"
 
 let currentCardData: Partial<StyleCard> | null = null
@@ -65,7 +65,7 @@ function renderCardImage(card: Partial<StyleCard>) {
     <img src="./cyber_samurai.png" alt="${card.name || "Card Image"}" class="card-image loading">
     <div class="card-image-overlay">Tap to reveal Prompt</div>
   `
-  resolveMobileCardImage(card.id, card.thumbnailPath, card.thumbnailData)
+  resolveWebCardImage(card.id, card.thumbnailPath, card.thumbnailData)
     .then((src) => {
       const img = container.querySelector("img")
       if (img) {
@@ -468,11 +468,21 @@ function initLocalAi() {
   client.checkModelDownloaded()
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+export function initPwaViewer(onBackToLp?: () => void) {
   loadCardFromUrl()
   setupEventHandlers()
   initA2HS()
   initLocalAi()
+
+  if (onBackToLp) {
+    const installCta = document.getElementById("installCta")
+    if (installCta) {
+      installCta.addEventListener("click", (e) => {
+        e.preventDefault()
+        onBackToLp()
+      })
+    }
+  }
 
   if (typeof window !== "undefined") {
     ;(window as any).__renderCardForTest = renderCard
@@ -483,8 +493,8 @@ document.addEventListener("DOMContentLoaded", () => {
     (import.meta.env.PROD || window.location.search.includes("pwa=true"))
   ) {
     navigator.serviceWorker
-      .register("/mobile/sw.js")
+      .register("/sw.js")
       .then((reg) => console.log("ServiceWorker registered: ", reg.scope))
       .catch((err) => console.error("ServiceWorker failed: ", err))
   }
-})
+}

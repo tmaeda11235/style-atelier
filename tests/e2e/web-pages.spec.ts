@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-test.describe("Mobile Pages & Google Drive Integration @J-MOBILE-PREVIEW-01", () => {
+test.describe("Web Pages & Google Drive Integration @J-WEB-LP-01", () => {
   test.beforeEach(async ({ page }) => {
     // Mock the Google Identity Services script loading to prevent it from overwriting our window.google mock
     await page.route(
@@ -24,7 +24,7 @@ test.describe("Mobile Pages & Google Drive Integration @J-MOBILE-PREVIEW-01", ()
                 requestAccessToken: () => {
                   if (config.callback) {
                     config.callback({
-                      access_token: "mock-mobile-access-token"
+                      access_token: "mock-web-access-token"
                     })
                   }
                 }
@@ -60,13 +60,16 @@ test.describe("Mobile Pages & Google Drive Integration @J-MOBILE-PREVIEW-01", ()
     })
 
     // Use relative path to support dynamic port allocation
-    await page.goto("/src/mobile-app/index.html")
+    await page.goto("/src/web-app/index.html?pwa=true")
+    await page.waitForFunction(
+      () => typeof (window as any).__renderCardForTest === "function"
+    )
     await page.evaluate(() => {
       ;(window as any).__E2E_TEST__ = true
     })
   })
 
-  test("should render the mobile app correctly", async ({ page }) => {
+  test("should render the web app correctly", async ({ page }) => {
     // アプリのヘッダタイトルが表示されているか確認
     await expect(page.locator(".app-title")).toHaveText("STYLE ATELIER")
 

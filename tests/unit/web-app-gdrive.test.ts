@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { GDriveClient } from "../../src/mobile-app/gdrive-client"
+import { GDriveClient } from "../../src/web-app/gdrive-client"
 
 describe("GDriveClient", () => {
   const mockClientId = "test-client-id"

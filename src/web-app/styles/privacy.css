@@ -1,0 +1,321 @@
+:root {
+  --bg-gradient:
+    radial-gradient(
+      circle at top right,
+      rgba(99, 102, 241, 0.08),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(59, 130, 246, 0.08),
+      transparent 40%
+    ),
+    #fafafa;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(226, 232, 240, 0.8);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --shadow:
+    0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --badge-bg: rgba(59, 130, 246, 0.08);
+  --badge-text: #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-gradient:
+      radial-gradient(
+        circle at top right,
+        rgba(99, 102, 241, 0.15),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at bottom left,
+        rgba(59, 130, 246, 0.15),
+        transparent 40%
+      ),
+      #0b0f19;
+    --card-bg: rgba(17, 24, 39, 0.7);
+    --card-border: rgba(31, 41, 55, 0.6);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --primary: #60a5fa;
+    --primary-hover: #3b82f6;
+    --shadow:
+      0 10px 30px -10px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --badge-bg: rgba(96, 165, 250, 0.12);
+    --badge-text: #60a5fa;
+  }
+}
+
+.pp-body {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem 1rem;
+  line-height: 1.6;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+  width: 100%;
+}
+
+.pp-container {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Glassmorphism Header */
+.pp-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.pp-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pp-logo-icon {
+  font-size: 1.75rem;
+  animation: pp-spin-slow 12s linear infinite;
+}
+
+@keyframes pp-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pp-logo-text {
+  font-family: "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Toggle Switch Component */
+.pp-lang-switcher {
+  display: flex;
+  background: var(--card-border);
+  padding: 0.25rem;
+  border-radius: 9999px;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.pp-lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pp-lang-btn.active {
+  background: var(--card-bg);
+  color: var(--badge-text);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* main card */
+.pp-main {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  padding: 3rem 2.5rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.pp-title-h1 {
+  font-family: "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 2.25rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.pp-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-bottom: 2.5rem;
+  font-weight: 500;
+}
+
+.pp-section-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.pp-section {
+  margin-bottom: 2.5rem;
+  animation: pp-fadeIn 0.4s ease-out;
+}
+
+.pp-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.pp-title-h2 {
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pp-p {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.pp-ul {
+  list-style-type: none;
+  margin-bottom: 1.25rem;
+  padding-left: 0.25rem;
+}
+
+.pp-li {
+  color: var(--text-muted);
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.pp-li::before {
+  content: "✦";
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: bold;
+}
+
+/* Highlight box for key messages */
+.pp-callout {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.05),
+    rgba(99, 102, 241, 0.05)
+  );
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pp-callout p {
+  color: var(--text-main);
+  font-weight: 500;
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+.pp-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.pp-link:hover {
+  color: var(--primary-hover);
+  border-bottom-color: var(--primary-hover);
+}
+
+.pp-footer {
+  margin-top: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+@keyframes pp-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .pp-body {
+    padding: 1rem 0.5rem;
+  }
+  .pp-header {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .pp-main {
+    padding: 2rem 1.5rem;
+    border-radius: 1rem;
+  }
+  .pp-title-h1 {
+    font-size: 1.75rem;
+  }
+  .pp-title-h2 {
+    font-size: 1.2rem;
+  }
+  .pp-p,
+  .pp-li {
+    font-size: 0.9rem;
+  }
+}
