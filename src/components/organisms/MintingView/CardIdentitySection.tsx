@@ -22,10 +22,10 @@ interface CardIdentitySectionProps {
 function PreviewNameBox({ t, currentName }: { t: any; currentName: string }) {
   return (
     <div className="mb-4">
-      <label className="block text-xs font-medium text-slate-500 mb-1">
+      <label className="block text-xs font-medium text-text-secondary mb-1">
         {t.minting.previewName}
       </label>
-      <div className="p-2 bg-slate-100 rounded border text-sm font-bold text-slate-800 min-h-[2.5rem] flex items-center">
+      <div className="p-2 bg-muted rounded border border-border-primary text-sm font-bold text-text-primary min-h-[2.5rem] flex items-center">
         {currentName}
       </div>
     </div>
@@ -45,7 +45,7 @@ function KeywordsSelector({
 }) {
   return (
     <div className="mb-4">
-      <label className="block text-xs font-medium text-slate-500 mb-2">
+      <label className="block text-xs font-medium text-text-secondary mb-2">
         {t.minting.selectKeywords}
       </label>
       <div className="flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ function CustomNameField({
 }) {
   return (
     <div className="mb-4" data-tutorial="title-input">
-      <label className="block text-xs font-medium text-slate-500 mb-1">
+      <label className="block text-xs font-medium text-text-secondary mb-1">
         {t.minting.customName}
       </label>
       <Input
@@ -123,14 +123,14 @@ function CategorySelectorBox({
   }
   return (
     <div className="mb-4">
-      <label className="flex items-center gap-1 text-xs font-medium text-slate-500 mb-1">
+      <label className="flex items-center gap-1 text-xs font-medium text-text-secondary mb-1">
         {t.minting.category}
         <HelpTooltip content={t.helpTooltips.categories} position="top-left" />
       </label>
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
-        className="w-full text-sm border rounded bg-white p-2">
+        className="w-full text-sm border border-border-primary rounded bg-surface text-text-primary p-2">
         <option value="">{t.minting.noCategory}</option>
         {categoriesList.map((cat) => (
           <option key={cat.id} value={cat.id}>
@@ -171,8 +171,8 @@ export function CardIdentitySection({
   advanceIfStep
 }: CardIdentitySectionProps) {
   return (
-    <div className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
-      <h3 className="text-sm font-bold mb-3 text-slate-700 uppercase tracking-wider">
+    <div className="mb-6 p-4 border border-border-primary rounded-lg bg-surface shadow-sm">
+      <h3 className="text-sm font-bold mb-3 text-text-primary uppercase tracking-wider">
         {t.minting.cardIdentity}
       </h3>
       <PreviewAndKeywords

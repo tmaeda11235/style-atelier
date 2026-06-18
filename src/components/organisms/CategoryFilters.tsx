@@ -87,7 +87,7 @@ export function CategoryFilterButton({
       className={`flex items-center gap-1 flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
         isSelected
           ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+          : "bg-surface border-border-primary text-text-secondary hover:border-border-primary/80 hover:bg-surface-hover"
       } ${isOverStyle}`}>
       {imageOrEmoji}
       <span>{displayName}</span>
@@ -137,8 +137,8 @@ export function CategoryFiltersRow(props: CategoryFiltersRowProps) {
           data-testid="category-filter-btn-all"
           className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
             props.categoryFilter === "All"
-              ? "bg-slate-800 border-slate-800 text-white shadow-sm"
-              : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+              ? "bg-text-primary border-text-primary text-surface shadow-sm"
+              : "bg-surface border-border-primary text-text-secondary hover:border-border-primary/80 hover:bg-surface-hover"
           } ${isOverStyle}`}>
           {props.allCategoriesLabel}
         </button>
@@ -153,7 +153,7 @@ export function CategoryFiltersRow(props: CategoryFiltersRowProps) {
         ))}
         <button
           onClick={() => props.setIsCategoryModalOpen(true)}
-          className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-dashed border-slate-300 transition-colors flex-shrink-0"
+          className="flex items-center justify-center w-6 h-6 rounded-full bg-muted hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-dashed border-border-primary transition-colors flex-shrink-0"
           title={props.manageCategoriesTitle}>
           <Tag className="w-3.5 h-3.5" />
         </button>

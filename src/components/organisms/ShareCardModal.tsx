@@ -26,14 +26,14 @@ interface HeaderProps {
 
 function ShareCardModalHeader({ title, onClose }: HeaderProps) {
   return (
-    <div className="p-4 border-b dark:border-slate-800 flex items-center justify-between">
-      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+    <div className="p-4 border-b border-border-primary flex items-center justify-between">
+      <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
         <Share2 className="w-4 h-4 text-blue-500" />
         <span>{title}</span>
       </h3>
       <button
         onClick={onClose}
-        className="p-1 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-500 dark:hover:text-slate-300 transition-colors">
+        className="p-1 rounded-full text-text-secondary hover:bg-surface-hover transition-colors">
         <X className="w-4 h-4" />
       </button>
     </div>
@@ -48,8 +48,8 @@ interface CardSummaryProps {
 
 function CardSummary({ card, tierLabel, srefIdLabel }: CardSummaryProps) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 border dark:border-slate-800 rounded-lg">
-      <div className="w-16 h-16 rounded overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0">
+    <div className="flex items-center gap-3 p-3 bg-muted border border-border-primary rounded-lg">
+      <div className="w-16 h-16 rounded overflow-hidden border border-border-primary shadow-sm flex-shrink-0">
         <OpfsImage
           src={card.thumbnailPath || card.thumbnailData || "assets/icon.png"}
           className="w-full h-full object-cover"
@@ -57,14 +57,14 @@ function CardSummary({ card, tierLabel, srefIdLabel }: CardSummaryProps) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+        <p className="text-xs font-bold text-text-primary truncate">
           {card.name}
         </p>
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+        <p className="text-[10px] text-text-secondary mt-0.5">
           {tierLabel} {card.tier}
         </p>
         {card.parameters?.sref && (
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+          <p className="text-[10px] text-text-secondary truncate mt-0.5">
             {srefIdLabel} {card.parameters.sref}
           </p>
         )}
@@ -81,10 +81,8 @@ interface BrandLogoToggleProps {
 
 function BrandLogoToggle({ label, enabled, onToggle }: BrandLogoToggleProps) {
   return (
-    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-950 border dark:border-slate-800 rounded-lg p-3">
-      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-        {label}
-      </span>
+    <div className="flex items-center justify-between bg-muted border border-border-primary rounded-lg p-3">
+      <span className="text-xs font-bold text-text-primary">{label}</span>
       <button
         type="button"
         id="share-modal-brand-logo-toggle"
@@ -136,7 +134,7 @@ function ShareActions({
         onClick={onOpenSharePage}
         variant="outline"
         disabled={isSharing}
-        className="w-full py-2.5 flex items-center justify-center gap-2 text-slate-700 border-slate-300 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 font-bold text-xs"
+        className="w-full py-2.5 flex items-center justify-center gap-2 font-bold text-xs"
         data-testid="share-page-button">
         <ExternalLink className="w-4 h-4" />
         {openPageBtn}
@@ -146,7 +144,7 @@ function ShareActions({
         onClick={onDownload}
         variant="secondary"
         disabled={isSharing}
-        className="w-full py-2.5 flex items-center justify-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-xs"
+        className="w-full py-2.5 flex items-center justify-center gap-2 font-bold text-xs"
         data-testid="share-download-button">
         <Download className="w-4 h-4" />
         {downloadPngBtn}
@@ -192,7 +190,7 @@ export function ShareCardModal({ card, onClose, addLog }: ShareCardModalProps) {
       className="absolute inset-0 bg-black/20 dark:bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end"
       onClick={onClose}>
       <div
-        className="bg-white dark:bg-slate-900 rounded-t-xl max-h-[85%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0"
+        className="bg-surface rounded-t-xl max-h-[85%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0"
         onClick={(e) => e.stopPropagation()}>
         <ShareCardModalHeader title={t.share.shareTitle} onClose={onClose} />
 
