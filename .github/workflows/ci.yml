@@ -111,14 +111,14 @@ jobs:
 
       - name: Verify ESLint exception list is synchronized
         run: |
-          node scratch/auto-sync-eslint.js
+          node scripts/auto-sync-eslint.js
           git diff --exit-code eslint.config.mjs
 
       - name: Fetch base branch for verification
         run: git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
 
       - name: Verify ESLint Whitelist has not grown
-        run: node scratch/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
+        run: node scripts/check-eslint-whitelist.js eslint.config.mjs ${{ github.base_ref }}
 
       - name: Run unit tests with coverage
         run: npm test -- --coverage
