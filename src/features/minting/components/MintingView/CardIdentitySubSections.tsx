@@ -1,8 +1,8 @@
 import React from "react"
 
-import { Button } from "../../atoms/Button"
-import { HelpTooltip } from "../../atoms/HelpTooltip"
-import { Input } from "../../atoms/Input"
+import { Button } from "../../../../components/atoms/Button"
+import { HelpTooltip } from "../../../../components/atoms/HelpTooltip"
+import { Input } from "../../../../components/atoms/Input"
 
 const CHAR_CLOSE = "×"
 const EMOJI_PALETTE = "🎨"

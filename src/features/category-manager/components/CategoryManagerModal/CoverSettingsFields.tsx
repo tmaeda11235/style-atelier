@@ -1,9 +1,9 @@
 import { Image as ImageIcon } from "lucide-react"
 import React from "react"
 
-import { compressCategoryCoverImage } from "../../../lib/image-utils"
-import { Button } from "../../atoms/Button"
-import { OpfsImage } from "../../atoms/OpfsImage"
+import { compressCategoryCoverImage } from "../../../../lib/image-utils"
+import { Button } from "../../../../components/atoms/Button"
+import { OpfsImage } from "../../../../components/atoms/OpfsImage"
 
 interface CoverSettingsFieldsProps {
   t: any

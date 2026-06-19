@@ -1,9 +1,9 @@
 import React from "react"
 
-import type { CustomCategory } from "../../../shared/lib/db-schema"
-import { HelpTooltip } from "../../atoms/HelpTooltip"
-import { Input } from "../../atoms/Input"
-import { TagEditor } from "../../molecules/TagEditor"
+import type { CustomCategory } from "../../../../shared/lib/db-schema"
+import { HelpTooltip } from "../../../../components/atoms/HelpTooltip"
+import { Input } from "../../../../components/atoms/Input"
+import { TagEditor } from "../../../../components/molecules/TagEditor"
 
 const DEFAULT_CATEGORY_ICON = "🖼️"
 

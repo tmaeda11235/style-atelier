@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useCategoryManager } from "../../hooks/useCategoryManager"
+import { useCategoryManager } from "../../../hooks/useCategoryManager"
 import { CategoryModalHeader } from "./CategoryManagerModal/CategoryModalHeader"
 import { ModalContent } from "./CategoryManagerModal/ModalContent"
 

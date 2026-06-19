@@ -1,7 +1,7 @@
 import React from "react"
 
-import type { StyleCard } from "../../../shared/lib/db-schema"
-import { ParameterEditor } from "../ParameterEditor"
+import type { StyleCard } from "../../../../shared/lib/db-schema"
+import { ParameterEditor } from "../../../../components/organisms/ParameterEditor"
 
 const TEXT_TRUE = "true"
 

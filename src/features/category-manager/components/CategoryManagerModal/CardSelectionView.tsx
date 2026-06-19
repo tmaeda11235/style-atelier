@@ -1,6 +1,6 @@
 import React from "react"
 
-import type { StyleCard } from "../../../shared/lib/db-schema"
+import type { StyleCard } from "../../../../shared/lib/db-schema"
 
 interface CardSelectionViewProps {
   t: any

@@ -1,7 +1,7 @@
 import { Edit2, Trash2 } from "lucide-react"
 import React from "react"
 
-import type { CustomCategory } from "../../../shared/lib/db-schema"
+import type { CustomCategory } from "../../../../shared/lib/db-schema"
 
 interface CategoryListProps {
   t: any
