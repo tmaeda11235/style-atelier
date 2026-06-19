@@ -79,6 +79,15 @@ test.describe("Premium License and UpgradeModal E2E Tests @J-PREMIUM-LICENSE-01"
       path: path.join(screenshotsDir, "license-activated-pro.png")
     })
 
+    // 6b. Reload page to verify license persistence & unobscure load
+    await page.reload()
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+    await settingsNavBtn.click()
+    await licenseAccordionHeader.click()
+    await expect(statusBadge).toHaveText(/Active|有効/)
+
     // Verify deactivate button is visible
     const deactivateBtn = spFrame.locator("#license-deactivate-btn")
     await expect(deactivateBtn).toBeVisible()

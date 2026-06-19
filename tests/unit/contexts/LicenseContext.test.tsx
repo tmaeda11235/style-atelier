@@ -3,7 +3,7 @@ import {
   useLicense,
   verifyLicenseKey
 } from "@/contexts/LicenseContext"
-import { act, renderHook } from "@testing-library/react"
+import { act, renderHook, waitFor } from "@testing-library/react"
 import React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -82,20 +82,23 @@ describe("LicenseContext & verifyLicenseKey", () => {
       expect(status).toBe("invalid")
     })
 
-    it("should fallback to invalid on API error status", async () => {
+    it("should fallback to invalid and throw error on API error status", async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: false
+        ok: false,
+        status: 500
       })
 
-      const status = await verifyLicenseKey("ONLINE-ERROR-KEY")
-      expect(status).toBe("invalid")
+      await expect(verifyLicenseKey("ONLINE-ERROR-KEY")).rejects.toThrow(
+        "Lemon Squeezy API request failed with status 500"
+      )
     })
 
-    it("should fallback to invalid on network throw", async () => {
+    it("should fallback to invalid and throw error on network throw", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network failed"))
 
-      const status = await verifyLicenseKey("ONLINE-THROW-KEY")
-      expect(status).toBe("invalid")
+      await expect(verifyLicenseKey("ONLINE-THROW-KEY")).rejects.toThrow(
+        "Network failed"
+      )
     })
   })
 
@@ -103,6 +106,16 @@ describe("LicenseContext & verifyLicenseKey", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <LicenseProvider>{children}</LicenseProvider>
     )
+
+    // Obfuscation helper helper for assertion
+    const obscure = (text: string) => {
+      const key = 42
+      const xor = text
+        .split("")
+        .map((c) => String.fromCharCode(c.charCodeAt(0) ^ key))
+        .join("")
+      return btoa(unescape(encodeURIComponent(xor)))
+    }
 
     it("should provide default unlicensed values", () => {
       const { result } = renderHook(() => useLicense(), { wrapper })
@@ -115,9 +128,16 @@ describe("LicenseContext & verifyLicenseKey", () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    it("should load from localStorage on init", () => {
-      localStorage.setItem("style-atelier-license-key", "PRO-MEMBER-TEST-KEY")
+    it("should load from localStorage on init and unobscure key", () => {
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("PRO-MEMBER-TEST-KEY")
+      )
       localStorage.setItem("style-atelier-license-status", "valid")
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        Date.now().toString()
+      )
 
       const { result } = renderHook(() => useLicense(), { wrapper })
 
@@ -139,14 +159,47 @@ describe("LicenseContext & verifyLicenseKey", () => {
       expect(result.current.licenseStatus).toBe("valid")
       expect(result.current.isPremium).toBe(true)
       expect(localStorage.getItem("style-atelier-license-key")).toBe(
-        "PRO-MEMBER-TEST-KEY"
+        obscure("PRO-MEMBER-TEST-KEY")
       )
       expect(localStorage.getItem("style-atelier-license-status")).toBe("valid")
+      expect(
+        localStorage.getItem("style-atelier-license-last-verified")
+      ).not.toBeNull()
+    })
+
+    it("should handle license activation API error / throw flow", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("API offline"))
+      const { result } = renderHook(() => useLicense(), { wrapper })
+
+      let success: boolean = true
+      await act(async () => {
+        success = await result.current.activateLicense("ONLINE-THROW-KEY")
+      })
+
+      expect(success).toBe(false)
+      expect(result.current.licenseStatus).toBe("invalid")
+      expect(result.current.isPremium).toBe(false)
+      expect(localStorage.getItem("style-atelier-license-key")).toBe(
+        obscure("ONLINE-THROW-KEY")
+      )
+      expect(localStorage.getItem("style-atelier-license-status")).toBe(
+        "invalid"
+      )
+      expect(
+        localStorage.getItem("style-atelier-license-last-verified")
+      ).toBeNull()
     })
 
     it("should handle license deactivation flow", async () => {
-      localStorage.setItem("style-atelier-license-key", "PRO-MEMBER-TEST-KEY")
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("PRO-MEMBER-TEST-KEY")
+      )
       localStorage.setItem("style-atelier-license-status", "valid")
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        Date.now().toString()
+      )
 
       const { result } = renderHook(() => useLicense(), { wrapper })
 
@@ -159,6 +212,9 @@ describe("LicenseContext & verifyLicenseKey", () => {
       expect(result.current.isPremium).toBe(false)
       expect(localStorage.getItem("style-atelier-license-key")).toBeNull()
       expect(localStorage.getItem("style-atelier-license-status")).toBeNull()
+      expect(
+        localStorage.getItem("style-atelier-license-last-verified")
+      ).toBeNull()
     })
 
     it("should control upgrade modal open/close states", () => {
@@ -189,6 +245,137 @@ describe("LicenseContext & verifyLicenseKey", () => {
 
       expect(result.current.upgradeModalOpen).toBe(true)
       expect(result.current.upgradeModalReason).toBe("test-reason")
+    })
+
+    it("should use local cache and skip API call if verified within 24 hours", () => {
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("PRO-MEMBER-TEST-KEY")
+      )
+      localStorage.setItem("style-atelier-license-status", "valid")
+      const verifiedRecent = Date.now() - 1000 * 60 * 60 // 1 hour ago
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        verifiedRecent.toString()
+      )
+
+      // verifyLicenseKey would not be called since it is cached
+      const spy = vi.spyOn(global, "fetch")
+      renderHook(() => useLicense(), { wrapper })
+      expect(spy).not.toHaveBeenCalled()
+    })
+
+    it("should revalidate in background if verified > 24 hours ago, updating last-verified on success", async () => {
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("ONLINE-VALID-KEY")
+      )
+      localStorage.setItem("style-atelier-license-status", "valid")
+      const verifiedOld = Date.now() - 1000 * 60 * 60 * 25 // 25 hours ago
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        verifiedOld.toString()
+      )
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ activated: true })
+      })
+
+      const { result } = renderHook(() => useLicense(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      expect(localStorage.getItem("style-atelier-license-status")).toBe("valid")
+      const newVerified = parseInt(
+        localStorage.getItem("style-atelier-license-last-verified") || "0",
+        10
+      )
+      expect(newVerified).toBeGreaterThan(verifiedOld)
+    })
+
+    it("should invalidate in background if verified > 24 hours ago, and API returns invalid", async () => {
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("ONLINE-INVALID-KEY")
+      )
+      localStorage.setItem("style-atelier-license-status", "valid")
+      const verifiedOld = Date.now() - 1000 * 60 * 60 * 25 // 25 hours ago
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        verifiedOld.toString()
+      )
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ activated: false, error: "expired" })
+      })
+
+      const { result } = renderHook(() => useLicense(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      expect(result.current.licenseStatus).toBe("expired")
+      expect(result.current.isPremium).toBe(false)
+      expect(localStorage.getItem("style-atelier-license-status")).toBe(
+        "expired"
+      )
+    })
+
+    it("should keep premium within 7-day offline grace period if verification fails due to connection error", async () => {
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("ONLINE-THROW-KEY")
+      )
+      localStorage.setItem("style-atelier-license-status", "valid")
+      const verifiedOld = Date.now() - 1000 * 60 * 60 * 25 // 25 hours ago
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        verifiedOld.toString()
+      )
+
+      mockFetch.mockRejectedValueOnce(new Error("Network offline"))
+
+      const { result } = renderHook(() => useLicense(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      expect(result.current.licenseStatus).toBe("valid")
+      expect(result.current.isPremium).toBe(true)
+      expect(localStorage.getItem("style-atelier-license-status")).toBe("valid")
+    })
+
+    it("should invalidate after 7-day offline grace period if verification fails due to connection error", async () => {
+      localStorage.setItem(
+        "style-atelier-license-key",
+        obscure("ONLINE-THROW-KEY")
+      )
+      localStorage.setItem("style-atelier-license-status", "valid")
+      const verifiedAncient = Date.now() - 1000 * 60 * 60 * 24 * 8 // 8 days ago
+      localStorage.setItem(
+        "style-atelier-license-last-verified",
+        verifiedAncient.toString()
+      )
+
+      mockFetch.mockRejectedValueOnce(new Error("Network offline"))
+
+      const { result } = renderHook(() => useLicense(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      expect(result.current.licenseStatus).toBe("invalid")
+      expect(result.current.isPremium).toBe(false)
+      expect(localStorage.getItem("style-atelier-license-status")).toBe(
+        "invalid"
+      )
     })
   })
 })
