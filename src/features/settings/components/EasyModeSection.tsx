@@ -1,10 +1,10 @@
 import { Settings2 } from "lucide-react"
 import React from "react"
 
-import { HelpTooltip } from "../atoms/HelpTooltip"
-import { FeatureToggleGroup } from "../molecules/FeatureToggleGroup"
-import { FeatureToggleItem } from "../molecules/FeatureToggleItem"
-import { InterfaceModeToggle } from "../molecules/InterfaceModeToggle"
+import { HelpTooltip } from "../../../components/atoms/HelpTooltip"
+import { FeatureToggleGroup } from "../../../components/molecules/FeatureToggleGroup"
+import { FeatureToggleItem } from "../../../components/molecules/FeatureToggleItem"
+import { InterfaceModeToggle } from "../../../components/molecules/InterfaceModeToggle"
 
 interface EasyModeSectionProps {
   currentEasyMode: boolean

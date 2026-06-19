@@ -1,8 +1,8 @@
 import React from "react"
 
-import type { Theme } from "../../contexts/SettingsContext"
-import type { Language } from "../../lib/i18n"
-import { HelpTooltip } from "../atoms/HelpTooltip"
+import { HelpTooltip } from "../../../components/atoms/HelpTooltip"
+import type { Theme } from "../../../contexts/SettingsContext"
+import type { Language } from "../../../lib/i18n"
 import { BrandLogoSettings } from "./BrandLogoSettingsSection"
 import { EasyModeSection } from "./EasyModeSection"
 

@@ -1,16 +1,16 @@
 import { Settings2 } from "lucide-react"
 import React from "react"
 
+import { CloudSyncSection } from "../../features/settings/components/CloudSyncSection"
+import { UiPreferencesSection } from "../../features/settings/components/UiPreferencesSection"
+import { WebLlmSettingsSection } from "../../features/settings/components/WebLlmSettingsSection"
 import { useWebLlm } from "../../hooks/useWebLlm"
 import { AiStatusBadge } from "../atoms/AiStatusBadge"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { SettingsAccordionItem } from "../molecules/SettingsAccordionItem"
 import { P2PSyncUI } from "../P2PSyncUI"
-import { CloudSyncSection } from "./CloudSyncSection"
 import { LicenseSettingsSection } from "./LicenseSettingsSection"
 import { MaintenanceContent } from "./MaintenanceContent"
-import { UiPreferencesSection } from "./UiPreferencesSection"
-import { WebLlmSettingsSection } from "./WebLlmSettingsSection"
 
 interface SettingsTabPresenterProps {
   t: any

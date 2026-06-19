@@ -1,4 +1,4 @@
-import { EasyModeSection } from "@/components/organisms/EasyModeSection"
+import { EasyModeSection } from "@/features/settings/components/EasyModeSection"
 import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"

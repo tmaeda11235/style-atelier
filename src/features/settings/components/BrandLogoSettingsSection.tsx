@@ -1,6 +1,6 @@
 import React from "react"
 
-import { HelpTooltip } from "../atoms/HelpTooltip"
+import { HelpTooltip } from "../../../components/atoms/HelpTooltip"
 
 export interface BrandLogoSettingsProps {
   includeBrandLogo: boolean

@@ -7,10 +7,10 @@ import {
 } from "lucide-react"
 import React from "react"
 
-import { HelpTooltip } from "../atoms/HelpTooltip"
+import { HelpTooltip } from "../../../components/atoms/HelpTooltip"
+import { SyncProgressBar } from "../../../components/organisms/SyncProgressBar"
+import { SyncStatusMessage } from "../../../components/organisms/SyncStatusMessage"
 import { CloudBackupInfo } from "./CloudBackupInfo"
-import { SyncProgressBar } from "./SyncProgressBar"
-import { SyncStatusMessage } from "./SyncStatusMessage"
 
 interface CloudSyncSectionProps {
   isSyncEnabled: boolean

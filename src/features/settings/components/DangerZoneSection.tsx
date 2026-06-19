@@ -1,7 +1,7 @@
 import { Database, DownloadCloud, RefreshCw, Trash2 } from "lucide-react"
 import React from "react"
 
-import { HelpTooltip } from "../atoms/HelpTooltip"
+import { HelpTooltip } from "../../../components/atoms/HelpTooltip"
 
 interface DangerZoneSectionProps {
   isSyncEnabled: boolean
