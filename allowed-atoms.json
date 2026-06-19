@@ -1,13 +1,18 @@
 [
   "AdviceViewer.tsx",
   "AiStatusBadge.tsx",
+  "AiStatusBadge.variants.ts",
   "Button.tsx",
+  "Button.variants.ts",
   "HelpTooltip.tsx",
   "IconButton.tsx",
+  "IconButton.variants.ts",
   "ImageThumbnailItem.tsx",
   "Input.tsx",
+  "Input.variants.ts",
   "OpfsImage.tsx",
   "RarityBadge.tsx",
+  "RarityBadge.variants.ts",
   "Tooltip.tsx",
   "Tooltip.test.tsx"
 ]

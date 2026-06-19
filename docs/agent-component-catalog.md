@@ -22,10 +22,10 @@ No description provided.
 
 ### Props
 
-| Prop        | Type     | Required | Default | Description |
-| ----------- | -------- | -------- | ------- | ----------- |
-| `status`    | `string` | No       | `-`     | -           |
-| `className` | `string` | No       | `-`     | -           |
+| Prop         | Type                                                              | Required | Default | Description |
+| ------------ | ----------------------------------------------------------------- | -------- | ------- | ----------- |
+| `status`     | `string`                                                          | No       | `-`     | -           |
+| `statusType` | `"ready" \| "downloading" \| "fallbackWebGpu" \| "fallbackModel"` | No       | `-`     | -           |
 
 ## Button
 
@@ -33,11 +33,11 @@ No description provided.
 
 ### Props
 
-| Prop        | Type                                                           | Required | Default   | Description |
-| ----------- | -------------------------------------------------------------- | -------- | --------- | ----------- |
-| `variant`   | `"primary" \| "secondary" \| "ghost" \| "danger" \| "outline"` | No       | `primary` | -           |
-| `size`      | `"xs" \| "sm" \| "md" \| "lg" \| "icon"`                       | No       | `md`      | -           |
-| `fullWidth` | `boolean`                                                      | No       | `false`   | -           |
+| Prop        | Type                                                           | Required | Default | Description |
+| ----------- | -------------------------------------------------------------- | -------- | ------- | ----------- |
+| `variant`   | `"primary" \| "secondary" \| "ghost" \| "danger" \| "outline"` | No       | `-`     | -           |
+| `size`      | `"xs" \| "sm" \| "md" \| "lg" \| "icon"`                       | No       | `-`     | -           |
+| `fullWidth` | `boolean`                                                      | No       | `-`     | -           |
 
 ## HelpTooltip
 
@@ -59,9 +59,9 @@ No description provided.
 
 | Prop      | Type                                                               | Required | Default | Description |
 | --------- | ------------------------------------------------------------------ | -------- | ------- | ----------- |
-| `rounded` | `boolean`                                                          | No       | `true`  | -           |
-| `size`    | `"xs" \| "sm" \| "md" \| "lg"`                                     | No       | `sm`    | -           |
-| `variant` | `"danger" \| "slate" \| "white" \| "indigo" \| "yellow" \| "blue"` | No       | `slate` | -           |
+| `variant` | `"danger" \| "slate" \| "white" \| "indigo" \| "yellow" \| "blue"` | No       | `-`     | -           |
+| `size`    | `"xs" \| "sm" \| "md" \| "lg"`                                     | No       | `-`     | -           |
+| `rounded` | `boolean`                                                          | No       | `-`     | -           |
 
 ## ImageThumbnailItem
 
@@ -102,10 +102,9 @@ No description provided.
 
 ### Props
 
-| Prop        | Type                                          | Required | Default | Description |
-| ----------- | --------------------------------------------- | -------- | ------- | ----------- |
-| `tier`      | `"Common" \| "Rare" \| "Epic" \| "Legendary"` | Yes      | `-`     | -           |
-| `className` | `string`                                      | No       | ``      | -           |
+| Prop   | Type                                          | Required | Default | Description |
+| ------ | --------------------------------------------- | -------- | ------- | ----------- |
+| `tier` | `"Common" \| "Rare" \| "Epic" \| "Legendary"` | Yes      | `-`     | -           |
 
 ## Tooltip
 

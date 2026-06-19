@@ -825,6 +825,23 @@
         "src/hooks/useCardExporter.ts",
         "src/lib/export-utils.ts"
       ]
+    },
+    {
+      "id": "@J-ATOM-CVA",
+      "name": "基礎UI部品のCVAバリアント確認",
+      "description": "Button, Badge, Input等の基礎コンポーネントがCVA化され、正しくレンダリングされていることを確認する",
+      "steps": [
+        "設定画面を開く",
+        "各基礎コンポーネント（Button, Input, Badge）が正しくレンダリングされているのを確認する"
+      ],
+      "nextJourneys": [],
+      "viewComponents": [
+        "src/components/atoms/Button.tsx",
+        "src/components/atoms/Input.tsx",
+        "src/components/atoms/IconButton.tsx",
+        "src/components/atoms/RarityBadge.tsx",
+        "src/components/atoms/AiStatusBadge.tsx"
+      ]
     }
   ]
 }

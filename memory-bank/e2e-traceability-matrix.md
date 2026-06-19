@@ -52,17 +52,19 @@
 | **@J-SET-WEBGPU-TROUBLESHOOT-01** | WebGPUトラブルシューティング・自動フォールバックと容量チェック                   | ✔️ `tests\e2e\webgpu-troubleshooting.spec.ts`                                                                                                           |
 | **@J-WB-UNDO-REDO-01**            | ワークベンチ操作の履歴管理（Undo/Redo）                                          | ✔️ `tests\e2e\workbench-undo-redo.spec.ts`                                                                                                              |
 | **@J-UX-DISCONNECTED-ALERT**      | 接続切断時のエラーハンドリングとリカバリ                                         | ✔️ `tests\e2e\connection-alert-i18n.spec.ts`                                                                                                            |
-| **@J-MOBILE-PREVIEW-01**          | モバイルお試しプレビュー＆フリップ                                               | ✔️ `tests\e2e\mobile-design-viewer.spec.ts`<br>✔️ `tests\e2e\mobile-landing-flow.spec.ts`<br>✔️ `tests\e2e\mobile-pages.spec.ts`                        |
+| **@J-MOBILE-PREVIEW-01**          | モバイルお試しプレビュー＆フリップ                                               | ❌ 未カバー (Missing)                                                                                                                                   |
 | **@J-ORG-BINDER-DND-01**          | カードのバインダーDnD移動                                                        | ✔️ `tests\e2e\card-drag-drop.spec.ts`                                                                                                                   |
 | **@J-SET-GDRIVE-ERROR**           | Google Drive同期エラーハンドリング                                               | ❌ 未カバー (Missing)                                                                                                                                   |
 | **@J-PROFILER-DASHBOARD**         | 開発者プロファイラーダッシュボード                                               | ✔️ `tests\e2e\litert-harness-profiling.spec.ts`<br>✔️ `tests\e2e\offline-harness-dashboard.spec.ts`<br>✔️ `tests\e2e\webllm-profiler-dashboard.spec.ts` |
 | **@J-SANDBOX-CONTROLLER-01**      | サンドボックスコントローラーによる異常系シミュレーション                         | ❌ 未カバー (Missing)                                                                                                                                   |
-| **@J-PWA-A2HS-OFFLINE-01**        | モバイルPWAスマートQR起動＆A2HSとオフライン閲覧                                  | ✔️ `tests\e2e\mobile-pwa.spec.ts`                                                                                                                       |
+| **@J-PWA-A2HS-OFFLINE-01**        | モバイルPWAスマートQR起動＆A2HSとオフライン閲覧                                  | ❌ 未カバー (Missing)                                                                                                                                   |
 | **@J-PWA-P2P-SYNC-01**            | モバイルPWA・PC間ハイブリッド同期（P2P/Drive）                                   | ✔️ `tests\e2e\p2p-signaling.spec.ts`<br>✔️ `tests\e2e\p2p-sync.spec.ts`                                                                                 |
-| **@J-PWA-AI-STYLE-ANALYSIS-01**   | モバイルPWAローカルAIアートスタイル分析                                          | ✔️ `tests\e2e\mobile-pwa.spec.ts`                                                                                                                       |
+| **@J-PWA-AI-STYLE-ANALYSIS-01**   | モバイルPWAローカルAIアートスタイル分析                                          | ✔️ `tests\e2e\web-pwa.spec.ts`                                                                                                                          |
+| **@J-EXPORT-SNS-SHARE**           | エクスポートSNS共有                                                              | ✔️ `tests\e2e\export-sns-share.spec.ts`                                                                                                                 |
+| **@J-ATOM-CVA**                   | 基礎UI部品のCVAバリアント確認                                                    | ✔️ `tests\e2e\atom-components-cva.spec.ts`                                                                                                              |
 
 ## サマリー
 
-- 全ジャーニー数: 56
+- 全ジャーニー数: 58
 - カバー済み: 54
-- 未カバー: 2
+- 未カバー: 4

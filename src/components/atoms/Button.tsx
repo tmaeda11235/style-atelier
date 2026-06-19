@@ -1,4 +1,8 @@
+import { type VariantProps } from "class-variance-authority"
 import React from "react"
+
+import { cn, extractLayoutClasses } from "../../lib/utils"
+import { buttonVariants } from "./Button.variants"
 
 /**
  * プロジェクト全体の標準的なボタンスタイルを提供するAtomコンポーネント。
@@ -6,52 +10,31 @@ import React from "react"
  * @param {Object} props
  * @param {React.ReactNode} props.children - ボタンのラベルやコンテンツ
  * @param {'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'} [props.variant='primary'] - ボタンの視覚スタイル
- * @param {'sm' | 'md' | 'lg' | 'icon'} [props.size='md'] - ボタンのサイズ
+ * @param {'xs' | 'sm' | 'md' | 'lg' | 'icon'} [props.size='md'] - ボタンのサイズ
  * @param {boolean} [props.fullWidth=false] - 幅を100%にするかどうか
  * @param {string} [props.className=''] - 追加のカスタムクラス
  */
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline"
-  size?: "xs" | "sm" | "md" | "lg" | "icon"
-  fullWidth?: boolean
-}
+export interface ButtonProps
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {}
 
 export function Button({
   children,
-  variant = "primary",
-  size = "md",
-  fullWidth = false,
+  variant,
+  size,
+  fullWidth,
   className = "",
   ...props
 }: ButtonProps) {
-  const baseStyles =
-    "inline-flex items-center justify-center font-medium transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-
-  const variants = {
-    primary:
-      "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
-    secondary:
-      "bg-muted text-text-primary hover:bg-surface-hover focus:ring-slate-500",
-    ghost:
-      "bg-transparent text-text-secondary hover:bg-surface-hover focus:ring-slate-500",
-    danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
-    outline:
-      "bg-transparent border border-border-primary text-text-primary hover:bg-surface-hover focus:ring-slate-500"
-  }
-
-  const sizes = {
-    xs: "px-2 py-1 text-[10px]",
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
-    icon: "p-2"
-  }
-
-  const widthStyle = fullWidth ? "w-full" : ""
+  const layoutClassName = extractLayoutClasses(className)
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${widthStyle} ${className}`}
+      className={cn(
+        buttonVariants({ variant, size, fullWidth }),
+        layoutClassName
+      )}
       {...props}>
       {children}
     </button>
