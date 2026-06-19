@@ -248,6 +248,38 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   async deleteRecipeHistory(id: string): Promise<void> {
     await this.recipeHistory.delete(id)
   }
+
+  // --- UserSettings Operations ---
+
+  async getUserSettings(): Promise<UserSettings> {
+    const all = await this.userSettings.toArray()
+    if (all.length > 0) {
+      return all[0]
+    }
+    const defaultSettings: UserSettings = {
+      userId: "default-user",
+      isPro: false,
+      unlockedSkins: [],
+      branding: {
+        enabled: false,
+        socialDisplayType: "none"
+      }
+    }
+    await this.userSettings.add(defaultSettings)
+    return defaultSettings
+  }
+
+  async updateUserSettings(changes: Partial<UserSettings>): Promise<void> {
+    const current = await this.getUserSettings()
+    await this.userSettings.put({
+      ...current,
+      ...changes,
+      branding: {
+        ...current.branding,
+        ...changes.branding
+      }
+    })
+  }
 }
 
 export const db = new StyleAtelierDatabase()

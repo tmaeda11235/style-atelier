@@ -49,9 +49,9 @@ export default defineConfig({
       ".stryker-tmp/**"
     ],
     coverage: {
-      provider: "istanbul",
+      provider: "v8",
       reportsDirectory: process.env.CI ? "./coverage" : "./coverage-qa",
-      clean: false,
+      clean: true,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",

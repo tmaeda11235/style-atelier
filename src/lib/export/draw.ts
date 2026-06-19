@@ -147,35 +147,177 @@ export async function drawQRCode(
   }
 }
 
-export function drawBrandLogo(
+export interface BrandLogoOptions {
+  text: string
+  customLogo?: string // Base64
+  twitter?: string
+  etsy?: string
+  socialDisplayType?: "text" | "qr" | "none"
+}
+
+// Draw brand badge capsule (logo image or text) and return its width
+async function drawBrandLogoCapsule(
+  ctx: CanvasRenderingContext2D,
+  badgeX: number,
+  badgeY: number,
+  badgeH: number,
+  options: BrandLogoOptions
+): Promise<number> {
+  let logoImg: HTMLImageElement | null = null
+  if (options.customLogo) {
+    try {
+      logoImg = await loadImage(options.customLogo)
+    } catch (e) {
+      console.error("Failed to load custom logo image in canvas:", e)
+    }
+  }
+
+  const padding = 2
+  const imgH = badgeH - padding * 2 // 18px
+  let badgeW: number
+
+  if (logoImg) {
+    const imgW = (logoImg.width / logoImg.height) * imgH
+    badgeW = imgW + 20
+
+    ctx.fillStyle = "rgba(30, 41, 59, 0.7)"
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
+    ctx.lineWidth = 1
+    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 11)
+    ctx.fill()
+    ctx.stroke()
+
+    ctx.drawImage(logoImg, badgeX + 10, badgeY + padding, imgW, imgH)
+  } else {
+    ctx.font = 'bold 11px "Segoe UI", Roboto, sans-serif'
+    const textWidth = ctx.measureText(options.text).width
+    badgeW = textWidth + 20
+
+    ctx.fillStyle = "rgba(30, 41, 59, 0.7)"
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
+    ctx.lineWidth = 1
+    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 11)
+    ctx.fill()
+    ctx.stroke()
+
+    ctx.fillStyle = "#ffffff"
+    ctx.textAlign = "left"
+    ctx.textBaseline = "middle"
+    ctx.fillText(options.text, badgeX + 10, badgeY + badgeH / 2)
+  }
+
+  return badgeW
+}
+
+// Draw social links as plain text
+function drawSocialText(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  badgeY: number,
+  badgeH: number,
+  options: BrandLogoOptions
+) {
+  const parts: string[] = []
+  if (options.twitter) parts.push(`X: ${options.twitter}`)
+  if (options.etsy) parts.push(`Etsy: ${options.etsy}`)
+  const socialText = parts.join("  |  ")
+
+  ctx.font = 'normal 11px "Segoe UI", Roboto, sans-serif'
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)"
+  ctx.textAlign = "left"
+  ctx.textBaseline = "middle"
+  ctx.fillText(socialText, startX, badgeY + badgeH / 2)
+}
+
+// Draw a single social link QR code
+async function drawSingleSocialQR(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  label: string,
+  url: string
+) {
+  try {
+    const qrDataUrl = await generateQRCodeUrl(url, 80)
+    const qrImg = await loadImage(qrDataUrl)
+
+    ctx.fillStyle = "#ffffff"
+    drawRoundedRect(ctx, x, y, size, size, 4)
+    ctx.fill()
+
+    ctx.drawImage(qrImg, x + 2, y + 2, size - 4, size - 4)
+
+    ctx.font = "bold 8px sans-serif"
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)"
+    ctx.textAlign = "center"
+    ctx.fillText(label, x + size / 2, y + size + 10)
+  } catch (e) {
+    console.error(`Failed to draw ${label} QR code:`, e)
+  }
+}
+
+// Draw social links as QR codes
+async function drawSocialQRs(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  badgeY: number,
+  badgeH: number,
+  options: BrandLogoOptions
+) {
+  const qrSize = 40
+  const qrY = badgeY + (badgeH - qrSize) / 2
+  let currentX = startX
+
+  if (options.twitter) {
+    const url = options.twitter.startsWith("http")
+      ? options.twitter
+      : `https://x.com/${options.twitter}`
+    await drawSingleSocialQR(ctx, currentX, qrY, qrSize, "X", url)
+    currentX += qrSize + 25
+  }
+
+  if (options.etsy) {
+    const url = options.etsy.startsWith("http")
+      ? options.etsy
+      : `https://www.etsy.com/shop/${options.etsy}`
+    await drawSingleSocialQR(ctx, currentX, qrY, qrSize, "Etsy", url)
+  }
+}
+
+export async function drawBrandLogo(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  text: string
+  options: BrandLogoOptions
 ) {
   ctx.save()
 
-  ctx.font = 'bold 11px "Segoe UI", Roboto, sans-serif'
-  const textWidth = ctx.measureText(text).width
-
   const badgeH = 22
-  const badgeW = textWidth + 20
-
-  const badgeX = 35
   const badgeY = height - 50 // 50px from the bottom
+  const badgeX = 35
 
-  // Capsule styling: semi-transparent slate border & background
-  ctx.fillStyle = "rgba(30, 41, 59, 0.7)"
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
-  ctx.lineWidth = 1
-  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 11)
-  ctx.fill()
-  ctx.stroke()
+  const badgeW = await drawBrandLogoCapsule(
+    ctx,
+    badgeX,
+    badgeY,
+    badgeH,
+    options
+  )
 
-  ctx.fillStyle = "#ffffff"
-  ctx.textAlign = "left"
-  ctx.textBaseline = "middle"
-  ctx.fillText(text, badgeX + 10, badgeY + badgeH / 2)
+  // --- Draw Social Links ---
+  const displayType = options.socialDisplayType || "none"
+  const hasTwitter = !!options.twitter
+  const hasEtsy = !!options.etsy
+
+  if (displayType !== "none" && (hasTwitter || hasEtsy)) {
+    const startX = badgeX + badgeW + 15
+    if (displayType === "text") {
+      drawSocialText(ctx, startX, badgeY, badgeH, options)
+    } else if (displayType === "qr") {
+      await drawSocialQRs(ctx, startX, badgeY, badgeH, options)
+    }
+  }
 
   ctx.restore()
 }

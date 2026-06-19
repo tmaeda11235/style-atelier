@@ -110,6 +110,9 @@ export interface UserSettings {
     enabled: boolean
     customLogo?: string // Base64
     signatureName?: string
+    twitter?: string
+    etsy?: string
+    socialDisplayType?: "text" | "qr" | "none"
   }
 }
 
