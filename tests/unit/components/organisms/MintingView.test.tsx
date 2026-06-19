@@ -1,6 +1,6 @@
-import { MintingView } from "@/components/organisms/MintingView"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { TutorialProvider } from "@/contexts/TutorialContext"
+import { MintingView } from "@/features/minting/components/MintingView"
 import { useCategories } from "@/hooks/useCategories"
 import { useHand } from "@/hooks/useHand"
 import type { HistoryItem, PromptSegment } from "@/shared/lib/db-schema"

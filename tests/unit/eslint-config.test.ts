@@ -91,8 +91,8 @@ describe("ESLint Configuration", () => {
     // Verify newly added components in this task are covered
     const newComponents = [
       "src/components/organisms/SettingsTab.tsx",
-      "src/components/organisms/MintingView.tsx",
-      "src/components/organisms/CardDetailView.tsx",
+      "src/features/minting/components/MintingView.tsx",
+      "src/features/card-detail/components/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
       "src/components/organisms/InteractiveTutorial.tsx"
     ]

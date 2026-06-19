@@ -1,6 +1,6 @@
-import { CardDetailView } from "@/components/organisms/CardDetailView"
 // CI trigger comment
 import { SettingsProvider } from "@/contexts/SettingsContext"
+import { CardDetailView } from "@/features/card-detail/components/CardDetailView"
 import { useHand } from "@/hooks/useHand"
 import type { StyleCard } from "@/shared/lib/db-schema"
 import {

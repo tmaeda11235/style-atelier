@@ -1,8 +1,8 @@
 import React from "react"
 
+import { CardDetailView } from "../../../features/card-detail/components/CardDetailView"
+import { MintingView } from "../../../features/minting/components/MintingView"
 import { getStyleCardById } from "../../../lib/style-card-store"
-import { CardDetailView } from "../CardDetailView"
-import { MintingView } from "../MintingView"
 
 function MintingOverlay({ minting }: { minting: any }) {
   if (!minting.mintingItem && !minting.variationBase) return null
