@@ -4,11 +4,9 @@ import { useLanguage } from "../../contexts/LanguageContext"
 import { useTutorial } from "../../contexts/TutorialContext"
 import { useCategories } from "../../hooks/useCategories"
 import type { HistoryItem, PromptSegment } from "../../shared/lib/db-schema"
-import {
-  FooterActions,
-  SimpleMintingBody,
-  SimpleMintingHeader
-} from "./SimpleMintingComponents"
+import { FooterActions } from "../molecules/simple-minting/FooterActions"
+import { SimpleMintingBody } from "../molecules/simple-minting/SimpleMintingBody"
+import { SimpleMintingHeader } from "../molecules/simple-minting/SimpleMintingHeader"
 
 interface SimpleMintingViewProps {
   mintingItem: HistoryItem | null
