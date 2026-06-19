@@ -1,4 +1,4 @@
-import { StyleCard } from "../../shared/lib/db-schema"
+import type { StyleCard } from "../../shared/lib/db-schema"
 import {
   buildPromptString,
   buildSegmentString
@@ -22,10 +22,14 @@ export async function getNotionCredentials(): Promise<NotionClientCredentials | 
   }
   return new Promise((resolve) => {
     chrome.storage.local.get(["notionApiKey", "notionDatabaseId"], (items) => {
-      if (items.notionApiKey && items.notionDatabaseId) {
+      const apiObj = items as Record<string, unknown>
+      if (
+        typeof apiObj.notionApiKey === "string" &&
+        typeof apiObj.notionDatabaseId === "string"
+      ) {
         resolve({
-          apiKey: items.notionApiKey,
-          databaseId: items.notionDatabaseId
+          apiKey: apiObj.notionApiKey,
+          databaseId: apiObj.notionDatabaseId
         })
       } else {
         resolve(null)

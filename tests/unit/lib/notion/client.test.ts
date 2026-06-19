@@ -4,7 +4,7 @@ import {
   getNotionCredentials,
   sendCardToNotion
 } from "../../../../src/lib/notion/client"
-import { StyleCard } from "../../../../src/shared/lib/db-schema"
+import type { StyleCard } from "../../../../src/shared/lib/db-schema"
 
 describe("Notion API Client", () => {
   const originalChrome = (global as any).chrome
