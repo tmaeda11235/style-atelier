@@ -13,7 +13,7 @@ test.describe("Web Landing Page and Privacy Policy E2E Test", () => {
     page
   }) => {
     // 1. Navigate to the web app index page (Desktop view, no PWA parameters)
-    await page.goto("/src/web-app/index.html")
+    await page.goto("/")
     await page.evaluate(() => localStorage.setItem("pref-lang", "ja"))
 
     // Ensure LP components are loaded
