@@ -30,4 +30,8 @@ if [ -n "$STAGED_FILES" ]; then
   fi
 fi
 
+# Generate agent component catalog and stage it
+node scripts/generate-component-catalog.mjs
+git add docs/agent-component-catalog.md
+
 npx lint-staged

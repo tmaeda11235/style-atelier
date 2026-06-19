@@ -25,6 +25,7 @@ try {
 const maxLinesFiles = new Set();
 const complexityFiles = new Set();
 const maxLinesPerFuncFiles = new Set();
+const forbidElementsFiles = new Set();
 
 for (const result of results) {
   const relativePath = path.relative(path.join(__dirname, '..'), result.filePath).replace(/\\/g, '/');
@@ -40,6 +41,8 @@ for (const result of results) {
       complexityFiles.add(relativePath);
     } else if (message.ruleId === 'max-lines-per-function') {
       maxLinesPerFuncFiles.add(relativePath);
+    } else if (message.ruleId === 'react/forbid-elements') {
+      forbidElementsFiles.add(relativePath);
     }
   }
 }
@@ -48,6 +51,7 @@ console.log('Found actual violations:');
 console.log(`- max-lines: ${maxLinesFiles.size} files`);
 console.log(`- sonarjs/cognitive-complexity: ${complexityFiles.size} files`);
 console.log(`- max-lines-per-function: ${maxLinesPerFuncFiles.size} files`);
+console.log(`- react/forbid-elements: ${forbidElementsFiles.size} files`);
 
 let configContent = fs.readFileSync(CONFIG_PATH, 'utf8');
 
@@ -73,6 +77,12 @@ configContent = configContent.replace(complexityRegex, (match, p1, p2, p3) => {
 const maxFuncLinesRegex = /(\/\/ 3\. Files violating max-lines-per-function \(50 limit\)\s*\{\s*files:\s*\[)([\s\S]*?)(\],\s*rules:\s*\{\s*"max-lines-per-function":\s*"warn"\s*\}\s*\})/g;
 configContent = configContent.replace(maxFuncLinesRegex, (match, p1, p2, p3) => {
   return p1 + formatFileList(maxLinesPerFuncFiles, 'src/placeholder-non-existent-func-lines.ts') + p3;
+});
+
+// 5. forbid-elements の置換
+const forbidElementsRegex = /(\/\/ 5\. Files violating react\/forbid-elements \(button, input, img etc\)\s*\{\s*files:\s*\[)([\s\S]*?)(\],\s*rules:\s*\{\s*"react\/forbid-elements":\s*"warn"\s*\}\s*\})/g;
+configContent = configContent.replace(forbidElementsRegex, (match, p1, p2, p3) => {
+  return p1 + formatFileList(forbidElementsFiles, 'src/placeholder-non-existent-forbid-elements.ts') + p3;
 });
 
 fs.writeFileSync(CONFIG_PATH, configContent, 'utf8');

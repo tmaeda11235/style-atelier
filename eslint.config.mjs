@@ -137,6 +137,25 @@ export default ts.config(
             }
           ]
         }
+      ],
+      "react/forbid-elements": [
+        "error",
+        {
+          "forbid": [
+            {
+              "element": "button",
+              "message": "Use <Button> or <IconButton> from 'src/components/atoms/Button' instead."
+            },
+            {
+              "element": "input",
+              "message": "Use <Input> from 'src/components/atoms/Input' instead."
+            },
+            {
+              "element": "img",
+              "message": "Use <OpfsImage> or <ImageThumbnailItem> from 'src/components/atoms/' instead."
+            }
+          ]
+        }
       ]
     },
   },
@@ -248,6 +267,101 @@ export default ts.config(
       ]
     }
   },
+  // 5. Files violating react/forbid-elements (button, input, img etc)
+  {
+    files: [
+      "src/placeholder-non-existent-forbid-elements.ts",
+      "src/components/P2PSyncCommonViews.tsx",
+      "src/components/P2PSyncGuestView.tsx",
+      "src/components/P2PSyncHostView.tsx",
+      "src/components/molecules/AiModelStatusOverlays.tsx",
+      "src/components/molecules/AiWarningModal.tsx",
+      "src/components/molecules/AliasEditModal.tsx",
+      "src/components/molecules/AspectRatioSelector.tsx",
+      "src/components/molecules/AutocompleteDropdown.tsx",
+      "src/components/molecules/CardThumbnail.tsx",
+      "src/components/molecules/CardThumbnailMoreMenu.tsx",
+      "src/components/molecules/ColorPaletteFilter.tsx",
+      "src/components/molecules/ConfirmationDialog.tsx",
+      "src/components/molecules/ConnectionAlert.tsx",
+      "src/components/molecules/ExportSuccessModal.tsx",
+      "src/components/molecules/FeatureToggleItem.tsx",
+      "src/components/molecules/GDriveSyncStrategyDialog.tsx",
+      "src/components/molecules/GenealogySection.tsx",
+      "src/components/molecules/GlobalDownloadIndicator.tsx",
+      "src/components/molecules/HistoryCard.tsx",
+      "src/components/molecules/HueSliderFilter.tsx",
+      "src/components/molecules/ImportNotificationBanner.tsx",
+      "src/components/molecules/InterfaceModeToggle.tsx",
+      "src/components/molecules/KeywordChip.tsx",
+      "src/components/molecules/LocalAiSetupPlaceholder.tsx",
+      "src/components/molecules/ModelFiltersRow.tsx",
+      "src/components/molecules/ModelIdleOverlay.tsx",
+      "src/components/molecules/ParameterArrayEditor.tsx",
+      "src/components/molecules/PromptBubble.tsx",
+      "src/components/molecules/RaritySelector.tsx",
+      "src/components/molecules/SettingsAccordionItem.tsx",
+      "src/components/molecules/SlotField.tsx",
+      "src/components/molecules/SlotSuggestionsDropdown.tsx",
+      "src/components/molecules/TagEditor.tsx",
+      "src/components/molecules/WebGpuWarning.tsx",
+      "src/components/organisms/AiRecipeAdviceSection.tsx",
+      "src/components/organisms/AiStyleAnalysisSection.tsx",
+      "src/components/organisms/BrandLogoSettingsSection.tsx",
+      "src/components/organisms/CardDetailView/SubSections.tsx",
+      "src/components/organisms/CardsGrid.tsx",
+      "src/components/organisms/CategoryFilters.tsx",
+      "src/components/organisms/CategoryManagerModal/CardSelectionView.tsx",
+      "src/components/organisms/CategoryManagerModal/CategoryForm.tsx",
+      "src/components/organisms/CategoryManagerModal/CategoryList.tsx",
+      "src/components/organisms/CategoryManagerModal/CategoryModalHeader.tsx",
+      "src/components/organisms/CategoryManagerModal/CoverSettingsFields.tsx",
+      "src/components/organisms/CloudSyncSection.tsx",
+      "src/components/organisms/DangerZoneSection.tsx",
+      "src/components/organisms/DbErrorOverlay.tsx",
+      "src/components/organisms/EmptyState.tsx",
+      "src/components/organisms/EvolutionSuccessModal.tsx",
+      "src/components/organisms/ExpertModeView/WelcomeDialog.tsx",
+      "src/components/organisms/FolderExplorer.tsx",
+      "src/components/organisms/HandBarScrollArea.tsx",
+      "src/components/organisms/HandBarScrollButton.tsx",
+      "src/components/organisms/LibraryFilterAccordion.tsx",
+      "src/components/organisms/LibrarySearchBar.tsx",
+      "src/components/organisms/LocalBackupSection.tsx",
+      "src/components/organisms/MergeStackMaterialList.tsx",
+      "src/components/organisms/MintingView.tsx",
+      "src/components/organisms/MintingView/CardIdentitySubSections.tsx",
+      "src/components/organisms/MintingView/MintingViewContent.tsx",
+      "src/components/organisms/NonTargetSiteView.tsx",
+      "src/components/organisms/OnboardingGuide.tsx",
+      "src/components/organisms/OnboardingGuideComponents.tsx",
+      "src/components/organisms/ParameterEditor.tsx",
+      "src/components/organisms/ParameterEditor/AdvancedParametersSection.tsx",
+      "src/components/organisms/PortionExtractorOverlay.tsx",
+      "src/components/organisms/PromptBubbleEditor.tsx",
+      "src/components/organisms/PromptDeclutterControls.tsx",
+      "src/components/organisms/ShareCardModal.tsx",
+      "src/components/organisms/SimpleMintingComponents.tsx",
+      "src/components/organisms/SimpleWorkbenchModal.tsx",
+      "src/components/organisms/StorageManagerSection.tsx",
+      "src/components/organisms/SyncStatusMessage.tsx",
+      "src/components/organisms/TipsBar.tsx",
+      "src/components/organisms/TutorialTooltip.tsx",
+      "src/components/organisms/UiPreferencesSection.tsx",
+      "src/components/organisms/WebLlmSettingsSubComponents.tsx",
+      "src/components/organisms/WorkbenchCard.tsx",
+      "src/components/organisms/WorkbenchHeader.tsx",
+      "src/components/templates/SidePanelDebugLogs.tsx",
+      "src/components/templates/SidePanelHeader.tsx",
+      "src/tabs/share-components.tsx",
+      "src/web-app/components/LandingPage.tsx",
+      "src/web-app/components/MobilePwaViewer.tsx",
+      "src/web-app/components/PrivacyPolicy.tsx",
+    ],
+    rules: {
+      "react/forbid-elements": "warn"
+    }
+  },
   // Overrides for test files to ease complexity and architecture rules
   // (Must be at the end to ensure it overrides any production file rules that matched test files)
   {
@@ -264,6 +378,36 @@ export default ts.config(
       "@typescript-eslint/no-unsafe-function-type": "warn",
       "@typescript-eslint/no-wrapper-object-types": "warn",
       "@typescript-eslint/ban-ts-comment": "off",
+    }
+  },
+  // Disable forbid-elements for atoms definition files
+  {
+    files: ["src/components/atoms/**/*.{ts,tsx}"],
+    rules: {
+      "react/forbid-elements": "off"
+    }
+  },
+  // Restrict imports for CVA variants definition files
+  {
+    files: ["src/**/*.variants.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          "paths": [
+            {
+              "name": "react",
+              "message": "Pure variants definition files (*.variants.ts) must not import react."
+            }
+          ],
+          "patterns": [
+            {
+              "group": ["**/components/**/*"],
+              "message": "Pure variants definition files (*.variants.ts) must not import UI components."
+            }
+          ]
+        }
+      ]
     }
   }
 );

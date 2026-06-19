@@ -123,6 +123,11 @@ tags: []
 3. **Pure Atoms**: Atoms must not depend on external hooks or global state (use props instead). They should be highly reusable and testable in isolation.
 4. **Consistency**: Reuse existing Atoms/Molecules to maintain UI consistency and reduce technical debt.
 5. **No Logic in Molecules**: Molecules should focus on UI structure and composition. Business logic or heavy state management should be handled in Organisms or Custom Hooks.
+6. **Systematic Appearance over Strict Visual Regression**: CVAバリアントを用いたデザインシステムの標準化移行を最優先とし、微細な見た目の維持のための場当たり的なTailwindクラスの追加を禁止する。
+7. **Forbid Raw HTML Tags**: ESLintの `react/forbid-elements` ルールにより、`<button>`, `<input>`, `<img>` などの生のHTMLタグの使用はエラーとなり、`src/components/atoms/` 配下の標準コンポーネント（`Button`, `Input`, `OpfsImage` など）の使用が強制される。既存の違反ファイルは一時的に overrides ブロック（`react/forbid-elements: warn`）で許可されているが、新規ファイルの追加はCIでブロックされる。
+8. **Allowed Atoms Whitelist**: 新たな基礎コンポーネント（Atoms）の無秩序な追加を防ぐため、`src/components/atoms/` 配下のファイルは `allowed-atoms.json` のホワイトリストに登録されているもののみ許可される。これは `scripts/check-allowed-atoms.mjs` によって `npm run lint` 時に検証される。
+9. **CVA Variants File Constraints**: `*.variants.ts` ファイルは純粋なCSSクラス名と型定義のみを含む辞書でなければならず、ReactロジックやUIコンポーネントをインポートしてはならない。これは ESLint の `no-restricted-imports` で強制される。
+10. **Auto-Generated Component Catalog**: `react-docgen-typescript` を用いた自動ドキュメント生成スクリプト（`scripts/generate-component-catalog.mjs`）により、AtomsコンポーネントのPropsやJSDocから `docs/agent-component-catalog.md` が自動生成される。これは Husky の `pre-commit` フックに組み込まれており、コミット時に自動同期される。
 
 ## Visual Resilience & Responsive UI Rules (Narrow Screens)
 
