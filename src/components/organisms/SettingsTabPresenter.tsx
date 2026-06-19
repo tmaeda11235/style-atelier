@@ -127,6 +127,7 @@ function LicenseAccordionItem({ isOpen, onToggle, title }: any) {
   )
 }
 
+// eslint-disable-next-line max-lines-per-function
 function AccordionSections({
   openSections,
   onToggleUi,
