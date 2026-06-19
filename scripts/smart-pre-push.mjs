@@ -98,6 +98,7 @@ async function main() {
   }
 
   const srcFiles = changedFiles.filter(f => f.startsWith('src/') || f.startsWith('tests/unit/'));
+  const signalingFiles = changedFiles.filter(f => f.startsWith('signaling/'));
 
   for (const file of changedFiles) {
     if (file.startsWith('src/')) {
@@ -137,6 +138,19 @@ async function main() {
     }
   } else {
     console.log('No src/ or unit test files changed. Skipping Vitest.');
+  }
+
+  // 6.5 Run signaling tests if changed
+  let signalingTested = false;
+  if (signalingFiles.length > 0) {
+    console.log('\n--- Running Signaling Tests ---');
+    try {
+      execSync('npm run test --prefix signaling', { stdio: 'inherit' });
+      signalingTested = true;
+    } catch {
+      console.error('Signaling tests failed.');
+      process.exit(1);
+    }
   }
 
   const testedJourneys = Array.from(affectedJourneys);
@@ -198,6 +212,7 @@ async function main() {
     commitHash,
     changedFiles,
     testedJourneys,
+    signalingTested,
     timestamp: new Date().toISOString()
   };
 
