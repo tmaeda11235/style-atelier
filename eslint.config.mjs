@@ -349,7 +349,6 @@ export default ts.config(
       "src/components/organisms/TipsBar.tsx",
       "src/components/organisms/TutorialTooltip.tsx",
       "src/components/organisms/UiPreferencesSection.tsx",
-      "src/components/organisms/WebLlmSettingsSubComponents.tsx",
       "src/components/organisms/WorkbenchCard.tsx",
       "src/components/organisms/WorkbenchHeader.tsx",
       "src/components/templates/SidePanelDebugLogs.tsx",
