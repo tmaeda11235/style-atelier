@@ -1,14 +1,14 @@
 import { useCallback } from "react"
 
-import { usePromptInjector } from "../../hooks/usePromptInjector"
-import type { PromptSegment } from "../../shared/lib/db-schema"
-import { type AlertType } from "../molecules/ConnectionAlert"
+import { type AlertType } from "../components/molecules/ConnectionAlert"
 import {
   evolveTargetCard,
   extractPortion,
   mintVariation,
   sendToWorkbench
-} from "./workbench-helpers"
+} from "../lib/workbench-helpers"
+import type { PromptSegment } from "../shared/lib/db-schema"
+import { usePromptInjector } from "./usePromptInjector"
 
 export interface UseHandlersOptions {
   workbenchCards: any[]
