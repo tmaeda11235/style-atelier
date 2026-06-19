@@ -48,8 +48,8 @@ No description provided.
 | Prop        | Type                                                                                                     | Required | Default | Description |
 | ----------- | -------------------------------------------------------------------------------------------------------- | -------- | ------- | ----------- |
 | `content`   | `string`                                                                                                 | Yes      | `-`     | -           |
-| `position`  | `"top" \| "bottom" \| "left" \| "right" \| "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | No       | `top`   | -           |
 | `className` | `string`                                                                                                 | No       | `-`     | -           |
+| `position`  | `"top" \| "bottom" \| "left" \| "right" \| "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | No       | `top`   | -           |
 
 ## IconButton
 
@@ -118,5 +118,5 @@ No description provided.
 | Prop        | Type                                                                                                     | Required | Default | Description |
 | ----------- | -------------------------------------------------------------------------------------------------------- | -------- | ------- | ----------- |
 | `content`   | `string`                                                                                                 | Yes      | `-`     | -           |
-| `position`  | `"top" \| "bottom" \| "left" \| "right" \| "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | No       | `top`   | -           |
 | `className` | `string`                                                                                                 | No       | `-`     | -           |
+| `position`  | `"top" \| "bottom" \| "left" \| "right" \| "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | No       | `top`   | -           |

@@ -1,5 +1,6 @@
 [
   "AdviceViewer.tsx",
+  "AdviceViewer.variants.ts",
   "AiStatusBadge.tsx",
   "AiStatusBadge.variants.ts",
   "Button.tsx",
@@ -8,11 +9,14 @@
   "IconButton.tsx",
   "IconButton.variants.ts",
   "ImageThumbnailItem.tsx",
+  "ImageThumbnailItem.variants.ts",
   "Input.tsx",
   "Input.variants.ts",
   "OpfsImage.tsx",
+  "OpfsImage.variants.ts",
   "RarityBadge.tsx",
   "RarityBadge.variants.ts",
   "Tooltip.tsx",
+  "Tooltip.variants.ts",
   "Tooltip.test.tsx"
 ]
