@@ -33,11 +33,25 @@ No description provided.
 
 ### Props
 
-| Prop        | Type                                                           | Required | Default   | Description |
-| ----------- | -------------------------------------------------------------- | -------- | --------- | ----------- |
-| `variant`   | `"primary" \| "secondary" \| "ghost" \| "danger" \| "outline"` | No       | `primary` | -           |
-| `size`      | `"xs" \| "sm" \| "md" \| "lg" \| "icon"`                       | No       | `md`      | -           |
-| `fullWidth` | `boolean`                                                      | No       | `false`   | -           |
+| Prop        | Type                                                           | Required | Default | Description |
+| ----------- | -------------------------------------------------------------- | -------- | ------- | ----------- |
+| `variant`   | `"primary" \| "secondary" \| "ghost" \| "danger" \| "outline"` | No       | `-`     | -           |
+| `size`      | `"xs" \| "sm" \| "md" \| "lg" \| "icon"`                       | No       | `-`     | -           |
+| `fullWidth` | `boolean`                                                      | No       | `-`     | -           |
+
+## buttonVariants
+
+プロジェクト全体の標準的なボタンスタイルを提供するAtomコンポーネント。
+
+### Props
+
+| Prop        | Type                                                           | Required | Default | Description |
+| ----------- | -------------------------------------------------------------- | -------- | ------- | ----------- |
+| `variant`   | `"primary" \| "secondary" \| "ghost" \| "danger" \| "outline"` | No       | `-`     | -           |
+| `size`      | `"xs" \| "sm" \| "md" \| "lg" \| "icon"`                       | No       | `-`     | -           |
+| `fullWidth` | `boolean`                                                      | No       | `-`     | -           |
+| `class`     | `ClassValue`                                                   | No       | `-`     | -           |
+| `className` | `ClassValue`                                                   | No       | `-`     | -           |
 
 ## HelpTooltip
 
@@ -59,9 +73,23 @@ No description provided.
 
 | Prop      | Type                                                               | Required | Default | Description |
 | --------- | ------------------------------------------------------------------ | -------- | ------- | ----------- |
-| `rounded` | `boolean`                                                          | No       | `true`  | -           |
-| `size`    | `"xs" \| "sm" \| "md" \| "lg"`                                     | No       | `sm`    | -           |
-| `variant` | `"danger" \| "slate" \| "white" \| "indigo" \| "yellow" \| "blue"` | No       | `slate` | -           |
+| `variant` | `"danger" \| "slate" \| "white" \| "indigo" \| "yellow" \| "blue"` | No       | `-`     | -           |
+| `size`    | `"xs" \| "sm" \| "md" \| "lg"`                                     | No       | `-`     | -           |
+| `rounded` | `boolean`                                                          | No       | `-`     | -           |
+
+## iconButtonVariants
+
+アイコンを表示するための円形または四角形のボタン。
+
+### Props
+
+| Prop        | Type                                                               | Required | Default | Description |
+| ----------- | ------------------------------------------------------------------ | -------- | ------- | ----------- |
+| `variant`   | `"danger" \| "slate" \| "white" \| "indigo" \| "yellow" \| "blue"` | No       | `-`     | -           |
+| `size`      | `"xs" \| "sm" \| "md" \| "lg"`                                     | No       | `-`     | -           |
+| `rounded`   | `boolean`                                                          | No       | `-`     | -           |
+| `class`     | `ClassValue`                                                       | No       | `-`     | -           |
+| `className` | `ClassValue`                                                       | No       | `-`     | -           |
 
 ## ImageThumbnailItem
 
