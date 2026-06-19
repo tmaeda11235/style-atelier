@@ -35,6 +35,8 @@ describe("PremiumBrandingPanel", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    defaultProps.onUpdateBranding.mockClear()
+    defaultProps.onUpgrade.mockClear()
   })
 
   it("renders upgrade banner when not premium", () => {
@@ -80,13 +82,22 @@ describe("PremiumBrandingPanel", () => {
     })
   })
 
-  it("handles image upload on dragover and drop", () => {
+  it("handles image upload on dragover, dragleave and drop", () => {
     render(<PremiumBrandingPanel {...noLogoProps} />)
 
     const dropZone = screen.getByTestId("logo-dropzone")
 
     // Drag Over
     fireEvent.dragOver(dropZone)
+    expect(dropZone.className).toContain("border-blue-500")
+
+    // Drag Leave
+    fireEvent.dragLeave(dropZone)
+    expect(dropZone.className).not.toContain("border-blue-500")
+
+    // Drag Over again for drop
+    fireEvent.dragOver(dropZone)
+    expect(dropZone.className).toContain("border-blue-500")
 
     // Drop file
     const file = new File(["dummy"], "logo.png", { type: "image/png" })
@@ -121,6 +132,7 @@ describe("PremiumBrandingPanel", () => {
         expect(defaultProps.onUpdateBranding).toHaveBeenCalledWith({
           customLogo: dummyDataUrl
         })
+        expect(dropZone.className).not.toContain("border-blue-500")
         global.FileReader = originalFileReader
         resolve()
       }, 50)

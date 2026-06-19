@@ -47,48 +47,76 @@ function readAndSetLogo(
   reader.readAsDataURL(file)
 }
 
+interface ActiveLogoDisplayProps {
+  customLogo: string
+  onRemove: () => void
+}
+
+function ActiveLogoDisplay({ customLogo, onRemove }: ActiveLogoDisplayProps) {
+  return (
+    <div className="flex items-center justify-between p-2 bg-surface border border-border-primary rounded-lg">
+      <div className="flex items-center gap-2">
+        <div
+          style={{ backgroundImage: `url(${customLogo})` }}
+          className="h-6 w-16 bg-contain bg-no-repeat bg-center border border-border-primary rounded"
+          aria-label="Custom brand logo"
+        />
+        <span className="text-[10px] text-text-secondary">Active</span>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRemove}
+        className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded transition-colors"
+        data-testid="delete-custom-logo-button">
+        <Trash2 className="w-3.5 h-3.5" />
+      </Button>
+    </div>
+  )
+}
+
 interface LogoUploaderProps {
   customLogo?: string
   onUpdateBranding: (changes: Partial<UserSettings["branding"]>) => void
 }
 
 function LogoUploader({ customLogo, onUpdateBranding }: LogoUploaderProps) {
+  const [isDragging, setIsDragging] = React.useState(false)
+
   if (customLogo) {
     return (
-      <div className="flex items-center justify-between p-2 bg-surface border border-border-primary rounded-lg">
-        <div className="flex items-center gap-2">
-          <div
-            style={{ backgroundImage: `url(${customLogo})` }}
-            className="h-6 w-16 bg-contain bg-no-repeat bg-center border border-border-primary rounded"
-            aria-label="Custom brand logo"
-          />
-          <span className="text-[10px] text-text-secondary">Active</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onUpdateBranding({ customLogo: undefined })}
-          className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded transition-colors"
-          data-testid="delete-custom-logo-button">
-          <Trash2 className="w-3.5 h-3.5" />
-        </Button>
-      </div>
+      <ActiveLogoDisplay
+        customLogo={customLogo}
+        onRemove={() => onUpdateBranding({ customLogo: undefined })}
+      />
     )
   }
 
   return (
     <div
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={(e) => {
+        e.preventDefault()
+        setIsDragging(true)
+      }}
+      onDragLeave={() => setIsDragging(false)}
       onDrop={(e) => {
         e.preventDefault()
+        setIsDragging(false)
         readAndSetLogo(e.dataTransfer.files?.[0], onUpdateBranding)
       }}
-      className="border border-dashed border-border-primary rounded-lg p-3 bg-surface hover:bg-surface-hover transition-colors flex flex-col items-center justify-center text-center gap-1 cursor-pointer relative"
+      className={`border border-dashed rounded-lg p-3 bg-surface hover:bg-surface-hover transition-colors flex flex-col items-center justify-center text-center gap-1 cursor-pointer relative ${
+        isDragging
+          ? "border-blue-500 bg-blue-50/10 dark:bg-blue-950/10"
+          : "border-border-primary"
+      }`}
       data-testid="logo-dropzone">
       <Input
         type="file"
         accept="image/*"
-        onChange={(e) => readAndSetLogo(e.target.files?.[0], onUpdateBranding)}
+        onChange={(e) => {
+          setIsDragging(false)
+          readAndSetLogo(e.target.files?.[0], onUpdateBranding)
+        }}
         className="absolute inset-0 opacity-0 cursor-pointer"
         data-testid="logo-file-input"
       />
