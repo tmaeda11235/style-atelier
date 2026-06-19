@@ -29,7 +29,7 @@ export const CustomNameInput: React.FC<CustomNameInputProps> = ({
         advanceIfStep("title-input")
       }}
       placeholder={t.minting.enterCustomName}
-      className="h-9 text-xs focus-visible:ring-blue-600 rounded-xl"
+      size="sm"
     />
     <div className="mt-1.5 text-xs text-slate-500 font-medium">
       {t.minting.preview}:{" "}

@@ -18,7 +18,7 @@ export const TitleIllustration: React.FC<IllustrationProps> = ({ t }) => {
           type="text"
           readOnly
           value={mockT.neonCyberpunkSamurai}
-          className="w-full focus:outline-none"
+          size="sm"
         />
         <span className="absolute right-2 top-2 text-[10px] text-purple-400 font-bold animate-pulse">
           {mockT.title}

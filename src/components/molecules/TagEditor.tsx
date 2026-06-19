@@ -76,7 +76,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
           value={newTagInput}
           onChange={(e) => onNewTagInputChange(e.target.value)}
           placeholder={t.minting.tagsPlaceholder}
-          className="text-xs py-1"
+          size="sm"
         />
         <Button type="submit" size="xs" variant="secondary">
           {t.minting.add}

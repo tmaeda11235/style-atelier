@@ -23,8 +23,7 @@ interface Feedback {
   message: string
 }
 
-const INPUT_CLASS =
-  "w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-text-primary placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 font-mono"
+const INPUT_CLASS = "pl-3 pr-10 font-mono"
 const ACTIVATE_BTN_CLASS =
   "flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-600/10 transition-all active:scale-99"
 const BUY_BTN_CLASS =
@@ -198,6 +197,7 @@ function LicenseInactiveForm({
             disabled={isLoading}
             placeholder={t.settings.license.placeholder}
             className={INPUT_CLASS}
+            size="sm"
             id="license-key-input"
           />
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">

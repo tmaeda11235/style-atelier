@@ -6,22 +6,24 @@ import { inputVariants } from "./Input.variants"
 
 /**
  * 汎用的なテキスト入力フィールドを提供するAtomコンポーネント。
- *
- * @param {Object} props
- * @param {string} [props.className=''] - 追加のカスタムクラス
  */
 export interface InputProps
   extends
-    React.InputHTMLAttributes<HTMLInputElement>,
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
     VariantProps<typeof inputVariants> {}
 
-export function Input({ width, className = "", ...props }: InputProps) {
-  const layoutClassName = extractLayoutClasses(className)
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ variant, size, width, className = "", ...props }, ref) => {
+    const layoutClassName = extractLayoutClasses(className)
 
-  return (
-    <input
-      className={cn(inputVariants({ width }), layoutClassName)}
-      {...props}
-    />
-  )
-}
+    return (
+      <input
+        ref={ref}
+        className={cn(inputVariants({ variant, size, width }), layoutClassName)}
+        {...props}
+      />
+    )
+  }
+)
+
+Input.displayName = "Input"

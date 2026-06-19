@@ -42,7 +42,8 @@ function CardNameInput({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t.cardDetail.cardNamePlaceholder}
-        className="font-bold text-slate-800 text-sm"
+        className="font-bold text-slate-800"
+        size="md"
         disabled={!expertFeatures.cardEditing}
       />
     </div>

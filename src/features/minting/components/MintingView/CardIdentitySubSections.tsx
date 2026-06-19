@@ -55,7 +55,7 @@ function TagInputField({
         type="text"
         id="custom-tag-input"
         placeholder={t.minting.pressEnterToAdd}
-        className="text-xs py-1"
+        size="sm"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault()

@@ -83,7 +83,10 @@ No description provided.
 
 ### Props
 
-No custom props.
+| Prop      | Type                                 | Required | Default | Description |
+| --------- | ------------------------------------ | -------- | ------- | ----------- |
+| `variant` | `"default" \| "error" \| "unstyled"` | No       | `-`     | -           |
+| `size`    | `"xs" \| "sm" \| "md" \| "lg"`       | No       | `-`     | -           |
 
 ## OpfsImage
 

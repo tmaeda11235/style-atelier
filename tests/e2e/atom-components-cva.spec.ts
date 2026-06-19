@@ -54,7 +54,19 @@ test.describe("Style Atelier E2E Tests - Atom Components CVA @J-ATOM-CVA", () =>
     )
     await expect(accordionHeaders.first()).toBeVisible()
 
-    // Take a screenshot of the settings tab containing CVA components
+    // 8. Verify License input component (which uses Input CVA size="sm")
+    const licenseAccordionHeader = spFrame.locator(
+      "#settings-accordion-license"
+    )
+    await expect(licenseAccordionHeader).toBeVisible()
+    await licenseAccordionHeader.click()
+
+    const licenseInput = spFrame.locator("#license-key-input")
+    await expect(licenseInput).toBeVisible()
+    await licenseInput.fill("TEST-CVA-INPUT-KEY")
+    await expect(licenseInput).toHaveValue("TEST-CVA-INPUT-KEY")
+
+    // Take a screenshot of the settings tab containing CVA components including Input
     await page.screenshot({
       path: path.join(screenshotsDir, "atom-components-cva.png")
     })
