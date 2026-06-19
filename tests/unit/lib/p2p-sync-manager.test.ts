@@ -15,6 +15,7 @@ import {
 // Mock migration-helpers
 vi.mock("../../../src/shared/lib/db/migration-helpers", () => ({
   computeHash: vi.fn().mockResolvedValue("mock-hash"),
+  deleteOpfsFile: vi.fn().mockResolvedValue(undefined),
   listOpfsFiles: vi.fn().mockResolvedValue([
     {
       filePath: "images/cards/test-card-1.png",
