@@ -131,7 +131,7 @@ async function main() {
   console.log('\n--- Running Unit Tests with Coverage ---');
   if (srcFiles.length > 0) {
     try {
-      execSync('npx vitest run --coverage --maxWorkers=1', { stdio: 'inherit' });
+      execSync('npm test -- --coverage', { stdio: 'inherit' });
     } catch {
       console.error('Unit tests or coverage threshold checks failed.');
       process.exit(1);
