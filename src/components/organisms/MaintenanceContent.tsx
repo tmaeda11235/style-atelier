@@ -1,8 +1,8 @@
 import React from "react"
 
-import { DangerZoneSection } from "./DangerZoneSection"
-import { LocalBackupSection } from "./LocalBackupSection"
-import { StorageManagerSection } from "./StorageManagerSection"
+import { DangerZoneSection } from "../../features/settings/components/DangerZoneSection"
+import { LocalBackupSection } from "../../features/settings/components/LocalBackupSection"
+import { StorageManagerSection } from "../../features/settings/components/StorageManagerSection"
 
 interface MaintenanceContentProps {
   t: any

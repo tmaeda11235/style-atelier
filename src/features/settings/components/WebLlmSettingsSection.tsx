@@ -1,12 +1,7 @@
 import { AlertTriangle } from "lucide-react"
 import React from "react"
 
-import { useConfirm } from "../../contexts/ConfirmContext"
-import { useLanguage } from "../../contexts/LanguageContext"
-import { useWebGpu } from "../../hooks/useWebGpu"
-import { useWebLlm } from "../../hooks/useWebLlm"
-import { isMobileConnection } from "../../lib/network-utils"
-import { WebGpuWarning } from "../molecules/WebGpuWarning"
+import { WebGpuWarning } from "../../../components/molecules/WebGpuWarning"
 import {
   WebLlmActionButtons,
   WebLlmBothUnsupportedWarning,
@@ -16,7 +11,12 @@ import {
   WebLlmQuotaWarning,
   WebLlmRetryingInfo,
   WebLlmStatusRow
-} from "./WebLlmSettings"
+} from "../../../components/organisms/WebLlmSettings"
+import { useConfirm } from "../../../contexts/ConfirmContext"
+import { useLanguage } from "../../../contexts/LanguageContext"
+import { useWebGpu } from "../../../hooks/useWebGpu"
+import { useWebLlm } from "../../../hooks/useWebLlm"
+import { isMobileConnection } from "../../../lib/network-utils"
 
 interface StatusDisplay {
   colorClass: string
