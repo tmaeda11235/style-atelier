@@ -65,6 +65,41 @@
   },
   "settings": {
     "title": "設定",
+    "premiumGroupTitle": "💎 プレミアムライセンス",
+    "license": {
+      "title": "ライセンス管理",
+      "description": "プレミアム機能（Notion同期やカスタムテンプレート）を有効にするためのライセンスキーを入力します。",
+      "keyLabel": "ライセンスキー",
+      "placeholder": "PRO-XXXX-XXXX-XXXX...",
+      "activate": "有効化（アクティベート）",
+      "deactivate": "認証解除",
+      "status": "ライセンスステータス: ",
+      "statusValid": "有効 (Premium Pro)",
+      "statusInvalid": "無効なキー",
+      "statusExpired": "期限切れ",
+      "statusUnlicensed": "未アクティベート (無料プラン)",
+      "success": "ライセンスが正常に有効化されました！",
+      "failed": "ライセンスの有効化に失敗しました。キーを確認してください。",
+      "deactivateSuccess": "ライセンスの認証を解除しました。",
+      "loading": "ライセンスを検証中...",
+      "getLicense": "ライセンスキーを購入する"
+    },
+    "upgrade": {
+      "modalTitle": "Premium Proへアップグレード",
+      "modalSubtitle": "すべての高度な機能を解放し、プロのワークフローへ",
+      "checkoutBtn": "Premium Proを入手する",
+      "alreadyHaveKey": "すでにライセンスキーをお持ちですか？設定画面へ",
+      "freePlan": "無料プラン",
+      "proPlan": "Premium Pro",
+      "features": {
+        "unlimitedCards": "スタイルカード保存数無制限",
+        "gdriveSync": "Google Drive同期",
+        "notionSync": "Notion同期（自動同期含む）",
+        "customCard": "カスタムカードデザイン＆テンプレート",
+        "localAi": "ローカルAIアシスタント",
+        "prioritySupport": "優先サポート＆機能アップデート"
+      }
+    },
     "uiGroupTitle": "🎨 UI表示設定",
     "cloudGroupTitle": "☁️ クラウド同期・バックアップ",
     "maintenanceGroupTitle": "📊 メンテナンスとローカル保存",

@@ -7,6 +7,7 @@ import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { SettingsAccordionItem } from "../molecules/SettingsAccordionItem"
 import { P2PSyncUI } from "../P2PSyncUI"
 import { CloudSyncSection } from "./CloudSyncSection"
+import { LicenseSettingsSection } from "./LicenseSettingsSection"
 import { MaintenanceContent } from "./MaintenanceContent"
 import { UiPreferencesSection } from "./UiPreferencesSection"
 import { WebLlmSettingsSection } from "./WebLlmSettingsSection"
@@ -19,6 +20,7 @@ interface SettingsTabPresenterProps {
   onToggleCloud: () => void
   onToggleMaintenance: () => void
   onToggleWebLlm: () => void
+  onToggleLicense: () => void
   uiProps: any
   cloudProps: any
   maintenanceProps: any
@@ -113,12 +115,25 @@ function WebLlmAccordionItem({ isOpen, onToggle, title }: any) {
   )
 }
 
+function LicenseAccordionItem({ isOpen, onToggle, title }: any) {
+  return (
+    <SettingsAccordionItem
+      id="settings-accordion-license"
+      title={title}
+      isOpen={isOpen}
+      onToggle={onToggle}>
+      <LicenseSettingsSection />
+    </SettingsAccordionItem>
+  )
+}
+
 function AccordionSections({
   openSections,
   onToggleUi,
   onToggleCloud,
   onToggleMaintenance,
   onToggleWebLlm,
+  onToggleLicense,
   uiProps,
   cloudProps,
   maintenanceProps,
@@ -133,6 +148,11 @@ function AccordionSections({
         onToggle={onToggleUi}
         title={t.uiGroupTitle}
         uiProps={uiProps}
+      />
+      <LicenseAccordionItem
+        isOpen={openSections.license}
+        onToggle={onToggleLicense}
+        title={t.premiumGroupTitle}
       />
       <CloudSyncAccordionItem
         isOpen={openSections.cloud}

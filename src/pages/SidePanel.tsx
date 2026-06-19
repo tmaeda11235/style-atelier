@@ -2,8 +2,10 @@ import React, { useEffect } from "react"
 
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
+import { UpgradeModal } from "../components/organisms/UpgradeModal"
 import { ConfirmProvider } from "../contexts/ConfirmContext"
 import { LanguageProvider, useLanguage } from "../contexts/LanguageContext"
+import { LicenseProvider } from "../contexts/LicenseContext"
 import { P2PSyncProvider } from "../contexts/P2PSyncContext"
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
 import { TutorialProvider } from "../contexts/TutorialContext"
@@ -76,6 +78,7 @@ function SidePanelInner() {
             onOpenMidjourney={handleOpenMidjourney}
           />
         )}
+        <UpgradeModal />
       </WorkbenchProvider>
     </P2PSyncProvider>
   )
@@ -89,13 +92,15 @@ function SidePanelPage() {
   return (
     <LanguageProvider>
       <SettingsProvider>
-        <WebLlmProvider>
-          <TutorialProvider>
-            <ConfirmProvider>
-              <SidePanelInner />
-            </ConfirmProvider>
-          </TutorialProvider>
-        </WebLlmProvider>
+        <LicenseProvider>
+          <WebLlmProvider>
+            <TutorialProvider>
+              <ConfirmProvider>
+                <SidePanelInner />
+              </ConfirmProvider>
+            </TutorialProvider>
+          </WebLlmProvider>
+        </LicenseProvider>
       </SettingsProvider>
     </LanguageProvider>
   )
