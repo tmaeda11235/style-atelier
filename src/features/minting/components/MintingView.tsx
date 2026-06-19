@@ -1,13 +1,14 @@
 import React from "react"
 
-import { useLanguage } from "../../contexts/LanguageContext"
-import { useSettings } from "../../contexts/SettingsContext"
-import { useTutorial } from "../../contexts/TutorialContext"
-import { useCategories } from "../../hooks/useCategories"
-import { useHand } from "../../hooks/useHand"
-import type { RarityTier } from "../../lib/rarity-config"
-import type { HistoryItem, PromptSegment } from "../../shared/lib/db-schema"
-import { Button } from "../atoms/Button"
+import { Button } from "~components/atoms/Button"
+import { useLanguage } from "~contexts/LanguageContext"
+import { useSettings } from "~contexts/SettingsContext"
+import { useTutorial } from "~contexts/TutorialContext"
+import { useCategories } from "~hooks/useCategories"
+import { useHand } from "~hooks/useHand"
+import type { RarityTier } from "~lib/rarity-config"
+import type { HistoryItem, PromptSegment } from "~shared/lib/db-schema"
+
 import { MintingViewContent } from "./MintingView/MintingViewContent"
 
 const STEP_TITLE_INPUT = "title-input"

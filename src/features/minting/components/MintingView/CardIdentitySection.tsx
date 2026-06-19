@@ -1,10 +1,11 @@
 import React from "react"
 
-import type { CustomCategory } from "../../../shared/lib/db-schema"
-import { HelpTooltip } from "../../atoms/HelpTooltip"
-import { Input } from "../../atoms/Input"
-import { KeywordChip } from "../../molecules/KeywordChip"
-import { AiStyleAnalysisSection } from "../AiStyleAnalysisSection"
+import { HelpTooltip } from "~components/atoms/HelpTooltip"
+import { Input } from "~components/atoms/Input"
+import { KeywordChip } from "~components/molecules/KeywordChip"
+import { AiStyleAnalysisSection } from "~components/organisms/AiStyleAnalysisSection"
+import type { CustomCategory } from "~shared/lib/db-schema"
+
 import { CustomTagsBox, DetectedPaletteBox } from "./CardIdentitySubSections"
 
 const DEFAULT_CATEGORY_ICON = "🖼️"
