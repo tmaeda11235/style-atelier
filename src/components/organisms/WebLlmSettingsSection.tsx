@@ -16,7 +16,7 @@ import {
   WebLlmQuotaWarning,
   WebLlmRetryingInfo,
   WebLlmStatusRow
-} from "./WebLlmSettingsSubComponents"
+} from "./WebLlmSettings"
 
 interface StatusDisplay {
   colorClass: string
