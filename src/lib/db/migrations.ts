@@ -13,6 +13,7 @@ export function setupMigrations(db: Dexie) {
   setupVersions5To9(db)
   setupVersions10To13(db)
   setupVersions14OrHigher(db)
+  setupVersions17OrHigher(db)
 }
 function setupVersions5To9(db: Dexie) {
   // Version 5: Previous version
@@ -153,6 +154,23 @@ function setupVersions14OrHigher(db: Dexie) {
       imageSyncStates: "filePath, cardId, categoryId, syncStatus"
     })
     .upgrade(upgradeToVersion16)
+}
+
+function setupVersions17OrHigher(db: Dexie) {
+  // Version 17: Add notionSyncStates table for Notion sync metadata
+  db.version(17).stores({
+    styleCards:
+      "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+    historyItems: "id, timestamp",
+    userSettings: "userId",
+    categories: "id, name, createdAt, isDeleted, parentId",
+    slotHistory: "label",
+    parameterAliases: "id, paramType, value, alias, folderId",
+    parameterFolders: "id, name, parentId",
+    recipeHistory: "id, timestamp",
+    imageSyncStates: "filePath, cardId, categoryId, syncStatus",
+    notionSyncStates: "cardId, notionPageId, lastSyncedAt"
+  })
 }
 
 export function upgradeToVersion6(tx: any) {

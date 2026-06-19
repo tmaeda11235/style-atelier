@@ -34,6 +34,7 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(14)
     expect(mockVersion).toHaveBeenCalledWith(15)
     expect(mockVersion).toHaveBeenCalledWith(16)
+    expect(mockVersion).toHaveBeenCalledWith(17)
   })
 })
 
