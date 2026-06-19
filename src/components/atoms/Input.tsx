@@ -1,4 +1,8 @@
+import { type VariantProps } from "class-variance-authority"
 import React from "react"
+
+import { cn, extractLayoutClasses } from "../../lib/utils"
+import { inputVariants } from "./Input.variants"
 
 /**
  * 汎用的なテキスト入力フィールドを提供するAtomコンポーネント。
@@ -6,12 +10,17 @@ import React from "react"
  * @param {Object} props
  * @param {string} [props.className=''] - 追加のカスタムクラス
  */
-type InputProps = React.InputHTMLAttributes<HTMLInputElement>
+export interface InputProps
+  extends
+    React.InputHTMLAttributes<HTMLInputElement>,
+    VariantProps<typeof inputVariants> {}
 
-export function Input({ className = "", ...props }: InputProps) {
+export function Input({ width, className = "", ...props }: InputProps) {
+  const layoutClassName = extractLayoutClasses(className)
+
   return (
     <input
-      className={`w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-500 dark:disabled:text-slate-400 ${className}`}
+      className={cn(inputVariants({ width }), layoutClassName)}
       {...props}
     />
   )

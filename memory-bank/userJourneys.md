@@ -64,6 +64,8 @@ stateDiagram-v2
   _J_PWA_A2HS_OFFLINE_01 : モバイルPWAスマートQR起動＆A2HSとオフライン閲覧
   _J_PWA_P2P_SYNC_01 : モバイルPWA・PC間ハイブリッド同期（P2P/Drive）
   _J_PWA_AI_STYLE_ANALYSIS_01 : モバイルPWAローカルAIアートスタイル分析
+  _J_EXPORT_SNS_SHARE : エクスポートSNS共有
+  _J_ATOM_CVA : 基礎UI部品のCVAバリアント確認
   _J_MINT_EXPERT_01 --> _J_ORG_EXPERT_01
   _J_MINT_EXPERT_01 --> _J_WB_EXPERT_01
   _J_MINT_EASY_01 --> _J_ORG_EASY_01
@@ -78,6 +80,7 @@ stateDiagram-v2
   _J_ORG_EXPERT_01 --> _J_ORG_QUICK_SEND_01
   _J_ORG_EXPERT_01 --> _J_ORG_CARD_HOLO_EFFECT_01
   _J_ORG_EXPERT_01 --> _J_ORG_BINDER_DND_01
+  _J_ORG_EXPERT_01 --> _J_EXPORT_SNS_SHARE
   _J_ORG_EXPERT_02 --> _J_ORG_EXPERT_01
   _J_ORG_EXPERT_02 --> _J_ORG_FOLDER_01
   _J_ORG_EASY_01 --> _J_WB_EASY_01
@@ -971,4 +974,30 @@ flowchart TD
   S2 --> S3
   S4["ローカルのWebGPU（またはWasm CPUフォールバック）で推論を行い、分析されたジャンル、タグ、要約テキストが画面に表示されるのを確認する"]
   S3 --> S4
+```
+
+### @J-EXPORT-SNS-SHARE: エクスポートSNS共有
+
+カードエクスポート成功時にWeb Share APIまたはSNSインテントを利用してカード画像と情報を共有する
+
+```mermaid
+flowchart TD
+  S1["カード詳細を開く"]
+  S2["Exportボタン押下"]
+  S1 --> S2
+  S3["エクスポート成功モーダル確認"]
+  S2 --> S3
+  S4["共有ボタン押下によるSNS共有実行"]
+  S3 --> S4
+```
+
+### @J-ATOM-CVA: 基礎UI部品のCVAバリアント確認
+
+Button, Badge, Input等の基礎コンポーネントがCVA化され、正しくレンダリングされていることを確認する
+
+```mermaid
+flowchart TD
+  S1["設定画面を開く"]
+  S2["各基礎コンポーネント（Button, Input, Badge）が正しくレンダリングされているのを確認する"]
+  S1 --> S2
 ```
