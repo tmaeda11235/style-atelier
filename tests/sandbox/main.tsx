@@ -7,8 +7,8 @@ import SidePanelPage from "../../src/pages/SidePanel"
 
 import "../../src/style.css" // スタイルの読み込み
 
-import { OnboardingGuide } from "../../src/components/organisms/OnboardingGuide"
 import { LanguageProvider } from "../../src/contexts/LanguageContext"
+import { OnboardingGuide } from "../../src/features/tutorial/components/OnboardingGuide"
 import { db } from "../../src/lib/db"
 import {
   checkAvailableStorage,

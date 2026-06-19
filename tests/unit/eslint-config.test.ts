@@ -94,7 +94,7 @@ describe("ESLint Configuration", () => {
       "src/features/minting/components/MintingView.tsx",
       "src/features/card-detail/components/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx"
+      "src/features/tutorial/components/InteractiveTutorial.tsx"
     ]
     for (const comp of newComponents) {
       const compConfig = eslintConfig.find(

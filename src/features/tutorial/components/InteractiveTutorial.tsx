@@ -1,7 +1,7 @@
 import React from "react"
 
-import { useInteractiveTutorial } from "../../hooks/useInteractiveTutorial"
-import { SpotlightOverlay } from "./SpotlightOverlay"
+import { SpotlightOverlay } from "../../../components/organisms/SpotlightOverlay"
+import { useInteractiveTutorial } from "../../../hooks/useInteractiveTutorial"
 import { TutorialTooltip } from "./TutorialTooltip"
 
 // スポットライト境界線部分

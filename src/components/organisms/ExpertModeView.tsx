@@ -1,13 +1,13 @@
 /* eslint-disable max-lines-per-function */
 import React from "react"
 
+import { InteractiveTutorial } from "../../features/tutorial/components/InteractiveTutorial"
 import { useExpertModeView } from "../../hooks/useExpertModeView"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
 import { ExpertModeOverlayManager } from "./ExpertModeView/ExpertModeOverlayManager"
 import { ExpertModeTabContainer } from "./ExpertModeView/ExpertModeTabContainer"
 import { WelcomeDialog } from "./ExpertModeView/WelcomeDialog"
 import { HandBar } from "./HandBar"
-import { InteractiveTutorial } from "./InteractiveTutorial"
 import { TipsBar } from "./TipsBar"
 
 interface ExpertModeViewProps {
