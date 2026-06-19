@@ -2,14 +2,12 @@ import { ArrowDown } from "lucide-react"
 import React, { useEffect, useState } from "react"
 
 import type { PromptSegment, StyleCard } from "../../shared/lib/db-schema"
+import { BlendingOverlay } from "../molecules/cauldron/BlendingOverlay"
+import { CauldronBackground } from "../molecules/cauldron/CauldronBackground"
+import { CauldronBubbles } from "../molecules/cauldron/CauldronBubbles"
+import { ShufflingOverlay } from "../molecules/cauldron/ShufflingOverlay"
+import { WorkbenchCardList } from "../molecules/cauldron/WorkbenchCardList"
 import { AiRecipeAdviceSection } from "./AiRecipeAdviceSection"
-import {
-  BlendingOverlay,
-  CauldronBackground,
-  CauldronBubbles,
-  ShufflingOverlay,
-  WorkbenchCardList
-} from "./CauldronSubcomponents"
 
 interface CauldronProps {
   workbenchCards: StyleCard[]
