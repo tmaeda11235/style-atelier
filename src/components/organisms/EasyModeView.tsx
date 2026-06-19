@@ -1,10 +1,10 @@
 /* eslint-disable max-lines */
 import React from "react"
 
+import { CardDetailView } from "../../features/card-detail/components/CardDetailView"
 import { useEasyModeView } from "../../hooks/useEasyModeView"
 import { getStyleCardById } from "../../lib/style-card-store"
 import { SidePanelLayout } from "../templates/SidePanelLayout"
-import { CardDetailView } from "./CardDetailView"
 import { LibraryTab } from "./LibraryTab"
 import { NonTargetSiteView } from "./NonTargetSiteView"
 import { SettingsTab } from "./SettingsTab"

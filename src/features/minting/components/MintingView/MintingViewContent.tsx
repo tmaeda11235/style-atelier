@@ -1,11 +1,12 @@
 import React from "react"
 
-import type { RarityTier } from "../../../lib/rarity-config"
-import type { HistoryItem, PromptSegment } from "../../../shared/lib/db-schema"
-import { HelpTooltip } from "../../atoms/HelpTooltip"
-import { PromptBubble } from "../../molecules/PromptBubble"
-import { RaritySelector } from "../../molecules/RaritySelector"
-import { PromptBubbleEditor } from "../PromptBubbleEditor"
+import { HelpTooltip } from "~components/atoms/HelpTooltip"
+import { PromptBubble } from "~components/molecules/PromptBubble"
+import { RaritySelector } from "~components/molecules/RaritySelector"
+import { PromptBubbleEditor } from "~components/organisms/PromptBubbleEditor"
+import type { RarityTier } from "~lib/rarity-config"
+import type { HistoryItem, PromptSegment } from "~shared/lib/db-schema"
+
 import { CardIdentitySection } from "./CardIdentitySection"
 
 interface MintingViewProps {

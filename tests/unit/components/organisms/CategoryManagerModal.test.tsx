@@ -1,5 +1,5 @@
-import { CategoryManagerModal } from "@/components/organisms/CategoryManagerModal"
 import { LanguageProvider } from "@/contexts/LanguageContext"
+import { CategoryManagerModal } from "@/features/category-manager/components/CategoryManagerModal"
 import { db } from "@/lib/db"
 import {
   fireEvent,
