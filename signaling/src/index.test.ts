@@ -226,3 +226,4 @@ describe("Signaling Server Integration Tests (In-Memory Worker Simulation)", () 
     expect(ws2Closed).toBe(true)
   })
 })
+// Trigger test change
