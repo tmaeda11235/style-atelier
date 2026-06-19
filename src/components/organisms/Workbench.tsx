@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 
+import { useWorkbenchCore } from "../../hooks/useWorkbenchCore"
 import { type AlertType } from "../molecules/ConnectionAlert"
-import { useWorkbenchCore } from "./useWorkbenchCore"
 import { WorkbenchView } from "./WorkbenchView"
 
 interface WorkbenchProps {

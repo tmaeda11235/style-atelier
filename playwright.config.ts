@@ -108,13 +108,11 @@ export default defineConfig({
       timeout: 60 * 1000
     },
     {
-      command: `node scripts/dev-signaling-server.js`,
+      command: `npx wrangler dev --port ${SIGNALING_PORT} --ip 127.0.0.1`,
+      cwd: path.resolve(__dirname, "signaling"),
       port: Number(SIGNALING_PORT),
-      env: {
-        PORT: SIGNALING_PORT
-      },
       reuseExistingServer: false,
-      timeout: 30 * 1000
+      timeout: 60 * 1000
     }
   ]
 })

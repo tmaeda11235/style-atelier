@@ -17,7 +17,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     page
   }) => {
     // 1. Navigate to the mobile app index page (no params, should fallback, and use mock mode)
-    await page.goto("/src/web-app/index.html?mock=true")
+    await page.goto("/?mock=true")
 
     // Ensure fonts and main components are loaded
     await page.waitForSelector(".phone-frame")
@@ -134,7 +134,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     const payload = compressCardData(testCard as StyleCard)
 
     // 3. Navigate with parameter '?p='
-    await page.goto(`/src/web-app/index.html?p=${encodeURIComponent(payload)}`)
+    await page.goto(`/?p=${encodeURIComponent(payload)}`)
 
     // Wait for elements
     await page.waitForSelector(".phone-frame")

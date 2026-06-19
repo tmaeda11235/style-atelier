@@ -842,6 +842,24 @@
         "src/components/atoms/RarityBadge.tsx",
         "src/components/atoms/AiStatusBadge.tsx"
       ]
+    },
+    {
+      "id": "@J-PREMIUM-LICENSE-01",
+      "name": "プレミアムライセンスのアクティベーションと制限機能解除",
+      "description": "ライセンスキーを入力してプレミアム機能を有効化し、UpgradeModalの導線が正しく動作することを確認する",
+      "steps": [
+        "設定タブを開く",
+        "ライセンスキーを入力",
+        "アクティベートボタンを押下し有効化を確認",
+        "認証解除ボタンで元に戻ることを確認",
+        "UpgradeModalから設定タブのライセンスセクションへ自動遷移することを確認"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/contexts/LicenseContext.tsx",
+        "src/components/organisms/LicenseSettingsSection.tsx",
+        "src/components/organisms/UpgradeModal.tsx"
+      ]
     }
   ]
 }

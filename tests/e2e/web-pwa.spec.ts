@@ -13,7 +13,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
     request
   }) => {
     // 1. Visit the web viewer page
-    await page.goto("/src/web-app/index.html?pwa=true")
+    await page.goto("/?pwa=true")
 
     // Check if the manifest link is present in head
     const manifestLink = page.locator('link[rel="manifest"]')
@@ -125,7 +125,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
   test.describe("A2HS Installation Prompts", () => {
     test.beforeEach(async ({ page }) => {
       // Clear localStorage before each test
-      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.goto("/?pwa=true")
       await page.waitForFunction(
         () => typeof (window as any).__renderCardForTest === "function"
       )
@@ -135,7 +135,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
     test("should display Android install dialog when beforeinstallprompt fires and hide on dismiss", async ({
       page
     }) => {
-      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.goto("/?pwa=true")
 
       // Dispatch beforeinstallprompt
       await page.evaluate(() => {
@@ -173,7 +173,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
     test("should save dismissal and not show dialog on reload", async ({
       page
     }) => {
-      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.goto("/?pwa=true")
 
       // Trigger beforeinstallprompt
       await page.evaluate(() => {
@@ -236,7 +236,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
         })
       })
 
-      await page.goto("/src/web-app/index.html?pwa=true")
+      await page.goto("/?pwa=true")
 
       // Trigger flip to show iOS tooltip
       await page.click("#cardContainer")
@@ -380,7 +380,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
 
     test.beforeEach(async ({ page }) => {
       // Clear model downloaded state to force download UI
-      await page.goto("/src/web-app/index.html?mock=true")
+      await page.goto("/?mock=true")
       await page.evaluate(async () => {
         localStorage.clear()
         localStorage.setItem("mock-webllm", "true")
@@ -402,7 +402,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
       const mockBase64 =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
-      await page.goto("/src/web-app/index.html?mock=true")
+      await page.goto("/?mock=true")
       await page.waitForFunction(
         () => typeof (window as any).__renderCardForTest === "function"
       )

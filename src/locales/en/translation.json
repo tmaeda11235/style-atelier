@@ -74,6 +74,41 @@
   },
   "settings": {
     "title": "Settings",
+    "premiumGroupTitle": "💎 Premium License",
+    "license": {
+      "title": "License Management",
+      "description": "Enter your license key to unlock premium features like Notion sync and custom templates.",
+      "keyLabel": "License Key",
+      "placeholder": "PRO-XXXX-XXXX-XXXX...",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "status": "License Status: ",
+      "statusValid": "Active (Premium Pro)",
+      "statusInvalid": "Invalid Key",
+      "statusExpired": "Expired",
+      "statusUnlicensed": "Unlicensed (Free Plan)",
+      "success": "License activated successfully!",
+      "failed": "Failed to activate license. Please check the key.",
+      "deactivateSuccess": "License deactivated.",
+      "loading": "Validating license...",
+      "getLicense": "Get License Key"
+    },
+    "upgrade": {
+      "modalTitle": "Upgrade to Premium Pro",
+      "modalSubtitle": "Unlock all advanced features and elevate your workflow",
+      "checkoutBtn": "Get Premium Pro",
+      "alreadyHaveKey": "Already have a license key? Go to settings",
+      "freePlan": "Free Plan",
+      "proPlan": "Premium Pro",
+      "features": {
+        "unlimitedCards": "Unlimited Style Cards",
+        "gdriveSync": "Google Drive Sync",
+        "notionSync": "Notion Sync (incl. Auto-Sync)",
+        "customCard": "Custom Card Designs & Templates",
+        "localAi": "Local AI Assistant",
+        "prioritySupport": "Priority Support & Updates"
+      }
+    },
     "uiGroupTitle": "🎨 UI Preferences",
     "cloudGroupTitle": "☁️ Cloud Backup & Sync",
     "maintenanceGroupTitle": "📊 Maintenance & Backup",

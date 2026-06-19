@@ -1,16 +1,13 @@
 import { useCallback, useMemo, useState } from "react"
 
-import { useLanguage } from "../../contexts/LanguageContext"
-import { useSettings } from "../../contexts/SettingsContext"
-import { useChromeTabConnection } from "../../hooks/useChromeTabConnection"
-import { useEvolution } from "../../hooks/useEvolution"
-import { usePromptSegmentsSync } from "../../hooks/usePromptSegmentsSync"
-import { useWorkbench } from "../../hooks/useWorkbench"
-import type {
-  PromptSegment,
-  RecipeHistoryItem
-} from "../../shared/lib/db-schema"
-import { type AlertType } from "../molecules/ConnectionAlert"
+import { type AlertType } from "../components/molecules/ConnectionAlert"
+import { useLanguage } from "../contexts/LanguageContext"
+import { useSettings } from "../contexts/SettingsContext"
+import type { PromptSegment, RecipeHistoryItem } from "../shared/lib/db-schema"
+import { useChromeTabConnection } from "./useChromeTabConnection"
+import { useEvolution } from "./useEvolution"
+import { usePromptSegmentsSync } from "./usePromptSegmentsSync"
+import { useWorkbench } from "./useWorkbench"
 import { useWorkbenchHandlers } from "./useWorkbenchHandlers"
 
 export interface WorkbenchProps {
