@@ -12,6 +12,7 @@ const SECTION_UI = "ui"
 const SECTION_CLOUD = "cloud"
 const SECTION_MAINTENANCE = "maintenance"
 const SECTION_WEBLLM = "webllm"
+const SECTION_LICENSE = "license"
 
 export function useSettingsAccordionState(isTestEnv: boolean) {
   const [openSections, setOpenSections] = React.useState<
@@ -20,7 +21,8 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
     ui: true,
     cloud: isTestEnv,
     maintenance: isTestEnv,
-    webllm: isTestEnv
+    webllm: isTestEnv,
+    license: isTestEnv
   })
 
   const toggleSection = React.useCallback((section: string) => {
@@ -43,6 +45,10 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
     () => toggleSection(SECTION_WEBLLM),
     [toggleSection]
   )
+  const handleToggleLicense = React.useCallback(
+    () => toggleSection(SECTION_LICENSE),
+    [toggleSection]
+  )
 
   return {
     openSections,
@@ -50,7 +56,8 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
     handleToggleUi,
     handleToggleCloud,
     handleToggleMaintenance,
-    handleToggleWebLlm
+    handleToggleWebLlm,
+    handleToggleLicense
   }
 }
 
@@ -118,6 +125,7 @@ function buildSettingsTabResult(
     onToggleCloud: accordion.handleToggleCloud,
     onToggleMaintenance: accordion.handleToggleMaintenance,
     onToggleWebLlm: accordion.handleToggleWebLlm,
+    onToggleLicense: accordion.handleToggleLicense,
     uiProps,
     cloudProps,
     maintenanceProps,
@@ -181,6 +189,16 @@ export function useSettingsTab(props: SettingsTabHooksProps) {
         if (btn) {
           btn.focus()
           btn.scrollIntoView({ behavior: "smooth", block: "center" })
+        }
+      }, 300)
+    } else if (autoOpenSection === "license") {
+      setOpenSections((prev) => ({ ...prev, license: true }))
+      setAutoOpenSection(null)
+      setTimeout(() => {
+        const input = document.getElementById("license-key-input")
+        if (input) {
+          input.focus()
+          input.scrollIntoView({ behavior: "smooth", block: "center" })
         }
       }, 300)
     }
