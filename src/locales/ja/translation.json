@@ -1,4 +1,13 @@
 {
+  "commandPalette": {
+    "placeholder": "コマンドを入力するか、スタイルカードを検索...",
+    "empty": "一致するコマンド、カード、カテゴリが見つかりません。",
+    "loading": "検索対象を読み込み中...",
+    "shortcutTip": "Ctrl+K または Cmd+K で開閉",
+    "commandsTitle": "コマンド",
+    "categoriesTitle": "カテゴリ",
+    "cardsTitle": "スタイルカード"
+  },
   "welcome": {
     "title": "Style Atelierへようこそ！",
     "description": "実際に操作しながら使い方を覚える\nインタラクティブなガイドを開始しますか？",

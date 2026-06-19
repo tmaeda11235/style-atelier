@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
 
+import { CommandPalette } from "../components/organisms/CommandPalette"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
 import { ConfirmProvider } from "../contexts/ConfirmContext"
@@ -76,6 +77,7 @@ function SidePanelInner() {
             onOpenMidjourney={handleOpenMidjourney}
           />
         )}
+        <CommandPalette />
       </WorkbenchProvider>
     </P2PSyncProvider>
   )
