@@ -112,6 +112,7 @@ function LogoUploader({ customLogo, onUpdateBranding }: LogoUploaderProps) {
       data-testid="logo-dropzone">
       <Input
         type="file"
+        variant="unstyled"
         accept="image/*"
         onChange={(e) => {
           setIsDragging(false)
@@ -152,6 +153,7 @@ function SocialLinkInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="flex-1"
+        size="sm"
         data-testid={testId}
       />
     </div>

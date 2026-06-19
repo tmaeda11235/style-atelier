@@ -52,7 +52,7 @@ function CategoryNameField({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t.placeholderName}
-        className="text-xs"
+        size="sm"
       />
     </div>
   )
@@ -150,7 +150,8 @@ function EmojiInput({
         value={emoji}
         onChange={(e) => handleEmojiChange(e.target.value)}
         placeholder={t.placeholderEmoji}
-        className="text-xs text-center"
+        className="text-center"
+        size="sm"
         disabled={disabled}
       />
     </div>

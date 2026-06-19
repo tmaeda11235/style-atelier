@@ -62,7 +62,8 @@ export function CommandPalette() {
           <Input
             ref={inputRef}
             type="text"
-            className="flex-1 bg-transparent border-0 outline-none text-slate-100 placeholder-slate-500 text-sm focus:ring-0 w-full"
+            variant="unstyled"
+            className="flex-1 text-slate-100 placeholder-slate-500 text-sm w-full"
             placeholder={
               t.commandPalette?.placeholder ||
               "Type a command or search style cards..."

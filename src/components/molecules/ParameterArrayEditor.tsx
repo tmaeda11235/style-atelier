@@ -167,7 +167,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className="h-8 text-xs w-full"
+            size="sm"
           />
           {options.length > 0 && (
             <AutocompleteDropdown
