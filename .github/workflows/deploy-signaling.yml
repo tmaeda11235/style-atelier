@@ -1,0 +1,50 @@
+name: Deploy Signaling Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'signaling/**'
+      - '.github/workflows/deploy-signaling.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.node-version'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-cache-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          npm ci --legacy-peer-deps
+          npm ci --prefix signaling
+
+      - name: Run signaling typecheck
+        run: npm run typecheck --prefix signaling
+
+      - name: Run signaling tests
+        run: npm run test --prefix signaling
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: 'signaling'
