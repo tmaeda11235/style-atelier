@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "lint": "eslint src/ && node scripts/check-i18n-keys.mjs && node scripts/check-allowed-atoms.mjs",
+    "lint": "eslint src/ && node scripts/check-i18n-keys.mjs && node scripts/check-allowed-atoms.mjs && node scripts/check-ui-element-limits.mjs",
     "prepare": "husky",
     "test:mutate": "stryker run",
     "push": "npm run lint && node scripts/smart-pre-push.mjs && git notes add -f -F artifacts/test-proof.enc HEAD && git push origin HEAD refs/notes/* --no-verify",
