@@ -51,7 +51,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reportsDirectory: process.env.CI ? "./coverage" : "./coverage-qa",
-      clean: true,
+      clean: false,
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/**",
