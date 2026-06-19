@@ -1,8 +1,15 @@
 import { useOpfsImage } from "@/hooks/useOpfsImage"
+import { cn } from "@/lib/utils"
+import { type VariantProps } from "class-variance-authority"
 import React, { useEffect, useRef, useState } from "react"
 import iconUrl from "url:../../../assets/icon.png"
 
-interface OpfsImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+import { opfsImageVariants } from "./OpfsImage.variants"
+
+interface OpfsImageProps
+  extends
+    React.ImgHTMLAttributes<HTMLImageElement>,
+    Omit<VariantProps<typeof opfsImageVariants>, "loading"> {
   src?: string
   alt: string
 }
@@ -69,7 +76,7 @@ export function OpfsImage({ src, alt, className, ...props }: OpfsImageProps) {
       ref={imgRef}
       src={finalSrc || iconUrl}
       alt={alt}
-      className={`${className || ""} ${isLoading ? "animate-pulse" : ""}`}
+      className={cn(opfsImageVariants({ loading: isLoading }), className)}
       {...props}
     />
   )

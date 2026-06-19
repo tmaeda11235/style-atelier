@@ -20,3 +20,7 @@ export const aiStatusBadgeVariants = cva(
     }
   }
 )
+
+export const aiStatusBadgeTooltipVariants = cva(
+  "absolute hidden group-hover:block group-focus-within:block bg-slate-900 dark:bg-slate-950 text-white text-[10px] font-normal rounded-lg p-2.5 shadow-xl w-56 z-[9999] pointer-events-none leading-relaxed transition-all animate-in fade-in duration-150 bottom-full left-1/2 -translate-x-1/2 mb-2 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-slate-900 dark:after:border-t-slate-950"
+)

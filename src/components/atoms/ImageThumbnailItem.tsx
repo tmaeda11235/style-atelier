@@ -1,8 +1,18 @@
+import { type VariantProps } from "class-variance-authority"
 import { CheckCircle2 } from "lucide-react"
 import React from "react"
 import iconUrl from "url:../../../assets/icon.png"
 
-export interface ImageThumbnailItemProps {
+import { cn } from "../../lib/utils"
+import {
+  imageThumbnailBadgeVariants,
+  imageThumbnailItemVariants
+} from "./ImageThumbnailItem.variants"
+
+export interface ImageThumbnailItemProps
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
+    Omit<VariantProps<typeof imageThumbnailItemVariants>, "selected"> {
   imgUrl: string
   alt: string
   isSelected: boolean
@@ -15,23 +25,25 @@ export const ImageThumbnailItem: React.FC<ImageThumbnailItemProps> = ({
   alt,
   isSelected,
   orderLabel,
-  onClick
+  onClick,
+  className,
+  ...props
 }) => {
   return (
     <div
       onClick={onClick}
-      className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
-        isSelected
-          ? "border-blue-500 ring-2 ring-blue-100 shadow-md"
-          : "border-slate-200 hover:border-slate-400"
-      }`}>
+      className={cn(
+        imageThumbnailItemVariants({ selected: isSelected }),
+        className
+      )}
+      {...props}>
       <img
         src={imgUrl === "assets/icon.png" ? iconUrl : imgUrl}
         className="w-full h-full object-cover"
         alt={alt}
       />
       {isSelected && (
-        <div className="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1">
+        <div className={cn(imageThumbnailBadgeVariants())}>
           <CheckCircle2 className="w-3 h-3" />
           <span>{orderLabel}</span>
         </div>
