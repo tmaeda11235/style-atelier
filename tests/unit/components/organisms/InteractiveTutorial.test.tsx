@@ -1,6 +1,6 @@
-import { InteractiveTutorial } from "@/components/organisms/InteractiveTutorial"
 import { LanguageProvider } from "@/contexts/LanguageContext"
 import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext"
+import { InteractiveTutorial } from "@/features/tutorial/components/InteractiveTutorial"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"

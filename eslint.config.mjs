@@ -197,7 +197,7 @@ export default ts.config(
       "src/features/minting/components/MintingView.tsx",
       "src/features/card-detail/components/CardDetailView.tsx",
       "src/components/organisms/Workbench.tsx",
-      "src/components/organisms/InteractiveTutorial.tsx",
+      "src/features/tutorial/components/InteractiveTutorial.tsx",
       "src/features/settings/components/WebLlmSettingsSection.tsx",
       "src/components/organisms/SimpleWorkbenchModal.tsx",
       "src/components/organisms/SlotVariablesSection.tsx",
@@ -221,8 +221,8 @@ export default ts.config(
       "src/components/molecules/WebGpuWarning.tsx",
       "src/components/organisms/LibraryFilterAccordion.tsx",
       "src/components/organisms/LibrarySearchBar.tsx",
-      "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/OnboardingGuideComponents.tsx"
+      "src/features/tutorial/components/OnboardingGuide.tsx",
+      "src/features/tutorial/components/OnboardingGuideComponents.tsx"
     ],
     rules: {
       "i18next/no-literal-string": [
@@ -334,8 +334,8 @@ export default ts.config(
       "src/features/minting/components/MintingView/CardIdentitySubSections.tsx",
       "src/features/minting/components/MintingView/MintingViewContent.tsx",
       "src/components/organisms/NonTargetSiteView.tsx",
-      "src/components/organisms/OnboardingGuide.tsx",
-      "src/components/organisms/OnboardingGuideComponents.tsx",
+      "src/features/tutorial/components/OnboardingGuide.tsx",
+      "src/features/tutorial/components/OnboardingGuideComponents.tsx",
       "src/components/organisms/ParameterEditor.tsx",
       "src/components/organisms/ParameterEditor/AdvancedParametersSection.tsx",
       "src/components/organisms/PortionExtractorOverlay.tsx",
@@ -348,7 +348,7 @@ export default ts.config(
       "src/features/settings/components/StorageManagerSection.tsx",
       "src/components/organisms/SyncStatusMessage.tsx",
       "src/components/organisms/TipsBar.tsx",
-      "src/components/organisms/TutorialTooltip.tsx",
+      "src/features/tutorial/components/TutorialTooltip.tsx",
       "src/features/settings/components/UiPreferencesSection.tsx",
       "src/components/organisms/WorkbenchCard.tsx",
       "src/components/organisms/WorkbenchHeader.tsx",

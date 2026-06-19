@@ -1,6 +1,5 @@
+import { Input } from "@/components/atoms/Input"
 import React from "react"
-
-import { Input } from "../../atoms/Input"
 
 interface IllustrationProps {
   t: any

@@ -1,7 +1,6 @@
+import { Button } from "@/components/atoms/Button"
 import { Sparkles } from "lucide-react"
 import React from "react"
-
-import { Button } from "../../atoms/Button"
 
 interface IllustrationProps {
   t: any

@@ -299,8 +299,8 @@
       ],
       "nextJourneys": ["@J-MINT-EXPERT-01", "@J-WB-EXPERT-01"],
       "viewComponents": [
-        "src/components/organisms/InteractiveTutorial.tsx",
-        "src/components/organisms/OnboardingGuide.tsx"
+        "src/features/tutorial/components/InteractiveTutorial.tsx",
+        "src/features/tutorial/components/OnboardingGuide.tsx"
       ]
     },
     {

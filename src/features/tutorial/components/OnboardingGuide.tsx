@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react"
 import React, { useState } from "react"
 
-import { useLanguage } from "../../contexts/LanguageContext"
+import { useLanguage } from "../../../contexts/LanguageContext"
 import { getSteps } from "./OnboardingGuide/OnboardingSteps"
 
 interface OnboardingGuideProps {
