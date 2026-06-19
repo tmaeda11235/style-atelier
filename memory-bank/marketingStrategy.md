@@ -260,7 +260,7 @@ graph TD
 ### 8.9 施策9: プレミアム機能（高度なNotion同期・カスタムテンプレート）の設計と買い切りライセンスキー（Lemon Squeezy）によるフリーミアム検証
 
 - **目的**: KPI 4-1 (プレミアム転換率)、KPI 4-2 (顧客単価)、および長期的なプロダクトの持続可能性（Revenue）の検証。
-- **アジェンダ**: [Discussion #1470](https://github.com/tmaeda11235/style-atelier/discussions/1470)
+- **アジェンダ**: [Discussion #1472](https://github.com/tmaeda11235/style-atelier/discussions/1472)
 - **進捗状況**:
   - プレミアム機能の設計と、Lemon Squeezy ライセンス検証 API 連携機能のプロトタイプ設計が完了。
   - プレミアム機能として「Notion Database 同期機能」「カスタムカードデザイン・テンプレート」「大量カードの一括 AI Minting（バッチ処理）」を定義。
