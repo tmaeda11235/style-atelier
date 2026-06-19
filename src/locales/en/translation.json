@@ -111,6 +111,7 @@
     },
     "uiGroupTitle": "🎨 UI Preferences",
     "cloudGroupTitle": "☁️ Cloud Backup & Sync",
+    "notionGroupTitle": "🔗 Notion Integration",
     "maintenanceGroupTitle": "📊 Maintenance & Backup",
     "backToLibrary": "Back to Library",
     "themeLabel": "Theme Setting",

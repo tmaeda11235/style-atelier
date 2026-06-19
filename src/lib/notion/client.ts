@@ -10,7 +10,35 @@ export interface NotionClientCredentials {
 }
 
 /**
- * Retrieves Notion Integration credentials (apiKey and databaseId) from chrome.storage.local
+ * Saves Notion Integration credentials to chrome.storage.local (falls back to localStorage in non-extension environments)
+ */
+export async function saveNotionCredentials(
+  credentials: NotionClientCredentials
+): Promise<void> {
+  if (
+    typeof chrome === "undefined" ||
+    !chrome.storage ||
+    !chrome.storage.local
+  ) {
+    localStorage.setItem("notionApiKey", credentials.apiKey)
+    localStorage.setItem("notionDatabaseId", credentials.databaseId)
+    return
+  }
+  return new Promise((resolve) => {
+    chrome.storage.local.set(
+      {
+        notionApiKey: credentials.apiKey,
+        notionDatabaseId: credentials.databaseId
+      },
+      () => {
+        resolve()
+      }
+    )
+  })
+}
+
+/**
+ * Retrieves Notion Integration credentials (apiKey and databaseId) from chrome.storage.local (falls back to localStorage)
  */
 export async function getNotionCredentials(): Promise<NotionClientCredentials | null> {
   if (
@@ -18,6 +46,11 @@ export async function getNotionCredentials(): Promise<NotionClientCredentials | 
     !chrome.storage ||
     !chrome.storage.local
   ) {
+    const apiKey = localStorage.getItem("notionApiKey")
+    const databaseId = localStorage.getItem("notionDatabaseId")
+    if (apiKey && databaseId) {
+      return { apiKey, databaseId }
+    }
     return null
   }
   return new Promise((resolve) => {
@@ -36,6 +69,33 @@ export async function getNotionCredentials(): Promise<NotionClientCredentials | 
       }
     })
   })
+}
+
+/**
+ * Validates Notion Integration credentials by making a retrieve database call
+ */
+export async function validateNotionConnection(
+  credentials: NotionClientCredentials
+): Promise<boolean> {
+  if (!credentials.apiKey || !credentials.databaseId) {
+    return false
+  }
+  try {
+    const response = await fetch(
+      `https://api.notion.com/v1/databases/${credentials.databaseId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${credentials.apiKey}`,
+          "Notion-Version": "2022-06-28"
+        }
+      }
+    )
+    return response.ok
+  } catch (error) {
+    console.error("Notion connection validation failed:", error)
+    return false
+  }
 }
 
 /**

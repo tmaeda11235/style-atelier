@@ -871,6 +871,23 @@
         "src/components/organisms/LicenseSettingsSection.tsx",
         "src/components/organisms/UpgradeModal.tsx"
       ]
+    },
+    {
+      "id": "@J-NOTION-INTEGRATION-01",
+      "name": "Notion連携設定と接続確認",
+      "description": "NotionのAPIトークンとデータベースIDを設定し、接続テストを実行して設定を保存する",
+      "steps": [
+        "設定タブを開く",
+        "Notion 外部連携設定のアコーディオンを展開する",
+        "Notion APIキーとデータベースIDを入力する",
+        "接続確認テストを実行する",
+        "設定を保存する"
+      ],
+      "nextJourneys": ["@J-SET-01"],
+      "viewComponents": [
+        "src/features/settings/components/NotionSettingsSection.tsx",
+        "src/lib/notion/client.ts"
+      ]
     }
   ]
 }
