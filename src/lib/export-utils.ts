@@ -15,7 +15,14 @@ import {
  */
 export async function renderCardToCanvas(
   card: StyleCard,
-  options?: { includeBrandLogo?: boolean; brandLogoText?: string }
+  options?: {
+    includeBrandLogo?: boolean
+    brandLogoText?: string
+    customLogo?: string
+    twitter?: string
+    etsy?: string
+    socialDisplayType?: "text" | "qr" | "none"
+  }
 ): Promise<HTMLCanvasElement> {
   const width = 600
   const height = 850
@@ -47,8 +54,14 @@ export async function renderCardToCanvas(
   await drawQRCode(ctx, width, qrSize, qrX, qrY, card)
 
   // 5. Draw Brand Logo
-  if (options?.includeBrandLogo && options?.brandLogoText) {
-    drawBrandLogo(ctx, width, height, options.brandLogoText)
+  if (options?.includeBrandLogo) {
+    await drawBrandLogo(ctx, width, height, {
+      text: options.brandLogoText || "Minted with Style Atelier 🔮",
+      customLogo: options.customLogo,
+      twitter: options.twitter,
+      etsy: options.etsy,
+      socialDisplayType: options.socialDisplayType
+    })
   }
 
   return canvas
@@ -59,7 +72,14 @@ export async function renderCardToCanvas(
  */
 export async function exportCardAsImage(
   card: StyleCard,
-  options?: { includeBrandLogo?: boolean; brandLogoText?: string }
+  options?: {
+    includeBrandLogo?: boolean
+    brandLogoText?: string
+    customLogo?: string
+    twitter?: string
+    etsy?: string
+    socialDisplayType?: "text" | "qr" | "none"
+  }
 ): Promise<Blob> {
   const canvas = await renderCardToCanvas(card, options)
   const dataUrl = canvas.toDataURL("image/png")

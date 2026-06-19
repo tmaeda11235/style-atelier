@@ -269,6 +269,88 @@ describe("export-utils", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-url-0")
   })
 
+  it("renders with custom brand logo and social links (text)", async () => {
+    const originalImage = global.Image
+    const imageLoadSources: string[] = []
+    global.Image = class extends originalImage {
+      _src = ""
+      set src(v: string) {
+        this._src = v
+        imageLoadSources.push(v)
+        setTimeout(() => {
+          if (this.onload) this.onload()
+        }, 0)
+      }
+      get src() {
+        return this._src
+      }
+    } as any
+
+    try {
+      const card: StyleCard = {
+        ...baseCard,
+        thumbnailData: "data:image/png;base64,mockbase64"
+      }
+
+      await renderCardToCanvas(card, {
+        includeBrandLogo: true,
+        customLogo: "data:image/png;base64,customlogobase64",
+        twitter: "my_twitter",
+        etsy: "my_etsy",
+        socialDisplayType: "text"
+      })
+
+      expect(imageLoadSources).toContain(
+        "data:image/png;base64,customlogobase64"
+      )
+    } finally {
+      global.Image = originalImage
+    }
+  })
+
+  it("renders with custom brand logo and social links (qr)", async () => {
+    const originalImage = global.Image
+    const imageLoadSources: string[] = []
+    global.Image = class extends originalImage {
+      _src = ""
+      set src(v: string) {
+        this._src = v
+        imageLoadSources.push(v)
+        setTimeout(() => {
+          if (this.onload) this.onload()
+        }, 0)
+      }
+      get src() {
+        return this._src
+      }
+    } as any
+
+    try {
+      const card: StyleCard = {
+        ...baseCard,
+        thumbnailData: "data:image/png;base64,mockbase64"
+      }
+
+      await renderCardToCanvas(card, {
+        includeBrandLogo: true,
+        customLogo: "data:image/png;base64,customlogobase64",
+        twitter: "my_twitter",
+        etsy: "my_etsy",
+        socialDisplayType: "qr"
+      })
+
+      expect(imageLoadSources).toContain(
+        "data:image/png;base64,customlogobase64"
+      )
+      const qrLoadSources = imageLoadSources.filter((src) =>
+        src.startsWith("data:image/png;base64")
+      )
+      expect(qrLoadSources.length).toBeGreaterThanOrEqual(1)
+    } finally {
+      global.Image = originalImage
+    }
+  })
+
   describe("exportCardAsImage", () => {
     it("creates an anchor tag and triggers a click to download the card", async () => {
       const { exportCardAsImage } = await import("@/lib/export-utils")

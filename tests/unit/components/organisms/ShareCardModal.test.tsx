@@ -15,6 +15,28 @@ vi.mock("@/contexts/SettingsContext", () => ({
   })
 }))
 
+vi.mock("@/contexts/LicenseContext", () => ({
+  useLicense: () => ({
+    isPremium: false,
+    openUpgradeModal: vi.fn()
+  })
+}))
+
+vi.mock("@/lib/db", () => ({
+  db: {
+    getUserSettings: vi.fn().mockResolvedValue({
+      userId: "default-user",
+      isPro: false,
+      unlockedSkins: [],
+      branding: {
+        enabled: false,
+        socialDisplayType: "none"
+      }
+    }),
+    updateUserSettings: vi.fn().mockResolvedValue(undefined)
+  }
+}))
+
 const mockClipboardWrite = vi.fn()
 
 const mockCard: StyleCard = {
