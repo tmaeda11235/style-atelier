@@ -50,15 +50,18 @@ const extractListsFromContent = (content) => {
   const maxLinesRegex = /\/\/ 1\. Files violating max-lines \(300 lines limit\)\s*\{\s*files:\s*\[([\s\S]*?)\]/;
   const complexityRegex = /\/\/ 2\. Files violating sonarjs\/cognitive-complexity \(15 limit\)\s*\{\s*files:\s*\[([\s\S]*?)\]/;
   const maxFuncLinesRegex = /\/\/ 3\. Files violating max-lines-per-function \(50 limit\)\s*\{\s*files:\s*\[([\s\S]*?)\]/;
+  const forbidElementsRegex = /\/\/ 5\. Files violating react\/forbid-elements \(button, input, img etc\)\s*\{\s*files:\s*\[([\s\S]*?)\]/;
 
   const maxLinesMatch = content.match(maxLinesRegex);
   const complexityMatch = content.match(complexityRegex);
   const maxFuncLinesMatch = content.match(maxFuncLinesRegex);
+  const forbidElementsMatch = content.match(forbidElementsRegex);
 
   return {
     maxLines: parseArray(maxLinesMatch ? maxLinesMatch[1] : ''),
     complexity: parseArray(complexityMatch ? complexityMatch[1] : ''),
     maxFuncLines: parseArray(maxFuncLinesMatch ? maxFuncLinesMatch[1] : ''),
+    forbidElements: parseArray(forbidElementsMatch ? forbidElementsMatch[1] : ''),
   };
 };
 
@@ -98,6 +101,7 @@ const checkAddedFiles = (ruleName, currentList, targetList) => {
 checkAddedFiles('max-lines', currentLists.maxLines, targetLists.maxLines);
 checkAddedFiles('sonarjs/cognitive-complexity', currentLists.complexity, targetLists.complexity);
 checkAddedFiles('max-lines-per-function', currentLists.maxFuncLines, targetLists.maxFuncLines);
+checkAddedFiles('react/forbid-elements', currentLists.forbidElements, targetLists.forbidElements);
 
 if (hasError) {
   console.error('\n\x1b[31mVerification failed! You are not allowed to add new files to the ESLint whitelist.\x1b[0m');

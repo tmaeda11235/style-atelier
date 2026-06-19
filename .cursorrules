@@ -19,6 +19,10 @@ This file defines the project constraints, architectural guidelines, and workflo
 - **Molecules and Atoms**: Keep them as pure presentation components. They must not contain business logic, direct API/database calls, or state mutations.
 - **No Direct DB Queries in UI**: Do not import `src/lib/db.ts` or database utilities directly inside UI components. Use services, store/context, or hooks.
 - **Test Mock Purity**: Do not embed business logic or database state transitions in test mocks (e.g., `tests/mocks/db.ts`).
+- **見た目の完全維持よりも標準バリアントを優先する (Systematic Appearance over Strict Visual Regression)**: CVAバリアントに基づくデザインシステム移行を最優先とし、ピクセルパーフェクトな維持のために微細なTailwindクラスを乱立させてはならない。
+- **生HTMLタグ (<button>, <input>, <img> 等) の使用禁止**: UI実装時には必ず `src/components/atoms/` の標準Atomコンポーネント (`Button`, `Input`, `OpfsImage` 等) を使用すること。このルールは ESLint (`react/forbid-elements`) によって強制される。
+- **基礎コンポーネント (Atoms) 追加の制限**: 新しい Atom ファイルは原則追加禁止。追加が必要な場合は必ず `allowed-atoms.json` にファイル名をホワイトリスト登録すること。このルールは `check-allowed-atoms.mjs` によって強制される。
+- **`*.variants.ts` での React / UI コンポーネントインポート禁止**: CVAバリアント定義ファイルからは pure-CSS / pure-types のみをエクスポートし、React ロジックや UI コンポーネントをインポートしてはならない。このルールは `no-restricted-imports` によって強制される。
 
 ## 3. i18n Translation Integrity
 
