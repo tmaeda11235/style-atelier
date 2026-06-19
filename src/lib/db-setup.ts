@@ -4,6 +4,7 @@ import type {
   CustomCategory,
   HistoryItem,
   ImageSyncState,
+  NotionSyncState,
   ParameterAlias,
   ParameterFolder,
   RecipeHistoryItem,
@@ -30,6 +31,7 @@ export class StyleAtelierDatabaseBase extends Dexie {
   parameterFolders!: Table<ParameterFolder, string>
   imageSyncStates!: Table<ImageSyncState, string>
   recipeHistory!: Table<RecipeHistoryItem, string>
+  notionSyncStates!: Table<NotionSyncState, string>
 
   constructor() {
     super("StyleAtelierDatabase")

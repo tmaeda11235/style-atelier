@@ -174,3 +174,10 @@ export interface RecipeHistoryItem {
   }
   slotValues?: Record<string, string>
 }
+
+export interface NotionSyncState {
+  cardId: string
+  notionPageId: string
+  lastSyncedAt: number
+  lastSyncedHash: string
+}
