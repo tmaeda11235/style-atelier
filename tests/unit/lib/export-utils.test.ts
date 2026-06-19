@@ -351,6 +351,140 @@ describe("export-utils", () => {
     }
   })
 
+  it("renders branding fallback with text title when customLogo is undefined", async () => {
+    const card: StyleCard = {
+      ...baseCard,
+      thumbnailData: "data:image/png;base64,mockbase64"
+    }
+
+    // This should exercise the 'else' block in drawBranding (line 191 in draw.ts)
+    await renderCardToCanvas(card, {
+      includeBrandLogo: true,
+      customLogo: undefined,
+      text: "Fallback Brand Name",
+      twitter: "my_twitter",
+      etsy: "my_etsy",
+      socialDisplayType: "text"
+    })
+  })
+
+  it("handles custom logo image load failure gracefully", async () => {
+    const originalImage = global.Image
+
+    // Simulate image error for custom logo
+    global.Image = class {
+      _src = ""
+      crossOrigin = ""
+      onload = null
+      onerror = null
+      set src(v: string) {
+        this._src = v
+        if (v.includes("customlogobase64")) {
+          setTimeout(() => {
+            if (this.onerror) this.onerror(new Error("Custom logo load error"))
+          }, 0)
+        } else {
+          setTimeout(() => {
+            if (this.onload) this.onload()
+          }, 0)
+        }
+      }
+      get src() {
+        return this._src
+      }
+    } as any
+
+    const spyConsoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {})
+
+    try {
+      const card: StyleCard = {
+        ...baseCard,
+        thumbnailData: "data:image/png;base64,mockbase64"
+      }
+
+      await renderCardToCanvas(card, {
+        includeBrandLogo: true,
+        customLogo: "data:image/png;base64,customlogobase64",
+        text: "Brand",
+        socialDisplayType: "none"
+      })
+
+      expect(spyConsoleError).toHaveBeenCalledWith(
+        "Failed to load custom logo image in canvas:",
+        expect.any(Error)
+      )
+    } finally {
+      global.Image = originalImage
+      spyConsoleError.mockRestore()
+    }
+  })
+
+  it("handles QR code image load failure gracefully", async () => {
+    const { generateQRCodeUrl } = await import("@/shared/lib/qr-utils")
+    vi.mocked(generateQRCodeUrl).mockImplementation(async (url: string) => {
+      if (url.includes("x.com")) {
+        return "data:image/png;base64,mockedtwitterqr"
+      }
+      return "data:image/png;base64,mockedqrcode"
+    })
+
+    const originalImage = global.Image
+
+    // Simulate image error for Twitter QR code
+    global.Image = class {
+      _src = ""
+      crossOrigin = ""
+      onload = null
+      onerror = null
+      set src(v: string) {
+        this._src = v
+        if (v.includes("mockedtwitterqr")) {
+          setTimeout(() => {
+            if (this.onerror) this.onerror(new Error("QR image load error"))
+          }, 0)
+        } else {
+          setTimeout(() => {
+            if (this.onload) this.onload()
+          }, 0)
+        }
+      }
+      get src() {
+        return this._src
+      }
+    } as any
+
+    const spyConsoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {})
+
+    try {
+      const card: StyleCard = {
+        ...baseCard,
+        thumbnailData: "data:image/png;base64,mockbase64"
+      }
+
+      await renderCardToCanvas(card, {
+        includeBrandLogo: true,
+        customLogo: "data:image/png;base64,customlogobase64",
+        twitter: "my_twitter",
+        socialDisplayType: "qr"
+      })
+
+      expect(spyConsoleError).toHaveBeenCalledWith(
+        "Failed to draw X QR code:",
+        expect.any(Error)
+      )
+    } finally {
+      global.Image = originalImage
+      spyConsoleError.mockRestore()
+      vi.mocked(generateQRCodeUrl).mockResolvedValue(
+        "data:image/png;base64,mockedqrcode"
+      )
+    }
+  })
+
   describe("exportCardAsImage", () => {
     it("creates an anchor tag and triggers a click to download the card", async () => {
       const { exportCardAsImage } = await import("@/lib/export-utils")
