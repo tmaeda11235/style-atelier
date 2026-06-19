@@ -1,5 +1,6 @@
 import { SettingsTab } from "@/components/organisms/SettingsTab"
 import { LanguageProvider } from "@/contexts/LanguageContext"
+import { LicenseProvider } from "@/contexts/LicenseContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import * as backupManager from "@/lib/backup-manager"
 import { exportDatabase, importDatabase } from "@/lib/backup-manager"
@@ -30,7 +31,9 @@ const render = (ui: React.ReactElement, options?: any) => {
   return tlRender(
     <QueryTestProvider>
       <LanguageProvider>
-        <SettingsProvider>{ui}</SettingsProvider>
+        <LicenseProvider>
+          <SettingsProvider>{ui}</SettingsProvider>
+        </LicenseProvider>
       </LanguageProvider>
     </QueryTestProvider>,
     options
