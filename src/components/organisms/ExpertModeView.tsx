@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import React from "react"
 
 import { useExpertModeView } from "../../hooks/useExpertModeView"
@@ -36,9 +37,22 @@ export function ExpertModeView({
         expertView.setActiveDetailCard(null)
       }
     }
+    const handleOpenCardDetail = async (e: Event) => {
+      const customEvent = e as CustomEvent<{ cardId: string }>
+      if (customEvent.detail?.cardId) {
+        const { getStyleCardById } = await import("../../lib/style-card-store")
+        const card = await getStyleCardById(customEvent.detail.cardId)
+        if (card) {
+          expertView.setActiveTab("library")
+          expertView.setActiveDetailCard(card)
+        }
+      }
+    }
     window.addEventListener("change-expert-tab", handleTabChange)
+    window.addEventListener("open-card-detail", handleOpenCardDetail)
     return () => {
       window.removeEventListener("change-expert-tab", handleTabChange)
+      window.removeEventListener("open-card-detail", handleOpenCardDetail)
     }
   }, [expertView])
 

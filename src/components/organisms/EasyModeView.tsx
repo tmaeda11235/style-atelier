@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import React from "react"
 
 import { useEasyModeView } from "../../hooks/useEasyModeView"
@@ -28,6 +29,37 @@ export function EasyModeView({
   onOpenMidjourney
 }: EasyModeViewProps) {
   const state = useEasyModeView({ isEasyMode, onToggleEasyMode })
+
+  React.useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail) {
+        state.setActiveTab(customEvent.detail)
+        state.minting.setMintingItem(null)
+        state.minting.setVariationBase(null)
+        state.setActiveDetailCard(null)
+        state.setActiveSimpleWorkbenchCard(null)
+      }
+    }
+    const handleOpenCardDetail = async (e: Event) => {
+      const customEvent = e as CustomEvent<{ cardId: string }>
+      if (customEvent.detail?.cardId) {
+        const { getStyleCardById } = await import("../../lib/style-card-store")
+        const card = await getStyleCardById(customEvent.detail.cardId)
+        if (card) {
+          state.setActiveTab("library")
+          state.setActiveDetailCard(card)
+        }
+      }
+    }
+
+    window.addEventListener("change-easy-tab", handleTabChange)
+    window.addEventListener("open-card-detail", handleOpenCardDetail)
+    return () => {
+      window.removeEventListener("change-easy-tab", handleTabChange)
+      window.removeEventListener("open-card-detail", handleOpenCardDetail)
+    }
+  }, [state])
   return (
     <EasyModeLayoutWrapper
       state={state}

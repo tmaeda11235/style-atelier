@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, max-lines-per-function */
 import React, { useState } from "react"
 
 import { useLanguage } from "../../contexts/LanguageContext"
@@ -264,6 +265,19 @@ function useLibraryTabState(props: LibraryTabProps) {
 export function LibraryTab(props: LibraryTabProps) {
   const state = useLibraryTabState(props)
   const { lib, t, currentCategory, activeTheme, themeStyles } = state
+
+  React.useEffect(() => {
+    const handleFilterCategory = (e: Event) => {
+      const customEvent = e as CustomEvent<{ categoryId: string }>
+      if (customEvent.detail?.categoryId) {
+        lib.setCurrentFolderId(customEvent.detail.categoryId)
+      }
+    }
+    window.addEventListener("filter-category", handleFilterCategory)
+    return () => {
+      window.removeEventListener("filter-category", handleFilterCategory)
+    }
+  }, [lib])
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
 
+import { CommandPalette } from "../components/organisms/CommandPalette"
 import { EasyModeView } from "../components/organisms/EasyModeView"
 import { ExpertModeView } from "../components/organisms/ExpertModeView"
 import { UpgradeModal } from "../components/organisms/UpgradeModal"
@@ -78,6 +79,7 @@ function SidePanelInner() {
             onOpenMidjourney={handleOpenMidjourney}
           />
         )}
+        <CommandPalette />
         <UpgradeModal />
       </WorkbenchProvider>
     </P2PSyncProvider>

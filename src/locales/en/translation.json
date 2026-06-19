@@ -1,4 +1,13 @@
 {
+  "commandPalette": {
+    "placeholder": "Type a command or search style cards...",
+    "empty": "No matching commands, cards, or categories found.",
+    "loading": "Loading search targets...",
+    "shortcutTip": "Press Ctrl+K or Cmd+K to toggle",
+    "commandsTitle": "Commands",
+    "categoriesTitle": "Categories",
+    "cardsTitle": "Style Cards"
+  },
   "welcome": {
     "title": "Welcome to Style Atelier!",
     "description": "Would you like to start the interactive guide to learn how to use it?",
