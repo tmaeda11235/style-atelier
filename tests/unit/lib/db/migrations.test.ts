@@ -21,7 +21,7 @@ describe("setupMigrations", () => {
 
     setupMigrations(mockDb)
 
-    // Verify versions 5 to 15 are registered
+    // Verify versions 5 to 18 are registered
     expect(mockVersion).toHaveBeenCalledWith(5)
     expect(mockVersion).toHaveBeenCalledWith(6)
     expect(mockVersion).toHaveBeenCalledWith(7)
@@ -35,6 +35,7 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(15)
     expect(mockVersion).toHaveBeenCalledWith(16)
     expect(mockVersion).toHaveBeenCalledWith(17)
+    expect(mockVersion).toHaveBeenCalledWith(18)
   })
 })
 

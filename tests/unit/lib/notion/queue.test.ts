@@ -1,0 +1,193 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { sendCardToNotion } from "../../../../src/lib/notion/client"
+import { notionSyncQueueManager } from "../../../../src/lib/notion/queue"
+
+// Mock sendCardToNotion
+vi.mock("../../../../src/lib/notion/client", () => ({
+  sendCardToNotion: vi.fn(),
+  getNotionCredentials: vi.fn()
+}))
+
+// Mock computeHash
+vi.mock("../../../../src/shared/lib/db/migration-helpers", () => ({
+  computeHash: vi.fn().mockResolvedValue("mock-hash-val")
+}))
+
+// Hoisted table mocks
+const { mockQueueTable, mockSyncStatesTable, mockGetCard } = vi.hoisted(() => {
+  return {
+    mockQueueTable: {
+      get: vi.fn(),
+      put: vi.fn(),
+      update: vi.fn(),
+      toArray: vi.fn(),
+      where: vi.fn()
+    },
+    mockSyncStatesTable: {
+      put: vi.fn()
+    },
+    mockGetCard: vi.fn()
+  }
+})
+
+vi.mock("../../../../src/lib/db", () => {
+  return {
+    db: {
+      notionSyncQueue: mockQueueTable,
+      notionSyncStates: mockSyncStatesTable,
+      getCard: mockGetCard,
+      transaction: vi.fn((_mode, _tables, cb) => cb())
+    }
+  }
+})
+
+describe("NotionSyncQueueManager", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    notionSyncQueueManager.stop()
+  })
+
+  it("should enqueue a card and start processing", async () => {
+    mockQueueTable.get.mockResolvedValue(null)
+    mockQueueTable.put.mockResolvedValue(undefined)
+    mockGetCard.mockResolvedValue({ id: "card-1" })
+    vi.mocked(sendCardToNotion).mockResolvedValue({ pageId: "page-123" })
+
+    // Setup queue table mock for processLoop
+    const mockFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 0,
+        status: "pending"
+      })
+      .mockResolvedValueOnce(null) // end loop
+    mockQueueTable.where.mockReturnValue({
+      anyOf: vi.fn().mockReturnValue({
+        first: mockFirst
+      })
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+
+    expect(mockQueueTable.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cardId: "card-1",
+        status: "pending",
+        retryCount: 0
+      })
+    )
+
+    // Fast-forward timers to run the async processLoop
+    await vi.runAllTimersAsync()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "processing"
+      })
+    )
+    expect(sendCardToNotion).toHaveBeenCalledWith({ id: "card-1" })
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "completed"
+      })
+    )
+    expect(mockSyncStatesTable.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cardId: "card-1",
+        notionPageId: "page-123",
+        lastSyncedHash: "mock-hash-val"
+      })
+    )
+  })
+
+  it("should retry on failure and eventually mark as failed", async () => {
+    mockQueueTable.get.mockResolvedValue(null)
+    mockGetCard.mockResolvedValue({ id: "card-1" })
+    vi.mocked(sendCardToNotion).mockRejectedValue(new Error("API Error"))
+
+    // 1st attempt: starts at retryCount: 0
+    const mockFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 0,
+        status: "pending"
+      }) // Attempt 1
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 1,
+        status: "pending"
+      }) // Attempt 2
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 2,
+        status: "pending"
+      }) // Attempt 3 (Max retries reached -> failed)
+      .mockResolvedValueOnce(null) // end loop
+
+    mockQueueTable.where.mockReturnValue({
+      anyOf: vi.fn().mockReturnValue({
+        first: mockFirst
+      })
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+    await vi.runAllTimersAsync()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "pending", // retryable, goes back to pending
+        retryCount: 1,
+        error: "API Error"
+      })
+    )
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "pending",
+        retryCount: 2
+      })
+    )
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "failed", // max retries (3) reached
+        retryCount: 3
+      })
+    )
+  })
+
+  it("should resume processing when resume is called", async () => {
+    // Mock resume: search for status='processing' and reset to 'pending'
+    const mockProcessingArray = [{ cardId: "card-1", status: "processing" }]
+    mockQueueTable.where.mockReturnValue({
+      equals: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue(mockProcessingArray)
+      }),
+      anyOf: vi.fn().mockReturnValue({
+        first: vi.fn().mockResolvedValue(null) // stop processLoop early
+      })
+    })
+
+    await notionSyncQueueManager.resume()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "pending"
+      })
+    )
+  })
+})

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type {
   CustomCategory,
   HistoryItem,
@@ -328,23 +329,72 @@ db.open().catch((err) => {
   dbErrorListeners.forEach((listener) => listener(dbError!))
 })
 
+async function setupNotionSync() {
+  if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
+    return
+  }
+  try {
+    const { notionSyncQueueManager } = await import("./notion/queue")
+    const { getNotionCredentials } = await import("./notion/client")
+
+    db.styleCards.hook("creating", function (primKey, obj, transaction) {
+      transaction.on("complete", () => {
+        getNotionCredentials().then((creds) => {
+          if (creds && !obj.isDeleted) {
+            notionSyncQueueManager.enqueue(obj.id)
+          }
+        })
+      })
+    })
+
+    db.styleCards.hook("updating", function (mods, primKey, obj, transaction) {
+      transaction.on("complete", () => {
+        getNotionCredentials().then((creds) => {
+          if (creds) {
+            db.getCard(primKey).then((updatedCard) => {
+              if (updatedCard && !updatedCard.isDeleted) {
+                notionSyncQueueManager.enqueue(primKey)
+              }
+            })
+          }
+        })
+      })
+    })
+  } catch (error) {
+    console.error("Failed to setup Notion sync hooks:", error)
+  }
+}
+
+async function runReadyHook() {
+  try {
+    const { purgeDeletedRecords, cleanupOrphanedImages } =
+      await import("./db/purge-ops")
+    const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
+    await purgeDeletedRecords(db, thresholdMs)
+    await cleanupOrphanedImages(db)
+  } catch (error) {
+    console.error(
+      "Failed to purge deleted records or run GC on ready hook:",
+      error
+    )
+  }
+
+  // Notion Sync Queue resume
+  try {
+    const { notionSyncQueueManager } = await import("./notion/queue")
+    await notionSyncQueueManager.resume()
+  } catch (error) {
+    console.error("Failed to resume Notion sync queue:", error)
+  }
+
+  // Hook StyleCard creation and updates to enqueue to Notion sync
+  await setupNotionSync()
+}
+
 // Register startup hook for purging deleted records older than 60 days
 db.on("ready", () => {
   // Run asynchronously without blocking the database open operation (avoids deadlock in tests)
-  setTimeout(async () => {
-    try {
-      const { purgeDeletedRecords, cleanupOrphanedImages } =
-        await import("./db/purge-ops")
-      const thresholdMs = 60 * 24 * 60 * 60 * 1000 // 60 days
-      await purgeDeletedRecords(db, thresholdMs)
-      await cleanupOrphanedImages(db)
-    } catch (error) {
-      console.error(
-        "Failed to purge deleted records or run GC on ready hook:",
-        error
-      )
-    }
-  }, 0)
+  setTimeout(runReadyHook, 0)
 })
 
 export async function seedDefaultCategories(
