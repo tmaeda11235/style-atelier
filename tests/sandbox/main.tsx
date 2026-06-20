@@ -19,6 +19,9 @@ import {
 const queryClient = new QueryClient()
 
 async function seedSandboxData() {
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("style-atelier-onboarding-seen", "true")
+  }
   try {
     const isSessionCleared =
       typeof sessionStorage !== "undefined" &&
@@ -33,12 +36,6 @@ async function seedSandboxData() {
       await db.userSettings.clear()
       if (typeof sessionStorage !== "undefined") {
         sessionStorage.setItem("sandbox-db-cleared", "true")
-      }
-      if (typeof localStorage !== "undefined") {
-        console.log(
-          "[Sandbox Seed] Defaulting onboarding-seen to true to prevent welcome dialog overlays in tests"
-        )
-        localStorage.setItem("style-atelier-onboarding-seen", "true")
       }
     }
 
@@ -1347,7 +1344,11 @@ function SandboxWrapper() {
       <button
         id="test-open-onboarding-btn"
         onClick={() => setIsOnboardingOpen(true)}
-        className="absolute bottom-4 left-4 z-50 px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30">
+        className={`absolute bottom-4 left-4 z-50 px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all shadow-md shadow-indigo-950/30 ${
+          typeof navigator !== "undefined" && navigator.webdriver
+            ? "pointer-events-none opacity-0"
+            : ""
+        }`}>
         💡 Open Onboarding Guide
       </button>
 

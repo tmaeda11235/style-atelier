@@ -3,6 +3,10 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SEND-01", () => {
   test.beforeEach(async ({ page }) => {
+    // Pre-seed localStorage to prevent onboarding welcome dialog overlays from interrupting tests
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-onboarding-seen", "true")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -68,7 +72,11 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       timeout: 5000
     })
 
-    // 7. Verify the card is visible in the HandBar
+    // 7. Switch back to Library tab to show HandBar for verification
+    const libraryTabBtn = spFrame.locator("button:has-text('Library')").first()
+    await libraryTabBtn.click()
+
+    // Verify the card is visible in the HandBar
     const handbarCard = spFrame.locator("#handbar-root img[alt='Quick Card A']")
     await expect(handbarCard).toBeVisible({ timeout: 5000 })
 
@@ -145,7 +153,11 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       timeout: 5000
     })
 
-    // 8. Verify the card is visible in the HandBar
+    // 8. Switch back to Library tab to show HandBar for verification
+    const libraryTabBtn = spFrame.locator("button:has-text('Library')").first()
+    await libraryTabBtn.click()
+
+    // Verify the card is visible in the HandBar
     const handbarCard = spFrame.locator("#handbar-root img[alt='Quick Card B']")
     await expect(handbarCard).toBeVisible({ timeout: 5000 })
 
@@ -239,7 +251,11 @@ test.describe("Style Atelier E2E Tests - Quick Send to Workbench @J-ORG-QUICK-SE
       timeout: 5000
     })
 
-    // 9. Verify the card is visible in the HandBar
+    // 9. Switch back to Library tab to show HandBar for verification
+    const libraryTabBtn = spFrame.locator("button:has-text('Library')").first()
+    await libraryTabBtn.click()
+
+    // Verify the card is visible in the HandBar
     const handbarCard = spFrame.locator("#handbar-root img[alt='Quick Card C']")
     await expect(handbarCard).toBeVisible({ timeout: 5000 })
 

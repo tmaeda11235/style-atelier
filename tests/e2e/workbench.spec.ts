@@ -1,9 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () => {
   test.beforeEach(async ({ page }) => {
+    // Pre-seed localStorage to prevent onboarding welcome dialog overlays from interrupting tests
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-onboarding-seen", "true")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -38,17 +41,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       await skipButton.click()
     }
 
-    // 2. HandBarからanime slot templateをクリックしてWorkbenchに追加
-    const mockCardInHand = spFrame
-      .locator("#handbar-root .cursor-pointer")
-      .nth(1) // anime slot template
-    await expect(mockCardInHand).toBeVisible({ timeout: 10000 })
-    await mockCardInHand.click({ force: true })
-
-    // 3. Workbenchタブへ切り替え
+    // 2. Workbenchタブへ切り替え (HandBar内のanime slot templateは初期シードで既にピン留め済み)
     const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
     await expect(workbenchTabButton).toBeVisible({ timeout: 10000 })
-    await workbenchTabButton.click()
+    await workbenchTabButton.click({ force: true })
 
     // 4. Slot Variablesセクションが表示されるのを確認
     const slotSectionHeader = spFrame.locator("text=Slot Variables")
@@ -63,6 +59,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     const sendBtn = spFrame.locator("button[title='Send to Workbench']").first()
     await expect(sendBtn).toBeVisible()
     await sendBtn.click()
+
+    // Switch back to Library tab to show HandBar for verification
+    const libraryTabBtn = spFrame.locator("button:has-text('Library')").first()
+    await libraryTabBtn.click()
 
     // 6. 新しいカードがHandBarにピン留めされたかを確認
     const newCardImage = spFrame.locator("#handbar-root img[alt='samurai cat']")
@@ -87,11 +87,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     const cardCount = spFrame.locator("#handbar-root .cursor-pointer")
     await expect(cardCount).toHaveCount(2)
 
-    // 3. Workbenchタブへ切り替え
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await workbenchTabButton.click()
-
-    // 4. Merge Stackボタンをクリックしてモーダルを開く
+    // 3. Merge Stackボタンをクリックしてモーダルを開く（HandBarはWorkbenchタブでは非表示になるため、切り替える前に行う）
     const mergeStackBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
     await expect(mergeStackBtn).toBeVisible()
     await mergeStackBtn.click()
@@ -110,9 +106,13 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     // 7. モーダルが閉じたことを確認
     await expect(modalTitle).not.toBeVisible({ timeout: 10000 })
 
-    // 材料カードが消費され、ベースカード1枚だけが残っていることを確認
+    // 材料カードが消費され、ベースカード1枚だけが残っていることを確認（現在LibraryタブなのでHandBarが表示されている）
     const remainingCards = spFrame.locator("#handbar-root .cursor-pointer")
     await expect(remainingCards).toHaveCount(1)
+
+    // 8. 最後にWorkbenchタブへ切り替えを検証
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click({ force: true })
   })
 
   test("should support Workbench-Single flow (Scenario 5)", async ({
@@ -175,11 +175,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       ])
     })
 
-    // 3. Switch to Workbench tab
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await workbenchTabButton.click()
-
     // Unpin Card W2 and Card W3 using the X button on their thumbnails in the HandBar
+    // (This MUST happen before switching to the Workbench tab because the HandBar is hidden there)
     console.log("Unpinning Card W2 and Card W3...")
     const cardW2 = spFrame.locator("#handbar-root .cursor-pointer").nth(1)
     await cardW2.hover()
@@ -194,6 +191,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       "#handbar-root .cursor-pointer"
     )
     await expect(activeWorkbenchCards).toHaveCount(1)
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click({ force: true })
 
     // 4. Fill in slot value for "Color"
     const slotInput = spFrame.locator("input[placeholder='blue']")
@@ -279,11 +280,8 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       ])
     })
 
-    // 3. Switch to Workbench tab
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await workbenchTabButton.click()
-
     // Workbench-Double: select two cards (W1 and W2). So unpin Card W3 (index 2).
+    // (This MUST happen before switching to the Workbench tab because the HandBar is hidden there)
     console.log("Unpinning Card W3...")
     const cardW3 = spFrame.locator("#handbar-root .cursor-pointer").nth(2)
     await cardW3.hover()
@@ -294,6 +292,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       "#handbar-root .cursor-pointer"
     )
     await expect(activeWorkbenchCards).toHaveCount(2)
+
+    // 3. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click({ force: true })
 
     // 4. Fill in slot value for "Color"
     const slotInput = spFrame.locator("input[placeholder='blue']")
@@ -378,11 +380,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       ])
     })
 
-    // 3. Switch to Workbench tab
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await workbenchTabButton.click()
-
-    // 4. Click "Merge Stack" button in the HandBar
+    // 3. Click "Merge Stack" button in the HandBar (while still on Library tab so HandBar is visible)
     const mergeStackBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
     await expect(mergeStackBtn).toBeVisible({ timeout: 10000 })
     await mergeStackBtn.click()
@@ -435,6 +433,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
     expect(results.w1Usage).toBe(8)
     expect(results.w2Exists).toBe(false)
     expect(results.w3Exists).toBe(true)
+
+    // 10. Switch to Workbench tab at the end to verify state
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click({ force: true })
 
     await page.screenshot({
       path: path.join(screenshotsDir, "workbench-triple-success.png")
@@ -635,15 +637,16 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       ])
     })
 
-    // 3. Switch to Workbench tab
-    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
-    await workbenchTabButton.click()
-
-    // 4. Verify both cards are in the Workbench (blending state visual feedback)
+    // 3. Verify both cards are in the Workbench (blending state visual feedback)
+    // (This MUST happen before switching to the Workbench tab because the HandBar is hidden there)
     const activeWorkbenchCards = spFrame.locator(
       "#handbar-root .cursor-pointer"
     )
     await expect(activeWorkbenchCards).toHaveCount(2)
+
+    // 4. Switch to Workbench tab
+    const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
+    await workbenchTabButton.click({ force: true })
 
     // 5. Expand Parameters Accordion and adjust parameter sliders
     const advancedAccordionBtn = spFrame.locator(
@@ -667,12 +670,19 @@ test.describe("Style Atelier Sandbox E2E Tests - Workbench @J-WB-EXPERT-01", () 
       path: path.join(screenshotsDir, "atelier-blending-parameters.png")
     })
 
-    // 6. Unpin Card B to leave only Card A in the Workbench (triggering single card evolution mode)
+    // 6. Switch back to Library tab temporarily to interact with the HandBar (which is hidden in the Workbench tab)
+    const libraryTabBtn = spFrame.locator("button:has-text('Library')").first()
+    await libraryTabBtn.click()
+
+    // Unpin Card B to leave only Card A in the Workbench (triggering single card evolution mode)
     console.log("Unpinning Alchemist Card B...")
     const cardB = spFrame.locator("#handbar-root .cursor-pointer").nth(1)
     await cardB.hover()
     await cardB.locator("button").last().click()
     await expect(activeWorkbenchCards).toHaveCount(1)
+
+    // Switch back to Workbench tab to trigger single card evolution mode
+    await workbenchTabButton.click({ force: true })
 
     // 7. Click Evolve button and verify the Evolution Success Modal (alchemy effects validation)
     const evolveBtn = spFrame.locator(

@@ -3,6 +3,10 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Prompt Injection @J-WB-EXPERT-03", () => {
   test.beforeEach(async ({ page }) => {
+    // Pre-seed localStorage to prevent onboarding welcome dialog overlays from interrupting tests
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-onboarding-seen", "true")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -73,7 +77,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Prompt Injection @J-WB-EXPERT-0
       console.log("Switching to Workbench tab in Sidepanel...")
       const workbenchTabButton = spFrame.locator("button:has-text('Workbench')")
       await expect(workbenchTabButton).toBeVisible({ timeout: 10000 })
-      await workbenchTabButton.click()
+      await workbenchTabButton.click({ force: true })
 
       // 7. 「Workbench」の入力エリアにテキストを入力してプロンプトを追加
       console.log("Adding prompt segments in Sidepanel...")
