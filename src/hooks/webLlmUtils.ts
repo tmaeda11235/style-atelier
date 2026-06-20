@@ -44,10 +44,14 @@ export async function checkCurrentStateHelper(
     if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
+  console.log(
+    "checkCurrentStateHelper: sending verify-integrity message to offscreen..."
+  )
   Promise.resolve(
     safeSendMessage({ target: "offscreen", action: "verify-integrity" })
   )
     .then((res: any) => {
+      console.log("checkCurrentStateHelper: verify-integrity response =", res)
       if (res && res.status === "success" && res.integrityPassed) {
         setStatus("ready")
         setProgress(100)
@@ -71,16 +75,23 @@ function runStartDownload(
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
+  console.log(
+    "runStartDownload: sending start-download message to offscreen..."
+  )
   Promise.resolve(
     safeSendMessage({ target: "offscreen", action: "start-download" })
   )
     .then((downloadRes: any) => {
+      console.log("runStartDownload: start-download response =", downloadRes)
       if (!downloadRes || downloadRes.status === "error") {
         setStatus("error")
         setError(downloadRes?.error ?? "Start download failed")
       } else {
         setStatus("downloading")
         setProgress(0)
+        console.log(
+          "runStartDownload: notifying background to set downloading state..."
+        )
         Promise.resolve(
           safeSendMessage({
             target: "background",
@@ -104,10 +115,12 @@ function runInitWorker(
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
+  console.log("runInitWorker: sending init-worker message to offscreen...")
   Promise.resolve(
     safeSendMessage({ target: "offscreen", action: "init-worker" })
   )
     .then((workerRes: any) => {
+      console.log("runInitWorker: init-worker response =", workerRes)
       if (!workerRes || workerRes.status === "error") {
         setStatus("error")
         setError(workerRes?.error ?? "Worker init failed")
@@ -136,6 +149,13 @@ export async function startDownloadHelper(
     typeof WebAssembly === "object" &&
     typeof WebAssembly.instantiate === "function"
 
+  console.log(
+    "startDownloadHelper: gpuSupported =",
+    gpuSupported,
+    "wasmSupported =",
+    wasmSupported
+  )
+
   if (!gpuSupported && !wasmSupported) {
     setError("both-unsupported")
     setStatus("unsupported")
@@ -146,6 +166,9 @@ export async function startDownloadHelper(
     if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
+  console.log(
+    "startDownloadHelper: sending check-quota message to offscreen..."
+  )
   Promise.resolve(
     safeSendMessage({
       target: "offscreen",
@@ -154,6 +177,7 @@ export async function startDownloadHelper(
     })
   )
     .then((quotaRes: any) => {
+      console.log("startDownloadHelper: check-quota response =", quotaRes)
       if (!quotaRes || quotaRes.status === "error") {
         setStatus("error")
         setError(quotaRes?.error ?? "Quota check failed")

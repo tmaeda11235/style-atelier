@@ -62,7 +62,21 @@ export function ExpertModeView({
       onDragLeave={expertView.handleDragLeave}
       onDrop={expertView.handleDrop}
       className="h-full relative overflow-hidden">
-      <SidePanelLayout {...expertView.sidePanelLayoutProps}>
+      <SidePanelLayout
+        {...expertView.sidePanelLayoutProps}
+        footer={
+          <>
+            {expertView.activeTab !== "workbench" && (
+              <HandBar
+                onNavigateToWorkbench={() =>
+                  expertView.setActiveTab("workbench")
+                }
+                onOpenDetailCard={expertView.setActiveDetailCard}
+              />
+            )}
+            <TipsBar />
+          </>
+        }>
         <ExpertModeOverlayManager expertView={expertView} />
 
         <ExpertModeTabContainer
@@ -71,12 +85,6 @@ export function ExpertModeView({
           onOpenMidjourney={onOpenMidjourney}
           isEasyMode={isEasyMode}
         />
-
-        <HandBar
-          onNavigateToWorkbench={() => expertView.setActiveTab("workbench")}
-          onOpenDetailCard={expertView.setActiveDetailCard}
-        />
-        <TipsBar />
       </SidePanelLayout>
 
       {expertView.showWelcome && (

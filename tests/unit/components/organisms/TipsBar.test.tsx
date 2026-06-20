@@ -1,7 +1,7 @@
 import { TipsBar } from "@/components/organisms/TipsBar"
 import { LanguageProvider } from "@/contexts/LanguageContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -38,23 +38,28 @@ describe("TipsBar", () => {
 
     // Default language mock is en-US in vitest.setup.ts, so English tips should show up
     expect(screen.getByText(/Use Stack to merge multiple cards/i)).toBeDefined()
-    expect(screen.getByText("Next →")).toBeDefined()
+    expect(screen.queryByText("Next →")).toBeNull()
   })
 
-  it("cycles through tips when Next button is clicked", () => {
+  it("cycles through tips automatically", () => {
+    vi.useFakeTimers()
     renderTipsBar()
 
     expect(screen.getByText(/Use Stack to merge multiple cards/i)).toBeDefined()
 
-    const nextBtn = screen.getByText("Next →")
-
-    // Click next -> should show second tip
-    fireEvent.click(nextBtn)
+    // Advance timers by 8 seconds to trigger the auto-cycle
+    act(() => {
+      vi.advanceTimersByTime(8000)
+    })
     expect(screen.getByText(/Convert prompt segments to Slots/i)).toBeDefined()
 
-    // Click next -> third tip
-    fireEvent.click(nextBtn)
+    // Advance another 8 seconds
+    act(() => {
+      vi.advanceTimersByTime(8000)
+    })
     expect(screen.getByText(/Add custom tags to cards/i)).toBeDefined()
+
+    vi.useRealTimers()
   })
 
   it("does not render when showTipsBar is disabled", () => {

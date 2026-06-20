@@ -22,6 +22,14 @@ export default defineConfig({
         replacement: path.resolve(__dirname, "./tests/mocks/mockHtml.ts")
       },
       {
+        find: /^url:~litert\.worker\.ts$/,
+        replacement: path.resolve(__dirname, "./src/litert.worker.ts")
+      },
+      {
+        find: /^url:~src\/workers\/local-ai\.worker\.ts$/,
+        replacement: path.resolve(__dirname, "./src/workers/local-ai.worker.ts")
+      },
+      {
         find: /^url:(.*)$/,
         replacement: "$1"
       }
