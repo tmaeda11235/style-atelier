@@ -2,6 +2,7 @@ import { SettingsTab } from "@/components/organisms/SettingsTab"
 import { LanguageProvider } from "@/contexts/LanguageContext"
 import { LicenseProvider } from "@/contexts/LicenseContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
+import { WebLlmProvider } from "@/contexts/WebLlmContext"
 import * as backupManager from "@/lib/backup-manager"
 import { exportDatabase, importDatabase } from "@/lib/backup-manager"
 import { db } from "@/lib/db"
@@ -32,7 +33,9 @@ const render = (ui: React.ReactElement, options?: any) => {
     <QueryTestProvider>
       <LanguageProvider>
         <LicenseProvider>
-          <SettingsProvider>{ui}</SettingsProvider>
+          <SettingsProvider>
+            <WebLlmProvider>{ui}</WebLlmProvider>
+          </SettingsProvider>
         </LicenseProvider>
       </LanguageProvider>
     </QueryTestProvider>,

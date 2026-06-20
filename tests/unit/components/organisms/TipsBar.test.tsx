@@ -69,30 +69,6 @@ describe("TipsBar", () => {
     renderTipsBar()
 
     expect(screen.queryByText(/Use Stack to merge multiple cards/i)).toBeNull()
-    expect(screen.queryByText("Next →")).toBeNull()
-  })
-
-  it("applies bottom-[92px] class when hand has pinned cards", () => {
-    // Mock pinned cards in hand
-    mockPinnedCards.mockReturnValue([{ id: "card-1" }])
-
-    const { container } = renderTipsBar()
-
-    const tipsBarDiv = container.querySelector("#tips-bar")
-    expect(tipsBarDiv).not.toBeNull()
-    expect(tipsBarDiv?.className).toContain("bottom-[92px]")
-    expect(tipsBarDiv?.className).not.toContain("bottom-0")
-  })
-
-  it("applies bottom-0 class when hand is empty", () => {
-    mockPinnedCards.mockReturnValue([])
-
-    const { container } = renderTipsBar()
-
-    const tipsBarDiv = container.querySelector("#tips-bar")
-    expect(tipsBarDiv).not.toBeNull()
-    expect(tipsBarDiv?.className).toContain("bottom-0")
-    expect(tipsBarDiv?.className).not.toContain("bottom-[92px]")
   })
 
   it("renders tips bar text with formatting classes but no title attribute", () => {

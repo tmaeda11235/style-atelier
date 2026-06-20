@@ -130,9 +130,7 @@ function handleInitWorker(sendResponse: (res: any) => void) {
       const resolvedWorkerUrl =
         workerUrlQuery ||
         new URL("./litert.worker.ts", import.meta.url).toString()
-      litertWorker = new Worker(resolvedWorkerUrl, {
-        type: "module"
-      })
+      litertWorker = new Worker(resolvedWorkerUrl, { type: "classic" })
 
       litertWorker.onmessage = (event) => {
         const data = event.data

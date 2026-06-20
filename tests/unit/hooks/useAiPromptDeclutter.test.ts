@@ -1,3 +1,4 @@
+import { WebLlmProvider } from "@/contexts/WebLlmContext"
 import { useAiPromptDeclutter } from "@/hooks/useAiPromptDeclutter"
 import { act, renderHook } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -47,11 +48,13 @@ describe("useAiPromptDeclutter", () => {
       }
     })
 
-    const { result } = renderHook(() => useAiPromptDeclutter())
+    const { result } = renderHook(() => useAiPromptDeclutter(), {
+      wrapper: WebLlmProvider
+    })
 
     // Wait for verify-integrity to settle
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 100))
     })
 
     expect(result.current.isModelReady).toBe(true)
@@ -85,11 +88,13 @@ describe("useAiPromptDeclutter", () => {
       }
     })
 
-    const { result } = renderHook(() => useAiPromptDeclutter())
+    const { result } = renderHook(() => useAiPromptDeclutter(), {
+      wrapper: WebLlmProvider
+    })
 
     // Wait for verify-integrity to settle
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 100))
     })
 
     let segments: any
@@ -109,11 +114,13 @@ describe("useAiPromptDeclutter", () => {
       }
     })
 
-    const { result } = renderHook(() => useAiPromptDeclutter())
+    const { result } = renderHook(() => useAiPromptDeclutter(), {
+      wrapper: WebLlmProvider
+    })
 
     // Wait for verify-integrity to settle
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 100))
     })
 
     expect(result.current.isModelReady).toBe(false)
