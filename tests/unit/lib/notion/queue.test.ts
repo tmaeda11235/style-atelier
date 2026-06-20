@@ -254,6 +254,10 @@ describe("NotionSyncQueueManager", () => {
   it("should retry or fail if archive fails", async () => {
     mockQueueTable.get.mockResolvedValue(null)
     mockStyleCardsTable.get.mockResolvedValue({ id: "card-1", isDeleted: true })
+    mockSyncStatesTable.get.mockResolvedValue({
+      cardId: "card-1",
+      notionPageId: "page-123"
+    })
     const { archiveCardInNotion } = await import("@/lib/notion/client")
     vi.mocked(archiveCardInNotion).mockRejectedValue(
       new Error("Archive API Error")
