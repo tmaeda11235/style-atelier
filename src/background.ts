@@ -68,8 +68,25 @@ if (
   })
 }
 
-function checkLifecycle() {
-  if (!isSidePanelOpen && !isDownloading && !isInferenceRunning) {
+async function checkLifecycle() {
+  let activeSidePanel = isSidePanelOpen
+  if (
+    !activeSidePanel &&
+    typeof chrome !== "undefined" &&
+    chrome.runtime &&
+    chrome.runtime.getContexts
+  ) {
+    try {
+      const contexts = await chrome.runtime.getContexts({
+        contextTypes: ["SIDE_PANEL"]
+      })
+      activeSidePanel = contexts.length > 0
+    } catch (e) {
+      console.warn("Failed to get contexts:", e)
+    }
+  }
+
+  if (!activeSidePanel && !isDownloading && !isInferenceRunning) {
     closeOffscreen()
   }
 }
