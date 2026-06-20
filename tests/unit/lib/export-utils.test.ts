@@ -661,8 +661,12 @@ describe("export-utils", () => {
       // Test error fallback catching
       const spyWarn = vi.spyOn(console, "warn").mockImplementation(() => {})
       const originalGet = db.historyItems.get
+      const originalFilter = db.historyItems.filter
       // Force an error inside resolveLocalImageSource
       db.historyItems.get = () => {
+        throw new Error("Simulated Database Read Failure")
+      }
+      db.historyItems.filter = () => {
         throw new Error("Simulated Database Read Failure")
       }
 
@@ -678,6 +682,7 @@ describe("export-utils", () => {
 
       // Restore
       db.historyItems.get = originalGet
+      db.historyItems.filter = originalFilter
       spyWarn.mockRestore()
     })
   })
