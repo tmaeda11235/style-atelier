@@ -6,6 +6,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 vi.unmock("@/lib/db")
 vi.unmock("@/lib/db/purge-ops")
 
+// Mock migration-helpers to allow spying on deleteOpfsFile
+vi.mock("@/shared/lib/db/migration-helpers", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/shared/lib/db/migration-helpers")>()
+  return {
+    ...actual,
+    deleteOpfsFile: vi.fn(actual.deleteOpfsFile)
+  }
+})
+
 // OPFS Mocks
 class MockFileHandle {
   name: string
@@ -270,6 +280,70 @@ describe("purge-ops tests", () => {
       expect(cardsDir.files.has("orphaned.png")).toBe(false)
       expect(categoriesDir.files.has("active-cat.png")).toBe(true)
       expect(categoriesDir.files.has("orphaned-cat.png")).toBe(false)
+    })
+
+    it("should propagate errors from getDirectoryHandle other than NotFoundError", async () => {
+      const rootDir = new MockDirectoryHandle()
+      const genericError = new Error("Generic Disk Error")
+      genericError.name = "NotAllowedError"
+      rootDir.getDirectoryHandle.mockRejectedValue(genericError)
+
+      const mockGetDirectory = vi.fn().mockResolvedValue(rootDir)
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      await expect(cleanupOrphanedImages(db)).rejects.toThrow(
+        "Generic Disk Error"
+      )
+    })
+
+    it("should log warning and continue when deleteOpfsFile fails during cleanup", async () => {
+      const rootDir = new MockDirectoryHandle()
+      const mockGetDirectory = vi.fn().mockResolvedValue(rootDir)
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const imagesDir = new MockDirectoryHandle("images")
+      rootDir.dirs.set("images", imagesDir)
+      const cardsDir = new MockDirectoryHandle("cards")
+      imagesDir.dirs.set("cards", cardsDir)
+
+      cardsDir.files.set("orphaned.png", new MockFileHandle("orphaned.png"))
+
+      const { deleteOpfsFile } =
+        await import("@/shared/lib/db/migration-helpers")
+      vi.mocked(deleteOpfsFile).mockRejectedValueOnce(
+        new Error("Disk error on delete")
+      )
+
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      await cleanupOrphanedImages(db)
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("[OPFS GC] Failed to delete orphaned image"),
+        expect.any(Error)
+      )
+      warnSpy.mockRestore()
+    })
+
+    it("should return early without throwing if images directory is not found", async () => {
+      const rootDir = new MockDirectoryHandle()
+      const mockGetDirectory = vi.fn().mockResolvedValue(rootDir)
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const result = await cleanupOrphanedImages(db)
+      expect(result).toBeUndefined()
     })
   })
 })

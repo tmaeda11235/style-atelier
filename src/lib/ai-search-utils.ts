@@ -114,7 +114,7 @@ const colorMapJa: Record<string, string> = {
 
 function extractRarity(userQuery: string): string {
   const queryLower = userQuery.toLowerCase()
-  const rarities = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+  const rarities = ["Legendary", "Uncommon", "Common", "Rare", "Epic"]
   for (const r of rarities) {
     if (queryLower.includes(r.toLowerCase())) return r
   }
@@ -163,11 +163,11 @@ function cleanQueryText(userQuery: string, category: string): string {
   let remainingQuery = userQuery
 
   const rarityWords = [
-    "common",
+    "legendary",
     "uncommon",
+    "common",
     "rare",
     "epic",
-    "legendary",
     ...Object.keys(rarityMapJa)
   ]
   for (const word of rarityWords) {

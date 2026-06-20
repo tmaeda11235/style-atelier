@@ -1,4 +1,7 @@
-import { parseSemanticQuery } from "@/lib/ai-search-utils"
+import {
+  parseSemanticQuery,
+  parseSemanticQueryFallback
+} from "@/lib/ai-search-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 let mockSendMessage: any
@@ -184,5 +187,49 @@ describe("parseSemanticQuery", () => {
       },
       expect.any(Function)
     )
+  })
+})
+
+describe("parseSemanticQueryFallback", () => {
+  it("should extract rarity, color, and category correctly from query in English", () => {
+    const categories = [
+      { id: "cat-1", name: "Cyberpunk" },
+      { id: "cat-2", name: "Anime" }
+    ]
+    const result = parseSemanticQueryFallback(
+      "Uncommon red Cyberpunk card",
+      categories
+    )
+    expect(result).toEqual({
+      rarity: "Uncommon",
+      color: "Red",
+      category: "Cyberpunk",
+      query: "card"
+    })
+  })
+
+  it("should extract rarity, color, and category correctly from query in Japanese", () => {
+    const categories = [
+      { id: "cat-1", name: "Cyberpunk" },
+      { id: "cat-2", name: "Anime" }
+    ]
+    const result = parseSemanticQueryFallback("伝説 青 Anime 風", categories)
+    expect(result).toEqual({
+      rarity: "Legendary",
+      color: "Blue",
+      category: "Anime",
+      query: "風"
+    })
+  })
+
+  it("should return All if no matching parameters are found", () => {
+    const categories = [{ id: "cat-1", name: "Cyberpunk" }]
+    const result = parseSemanticQueryFallback("something else", categories)
+    expect(result).toEqual({
+      rarity: "All",
+      color: "All",
+      category: "All",
+      query: "something else"
+    })
   })
 })
