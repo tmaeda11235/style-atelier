@@ -82,8 +82,10 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
       </main>
 
       {props.footer && (
-        <footer className="absolute bottom-0 left-0 right-0 z-40">
-          {props.footer}
+        <footer className="absolute bottom-0 left-0 right-0 z-40 flex flex-col-reverse pointer-events-none">
+          <div className="w-full flex flex-col-reverse pointer-events-auto">
+            {props.footer}
+          </div>
         </footer>
       )}
       <GlobalDownloadIndicator onTabChange={props.onTabChange} />

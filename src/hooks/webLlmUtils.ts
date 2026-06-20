@@ -14,6 +14,7 @@ export type DownloadStatus =
   | "engine-ready"
   | "unsupported"
 
+// eslint-disable-next-line max-lines-per-function
 export async function checkCurrentStateHelper(
   setStatus: (s: DownloadStatus) => void,
   setProgress: (p: number) => void,
@@ -135,6 +136,7 @@ function runInitWorker(
     })
 }
 
+// eslint-disable-next-line max-lines-per-function
 export async function startDownloadHelper(
   setStatus: (s: DownloadStatus) => void,
   setProgress: (p: number) => void,

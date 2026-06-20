@@ -30,9 +30,7 @@ export function TipsBar() {
   return (
     <div
       id="tips-bar"
-      className={`fixed ${
-        hasPinned ? "bottom-[92px]" : "bottom-0"
-      } left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/85 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/40 shadow-lg text-slate-700 dark:text-slate-300 transition-all duration-300 ease-in-out pointer-events-none`}>
+      className="w-full relative bg-white/95 dark:bg-slate-900/85 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/40 shadow-lg text-slate-700 dark:text-slate-300 transition-all duration-300 ease-in-out pointer-events-auto">
       <div className="max-w-md mx-auto py-1.5 px-3 flex items-center justify-between text-[10px] sm:text-xs">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse shrink-0" />
