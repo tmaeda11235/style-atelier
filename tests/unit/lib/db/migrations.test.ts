@@ -1,7 +1,8 @@
 import {
   setupMigrations,
   upgradeToVersion15,
-  upgradeToVersion16
+  upgradeToVersion16,
+  upgradeToVersion19
 } from "@/lib/db/migrations"
 import Dexie from "dexie"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -36,6 +37,7 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(16)
     expect(mockVersion).toHaveBeenCalledWith(17)
     expect(mockVersion).toHaveBeenCalledWith(18)
+    expect(mockVersion).toHaveBeenCalledWith(19)
   })
 })
 
@@ -313,6 +315,59 @@ describe("upgradeToVersion16", () => {
           updatedAt: 2000
         })
       ])
+    )
+  })
+})
+
+describe("upgradeToVersion19", () => {
+  it("should initialize branding settings with customLogoPath", async () => {
+    const mockUserSettingsTable = {
+      toArray: vi.fn(),
+      put: vi.fn()
+    }
+    const mockTx = {
+      table: vi.fn().mockImplementation((name) => {
+        if (name === "userSettings") return mockUserSettingsTable
+      })
+    }
+
+    const mockSettings = [
+      {
+        userId: "user-1",
+        branding: {
+          enabled: true,
+          socialDisplayType: "text"
+        }
+      },
+      {
+        userId: "user-2"
+        // no branding block
+      }
+    ]
+
+    mockUserSettingsTable.toArray.mockResolvedValue(mockSettings)
+
+    await upgradeToVersion19(mockTx)
+
+    expect(mockUserSettingsTable.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "user-1",
+        branding: {
+          enabled: true,
+          socialDisplayType: "text",
+          customLogoPath: undefined
+        }
+      })
+    )
+
+    expect(mockUserSettingsTable.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "user-2",
+        branding: {
+          enabled: false,
+          socialDisplayType: "none"
+        }
+      })
     )
   })
 })

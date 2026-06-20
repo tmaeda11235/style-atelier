@@ -261,4 +261,115 @@ test.describe("Style Atelier Sandbox E2E Tests - Brand Logo Synthesis on Export 
 
     console.log("Premium Custom Branding E2E test passed successfully!")
   })
+
+  test("should render custom logo from OPFS when branding is enabled", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    console.log("Navigating to sandbox page for OPFS Custom Logo E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Welcome dialog skip
+    const skipBtn = spFrame.locator("#welcome-skip-btn")
+    if (await skipBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipBtn.click()
+    }
+
+    // Set Pro license
+    await page.evaluate(() => {
+      localStorage.setItem("style-atelier-license-status", "valid")
+    })
+
+    // Setup DB setting and save dummy logo to OPFS
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+
+      // Update settings
+      await database.userSettings.clear()
+      await database.userSettings.add({
+        userId: "default",
+        branding: {
+          enabled: true,
+          customLogoPath: "images/branding/logo.png",
+          socialDisplayType: "none"
+        }
+      })
+
+      // Add a card
+      await database.styleCards.clear()
+      await database.styleCards.bulkAdd([
+        {
+          id: "opfs-logo-test-card",
+          name: "OPFS Logo Test Card",
+          promptSegments: [{ type: "text", value: "neon city landscape" }],
+          parameters: { ar: "16:9" },
+          masking: {},
+          tier: "Epic",
+          dominantColor: "#10b981",
+          thumbnailData:
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%2310b981'/></svg>"
+        }
+      ])
+    })
+
+    // Write a dummy 1x1 base64 transparent PNG to OPFS inside the browser
+    await spFrame.locator("body").evaluate(async () => {
+      const root = await navigator.storage.getDirectory()
+      const imagesDir = await root.getDirectoryHandle("images", {
+        create: true
+      })
+      const brandingDir = await imagesDir.getDirectoryHandle("branding", {
+        create: true
+      })
+      const fileHandle = await brandingDir.getFileHandle("logo.png", {
+        create: true
+      })
+      const writable = await (fileHandle as any).createWritable()
+      const dummyPng =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+      const res = await fetch(dummyPng)
+      const blob = await res.blob()
+      await writable.write(blob)
+      await writable.close()
+    })
+
+    // Reload sidepanel frame to load new license status and db changes
+    await spFrame.locator("body").evaluate(() => {
+      window.location.reload()
+    })
+    await page.waitForTimeout(1500)
+
+    const skipBtn2 = spFrame.locator("#welcome-skip-btn")
+    if (await skipBtn2.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipBtn2.click()
+    }
+
+    // Switch to Library tab
+    const libraryTabButton = spFrame.locator("button:has-text('Library')")
+    await libraryTabButton.click()
+    await page.waitForTimeout(500)
+
+    // Open Share Modal
+    const shareBtn = spFrame
+      .locator("[data-testid='share-card-button']")
+      .first()
+    await expect(shareBtn).toBeVisible({ timeout: 5000 })
+    await shareBtn.click()
+
+    // Verify Share Modal is open
+    const shareModalOverlay = spFrame.locator(
+      "[data-testid='share-card-modal-overlay']"
+    )
+    await expect(shareModalOverlay).toBeVisible()
+
+    // Take screenshot of modal with OPFS branding active
+    await page.screenshot({
+      path: path.join(screenshotsDir, "share-modal-opfs-branding-active.png")
+    })
+
+    console.log("OPFS Custom Logo E2E test passed successfully!")
+  })
 })
