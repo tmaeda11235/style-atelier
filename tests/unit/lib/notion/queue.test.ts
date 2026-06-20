@@ -203,4 +203,86 @@ describe("NotionSyncQueueManager", () => {
       })
     )
   })
+
+  it("should not re-enqueue if already pending", async () => {
+    mockQueueTable.get.mockResolvedValue({
+      cardId: "card-1",
+      status: "pending"
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+
+    expect(mockQueueTable.put).not.toHaveBeenCalled()
+  })
+
+  it("should complete immediately if hash matches lastSyncedHash", async () => {
+    mockQueueTable.get.mockResolvedValue(null)
+    mockStyleCardsTable.get.mockResolvedValue({ id: "card-1" })
+    mockSyncStatesTable.get.mockResolvedValue({
+      cardId: "card-1",
+      lastSyncedHash: "c4ca4238a0b923820dcc509a6f75849b"
+    })
+
+    const mockFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 0,
+        status: "pending"
+      })
+      .mockResolvedValueOnce(null)
+
+    mockQueueTable.where.mockReturnValue({
+      anyOf: vi.fn().mockReturnValue({
+        first: mockFirst
+      })
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+    await vi.runAllTimersAsync()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "completed"
+      })
+    )
+    expect(sendCardToNotion).not.toHaveBeenCalled()
+  })
+
+  it("should retry or fail if archive fails", async () => {
+    mockQueueTable.get.mockResolvedValue(null)
+    mockStyleCardsTable.get.mockResolvedValue({ id: "card-1", isDeleted: true })
+    const { archiveCardInNotion } = await import("@/lib/notion/client")
+    vi.mocked(archiveCardInNotion).mockRejectedValue(
+      new Error("Archive API Error")
+    )
+
+    const mockFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 0,
+        status: "pending"
+      })
+      .mockResolvedValueOnce(null)
+
+    mockQueueTable.where.mockReturnValue({
+      anyOf: vi.fn().mockReturnValue({
+        first: mockFirst
+      })
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+    await vi.runAllTimersAsync()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "pending",
+        retryCount: 1,
+        error: "Archive API Error"
+      })
+    )
+  })
 })
