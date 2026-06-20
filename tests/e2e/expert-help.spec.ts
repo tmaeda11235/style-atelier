@@ -154,10 +154,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
     console.log("Workbench tooltip screenshot saved.")
 
     // Click anywhere else to close hover state
-    await spFrame
-      .locator("h2:has-text('Workbench'), h2:has-text('ワークベンチ')")
-      .first()
-      .click()
+    await spFrame.locator("body").first().click()
 
     // Verify slot variables section and tooltip
     const slotVariablesHeader = spFrame.locator(
