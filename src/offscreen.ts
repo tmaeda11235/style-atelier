@@ -14,6 +14,10 @@ const GEMMA_MODEL_FILES = [{ name: MODEL_FILENAME, size: 2008432640 }]
 
 console.log("Offscreen Document loaded.")
 
+// Parse workerUrl from search parameters to satisfy MV3 CSP rules
+const urlParams = new URLSearchParams(window.location.search)
+const workerUrlQuery = urlParams.get("workerUrl")
+
 if (process.env.PLASMO_PUBLIC_USE_LOCAL_CACHE === "true") {
   import("./mocks/browser")
     .then(({ worker }) => {
@@ -123,12 +127,10 @@ async function handleVerifyIntegrity(sendResponse: (res: any) => void) {
 function handleInitWorker(sendResponse: (res: any) => void) {
   try {
     if (!litertWorker) {
-      litertWorker = new Worker(
-        new URL("./litert.worker.ts", import.meta.url),
-        {
-          type: "module"
-        }
-      )
+      const resolvedWorkerUrl =
+        workerUrlQuery ||
+        new URL("./litert.worker.ts", import.meta.url).toString()
+      litertWorker = new Worker(resolvedWorkerUrl, { type: "classic" })
 
       litertWorker.onmessage = (event) => {
         const data = event.data

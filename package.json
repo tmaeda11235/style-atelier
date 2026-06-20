@@ -114,7 +114,8 @@
       "activeTab",
       "identity",
       "storage",
-      "offscreen"
+      "offscreen",
+      "unlimitedStorage"
     ],
     "host_permissions": [
       "https://midjourney.com/*",

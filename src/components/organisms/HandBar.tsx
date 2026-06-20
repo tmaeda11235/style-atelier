@@ -94,15 +94,13 @@ function HandBarInner({
     <div
       id="handbar-root"
       onClick={s.isCollapsed ? handleCollapsedClick : undefined}
-      className={`absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 shadow-lg z-50 transition-all duration-300 ease-in-out ${
+      className={`relative w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 shadow-none z-50 transition-[height] duration-300 ease-in-out ${
         s.isCollapsed
           ? "cursor-pointer hover:bg-slate-50/95 dark:hover:bg-slate-800/95"
           : "cursor-default"
       }`}
       style={{
-        transform: s.isCollapsed
-          ? "translateY(calc(100% - 38px))"
-          : "translateY(0)"
+        height: s.isCollapsed ? "38px" : "90px"
       }}>
       <HandBarContent
         onNavigateToWorkbench={onNavigateToWorkbench}

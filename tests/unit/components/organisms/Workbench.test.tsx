@@ -1,6 +1,7 @@
 import { Workbench } from "@/components/organisms/Workbench"
 import { LanguageProvider } from "@/contexts/LanguageContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
+import { WebLlmProvider } from "@/contexts/WebLlmContext"
 import { useEvolution } from "@/hooks/useEvolution"
 import { useWorkbench } from "@/hooks/useWorkbench"
 import type { StyleCard } from "@/shared/lib/db-schema"
@@ -16,7 +17,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 const render = (ui: React.ReactElement, options?: any) => {
   return tlRender(
     <LanguageProvider>
-      <SettingsProvider>{ui}</SettingsProvider>
+      <SettingsProvider>
+        <WebLlmProvider>{ui}</WebLlmProvider>
+      </SettingsProvider>
     </LanguageProvider>,
     options
   )

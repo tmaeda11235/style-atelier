@@ -41,14 +41,15 @@ test.describe("Style Atelier Sandbox E2E Tests - Tips Bar @J-SYS-03", () => {
     })
     console.log("Tips Bar visible screenshot saved.")
 
-    // 3. Click next tip button and verify it changes
-    const nextBtn = spFrame.locator("#next-tip-btn")
-    await expect(nextBtn).toBeVisible()
-    await nextBtn.click()
+    // 3. Wait for the tip to cycle automatically (should change within 8 seconds)
+    console.log("Waiting for tip to cycle automatically...")
+    await expect(async () => {
+      const currentText = await tipText.innerText()
+      expect(currentText).not.toBe(initialText)
+    }).toPass({ timeout: 12000, intervals: [500] })
 
     const newText = await tipText.innerText()
-    console.log(`New tip text after click: "${newText}"`)
-    expect(newText).not.toBe(initialText)
+    console.log(`New tip text after auto-cycle: "${newText}"`)
 
     // 4. Navigate to settings to toggle it off
     const settingsNavBtn = spFrame.locator("#settings-nav-btn")

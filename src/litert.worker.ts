@@ -118,6 +118,13 @@ async function instantiateEngine(file: File): Promise<Engine> {
       return engineInstance
     } catch (cpuError: any) {
       console.error("CPU (Wasm) fallback initialization failed:", cpuError)
+      const wasmSupported =
+        typeof WebAssembly === "object" &&
+        typeof WebAssembly.instantiate === "function"
+      if (wasmSupported) {
+        // Wasm is supported, so the failure is likely file corruption or load failure
+        throw cpuError
+      }
       throw new Error("both-unsupported")
     }
   }

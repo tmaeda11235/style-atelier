@@ -178,7 +178,7 @@ function StatusDownloading({
       <div className="flex justify-between text-[10px] text-slate-400 font-mono">
         {speed > 0 && <span>{speed.toFixed(1)} MB/s</span>}
         {eta > 0 && <span>Remaining: {formatEta(eta)}</span>}
-        <span>1.0 GB total</span>
+        <span>1.9 GB total</span>
       </div>
       {text && (
         <p className="text-[9px] text-slate-400 mt-1 italic leading-normal border-t border-slate-100 pt-1.5">

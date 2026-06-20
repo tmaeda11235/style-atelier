@@ -1,3 +1,4 @@
+import { WebLlmProvider } from "@/contexts/WebLlmContext"
 import { useWebLlm } from "@/hooks/useWebLlm"
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -37,7 +38,9 @@ describe("useWebLlm", () => {
       }
     })
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     expect(result.current.status).toBe("checking")
 
@@ -69,7 +72,9 @@ describe("useWebLlm", () => {
       }
     })
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     await act(async () => {
       await sendMessagePromise
@@ -89,7 +94,9 @@ describe("useWebLlm", () => {
       }
     })
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     // Reset call counts for clean assert
     mockSendMessage.mockClear()
@@ -168,7 +175,9 @@ describe("useWebLlm", () => {
       }
     })
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
     mockSendMessage.mockClear()
 
     mockSendMessage.mockImplementation((message, callback) => {
@@ -195,7 +204,9 @@ describe("useWebLlm", () => {
       }
     })
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     // Wait for the async initialization check to settle
     await waitFor(() => {
@@ -223,7 +234,9 @@ describe("useWebLlm", () => {
   })
 
   it("should execute runInference and resolve on success", async () => {
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     mockSendMessage.mockImplementation((message, callback) => {
       if (message && message.action === "run-inference") {
@@ -256,7 +269,9 @@ describe("useWebLlm", () => {
   })
 
   it("should reject runInference on failure response", async () => {
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     mockSendMessage.mockImplementation((message, callback) => {
       if (message && message.action === "run-inference") {
@@ -280,7 +295,9 @@ describe("useWebLlm", () => {
     })
     vi.stubGlobal("WebAssembly", undefined)
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     // Wait for async checks to complete
     await waitFor(() => {
@@ -300,7 +317,9 @@ describe("useWebLlm", () => {
     })
     vi.stubGlobal("WebAssembly", undefined)
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     await waitFor(() => {
       expect(result.current.status).toBe("unsupported")
@@ -344,7 +363,9 @@ describe("useWebLlm", () => {
       }
     })
 
-    const { result } = renderHook(() => useWebLlm())
+    const { result } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
 
     await act(async () => {
       await sendMessagePromise

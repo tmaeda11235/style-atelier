@@ -1,3 +1,4 @@
+import litertWorkerUrl from "url:~litert.worker.ts"
 import offscreenHtmlUrl from "url:~src/offscreen.html"
 
 // アクションクリック時にサイドパネルを開く設定
@@ -26,8 +27,10 @@ async function setupOffscreen() {
     return
   }
 
+  const offscreenUrl = `${offscreenHtmlUrl}?workerUrl=${encodeURIComponent(litertWorkerUrl)}`
+
   isCreating = chrome.offscreen.createDocument({
-    url: offscreenHtmlUrl,
+    url: offscreenUrl,
     reasons: [chrome.offscreen.Reason.LOCAL_STORAGE],
     justification: "WebLLM model download, caching, and inference"
   })
@@ -43,6 +46,7 @@ async function setupOffscreen() {
 let isDownloading = false
 let isSidePanelOpen = false
 let isInferenceRunning = false
+let sidePanelConnectionsCount = 0
 
 if (
   typeof chrome !== "undefined" &&
@@ -51,10 +55,14 @@ if (
 ) {
   chrome.runtime.onConnect.addListener((port) => {
     if (port.name === "sidepanel") {
+      sidePanelConnectionsCount++
       isSidePanelOpen = true
       port.onDisconnect.addListener(() => {
-        isSidePanelOpen = false
-        checkLifecycle()
+        sidePanelConnectionsCount = Math.max(0, sidePanelConnectionsCount - 1)
+        if (sidePanelConnectionsCount === 0) {
+          isSidePanelOpen = false
+          checkLifecycle()
+        }
       })
     }
   })

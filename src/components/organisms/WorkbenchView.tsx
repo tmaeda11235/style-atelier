@@ -135,7 +135,7 @@ export const WorkbenchView: React.FC<WorkbenchViewProps> = (props) => {
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 space-y-4">
       <WorkbenchHeader {...props} />
       <Cauldron {...props} handleExtractPortion={props.handleExtract} />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16">
         <RecipeSection {...props} />
       </div>
       {evolvedCardData && (

@@ -146,6 +146,11 @@ export function createMessageListener(
       text: wtxt
     } = message.payload || {}
 
+    // Output detailed progress logs to allow tracing download vs compilation phases
+    console.log(
+      `[WebLLM Progress Trace] status="${ws}", progress=${wp ?? 0}%, speed=${wsp ?? 0}MB/s, text="${wtxt || ""}"`
+    )
+
     const dispatch: Dispatchers = {
       setStatus,
       setEngineStatus,

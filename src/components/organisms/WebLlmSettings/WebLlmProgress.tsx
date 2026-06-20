@@ -78,7 +78,7 @@ function ProgressMeta({
           {t.webLlmRemaining || "Remaining"}: {formatEta(eta)}
         </span>
       )}
-      <span>1.0 GB total</span>
+      <span>1.9 GB total</span>
     </div>
   )
 }

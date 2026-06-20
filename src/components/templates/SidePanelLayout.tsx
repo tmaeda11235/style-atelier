@@ -14,6 +14,7 @@ interface SidePanelLayoutProps {
   activeTab: Tab
   onTabChange: (tab: Tab) => void
   children: React.ReactNode
+  footer?: React.ReactNode
   isDragging: boolean
   logs: string[]
   onClearLogs: () => void
@@ -29,6 +30,12 @@ interface SidePanelLayoutProps {
   isEasyMode?: boolean
 }
 
+const getBgClass = (isDraggingFile?: boolean, isDragging?: boolean) => {
+  if (isDraggingFile) return "bg-blue-50 dark:bg-blue-950"
+  if (isDragging) return "bg-indigo-50 dark:bg-indigo-950"
+  return "bg-slate-50 dark:bg-slate-950"
+}
+
 export function SidePanelLayout(props: SidePanelLayoutProps) {
   const { t } = useLanguage()
   const dbError = useDbError()
@@ -37,15 +44,11 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
     return <DbErrorOverlay error={dbError} />
   }
 
+  const bgClass = getBgClass(props.isDraggingFile, props.isDragging)
+
   return (
     <div
-      className={`w-full h-screen flex flex-col relative overflow-hidden font-sans text-slate-800 dark:text-slate-100 transition-colors ${
-        props.isDraggingFile
-          ? "bg-blue-50 dark:bg-blue-950"
-          : props.isDragging
-            ? "bg-indigo-50 dark:bg-indigo-950"
-            : "bg-slate-50 dark:bg-slate-950"
-      }`}>
+      className={`w-full h-screen flex flex-col relative overflow-hidden font-sans text-slate-800 dark:text-slate-100 transition-colors ${bgClass}`}>
       <ConnectionAlert
         type={props.alertType || null}
         onRetry={props.onRetryConnection}
@@ -60,7 +63,8 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
         t={t}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-48 relative">
+      <main
+        className={`flex-1 relative p-4 ${props.activeTab === "workbench" ? "overflow-hidden flex flex-col pb-0" : "overflow-y-auto space-y-4 pb-36"}`}>
         <SidePanelOverlays
           isDraggingFile={props.isDraggingFile}
           isDragging={props.isDragging}
@@ -75,7 +79,15 @@ export function SidePanelLayout(props: SidePanelLayoutProps) {
           onClearLogs={props.onClearLogs}
           onResetDb={props.onResetDb}
         />
-      </div>
+      </main>
+
+      {props.footer && (
+        <footer className="absolute bottom-0 left-0 right-0 z-40 flex flex-col-reverse pointer-events-none">
+          <div className="w-full flex flex-col-reverse pointer-events-auto">
+            {props.footer}
+          </div>
+        </footer>
+      )}
       <GlobalDownloadIndicator onTabChange={props.onTabChange} />
     </div>
   )
