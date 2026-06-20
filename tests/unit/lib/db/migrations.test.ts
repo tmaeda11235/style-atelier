@@ -2,7 +2,8 @@ import {
   setupMigrations,
   upgradeToVersion15,
   upgradeToVersion16,
-  upgradeToVersion19
+  upgradeToVersion19,
+  upgradeToVersion20
 } from "@/lib/db/migrations"
 import Dexie from "dexie"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -22,7 +23,7 @@ describe("setupMigrations", () => {
 
     setupMigrations(mockDb)
 
-    // Verify versions 5 to 18 are registered
+    // Verify versions 5 to 20 are registered
     expect(mockVersion).toHaveBeenCalledWith(5)
     expect(mockVersion).toHaveBeenCalledWith(6)
     expect(mockVersion).toHaveBeenCalledWith(7)
@@ -38,6 +39,7 @@ describe("setupMigrations", () => {
     expect(mockVersion).toHaveBeenCalledWith(17)
     expect(mockVersion).toHaveBeenCalledWith(18)
     expect(mockVersion).toHaveBeenCalledWith(19)
+    expect(mockVersion).toHaveBeenCalledWith(20)
   })
 })
 
@@ -369,5 +371,14 @@ describe("upgradeToVersion19", () => {
         }
       })
     )
+  })
+})
+
+describe("upgradeToVersion20", () => {
+  it("should complete successfully resolving the promise", async () => {
+    const mockTx = {
+      table: vi.fn()
+    } as any
+    await expect(upgradeToVersion20(mockTx)).resolves.toBeUndefined()
   })
 })

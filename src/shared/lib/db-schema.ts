@@ -21,6 +21,12 @@ export interface CardVersion {
   name: string // 保存時のカード名
 }
 
+export interface ClipSettings {
+  xOffset: number // 画像の中心からの横方向オフセット率 (-0.5 〜 0.5)
+  yOffset: number // 画像の中心からの縦方向オフセット率 (-0.5 〜 0.5)
+  zoom: number // ズーム倍率 (1.0 〜 3.0, デフォルト 1.0)
+}
+
 export interface StyleCard {
   // --- Basic Identity ---
   id: string // UUID (e.g., "550e8400-e29b...")
@@ -85,6 +91,7 @@ export interface StyleCard {
   versionHistory?: CardVersion[] // 過去のプロンプト・パラメータ変更履歴（最大10件）
   weight?: number // 調合割合の重み (0.1 - 2.0)
   sortIndex?: number // バインダー内での並び順インデックス
+  clipSettings?: ClipSettings
 }
 
 // プロンプトの構成要素（バブル）

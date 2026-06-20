@@ -23,7 +23,11 @@ import {
 } from "./db/merge-ops"
 import { processCardChangesOpfs, processCardOpfs } from "./db/opfs-helpers"
 
-export { upgradeToVersion8, upgradeToVersion10 } from "./db-setup"
+export {
+  upgradeToVersion8,
+  upgradeToVersion10,
+  upgradeToVersion20
+} from "./db-setup"
 
 export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
   // --- StyleCard Operations ---
