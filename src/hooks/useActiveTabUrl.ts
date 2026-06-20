@@ -22,10 +22,7 @@ function useTabUrlListener(onTrigger: () => void) {
     }
 
     const handleActivated = () => onTrigger()
-    const handleUpdated = (
-      _tabId: number,
-      changeInfo: chrome.tabs.TabChangeInfo
-    ) => {
+    const handleUpdated = (_tabId: number, changeInfo: any) => {
       if (changeInfo.status === "complete" || changeInfo.url) {
         onTrigger()
       }

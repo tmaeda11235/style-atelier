@@ -26,7 +26,7 @@ interface RecipeSectionProps {
   handleSlotValueChange: (label: string, value: string) => void
   slotHistory: any
   handCards: StyleCard[]
-  handleSend: (val: string, label: string) => Promise<void>
+  handleSend: (val: string, label: string) => Promise<void> | void
   hasParams: boolean
   handleEvolve: () => Promise<void>
   handleMint: () => void

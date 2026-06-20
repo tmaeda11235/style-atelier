@@ -35,7 +35,7 @@ describe("useParameterAliases hook", () => {
     vi.mocked(db.saveParameterAlias).mockResolvedValue("new-id" as any)
     const { result } = renderHook(() => useParameterAliases())
 
-    const aliasData = { parameter: "--p", alias: "p1" }
+    const aliasData = { parameter: "--p", alias: "p1" } as any
     const newId = await result.current.saveAlias(aliasData)
 
     expect(newId).toBe("new-id")

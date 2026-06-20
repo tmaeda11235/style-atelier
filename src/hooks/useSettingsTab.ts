@@ -31,7 +31,7 @@ export function useSettingsTab({
 
   const isTestEnv =
     typeof process !== "undefined" &&
-    (process.env.NODE_ENV === "test" || !!process.env.VITEST)
+    ((process.env.NODE_ENV as string) === "test" || !!process.env.VITEST)
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     ui: true,

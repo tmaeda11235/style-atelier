@@ -6,7 +6,7 @@ import type { StyleCard } from "../shared/lib/db-schema"
 function buildExportCard(
   card: StyleCard,
   name: string,
-  tier: string,
+  tier: any,
   promptSegments: any[],
   parameters: any,
   tags: string[],

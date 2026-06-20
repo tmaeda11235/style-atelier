@@ -13,7 +13,7 @@ interface HistoryTabProps {
 
 export function HistoryTab({ onStartMinting }: HistoryTabProps) {
   const { historyItems, loadMore, hasMore, updateHistoryItem } = useHistory()
-  const { t } = useTranslation()
+  const { t } = useTranslation() as any
 
   const handleImageCached = useCallback(
     async (id: string, blob: Blob) => {

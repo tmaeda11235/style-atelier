@@ -115,9 +115,9 @@ describe("auto-sync", () => {
         expect.any(Function)
       )
 
-      const creatingHook = vi
-        .mocked(db.styleCards.hook)
-        .mock.calls.find((call) => call[0] === "creating")?.[1]
+      const creatingHook = (
+        vi.mocked(db.styleCards.hook).mock.calls as any
+      ).find((call: any) => call[0] === "creating")?.[1]
       expect(creatingHook).toBeDefined()
 
       vi.mocked(googleDrive.authorize).mockResolvedValue("mock-token")
@@ -138,7 +138,7 @@ describe("auto-sync", () => {
         })
       }
 
-      creatingHook!(null, null, mockTransaction)
+      ;(creatingHook as any)(null, null, mockTransaction)
 
       // Complete transaction
       transactionCompleteCallback()

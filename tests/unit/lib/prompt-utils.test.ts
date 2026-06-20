@@ -1,10 +1,24 @@
 import type { PromptSegment } from "@/shared/lib/db-schema"
 import {
-  buildPromptString,
-  mergePromptSegments,
-  parsePrompt
+  buildPromptString as originalBuildPromptString,
+  mergePromptSegments as originalMergePromptSegments,
+  parsePrompt as originalParsePrompt
 } from "@/shared/lib/prompt-utils"
 import { describe, expect, it } from "vitest"
+
+const parsePrompt = (prompt: string) => {
+  const res = originalParsePrompt(prompt)
+  return {
+    ...res,
+    promptSegments: res.promptSegments as any[]
+  }
+}
+
+const mergePromptSegments = (segments: PromptSegment[]) => {
+  return originalMergePromptSegments(segments) as any[]
+}
+
+const buildPromptString = originalBuildPromptString
 
 describe("buildPromptString", () => {
   it("should mask both sref and p", () => {
@@ -137,7 +151,7 @@ describe("buildPromptString", () => {
     const segments: PromptSegment[] = [
       { type: "text", value: "  " },
       { type: "text", value: "cat" },
-      { type: "chip", label: "color", default: "white" },
+      { type: "chip" as any, label: "color", default: "white" },
       { type: "text", value: "" },
       { type: "text", value: "dog" }
     ]
@@ -176,18 +190,20 @@ describe("buildPromptString", () => {
     expect(buildPromptString(segs4, {}, [], 1.5)).toBe("cat")
 
     // 5. slot segment with weight fallback
-    const segs5: PromptSegment[] = [{ type: "slot", label: "color" }]
+    const segs5: PromptSegment[] = [
+      { type: "slot", label: "color", default: "color" }
+    ]
     expect(buildPromptString(segs5, {}, [], 1.5)).toBe("{{color}}::1.5")
 
     // 6. slot segment with own weight
     const segs6: PromptSegment[] = [
-      { type: "slot", label: "color", weight: 0.5 }
+      { type: "slot", label: "color", default: "color", weight: 0.5 }
     ]
     expect(buildPromptString(segs6, {}, [], 1.5)).toBe("{{color}}::0.5")
 
     // 7. slot segment with weight 1.0 (should not append ::1.0)
     const segs7: PromptSegment[] = [
-      { type: "slot", label: "color", weight: 1.0 }
+      { type: "slot", label: "color", default: "color", weight: 1.0 }
     ]
     expect(buildPromptString(segs7, {}, [], 1.5)).toBe("{{color}}")
   })

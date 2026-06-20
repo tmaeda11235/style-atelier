@@ -3,7 +3,7 @@ import { useExpertModeView } from "@/hooks/useExpertModeView"
 import { useMinting } from "@/hooks/useMinting"
 import { db, seedDefaultCategories } from "@/lib/db"
 import { act, renderHook } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mockStartTutorial = vi.fn()
 const mockAdvanceIfStep = vi.fn()
@@ -68,6 +68,7 @@ describe("useExpertModeView hook", () => {
     isDraggingFile: false,
     isImporting: false,
     droppedItem: null,
+    clearDroppedItem: vi.fn(),
     handleDragOver: vi.fn(),
     handleDragLeave: vi.fn(),
     handleDrop: vi.fn()
@@ -88,7 +89,9 @@ describe("useExpertModeView hook", () => {
 
     // Mock chrome APIs
     vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 123 }] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
   })
 
   afterEach(() => {
@@ -410,7 +413,7 @@ describe("useExpertModeView hook", () => {
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       status: "error",
       message: "Could not find chat input"
-    })
+    } as any)
 
     const { result } = renderHook(() =>
       useExpertModeView({
@@ -430,7 +433,7 @@ describe("useExpertModeView hook", () => {
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       status: "error",
       message: "Some other error"
-    })
+    } as any)
 
     const { result } = renderHook(() =>
       useExpertModeView({

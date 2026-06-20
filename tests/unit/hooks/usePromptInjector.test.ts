@@ -37,7 +37,9 @@ describe("usePromptInjector", () => {
 
   it("injects prompt successfully, increments usage, and saves history", async () => {
     vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 1 }] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
 
     const { result } = renderHook(() =>
       usePromptInjector({

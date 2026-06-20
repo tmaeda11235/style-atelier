@@ -28,7 +28,9 @@ describe("useChromeTabConnection", () => {
     vi.mocked(chrome.tabs.query).mockResolvedValue([
       { id: 1, status: "complete" }
     ] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
 
     renderHook(() =>
       useChromeTabConnection({
@@ -163,7 +165,9 @@ describe("useChromeTabConnection", () => {
       .mockResolvedValueOnce([
         { id: 1, status: "complete", url: "https://example.com" }
       ] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
 
     renderHook(() =>
       useChromeTabConnection({

@@ -90,7 +90,7 @@ describe("useSettingsGoogleDrive", () => {
         useSettingsGoogleDrive({
           addLog,
           checkStorage,
-          gdriveClient: mockClient
+          gdriveClient: mockClient as any
         }),
       { wrapper }
     )
@@ -122,7 +122,7 @@ describe("useSettingsGoogleDrive", () => {
         useSettingsGoogleDrive({
           addLog,
           checkStorage,
-          gdriveClient: mockClient
+          gdriveClient: mockClient as any
         }),
       { wrapper }
     )
@@ -182,7 +182,7 @@ describe("useSettingsGoogleDrive", () => {
         useSettingsGoogleDrive({
           addLog,
           checkStorage,
-          gdriveClient: mockClient
+          gdriveClient: mockClient as any
         }),
       { wrapper }
     )
@@ -239,7 +239,7 @@ describe("useSettingsGoogleDrive", () => {
         useSettingsGoogleDrive({
           addLog,
           checkStorage,
-          gdriveClient: mockClient
+          gdriveClient: mockClient as any
         }),
       { wrapper }
     )

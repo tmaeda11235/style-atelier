@@ -54,7 +54,7 @@ class MockCollection<T> {
   })
 }
 
-class MockTable<T extends { id: string } | any, Key = string> {
+class MockTable<T extends Record<string, any>, Key = string> {
   private items: Map<any, T> = new Map()
   hooks: Record<string, any> = {}
 

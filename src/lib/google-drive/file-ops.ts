@@ -239,7 +239,7 @@ async function createNewImageFile(
       headers: {
         "Content-Type": `multipart/related; boundary=${boundary}`
       },
-      body: multipartBody,
+      body: multipartBody as any,
       ...options
     },
     ctx,

@@ -16,7 +16,7 @@ export interface UseHandlersOptions {
   addCard: (card: any) => Promise<any>
   evolveCard: (id: string) => Promise<any>
   slotHistory: any
-  saveSlotHistory: (history: any) => Promise<void>
+  saveSlotHistory: (label: string, values: string[]) => Promise<void>
   incrementCardUsage: (id: string) => Promise<void>
   editedSegments: PromptSegment[]
   editedParams: any

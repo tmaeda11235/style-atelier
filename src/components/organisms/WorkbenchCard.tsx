@@ -23,8 +23,8 @@ interface WorkbenchCardProps {
 const WeightDisplay: React.FC<{
   weight: number | undefined
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onMouseDown: () => void
-  onTouchStart: () => void
+  onMouseDown?: () => Promise<void> | void
+  onTouchStart?: () => Promise<void> | void
 }> = ({ weight, onChange, onMouseDown, onTouchStart }) => (
   <div className="absolute bottom-2 left-2 right-2 bg-slate-900/90 border border-slate-700 rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center space-y-1 z-10">
     <span className="text-[8px] text-slate-300 font-mono font-bold">
@@ -39,11 +39,11 @@ const WeightDisplay: React.FC<{
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => {
         e.stopPropagation()
-        onMouseDown()
+        onMouseDown?.()
       }}
       onTouchStart={(e) => {
         e.stopPropagation()
-        onTouchStart()
+        onTouchStart?.()
       }}
       onChange={onChange}
       className="w-full h-1 bg-slate-700 rounded appearance-none cursor-pointer accent-blue-500"
@@ -64,9 +64,13 @@ const RemoveButton: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({
 const SelectedPortionExtractor: React.FC<{
   card: StyleCard
   setSelectedCardId: (id: string | null) => void
-  updateCardWeight: (cardId: string, weight: number) => Promise<void>
-  onStartWeightAdjustment?: () => void
-  handleExtractPortion: (cardId: string, portionText: string) => Promise<void>
+  updateCardWeight: (cardId: string, weight: number) => Promise<void> | void
+  onStartWeightAdjustment?: () => Promise<void> | void
+  handleExtractPortion: (
+    name: string,
+    segments: PromptSegment[],
+    params: any
+  ) => Promise<void> | void
 }> = ({
   card,
   setSelectedCardId,

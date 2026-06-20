@@ -99,7 +99,7 @@ describe("SettingsTab", () => {
     vi.mocked(googleDrive.downloadBackup).mockResolvedValue("mock-backup-data")
     vi.mocked(googleDrive.uploadBackup).mockResolvedValue({
       id: "new-file-123"
-    })
+    } as any)
 
     // Reset window.confirm to default true to avoid leakage from other tests
     window.confirm = vi.fn().mockReturnValue(true)
@@ -514,7 +514,7 @@ describe("SettingsTab", () => {
         }
       })
       vi.mocked(googleDrive.downloadBackup).mockReturnValue(pendingPromise)
-      vi.mocked(googleDrive.uploadBackup).mockReturnValue(pendingPromise)
+      vi.mocked(googleDrive.uploadBackup).mockReturnValue(pendingPromise as any)
 
       const { container } = render(
         <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />

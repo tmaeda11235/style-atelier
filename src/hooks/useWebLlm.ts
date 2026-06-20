@@ -29,11 +29,11 @@ interface WebLlmEffectProps {
 }
 
 function preloadEngineHelper() {
-  safeSendMessage({ target: "offscreen", action: "preload-engine" }).catch(
-    (err) => {
-      console.error("preloadEngineHelper error:", err)
-    }
-  )
+  Promise.resolve(
+    safeSendMessage({ target: "offscreen", action: "preload-engine" })
+  ).catch((err) => {
+    console.error("preloadEngineHelper error:", err)
+  })
 }
 
 // eslint-disable-next-line max-lines-per-function

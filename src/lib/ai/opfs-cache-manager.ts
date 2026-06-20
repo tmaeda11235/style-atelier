@@ -242,7 +242,7 @@ export class OPFSCacheManager {
       if (done) break
 
       try {
-        await writable.write(value)
+        await writable.write(value as any)
       } catch (writeError: any) {
         if (this.checkQuotaError(writeError)) {
           throw new DOMException("QuotaExceededError", "QuotaExceededError")

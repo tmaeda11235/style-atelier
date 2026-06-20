@@ -21,7 +21,7 @@ interface RecipeEditorProps {
   handleSlotValueChange: (label: string, value: string) => void
   slotHistory: any
   handCards: StyleCard[]
-  handleSendToWorkbench: (val: string, label: string) => Promise<void>
+  handleSendToWorkbench: (val: string, label: string) => Promise<void> | void
   hasParams: boolean
   handleEvolve: () => Promise<void>
   handleMintVariation: () => void

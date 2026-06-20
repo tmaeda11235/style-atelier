@@ -7,7 +7,7 @@ interface SearchAndFilterSectionProps {
   lib: any
   isFiltersExpanded: boolean
   setIsFiltersExpanded: (v: boolean) => void
-  expertFeatures: boolean
+  expertFeatures: any
   setIsCategoryModalOpen: (v: boolean) => void
   t: any
 }
@@ -16,7 +16,7 @@ function buildFilterProps(
   lib: any,
   isFiltersExpanded: boolean,
   setIsFiltersExpanded: (v: boolean) => void,
-  expertFeatures: boolean,
+  expertFeatures: any,
   setIsCategoryModalOpen: (v: boolean) => void,
   t: any
 ) {

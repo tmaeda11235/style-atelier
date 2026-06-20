@@ -386,7 +386,7 @@ test.describe("Web PWA Support @J-WEB-PWA-A2HS-01", () => {
         localStorage.setItem("mock-webllm", "true")
         try {
           const root = await navigator.storage.getDirectory()
-          await root
+          await (root as any)
             .deleteEntry("litert_models", { recursive: true })
             .catch(() => {})
         } catch {

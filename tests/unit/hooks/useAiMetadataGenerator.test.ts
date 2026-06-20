@@ -31,7 +31,7 @@ describe("useAiMetadataGenerator", () => {
       purgeCache: vi.fn(),
       checkCurrentState: vi.fn(),
       runInference: mockRunInference
-    })
+    } as any)
   })
 
   it("should return initial state", () => {

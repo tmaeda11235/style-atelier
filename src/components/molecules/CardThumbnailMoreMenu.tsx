@@ -46,7 +46,7 @@ interface MenuConfigItem {
 }
 
 function getMenuItemsConfig(
-  t: (key: string) => string,
+  t: any,
   onQuickSendClick?: (e: React.MouseEvent) => void,
   onEditClick?: (e: React.MouseEvent) => void,
   onShareClick?: (e: React.MouseEvent) => void
@@ -77,7 +77,7 @@ function getMenuItemsConfig(
 }
 
 function MoreMenu(props: MoreMenuProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation() as any
   if (!props.isMenuOpen) return null
   const items = getMenuItemsConfig(
     t,
@@ -136,7 +136,7 @@ export function MoreMenuButton({
   isMenuOpen: boolean
   setIsMenuOpen: (open: boolean) => void
 }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation() as any
   if (!props.onShareClick && !props.onEditClick && !props.onQuickSendClick)
     return null
   return (

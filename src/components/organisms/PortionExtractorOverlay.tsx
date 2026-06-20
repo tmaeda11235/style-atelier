@@ -76,7 +76,11 @@ const SegmentList: React.FC<SegmentListProps> = ({
     </span>
     {segments.map((seg, idx) => {
       const text =
-        seg.type === "text" ? seg.value : `[${seg.type}] ${seg.label}`
+        seg.type === "text"
+          ? seg.value
+          : seg.type === "slot"
+            ? `[Slot] ${seg.label}`
+            : `[${seg.kind}] ${seg.value}`
       return (
         <div
           key={idx}

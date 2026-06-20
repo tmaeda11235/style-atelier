@@ -39,7 +39,8 @@ describe("HandBar", () => {
     dominantColor: "#ff0000",
     thumbnailData: "data:image/png;base64,abc",
     frameId: "default",
-    genealogy: { generation: 1, parentIds: [] }
+    genealogy: { generation: 1, parentIds: [] },
+    tags: []
   }
 
   const card2: StyleCard = {
@@ -57,7 +58,8 @@ describe("HandBar", () => {
     dominantColor: "#00ff00",
     thumbnailData: "data:image/png;base64,def",
     frameId: "default",
-    genealogy: { generation: 1, parentIds: [] }
+    genealogy: { generation: 1, parentIds: [] },
+    tags: []
   }
 
   beforeEach(() => {
@@ -197,7 +199,7 @@ describe("HandBar", () => {
       pinnedCards: [card1],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     const setItemSpy = vi.spyOn(Storage.prototype, "setItem")
 
@@ -232,7 +234,7 @@ describe("HandBar", () => {
       pinnedCards: [card1],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     // Mock localStorage to start as collapsed
     const getItemSpy = vi

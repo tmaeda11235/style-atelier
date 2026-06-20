@@ -73,7 +73,7 @@ describe("CardDetailView", () => {
       pinnedCards: [],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
   })
 
   it("renders with style card info", () => {

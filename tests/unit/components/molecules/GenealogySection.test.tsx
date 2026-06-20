@@ -19,6 +19,7 @@ const mockCard: StyleCard = {
   tags: [],
   thumbnailData: "https://example.com/thumb.png",
   frameId: "default",
+  dominantColor: "#000000",
   genealogy: {
     generation: 2,
     parentIds: ["parent-uuid-1", "non-existent-parent"],
@@ -40,6 +41,7 @@ const mockParentCard: StyleCard = {
   tags: [],
   thumbnailData: "https://example.com/parent-thumb.png",
   frameId: "default",
+  dominantColor: "#000000",
   genealogy: { generation: 1, parentIds: [] }
 }
 

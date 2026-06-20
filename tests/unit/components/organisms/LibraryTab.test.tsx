@@ -114,7 +114,7 @@ describe("LibraryTab", () => {
     vi.mocked(useLibrary).mockReturnValue({
       ...defaultMockReturnValue,
       togglePin: mockTogglePin
-    })
+    } as any)
   })
 
   it("renders search field, filters, and cards", () => {
@@ -182,7 +182,7 @@ describe("LibraryTab", () => {
       ...defaultMockReturnValue,
       togglePin: mockTogglePin,
       setColorFilter: mockSetColorFilter
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -205,7 +205,7 @@ describe("LibraryTab", () => {
       allCards: [],
       togglePin: mockTogglePin,
       totalMatchedCount: 0
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -237,7 +237,7 @@ describe("LibraryTab", () => {
       setCategoryFilter: mockSetCategoryFilter,
       togglePin: mockTogglePin,
       totalMatchedCount: 0
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -268,7 +268,7 @@ describe("LibraryTab", () => {
       hasMore: true,
       loadMore: mockLoadMore,
       togglePin: mockTogglePin
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -291,7 +291,7 @@ describe("LibraryTab", () => {
       togglePin: mockTogglePin,
       modelFilter: "All",
       setModelFilter: mockSetModelFilter
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -316,10 +316,10 @@ describe("LibraryTab", () => {
     }
     vi.mocked(useLibrary).mockReturnValue({
       ...defaultMockReturnValue,
-      categories: [mockCategory],
+      categories: [mockCategory as any],
       currentFolderId: "cat-1",
       togglePin: mockTogglePin
-    })
+    } as any)
 
     render(
       <TutorialProvider>

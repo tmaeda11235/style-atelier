@@ -81,7 +81,9 @@ describe("ESLint Configuration", () => {
     expect(i18nConfig).toBeDefined()
     expect(i18nConfig.rules["i18next/no-literal-string"]).toBeDefined()
 
-    const [severity, options] = i18nConfig.rules["i18next/no-literal-string"]
+    const [severity, options] = i18nConfig.rules[
+      "i18next/no-literal-string"
+    ] as any
     expect(severity).toBe("error")
     expect(options.mode).toBe("jsx-only")
     expect(options["jsx-attributes"].exclude).toContain("className")

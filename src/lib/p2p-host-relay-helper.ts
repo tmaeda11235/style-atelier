@@ -122,7 +122,7 @@ async function handleRelayImageFile(
   })
 
   const arrayBuf = base64ToUint8Array(msg.data).buffer
-  await saveIncomingImage(msg.filePath, arrayBuf, msg.hash)
+  await saveIncomingImage(msg.filePath, arrayBuf as ArrayBuffer, msg.hash)
 
   const ackMsg = JSON.stringify({
     type: "RELAY_ACK_IMAGE_FILE",

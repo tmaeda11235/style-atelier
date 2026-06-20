@@ -53,7 +53,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: false
-    })
+    } as any)
   })
 
   it("renders download button when status is idle", () => {
@@ -90,7 +90,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: false
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection
@@ -116,7 +116,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection
@@ -145,7 +145,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection
@@ -174,7 +174,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection
@@ -229,7 +229,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection
@@ -257,7 +257,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection
@@ -285,7 +285,7 @@ describe("AiStyleAnalysisSection", () => {
       setResult: vi.fn(),
       generateMetadata: mockGenerateMetadata,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <AiStyleAnalysisSection

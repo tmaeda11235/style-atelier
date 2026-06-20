@@ -114,7 +114,7 @@ test.describe("Mobile Viewer E2E Test", () => {
     const testCard: Partial<StyleCard> = {
       id: "dynamic-test-id",
       name: "Cyber Ninja",
-      tier: "epic",
+      tier: "Epic",
       accentColor: "#a855f7",
       dominantColor: "#1e1b4b",
       promptSegments: [

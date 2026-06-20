@@ -8,7 +8,7 @@ import {
 import React from "react"
 
 import { Button } from "../components/atoms/Button"
-import type { StyleCard } from "../shared/lib/db-schema"
+import type { PromptSegment, StyleCard } from "../shared/lib/db-schema"
 
 export interface TranslationType {
   noCardId: string
@@ -36,6 +36,7 @@ export interface TranslationType {
   promptPreview: string
   noSegments: string
   footer: string
+  brandBadgeText: string
 }
 
 export function ShareHeader({
@@ -162,7 +163,7 @@ export function SpecificationView({
   promptSegments,
   t
 }: {
-  promptSegments?: Array<{ value: string }>
+  promptSegments?: PromptSegment[]
   t: TranslationType
 }) {
   return (
@@ -175,7 +176,9 @@ export function SpecificationView({
           {t.promptPreview}
         </span>
         <p className="text-xs text-slate-300 font-mono bg-slate-950 p-2.5 rounded border border-slate-900 overflow-x-auto whitespace-pre-wrap">
-          {promptSegments?.map((s) => s.value).join(" ") || t.noSegments}
+          {promptSegments
+            ?.map((s) => (s.type === "slot" ? s.default : s.value))
+            .join(" ") || t.noSegments}
         </p>
       </div>
     </div>

@@ -77,8 +77,8 @@ export function useLibraryData() {
         promptSegments: c.promptSegments,
         parameters: c.parameters,
         masking: c.masking,
-        version: c.version || c.parameters?.version,
-        niji: c.niji || c.parameters?.niji,
+        version: c.parameters?.version,
+        niji: c.parameters?.niji,
         sortIndex: c.sortIndex
       })
     )

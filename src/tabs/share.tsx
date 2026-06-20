@@ -8,11 +8,8 @@ import "../style.css"
 
 import { LanguageProvider, useLanguage } from "../contexts/LanguageContext"
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext"
-import {
-  SharePageContent,
-  SharePageStatusView,
-  TranslationType
-} from "./share-components"
+import { SharePageContent, SharePageStatusView } from "./share-components"
+import type { TranslationType } from "./share-components"
 
 function useClipboardCopy(card: StyleCard | null, t: TranslationType) {
   const [success, setSuccess] = useState<string | null>(null)

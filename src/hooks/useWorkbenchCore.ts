@@ -91,9 +91,7 @@ function useWorkbenchSync({
     workbenchCards,
     setEditedSegments,
     setEditedParams,
-    setSlotValues,
-    restoredRecipe,
-    setRestoredRecipe
+    setSlotValues
   )
 }
 

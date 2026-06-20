@@ -153,7 +153,7 @@ function WebLlmSettingsContent({
         startDownload={startDownload}
         handlePurge={handlePurge}
         t={t}
-        isSupported={isSupported}
+        _isSupported={isSupported}
       />
     </div>
   )
@@ -163,7 +163,7 @@ function useWebLlmSettingsHandlers(
   t: Record<string, string>,
   confirm: any,
   startDownload: () => void,
-  purgeCache: () => Promise<void>
+  purgeCache: () => Promise<void> | void
 ) {
   const handleDownload = async () => {
     const isMobile = isMobileConnection()
@@ -213,13 +213,13 @@ export function WebLlmSettingsSection() {
   const confirm = useConfirm()
 
   const { handleDownload, handlePurge } = useWebLlmSettingsHandlers(
-    t,
+    t as any,
     confirm,
     startDownload,
     purgeCache
   )
 
-  const disp = getStatusDisplay(status, progress, t)
+  const disp = getStatusDisplay(status, progress, t as any)
 
   return (
     <div className="p-5 space-y-5 animate-in slide-in-from-top-2 duration-250">

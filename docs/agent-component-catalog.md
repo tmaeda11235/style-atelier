@@ -87,6 +87,7 @@ No description provided.
 | --------- | ------------------------------------ | -------- | ------- | ----------- |
 | `variant` | `"default" \| "error" \| "unstyled"` | No       | `-`     | -           |
 | `size`    | `"xs" \| "sm" \| "md" \| "lg"`       | No       | `-`     | -           |
+| `width`   | `"auto" \| "full"`                   | No       | `-`     | -           |
 
 ## OpfsImage
 

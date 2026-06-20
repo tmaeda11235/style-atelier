@@ -49,7 +49,7 @@ i18n.use(initReactI18next).init({
   interpolation: {
     escapeValue: false // react already safes from xss
   }
-})
+} as any)
 
 export { i18n }
 export const i18nDict = {

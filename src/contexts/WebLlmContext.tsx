@@ -41,9 +41,9 @@ export const WebLlmContext = createContext<WebLlmContextType | undefined>(
 )
 
 function preloadEngineHelper() {
-  safeSendMessage({ target: "offscreen", action: "preload-engine" })?.catch(
-    (err) => console.error("preloadEngineHelper failed:", err)
-  )
+  Promise.resolve(
+    safeSendMessage({ target: "offscreen", action: "preload-engine" })
+  ).catch((err) => console.error("preloadEngineHelper failed:", err))
 }
 
 function useWebLlmProviderStates() {

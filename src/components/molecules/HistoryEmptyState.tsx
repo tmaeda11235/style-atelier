@@ -3,7 +3,7 @@ import React from "react"
 import { useTranslation } from "react-i18next"
 
 export function HistoryEmptyState() {
-  const { t } = useTranslation()
+  const { t } = useTranslation() as any
 
   return (
     <div

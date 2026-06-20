@@ -79,7 +79,7 @@ export function useCardExport({ addLog, showStatus }: UseCardExportProps) {
     executeExport(
       "markdown",
       (cards, categories) =>
-        new Blob([exportStyleCardsToMarkdownZip(cards, categories)], {
+        new Blob([exportStyleCardsToMarkdownZip(cards, categories) as any], {
           type: "application/zip"
         }),
       "zip",

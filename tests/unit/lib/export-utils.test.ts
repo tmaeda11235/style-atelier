@@ -278,7 +278,7 @@ describe("export-utils", () => {
         this._src = v
         imageLoadSources.push(v)
         setTimeout(() => {
-          if (this.onload) this.onload()
+          if (this.onload) (this.onload as any)()
         }, 0)
       }
       get src() {
@@ -317,7 +317,7 @@ describe("export-utils", () => {
         this._src = v
         imageLoadSources.push(v)
         setTimeout(() => {
-          if (this.onload) this.onload()
+          if (this.onload) (this.onload as any)()
         }, 0)
       }
       get src() {
@@ -361,7 +361,7 @@ describe("export-utils", () => {
     await renderCardToCanvas(card, {
       includeBrandLogo: true,
       customLogo: undefined,
-      text: "Fallback Brand Name",
+      brandLogoText: "Fallback Brand Name",
       twitter: "my_twitter",
       etsy: "my_etsy",
       socialDisplayType: "text"
@@ -381,11 +381,12 @@ describe("export-utils", () => {
         this._src = v
         if (v.includes("customlogobase64")) {
           setTimeout(() => {
-            if (this.onerror) this.onerror(new Error("Custom logo load error"))
+            if (this.onerror)
+              (this.onerror as any)(new Error("Custom logo load error"))
           }, 0)
         } else {
           setTimeout(() => {
-            if (this.onload) this.onload()
+            if (this.onload) (this.onload as any)()
           }, 0)
         }
       }
@@ -407,7 +408,7 @@ describe("export-utils", () => {
       await renderCardToCanvas(card, {
         includeBrandLogo: true,
         customLogo: "data:image/png;base64,customlogobase64",
-        text: "Brand",
+        brandLogoText: "Brand",
         socialDisplayType: "none"
       })
 
