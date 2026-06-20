@@ -157,4 +157,153 @@ test.describe("Notion Integration E2E Tests @J-NOTION-INTEGRATION-01", () => {
     await saveBtn.click()
     await expect(feedbackText).toHaveText(/保存しました|saved/i)
   })
+
+  test("should trigger Notion sync on card update and store state", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+
+    // We will capture requests sent to Notion
+    let notionPostPayload: any = null
+    let notionPatchPayload: any = null
+
+    await page.route("https://api.notion.com/v1/pages", async (route) => {
+      if (route.request().method() === "POST") {
+        notionPostPayload = route.request().postDataJSON()
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          headers: { "Access-Control-Allow-Origin": "*" },
+          body: JSON.stringify({
+            id: "notion_new_page_uuid_999",
+            object: "page"
+          })
+        })
+      } else {
+        await route.fallback()
+      }
+    })
+
+    await page.route(
+      "https://api.notion.com/v1/pages/notion_new_page_uuid_999",
+      async (route) => {
+        if (route.request().method() === "PATCH") {
+          notionPatchPayload = route.request().postDataJSON()
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            headers: { "Access-Control-Allow-Origin": "*" },
+            body: JSON.stringify({
+              id: "notion_new_page_uuid_999",
+              object: "page"
+            })
+          })
+        } else {
+          await route.fallback()
+        }
+      }
+    )
+
+    await page.goto("/tests/sandbox/index.html")
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await skipButton.click()
+    }
+
+    // 1. Activate Pro License
+    const settingsNavBtn = spFrame.locator("#settings-nav-btn")
+    await expect(settingsNavBtn).toBeVisible()
+    await settingsNavBtn.click()
+
+    const licenseAccordionHeader = spFrame.locator(
+      "#settings-accordion-license"
+    )
+    await licenseAccordionHeader.click()
+
+    const keyInput = spFrame.locator("#license-key-input")
+    const activateBtn = spFrame.locator("#license-activate-btn")
+    await keyInput.fill("PRO-MEMBER-TEST-KEY")
+    await activateBtn.click()
+
+    const statusBadge = spFrame.locator("#license-status-badge")
+    await expect(statusBadge).toHaveText(/Active|有効/)
+
+    // 2. Setup Notion credentials
+    const notionAccordionHeader = spFrame.locator("#settings-accordion-notion")
+    await notionAccordionHeader.click()
+
+    const apiKeyInput = spFrame.locator("#notion-api-key-input")
+    const dbIdInput = spFrame.locator("#notion-database-id-input")
+    const saveBtn = spFrame.locator("#notion-save-settings-btn")
+
+    await apiKeyInput.fill("secret_valid_token")
+    await dbIdInput.fill("valid_db_id")
+    await saveBtn.click()
+
+    // Verify it is saved
+    const feedbackText = spFrame.locator("#notion-feedback-alert")
+    await expect(feedbackText).toHaveText(/保存しました|saved/i)
+
+    // Take screenshot of settings configured
+    await page.screenshot({
+      path: path.join(screenshotsDir, "notion-sync-settings-saved.png")
+    })
+
+    // 3. Go to Library and open a card detail view
+    const libraryTabBtn = spFrame.locator(
+      "button:has-text('Library'), button:has-text('ライブラリ')"
+    )
+    await libraryTabBtn.click()
+
+    const targetCard = spFrame
+      .locator("div.group")
+      .filter({ hasText: "cyberpunk style" })
+      .first()
+    const editBtn = targetCard.locator("[data-testid='edit-card-button']")
+    await expect(editBtn).toBeVisible()
+    await editBtn.click()
+
+    // 4. Modify some state to trigger auto sync on save
+    // Click 'detail-hide-sref' checkbox to update card
+    const hideSrefCheckbox = spFrame.locator("#detail-hide-sref")
+    await expect(hideSrefCheckbox).toBeVisible()
+    await hideSrefCheckbox.click()
+
+    // Click Save Button
+    const saveCardBtn = spFrame.locator(
+      "button:has-text('Save'), button:has-text('保存')"
+    )
+    await expect(saveCardBtn).toBeVisible()
+    await saveCardBtn.click()
+
+    // 5. Verify Notion API was triggered via POST
+    await expect
+      .poll(() => notionPostPayload, { timeout: 10000 })
+      .not.toBeNull()
+    expect(notionPostPayload.properties.Name.title[0].text.content).toContain(
+      "cyberpunk style"
+    )
+
+    // Take screenshot of library after save
+    await page.screenshot({
+      path: path.join(screenshotsDir, "notion-sync-after-save.png")
+    })
+
+    // 6. Open edit again and toggle it back to trigger PATCH
+    await editBtn.click()
+    await expect(hideSrefCheckbox).toBeVisible()
+    await hideSrefCheckbox.click()
+    await saveCardBtn.click()
+
+    // Verify Notion API was triggered via PATCH
+    await expect
+      .poll(() => notionPatchPayload, { timeout: 10000 })
+      .not.toBeNull()
+    expect(notionPatchPayload.properties.Name.title[0].text.content).toContain(
+      "cyberpunk style"
+    )
+  })
 })

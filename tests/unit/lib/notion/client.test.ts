@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   getNotionCredentials,
-  sendCardToNotion
+  sendCardToNotion,
+  updateCardInNotion
 } from "../../../../src/lib/notion/client"
 import type { StyleCard } from "../../../../src/shared/lib/db-schema"
 
@@ -211,6 +212,29 @@ describe("Notion API Client", () => {
       )
     })
 
+    it("should throw error and report 429 status code if rate limited", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 429,
+        text: vi.fn().mockResolvedValue("Rate limit exceeded")
+      }
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse as any)
+
+      await expect(sendCardToNotion(mockCard, mockCredentials)).rejects.toThrow(
+        "Notion API error (429): Rate limit exceeded"
+      )
+    })
+
+    it("should propagate network connection errors on fetch rejection", async () => {
+      vi.mocked(global.fetch).mockRejectedValue(
+        new TypeError("Failed to fetch")
+      )
+
+      await expect(sendCardToNotion(mockCard, mockCredentials)).rejects.toThrow(
+        "Failed to fetch"
+      )
+    })
+
     it("should throw error if response json is missing page ID", async () => {
       const mockResponse = {
         ok: true,
@@ -221,6 +245,82 @@ describe("Notion API Client", () => {
       await expect(sendCardToNotion(mockCard, mockCredentials)).rejects.toThrow(
         "Notion API response is missing page ID"
       )
+    })
+  })
+
+  describe("updateCardInNotion", () => {
+    const mockCard: StyleCard = {
+      id: "card-123",
+      name: "Cyber Punk Cat",
+      createdAt: 123456,
+      updatedAt: 123456,
+      promptSegments: [
+        { type: "text", value: "a cool cat" },
+        { type: "text", value: "neon lights" }
+      ],
+      parameters: {
+        ar: "16:9",
+        stylize: 250
+      },
+      masking: {
+        isSrefHidden: false,
+        isPHidden: false
+      },
+      tier: "Rare",
+      isFavorite: false,
+      usageCount: 0,
+      tags: ["cyberpunk", "animal"],
+      frameId: "default",
+      dominantColor: "#000000",
+      genealogy: {
+        generation: 1,
+        parentIds: [],
+        mutationNote: "First Gen"
+      },
+      thumbnailPath: "images/cards/card-123.png",
+      images: ["https://example.com/image.png"]
+    }
+
+    const mockCredentials = {
+      apiKey: "secret-key",
+      databaseId: "db-id"
+    }
+
+    it("should successfully update existing card in Notion database via PATCH", async () => {
+      const mockResponse = {
+        ok: true
+      }
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse as any)
+
+      await expect(
+        updateCardInNotion("page-789", mockCard, mockCredentials)
+      ).resolves.toBeUndefined()
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "https://api.notion.com/v1/pages/page-789",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: {
+            Authorization: "Bearer secret-key",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json"
+          },
+          body: expect.any(String)
+        })
+      )
+    })
+
+    it("should throw error if update fetch response is not ok", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 400,
+        text: vi.fn().mockResolvedValue("Bad Request")
+      }
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse as any)
+
+      await expect(
+        updateCardInNotion("page-789", mockCard, mockCredentials)
+      ).rejects.toThrow("Notion API error (400): Bad Request")
     })
   })
 })

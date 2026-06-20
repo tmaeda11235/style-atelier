@@ -20,6 +20,7 @@ import {
   safeQueryTabs,
   safeUpdateTab
 } from "../lib/chrome-utils"
+import { initializeNotionAutoSync } from "../lib/notion/auto-sync"
 
 /**
  * Main inner container for the side panel. It manages site target detection
@@ -35,6 +36,7 @@ function SidePanelInner() {
 
   useEffect(() => {
     initializeAutoSync()
+    initializeNotionAutoSync()
     preloadEngine()
   }, [preloadEngine])
 
