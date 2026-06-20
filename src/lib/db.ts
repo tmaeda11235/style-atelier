@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type {
   CustomCategory,
   HistoryItem,
@@ -338,6 +339,49 @@ db.on("ready", () => {
         "Failed to purge deleted records or run GC on ready hook:",
         error
       )
+    }
+
+    // Notion Sync Queue resume
+    try {
+      const { notionSyncQueueManager } = await import("./notion/queue")
+      await notionSyncQueueManager.resume()
+    } catch (error) {
+      console.error("Failed to resume Notion sync queue:", error)
+    }
+
+    // Hook StyleCard creation and updates to enqueue to Notion sync
+    try {
+      const { notionSyncQueueManager } = await import("./notion/queue")
+      const { getNotionCredentials } = await import("./notion/client")
+
+      db.styleCards.hook("creating", function (primKey, obj, transaction) {
+        transaction.on("complete", () => {
+          getNotionCredentials().then((creds) => {
+            if (creds && !obj.isDeleted) {
+              notionSyncQueueManager.enqueue(obj.id)
+            }
+          })
+        })
+      })
+
+      db.styleCards.hook(
+        "updating",
+        function (mods, primKey, obj, transaction) {
+          transaction.on("complete", () => {
+            getNotionCredentials().then((creds) => {
+              if (creds) {
+                db.getCard(primKey).then((updatedCard) => {
+                  if (updatedCard && !updatedCard.isDeleted) {
+                    notionSyncQueueManager.enqueue(primKey)
+                  }
+                })
+              }
+            })
+          })
+        }
+      )
+    } catch (error) {
+      console.error("Failed to setup Notion sync hooks:", error)
     }
   }, 0)
 })

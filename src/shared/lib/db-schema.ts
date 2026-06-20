@@ -181,3 +181,12 @@ export interface NotionSyncState {
   lastSyncedAt: number
   lastSyncedHash: string
 }
+
+export interface NotionSyncQueueItem {
+  cardId: string
+  status: "pending" | "processing" | "completed" | "failed"
+  retryCount: number
+  error?: string
+  createdAt: number
+  updatedAt: number
+}

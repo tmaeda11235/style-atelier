@@ -171,6 +171,22 @@ function setupVersions17OrHigher(db: Dexie) {
     imageSyncStates: "filePath, cardId, categoryId, syncStatus",
     notionSyncStates: "cardId, notionPageId, lastSyncedAt"
   })
+
+  // Version 18: Add notionSyncQueue table for throttling and resume-sync
+  db.version(18).stores({
+    styleCards:
+      "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+    historyItems: "id, timestamp",
+    userSettings: "userId",
+    categories: "id, name, createdAt, isDeleted, parentId",
+    slotHistory: "label",
+    parameterAliases: "id, paramType, value, alias, folderId",
+    parameterFolders: "id, name, parentId",
+    recipeHistory: "id, timestamp",
+    imageSyncStates: "filePath, cardId, categoryId, syncStatus",
+    notionSyncStates: "cardId, notionPageId, lastSyncedAt",
+    notionSyncQueue: "cardId, status"
+  })
 }
 
 export function upgradeToVersion6(tx: any) {
