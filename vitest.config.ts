@@ -76,10 +76,10 @@ export default defineConfig({
         ...harnessExclude
       ],
       thresholds: {
-        statements: 79.5,
+        statements: 80,
         branches: 65,
         functions: 75,
-        lines: 79.5
+        lines: 80
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
