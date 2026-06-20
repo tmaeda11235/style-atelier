@@ -231,7 +231,7 @@ function CardDetailViewLayout({
   return (
     <div
       data-testid="card-detail-view-container"
-      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${hasPinned ? "pb-[110px]" : ""}`}>
+      className={`fixed inset-0 bg-slate-50 z-20 flex flex-col ${hasPinned ? "pb-[110px]" : ""}`}>
       <HeaderSection t={t} onClose={props.onClose} />
       <DetailsScrollContent
         card={props.card}

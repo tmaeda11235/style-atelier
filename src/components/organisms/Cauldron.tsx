@@ -39,6 +39,7 @@ const handleCauldronDrop = async (
   addLog?: (msg: string) => void
 ) => {
   e.preventDefault()
+  e.stopPropagation()
   setIsDragOver(false)
   const cardId = e.dataTransfer.getData("cardId")
   if (cardId && !handCards.find((c) => c.id === cardId)) {
@@ -90,9 +91,13 @@ const CauldronDropZone: React.FC<CauldronDropZoneProps> = ({
   <div
     onDragOver={(e) => {
       e.preventDefault()
+      e.stopPropagation()
       setIsDragOver(true)
     }}
-    onDragLeave={() => setIsDragOver(false)}
+    onDragLeave={(e) => {
+      e.stopPropagation()
+      setIsDragOver(false)
+    }}
     onDrop={(e) =>
       handleCauldronDrop(
         e,

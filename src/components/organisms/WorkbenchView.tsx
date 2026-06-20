@@ -43,6 +43,7 @@ interface RecipeSectionProps {
 const RecipeSection: React.FC<RecipeSectionProps> = (props) => {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     props.setIsDragOver(false)
     const cardId = e.dataTransfer.getData("cardId")
     if (cardId && !props.handCards.find((c) => c.id === cardId)) {

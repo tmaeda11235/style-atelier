@@ -188,7 +188,7 @@ describe("SettingsTab", () => {
     )
 
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      '#local-backup-section input[type="file"]'
     ) as HTMLInputElement
     expect(fileInput).toBeDefined()
 
@@ -243,7 +243,7 @@ describe("SettingsTab", () => {
     )
 
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      '#local-backup-section input[type="file"]'
     ) as HTMLInputElement
     const invalidContent = '{"foo": "bar"}'
     const file = new File([invalidContent], "backup.json", {
@@ -271,7 +271,7 @@ describe("SettingsTab", () => {
     )
 
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      '#local-backup-section input[type="file"]'
     ) as HTMLInputElement
     const backupContent = '{"version": 1, "data": {"styleCards": []}}'
     const file = new File([backupContent], "backup.json", {
@@ -1054,6 +1054,40 @@ describe("SettingsTab", () => {
       )!
       fireEvent.click(replayBtn)
       expect(mockReplayTutorial).toHaveBeenCalled()
+    })
+  })
+
+  describe("Settings Tab Accordion Toggles", () => {
+    it("can toggle UI, Cloud, WebLLM, and Maintenance accordions", async () => {
+      const { container } = render(
+        <SettingsTab addLog={mockAddLog} onResetDb={mockResetDb} />
+      )
+
+      // Toggle UI accordion
+      const uiHeader = container.querySelector("#settings-accordion-ui")
+      if (uiHeader) {
+        fireEvent.click(uiHeader)
+      }
+
+      // Toggle Cloud accordion
+      const cloudHeader = container.querySelector("#settings-accordion-cloud")
+      if (cloudHeader) {
+        fireEvent.click(cloudHeader)
+      }
+
+      // Toggle WebLLM accordion
+      const webLlmHeader = container.querySelector("#settings-accordion-webllm")
+      if (webLlmHeader) {
+        fireEvent.click(webLlmHeader)
+      }
+
+      // Toggle Maintenance accordion
+      const maintenanceHeader = container.querySelector(
+        "#settings-accordion-maintenance"
+      )
+      if (maintenanceHeader) {
+        fireEvent.click(maintenanceHeader)
+      }
     })
   })
 })

@@ -14,10 +14,12 @@ function useCategoryDrop(
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsOver(true)
   }
 
@@ -27,6 +29,7 @@ function useCategoryDrop(
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsOver(false)
     const cardId = e.dataTransfer.getData("cardId")
     if (cardId && moveCardToCategory) {

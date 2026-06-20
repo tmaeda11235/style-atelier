@@ -375,4 +375,42 @@ describe("useWebLlm", () => {
     expect(result.current.webGpuFallback).toBe(true)
     vi.unstubAllGlobals()
   })
+
+  it("should attempt to reconnect the port when disconnected", async () => {
+    let disconnectCallback: any
+    const mockAddListener = vi.fn((fn) => {
+      disconnectCallback = fn
+    })
+    const localMockPort = {
+      disconnect: vi.fn(),
+      onDisconnect: {
+        addListener: mockAddListener,
+        removeListener: vi.fn()
+      }
+    }
+    chrome.runtime.connect = vi.fn().mockReturnValue(localMockPort)
+
+    vi.useFakeTimers()
+    const { unmount } = renderHook(() => useWebLlm(), {
+      wrapper: WebLlmProvider
+    })
+
+    expect(mockAddListener).toHaveBeenCalled()
+
+    // Trigger disconnect
+    act(() => {
+      disconnectCallback()
+    })
+
+    // Advance timers by 1 second to trigger reconnect
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+
+    // Should have called connect again (first during initial render, second during reconnect)
+    expect(chrome.runtime.connect).toHaveBeenCalledTimes(2)
+
+    vi.useRealTimers()
+    unmount()
+  })
 })

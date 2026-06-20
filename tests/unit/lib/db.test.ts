@@ -139,9 +139,9 @@ describe("db utilities", () => {
   })
 
   describe("seedDefaultCategories", () => {
-    it("should call bulkAdd on the categories table with the default categories", async () => {
+    it("should call bulkPut on the categories table with the default categories", async () => {
       const mockCategories = {
-        bulkAdd: vi.fn().mockResolvedValue(undefined)
+        bulkPut: vi.fn().mockResolvedValue(undefined)
       }
       const mockDb = {
         categories: mockCategories
@@ -149,8 +149,8 @@ describe("db utilities", () => {
 
       await seedDefaultCategories(mockDb)
 
-      expect(mockCategories.bulkAdd).toHaveBeenCalled()
-      const calls = mockCategories.bulkAdd.mock.calls
+      expect(mockCategories.bulkPut).toHaveBeenCalled()
+      const calls = mockCategories.bulkPut.mock.calls
       const categoriesPassed = calls[0][0]
       expect(categoriesPassed).toHaveLength(7)
       expect(categoriesPassed[0]).toMatchObject({

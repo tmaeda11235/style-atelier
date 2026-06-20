@@ -57,7 +57,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
         thumbnailData:
           "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
       }))
-      await database.styleCards.bulkAdd(mockCards)
+      await database.styleCards.bulkPut(mockCards)
 
       const count = await database.styleCards.count()
       console.log(`[E2E EVALUATE] Added ${count} cards to DB styleCards table.`)
@@ -370,7 +370,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Library Search & Scroll @J-ORG-
             "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect width='100' height='100' fill='%23ccc'/></svg>"
         }))
       ]
-      await database.styleCards.bulkAdd(mockCards)
+      await database.styleCards.bulkPut(mockCards)
     })
 
     const allCardsInGrid = spFrame.locator(

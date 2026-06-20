@@ -12,7 +12,6 @@ const SECTION_UI = "ui"
 const SECTION_CLOUD = "cloud"
 const SECTION_MAINTENANCE = "maintenance"
 const SECTION_WEBLLM = "webllm"
-const SECTION_LICENSE = "license"
 
 export function useSettingsAccordionState(isTestEnv: boolean) {
   const [openSections, setOpenSections] = React.useState<
@@ -21,8 +20,7 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
     ui: true,
     cloud: isTestEnv,
     maintenance: isTestEnv,
-    webllm: isTestEnv,
-    license: isTestEnv
+    webllm: isTestEnv
   })
 
   const toggleSection = React.useCallback((section: string) => {
@@ -45,10 +43,6 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
     () => toggleSection(SECTION_WEBLLM),
     [toggleSection]
   )
-  const handleToggleLicense = React.useCallback(
-    () => toggleSection(SECTION_LICENSE),
-    [toggleSection]
-  )
 
   return {
     openSections,
@@ -56,8 +50,7 @@ export function useSettingsAccordionState(isTestEnv: boolean) {
     handleToggleUi,
     handleToggleCloud,
     handleToggleMaintenance,
-    handleToggleWebLlm,
-    handleToggleLicense
+    handleToggleWebLlm
   }
 }
 
@@ -125,7 +118,6 @@ function buildSettingsTabResult(
     onToggleCloud: accordion.handleToggleCloud,
     onToggleMaintenance: accordion.handleToggleMaintenance,
     onToggleWebLlm: accordion.handleToggleWebLlm,
-    onToggleLicense: accordion.handleToggleLicense,
     uiProps,
     cloudProps,
     maintenanceProps,
@@ -137,9 +129,11 @@ function buildSettingsTabResult(
 
 export function useSettingsTab(props: SettingsTabHooksProps) {
   const { estimate, checkStorage } = useStorageEstimate()
-  const isTest =
+  const isVitest =
     typeof process !== "undefined" &&
     (!!process.env.VITEST || (process.env.NODE_ENV as string) === "test")
+
+  const isTest = isVitest
 
   const accordion = useSettingsAccordionState(isTest)
   const t = useLanguage().t.settings
@@ -215,6 +209,7 @@ export function useSettingsTab(props: SettingsTabHooksProps) {
     maintenanceProps,
     isWarningOpen,
     handleConfirmSyncStrategy,
-    setIsWarningOpen
+    setIsWarningOpen,
+    isTest
   )
 }

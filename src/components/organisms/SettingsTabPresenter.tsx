@@ -2,15 +2,12 @@ import { Settings2 } from "lucide-react"
 import React from "react"
 
 import { CloudSyncSection } from "../../features/settings/components/CloudSyncSection"
-import { NotionSettingsSection } from "../../features/settings/components/NotionSettingsSection"
 import { UiPreferencesSection } from "../../features/settings/components/UiPreferencesSection"
 import { WebLlmSettingsSection } from "../../features/settings/components/WebLlmSettingsSection"
 import { useWebLlm } from "../../hooks/useWebLlm"
 import { AiStatusBadge } from "../atoms/AiStatusBadge"
 import { GDriveSyncStrategyDialog } from "../molecules/GDriveSyncStrategyDialog"
 import { SettingsAccordionItem } from "../molecules/SettingsAccordionItem"
-import { P2PSyncUI } from "../P2PSyncUI"
-import { LicenseSettingsSection } from "./LicenseSettingsSection"
 import { MaintenanceContent } from "./MaintenanceContent"
 
 interface SettingsTabPresenterProps {
@@ -21,7 +18,6 @@ interface SettingsTabPresenterProps {
   onToggleCloud: () => void
   onToggleMaintenance: () => void
   onToggleWebLlm: () => void
-  onToggleLicense: () => void
   uiProps: any
   cloudProps: any
   maintenanceProps: any
@@ -67,20 +63,6 @@ function CloudSyncAccordionItem({ isOpen, onToggle, title, cloudProps }: any) {
   )
 }
 
-function P2PSyncAccordionItem({ isOpen, onToggle, title, tP2p }: any) {
-  return (
-    <SettingsAccordionItem
-      id="settings-accordion-p2p"
-      title={title}
-      isOpen={isOpen}
-      onToggle={onToggle}>
-      <div className="p-5 animate-in slide-in-from-top-2 duration-250">
-        <P2PSyncUI t={tP2p} />
-      </div>
-    </SettingsAccordionItem>
-  )
-}
-
 function MaintenanceAccordionItem({
   isOpen,
   onToggle,
@@ -116,61 +98,24 @@ function WebLlmAccordionItem({ isOpen, onToggle, title }: any) {
   )
 }
 
-function LicenseAccordionItem({ isOpen, onToggle, title }: any) {
-  return (
-    <SettingsAccordionItem
-      id="settings-accordion-license"
-      title={title}
-      isOpen={isOpen}
-      onToggle={onToggle}>
-      <LicenseSettingsSection />
-    </SettingsAccordionItem>
-  )
-}
-
-function NotionSyncAccordionItem({ isOpen, onToggle, title }: any) {
-  return (
-    <SettingsAccordionItem
-      id="settings-accordion-notion"
-      title={title}
-      isOpen={isOpen}
-      onToggle={onToggle}>
-      <div className="p-5 animate-in slide-in-from-top-2 duration-250">
-        <NotionSettingsSection />
-      </div>
-    </SettingsAccordionItem>
-  )
-}
-
-// eslint-disable-next-line max-lines-per-function
 function AccordionSections({
   openSections,
   onToggleUi,
   onToggleCloud,
   onToggleMaintenance,
   onToggleWebLlm,
-  onToggleLicense,
   uiProps,
   cloudProps,
   maintenanceProps,
-  p2pOpen,
-  setP2pOpen,
-  notionOpen,
-  setNotionOpen,
   t
 }: any) {
   return (
-    <>
+    <div className="border border-border rounded-lg overflow-hidden bg-background divide-y divide-border">
       <UiAccordionItem
         isOpen={openSections.ui}
         onToggle={onToggleUi}
         title={t.uiGroupTitle}
         uiProps={uiProps}
-      />
-      <LicenseAccordionItem
-        isOpen={openSections.license}
-        onToggle={onToggleLicense}
-        title={t.premiumGroupTitle}
       />
       <CloudSyncAccordionItem
         isOpen={openSections.cloud}
@@ -178,16 +123,10 @@ function AccordionSections({
         title={t.cloudGroupTitle}
         cloudProps={cloudProps}
       />
-      <NotionSyncAccordionItem
-        isOpen={notionOpen}
-        onToggle={() => setNotionOpen(!notionOpen)}
-        title={t.notionGroupTitle || "🔗 Notion 連携設定 (Integration)"}
-      />
-      <P2PSyncAccordionItem
-        isOpen={p2pOpen}
-        onToggle={() => setP2pOpen(!p2pOpen)}
-        title={t.p2pGroupTitle || "📲 Local P2P Sync (Direct)"}
-        tP2p={t.p2p}
+      <WebLlmAccordionItem
+        isOpen={openSections.webllm}
+        onToggle={onToggleWebLlm}
+        title={t.aiSettingsGroupTitle || "🤖 WebLLM AIモデル設定 (Local AI)"}
       />
       <MaintenanceAccordionItem
         isOpen={openSections.maintenance}
@@ -195,28 +134,15 @@ function AccordionSections({
         title={t.maintenanceGroupTitle}
         maintenanceProps={maintenanceProps}
       />
-      <WebLlmAccordionItem
-        isOpen={openSections.webllm}
-        onToggle={onToggleWebLlm}
-        title={t.webLlmGroupTitle}
-      />
-    </>
+    </div>
   )
 }
 
 export function SettingsTabPresenter(props: SettingsTabPresenterProps) {
-  const [p2pOpen, setP2pOpen] = React.useState(false)
-  const [notionOpen, setNotionOpen] = React.useState(false)
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {!props.currentEasyMode && <SettingsTabHeader title={props.t.title} />}
-      <AccordionSections
-        {...props}
-        p2pOpen={p2pOpen}
-        setP2pOpen={setP2pOpen}
-        notionOpen={notionOpen}
-        setNotionOpen={setNotionOpen}
-      />
+      <AccordionSections {...props} />
       <GDriveSyncStrategyDialog
         isOpen={props.isWarningOpen}
         onConfirm={props.handleConfirmSyncStrategy}

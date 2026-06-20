@@ -1,9 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - HandBar Collapse @J-WB-EXPERT-05", () => {
   test.beforeEach(async ({ page }) => {
+    // Pre-seed localStorage to prevent onboarding welcome dialog overlays from interrupting tests
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-onboarding-seen", "true")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })

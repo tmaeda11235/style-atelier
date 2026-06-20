@@ -22,7 +22,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   return (
     <div
       className={cn(
-        "group relative inline-block text-left select-none",
+        "group/tooltip relative inline-block text-left select-none",
         className
       )}>
       {children}

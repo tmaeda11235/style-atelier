@@ -141,7 +141,8 @@
     "oauth2": {
       "client_id": "81426269486-2pi6vl3bqhdr6l9tn1pddv6vh2mu3u0t.apps.googleusercontent.com",
       "scopes": [
-        "https://www.googleapis.com/auth/drive.file"
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive.appdata"
       ]
     }
   },

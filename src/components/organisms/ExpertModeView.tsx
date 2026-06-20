@@ -29,12 +29,14 @@ export function ExpertModeView({
 }: ExpertModeViewProps) {
   const expertView = useExpertModeView({ isEasyMode, onToggleEasyMode })
 
+  const { setActiveTab, setActiveDetailCard } = expertView
+
   React.useEffect(() => {
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>
       if (customEvent.detail) {
-        expertView.setActiveTab(customEvent.detail as any)
-        expertView.setActiveDetailCard(null)
+        setActiveTab(customEvent.detail as any)
+        setActiveDetailCard(null)
       }
     }
     const handleOpenCardDetail = async (e: Event) => {
@@ -43,8 +45,8 @@ export function ExpertModeView({
         const { getStyleCardById } = await import("../../lib/style-card-store")
         const card = await getStyleCardById(customEvent.detail.cardId)
         if (card) {
-          expertView.setActiveTab("library")
-          expertView.setActiveDetailCard(card)
+          setActiveTab("library")
+          setActiveDetailCard(card)
         }
       }
     }
@@ -54,7 +56,7 @@ export function ExpertModeView({
       window.removeEventListener("change-expert-tab", handleTabChange)
       window.removeEventListener("open-card-detail", handleOpenCardDetail)
     }
-  }, [expertView])
+  }, [setActiveTab, setActiveDetailCard])
 
   return (
     <div

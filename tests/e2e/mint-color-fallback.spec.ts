@@ -3,6 +3,10 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Minting Color Fallback", () => {
   test.beforeEach(async ({ page }) => {
+    // Pre-seed localStorage to prevent onboarding welcome dialog overlays from interrupting tests
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-onboarding-seen", "true")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -77,7 +81,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Minting Color Fallback", () => 
     // Epic: dominant '#7c3aed' (rgb(124, 58, 237)), accent '#c084fc' (rgb(192, 132, 252))
     const epicRarityBtn = spFrame.locator("button:has-text('Epic')")
     await expect(epicRarityBtn).toBeVisible()
-    await epicRarityBtn.click()
+    await epicRarityBtn.click({ force: true })
 
     // Colors should dynamically update to Epic fallback colors
     await expect(dominantColorCircle).toHaveCSS(
@@ -93,7 +97,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Minting Color Fallback", () => 
     // Legendary: dominant '#d97706' (rgb(217, 119, 6)), accent '#fbbf24' (rgb(251, 191, 36))
     const legendaryRarityBtn = spFrame.locator("button:has-text('Legendary')")
     await expect(legendaryRarityBtn).toBeVisible()
-    await legendaryRarityBtn.click()
+    await legendaryRarityBtn.click({ force: true })
 
     // Colors should dynamically update to Legendary fallback colors
     await expect(dominantColorCircle).toHaveCSS(

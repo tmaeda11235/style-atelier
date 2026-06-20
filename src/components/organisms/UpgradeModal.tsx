@@ -155,9 +155,14 @@ export function UpgradeModal({ onNavigateToSettings }: UpgradeModalProps) {
     if (onNavigateToSettings) {
       onNavigateToSettings()
     } else {
-      window.dispatchEvent(
-        new CustomEvent("change-expert-tab", { detail: "settings" })
-      )
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("change-expert-tab", { detail: "settings" })
+        )
+        window.dispatchEvent(
+          new CustomEvent("change-easy-tab", { detail: "settings" })
+        )
+      }, 0)
     }
   }
 

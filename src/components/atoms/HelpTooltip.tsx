@@ -21,7 +21,7 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
   return (
     <div
       className={cn(
-        "group relative inline-block text-left select-none",
+        "group/tooltip relative inline-block text-left select-none",
         className
       )}>
       <button

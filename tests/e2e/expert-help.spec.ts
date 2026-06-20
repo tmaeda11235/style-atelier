@@ -3,6 +3,10 @@ import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02", () => {
   test.beforeEach(async ({ page }) => {
+    // Pre-seed localStorage to prevent onboarding welcome dialog overlays from interrupting tests
+    await page.addInitScript(() => {
+      window.localStorage.setItem("style-atelier-onboarding-seen", "true")
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -122,6 +126,26 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
         ]
       })
     })
+
+    // Switch back to Library tab to show HandBar before asserting HandBar tooltips
+    const libraryNavBtnInitial = spFrame
+      .locator(
+        "button[title='Library'], nav button:has-text('Library'), nav button:has-text('ライブラリ')"
+      )
+      .first()
+    await expect(libraryNavBtnInitial).toBeVisible()
+    await libraryNavBtnInitial.click()
+
+    // Verify HandBar Merge Stack tooltip
+    const mergeBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
+    await expect(mergeBtn).toBeVisible()
+    const mergeTooltipTrigger = spFrame
+      .locator("#handbar-root")
+      .locator("[data-testid='help-tooltip-trigger']")
+      .first()
+    await expect(mergeTooltipTrigger).toBeVisible()
+    await mergeTooltipTrigger.hover()
+
     const workbenchNavBtn = spFrame
       .locator(
         "button[title='Workbench'], nav button:has-text('Workbench'), nav button:has-text('ワークベンチ')"
@@ -154,10 +178,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
     console.log("Workbench tooltip screenshot saved.")
 
     // Click anywhere else to close hover state
-    await spFrame
-      .locator("h2:has-text('Workbench'), h2:has-text('ワークベンチ')")
-      .first()
-      .click()
+    await spFrame.locator("body").first().click()
 
     // Verify slot variables section and tooltip
     const slotVariablesHeader = spFrame.locator(
@@ -169,15 +190,7 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Help Tooltips @J-SYS-02"
     )
     await expect(slotTooltipTrigger).toBeVisible()
 
-    // 5. Verify HandBar Merge Stack tooltip
-    const mergeBtn = spFrame.locator("[data-testid='handbar-merge-btn']")
-    await expect(mergeBtn).toBeVisible()
-    const mergeTooltipTrigger = spFrame
-      .locator("#handbar-root")
-      .locator("[data-testid='help-tooltip-trigger']")
-      .first()
-    await expect(mergeTooltipTrigger).toBeVisible()
-    await mergeTooltipTrigger.hover()
+    // HandBar Merge Stack tooltip verification moved to initial Library tab state above
 
     await page.screenshot({
       path: path.join(screenshotsDir, "expert-help-handbar-tooltip.png")
