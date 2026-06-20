@@ -888,6 +888,22 @@
         "src/features/settings/components/NotionSettingsSection.tsx",
         "src/lib/notion/client.ts"
       ]
+    },
+    {
+      "id": "@J-MINT-CLIP-ADJUSTER-01",
+      "name": "画像をクリップ調整",
+      "description": "ミントプレビュー画面で画像のズームと表示オフセット位置を調整する",
+      "steps": [
+        "ミント画面で画像プレビューをクリック",
+        "ClipAdjuster モーダルでスライダーをドラッグしてズームを調整",
+        "画像をドラッグしてオフセット位置を調整",
+        "「適用」ボタンを押下して設定を反映"
+      ],
+      "nextJourneys": ["@J-MINT-EXPERT-01"],
+      "viewComponents": [
+        "src/features/minting/components/ClipAdjuster.tsx",
+        "src/features/minting/components/MintingView/MintingViewContent.tsx"
+      ]
     }
   ]
 }
