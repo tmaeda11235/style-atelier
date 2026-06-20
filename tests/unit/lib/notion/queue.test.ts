@@ -6,7 +6,8 @@ import { notionSyncQueueManager } from "../../../../src/lib/notion/queue"
 // Mock sendCardToNotion
 vi.mock("../../../../src/lib/notion/client", () => ({
   sendCardToNotion: vi.fn(),
-  getNotionCredentials: vi.fn()
+  getNotionCredentials: vi.fn(),
+  archiveCardInNotion: vi.fn()
 }))
 
 // Mock computeHash
@@ -220,7 +221,7 @@ describe("NotionSyncQueueManager", () => {
     mockStyleCardsTable.get.mockResolvedValue({ id: "card-1" })
     mockSyncStatesTable.get.mockResolvedValue({
       cardId: "card-1",
-      lastSyncedHash: "c4ca4238a0b923820dcc509a6f75849b"
+      lastSyncedHash: "mock-hash-val"
     })
 
     const mockFirst = vi
