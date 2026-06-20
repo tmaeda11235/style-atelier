@@ -170,11 +170,9 @@ async function main() {
   // 8. Run E2E
   console.log('\n--- Running E2E Tests ---');
   if (isHeadlessEnvironment()) {
-    console.log('⚠️ Headless environment detected. Skipping extension E2E tests (SKIP_EXTENSION_TESTS will be set).');
+    console.log('⚠️ Headless environment detected. Skipping all extension E2E tests (SKIP_EXTENSION_TESTS is set).');
     process.env.SKIP_EXTENSION_TESTS = 'true';
-  }
-
-  if (testedJourneys.length > 0) {
+  } else if (testedJourneys.length > 0) {
     try {
       // Create grep pattern: e.g. "(@J-01|@J-02)"
       const grepPattern = `(${testedJourneys.join('|')})`;
@@ -189,17 +187,13 @@ async function main() {
     // If src files changed but NO journey was matched, it means we don't have coverage defined, OR it's an orphan file.
     // We should probably run ALL E2E just to be safe, or fail.
     console.log('WARNING: Changed files did not map to any View Components defined in userJourneys.json.');
-    if (isHeadlessEnvironment()) {
-      console.warn('⚠️ WARNING: Headless environment detected. Skipping E2E tests fallback to prevent browser startup failure.');
-    } else {
-      console.log('Running ALL E2E tests to be safe.');
-      try {
-        execSync(`npx playwright test --retries=2`, { stdio: 'inherit' });
-        testedJourneys.push('ALL'); // Indicate all were run
-      } catch {
-        console.error('E2E tests failed.');
-        process.exit(1);
-      }
+    console.log('Running ALL E2E tests to be safe.');
+    try {
+      execSync(`npx playwright test --retries=2`, { stdio: 'inherit' });
+      testedJourneys.push('ALL'); // Indicate all were run
+    } catch {
+      console.error('E2E tests failed.');
+      process.exit(1);
     }
   } else {
     console.log('No source code changes requiring E2E tests.');
