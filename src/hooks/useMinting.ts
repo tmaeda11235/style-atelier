@@ -11,6 +11,7 @@ import {
 import { extractKeywords } from "../lib/nlp-utils"
 import type { RarityTier } from "../lib/rarity-config"
 import type {
+  ClipSettings,
   HistoryItem,
   PromptSegment,
   StyleCard
@@ -79,6 +80,7 @@ export interface SaveMintedCardParams {
   dispatchState: React.Dispatch<React.SetStateAction<MintingState>>
   setActiveTab: (tab: "history" | "library" | "workbench") => void
   setAlertType?: (type: AlertType) => void
+  clipSettings?: ClipSettings
 }
 
 export function useSaveMintedCard(p: SaveMintedCardParams) {
@@ -103,7 +105,8 @@ export function useSaveMintedCard(p: SaveMintedCardParams) {
         p.isPHidden,
         thumbnailData,
         p.meta,
-        p.colors
+        p.colors,
+        p.clipSettings
       )
       const newCard = buildMintedCard(buildParams)
       await db.styleCards.put(newCard)
@@ -112,7 +115,8 @@ export function useSaveMintedCard(p: SaveMintedCardParams) {
         ...s,
         mintingItem: null,
         isSrefHidden: false,
-        isPHidden: false
+        isPHidden: false,
+        clipSettings: undefined
       }))
       p.setActiveTab("library")
     } catch (err) {
@@ -130,6 +134,7 @@ export interface MintingState {
   isSrefHidden: boolean
   isPHidden: boolean
   selectedRarity: RarityTier
+  clipSettings?: ClipSettings
 }
 
 export const INITIAL_MINTING_STATE: MintingState = {
@@ -138,7 +143,8 @@ export const INITIAL_MINTING_STATE: MintingState = {
   editedSegments: [],
   isSrefHidden: false,
   isPHidden: false,
-  selectedRarity: "Common"
+  selectedRarity: "Common",
+  clipSettings: undefined
 }
 
 export function createMintingHandlers(
@@ -153,10 +159,22 @@ export function createMintingHandlers(
       setState((s) => ({ ...s, isPHidden: hidden })),
     setSelectedRarity: (rarity: RarityTier) =>
       setState((s) => ({ ...s, selectedRarity: rarity })),
+    setClipSettings: (clip?: ClipSettings) =>
+      setState((s) => ({ ...s, clipSettings: clip })),
     handleStartMinting: (item: HistoryItem) =>
-      setState((s) => ({ ...s, mintingItem: item, variationBase: null })),
+      setState((s) => ({
+        ...s,
+        mintingItem: item,
+        variationBase: null,
+        clipSettings: undefined
+      })),
     handleStartVariationMinting: (base: VariationBase) =>
-      setState((s) => ({ ...s, variationBase: base, mintingItem: null })),
+      setState((s) => ({
+        ...s,
+        variationBase: base,
+        mintingItem: null,
+        clipSettings: undefined
+      })),
     setMintingItem: (item: HistoryItem | null) =>
       setState((s) => ({ ...s, mintingItem: item })),
     setVariationBase: (base: VariationBase | null) =>

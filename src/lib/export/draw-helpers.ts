@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function, sonarjs/cognitive-complexity */
 import type { StyleCard } from "../../shared/lib/db-schema"
 import { compressCardData, generateQRCodeUrl } from "../../shared/lib/qr-utils"
 import { drawRoundedRect, loadImage, resolveLocalImageSource } from "./helpers"
@@ -97,7 +98,8 @@ export function drawArtworkGrid(
   artX: number,
   artY: number,
   artW: number,
-  artH: number
+  artH: number,
+  card?: StyleCard
 ) {
   if (loadedImages.length === 4) {
     const halfW = artW / 2
@@ -124,7 +126,54 @@ export function drawArtworkGrid(
     ctx.drawImage(loadedImages[0], artX, artY, halfW, artH)
     ctx.drawImage(loadedImages[1], artX + halfW, artY, halfW, artH)
   } else if (loadedImages.length === 1) {
-    ctx.drawImage(loadedImages[0], artX, artY, artW, artH)
+    const img = loadedImages[0]
+    const clip = card?.clipSettings
+
+    let zoom = clip?.zoom !== undefined ? clip.zoom : 1.0
+    if (zoom < 1.0) zoom = 1.0
+    if (zoom > 3.0) zoom = 3.0
+
+    let xOffset = clip?.xOffset !== undefined ? clip.xOffset : 0.0
+    if (xOffset < -0.5) xOffset = -0.5
+    if (xOffset > 0.5) xOffset = 0.5
+
+    let yOffset = clip?.yOffset !== undefined ? clip.yOffset : 0.0
+    if (yOffset < -0.5) yOffset = -0.5
+    if (yOffset > 0.5) yOffset = 0.5
+
+    const targetRatio = artW / artH
+    const imgRatio = img.width / img.height
+
+    let sw = img.width
+    let sh = img.height
+
+    if (imgRatio > targetRatio) {
+      sw = img.height * targetRatio
+      sh = img.height
+    } else {
+      sw = img.width
+      sh = img.width / targetRatio
+    }
+
+    const swZoomed = sw / zoom
+    const shZoomed = sh / zoom
+
+    const dx = img.width * xOffset
+    const dy = img.height * yOffset
+
+    const cx = img.width / 2 + dx
+    const cy = img.height / 2 + dy
+
+    let sxNew = cx - swZoomed / 2
+    let syNew = cy - shZoomed / 2
+
+    if (sxNew < 0) sxNew = 0
+    if (sxNew > img.width - swZoomed) sxNew = img.width - swZoomed
+
+    if (syNew < 0) syNew = 0
+    if (syNew > img.height - shZoomed) syNew = img.height - shZoomed
+
+    ctx.drawImage(img, sxNew, syNew, swZoomed, shZoomed, artX, artY, artW, artH)
   } else {
     ctx.fillStyle = "#475569"
     ctx.font = "24px sans-serif"
