@@ -100,7 +100,7 @@ export async function exportCardAsImage(
   const bytesWithMetadata = insertMetadataToPng(bytes, "stylecard", payload)
 
   // 4. Create Blob and download
-  const blob = new Blob([bytesWithMetadata], { type: "image/png" })
+  const blob = new Blob([bytesWithMetadata as any], { type: "image/png" })
   const blobUrl = URL.createObjectURL(blob)
 
   const downloadLink = document.createElement("a")

@@ -213,7 +213,11 @@ async function executeInference(
       role: "user",
       content: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt
     })
-    return response.content[0].text || ""
+    const firstContent = response.content[0]
+    if (typeof firstContent === "string") {
+      return firstContent
+    }
+    return (firstContent as any).text || ""
   })()
   return Promise.race([work, timeout])
 }

@@ -92,9 +92,6 @@ export function buildStyleCard(
     createdAt: existingCard?.createdAt || Date.now(),
     updatedAt: Date.now(),
     masking: existingCard?.masking || {
-      isPromptSegmentHidden: new Array(partialCard.promptSegments.length).fill(
-        false
-      ),
       isSrefHidden: false,
       isPHidden: false
     },

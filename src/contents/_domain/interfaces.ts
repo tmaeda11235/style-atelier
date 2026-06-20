@@ -1,4 +1,4 @@
-import type { HistoryItem } from "../../../shared/lib/db-schema"
+import type { HistoryItem } from "../../shared/lib/db-schema"
 
 export interface IProcessor {
   process(element: HTMLElement): void

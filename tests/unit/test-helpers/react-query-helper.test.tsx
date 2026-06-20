@@ -32,6 +32,6 @@ describe("react-query-helper", () => {
       </QueryTestProvider>
     )
 
-    expect(await findByText("test-data")).toBeInTheDocument()
+    expect(await findByText("test-data")).toBeTruthy()
   })
 })

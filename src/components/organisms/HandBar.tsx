@@ -25,7 +25,10 @@ function MergePortal({
   isOpen: boolean
   onClose: () => void
   cards: StyleCard[]
-  onExecuteMerge: (args: any) => Promise<void>
+  onExecuteMerge: (
+    baseCardId: string,
+    consumeStates: Record<string, boolean>
+  ) => Promise<void>
 }) {
   if (!isOpen) return null
   return createPortal(

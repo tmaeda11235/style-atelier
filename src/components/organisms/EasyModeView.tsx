@@ -33,7 +33,10 @@ export function EasyModeView({
   React.useEffect(() => {
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>
-      if (customEvent.detail) {
+      if (
+        customEvent.detail === "settings" ||
+        customEvent.detail === "library"
+      ) {
         state.setActiveTab(customEvent.detail)
         state.minting.setMintingItem(null)
         state.minting.setVariationBase(null)

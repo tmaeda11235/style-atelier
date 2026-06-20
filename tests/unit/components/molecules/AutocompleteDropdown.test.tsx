@@ -14,6 +14,7 @@ describe("AutocompleteDropdown", () => {
         isOpen={false}
         onSelect={() => {}}
         onClose={() => {}}
+        parameterType="sref"
       />
     )
     expect(container.firstChild).toBeNull()
@@ -27,6 +28,7 @@ describe("AutocompleteDropdown", () => {
         isOpen={true}
         onSelect={() => {}}
         onClose={() => {}}
+        parameterType="sref"
       />
     )
     expect(screen.getByText("apple")).toBeInTheDocument()
@@ -42,6 +44,7 @@ describe("AutocompleteDropdown", () => {
         isOpen={true}
         onSelect={mockOnSelect}
         onClose={() => {}}
+        parameterType="sref"
       />
     )
     const option = screen.getByText("apple")
@@ -57,6 +60,7 @@ describe("AutocompleteDropdown", () => {
         isOpen={true}
         onSelect={() => {}}
         onClose={() => {}}
+        parameterType="sref"
       />
     )
     const img = screen.getByAltText("Sref Preview")
@@ -81,6 +85,7 @@ describe("AutocompleteDropdown", () => {
         onSelect={() => {}}
         onClose={() => {}}
         styleCards={styleCards}
+        parameterType="sref"
       />
     )
     expect(screen.getByAltText("Card Preview")).toBeInTheDocument()

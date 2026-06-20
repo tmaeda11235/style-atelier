@@ -210,7 +210,13 @@ async function runModelInference(systemPrompt: string, userPrompt: string) {
       content: fullPrompt
     })
 
-    const responseText = response.content[0].text || ""
+    const firstContent = response.content[0]
+    let responseText = ""
+    if (typeof firstContent === "string") {
+      responseText = firstContent
+    } else {
+      responseText = (firstContent as any).text || ""
+    }
     log(`Response: "${responseText}"`)
   } catch (err: any) {
     log(`Inference failed: ${err.message}`, true)

@@ -24,7 +24,7 @@ describe("useCategories integration test", () => {
       categoryId = await db.addCategory({
         id: "cyberpunk",
         name: "Cyberpunk"
-      })
+      } as any)
     })
 
     await waitFor(() => {

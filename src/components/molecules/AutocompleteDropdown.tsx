@@ -11,7 +11,7 @@ interface AutocompleteDropdownProps {
   onSelect: (option: string) => void
   onClose: () => void
   styleCards?: StyleCard[]
-  parameterType: "p" | "sref" | "cref" | "imagePrompts"
+  parameterType?: "p" | "sref" | "cref" | "imagePrompts"
 }
 
 // Custom hook to fetch and create local URL for sref preview images safely
@@ -275,7 +275,9 @@ export function AutocompleteDropdown({
   const { aliases } = useParameterAliases()
   const { folders } = useParameterFolders()
 
-  const typeAliases = aliases.filter((a) => a.type === parameterType)
+  const typeAliases = parameterType
+    ? aliases.filter((a) => a.paramType === parameterType)
+    : []
   const items = getFilteredItems(value, options, typeAliases, folders)
 
   useClickOutside(dropdownRef, onClose, isOpen)

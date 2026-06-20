@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+
 import { Input } from "../atoms/Input"
 import { AutocompleteDropdown } from "./AutocompleteDropdown"
 
@@ -19,6 +20,8 @@ interface SearchFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function SearchField({
   options = [],
   className = "",
+  size,
+  width,
   ...props
 }: SearchFieldProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -28,8 +31,8 @@ export function SearchField({
     if (props.onChange) {
       const syntheticEvent = {
         target: {
-          value: val,
-        },
+          value: val
+        }
       } as React.ChangeEvent<HTMLInputElement>
       props.onChange(syntheticEvent)
     }

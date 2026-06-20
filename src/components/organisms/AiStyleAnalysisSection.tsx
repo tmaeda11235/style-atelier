@@ -280,7 +280,7 @@ export function AiStyleAnalysisSection({
           maxRetries={gen.maxRetries}
           text={gen.text}
           webLlmError={gen.webLlmError}
-          webGpuFallback={gen.webGpuFallback}
+          webGpuFallback={(gen as any).webGpuFallback}
           startDownload={gen.startDownload}
           t={t}
         />

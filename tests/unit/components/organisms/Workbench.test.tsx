@@ -97,7 +97,9 @@ describe("Workbench", () => {
     })
 
     vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 1 }] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
   })
 
   afterEach(() => {
@@ -117,7 +119,7 @@ describe("Workbench", () => {
       addCard: vi.fn(),
       incrementCardUsage: vi.fn(),
       updateCardWeight: vi.fn()
-    })
+    } as any)
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
     expect(screen.getByText("Workbench は空です")).toBeDefined()
@@ -136,7 +138,7 @@ describe("Workbench", () => {
       addCard: vi.fn(),
       incrementCardUsage: vi.fn(),
       updateCardWeight: vi.fn()
-    })
+    } as any)
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
 
@@ -173,7 +175,7 @@ describe("Workbench", () => {
       addCard: vi.fn(),
       incrementCardUsage: mockIncrementCardUsage,
       updateCardWeight: vi.fn()
-    })
+    } as any)
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
 
@@ -221,7 +223,7 @@ describe("Workbench", () => {
       addCard: mockAddCard,
       incrementCardUsage: vi.fn(),
       updateCardWeight: vi.fn()
-    })
+    } as any)
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
 
@@ -261,7 +263,7 @@ describe("Workbench", () => {
       addCard: vi.fn(),
       incrementCardUsage: vi.fn(),
       updateCardWeight: vi.fn()
-    })
+    } as any)
 
     render(<Workbench setAlertType={mockSetAlertType} addLog={mockAddLog} />)
 
@@ -301,7 +303,7 @@ describe("Workbench", () => {
         addCard: vi.fn(),
         incrementCardUsage: vi.fn(),
         updateCardWeight: vi.fn()
-      })
+      } as any)
 
       // Simulate chrome tabs query failing to trigger a retry
       vi.mocked(chrome.tabs.query).mockRejectedValue(
@@ -353,7 +355,7 @@ describe("Workbench", () => {
       addCard: vi.fn(),
       incrementCardUsage: vi.fn(),
       updateCardWeight: vi.fn()
-    })
+    } as any)
 
     render(
       <Workbench

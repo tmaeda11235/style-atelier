@@ -14,6 +14,7 @@ describe("ParameterArrayEditor", () => {
         values={["val1", "val2"]}
         onChange={() => {}}
         placeholder="Enter value"
+        parameterType="sref"
       />
     )
 
@@ -32,6 +33,7 @@ describe("ParameterArrayEditor", () => {
         icon={null}
         values={["val1"]}
         onChange={mockOnChange}
+        parameterType="sref"
       />
     )
 
@@ -55,6 +57,7 @@ describe("ParameterArrayEditor", () => {
         icon={null}
         values={["val1"]}
         onChange={mockOnChange}
+        parameterType="sref"
       />
     )
 
@@ -73,6 +76,7 @@ describe("ParameterArrayEditor", () => {
         icon={null}
         values={["val1", "val2"]}
         onChange={mockOnChange}
+        parameterType="sref"
       />
     )
 
@@ -96,6 +100,7 @@ describe("ParameterArrayEditor", () => {
         values={[]}
         onChange={mockOnChange}
         options={suggestions}
+        parameterType="sref"
       />
     )
 

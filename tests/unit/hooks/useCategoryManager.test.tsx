@@ -58,7 +58,7 @@ describe("useCategoryManager", () => {
     vi.clearAllMocks()
     vi.restoreAllMocks()
     mockConfirmResult = true
-    vi.mocked(db.getAllCategories).mockReturnValue([])
+    vi.mocked(db.getAllCategories).mockResolvedValue([])
     vi.mocked(db.getAllCards).mockResolvedValue([])
     vi.mocked(db.getCategory).mockResolvedValue(undefined)
     vi.mocked(db.addCategory).mockResolvedValue("mock-id")
@@ -147,7 +147,7 @@ describe("useCategoryManager", () => {
       name: "Test Cat",
       iconEmoji: "🎮",
       parentId: "parent-1"
-    }
+    } as any
     act(() => {
       result.current.handleStartEdit(mockCat)
     })
@@ -241,7 +241,7 @@ describe("useCategoryManager", () => {
         vi.mocked(db.getCategory).mockResolvedValueOnce({
           id: "my-category",
           name: "Existing"
-        })
+        } as any)
         const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {})
 
         const { result } = renderHook(() =>
@@ -323,7 +323,7 @@ describe("useCategoryManager", () => {
         vi.mocked(db.getCategory).mockResolvedValueOnce({
           id: "other-cat",
           name: "Other"
-        })
+        } as any)
         const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {})
 
         const { result } = renderHook(() =>
@@ -331,7 +331,10 @@ describe("useCategoryManager", () => {
         )
 
         act(() => {
-          result.current.handleStartEdit({ id: "my-cat", name: "My Cat" })
+          result.current.handleStartEdit({
+            id: "my-cat",
+            name: "My Cat"
+          } as any)
           result.current.setName("Other Cat")
         })
 
@@ -354,7 +357,7 @@ describe("useCategoryManager", () => {
             id: "my-cat",
             name: "My Cat",
             parentId: "parent-old"
-          })
+          } as any)
           result.current.setName("Updated Cat")
           result.current.setParentId("parent-new")
         })
@@ -389,7 +392,10 @@ describe("useCategoryManager", () => {
         )
 
         act(() => {
-          result.current.handleStartEdit({ id: "my-cat", name: "My Cat" })
+          result.current.handleStartEdit({
+            id: "my-cat",
+            name: "My Cat"
+          } as any)
           result.current.setName("Updated Cat")
         })
 

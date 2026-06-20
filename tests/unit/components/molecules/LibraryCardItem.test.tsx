@@ -8,7 +8,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-const mockCard: StyleCard = {
+const mockCard = {
   id: "card-1",
   name: "Dreamy Fantasy",
   promptSegments: [
@@ -28,7 +28,7 @@ const mockCard: StyleCard = {
   createdAt: 12345678,
   updatedAt: 12345678,
   modelName: "Midjourney v6"
-}
+} as any
 
 const mockCategories = [{ id: "cat-1", name: "Illustration" }]
 

@@ -224,7 +224,7 @@ describe("PromptBubbleEditor", () => {
       error: null,
       declutterPrompt: vi.fn(),
       isModelReady: false
-    })
+    } as any)
 
     render(<PromptBubbleEditor initialSegments={[]} />)
     expect(screen.getByText(/Download Model/i)).toBeDefined()
@@ -239,7 +239,7 @@ describe("PromptBubbleEditor", () => {
       error: null,
       declutterPrompt: vi.fn(),
       isModelReady: false
-    })
+    } as any)
 
     render(<PromptBubbleEditor initialSegments={[]} />)
     expect(screen.getByText(/Downloading Model\.\.\. 46%/i)).toBeDefined()
@@ -260,7 +260,7 @@ describe("PromptBubbleEditor", () => {
       error: null,
       declutterPrompt: mockDeclutter,
       isModelReady: true
-    })
+    } as any)
 
     render(
       <PromptBubbleEditor

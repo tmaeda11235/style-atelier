@@ -301,6 +301,11 @@ export function getDbError(): Error | null {
   return dbError
 }
 
+export function setMockDbError(err: Error): void {
+  dbError = err
+  dbErrorListeners.forEach((listener) => listener(dbError!))
+}
+
 export function clearDbErrorForTest(): void {
   dbError = null
 }

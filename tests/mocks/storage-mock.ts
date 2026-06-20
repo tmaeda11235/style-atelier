@@ -8,7 +8,7 @@ export class MockFileSystemFileHandle {
   constructor(public name: string) {}
 
   async getFile(): Promise<File> {
-    return new File([this.content], this.name)
+    return new File([this.content as any], this.name)
   }
 
   async createWritable(): Promise<FileSystemWritableFileStream> {

@@ -9,7 +9,7 @@ export { PADDING, calculatePositionsResult } from "./useSpotlightCoordinates"
 
 export function useResizeScrollListener(
   isActive: boolean,
-  currentStep: number,
+  currentStep: string,
   computePositions: () => void
 ) {
   const rafRef = useRef<number>(0)
@@ -33,7 +33,7 @@ export function useResizeScrollListener(
 
 export function useRetryTargetSelector(
   isActive: boolean,
-  currentStep: number,
+  currentStep: string,
   currentConfig: any,
   computePositions: () => void
 ) {
@@ -61,7 +61,10 @@ export function useClickBlocker(
 ) {
   useEffect(() => {
     if (!isActive) return
-    if (process.env.NODE_ENV === "test" && process.env.BYPASS_VITEST !== "true")
+    if (
+      (process.env.NODE_ENV as string) === "test" &&
+      process.env.BYPASS_VITEST !== "true"
+    )
       return
 
     const handleCaptureClick = (e: MouseEvent) => {

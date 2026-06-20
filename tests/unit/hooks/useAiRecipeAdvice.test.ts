@@ -43,7 +43,7 @@ describe("useAiRecipeAdvice", () => {
       purgeCache: vi.fn(),
       checkCurrentState: vi.fn(),
       runInference: mockRunInference
-    })
+    } as any)
   })
 
   afterEach(() => {
@@ -68,7 +68,7 @@ describe("useAiRecipeAdvice", () => {
       purgeCache: vi.fn(),
       checkCurrentState: vi.fn(),
       runInference: mockRunInference
-    })
+    } as any)
 
     const cards = [
       { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },

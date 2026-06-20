@@ -200,7 +200,7 @@ export async function performRestoreWorkflow(
     token: params.token,
     gdriveClient: params.gdriveClient,
     onTokenUpdated: params.onTokenUpdated,
-    cloudBackup: params.cloudBackup,
+    _cloudBackup: params.cloudBackup,
     progress: params.progress,
     confirm: params.confirm,
     t: params.t,

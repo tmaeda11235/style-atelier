@@ -9,7 +9,7 @@ import { inputVariants } from "./Input.variants"
  */
 export interface InputProps
   extends
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "width">,
     VariantProps<typeof inputVariants> {}
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(

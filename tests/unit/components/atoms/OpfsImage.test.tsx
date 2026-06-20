@@ -7,10 +7,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 // Mock useOpfsImage hook
 vi.mock("@/hooks/useOpfsImage", () => {
   return {
-    useOpfsImage: vi.fn(() => ({
-      imageUrl: "mocked-opfs-url.jpg",
-      isLoading: false
-    }))
+    useOpfsImage: vi.fn(
+      () =>
+        ({
+          imageUrl: "mocked-opfs-url.jpg",
+          isLoading: false
+        }) as any
+    )
   }
 })
 
@@ -33,7 +36,7 @@ describe("OpfsImage", () => {
     vi.mocked(useOpfsImage).mockReturnValue({
       imageUrl: "mocked-opfs-url.jpg",
       isLoading: false
-    })
+    } as any)
   })
 
   it("should render non-OPFS src paths directly", () => {
@@ -61,7 +64,7 @@ describe("OpfsImage", () => {
     vi.mocked(useOpfsImage).mockReturnValue({
       imageUrl: undefined,
       isLoading: true
-    })
+    } as any)
     render(<OpfsImage src="test-opfs-file.jpg" alt="test image" />)
     const img = screen.getByAltText("test image")
     await waitFor(() => {

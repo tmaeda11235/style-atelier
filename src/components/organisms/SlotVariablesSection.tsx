@@ -22,7 +22,7 @@ export interface SlotVariablesSectionProps {
   /** List of cards currently in the Hand for quick-filling values */
   handCards: StyleCard[]
   /** Callback triggered to send a slot value as a new card to the Workbench */
-  onSendToWorkbench: (value: string, label: string) => Promise<void>
+  onSendToWorkbench: (value: string, label: string) => Promise<void> | void
 }
 
 const renderSlotField = ({

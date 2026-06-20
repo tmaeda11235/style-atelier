@@ -17,7 +17,7 @@ describe("GDriveClient", () => {
 
     // Mock window.google
     global.window = Object.create(window)
-    global.window.google = {
+    ;(window as any).google = {
       accounts: {
         oauth2: {
           initTokenClient: vi.fn()
@@ -49,7 +49,8 @@ describe("GDriveClient", () => {
     const mockInitTokenClient = vi.fn().mockReturnValue({
       requestAccessToken: mockRequestAccessToken
     })
-    global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
+    ;(window as any).google.accounts.oauth2.initTokenClient =
+      mockInitTokenClient
 
     const tokenPromise = client.requestAccessToken()
 
@@ -73,7 +74,8 @@ describe("GDriveClient", () => {
     const mockInitTokenClient = vi.fn().mockReturnValue({
       requestAccessToken: mockRequestAccessToken
     })
-    global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
+    ;(window as any).google.accounts.oauth2.initTokenClient =
+      mockInitTokenClient
 
     const tokenPromise = client.requestAccessToken()
 
@@ -87,7 +89,8 @@ describe("GDriveClient", () => {
     const mockInitTokenClient = vi.fn().mockImplementation(() => {
       throw new Error("Init failed")
     })
-    global.window.google.accounts.oauth2.initTokenClient = mockInitTokenClient
+    ;(window as any).google.accounts.oauth2.initTokenClient =
+      mockInitTokenClient
 
     await expect(client.requestAccessToken()).rejects.toThrow("Init failed")
   })

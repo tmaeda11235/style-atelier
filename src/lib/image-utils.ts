@@ -156,7 +156,7 @@ export async function createThumbnailDataUrl(
       initialQuality: quality
     }
 
-    const compressedBlob = await imageCompression(blob, options)
+    const compressedBlob = await imageCompression(blob as File, options)
     return await blobToBase64(compressedBlob)
   } catch (err) {
     console.warn(
@@ -265,7 +265,7 @@ export async function compressCategoryCoverImage(
       initialQuality: quality
     }
 
-    const compressedBlob = await imageCompression(blob, options)
+    const compressedBlob = await imageCompression(blob as File, options)
     return await blobToBase64(compressedBlob)
   } catch (err) {
     console.warn(

@@ -139,7 +139,7 @@ export function useSettingsTab(props: SettingsTabHooksProps) {
   const { estimate, checkStorage } = useStorageEstimate()
   const isTest =
     typeof process !== "undefined" &&
-    (!!process.env.VITEST || process.env.NODE_ENV === "test")
+    (!!process.env.VITEST || (process.env.NODE_ENV as string) === "test")
 
   const accordion = useSettingsAccordionState(isTest)
   const t = useLanguage().t.settings

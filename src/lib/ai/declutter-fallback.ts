@@ -77,7 +77,9 @@ export function declutterFallback(rawPrompt: string): PromptSegment[] {
   // 重複除去
   const seen = new Set<string>()
   const uniqueSegments = segments.filter((seg) => {
-    const normalized = seg.value.toLowerCase()
+    const normalized = (
+      seg.type === "slot" ? seg.default : seg.value
+    ).toLowerCase()
     if (seen.has(normalized)) {
       return false
     }

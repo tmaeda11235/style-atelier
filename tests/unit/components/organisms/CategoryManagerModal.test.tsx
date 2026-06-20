@@ -176,7 +176,9 @@ describe("CategoryManagerModal", () => {
     const nameInput = screen.getByPlaceholderText("e.g. Cyberpunk, Retro")
     fireEvent.change(nameInput, { target: { value: "Mixed" } })
 
-    const emojiInput = screen.getByPlaceholderText("e.g. 🎨, 🛸")
+    const emojiInput = screen.getByPlaceholderText(
+      "e.g. 🎨, 🛸"
+    ) as HTMLInputElement
     // Inputting multiple emojis: 🧙‍♂️ (first grapheme) and 🚀 (second grapheme)
     fireEvent.change(emojiInput, { target: { value: "🧙‍♂️🚀" } })
 

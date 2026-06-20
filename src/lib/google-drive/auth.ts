@@ -22,7 +22,9 @@ export async function authorize(interactive = true): Promise<string> {
           return reject(new Error(chrome.runtime.lastError.message))
         }
         if (token) {
-          resolve(token)
+          const actualToken =
+            typeof token === "string" ? token : (token as any).token
+          resolve(actualToken)
         } else {
           reject(new Error("Authorization failed: empty access token"))
         }

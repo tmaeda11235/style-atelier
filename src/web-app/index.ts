@@ -113,12 +113,11 @@ function renderCard(card: Partial<StyleCard>) {
 function loadFallbackCard() {
   const fallback: Partial<StyleCard> = {
     name: "Cyber Samurai",
-    tier: "legendary",
+    tier: "Legendary",
     accentColor: "#fbbf24",
     dominantColor: "#1e293b",
     promptSegments: [
       {
-        id: "1",
         value:
           "A futuristic cyberpunk samurai standing in neon rain, Tokyo street background, highly detailed style, glowing katana, rich colors, intricate cybernetic armor, Unreal Engine 5 render, cinematic lighting",
         type: "text"
@@ -490,7 +489,8 @@ export function initPwaViewer(onBackToLp?: () => void) {
 
   if (
     "serviceWorker" in navigator &&
-    (import.meta.env.PROD || window.location.search.includes("pwa=true"))
+    ((import.meta as any).env?.PROD ||
+      window.location.search.includes("pwa=true"))
   ) {
     navigator.serviceWorker
       .register("/sw.js")

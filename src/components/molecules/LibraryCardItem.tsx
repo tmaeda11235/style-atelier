@@ -17,6 +17,10 @@ interface LibraryCardItemProps {
   setSharingCard: (card: StyleCard | null) => void
   categories: Array<{ id: string; name: string }>
   onQuickSend?: (card: StyleCard, e: React.MouseEvent) => void
+  moveCardToCategory?: (
+    cardId: string,
+    categoryId: string | null
+  ) => Promise<void>
   cardSlotThemeClass?: string
   onDragStartGlobal?: (e: React.DragEvent, cardId: string) => void
   onDragOverGlobal?: (e: React.DragEvent, cardId: string) => void

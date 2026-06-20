@@ -34,7 +34,8 @@ describe("useHandBar hook", () => {
     dominantColor: "#ff0000",
     thumbnailData: "",
     frameId: "default",
-    genealogy: { generation: 1, parentIds: [] }
+    genealogy: { generation: 1, parentIds: [] },
+    tags: []
   }
 
   const card2: StyleCard = {
@@ -52,7 +53,8 @@ describe("useHandBar hook", () => {
     dominantColor: "#00ff00",
     thumbnailData: "",
     frameId: "default",
-    genealogy: { generation: 1, parentIds: [] }
+    genealogy: { generation: 1, parentIds: [] },
+    tags: []
   }
 
   beforeEach(() => {

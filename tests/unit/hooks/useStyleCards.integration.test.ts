@@ -31,7 +31,7 @@ describe("useStyleCards integration test", () => {
         name: "Neo Tokyo",
         tier: "Rare",
         parameters: { ar: "16:9" }
-      })
+      } as any)
     })
 
     await waitFor(() => {

@@ -51,9 +51,11 @@ describe("useLibrary hook", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(chrome.tabs.query).mockImplementation((query, callback) => {
-      callback([{ id: 1 }])
+      callback([{ id: 1 }] as any)
     })
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
   })
 
   it("should increment usageCount when toggling pin (adding to hand)", async () => {

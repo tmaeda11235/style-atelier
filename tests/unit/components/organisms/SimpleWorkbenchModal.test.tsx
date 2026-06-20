@@ -52,7 +52,9 @@ describe("SimpleWorkbenchModal", () => {
     vi.mocked(chrome.tabs.query).mockResolvedValue([
       { id: 1, status: "complete" }
     ] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
     vi.mocked(updateStyleCard).mockClear()
   })
 

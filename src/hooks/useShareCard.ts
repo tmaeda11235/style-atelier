@@ -193,7 +193,7 @@ function useBrandingSettings(
         }
       }
     })
-    await db.updateUserSettings({ branding: changes })
+    await db.updateUserSettings({ branding: changes as any })
   }
 
   return { userSettings, handleUpdateBranding }
@@ -276,13 +276,13 @@ export function useShareCard({ card, onClose, addLog }: UseShareCardProps) {
   )
 
   return {
+    ...actions,
     localIncludeBrandLogo,
     handleToggleBrandLogo: () =>
       actions.handleToggleBrandLogo(
         setLocalIncludeBrandLogo,
         localIncludeBrandLogo
       ),
-    ...actions,
     isPremium,
     userSettings,
     handleUpdateBranding,

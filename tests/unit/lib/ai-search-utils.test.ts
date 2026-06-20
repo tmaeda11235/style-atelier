@@ -1,30 +1,31 @@
 import { parseSemanticQuery } from "@/lib/ai-search-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+let mockSendMessage: any
+
 describe("parseSemanticQuery", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     chrome.runtime.sendMessage = vi.fn()
+    mockSendMessage = chrome.runtime.sendMessage
   })
 
   it("should parse query and extract correct filters", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result: JSON.stringify({
-                rarity: "Legendary",
-                color: "Blue",
-                category: "All",
-                query: "anime style"
-              })
+    mockSendMessage.mockImplementation((message, callback) => {
+      if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result: JSON.stringify({
+              rarity: "Legendary",
+              color: "Blue",
+              category: "All",
+              query: "anime style"
             })
-          }
+          })
         }
       }
-    )
+    })
 
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     const result = await parseSemanticQuery(
@@ -52,19 +53,17 @@ describe("parseSemanticQuery", () => {
   })
 
   it("should handle markdown block JSON response from AI", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result:
-                '```json\n{\n  "rarity": "Rare",\n  "color": "Red",\n  "category": "Cyberpunk",\n  "query": "mecha"\n}\n```'
-            })
-          }
+    mockSendMessage.mockImplementation((message, callback) => {
+      if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result:
+              '```json\n{\n  "rarity": "Rare",\n  "color": "Red",\n  "category": "Cyberpunk",\n  "query": "mecha"\n}\n```'
+          })
         }
       }
-    )
+    })
 
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     const result = await parseSemanticQuery(
@@ -81,36 +80,32 @@ describe("parseSemanticQuery", () => {
   })
 
   it("should default filters to 'All' or empty string on JSON parse errors or partial properties", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result: "invalid json string"
-            })
-          }
+    mockSendMessage.mockImplementation((message, callback) => {
+      if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result: "invalid json string"
+          })
         }
       }
-    )
+    })
 
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     await expect(parseSemanticQuery("something", categories)).rejects.toThrow()
   })
 
   it("should handle plain markdown block without json language specifier", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result: '```\n{\n  "rarity": "Epic",\n  "color": "Green"\n}\n```'
-            })
-          }
+    mockSendMessage.mockImplementation((message, callback) => {
+      if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result: '```\n{\n  "rarity": "Epic",\n  "color": "Green"\n}\n```'
+          })
         }
       }
-    )
+    })
 
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     const result = await parseSemanticQuery("Epic green stuff", categories)
@@ -124,18 +119,16 @@ describe("parseSemanticQuery", () => {
   })
 
   it("should handle partial JSON properties and fallback to All", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result: "{}"
-            })
-          }
+    mockSendMessage.mockImplementation((message, callback) => {
+      if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result: "{}"
+          })
         }
       }
-    )
+    })
 
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     const result = await parseSemanticQuery("something", categories)
@@ -149,23 +142,21 @@ describe("parseSemanticQuery", () => {
   })
 
   it("should parse Japanese query when language is 'ja'", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result: JSON.stringify({
-                rarity: "Legendary",
-                color: "Blue",
-                category: "All",
-                query: "cyberpunk"
-              })
+    mockSendMessage.mockImplementation((message, callback) => {
+      if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result: JSON.stringify({
+              rarity: "Legendary",
+              color: "Blue",
+              category: "All",
+              query: "cyberpunk"
             })
-          }
+          })
         }
       }
-    )
+    })
 
     const categories = [{ id: "cat-1", name: "Cyberpunk" }]
     const result = await parseSemanticQuery(

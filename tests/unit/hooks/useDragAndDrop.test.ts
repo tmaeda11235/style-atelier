@@ -131,7 +131,7 @@ describe("useDragAndDrop", () => {
     }
 
     // Mock DB: style card found on first call
-    vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
+    vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard as any)
     vi.mocked(db.updateCard).mockResolvedValue(1)
 
     const mockItem = {
@@ -183,7 +183,7 @@ describe("useDragAndDrop", () => {
     }
 
     // Mock DB: getCardByJobId returns card
-    vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
+    vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard as any)
     vi.mocked(db.updateCard).mockResolvedValue(1)
 
     const mockItem = {
@@ -283,7 +283,7 @@ describe("useDragAndDrop", () => {
         thumbnailData: "https://example.com/first.png"
       }
 
-      vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard)
+      vi.mocked(db.getCardByJobId).mockResolvedValue(mockExistingCard as any)
       vi.mocked(db.updateCard).mockResolvedValue(1)
 
       const mockItem = {

@@ -283,8 +283,6 @@ export function LibrarySearchBar(props: ExtendedLibrarySearchBarProps) {
       isAiSearching={ai.isAiSearching}
       isEngineInitializing={isEngineInitializing}
       aiSearchError={ai.aiSearchError}
-      aiWarningOpen={ai.aiWarningOpen}
-      setAiWarningOpen={ai.setAiWarningOpen}
       t={t}
       i18nSettings={i18n.settings}
       sortBy={props.sortBy}

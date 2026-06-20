@@ -893,7 +893,7 @@ describe("Color Utilities", () => {
         const fallback1 = getFallbackColors(undefined)
         expect(fallback1.dominantHex).toBe("#64748b")
 
-        const fallback2 = getFallbackColors("")
+        const fallback2 = getFallbackColors("" as any)
         expect(fallback2.dominantHex).toBe("#64748b")
       })
     })

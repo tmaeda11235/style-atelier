@@ -9,7 +9,7 @@ describe("chromeAsyncStorage", () => {
 
   it("should use chrome.storage.local.get when chrome API is available", async () => {
     const mockData = { testKey: "testValue" }
-    vi.mocked(chrome.storage.local.get).mockResolvedValue(mockData)
+    vi.mocked(chrome.storage.local.get).mockResolvedValue(mockData as any)
 
     const result = await chromeAsyncStorage.getItem("testKey")
 
@@ -18,7 +18,7 @@ describe("chromeAsyncStorage", () => {
   })
 
   it("should return null if chrome.storage.local.get returns empty", async () => {
-    vi.mocked(chrome.storage.local.get).mockResolvedValue({})
+    vi.mocked(chrome.storage.local.get).mockResolvedValue({} as any)
 
     const result = await chromeAsyncStorage.getItem("testKey")
 
@@ -43,7 +43,6 @@ describe("chromeAsyncStorage", () => {
     // Save original chrome mock
     const originalChrome = global.chrome
     // Temporarily delete chrome from global
-    // @ts-expect-error - overriding global
     delete global.chrome
 
     localStorage.setItem("fallbackKey", "fallbackValue")

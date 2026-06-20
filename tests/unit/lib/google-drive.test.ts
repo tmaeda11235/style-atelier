@@ -26,6 +26,8 @@ import {
 } from "@/lib/google-drive/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+const mockGetAuthToken = vi.mocked(chrome.identity.getAuthToken) as any
+
 // Mock XMLHttpRequest
 const mockXhrInstances: any[] = []
 class MockXMLHttpRequest {
@@ -59,11 +61,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
   describe("authorize", () => {
     it("should resolve access token on successful getAuthToken call", async () => {
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback("mock-token-123")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("mock-token-123")
+      })
 
       const token = await authorize(true)
       expect(token).toBe("mock-token-123")
@@ -78,11 +78,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       ;(chrome.runtime as any).lastError = {
         message: "User cancelled authentication"
       }
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback(undefined)
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback(undefined)
+      })
 
       await expect(authorize()).rejects.toThrow("User cancelled authentication")
 
@@ -480,12 +478,10 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         })
 
       // Mock authorize for silent flow
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          expect(opts.interactive).toBe(false)
-          callback("fresh-token-456")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        expect(opts.interactive).toBe(false)
+        callback("fresh-token-456")
+      })
 
       vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
         (opts, callback) => {
@@ -531,11 +527,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
       // Mock authorize to fail
       const originalLastError = chrome.runtime.lastError
       ;(chrome.runtime as any).lastError = { message: "Silent reauth failed" }
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback(undefined)
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback(undefined)
+      })
 
       await expect(searchBackupFile("stale-token-123")).rejects.toThrow(
         "Google Drive authentication expired: Silent reauth failed"
@@ -548,11 +542,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
 
   describe("defaultGoogleDriveClient", () => {
     it("should authorize, clear token, and upload correctly using defaultGoogleDriveClient", async () => {
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback("default-token")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("default-token")
+      })
       const token = await defaultGoogleDriveClient.authorize(true)
       expect(token).toBe("default-token")
 
@@ -704,11 +696,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         })
       })
 
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback("fresh-download-token")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("fresh-download-token")
+      })
 
       vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
         (opts, callback) => {
@@ -831,11 +821,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         })
       })
 
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback("fresh-patch-token")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("fresh-patch-token")
+      })
 
       vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
         (opts, callback) => {
@@ -984,11 +972,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         json: vi.fn().mockResolvedValue({ files: [] })
       })
 
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback("fresh-post-token")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("fresh-post-token")
+      })
 
       vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
         (opts, callback) => {
@@ -1123,11 +1109,9 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
           }
         })
 
-      vi.mocked(chrome.identity.getAuthToken).mockImplementation(
-        (opts, callback) => {
-          callback("fresh-resumable-token")
-        }
-      )
+      mockGetAuthToken.mockImplementation((opts, callback) => {
+        callback("fresh-resumable-token")
+      })
 
       vi.mocked(chrome.identity.removeCachedAuthToken).mockImplementation(
         (opts, callback) => {
@@ -1385,7 +1369,7 @@ describe("Google Drive Utilities (getAuthToken Flow)", () => {
         json: async () => {
           throw new Error("JSON parse fail")
         }
-      } as Response
+      } as unknown as Response
       await expect(handleResponseError(res, "failed")).rejects.toThrow(
         "failed: 403 Forbidden"
       )

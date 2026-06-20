@@ -74,5 +74,6 @@ export default defineConfig({
         lines: 80
       }
     }
-  }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any
 })

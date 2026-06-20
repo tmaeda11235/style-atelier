@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 describe("useAiPromptDeclutter", () => {
   const mockDisconnect = vi.fn()
   const mockPort = { disconnect: mockDisconnect }
+  let mockSendMessage: any
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -23,29 +24,28 @@ describe("useAiPromptDeclutter", () => {
       chrome.runtime.connect = vi.fn().mockReturnValue(mockPort)
       chrome.runtime.sendMessage = vi.fn()
     }
+    mockSendMessage = vi.mocked(chrome.runtime.sendMessage) as any
   })
 
   it("should de-clutter a messy prompt and return parsed segments", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "verify-integrity") {
-          if (callback) callback({ status: "success", integrityPassed: true })
-        } else if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "success",
-              result: JSON.stringify({
-                segments: [
-                  "a beautiful cyberpunk girl",
-                  "in a neon alley",
-                  "glowing lights"
-                ]
-              })
+    mockSendMessage.mockImplementation((message: any, callback: any) => {
+      if (message && message.action === "verify-integrity") {
+        if (callback) callback({ status: "success", integrityPassed: true })
+      } else if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "success",
+            result: JSON.stringify({
+              segments: [
+                "a beautiful cyberpunk girl",
+                "in a neon alley",
+                "glowing lights"
+              ]
             })
-          }
+          })
         }
       }
-    )
+    })
 
     const { result } = renderHook(() => useAiPromptDeclutter())
 
@@ -72,20 +72,18 @@ describe("useAiPromptDeclutter", () => {
   })
 
   it("should handle error gracefully when inference fails and return fallback", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "verify-integrity") {
-          if (callback) callback({ status: "success", integrityPassed: true })
-        } else if (message && message.action === "run-inference") {
-          if (callback) {
-            callback({
-              status: "error",
-              error: "Failed to allocate memory"
-            })
-          }
+    mockSendMessage.mockImplementation((message: any, callback: any) => {
+      if (message && message.action === "verify-integrity") {
+        if (callback) callback({ status: "success", integrityPassed: true })
+      } else if (message && message.action === "run-inference") {
+        if (callback) {
+          callback({
+            status: "error",
+            error: "Failed to allocate memory"
+          })
         }
       }
-    )
+    })
 
     const { result } = renderHook(() => useAiPromptDeclutter())
 
@@ -105,13 +103,11 @@ describe("useAiPromptDeclutter", () => {
   })
 
   it("should run fallback directly when status is not ready", async () => {
-    vi.mocked(chrome.runtime.sendMessage).mockImplementation(
-      (message, callback) => {
-        if (message && message.action === "verify-integrity") {
-          if (callback) callback({ status: "success", integrityPassed: false })
-        }
+    mockSendMessage.mockImplementation((message: any, callback: any) => {
+      if (message && message.action === "verify-integrity") {
+        if (callback) callback({ status: "success", integrityPassed: false })
       }
-    )
+    })
 
     const { result } = renderHook(() => useAiPromptDeclutter())
 

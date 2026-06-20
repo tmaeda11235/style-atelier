@@ -12,7 +12,9 @@ describe("PromptBubble", () => {
   it("renders slot segment correctly", () => {
     render(
       <PromptBubble
-        segment={{ type: "slot", name: "slot1", label: "Age", value: "" }}
+        segment={
+          { type: "slot", name: "slot1", label: "Age", value: "" } as any
+        }
       />
     )
     expect(screen.getByText("Age")).toBeInTheDocument()
@@ -21,7 +23,9 @@ describe("PromptBubble", () => {
 
   it("renders chip segment correctly", () => {
     render(
-      <PromptBubble segment={{ type: "chip", cardId: "card1", kind: "Sref" }} />
+      <PromptBubble
+        segment={{ type: "chip", cardId: "card1", kind: "Sref" } as any}
+      />
     )
     expect(screen.getByText("Sref")).toBeInTheDocument()
     expect(screen.getByText("Card")).toBeInTheDocument()

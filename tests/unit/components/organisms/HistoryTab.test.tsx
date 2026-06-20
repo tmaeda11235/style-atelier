@@ -10,7 +10,7 @@ vi.mock("@/hooks/useHistory", () => ({
   useHistory: vi.fn()
 }))
 
-const mockHistoryItems: HistoryItem[] = [
+const mockHistoryItems: any[] = [
   {
     id: "item-1",
     fullCommand: "a majestic golden castle",
@@ -39,7 +39,7 @@ describe("HistoryTab", () => {
       loadMore: vi.fn(),
       hasMore: false,
       updateHistoryItem: vi.fn()
-    })
+    } as any)
 
     const { container } = render(
       <LanguageProvider>
@@ -60,7 +60,7 @@ describe("HistoryTab", () => {
       loadMore: vi.fn(),
       hasMore: false,
       updateHistoryItem: vi.fn()
-    })
+    } as any)
 
     render(
       <LanguageProvider>
@@ -80,7 +80,7 @@ describe("HistoryTab", () => {
       loadMore: vi.fn(),
       hasMore: false,
       updateHistoryItem: vi.fn()
-    })
+    } as any)
 
     render(
       <LanguageProvider>

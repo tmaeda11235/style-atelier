@@ -220,10 +220,14 @@ export const useSettings = () => {
       isEasyMode: false,
       toggleEasyMode: () => {},
       expertFeatures: {
-        declutter: false,
-        recipeAdvice: false,
-        themeConsistency: false,
-        webllmInference: false
+        stack: false,
+        slot: false,
+        rarity: false,
+        tags: false,
+        categories: false,
+        multiCard: false,
+        cardEditing: false,
+        multiImage: false
       },
       updateExpertFeature: () => {},
       showTipsBar: true,
@@ -233,7 +237,9 @@ export const useSettings = () => {
       includeBrandLogo: true,
       toggleBrandLogo: () => {},
       alwaysEnglishLogoText: false,
-      toggleAlwaysEnglishLogoText: () => {}
+      toggleAlwaysEnglishLogoText: () => {},
+      autoOpenSection: null as string | null,
+      setAutoOpenSection: () => {}
     }
   }
   return context

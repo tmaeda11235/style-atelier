@@ -43,7 +43,7 @@ export const test = base.extend<{
       )
     }
     // playwright.config.ts から args を取得。なければデフォルト
-    const args = project.use?.args || []
+    const args = (project.use as any)?.args || []
 
     const pathToExtension = path.resolve(
       __dirname,

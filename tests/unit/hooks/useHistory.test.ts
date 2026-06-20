@@ -157,7 +157,7 @@ describe("useHistory hook", () => {
     })
 
     await act(async () => {
-      await result.current.updateHistoryItem("1", { rating: 5 })
+      await result.current.updateHistoryItem("1", { rating: 5 } as any)
     })
 
     expect(mockUpdate).toHaveBeenCalledWith("1", { rating: 5 })

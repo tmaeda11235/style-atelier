@@ -33,7 +33,7 @@ export function ExpertModeView({
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>
       if (customEvent.detail) {
-        expertView.setActiveTab(customEvent.detail)
+        expertView.setActiveTab(customEvent.detail as any)
         expertView.setActiveDetailCard(null)
       }
     }

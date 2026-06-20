@@ -119,12 +119,12 @@ export function AiStatusBadge({
   className,
   ...props
 }: AiStatusBadgeProps) {
-  const { language } = useLanguage()
+  const { lang } = useLanguage()
   const { hasWebGpu } = useWebGpuCheck()
   const { status: webLlmStatus, progress } = useWebLlm()
 
   const activeStatus = propStatus || webLlmStatus
-  const isJa = language?.startsWith("ja")
+  const isJa = lang?.startsWith("ja")
   const config = getBadgeConfig(activeStatus, progress, hasWebGpu, isJa)
 
   const layoutClassName = extractLayoutClasses(className)

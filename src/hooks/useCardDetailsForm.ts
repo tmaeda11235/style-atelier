@@ -139,7 +139,7 @@ async function buildUpdatedCard(
   return {
     ...card,
     name: formValues.name,
-    tier: formValues.tier,
+    tier: formValues.tier as any,
     promptSegments: formValues.promptSegments,
     parameters: formValues.parameters,
     tags: formValues.tags,

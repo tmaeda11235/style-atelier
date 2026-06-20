@@ -74,7 +74,7 @@ describe("MintingView", () => {
       pinnedCards: [],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -92,7 +92,7 @@ describe("MintingView", () => {
       pinnedCards: [],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -130,7 +130,7 @@ describe("MintingView", () => {
       ],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -146,7 +146,7 @@ describe("MintingView", () => {
       pinnedCards: [],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     render(
       <TutorialProvider>
@@ -174,7 +174,7 @@ describe("MintingView", () => {
       pinnedCards: [],
       unpinCard: vi.fn(),
       clearHand: vi.fn()
-    })
+    } as any)
 
     // To test with cardEditing disabled, we can temporarily modify localStorage
     localStorage.setItem(

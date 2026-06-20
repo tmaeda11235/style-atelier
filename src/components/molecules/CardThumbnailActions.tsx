@@ -69,7 +69,7 @@ interface ButtonConfigItem {
 }
 
 function getButtonsConfig(
-  t: (key: string) => string,
+  t: any,
   props: CardThumbnailActionsProps
 ): ButtonConfigItem[] {
   return [
@@ -109,7 +109,7 @@ function getButtonsConfig(
 }
 
 function PinButton({ props }: { props: CardThumbnailActionsProps }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation() as any
   return (
     <IconButtonWithTooltip
       show={!!props.onPinClick}
@@ -145,7 +145,7 @@ function DeleteButton({
 }
 
 export function CardThumbnailActions(props: CardThumbnailActionsProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation() as any
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const buttons = getButtonsConfig(t, props)
 

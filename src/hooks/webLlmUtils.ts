@@ -44,7 +44,9 @@ export async function checkCurrentStateHelper(
     if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
-  safeSendMessage({ target: "offscreen", action: "verify-integrity" })
+  Promise.resolve(
+    safeSendMessage({ target: "offscreen", action: "verify-integrity" })
+  )
     .then((res: any) => {
       if (res && res.status === "success" && res.integrityPassed) {
         setStatus("ready")
@@ -69,7 +71,9 @@ function runStartDownload(
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
-  safeSendMessage({ target: "offscreen", action: "start-download" })
+  Promise.resolve(
+    safeSendMessage({ target: "offscreen", action: "start-download" })
+  )
     .then((downloadRes: any) => {
       if (!downloadRes || downloadRes.status === "error") {
         setStatus("error")
@@ -77,11 +81,13 @@ function runStartDownload(
       } else {
         setStatus("downloading")
         setProgress(0)
-        safeSendMessage({
-          target: "background",
-          action: "set-downloading",
-          value: true
-        }).catch((err) => {
+        Promise.resolve(
+          safeSendMessage({
+            target: "background",
+            action: "set-downloading",
+            value: true
+          })
+        ).catch((err) => {
           console.error("set-downloading error:", err)
         })
       }
@@ -98,7 +104,9 @@ function runInitWorker(
   setProgress: (p: number) => void,
   setError: (e: string | null) => void
 ) {
-  safeSendMessage({ target: "offscreen", action: "init-worker" })
+  Promise.resolve(
+    safeSendMessage({ target: "offscreen", action: "init-worker" })
+  )
     .then((workerRes: any) => {
       if (!workerRes || workerRes.status === "error") {
         setStatus("error")
@@ -138,11 +146,13 @@ export async function startDownloadHelper(
     if (setWebGpuFallback) setWebGpuFallback(true)
   }
 
-  safeSendMessage({
-    target: "offscreen",
-    action: "check-quota",
-    requiredBytes: 2.5 * 1024 * 1024 * 1024
-  })
+  Promise.resolve(
+    safeSendMessage({
+      target: "offscreen",
+      action: "check-quota",
+      requiredBytes: 2.5 * 1024 * 1024 * 1024
+    })
+  )
     .then((quotaRes: any) => {
       if (!quotaRes || quotaRes.status === "error") {
         setStatus("error")
@@ -166,7 +176,9 @@ export function purgeCacheHelper(
   setError: (e: string | null) => void
 ) {
   setStatus("checking")
-  safeSendMessage({ target: "offscreen", action: "purge-cache" })
+  Promise.resolve(
+    safeSendMessage({ target: "offscreen", action: "purge-cache" })
+  )
     .then((res: any) => {
       if (res && res.status === "success") {
         setStatus("idle")
@@ -189,14 +201,16 @@ export function runInferenceHelper(
   temperature?: number
 ): Promise<string> {
   const requestId = Math.random().toString(36).substring(7)
-  return safeSendMessage({
-    target: "offscreen",
-    action: "run-inference",
-    requestId,
-    prompt,
-    systemPrompt,
-    temperature
-  })
+  return Promise.resolve(
+    safeSendMessage({
+      target: "offscreen",
+      action: "run-inference",
+      requestId,
+      prompt,
+      systemPrompt,
+      temperature
+    })
+  )
     .then((res: any) => {
       if (!res) {
         throw new Error("No response from background")

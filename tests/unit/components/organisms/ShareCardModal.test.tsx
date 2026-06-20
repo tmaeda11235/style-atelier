@@ -39,13 +39,13 @@ vi.mock("@/lib/db", () => ({
 
 const mockClipboardWrite = vi.fn()
 
-const mockCard: StyleCard = {
+const mockCard = {
   id: "card-uuid-1",
   name: "Neon Dragon",
   createdAt: Date.now(),
   updatedAt: Date.now(),
   promptSegments: [{ type: "text", value: "a neon dragon" }],
-  parameters: { sref: "12345" },
+  parameters: { sref: ["12345"] },
   masking: { isSrefHidden: false, isPHidden: false },
   tier: "Legendary",
   isFavorite: false,
@@ -54,7 +54,7 @@ const mockCard: StyleCard = {
   dominantColor: "#00ff00",
   thumbnailData: "https://example.com/thumb.png",
   images: ["https://example.com/thumb.png"]
-}
+} as any
 
 describe("ShareCardModal", () => {
   const defaultProps = {

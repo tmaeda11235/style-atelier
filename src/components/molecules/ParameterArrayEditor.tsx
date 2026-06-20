@@ -201,7 +201,7 @@ export const ParameterArrayEditor: React.FC<ParameterArrayEditorProps> = ({
           parameterType={parameterType}
           folders={folders}
           addFolder={addFolder}
-          saveAlias={saveAlias}
+          saveAlias={saveAlias as any}
           deleteAlias={deleteAlias}
         />
       )}

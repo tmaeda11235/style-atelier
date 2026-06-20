@@ -328,7 +328,7 @@ describe("qr-utils", () => {
       }
       vi.stubGlobal("FileReader", MockFileReader)
 
-      const mockFile = new File([pngWithMeta], "test.png", {
+      const mockFile = new File([pngWithMeta as any], "test.png", {
         type: "image/png"
       })
       const result = await readQRCodeFromImage(mockFile)
@@ -371,11 +371,11 @@ describe("qr-utils", () => {
       })
 
       let callCount = 0
-      vi.mocked(jsQR).mockImplementation(() => {
+      vi.mocked(jsQR).mockImplementation((() => {
         callCount++
         if (callCount === 1) return null
         return { data: "cropped-qr-payload" }
-      })
+      }) as any)
 
       const mockFile = new File([""], "test.png", { type: "image/png" })
       const result = await readQRCodeFromImage(mockFile)

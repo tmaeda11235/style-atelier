@@ -188,7 +188,7 @@ function detectInitialState(
     editedSegments = variationBase.promptSegments
     const gen = variationBase.genealogy?.generation || 1
     const fullPrompt = variationBase.promptSegments
-      .map((seg) => seg.value)
+      .map((seg) => (seg.type === "slot" ? seg.default : seg.value))
       .join(" ")
     detectedRarity = determineRarity(fullPrompt, variationBase.parameters, gen)
   }

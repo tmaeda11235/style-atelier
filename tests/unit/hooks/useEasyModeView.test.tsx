@@ -49,6 +49,7 @@ describe("useEasyModeView hook", () => {
     isDraggingFile: false,
     isImporting: false,
     droppedItem: null,
+    clearDroppedItem: vi.fn(),
     handleDragOver: vi.fn(),
     handleDragLeave: vi.fn(),
     handleDrop: vi.fn()
@@ -72,7 +73,9 @@ describe("useEasyModeView hook", () => {
 
     // Mock chrome APIs
     vi.mocked(chrome.tabs.query).mockResolvedValue([{ id: 123 }] as any)
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ status: "success" })
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      status: "success"
+    } as any)
   })
 
   it("should initialize with default states", () => {
@@ -252,7 +255,7 @@ describe("useEasyModeView hook", () => {
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       status: "error",
       message: "Could not find chat input"
-    })
+    } as any)
 
     const { result } = renderHook(() =>
       useEasyModeView({
@@ -272,7 +275,7 @@ describe("useEasyModeView hook", () => {
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       status: "error",
       message: "Some other error"
-    })
+    } as any)
 
     const { result } = renderHook(() =>
       useEasyModeView({
