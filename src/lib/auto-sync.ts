@@ -342,6 +342,6 @@ export async function checkAndMergeMobileTempData(): Promise<void> {
       )
     }
   } catch (error) {
-    console.error("[AutoSync] Failed to check/merge mobile temp data:", error)
+    console.warn("[AutoSync] Failed to check/merge mobile temp data:", error)
   }
 }

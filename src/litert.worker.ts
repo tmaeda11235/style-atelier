@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Backend, Engine, LiteRtLm } from "@litert-lm/core"
 
 import { OPFSCacheManager } from "./lib/ai/opfs-cache-manager"
@@ -5,6 +6,16 @@ import { setupWorkerCache } from "./mocks/interceptor"
 
 console.log("LiteRT Worker context initialized.")
 setupWorkerCache()
+
+// Define self.Module for Emscripten locateFile path resolution inside the Web Worker
+;(self as any).Module = {
+  locateFile: (path: string, prefix: string) => {
+    if (path.endsWith(".wasm")) {
+      return `${LiteRtLm.DEFAULT_WASM_PATH}/${path}`
+    }
+    return prefix + path
+  }
+}
 
 let engine: Engine | null = null
 let isInitializing = false
