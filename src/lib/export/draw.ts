@@ -36,7 +36,7 @@ export async function drawArtwork(
       iconUrl,
       objectUrlsToRevoke
     )
-    drawArtworkGrid(ctx, loadedImages, artX, artY, artW, artH)
+    drawArtworkGrid(ctx, loadedImages, artX, artY, artW, artH, card)
   } catch (err: any) {
     throw new Error(`Failed to draw artwork to canvas: ${err.message || err}`, {
       cause: err

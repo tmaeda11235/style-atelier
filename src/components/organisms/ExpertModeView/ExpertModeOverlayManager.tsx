@@ -15,6 +15,8 @@ function MintingOverlay({ minting }: { minting: any }) {
       setIsSrefHidden={minting.setIsSrefHidden}
       isPHidden={minting.isPHidden}
       setIsPHidden={minting.setIsPHidden}
+      clipSettings={minting.clipSettings}
+      setClipSettings={minting.setClipSettings}
       onCancelMinting={() => {
         minting.setMintingItem(null)
         minting.setVariationBase(null)

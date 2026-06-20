@@ -1,9 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path"
 import { expect, test } from "@playwright/test"
 
 test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
   test.beforeEach(async ({ page }) => {
+    // Force Expert Mode and enable all features for these tests
+    await page.addInitScript(() => {
+      localStorage.setItem("style-atelier-easy-mode", "false")
+      localStorage.setItem(
+        "style-atelier-expert-features",
+        JSON.stringify({
+          stack: true,
+          slot: true,
+          rarity: true,
+          tags: true,
+          categories: true,
+          multiCard: true,
+          cardEditing: true,
+          multiImage: true
+        })
+      )
+    })
     page.on("console", (msg) => {
       console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`)
     })
@@ -33,7 +49,10 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
 
     // 1. Skip welcome dialog
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await skipButton
+      .waitFor({ state: "visible", timeout: 10000 })
+      .catch(() => {})
+    if (await skipButton.isVisible()) {
       await skipButton.click()
     }
 
@@ -146,8 +165,144 @@ test.describe("Style Atelier Sandbox E2E Tests - Expert Minting", () => {
       path: path.join(screenshotsDir, "mint-expert-detail-verify.png")
     })
 
-    // Close the detail view
     const closeDetailBtn = detailView.locator("button").first()
     await closeDetailBtn.click()
+  })
+
+  test("should allow adjusting clip settings on minting preview and save card (@J-MINT-CLIP-ADJUSTER-01)", async ({
+    page
+  }) => {
+    const screenshotsDir = path.join(__dirname, "../../tests/screenshots")
+    console.log("Navigating to sandbox page for Clip Adjuster E2E test...")
+    await page.goto("/tests/sandbox/index.html")
+
+    const spFrame = page.frameLocator("#sidepanel-frame")
+
+    // 1. Skip welcome dialog
+    const skipButton = spFrame.locator("#welcome-skip-btn")
+    await skipButton
+      .waitFor({ state: "visible", timeout: 10000 })
+      .catch(() => {})
+    if (await skipButton.isVisible()) {
+      await skipButton.click()
+    }
+
+    // 2. Seed database with mock history item
+    await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      await database.historyItems.clear()
+      await database.historyItems.add({
+        id: "mock-history-item-to-clip",
+        fullCommand: "a beautiful cyberpunk warrior --ar 1:1",
+        imageUrl: "/tests/fixtures/midjourney/index_files/0_0_640_N.webp",
+        timestamp: Date.now()
+      })
+      await database.categories.clear()
+      await database.categories.add({
+        id: "category-expert-1",
+        name: "Cyberpunk Tech",
+        iconEmoji: "🦾"
+      })
+    })
+
+    // 3. Switch to History tab and open Minting View
+    const historyTabButton = spFrame.locator("button:has-text('History')")
+    await expect(historyTabButton).toBeVisible()
+    await historyTabButton.click()
+
+    const mintCardBtn = spFrame.locator("button:has-text('Mint Card')").first()
+    await expect(mintCardBtn).toBeVisible({ timeout: 10000 })
+    await mintCardBtn.click()
+
+    // 4. Verify Minting View is open
+    const mintingView = spFrame.locator(
+      "[data-testid='minting-view-container']"
+    )
+    await expect(mintingView).toBeVisible({ timeout: 10000 })
+
+    // 5. Click the image preview to open ClipAdjuster
+    const previewContainer = spFrame.locator(
+      "[data-testid='minting-preview-container']"
+    )
+    await expect(previewContainer).toBeVisible()
+    await previewContainer.click()
+
+    // 6. Verify ClipAdjuster modal is open
+    const adjusterModal = spFrame.locator("h3:has-text('画像をクリップ調整')")
+    await expect(adjusterModal).toBeVisible({ timeout: 5000 })
+
+    // Take screenshot of ClipAdjuster Modal
+    await page.screenshot({
+      path: path.join(screenshotsDir, "clip-adjuster-modal-open.png")
+    })
+
+    // 7. Adjust Zoom via range input
+    const zoomInput = spFrame.locator("input[type='range']")
+    await expect(zoomInput).toBeVisible()
+    await zoomInput.evaluate((el: HTMLInputElement) => {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value"
+      )?.set
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(el, "2.5")
+      } else {
+        el.value = "2.5"
+      }
+      el.dispatchEvent(new Event("input", { bubbles: true }))
+      el.dispatchEvent(new Event("change", { bubbles: true }))
+    })
+
+    // 8. Drag image to adjust offset
+    const dragImg = spFrame.locator("img[alt='Adjust clip']")
+    const boundingBox = await dragImg.boundingBox()
+    if (boundingBox) {
+      const startX = boundingBox.x + boundingBox.width / 2
+      const startY = boundingBox.y + boundingBox.height / 2
+      await page.mouse.move(startX, startY)
+      await page.mouse.down()
+      await page.mouse.move(startX - 30, startY + 40) // drag left/down slightly
+      await page.mouse.up()
+    }
+
+    // Take screenshot of ClipAdjuster Modal after adjustment
+    await page.screenshot({
+      path: path.join(screenshotsDir, "clip-adjuster-modal-adjusted.png")
+    })
+
+    // 9. Apply adjustment
+    const applyBtn = spFrame.locator("button:has-text('適用')")
+    await expect(applyBtn).toBeVisible()
+    await applyBtn.evaluate((el: HTMLElement) => el.click())
+
+    // 10. Verify ClipAdjuster is closed
+    await expect(adjusterModal).not.toBeVisible({ timeout: 5000 })
+
+    // 11. Enter custom name & save card
+    const nameInput = spFrame.locator("input[placeholder='Add details...']")
+    await nameInput.fill("Clip Test Warrior")
+
+    const saveCardBtn = spFrame.locator(
+      "button:has-text('Save Card'), button:has-text('カードを保存')"
+    )
+    await expect(saveCardBtn).toBeVisible()
+    await saveCardBtn.click()
+
+    // 12. Verify card is saved and DB has correct clipSettings
+    await expect(mintingView).not.toBeVisible({ timeout: 10000 })
+
+    const savedCards = await spFrame.locator("body").evaluate(async () => {
+      const database = (window as any).db
+      return await database.styleCards.toArray()
+    })
+
+    const targetCard = savedCards.find((c: any) =>
+      c.name.includes("Clip Test Warrior")
+    )
+    expect(targetCard).toBeDefined()
+    expect(targetCard.clipSettings).toBeDefined()
+    expect(targetCard.clipSettings.zoom).toBeCloseTo(2.5, 1)
+    expect(targetCard.clipSettings.xOffset).not.toBe(0)
+    expect(targetCard.clipSettings.yOffset).not.toBe(0)
   })
 })

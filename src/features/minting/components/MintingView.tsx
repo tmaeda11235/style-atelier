@@ -7,7 +7,11 @@ import { useTutorial } from "~contexts/TutorialContext"
 import { useCategories } from "~hooks/useCategories"
 import { useHand } from "~hooks/useHand"
 import type { RarityTier } from "~lib/rarity-config"
-import type { HistoryItem, PromptSegment } from "~shared/lib/db-schema"
+import type {
+  ClipSettings,
+  HistoryItem,
+  PromptSegment
+} from "~shared/lib/db-schema"
 
 import { MintingViewContent } from "./MintingView/MintingViewContent"
 
@@ -40,6 +44,8 @@ interface MintingViewProps {
   detectedColorTags?: string[]
   mutationNote?: string
   setMutationNote?: (note: string) => void
+  clipSettings?: ClipSettings
+  setClipSettings?: (clip?: ClipSettings) => void
 }
 
 function MintingHeader({ t }: { t: any }) {

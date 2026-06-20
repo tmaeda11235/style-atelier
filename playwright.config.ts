@@ -67,7 +67,9 @@ export default defineConfig({
     /* Capture screenshot after each test. */
     screenshot: "on",
     /* Record video only when a test fails. */
-    video: "off"
+    video: "off",
+    /* Enforce English locale for test UI consistency */
+    locale: "en-US"
   },
 
   /* Configure projects for major browsers */

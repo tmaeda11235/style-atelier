@@ -1,4 +1,5 @@
 import type {
+  ClipSettings,
   HistoryItem,
   PromptSegment,
   StyleCard
@@ -30,6 +31,7 @@ export interface BuildCardParams {
   isSrefHidden: boolean
   isPHidden: boolean
   mutationNote?: string
+  clipSettings?: ClipSettings
 }
 
 export function resolveCardName(
@@ -139,7 +141,8 @@ export function createBuildCardParams(
     detectedColorTags: string[]
     detectedDominantColor: string
     detectedAccentColor: string
-  }
+  },
+  clipSettings?: ClipSettings
 ): BuildCardParams {
   return {
     mintingItem,
@@ -156,7 +159,8 @@ export function createBuildCardParams(
     thumbnailData,
     isSrefHidden,
     isPHidden,
-    mutationNote: meta.mutationNote
+    mutationNote: meta.mutationNote,
+    clipSettings
   }
 }
 
@@ -176,7 +180,8 @@ export function buildMintedCard(params: BuildCardParams): StyleCard {
     thumbnailData,
     isSrefHidden,
     isPHidden,
-    mutationNote
+    mutationNote,
+    clipSettings
   } = params
 
   const { parameters, genealogy, images, selectedThumbnails } =
@@ -205,7 +210,8 @@ export function buildMintedCard(params: BuildCardParams): StyleCard {
     jobId: mintingItem ? mintingItem.id : undefined,
     associatedJobIds: mintingItem ? [mintingItem.id] : [],
     images,
-    selectedThumbnails
+    selectedThumbnails,
+    clipSettings
   }
 }
 

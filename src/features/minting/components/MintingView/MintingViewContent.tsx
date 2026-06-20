@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import React from "react"
 
 import { HelpTooltip } from "~components/atoms/HelpTooltip"
@@ -5,8 +6,13 @@ import { PromptBubble } from "~components/molecules/PromptBubble"
 import { RaritySelector } from "~components/molecules/RaritySelector"
 import { PromptBubbleEditor } from "~components/organisms/PromptBubbleEditor"
 import type { RarityTier } from "~lib/rarity-config"
-import type { HistoryItem, PromptSegment } from "~shared/lib/db-schema"
+import type {
+  ClipSettings,
+  HistoryItem,
+  PromptSegment
+} from "~shared/lib/db-schema"
 
+import { ClipAdjuster } from "../ClipAdjuster"
 import { CardIdentitySection } from "./CardIdentitySection"
 
 interface MintingViewProps {
@@ -35,6 +41,8 @@ interface MintingViewProps {
   detectedColorTags?: string[]
   mutationNote?: string
   setMutationNote?: (note: string) => void
+  clipSettings?: ClipSettings
+  setClipSettings?: (clip?: ClipSettings) => void
 }
 
 function PromptSegmentsSection({
@@ -127,15 +135,66 @@ export function MintingViewContent({
   toggleKeyword,
   advanceIfStep
 }: MintingViewContentProps) {
+  const [showAdjuster, setShowAdjuster] = React.useState(false)
+
   if (!props.mintingItem) {
     return null
   }
+
+  const clip = props.clipSettings
+  const previewStyle: React.CSSProperties | undefined = clip
+    ? {
+        transform: `scale(${clip.zoom}) translate(${-clip.xOffset * 100}%, ${-clip.yOffset * 100}%)`,
+        transformOrigin: "center center",
+        transition: "transform 0.2s ease-out"
+      }
+    : undefined
+
   return (
     <>
-      <img
-        src={props.mintingItem.imageUrl}
-        className="w-full h-auto rounded-lg mb-4 shadow-md"
-      />
+      <div
+        onClick={() => setShowAdjuster(true)}
+        className="relative w-full aspect-square bg-slate-900 rounded-lg mb-4 shadow-md overflow-hidden cursor-pointer group"
+        data-testid="minting-preview-container">
+        <img
+          src={props.mintingItem.imageUrl}
+          className="w-full h-full object-cover transition-transform duration-200"
+          style={previewStyle}
+          alt="Card Preview"
+        />
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <span className="text-white text-sm font-bold bg-slate-900/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg border border-white/10">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-crop">
+              <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+              <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+            </svg>
+            画像を調整
+          </span>
+        </div>
+      </div>
+
+      {showAdjuster && (
+        <ClipAdjuster
+          imageUrl={props.mintingItem.imageUrl}
+          clipSettings={props.clipSettings}
+          onChange={(newClip) => {
+            if (props.setClipSettings) {
+              props.setClipSettings(newClip)
+            }
+          }}
+          onClose={() => setShowAdjuster(false)}
+        />
+      )}
 
       <CardIdentitySection
         props={props}
