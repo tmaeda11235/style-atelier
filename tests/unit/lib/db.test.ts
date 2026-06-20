@@ -784,12 +784,19 @@ describe("db utilities", () => {
     it("getAllParameterFolders, deleteParameterFolder and deleteRecipeHistory should mock correctly", async () => {
       const mockFolderToArray = vi.fn().mockResolvedValue([{ id: "folder-1" }])
       const mockRecipeDelete = vi.fn().mockResolvedValue(undefined)
+      const mockModify = vi.fn().mockResolvedValue(undefined)
+      const mockEquals = vi.fn().mockReturnValue({ modify: mockModify })
+      const mockWhere = vi.fn().mockReturnValue({ equals: mockEquals })
+      const mockFolderDelete = vi.fn().mockResolvedValue(undefined)
 
       const mockDbInstance = {
         parameterFolders: {
-          toArray: mockFolderToArray
+          toArray: mockFolderToArray,
+          delete: mockFolderDelete
         },
-        deleteParameterFolder: vi.fn().mockResolvedValue(undefined),
+        parameterAliases: {
+          where: mockWhere
+        },
         recipeHistory: {
           delete: mockRecipeDelete
         }
@@ -805,9 +812,9 @@ describe("db utilities", () => {
         mockDbInstance,
         "folder-1"
       )
-      expect(mockDbInstance.deleteParameterFolder).toHaveBeenCalledWith(
-        "folder-1"
-      )
+      expect(mockWhere).toHaveBeenCalledWith("folderId")
+      expect(mockEquals).toHaveBeenCalledWith("folder-1")
+      expect(mockFolderDelete).toHaveBeenCalledWith("folder-1")
 
       await StyleAtelierDatabase.prototype.deleteRecipeHistory.call(
         mockDbInstance,
