@@ -35,7 +35,9 @@ interface CopyParams {
   card: StyleCard
   includeLogo: boolean
   logoText: string
+  brandingEnabled?: boolean
   customLogo?: string
+  customLogoPath?: string
   twitter?: string
   etsy?: string
   socialDisplayType?: "text" | "qr" | "none"
@@ -47,53 +49,41 @@ interface CopyParams {
   setErrorMessage: (msg: string | null) => void
 }
 
-async function copyToClipboard({
-  card,
-  includeLogo,
-  logoText,
-  customLogo,
-  twitter,
-  etsy,
-  socialDisplayType,
-  failedMsg,
-  blockedMsg,
-  addLog,
-  onClose,
-  setIsSharing,
-  setErrorMessage
-}: CopyParams) {
-  setIsSharing(true)
-  setErrorMessage(null)
+async function copyToClipboard(params: CopyParams) {
+  params.setIsSharing(true)
+  params.setErrorMessage(null)
   try {
-    const canvas = await renderCardToCanvas(card, {
-      includeBrandLogo: includeLogo,
-      brandLogoText: logoText,
-      customLogo,
-      twitter,
-      etsy,
-      socialDisplayType
+    const canvas = await renderCardToCanvas(params.card, {
+      includeBrandLogo: params.includeLogo,
+      brandLogoText: params.logoText,
+      brandingEnabled: params.brandingEnabled,
+      customLogo: params.customLogo,
+      customLogoPath: params.customLogoPath,
+      twitter: params.twitter,
+      etsy: params.etsy,
+      socialDisplayType: params.socialDisplayType
     })
-    canvas.toBlob(async (blob) => {
-      if (!blob) {
-        setErrorMessage(failedMsg)
-        return
-      }
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blob })
-        ])
-        addLog(`Copied card "${card.name}" to clipboard.`)
-        onClose()
-      } catch (clipErr: any) {
-        console.error("Clipboard copy failed:", clipErr)
-        setErrorMessage(blockedMsg)
-      }
-    }, "image/png")
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png")
+    )
+    if (!blob) {
+      params.setErrorMessage(params.failedMsg)
+      return
+    }
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
+    params.addLog(`Copied card "${params.card.name}" to clipboard.`)
+    params.onClose()
   } catch (err: any) {
     console.error("Clipboard copy failed:", err)
-    setErrorMessage(`Failed to copy image to clipboard: ${err.message || err}`)
+    if (err.name === "NotAllowedError" || err.message?.includes("permission")) {
+      params.setErrorMessage(params.blockedMsg)
+    } else {
+      params.setErrorMessage(
+        `Failed to copy image to clipboard: ${err.message || err}`
+      )
+    }
   } finally {
-    setIsSharing(false)
+    params.setIsSharing(false)
   }
 }
 
@@ -101,7 +91,9 @@ interface DownloadParams {
   card: StyleCard
   includeLogo: boolean
   logoText: string
+  brandingEnabled?: boolean
   customLogo?: string
+  customLogoPath?: string
   twitter?: string
   etsy?: string
   socialDisplayType?: "text" | "qr" | "none"
@@ -115,7 +107,9 @@ async function downloadImage({
   card,
   includeLogo,
   logoText,
+  brandingEnabled,
   customLogo,
+  customLogoPath,
   twitter,
   etsy,
   socialDisplayType,
@@ -129,7 +123,9 @@ async function downloadImage({
     await exportCardAsImage(card, {
       includeBrandLogo: includeLogo,
       brandLogoText: logoText,
+      brandingEnabled,
       customLogo,
+      customLogoPath,
       twitter,
       etsy,
       socialDisplayType
@@ -145,7 +141,9 @@ async function downloadImage({
 }
 
 interface BrandingData {
+  brandingEnabled?: boolean
   customLogo?: string
+  customLogoPath?: string
   twitter?: string
   etsy?: string
   socialDisplayType?: "text" | "qr" | "none"
@@ -157,7 +155,9 @@ function getBrandingParams(
 ): BrandingData {
   if (!isPremium) return { socialDisplayType: "none" }
   return {
+    brandingEnabled: userSettings?.branding?.enabled,
     customLogo: userSettings?.branding?.customLogo,
+    customLogoPath: userSettings?.branding?.customLogoPath,
     twitter: userSettings?.branding?.twitter,
     etsy: userSettings?.branding?.etsy,
     socialDisplayType: userSettings?.branding?.socialDisplayType || "none"

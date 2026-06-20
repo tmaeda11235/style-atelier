@@ -109,6 +109,7 @@ export interface UserSettings {
   branding: {
     enabled: boolean
     customLogo?: string // Base64
+    customLogoPath?: string // OPFS path
     signatureName?: string
     twitter?: string
     etsy?: string

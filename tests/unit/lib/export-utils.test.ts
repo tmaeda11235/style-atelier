@@ -3,6 +3,15 @@ import { renderCardToCanvas } from "@/lib/export-utils"
 import type { StyleCard } from "@/shared/lib/db-schema"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+vi.mock("@/shared/lib/db/migration-helpers", () => ({
+  readBlobFromOpfs: vi.fn().mockImplementation(async (path: string) => {
+    if (path.includes("invalid")) {
+      throw new Error("Invalid OPFS path")
+    }
+    return new Blob(["mock-opfs-logo"], { type: "image/png" })
+  })
+}))
+
 vi.mock("@/shared/lib/qr-utils", () => ({
   compressCardData: vi.fn().mockReturnValue("mocked-compressed-data"),
   generateQRCodeUrl: vi
@@ -483,6 +492,87 @@ describe("export-utils", () => {
       vi.mocked(generateQRCodeUrl).mockResolvedValue(
         "data:image/png;base64,mockedqrcode"
       )
+    }
+  })
+
+  it("skips default brand logo rendering if brandingEnabled is true and no custom logo is specified", async () => {
+    const card: StyleCard = {
+      ...baseCard,
+      thumbnailData: "data:image/png;base64,mockbase64"
+    }
+
+    const canvas = await renderCardToCanvas(card, {
+      includeBrandLogo: true,
+      brandingEnabled: true,
+      customLogo: undefined,
+      customLogoPath: undefined,
+      socialDisplayType: "none"
+    })
+    expect(canvas).toBeDefined()
+  })
+
+  it("renders with custom brand logo loaded from OPFS", async () => {
+    const originalImage = global.Image
+    const imageLoadSources: string[] = []
+    global.Image = class extends originalImage {
+      _src = ""
+      set src(v: string) {
+        this._src = v
+        imageLoadSources.push(v)
+        setTimeout(() => {
+          if (this.onload) (this.onload as any)()
+        }, 0)
+      }
+      get src() {
+        return this._src
+      }
+    } as any
+
+    try {
+      const card: StyleCard = {
+        ...baseCard,
+        thumbnailData: "data:image/png;base64,mockbase64"
+      }
+
+      await renderCardToCanvas(card, {
+        includeBrandLogo: true,
+        brandingEnabled: true,
+        customLogoPath: "branding/custom_logo.png",
+        socialDisplayType: "none"
+      })
+
+      expect(
+        imageLoadSources.some((src) => src.startsWith("blob:mock-url-"))
+      ).toBe(true)
+    } finally {
+      global.Image = originalImage
+    }
+  })
+
+  it("falls back to default logo text rendering if custom logo OPFS load fails", async () => {
+    const spyConsoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {})
+
+    try {
+      const card: StyleCard = {
+        ...baseCard,
+        thumbnailData: "data:image/png;base64,mockbase64"
+      }
+
+      const canvas = await renderCardToCanvas(card, {
+        includeBrandLogo: true,
+        brandingEnabled: true,
+        customLogoPath: "branding/invalid_logo.png",
+        socialDisplayType: "none"
+      })
+      expect(canvas).toBeDefined()
+      expect(spyConsoleError).toHaveBeenCalledWith(
+        "Failed to load custom logo from OPFS in canvas:",
+        expect.any(Error)
+      )
+    } finally {
+      spyConsoleError.mockRestore()
     }
   })
 
