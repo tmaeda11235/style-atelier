@@ -4,6 +4,94 @@ import {
   buildSegmentString
 } from "../../shared/lib/prompt-utils"
 
+export const retryConfig = {
+  sleep: (ms: number): Promise<void> => {
+    if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
+      return Promise.resolve()
+    }
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  },
+  recordedDelays: [] as number[]
+}
+
+function calculateDelay(attempt: number, response?: Response): number {
+  const defaultDelay = Math.pow(2, attempt) * 1000
+
+  if (response?.status === 429) {
+    const retryAfterHeader = response.headers?.get
+      ? response.headers.get("Retry-After")
+      : null
+    if (retryAfterHeader) {
+      const seconds = parseInt(retryAfterHeader, 10)
+      if (!isNaN(seconds)) {
+        return seconds * 1000
+      }
+      const dateMs = Date.parse(retryAfterHeader)
+      if (!isNaN(dateMs)) {
+        const diff = dateMs - Date.now()
+        return diff > 0 ? diff : 0
+      }
+    }
+  }
+
+  return defaultDelay
+}
+
+async function handleRetry(
+  attempt: number,
+  maxRetries: number,
+  errorOrResponse: any,
+  isNetworkError: boolean
+): Promise<void> {
+  const response = isNetworkError ? undefined : (errorOrResponse as Response)
+  const delayMs = calculateDelay(attempt, response)
+
+  const errorMsg = isNetworkError
+    ? `network error (${errorOrResponse instanceof Error ? errorOrResponse.message : String(errorOrResponse)})`
+    : response?.status === 429
+      ? "429 Too Many Requests"
+      : `server error (${response?.status})`
+
+  console.warn(
+    `Notion API ${errorMsg}. Retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries})...`
+  )
+  retryConfig.recordedDelays.push(delayMs)
+  await retryConfig.sleep(delayMs)
+}
+
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  maxRetries: number = 5
+): Promise<Response> {
+  let attempt = 0
+  while (true) {
+    try {
+      const response = await fetch(input, init)
+
+      if (
+        response.status === 429 ||
+        (response.status >= 500 && response.status < 600)
+      ) {
+        if (attempt >= maxRetries) {
+          return response
+        }
+        await handleRetry(attempt, maxRetries, response, false)
+        attempt++
+        continue
+      }
+
+      return response
+    } catch (error) {
+      if (attempt >= maxRetries) {
+        throw error
+      }
+      await handleRetry(attempt, maxRetries, error, true)
+      attempt++
+    }
+  }
+}
+
 export interface NotionClientCredentials {
   apiKey: string
   databaseId: string
@@ -81,7 +169,7 @@ export async function validateNotionConnection(
     return false
   }
   try {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `https://api.notion.com/v1/databases/${credentials.databaseId}`,
       {
         method: "GET",
@@ -155,7 +243,7 @@ export async function sendCardToNotion(
 
   const properties = mapCardToNotionProperties(card)
 
-  const response = await fetch("https://api.notion.com/v1/pages", {
+  const response = await fetchWithRetry("https://api.notion.com/v1/pages", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${creds.apiKey}`,
@@ -199,17 +287,20 @@ export async function updateCardInNotion(
 
   const properties = mapCardToNotionProperties(card)
 
-  const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${creds.apiKey}`,
-      "Notion-Version": "2022-06-28",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      properties
-    })
-  })
+  const response = await fetchWithRetry(
+    `https://api.notion.com/v1/pages/${pageId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${creds.apiKey}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        properties
+      })
+    }
+  )
 
   if (!response.ok) {
     const errorText = await response.text()

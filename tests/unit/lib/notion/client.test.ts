@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import * as notionClient from "../../../../src/lib/notion/client"
 import {
   getNotionCredentials,
   sendCardToNotion,
@@ -13,6 +14,7 @@ describe("Notion API Client", () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.spyOn(global, "fetch").mockImplementation(vi.fn() as any)
+    notionClient.retryConfig.recordedDelays = []
   })
 
   afterEach(() => {
@@ -321,6 +323,169 @@ describe("Notion API Client", () => {
       await expect(
         updateCardInNotion("page-789", mockCard, mockCredentials)
       ).rejects.toThrow("Notion API error (400): Bad Request")
+    })
+  })
+
+  describe("Retry Resilience", () => {
+    const mockCard: StyleCard = {
+      id: "card-123",
+      name: "Cyber Punk Cat",
+      createdAt: 123456,
+      updatedAt: 123456,
+      promptSegments: [
+        { type: "text", value: "a cool cat" },
+        { type: "text", value: "neon lights" }
+      ],
+      parameters: {
+        ar: "16:9",
+        stylize: 250
+      },
+      masking: {
+        isSrefHidden: false,
+        isPHidden: false
+      },
+      tier: "Rare",
+      isFavorite: false,
+      usageCount: 0,
+      tags: ["cyberpunk", "animal"],
+      frameId: "default",
+      dominantColor: "#000000",
+      genealogy: {
+        generation: 1,
+        parentIds: [],
+        mutationNote: "First Gen"
+      },
+      thumbnailPath: "images/cards/card-123.png",
+      images: ["https://example.com/image.png"]
+    }
+
+    const mockCredentials = {
+      apiKey: "secret-key",
+      databaseId: "db-id"
+    }
+
+    it("should retry with exponential backoff on 429 if Retry-After header is missing", async () => {
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          headers: new Headers(),
+          text: vi.fn().mockResolvedValue("Rate limit exceeded")
+        } as any)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          headers: new Headers(),
+          text: vi.fn().mockResolvedValue("Rate limit exceeded")
+        } as any)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "page-789" })
+        } as any)
+
+      const result = await sendCardToNotion(mockCard, mockCredentials)
+      expect(result).toEqual({ pageId: "page-789" })
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+
+      expect(notionClient.retryConfig.recordedDelays).toEqual([1000, 2000])
+    })
+
+    it("should retry using Retry-After header seconds on 429", async () => {
+      const headers = new Headers()
+      headers.set("Retry-After", "3")
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          headers,
+          text: vi.fn().mockResolvedValue("Rate limit exceeded")
+        } as any)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "page-789" })
+        } as any)
+
+      const result = await sendCardToNotion(mockCard, mockCredentials)
+      expect(result).toEqual({ pageId: "page-789" })
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+
+      expect(notionClient.retryConfig.recordedDelays).toEqual([3000])
+    })
+
+    it("should retry using Retry-After header HTTP-date on 429", async () => {
+      const futureDate = new Date(Date.now() + 5000)
+      const headers = new Headers()
+      headers.set("Retry-After", futureDate.toUTCString())
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          headers,
+          text: vi.fn().mockResolvedValue("Rate limit exceeded")
+        } as any)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "page-789" })
+        } as any)
+
+      const result = await sendCardToNotion(mockCard, mockCredentials)
+      expect(result).toEqual({ pageId: "page-789" })
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+
+      expect(notionClient.retryConfig.recordedDelays.length).toBe(1)
+      const sleepArg = notionClient.retryConfig.recordedDelays[0]
+      expect(sleepArg).toBeGreaterThanOrEqual(4000)
+      expect(sleepArg).toBeLessThanOrEqual(6000)
+    })
+
+    it("should retry on 5xx temporary server errors", async () => {
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 503,
+          text: vi.fn().mockResolvedValue("Service Unavailable")
+        } as any)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "page-789" })
+        } as any)
+
+      const result = await sendCardToNotion(mockCard, mockCredentials)
+      expect(result).toEqual({ pageId: "page-789" })
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+      expect(notionClient.retryConfig.recordedDelays).toEqual([1000])
+    })
+
+    it("should retry on network type errors", async () => {
+      vi.mocked(global.fetch)
+        .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "page-789" })
+        } as any)
+
+      const result = await sendCardToNotion(mockCard, mockCredentials)
+      expect(result).toEqual({ pageId: "page-789" })
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+      expect(notionClient.retryConfig.recordedDelays).toEqual([1000])
+    })
+
+    it("should throw error if retry count exceeds max limit", async () => {
+      for (let i = 0; i < 6; i++) {
+        vi.mocked(global.fetch).mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          headers: new Headers(),
+          text: vi.fn().mockResolvedValue("Rate limit exceeded")
+        } as any)
+      }
+
+      await expect(sendCardToNotion(mockCard, mockCredentials)).rejects.toThrow(
+        "Notion API error (429): Rate limit exceeded"
+      )
+      expect(global.fetch).toHaveBeenCalledTimes(6)
     })
   })
 })
