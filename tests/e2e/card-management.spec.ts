@@ -29,8 +29,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
 
     // 1. スキップ
     const skipButton = spFrame.locator("#welcome-skip-btn")
-    if (await skipButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await skipButton.waitFor({ state: "visible", timeout: 2000 })
       await skipButton.click()
+    } catch {
+      // Ignore if not visible or already skipped
     }
 
     // 2. Libraryタブに切り替え
@@ -344,6 +347,11 @@ test.describe("Style Atelier Sandbox E2E Tests - Card Management @J-ORG-EXPERT-0
     await page.screenshot({
       path: path.join(screenshotsDir, "advanced-parameters-readonly.png")
     })
+
+    // Close the detail view (drawer) to prevent layout blocking
+    const cancelBtn = spFrame.locator("button:has-text('Cancel')")
+    await expect(cancelBtn).toBeVisible()
+    await cancelBtn.click()
 
     // Clean up: Reset Card Editing setting to true for other tests
     await settingsBtn.click()

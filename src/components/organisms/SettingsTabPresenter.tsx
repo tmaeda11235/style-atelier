@@ -18,7 +18,6 @@ interface SettingsTabPresenterProps {
   onToggleCloud: () => void
   onToggleMaintenance: () => void
   onToggleWebLlm: () => void
-  onToggleLicense: () => void
   uiProps: any
   cloudProps: any
   maintenanceProps: any
@@ -111,7 +110,7 @@ function AccordionSections({
   t
 }: any) {
   return (
-    <>
+    <div className="border border-border rounded-lg overflow-hidden bg-background divide-y divide-border">
       <UiAccordionItem
         isOpen={openSections.ui}
         onToggle={onToggleUi}
@@ -124,18 +123,18 @@ function AccordionSections({
         title={t.cloudGroupTitle}
         cloudProps={cloudProps}
       />
+      <WebLlmAccordionItem
+        isOpen={openSections.webllm}
+        onToggle={onToggleWebLlm}
+        title={t.aiSettingsGroupTitle || "🤖 WebLLM AIモデル設定 (Local AI)"}
+      />
       <MaintenanceAccordionItem
         isOpen={openSections.maintenance}
         onToggle={onToggleMaintenance}
         title={t.maintenanceGroupTitle}
         maintenanceProps={maintenanceProps}
       />
-      <WebLlmAccordionItem
-        isOpen={openSections.webllm}
-        onToggle={onToggleWebLlm}
-        title={t.webLlmGroupTitle}
-      />
-    </>
+    </div>
   )
 }
 

@@ -270,7 +270,7 @@ export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {
         socialDisplayType: "none"
       }
     }
-    await this.userSettings.add(defaultSettings)
+    await this.userSettings.put(defaultSettings)
     return defaultSettings
   }
 
@@ -405,7 +405,7 @@ export async function seedDefaultCategories(
   targetDb: StyleAtelierDatabase = db
 ) {
   const now = Date.now()
-  await targetDb.categories.bulkAdd([
+  await targetDb.categories.bulkPut([
     { id: "style", name: "Style", iconEmoji: "🎨", createdAt: now },
     { id: "character", name: "Character", iconEmoji: "👤", createdAt: now },
     { id: "landscape", name: "Landscape", iconEmoji: "🌲", createdAt: now },

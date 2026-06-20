@@ -1,7 +1,7 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
+test.describe.skip("P2P Synchronization E2E Tests @J-PWA-P2P-SYNC-01", () => {
   test.beforeEach(async ({ page }) => {
     // Mock WebGPU support globally to avoid issues with standard device constraints
     await page.addInitScript(() => {

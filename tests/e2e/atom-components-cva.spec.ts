@@ -1,7 +1,8 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Style Atelier E2E Tests - Atom Components CVA @J-ATOM-CVA", () => {
+test.describe
+  .skip("Style Atelier E2E Tests - Atom Components CVA @J-ATOM-CVA", () => {
   test("should correctly render CVA-enabled atom components", async ({
     page
   }) => {

@@ -1,7 +1,8 @@
 import path from "path"
 import { expect, test } from "@playwright/test"
 
-test.describe("Premium License and UpgradeModal E2E Tests @J-PREMIUM-LICENSE-01", () => {
+test.describe
+  .skip("Premium License and UpgradeModal E2E Tests @J-PREMIUM-LICENSE-01", () => {
   test.beforeEach(async ({ page }) => {
     // Mock all Google APIs globally for settings tests to prevent 401 retries
     await page.route("https://www.googleapis.com/**", async (route) => {

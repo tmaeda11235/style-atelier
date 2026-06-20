@@ -18,13 +18,32 @@ import {
 
 const queryClient = new QueryClient()
 
-// シードデータ設定
 async function seedSandboxData() {
   try {
-    console.log("[Sandbox Seed] Clearing old style cards...")
-    await db.styleCards.clear()
+    const isSessionCleared =
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem("sandbox-db-cleared") === "true"
+
+    if (!isSessionCleared) {
+      console.log("[Sandbox Seed] Clearing old style cards...")
+      await db.styleCards.clear()
+      console.log("[Sandbox Seed] Clearing old categories...")
+      await db.categories.clear()
+      console.log("[Sandbox Seed] Clearing old user settings...")
+      await db.userSettings.clear()
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem("sandbox-db-cleared", "true")
+      }
+      if (typeof localStorage !== "undefined") {
+        console.log(
+          "[Sandbox Seed] Defaulting onboarding-seen to true to prevent welcome dialog overlays in tests"
+        )
+        localStorage.setItem("style-atelier-onboarding-seen", "true")
+      }
+    }
+
     console.log("[Sandbox Seed] Seeding mock cards into IndexedDB...")
-    await db.styleCards.bulkAdd([
+    await db.styleCards.bulkPut([
       {
         id: "mock-card-1",
         name: "cyberpunk style",
@@ -71,11 +90,9 @@ async function seedSandboxData() {
       }
     ])
 
-    console.log("[Sandbox Seed] Clearing old categories...")
-    await db.categories.clear()
     console.log("[Sandbox Seed] Seeding default categories...")
     const now = Date.now()
-    await db.categories.bulkAdd([
+    await db.categories.bulkPut([
       { id: "style", name: "Style", iconEmoji: "🎨", createdAt: now },
       { id: "character", name: "Character", iconEmoji: "👤", createdAt: now },
       { id: "landscape", name: "Landscape", iconEmoji: "🌲", createdAt: now },
@@ -97,16 +114,7 @@ async function seedSandboxData() {
   }
 }
 
-const urlParams = new URLSearchParams(
-  typeof window !== "undefined" ? window.location.search : ""
-)
-if (urlParams.get("noseed") !== "true") {
-  seedSandboxData()
-} else {
-  if (typeof window !== "undefined") {
-    ;(window as any).sandboxSeedFinished = true
-  }
-}
+// We will run seedSandboxData during initial render execution
 
 let updateProfilingCallback: ((data: any) => void) | null = null
 let actualWorker: Worker | null = null
@@ -1371,13 +1379,28 @@ function SandboxWrapper() {
   )
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root")!)
-root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <SandboxWrapper />
-      </LanguageProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-)
+async function init() {
+  const urlParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  )
+  if (urlParams.get("noseed") !== "true") {
+    await seedSandboxData()
+  } else {
+    if (typeof window !== "undefined") {
+      ;(window as any).sandboxSeedFinished = true
+    }
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById("root")!)
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <SandboxWrapper />
+        </LanguageProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  )
+}
+
+init()
