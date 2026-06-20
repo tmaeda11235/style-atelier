@@ -121,7 +121,8 @@
       "https://*.midjourney.com/*",
       "https://*.discord.com/*",
       "https://*.discordapp.com/*",
-      "https://*.discordapp.net/*"
+      "https://*.discordapp.net/*",
+      "https://api.notion.com/*"
     ],
     "content_security_policy": {
       "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
