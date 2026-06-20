@@ -788,11 +788,19 @@ describe("db utilities", () => {
       const mockEquals = vi.fn().mockReturnValue({ modify: mockModify })
       const mockWhere = vi.fn().mockReturnValue({ equals: mockEquals })
       const mockFolderDelete = vi.fn().mockResolvedValue(undefined)
+      const mockFolderGet = vi.fn().mockResolvedValue({ parentId: "parent-1" })
+      const mockFolderUpdate = vi.fn().mockResolvedValue(1)
+      const mockFolderWhere = vi.fn().mockReturnValue({
+        modify: vi.fn().mockResolvedValue(undefined)
+      })
 
       const mockDbInstance = {
         parameterFolders: {
           toArray: mockFolderToArray,
-          delete: mockFolderDelete
+          delete: mockFolderDelete,
+          get: mockFolderGet,
+          update: mockFolderUpdate,
+          where: mockFolderWhere
         },
         parameterAliases: {
           where: mockWhere
@@ -814,6 +822,7 @@ describe("db utilities", () => {
       )
       expect(mockWhere).toHaveBeenCalledWith("folderId")
       expect(mockEquals).toHaveBeenCalledWith("folder-1")
+      expect(mockFolderGet).toHaveBeenCalledWith("folder-1")
       expect(mockFolderDelete).toHaveBeenCalledWith("folder-1")
 
       await StyleAtelierDatabase.prototype.deleteRecipeHistory.call(
