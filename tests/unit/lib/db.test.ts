@@ -747,5 +747,73 @@ describe("db utilities", () => {
       expect(result.userId).toBe("default-user")
       expect(mockAdd).toHaveBeenCalled()
     })
+
+    it("getParameterAlias, deleteParameterAlias and getAllParameterAliases should mock correctly", async () => {
+      const mockGet = vi.fn().mockResolvedValue({ id: "alias-1" })
+      const mockDelete = vi.fn().mockResolvedValue(undefined)
+      const mockToArray = vi.fn().mockResolvedValue([{ id: "alias-1" }])
+
+      const mockDbInstance = {
+        parameterAliases: {
+          get: mockGet,
+          delete: mockDelete,
+          toArray: mockToArray
+        }
+      } as any
+
+      expect(
+        await StyleAtelierDatabase.prototype.getParameterAlias.call(
+          mockDbInstance,
+          "alias-1"
+        )
+      ).toEqual({ id: "alias-1" })
+
+      await StyleAtelierDatabase.prototype.deleteParameterAlias.call(
+        mockDbInstance,
+        "alias-1"
+      )
+      expect(mockDelete).toHaveBeenCalledWith("alias-1")
+
+      expect(
+        await StyleAtelierDatabase.prototype.getAllParameterAliases.call(
+          mockDbInstance
+        )
+      ).toEqual([{ id: "alias-1" }])
+    })
+
+    it("getAllParameterFolders, deleteParameterFolder and deleteRecipeHistory should mock correctly", async () => {
+      const mockFolderToArray = vi.fn().mockResolvedValue([{ id: "folder-1" }])
+      const mockRecipeDelete = vi.fn().mockResolvedValue(undefined)
+
+      const mockDbInstance = {
+        parameterFolders: {
+          toArray: mockFolderToArray
+        },
+        deleteParameterFolder: vi.fn().mockResolvedValue(undefined),
+        recipeHistory: {
+          delete: mockRecipeDelete
+        }
+      } as any
+
+      expect(
+        await StyleAtelierDatabase.prototype.getAllParameterFolders.call(
+          mockDbInstance
+        )
+      ).toEqual([{ id: "folder-1" }])
+
+      await StyleAtelierDatabase.prototype.deleteParameterFolder.call(
+        mockDbInstance,
+        "folder-1"
+      )
+      expect(mockDbInstance.deleteParameterFolder).toHaveBeenCalledWith(
+        "folder-1"
+      )
+
+      await StyleAtelierDatabase.prototype.deleteRecipeHistory.call(
+        mockDbInstance,
+        "recipe-1"
+      )
+      expect(mockRecipeDelete).toHaveBeenCalledWith("recipe-1")
+    })
   })
 })
