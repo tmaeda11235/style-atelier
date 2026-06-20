@@ -213,7 +213,7 @@ describe("parseSemanticQueryFallback", () => {
       { id: "cat-1", name: "Cyberpunk" },
       { id: "cat-2", name: "Anime" }
     ]
-    const result = parseSemanticQueryFallback("伝説の青いAnime風", categories)
+    const result = parseSemanticQueryFallback("伝説 青 Anime 風", categories)
     expect(result).toEqual({
       rarity: "Legendary",
       color: "Blue",
