@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { renderCardToCanvas } from "@/lib/export-utils"
+import { resolveLocalImageSource } from "@/lib/export/helpers"
 import type { StyleCard } from "@/shared/lib/db-schema"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -612,6 +613,72 @@ describe("export-utils", () => {
         spyCreateElement.mockRestore()
         HTMLCanvasElement.prototype.toDataURL = originalToDataURL
       }
+    })
+  })
+
+  describe("resolveLocalImageSource", () => {
+    beforeEach(async () => {
+      await db.historyItems.clear()
+    })
+
+    it("should return matches from matchedItem filter and handle database error logs", async () => {
+      const mockCard: StyleCard = {
+        id: "card-1",
+        name: "Test Card",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        promptSegments: [],
+        parameters: {},
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common",
+        isFavorite: false,
+        usageCount: 0,
+        tags: [],
+        dominantColor: "#000000",
+        thumbnailData: "",
+        frameId: "",
+        genealogy: { generation: 1, parentIds: [] }
+      }
+
+      // Add matching item that is NOT associated by jobId (for fallback filter coverage)
+      const mockBlob = new Blob(["test-image-blob-data"], { type: "image/png" })
+      await db.historyItems.add({
+        id: "job-different",
+        prompt: "matching prompt",
+        imageUrl: "http://example.com/test.png",
+        localImageBlob: mockBlob,
+        status: "completed",
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      })
+
+      const resolved = await resolveLocalImageSource(
+        "http://example.com/test.png",
+        mockCard
+      )
+      expect(resolved).toBe("blob:mock-url-0")
+
+      // Test error fallback catching
+      const spyWarn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const originalGet = db.historyItems.get
+      // Force an error inside resolveLocalImageSource
+      db.historyItems.get = () => {
+        throw new Error("Simulated Database Read Failure")
+      }
+
+      const fallbackResult = await resolveLocalImageSource(
+        "http://example.com/test.png",
+        mockCard
+      )
+      expect(fallbackResult).toBe("http://example.com/test.png")
+      expect(spyWarn).toHaveBeenCalledWith(
+        "Failed to resolve local image from database:",
+        expect.any(Error)
+      )
+
+      // Restore
+      db.historyItems.get = originalGet
+      spyWarn.mockRestore()
     })
   })
 })
