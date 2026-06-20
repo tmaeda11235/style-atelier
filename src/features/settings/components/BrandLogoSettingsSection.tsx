@@ -1,6 +1,9 @@
 import React from "react"
 
 import { HelpTooltip } from "../../../components/atoms/HelpTooltip"
+import { PremiumBrandingPanel } from "../../../components/organisms/PremiumBrandingPanel"
+import { useLicense } from "../../../contexts/LicenseContext"
+import { useBrandingSettings } from "../../../hooks/useShareCard"
 
 export interface BrandLogoSettingsProps {
   includeBrandLogo: boolean
@@ -79,6 +82,7 @@ function BrandLogoSettingsHeader({ label, desc }: HeaderProps) {
   )
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function BrandLogoSettings({
   includeBrandLogo,
   toggleBrandLogo,
@@ -86,6 +90,15 @@ export function BrandLogoSettings({
   toggleAlwaysEnglishLogoText,
   t
 }: BrandLogoSettingsProps) {
+  const { isPremium, openUpgradeModal } = useLicense()
+  const { userSettings, handleUpdateBranding } = useBrandingSettings(
+    isPremium,
+    openUpgradeModal
+  )
+
+  const isLogoToggleDisabled = !isPremium
+  const effectiveIncludeLogo = isPremium ? includeBrandLogo : true
+
   return (
     <div className="relative overflow-hidden" id="settings-brand-logo-section">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
@@ -105,23 +118,39 @@ export function BrandLogoSettings({
             t.includeBrandLogoToggleSub ||
             "Embed brand badge in exported images"
           }
-          enabled={includeBrandLogo}
+          enabled={effectiveIncludeLogo}
           onToggle={toggleBrandLogo}
+          disabled={isLogoToggleDisabled}
           id="brand-logo-toggle-btn"
         />
       </div>
 
-      <SettingsToggle
-        label={t.alwaysEnglishLogoTextLabel || "Force English Badge Logo"}
-        subLabel={
-          t.alwaysEnglishLogoTextSub ||
-          "Keep 'Minted with Style Atelier' text even in Japanese"
-        }
-        enabled={alwaysEnglishLogoText}
-        onToggle={toggleAlwaysEnglishLogoText}
-        disabled={!includeBrandLogo}
-        id="always-english-logo-toggle-btn"
-      />
+      <div className="mb-3">
+        <SettingsToggle
+          label={t.alwaysEnglishLogoTextLabel || "Force English Badge Logo"}
+          subLabel={
+            t.alwaysEnglishLogoTextSub ||
+            "Keep 'Minted with Style Atelier' text even in Japanese"
+          }
+          enabled={alwaysEnglishLogoText}
+          onToggle={toggleAlwaysEnglishLogoText}
+          disabled={!effectiveIncludeLogo || isLogoToggleDisabled}
+          id="always-english-logo-toggle-btn"
+        />
+      </div>
+
+      {effectiveIncludeLogo && (
+        <div
+          className="mt-4 pt-4 border-t border-slate-100"
+          data-testid="settings-premium-branding-panel-wrapper">
+          <PremiumBrandingPanel
+            isPremium={isPremium}
+            userSettings={userSettings}
+            onUpdateBranding={handleUpdateBranding}
+            onUpgrade={() => openUpgradeModal("custom-branding")}
+          />
+        </div>
+      )}
     </div>
   )
 }

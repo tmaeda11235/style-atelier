@@ -164,7 +164,7 @@ function getBrandingParams(
   }
 }
 
-function useBrandingSettings(
+export function useBrandingSettings(
   isPremium: boolean,
   openUpgradeModal: (type: string) => void
 ) {
