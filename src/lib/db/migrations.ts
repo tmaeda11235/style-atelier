@@ -472,8 +472,26 @@ export async function upgradeToVersion16(tx: any) {
   await Dexie.waitFor(populateImageSyncStates(syncStatesTable))
 }
 
+export async function upgradeToVersion19(tx: any) {
+  const userSettingsTable = tx.table("userSettings")
+  const settings = await userSettingsTable.toArray()
+  for (const setting of settings) {
+    if (setting.branding) {
+      if (!("customLogoPath" in setting.branding)) {
+        setting.branding.customLogoPath = undefined
+      }
+    } else {
+      setting.branding = {
+        enabled: false,
+        socialDisplayType: "none"
+      }
+    }
+    await userSettingsTable.put(setting)
+  }
+}
+
 function setupVersions19OrHigher(db: Dexie) {
-  // Version 19: Add clipSettings to styleCards (no index changes, but version bump for new schema fields)
+  // Version 19: Add customLogoPath to branding settings
   db.version(19)
     .stores({
       styleCards:
@@ -490,9 +508,27 @@ function setupVersions19OrHigher(db: Dexie) {
       notionSyncQueue: "cardId, status"
     })
     .upgrade(upgradeToVersion19)
+
+  // Version 20: Add clipSettings to styleCards (no index changes, but version bump for new schema fields)
+  db.version(20)
+    .stores({
+      styleCards:
+        "id, name, createdAt, tier, isFavorite, isPinned, jobId, category, *associatedJobIds, isDeleted",
+      historyItems: "id, timestamp",
+      userSettings: "userId",
+      categories: "id, name, createdAt, isDeleted, parentId",
+      slotHistory: "label",
+      parameterAliases: "id, paramType, value, alias, folderId",
+      parameterFolders: "id, name, parentId",
+      recipeHistory: "id, timestamp",
+      imageSyncStates: "filePath, cardId, categoryId, syncStatus",
+      notionSyncStates: "cardId, notionPageId, lastSyncedAt",
+      notionSyncQueue: "cardId, status"
+    })
+    .upgrade(upgradeToVersion20)
 }
 
-export async function upgradeToVersion19(_tx: any) {
+export async function upgradeToVersion20(_tx: any) {
   // clipSettings is optional, so no data migration is strictly required.
   // We resolve the promise to complete the version upgrade.
   return Promise.resolve()

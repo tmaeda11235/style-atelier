@@ -26,7 +26,7 @@ import { processCardChangesOpfs, processCardOpfs } from "./db/opfs-helpers"
 export {
   upgradeToVersion8,
   upgradeToVersion10,
-  upgradeToVersion19
+  upgradeToVersion20
 } from "./db-setup"
 
 export class StyleAtelierDatabase extends StyleAtelierDatabaseBase {

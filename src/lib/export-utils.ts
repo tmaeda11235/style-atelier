@@ -2,13 +2,8 @@ import iconUrl from "url:../../assets/icon.png"
 
 import type { StyleCard } from "../shared/lib/db-schema"
 import { compressCardData, insertMetadataToPng } from "../shared/lib/qr-utils"
-import {
-  drawArtwork,
-  drawBrandLogo,
-  drawCardBackground,
-  drawCardInfo,
-  drawQRCode
-} from "./export/draw"
+import { drawArtwork, drawBrandLogo, drawCardInfo } from "./export/draw"
+import { drawCardBackground, drawQRCode } from "./export/draw-helpers"
 
 /**
  * Renders the card content onto a canvas.
@@ -18,7 +13,9 @@ export async function renderCardToCanvas(
   options?: {
     includeBrandLogo?: boolean
     brandLogoText?: string
+    brandingEnabled?: boolean
     customLogo?: string
+    customLogoPath?: string
     twitter?: string
     etsy?: string
     socialDisplayType?: "text" | "qr" | "none"
@@ -57,7 +54,9 @@ export async function renderCardToCanvas(
   if (options?.includeBrandLogo) {
     await drawBrandLogo(ctx, width, height, {
       text: options.brandLogoText || "Minted with Style Atelier 🔮",
+      brandingEnabled: options.brandingEnabled,
       customLogo: options.customLogo,
+      customLogoPath: options.customLogoPath,
       twitter: options.twitter,
       etsy: options.etsy,
       socialDisplayType: options.socialDisplayType
@@ -75,7 +74,9 @@ export async function exportCardAsImage(
   options?: {
     includeBrandLogo?: boolean
     brandLogoText?: string
+    brandingEnabled?: boolean
     customLogo?: string
+    customLogoPath?: string
     twitter?: string
     etsy?: string
     socialDisplayType?: "text" | "qr" | "none"
