@@ -305,6 +305,43 @@ export class MockStyleAtelierDatabase {
     await this.categories.delete(id)
   })
 
+  // UserSettings Operations
+  getUserSettings = vi
+    .fn()
+    .mockImplementation(async (): Promise<UserSettings> => {
+      const all = await this.userSettings.toArray()
+      if (all.length > 0) {
+        return all[0]
+      }
+      const defaultSettings: UserSettings = {
+        userId: "default-user",
+        isPro: false,
+        unlockedSkins: [],
+        branding: {
+          enabled: false,
+          socialDisplayType: "none"
+        }
+      }
+      await this.userSettings.add(defaultSettings)
+      return defaultSettings
+    })
+
+  updateUserSettings = vi
+    .fn()
+    .mockImplementation(
+      async (changes: Partial<UserSettings>): Promise<void> => {
+        const current = await this.getUserSettings()
+        await this.userSettings.put({
+          ...current,
+          ...changes,
+          branding: {
+            ...current.branding,
+            ...changes.branding
+          }
+        })
+      }
+    )
+
   mergeStyleCards = vi.fn()
 
   importBackupData = vi.fn()

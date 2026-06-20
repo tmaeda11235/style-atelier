@@ -59,7 +59,7 @@ describe("useAiRecipeAdvice", () => {
     expect(mockRunInference).not.toHaveBeenCalled()
   })
 
-  it("should return static fallback advice when WebLLM status is not ready", () => {
+  it("should return null advice when WebLLM status is not ready", () => {
     vi.mocked(useWebLlm).mockReturnValue({
       status: "idle",
       progress: 0,
@@ -80,10 +80,9 @@ describe("useAiRecipeAdvice", () => {
       vi.advanceTimersByTime(1500)
     })
 
-    expect(result.current.advice).not.toBeNull()
-    expect(result.current.advice).toContain("Recipe")
-    expect(result.current.isFallback).toBe(true)
-    expect(result.current.isFallbackMode).toBe(true)
+    expect(result.current.advice).toBeNull()
+    expect(result.current.isFallback).toBe(false)
+    expect(result.current.isFallbackMode).toBe(false)
     expect(result.current.loading).toBe(false)
     expect(mockRunInference).not.toHaveBeenCalled()
   })
@@ -151,7 +150,7 @@ describe("useAiRecipeAdvice", () => {
     expect(mockRunInference).not.toHaveBeenCalled()
   })
 
-  it("should return fallback advice and set isFallback state when runInference fails", async () => {
+  it("should return null advice and set error state when runInference fails", async () => {
     mockRunInference.mockRejectedValue(new Error("Inference failed"))
     const cards = [
       { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
@@ -165,11 +164,10 @@ describe("useAiRecipeAdvice", () => {
     })
 
     expect(result.current.loading).toBe(false)
-    expect(result.current.advice).not.toBeNull()
-    expect(result.current.advice).toContain("Recipe")
-    expect(result.current.isFallback).toBe(true)
-    expect(result.current.isFallbackMode).toBe(true)
-    expect(result.current.error).toBeNull()
+    expect(result.current.advice).toBeNull()
+    expect(result.current.isFallback).toBe(false)
+    expect(result.current.isFallbackMode).toBe(false)
+    expect(result.current.error).toBe("Inference failed")
   })
 })
 

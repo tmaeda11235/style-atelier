@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { generateRecipeAdviceHeuristics } from "../lib/ai/recipe-heuristics"
 import { useWebGpuCheck } from "./useWebGpuCheck"
 import { useWebLlm } from "./useWebLlm"
 
@@ -80,14 +79,11 @@ async function fetchAdviceHelper(params: FetchAdviceParams) {
       setIsFallback(false)
     }
   } catch (err: any) {
-    console.error(
-      "AI blend advice generation failed, falling back to static heuristics:",
-      err
-    )
+    console.error("AI blend advice generation failed:", err)
     if (isMounted()) {
-      const fallbackAdvice = generateRecipeAdviceHeuristics(cards, lang)
-      setAdvice(fallbackAdvice)
-      setIsFallback(true)
+      setError(err.message || "Failed to generate AI advice.")
+      setAdvice(null)
+      setIsFallback(false)
     }
   } finally {
     if (isMounted()) {
@@ -137,11 +133,10 @@ function processCache(params: CacheCheckParams): boolean {
     status === "engine-ready"
 
   if (hasWebGpu === false || !isDownloaded) {
-    const fallbackAdvice = generateRecipeAdviceHeuristics(cards, lang)
-    setAdvice(fallbackAdvice)
+    setAdvice(null)
     setError(null)
     setLoading(false)
-    setIsFallback(true)
+    setIsFallback(false)
     return true
   }
 
