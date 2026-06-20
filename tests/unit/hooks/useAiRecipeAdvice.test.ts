@@ -14,10 +14,12 @@ vi.mock("@/hooks/useWebLlm", () => {
   }
 })
 
+const mockUseWebGpuCheck = vi.fn(() => ({ hasWebGpu: true, isChecking: false }))
+
 // Mock useWebGpuCheck
 vi.mock("@/hooks/useWebGpuCheck", () => {
   return {
-    useWebGpuCheck: () => ({ hasWebGpu: true, isChecking: false })
+    useWebGpuCheck: () => mockUseWebGpuCheck()
   }
 })
 
@@ -168,6 +170,46 @@ describe("useAiRecipeAdvice", () => {
     expect(result.current.isFallback).toBe(false)
     expect(result.current.isFallbackMode).toBe(false)
     expect(result.current.error).toBe("Inference failed")
+  })
+
+  it("should return null advice when hasWebGpu is false", () => {
+    mockUseWebGpuCheck.mockReturnValue({ hasWebGpu: false, isChecking: false })
+
+    const cards = [
+      { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
+      { id: "2", name: "Card 2", prompt: "prompt 2", weight: 1.0 }
+    ]
+    const { result } = renderHook(() => useAiRecipeAdvice(cards))
+
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.advice).toBeNull()
+    expect(result.current.isFallback).toBe(false)
+    expect(result.current.isFallbackMode).toBe(false)
+    expect(result.current.loading).toBe(false)
+    expect(mockRunInference).not.toHaveBeenCalled()
+
+    // Restore default mock value
+    mockUseWebGpuCheck.mockReturnValue({ hasWebGpu: true, isChecking: false })
+  })
+
+  it("should clean up timer and set mounted to false when unmounted", () => {
+    const cards = [
+      { id: "1", name: "Card 1", prompt: "prompt 1", weight: 1.0 },
+      { id: "2", name: "Card 2", prompt: "prompt 2", weight: 1.0 }
+    ]
+    const { unmount } = renderHook(() => useAiRecipeAdvice(cards))
+
+    // Unmount before 500ms debounce timer fires
+    unmount()
+
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(mockRunInference).not.toHaveBeenCalled()
   })
 })
 
