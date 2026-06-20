@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority"
 
 export const tooltipContentVariants = cva(
-  "absolute hidden group-hover:block group-focus-within:block bg-slate-900 text-white text-xs font-normal rounded-lg shadow-xl z-[9999] pointer-events-none leading-relaxed transition-all animate-in fade-in duration-150",
+  "absolute hidden group-hover/tooltip:block group-focus-within/tooltip:block bg-slate-900 text-white text-xs font-normal rounded-lg shadow-xl z-[9999] pointer-events-none leading-relaxed transition-all animate-in fade-in duration-150",
   {
     variants: {
       position: {

@@ -164,7 +164,7 @@ export function MintingView(props: MintingViewProps) {
   return (
     <div
       data-testid="minting-view-container"
-      className={`absolute inset-0 bg-slate-50 z-20 flex flex-col ${
+      className={`fixed inset-0 bg-slate-50 z-20 flex flex-col ${
         hasPinnedCards ? "pb-[110px]" : ""
       }`}>
       <MintingHeader t={t} />

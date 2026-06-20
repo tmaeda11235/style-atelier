@@ -37,10 +37,10 @@ function SettingsToggle({
 }: ToggleProps) {
   return (
     <div
-      className={`flex items-center justify-between bg-slate-50/80 border border-slate-100/80 rounded-xl px-4 py-3 transition-all ${disabled ? "" : "hover:bg-slate-50"}`}>
+      className={`flex items-center justify-between bg-muted/80 border border-border-primary/80 rounded-xl px-4 py-3 transition-all ${disabled ? "" : "hover:bg-surface-hover"}`}>
       <div className="flex flex-col">
-        <span className="text-xs font-bold text-slate-700">{label}</span>
-        <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+        <span className="text-xs font-bold text-text-primary">{label}</span>
+        <span className="text-[10px] text-text-secondary mt-0.5">
           {subLabel}
         </span>
       </div>
@@ -51,10 +51,10 @@ function SettingsToggle({
         onClick={() => onToggle(!enabled)}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
           disabled
-            ? "opacity-50 cursor-not-allowed bg-slate-200"
+            ? "opacity-50 cursor-not-allowed bg-slate-200 dark:bg-slate-800"
             : enabled
               ? "bg-blue-600"
-              : "bg-slate-200"
+              : "bg-slate-200 dark:bg-slate-700"
         }`}>
         <span
           className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -69,11 +69,11 @@ function SettingsToggle({
 function BrandLogoSettingsHeader({ label, desc }: HeaderProps) {
   return (
     <div className="flex items-start gap-4 mb-4">
-      <div className="p-3 bg-slate-50 text-slate-600 rounded-xl border border-slate-100">
+      <div className="p-3 bg-muted text-text-secondary rounded-xl border border-border-primary">
         <span className="text-xl">🔮</span>
       </div>
       <div className="space-y-1 flex-1">
-        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+        <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
           {label}
           <HelpTooltip content={desc} position="top-left" />
         </h3>

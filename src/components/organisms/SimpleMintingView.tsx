@@ -73,7 +73,7 @@ export function SimpleMintingView(props: SimpleMintingViewProps) {
   return (
     <div
       data-testid="simple-minting-view-container"
-      className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-20 flex flex-col items-center justify-center p-4 font-sans">
+      className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-20 flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
         <SimpleMintingHeader t={t} />
 

@@ -1,7 +1,6 @@
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { TutorialProvider } from "@/contexts/TutorialContext"
 import { MintingView } from "@/features/minting/components/MintingView"
-import { useCategories } from "@/hooks/useCategories"
 import { useHand } from "@/hooks/useHand"
 import type { HistoryItem, PromptSegment } from "@/shared/lib/db-schema"
 import { fireEvent, screen, render as tlRender } from "@testing-library/react"
@@ -101,7 +100,7 @@ describe("MintingView", () => {
     )
     const container = screen.getByTestId("minting-view-container")
     expect(container.className).toContain(
-      "absolute inset-0 bg-slate-50 z-20 flex flex-col"
+      "fixed inset-0 bg-slate-50 z-20 flex flex-col"
     )
     expect(container.className).not.toContain("pb-[110px]")
   })

@@ -188,7 +188,7 @@ describe("SettingsTab", () => {
     )
 
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      '#local-backup-section input[type="file"]'
     ) as HTMLInputElement
     expect(fileInput).toBeDefined()
 
@@ -243,7 +243,7 @@ describe("SettingsTab", () => {
     )
 
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      '#local-backup-section input[type="file"]'
     ) as HTMLInputElement
     const invalidContent = '{"foo": "bar"}'
     const file = new File([invalidContent], "backup.json", {
@@ -271,7 +271,7 @@ describe("SettingsTab", () => {
     )
 
     const fileInput = container.querySelector(
-      'input[type="file"]'
+      '#local-backup-section input[type="file"]'
     ) as HTMLInputElement
     const backupContent = '{"version": 1, "data": {"styleCards": []}}'
     const file = new File([backupContent], "backup.json", {

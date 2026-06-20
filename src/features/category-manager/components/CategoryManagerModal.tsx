@@ -33,7 +33,7 @@ function ModalContainer({
   handleCloseIcon
 }: any) {
   return (
-    <div className="absolute inset-0 bg-black/20 dark:bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end">
+    <div className="fixed inset-0 bg-black/20 dark:bg-slate-900/60 backdrop-blur-sm z-[100] flex flex-col justify-end">
       <div className="bg-white rounded-t-xl max-h-[85%] flex flex-col shadow-2xl transition-all duration-300 transform translate-y-0">
         <CategoryModalHeader
           t={manager.t}

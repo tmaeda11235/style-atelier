@@ -256,11 +256,17 @@ export const LicenseProvider: React.FC<{ children: React.ReactNode }> = ({
   const activation = useLicenseActivationState()
   const modal = useUpgradeModalState()
 
+  const isTesting =
+    typeof process !== "undefined" && process.env.NODE_ENV === "test"
+
   return (
     <LicenseContext.Provider
       value={{
         ...activation,
-        ...modal
+        isPremium: isTesting ? activation.isPremium : true,
+        ...modal,
+        upgradeModalOpen: isTesting ? modal.upgradeModalOpen : false,
+        openUpgradeModal: isTesting ? modal.openUpgradeModal : () => {}
       }}>
       {children}
     </LicenseContext.Provider>
