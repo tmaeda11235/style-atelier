@@ -2,6 +2,7 @@ import { Settings2 } from "lucide-react"
 import React from "react"
 
 import { CloudSyncSection } from "../../features/settings/components/CloudSyncSection"
+import { NotionSettingsSection } from "../../features/settings/components/NotionSettingsSection"
 import { UiPreferencesSection } from "../../features/settings/components/UiPreferencesSection"
 import { WebLlmSettingsSection } from "../../features/settings/components/WebLlmSettingsSection"
 import { useWebLlm } from "../../hooks/useWebLlm"
@@ -127,6 +128,20 @@ function LicenseAccordionItem({ isOpen, onToggle, title }: any) {
   )
 }
 
+function NotionSyncAccordionItem({ isOpen, onToggle, title }: any) {
+  return (
+    <SettingsAccordionItem
+      id="settings-accordion-notion"
+      title={title}
+      isOpen={isOpen}
+      onToggle={onToggle}>
+      <div className="p-5 animate-in slide-in-from-top-2 duration-250">
+        <NotionSettingsSection />
+      </div>
+    </SettingsAccordionItem>
+  )
+}
+
 // eslint-disable-next-line max-lines-per-function
 function AccordionSections({
   openSections,
@@ -140,6 +155,8 @@ function AccordionSections({
   maintenanceProps,
   p2pOpen,
   setP2pOpen,
+  notionOpen,
+  setNotionOpen,
   t
 }: any) {
   return (
@@ -160,6 +177,11 @@ function AccordionSections({
         onToggle={onToggleCloud}
         title={t.cloudGroupTitle}
         cloudProps={cloudProps}
+      />
+      <NotionSyncAccordionItem
+        isOpen={notionOpen}
+        onToggle={() => setNotionOpen(!notionOpen)}
+        title={t.notionGroupTitle || "🔗 Notion 連携設定 (Integration)"}
       />
       <P2PSyncAccordionItem
         isOpen={p2pOpen}
@@ -184,10 +206,17 @@ function AccordionSections({
 
 export function SettingsTabPresenter(props: SettingsTabPresenterProps) {
   const [p2pOpen, setP2pOpen] = React.useState(false)
+  const [notionOpen, setNotionOpen] = React.useState(false)
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {!props.currentEasyMode && <SettingsTabHeader title={props.t.title} />}
-      <AccordionSections {...props} p2pOpen={p2pOpen} setP2pOpen={setP2pOpen} />
+      <AccordionSections
+        {...props}
+        p2pOpen={p2pOpen}
+        setP2pOpen={setP2pOpen}
+        notionOpen={notionOpen}
+        setNotionOpen={setNotionOpen}
+      />
       <GDriveSyncStrategyDialog
         isOpen={props.isWarningOpen}
         onConfirm={props.handleConfirmSyncStrategy}
