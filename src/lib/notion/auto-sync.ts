@@ -83,7 +83,7 @@ export function initializeNotionAutoSync() {
   db.styleCards.hook("updating", (mods, primKey, obj, transaction) => {
     if (transaction && transaction.on) {
       transaction.on("complete", () => {
-        triggerNotionSync(obj)
+        triggerNotionSync({ ...obj, ...mods })
       })
     }
   })

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "../../../../src/lib/db"
 import {
   computeCardHash,
+  initializeNotionAutoSync,
   isNotionSyncActive,
   syncCardToNotion
 } from "../../../../src/lib/notion/auto-sync"
@@ -190,6 +191,54 @@ describe("Notion Auto Sync", () => {
         expect.stringContaining("Failed to sync card to Notion"),
         expect.any(Error)
       )
+    })
+  })
+
+  describe("initializeNotionAutoSync", () => {
+    it("should register hooks and trigger sync on card creation and update", async () => {
+      localStorage.setItem("style-atelier-license-status", "valid")
+
+      const mockCredentials = { apiKey: "key", databaseId: "id" }
+      vi.spyOn(notionClient, "getNotionCredentials").mockResolvedValue(
+        mockCredentials
+      )
+      const sendSpy = vi
+        .spyOn(notionClient, "sendCardToNotion")
+        .mockResolvedValue({ pageId: "page-1" })
+      const updateSpy = vi
+        .spyOn(notionClient, "updateCardInNotion")
+        .mockResolvedValue(undefined)
+
+      initializeNotionAutoSync()
+
+      const newCard: StyleCard = {
+        id: "hook-card-1",
+        name: "Hook Created Card",
+        createdAt: 200,
+        updatedAt: 200,
+        promptSegments: [],
+        parameters: {},
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common",
+        isFavorite: false,
+        usageCount: 0,
+        tags: [],
+        frameId: "default",
+        dominantColor: "#000000",
+        genealogy: { generation: 1, parentIds: [] }
+      }
+
+      await db.styleCards.put(newCard)
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(sendSpy).toHaveBeenCalled()
+
+      // Use update instead of put to ensure updating hook is triggered
+      await db.styleCards.update("hook-card-1", { name: "Hook Updated Card" })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(updateSpy).toHaveBeenCalled()
     })
   })
 })
