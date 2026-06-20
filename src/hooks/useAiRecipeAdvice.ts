@@ -110,7 +110,7 @@ function processCache(params: CacheCheckParams): boolean {
     cards,
     status,
     key,
-    lang,
+    _lang,
     hasWebGpu,
     cacheRef,
     setAdvice,
