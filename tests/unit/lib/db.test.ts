@@ -1,4 +1,5 @@
 import {
+  addDbErrorListener,
   seedDefaultCategories,
   StyleAtelierDatabase,
   upgradeToVersion8,
@@ -693,6 +694,184 @@ describe("db utilities", () => {
         subject: ["a"],
         artist: ["b"]
       })
+    })
+
+    it("getUserSettings and updateUserSettings should load/save settings correctly", async () => {
+      const mockSettings = {
+        userId: "default-user",
+        isPro: false,
+        branding: { enabled: false }
+      }
+      const mockToArray = vi.fn().mockResolvedValue([mockSettings])
+      const mockPut = vi.fn().mockResolvedValue(undefined)
+      const mockDbInstance = {
+        userSettings: {
+          toArray: mockToArray,
+          put: mockPut
+        },
+        getUserSettings: async () => mockSettings
+      } as any
+
+      // Testing getUserSettings with existing data
+      const result =
+        await StyleAtelierDatabase.prototype.getUserSettings.call(
+          mockDbInstance
+        )
+      expect(result).toEqual(mockSettings)
+
+      // Testing updateUserSettings
+      await StyleAtelierDatabase.prototype.updateUserSettings.call(
+        mockDbInstance,
+        { isPro: true }
+      )
+      expect(mockPut).toHaveBeenCalledWith({
+        userId: "default-user",
+        isPro: true,
+        branding: { enabled: false }
+      })
+    })
+
+    it("getUserSettings should return defaults if no settings exist", async () => {
+      const mockToArray = vi.fn().mockResolvedValue([])
+      const mockAdd = vi.fn().mockResolvedValue(undefined)
+      const mockDbInstance = {
+        userSettings: {
+          toArray: mockToArray,
+          add: mockAdd
+        }
+      } as any
+
+      const result =
+        await StyleAtelierDatabase.prototype.getUserSettings.call(
+          mockDbInstance
+        )
+      expect(result.userId).toBe("default-user")
+      expect(mockAdd).toHaveBeenCalled()
+    })
+
+    it("getParameterAlias, deleteParameterAlias and getAllParameterAliases should mock correctly", async () => {
+      const mockGet = vi.fn().mockResolvedValue({ id: "alias-1" })
+      const mockDelete = vi.fn().mockResolvedValue(undefined)
+      const mockToArray = vi.fn().mockResolvedValue([{ id: "alias-1" }])
+
+      const mockDbInstance = {
+        parameterAliases: {
+          get: mockGet,
+          delete: mockDelete,
+          toArray: mockToArray
+        }
+      } as any
+
+      expect(
+        await StyleAtelierDatabase.prototype.getParameterAlias.call(
+          mockDbInstance,
+          "alias-1"
+        )
+      ).toEqual({ id: "alias-1" })
+
+      await StyleAtelierDatabase.prototype.deleteParameterAlias.call(
+        mockDbInstance,
+        "alias-1"
+      )
+      expect(mockDelete).toHaveBeenCalledWith("alias-1")
+
+      expect(
+        await StyleAtelierDatabase.prototype.getAllParameterAliases.call(
+          mockDbInstance
+        )
+      ).toEqual([{ id: "alias-1" }])
+    })
+
+    it("getAllParameterFolders, deleteParameterFolder and deleteRecipeHistory should mock correctly", async () => {
+      const mockFolderToArray = vi.fn().mockResolvedValue([{ id: "folder-1" }])
+      const mockRecipeDelete = vi.fn().mockResolvedValue(undefined)
+      const mockModify = vi.fn().mockResolvedValue(undefined)
+      const mockEquals = vi.fn().mockReturnValue({ modify: mockModify })
+      const mockWhere = vi.fn().mockReturnValue({ equals: mockEquals })
+      const mockFolderDelete = vi.fn().mockResolvedValue(undefined)
+      const mockFolderGet = vi.fn().mockResolvedValue({ parentId: "parent-1" })
+      const mockFolderUpdate = vi.fn().mockResolvedValue(1)
+      const mockFolderEquals = vi.fn().mockReturnValue({
+        modify: vi.fn().mockResolvedValue(undefined)
+      })
+      const mockFolderWhere = vi.fn().mockReturnValue({
+        equals: mockFolderEquals
+      })
+
+      const mockDbInstance = {
+        parameterFolders: {
+          toArray: mockFolderToArray,
+          delete: mockFolderDelete,
+          get: mockFolderGet,
+          update: mockFolderUpdate,
+          where: mockFolderWhere
+        },
+        parameterAliases: {
+          where: mockWhere
+        },
+        recipeHistory: {
+          delete: mockRecipeDelete
+        }
+      } as any
+
+      expect(
+        await StyleAtelierDatabase.prototype.getAllParameterFolders.call(
+          mockDbInstance
+        )
+      ).toEqual([{ id: "folder-1" }])
+
+      await StyleAtelierDatabase.prototype.deleteParameterFolder.call(
+        mockDbInstance,
+        "folder-1"
+      )
+      expect(mockWhere).toHaveBeenCalledWith("folderId")
+      expect(mockEquals).toHaveBeenCalledWith("folder-1")
+      expect(mockFolderGet).toHaveBeenCalledWith("folder-1")
+      expect(mockFolderWhere).toHaveBeenCalledWith("parentId")
+      expect(mockFolderEquals).toHaveBeenCalledWith("folder-1")
+      expect(mockFolderDelete).toHaveBeenCalledWith("folder-1")
+
+      await StyleAtelierDatabase.prototype.deleteRecipeHistory.call(
+        mockDbInstance,
+        "recipe-1"
+      )
+      expect(mockRecipeDelete).toHaveBeenCalledWith("recipe-1")
+    })
+  })
+
+  describe("dbError and addDbErrorListener", () => {
+    it("should register listener and trigger on errors", () => {
+      const listener = vi.fn()
+      const cleanup = addDbErrorListener(listener)
+
+      expect(listener).not.toHaveBeenCalled()
+
+      // trigger error by using __setDbErrorForTest
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__setDbErrorForTest
+      ) {
+        ;(window as any).__setDbErrorForTest("test error message")
+        expect(listener).toHaveBeenCalledWith(expect.any(Error))
+        expect(listener.mock.calls[0][0].message).toBe("test error message")
+      }
+
+      cleanup()
+    })
+
+    it("should clear error by using __clearDbErrorForTest", () => {
+      const listener = vi.fn()
+      const cleanup = addDbErrorListener(listener)
+
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__clearDbErrorForTest
+      ) {
+        ;(window as any).__clearDbErrorForTest()
+        expect(listener).toHaveBeenCalledWith(null)
+      }
+
+      cleanup()
     })
   })
 })

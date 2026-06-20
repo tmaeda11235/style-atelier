@@ -6,7 +6,8 @@ import { notionSyncQueueManager } from "../../../../src/lib/notion/queue"
 // Mock sendCardToNotion
 vi.mock("../../../../src/lib/notion/client", () => ({
   sendCardToNotion: vi.fn(),
-  getNotionCredentials: vi.fn()
+  getNotionCredentials: vi.fn(),
+  archiveCardInNotion: vi.fn()
 }))
 
 // Mock computeHash
@@ -202,5 +203,102 @@ describe("NotionSyncQueueManager", () => {
         status: "pending"
       })
     )
+  })
+
+  it("should not re-enqueue if already pending", async () => {
+    mockQueueTable.get.mockResolvedValue({
+      cardId: "card-1",
+      status: "pending"
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+
+    expect(mockQueueTable.put).not.toHaveBeenCalled()
+  })
+
+  it("should complete immediately if hash matches lastSyncedHash", async () => {
+    mockQueueTable.get.mockResolvedValue(null)
+    mockStyleCardsTable.get.mockResolvedValue({ id: "card-1" })
+    mockSyncStatesTable.get.mockResolvedValue({
+      cardId: "card-1",
+      lastSyncedHash: "mock-hash-val"
+    })
+
+    const mockFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 0,
+        status: "pending"
+      })
+      .mockResolvedValueOnce(null)
+
+    mockQueueTable.where.mockReturnValue({
+      anyOf: vi.fn().mockReturnValue({
+        first: mockFirst
+      })
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+    await vi.runAllTimersAsync()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "completed"
+      })
+    )
+    expect(sendCardToNotion).not.toHaveBeenCalled()
+  })
+
+  it("should retry or fail if archive fails", async () => {
+    mockQueueTable.get.mockResolvedValue(null)
+    mockStyleCardsTable.get.mockResolvedValue({ id: "card-1", isDeleted: true })
+    mockSyncStatesTable.get.mockResolvedValue({
+      cardId: "card-1",
+      notionPageId: "page-123"
+    })
+    const { archiveCardInNotion } = await import("@/lib/notion/client")
+    vi.mocked(archiveCardInNotion).mockRejectedValue(
+      new Error("Archive API Error")
+    )
+
+    const mockFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        cardId: "card-1",
+        retryCount: 0,
+        status: "pending"
+      })
+      .mockResolvedValueOnce(null)
+
+    mockQueueTable.where.mockReturnValue({
+      anyOf: vi.fn().mockReturnValue({
+        first: mockFirst
+      })
+    })
+
+    await notionSyncQueueManager.enqueue("card-1")
+    await vi.runAllTimersAsync()
+
+    expect(mockQueueTable.update).toHaveBeenCalledWith(
+      "card-1",
+      expect.objectContaining({
+        status: "pending",
+        retryCount: 1,
+        error: "Archive API Error"
+      })
+    )
+  })
+
+  it("should not start processing loop again if already processing", async () => {
+    const manager = notionSyncQueueManager as any
+    manager.processing = true
+
+    await notionSyncQueueManager.start()
+
+    expect(mockQueueTable.where).not.toHaveBeenCalled()
+
+    manager.processing = false
   })
 })

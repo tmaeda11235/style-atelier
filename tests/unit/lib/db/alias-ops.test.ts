@@ -24,6 +24,27 @@ describe("alias-ops tests", () => {
     expect(uuid1).not.toBe(uuid2)
   })
 
+  it("generateUUID should fallback when crypto.randomUUID is not available", () => {
+    const originalCrypto = global.crypto
+    Object.defineProperty(global, "crypto", {
+      value: undefined,
+      writable: true,
+      configurable: true
+    })
+
+    const uuid1 = generateUUID()
+    const uuid2 = generateUUID()
+    expect(typeof uuid1).toBe("string")
+    expect(uuid1.length).toBeGreaterThan(5)
+    expect(uuid1).not.toBe(uuid2)
+
+    Object.defineProperty(global, "crypto", {
+      value: originalCrypto,
+      writable: true,
+      configurable: true
+    })
+  })
+
   describe("saveParameterAlias", () => {
     it("should add a new alias if no id or existing value", async () => {
       const aliasId = await saveParameterAlias(db, {
