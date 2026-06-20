@@ -1,4 +1,5 @@
 import {
+  addDbErrorListener,
   seedDefaultCategories,
   StyleAtelierDatabase,
   upgradeToVersion8,
@@ -835,6 +836,42 @@ describe("db utilities", () => {
         "recipe-1"
       )
       expect(mockRecipeDelete).toHaveBeenCalledWith("recipe-1")
+    })
+  })
+
+  describe("dbError and addDbErrorListener", () => {
+    it("should register listener and trigger on errors", () => {
+      const listener = vi.fn()
+      const cleanup = addDbErrorListener(listener)
+
+      expect(listener).not.toHaveBeenCalled()
+
+      // trigger error by using __setDbErrorForTest
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__setDbErrorForTest
+      ) {
+        ;(window as any).__setDbErrorForTest("test error message")
+        expect(listener).toHaveBeenCalledWith(expect.any(Error))
+        expect(listener.mock.calls[0][0].message).toBe("test error message")
+      }
+
+      cleanup()
+    })
+
+    it("should clear error by using __clearDbErrorForTest", () => {
+      const listener = vi.fn()
+      const cleanup = addDbErrorListener(listener)
+
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__clearDbErrorForTest
+      ) {
+        ;(window as any).__clearDbErrorForTest()
+        expect(listener).toHaveBeenCalledWith(null)
+      }
+
+      cleanup()
     })
   })
 })
