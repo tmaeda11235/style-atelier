@@ -305,5 +305,32 @@ test.describe("Notion Integration E2E Tests @J-NOTION-INTEGRATION-01", () => {
     expect(notionPatchPayload.properties.Name.title[0].text.content).toContain(
       "cyberpunk style"
     )
+
+    // Clear payload to intercept next PATCH
+    notionPatchPayload = null
+
+    // 7. Delete card and verify archive patch is sent
+    await editBtn.click()
+    const deleteBtn = spFrame.locator("[data-testid='delete-card-button']")
+    await expect(deleteBtn).toBeVisible()
+    await deleteBtn.click()
+
+    const deleteModal = spFrame.locator("[data-testid='delete-confirm-modal']")
+    await expect(deleteModal).toBeVisible()
+
+    const okBtn = spFrame.locator("[data-testid='delete-confirm-ok-button']")
+    await expect(okBtn).toBeVisible()
+    await okBtn.click()
+
+    // Verify Notion API was triggered via PATCH with archived: true
+    await expect
+      .poll(() => notionPatchPayload, { timeout: 10000 })
+      .not.toBeNull()
+    expect(notionPatchPayload.archived).toBe(true)
+
+    // Take screenshot of library after delete sync
+    await page.screenshot({
+      path: path.join(screenshotsDir, "notion-sync-after-delete.png")
+    })
   })
 })

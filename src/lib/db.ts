@@ -344,7 +344,7 @@ async function setupNotionSync() {
     db.styleCards.hook("creating", function (primKey, obj, transaction) {
       transaction.on("complete", () => {
         getNotionCredentials().then((creds) => {
-          if (creds && !obj.isDeleted) {
+          if (creds) {
             notionSyncQueueManager.enqueue(obj.id)
           }
         })
@@ -355,8 +355,8 @@ async function setupNotionSync() {
       transaction.on("complete", () => {
         getNotionCredentials().then((creds) => {
           if (creds) {
-            db.getCard(primKey).then((updatedCard) => {
-              if (updatedCard && !updatedCard.isDeleted) {
+            db.styleCards.get(primKey).then((updatedCard) => {
+              if (updatedCard) {
                 notionSyncQueueManager.enqueue(primKey)
               }
             })

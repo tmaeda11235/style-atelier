@@ -1,7 +1,11 @@
 import type { StyleCard } from "../../shared/lib/db-schema"
 import { computeHash } from "../../shared/lib/db/migration-helpers"
 import { db } from "../db"
-import { sendCardToNotion } from "./client"
+import {
+  archiveCardInNotion,
+  sendCardToNotion,
+  updateCardInNotion
+} from "./client"
 
 // Helper to compute card hash for lastSyncedHash
 async function calculateCardHash(card: StyleCard): Promise<string> {
@@ -43,13 +47,10 @@ export class NotionSyncQueueManager {
         updatedAt: Date.now()
       })
 
-      const card = await db.getCard(nextItem.cardId)
-      if (!card) {
-        await db.notionSyncQueue.update(nextItem.cardId, {
-          status: "failed",
-          error: "Card not found in local DB",
-          updatedAt: Date.now()
-        })
+      const card = await db.styleCards.get(nextItem.cardId)
+      if (!card || card.isDeleted) {
+        await this.deleteCardFromNotion(nextItem)
+        await this.delay(this.delayMs)
         continue
       }
 
@@ -58,10 +59,60 @@ export class NotionSyncQueueManager {
     }
   }
 
+  private async deleteCardFromNotion(nextItem: any): Promise<void> {
+    try {
+      const syncState = await db.notionSyncStates.get(nextItem.cardId)
+      if (syncState && syncState.notionPageId) {
+        await archiveCardInNotion(syncState.notionPageId)
+      }
+
+      await db.transaction(
+        "rw",
+        [db.notionSyncQueue, db.notionSyncStates],
+        async () => {
+          await db.notionSyncQueue.update(nextItem.cardId, {
+            status: "completed",
+            updatedAt: Date.now()
+          })
+
+          await db.notionSyncStates.delete(nextItem.cardId)
+        }
+      )
+    } catch (error: any) {
+      console.error(`Notion archive failed for card ${nextItem.cardId}:`, error)
+      const newRetryCount = nextItem.retryCount + 1
+      const isMaxRetries = newRetryCount >= this.maxRetries
+
+      await db.notionSyncQueue.update(nextItem.cardId, {
+        status: isMaxRetries ? "failed" : "pending",
+        retryCount: newRetryCount,
+        error: error instanceof Error ? error.message : String(error),
+        updatedAt: Date.now()
+      })
+    }
+  }
+
   private async syncCard(nextItem: any, card: StyleCard): Promise<void> {
     try {
-      const result = await sendCardToNotion(card)
+      const syncState = await db.notionSyncStates.get(card.id)
       const hash = await calculateCardHash(card)
+
+      if (syncState && syncState.lastSyncedHash === hash) {
+        await db.notionSyncQueue.update(nextItem.cardId, {
+          status: "completed",
+          updatedAt: Date.now()
+        })
+        return
+      }
+
+      let pageId = syncState?.notionPageId
+
+      if (pageId) {
+        await updateCardInNotion(pageId, card)
+      } else {
+        const result = await sendCardToNotion(card)
+        pageId = result.pageId
+      }
 
       await db.transaction(
         "rw",
@@ -74,7 +125,7 @@ export class NotionSyncQueueManager {
 
           await db.notionSyncStates.put({
             cardId: card.id,
-            notionPageId: result.pageId,
+            notionPageId: pageId,
             lastSyncedAt: Date.now(),
             lastSyncedHash: hash
           })
@@ -96,10 +147,7 @@ export class NotionSyncQueueManager {
 
   async enqueue(cardId: string): Promise<void> {
     const existing = await db.notionSyncQueue.get(cardId)
-    if (
-      existing &&
-      (existing.status === "pending" || existing.status === "processing")
-    ) {
+    if (existing && existing.status === "pending") {
       return
     }
 
