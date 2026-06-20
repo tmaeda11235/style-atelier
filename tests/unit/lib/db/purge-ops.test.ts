@@ -332,5 +332,18 @@ describe("purge-ops tests", () => {
       )
       warnSpy.mockRestore()
     })
+
+    it("should return early without throwing if images directory is not found", async () => {
+      const rootDir = new MockDirectoryHandle()
+      const mockGetDirectory = vi.fn().mockResolvedValue(rootDir)
+      Object.defineProperty(global, "navigator", {
+        value: { storage: { getDirectory: mockGetDirectory } },
+        writable: true,
+        configurable: true
+      })
+
+      const result = await cleanupOrphanedImages(db)
+      expect(result).toBeUndefined()
+    })
   })
 })
