@@ -105,8 +105,30 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
     if (!isExtensionContextValid()) {
       return
     }
+    let port: chrome.runtime.Port | null = null
+    let reconnectTimeout: any = null
+
+    const connectPort = () => {
+      if (!isExtensionContextValid()) {
+        return
+      }
+      try {
+        port = chrome.runtime.connect({ name: "sidepanel" })
+        port.onDisconnect.addListener(() => {
+          console.log(
+            "[WebLlmContext] Port disconnected. Reconnecting in 1s..."
+          )
+          port = null
+          reconnectTimeout = setTimeout(connectPort, 1000)
+        })
+      } catch (err) {
+        console.warn("[WebLlmContext] Failed to connect port:", err)
+        reconnectTimeout = setTimeout(connectPort, 2000)
+      }
+    }
+
     try {
-      const port = chrome.runtime.connect({ name: "sidepanel" })
+      connectPort()
       const messageListener = createMessageListener(
         props.setStatus,
         props.setEngineStatus,
@@ -127,8 +149,13 @@ function useWebLlmEffect(props: WebLlmEffectProps) {
         props.setError
       )
       return () => {
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout)
+        }
         try {
-          port.disconnect()
+          if (port) {
+            port.disconnect()
+          }
         } catch {
           // ignore
         }

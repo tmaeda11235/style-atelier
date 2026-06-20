@@ -49,7 +49,8 @@ describe("background.ts", () => {
         },
         onMessage: {
           addListener: vi.fn((fn) => messageListeners.push(fn))
-        }
+        },
+        getContexts: vi.fn().mockResolvedValue([])
       }
     } as any
   })
@@ -88,7 +89,9 @@ describe("background.ts", () => {
     const disconnectCallback = disconnectListeners[0]
     await disconnectCallback()
 
-    expect(closeDocumentMock).toHaveBeenCalled()
+    await vi.waitFor(() => {
+      expect(closeDocumentMock).toHaveBeenCalled()
+    })
   })
 
   it("should set downloading status via set-downloading message", async () => {
@@ -158,6 +161,34 @@ describe("background.ts", () => {
       sendResponse
     )
 
-    expect(closeDocumentMock).toHaveBeenCalled()
+    await vi.waitFor(() => {
+      expect(closeDocumentMock).toHaveBeenCalled()
+    })
+  })
+
+  it("should keep offscreen document open if getContexts finds an active side panel", async () => {
+    const getContextsMock = vi
+      .fn()
+      .mockResolvedValue([{ contextType: "SIDE_PANEL" }])
+    global.chrome.runtime.getContexts = getContextsMock
+
+    await importBackground()
+
+    const connectCallback = connectListeners[0]
+    const disconnectListeners: any[] = []
+    const mockPort = {
+      name: "sidepanel",
+      onDisconnect: {
+        addListener: vi.fn((fn) => disconnectListeners.push(fn))
+      }
+    }
+
+    connectCallback(mockPort)
+
+    hasDocumentMock.mockResolvedValue(true)
+    const disconnectCallback = disconnectListeners[0]
+    await disconnectCallback()
+
+    expect(closeDocumentMock).not.toHaveBeenCalled()
   })
 })

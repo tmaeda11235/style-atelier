@@ -47,6 +47,9 @@ let isDownloading = false
 let isSidePanelOpen = false
 let isInferenceRunning = false
 let sidePanelConnectionsCount = 0
+let offscreenCloseTimeout: any = null
+const OFFSCREEN_CLOSE_GRACE_PERIOD_MS =
+  typeof process !== "undefined" && process.env.NODE_ENV === "test" ? 0 : 10000
 
 if (
   typeof chrome !== "undefined" &&
@@ -55,6 +58,10 @@ if (
 ) {
   chrome.runtime.onConnect.addListener((port) => {
     if (port.name === "sidepanel") {
+      if (offscreenCloseTimeout) {
+        clearTimeout(offscreenCloseTimeout)
+        offscreenCloseTimeout = null
+      }
       sidePanelConnectionsCount++
       isSidePanelOpen = true
       port.onDisconnect.addListener(() => {
@@ -69,9 +76,34 @@ if (
 }
 
 function checkLifecycle() {
-  if (!isSidePanelOpen && !isDownloading && !isInferenceRunning) {
-    closeOffscreen()
+  if (offscreenCloseTimeout) {
+    clearTimeout(offscreenCloseTimeout)
+    offscreenCloseTimeout = null
   }
+
+  offscreenCloseTimeout = setTimeout(async () => {
+    let activeSidePanel = isSidePanelOpen
+    if (
+      !activeSidePanel &&
+      typeof chrome !== "undefined" &&
+      chrome.runtime &&
+      chrome.runtime.getContexts
+    ) {
+      try {
+        const contexts = await chrome.runtime.getContexts({
+          contextTypes: ["SIDE_PANEL"]
+        })
+        activeSidePanel = contexts.length > 0
+      } catch (e) {
+        console.warn("Failed to get contexts:", e)
+      }
+    }
+
+    if (!activeSidePanel && !isDownloading && !isInferenceRunning) {
+      closeOffscreen()
+    }
+    offscreenCloseTimeout = null
+  }, OFFSCREEN_CLOSE_GRACE_PERIOD_MS)
 }
 
 async function closeOffscreen() {
