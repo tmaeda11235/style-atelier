@@ -1,5 +1,6 @@
 import type { StyleCard } from "../../shared/lib/db-schema"
-import { loadImage, resolveLocalImageSource } from "./helpers"
+import { compressCardData, generateQRCodeUrl } from "../../shared/lib/qr-utils"
+import { drawRoundedRect, loadImage, resolveLocalImageSource } from "./helpers"
 
 export function selectImageSources(card: StyleCard): string[] {
   const isLocalThumb =
@@ -179,4 +180,68 @@ export function selectParameters(card: StyleCard): string[] {
   if (card.parameters?.raw) paramList.push(`--style raw`)
   if (card.parameters?.tile) paramList.push(`--tile`)
   return paramList
+}
+
+export function drawCardBackground(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  primaryBgColor: string,
+  accentColor: string
+) {
+  ctx.fillStyle = "#0f172a" // Deep dark base
+  ctx.fillRect(0, 0, width, height)
+
+  const bgGrad = ctx.createRadialGradient(
+    width / 2,
+    height / 2,
+    50,
+    width / 2,
+    height / 2,
+    width
+  )
+  bgGrad.addColorStop(0, primaryBgColor + "55")
+  bgGrad.addColorStop(1, "#0f172a")
+  ctx.fillStyle = bgGrad
+  ctx.fillRect(0, 0, width, height)
+
+  ctx.strokeStyle = accentColor
+  ctx.lineWidth = 6
+  drawRoundedRect(ctx, 10, 10, width - 20, height - 20, 24)
+  ctx.stroke()
+}
+
+export async function drawQRCode(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  qrSize: number,
+  qrX: number,
+  qrY: number,
+  card: StyleCard
+) {
+  try {
+    const compressed = compressCardData(card)
+    const qrPayload = `https://style-atelier.github.io/app/?p=${compressed}`
+    const qrDataUrl = await generateQRCodeUrl(qrPayload, qrSize)
+    const qrImg = await loadImage(qrDataUrl)
+
+    ctx.fillStyle = "#ffffff"
+    drawRoundedRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12)
+    ctx.fill()
+
+    ctx.save()
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize)
+    ctx.restore()
+
+    ctx.fillStyle = "#94a3b8"
+    ctx.font = "bold 9px sans-serif"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "top"
+    ctx.fillText("SCAN TO IMPORT", qrX + qrSize / 2, qrY + qrSize + 14)
+  } catch (err: any) {
+    throw new Error(`Failed to generate QR code: ${err.message || err}`, {
+      cause: err
+    })
+  }
 }
