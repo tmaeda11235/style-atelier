@@ -19,7 +19,8 @@ export {
   upgradeToVersion6,
   upgradeToVersion8,
   upgradeToVersion10,
-  upgradeToVersion11
+  upgradeToVersion11,
+  upgradeToVersion19
 } from "./db/migrations"
 
 export class StyleAtelierDatabaseBase extends Dexie {
