@@ -163,11 +163,11 @@ function cleanQueryText(userQuery: string, category: string): string {
   let remainingQuery = userQuery
 
   const rarityWords = [
-    "common",
+    "legendary",
     "uncommon",
+    "common",
     "rare",
     "epic",
-    "legendary",
     ...Object.keys(rarityMapJa)
   ]
   for (const word of rarityWords) {
