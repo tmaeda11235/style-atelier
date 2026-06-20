@@ -290,4 +290,15 @@ describe("NotionSyncQueueManager", () => {
       })
     )
   })
+
+  it("should not start processing loop again if already processing", async () => {
+    const manager = notionSyncQueueManager as any
+    manager.processing = true
+
+    await notionSyncQueueManager.start()
+
+    expect(mockQueueTable.where).not.toHaveBeenCalled()
+
+    manager.processing = false
+  })
 })
