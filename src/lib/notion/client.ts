@@ -307,3 +307,38 @@ export async function updateCardInNotion(
     throw new Error(`Notion API error (${response.status}): ${errorText}`)
   }
 }
+
+/**
+ * Archives an existing page in Notion database via PATCH
+ * @param pageId Notion page ID to archive
+ * @param credentials Optional Notion credentials. If omitted, will try to load from chrome.storage.local
+ */
+export async function archiveCardInNotion(
+  pageId: string,
+  credentials?: NotionClientCredentials
+): Promise<void> {
+  const creds = credentials || (await getNotionCredentials())
+  if (!creds || !creds.apiKey) {
+    throw new Error("Missing Notion API credentials")
+  }
+
+  const response = await fetchWithRetry(
+    `https://api.notion.com/v1/pages/${pageId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${creds.apiKey}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        archived: true
+      })
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Notion API error (${response.status}): ${errorText}`)
+  }
+}

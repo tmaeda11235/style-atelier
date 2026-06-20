@@ -15,7 +15,12 @@ vi.mock("../../../../src/shared/lib/db/migration-helpers", () => ({
 }))
 
 // Hoisted table mocks
-const { mockQueueTable, mockSyncStatesTable, mockGetCard } = vi.hoisted(() => {
+const {
+  mockQueueTable,
+  mockSyncStatesTable,
+  mockGetCard,
+  mockStyleCardsTable
+} = vi.hoisted(() => {
   return {
     mockQueueTable: {
       get: vi.fn(),
@@ -25,9 +30,14 @@ const { mockQueueTable, mockSyncStatesTable, mockGetCard } = vi.hoisted(() => {
       where: vi.fn()
     },
     mockSyncStatesTable: {
-      put: vi.fn()
+      get: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn()
     },
-    mockGetCard: vi.fn()
+    mockGetCard: vi.fn(),
+    mockStyleCardsTable: {
+      get: vi.fn()
+    }
   }
 })
 
@@ -36,6 +46,7 @@ vi.mock("../../../../src/lib/db", () => {
     db: {
       notionSyncQueue: mockQueueTable,
       notionSyncStates: mockSyncStatesTable,
+      styleCards: mockStyleCardsTable,
       getCard: mockGetCard,
       transaction: vi.fn((_mode, _tables, cb) => cb())
     }
@@ -57,6 +68,7 @@ describe("NotionSyncQueueManager", () => {
     mockQueueTable.get.mockResolvedValue(null)
     mockQueueTable.put.mockResolvedValue(undefined)
     mockGetCard.mockResolvedValue({ id: "card-1" })
+    mockStyleCardsTable.get.mockResolvedValue({ id: "card-1" })
     vi.mocked(sendCardToNotion).mockResolvedValue({ pageId: "page-123" })
 
     // Setup queue table mock for processLoop
@@ -112,6 +124,7 @@ describe("NotionSyncQueueManager", () => {
   it("should retry on failure and eventually mark as failed", async () => {
     mockQueueTable.get.mockResolvedValue(null)
     mockGetCard.mockResolvedValue({ id: "card-1" })
+    mockStyleCardsTable.get.mockResolvedValue({ id: "card-1" })
     vi.mocked(sendCardToNotion).mockRejectedValue(new Error("API Error"))
 
     // 1st attempt: starts at retryCount: 0

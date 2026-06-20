@@ -6,6 +6,7 @@ import {
   sendCardToNotion,
   updateCardInNotion
 } from "./client"
+import { notionSyncQueueManager } from "./queue"
 
 export async function computeCardHash(card: StyleCard): Promise<string> {
   const encoder = new TextEncoder()
@@ -64,11 +65,11 @@ export function initializeNotionAutoSync() {
   if (hooksRegistered) return
 
   const triggerNotionSync = (card: StyleCard) => {
-    if (card.isDeleted) return
-
     // Run asynchronously without blocking transaction
     setTimeout(async () => {
-      await syncCardToNotion(card)
+      if (isNotionSyncActive()) {
+        await notionSyncQueueManager.enqueue(card.id)
+      }
     }, 0)
   }
 

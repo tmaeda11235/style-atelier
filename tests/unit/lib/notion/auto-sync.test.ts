@@ -230,15 +230,66 @@ describe("Notion Auto Sync", () => {
 
       await db.styleCards.put(newCard)
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 600))
 
       expect(sendSpy).toHaveBeenCalled()
 
       // Use update instead of put to ensure updating hook is triggered
       await db.styleCards.update("hook-card-1", { name: "Hook Updated Card" })
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 600))
       expect(updateSpy).toHaveBeenCalled()
+    })
+
+    it("should trigger Notion archive on card deletion", async () => {
+      localStorage.setItem("style-atelier-license-status", "valid")
+
+      const mockCredentials = { apiKey: "key", databaseId: "id" }
+      vi.spyOn(notionClient, "getNotionCredentials").mockResolvedValue(
+        mockCredentials
+      )
+      const archiveSpy = vi
+        .spyOn(notionClient, "archiveCardInNotion")
+        .mockResolvedValue(undefined)
+
+      initializeNotionAutoSync()
+
+      const newCard: StyleCard = {
+        id: "hook-card-delete",
+        name: "Hook Delete Card",
+        createdAt: 200,
+        updatedAt: 200,
+        promptSegments: [],
+        parameters: {},
+        masking: { isSrefHidden: false, isPHidden: false },
+        tier: "Common",
+        isFavorite: false,
+        usageCount: 0,
+        tags: [],
+        frameId: "default",
+        dominantColor: "#000000",
+        genealogy: { generation: 1, parentIds: [] }
+      }
+
+      await db.styleCards.put(newCard)
+
+      // Mock sync state
+      await db.notionSyncStates.put({
+        cardId: newCard.id,
+        notionPageId: "notion-page-delete-123",
+        lastSyncedAt: 100,
+        lastSyncedHash: "some-hash"
+      })
+
+      // Delete the card (updating isDeleted: true)
+      await db.styleCards.update(newCard.id, { isDeleted: true })
+
+      await new Promise((resolve) => setTimeout(resolve, 600))
+
+      expect(archiveSpy).toHaveBeenCalledWith("notion-page-delete-123")
+
+      const syncState = await db.notionSyncStates.get(newCard.id)
+      expect(syncState).toBeUndefined()
     })
   })
 })
