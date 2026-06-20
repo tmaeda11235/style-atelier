@@ -694,5 +694,58 @@ describe("db utilities", () => {
         artist: ["b"]
       })
     })
+
+    it("getUserSettings and updateUserSettings should load/save settings correctly", async () => {
+      const mockSettings = {
+        userId: "default-user",
+        isPro: false,
+        branding: { enabled: false }
+      }
+      const mockToArray = vi.fn().mockResolvedValue([mockSettings])
+      const mockPut = vi.fn().mockResolvedValue(undefined)
+      const mockDbInstance = {
+        userSettings: {
+          toArray: mockToArray,
+          put: mockPut
+        },
+        getUserSettings: async () => mockSettings
+      } as any
+
+      // Testing getUserSettings with existing data
+      const result =
+        await StyleAtelierDatabase.prototype.getUserSettings.call(
+          mockDbInstance
+        )
+      expect(result).toEqual(mockSettings)
+
+      // Testing updateUserSettings
+      await StyleAtelierDatabase.prototype.updateUserSettings.call(
+        mockDbInstance,
+        { isPro: true }
+      )
+      expect(mockPut).toHaveBeenCalledWith({
+        userId: "default-user",
+        isPro: true,
+        branding: { enabled: false }
+      })
+    })
+
+    it("getUserSettings should return defaults if no settings exist", async () => {
+      const mockToArray = vi.fn().mockResolvedValue([])
+      const mockAdd = vi.fn().mockResolvedValue(undefined)
+      const mockDbInstance = {
+        userSettings: {
+          toArray: mockToArray,
+          add: mockAdd
+        }
+      } as any
+
+      const result =
+        await StyleAtelierDatabase.prototype.getUserSettings.call(
+          mockDbInstance
+        )
+      expect(result.userId).toBe("default-user")
+      expect(mockAdd).toHaveBeenCalled()
+    })
   })
 })
