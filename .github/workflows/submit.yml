@@ -27,7 +27,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run E2E Tests for Safety
-        run: npm run test:e2e
+        run: xvfb-run npm run test:e2e
 
       - name: Package the extension into a zip artifact
         run: npm run package
