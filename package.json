@@ -83,7 +83,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-sonarjs": "^4.0.3",
+    "eslint-plugin-sonarjs": "^4.1.0",
     "fake-indexeddb": "^6.2.5",
     "http-server": "^14.1.1",
     "husky": "^9.1.7",
