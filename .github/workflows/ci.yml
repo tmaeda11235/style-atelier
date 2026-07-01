@@ -33,7 +33,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -88,7 +88,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -126,7 +126,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -188,7 +188,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -210,7 +210,7 @@ jobs:
 
       # PlaywrightのバージョンとOSのみをキーとし、確実なキャッシュヒットを狙う
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
