@@ -24,7 +24,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
